@@ -146,3 +146,19 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   **smoke 9/9 · feel 18/18 · keys 27/27** on build **sha cc601710…** (134,019 B); committed `481869a`.
 - cdp_midi suite (child B) dispatched against cc601710. On its report: verify → full battery → commit B
   → README + mnemosyne refresh.
+
+## Resume addendum 7 — 2026-10-07 (SESSION SAVE at ~96% context; midi suite in flight)
+
+- HEAD `5420543`; build **sha cc601710…** (134,019 B) — **smoke 9/9 · feel 18/18 · keys 27/27 GREEN** on these bytes.
+- **IN FLIGHT: `verify/cdp_midi.mjs` suite child** — subagent `sa-0-c6e017b1`, unit `deleg_e12d803b`, transcript
+  `C:\Users\Moddy\AppData\Local\hermes\profiles\deepseek\cache\delegation\live\deleg_e12d803b\task-0.log`.
+  Contract: §2 'Child B' of `verify/_p0b_suite_wave.md`; frozen build cc601710; may create ONLY
+  `verify/cdp_midi.mjs`, `verify/last-cdp_midi.log`, `renders/p0-midi-suite.png`; never src/*, never
+  build.py; report shape {checksPassed, checksFailed, appBugs[], freeze{shaBefore,shaAfter}, shots}.
+- **ON RESUME — the child may have finished, died, or never reported:** check `verify/cdp_midi.mjs`
+  exists and `tail verify/last-cdp_midi.log`. Child dead/mid-flight (no suite file or stale transcript)?
+  Re-dispatch the SAME contract in the same file scope. Suite green? Run the full battery
+  (smoke + feel + keys + midi) on the frozen sha → commit B → README status line + mnemosyne refresh →
+  then **P1 worklet engine** (the next milestone).
+- App bugs in the report: fix in src (parent-owned), rebuild, re-run keys+midi, then the battery.
+- Session cost ~$2.87 over 55 calls; all state committed; tree CLEAN at save.
