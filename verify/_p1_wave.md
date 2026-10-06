@@ -324,3 +324,17 @@ lab → battery → frozen bytes; children never run build.py/browsers(beyond th
 edit files outside your scope; no console windows; if a test exposes an app bug, report a minimal
 repro (what/expected/actual/where) — parent fixes src. The measured voice count is published ONLY
 from the parent-run ramp. One browser suite at a time on this machine.
+
+## AMENDMENTS + OPEN FINDINGS (post-landing, 2026-10-07 — read with addendum 11)
+
+1. Ladder (§2.2/§6): on `file:` pages the blob rung is skipped (probe-verified refusal); data: loads
+   fine — file:// rides `worklet:data`. `avEngineNoteArgs` rejects midi>127 (offline ramps cap at 128
+   distinct notes).
+2. §5 bench clock: Chromium worklets have NO performance.* — clock is Date.now (ms lattice). A
+   32-quanta windowed variant was tried and REJECTED (spans device-paced waiting; `bench-v1` log).
+   The publishable cost metric = offline marginal ramp (T1=1s vs T2=4s, page µs clock) + stats() FIFO
+   barrier (require active===N before startRendering; without it delivery races, `bench-v2` log).
+3. §9.3 ALIAS RESULTS — gates NOT MET (open): table in `verify/last-cdp_alias.log`; VA saw C4/A4 pass,
+   square/pulse + saw C6 + WT A4 fail. Fix wave = minBLEP Classic osc + margin policy + BH-window
+   metric amendment (see addendum 11).
+4. §9.4 stress: cap 64 (live pool; bench-verified), the min(published,32) placeholder was overridden.

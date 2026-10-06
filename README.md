@@ -5,10 +5,13 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **Phase 0 complete** — keyboard dock (61 keys) + MIDI deck live; battery green on
-frozen `index.html` sha cc601710… (134,019 B): smoke 9/9 · feel 18/18 · keys 27/27 · midi 33/33.
-Next: **P1** — worklet voice engine + measured voice-count benchmark.
-Resume at `CONTINUATION-2026-10-06.md`.
+Status 2026-10-07: **P1 core in** — worklet voice engine live (PolyBLEP + wavetable osc · TPT SVF ·
+env/LFO · unison/glide · pool + steal); battery green on frozen `index.html` sha 08e3c38f… (243,193 B):
+smoke 11/11 · feel 18/18 · keys 27/27 · midi 33/33; **measured: 128 voices at 38.7 % of the audio
+budget** (3 independent runs, delivery-verified) + 10-minute stress green at the 64-voice cap.
+OPEN (recorded): aliasing floors — saw passes C4/A4; VA square/pulse (all pitches) and saw C6 exceed
+the −45 dBc gate; WT rows show transition-band folds. Fix wave = minBLEP "Classic" oscillator +
+decimation/mip-margin policy. Resume at `CONTINUATION-2026-10-06.md` addendum 11.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)

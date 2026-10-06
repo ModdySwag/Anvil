@@ -231,6 +231,36 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   **128-note midi-space ceiling**. Realtime: **64/64 stable ×3 reps both variants, 0 underruns**;
   SPN fallback cell 8v ≈ 68 µs mean. Artifacts: `bench-v{1,2,3}*.{log,json}` (all three revisions of
   the story) + `last-cdp_bench.*` + `renders/p1-bench.png`. Rig: `--offline-only` flag exists.
-- **IN FLIGHT: alias + stress child (deleg_cab230c6)** — `verify/cdp_alias.mjs` (VA ≤ −45 dBc ≥C4 /
-  WT ≤ −80 dBc gates; determinism; 44.1 k spot) then `verify/cdp_stress.mjs` (10 min @ cap 64).
-  Then: final battery + `last-*` log refresh → README + addendum 11 + mnemosyne.
+## Resume addendum 11 — 2026-10-07 (P1 CLOSE-OUT: engine + benchmark done; aliasing blocker recorded)
+
+**Shipped + verified (frozen `08e3c38f`, 243,193 B):** the P1 voice engine — `av_dsp.js` (AVDSP kernels +
+voice pool), `av_voiceproc.js` (worklet), `av_engine.js` (tier ladder; file:// rides data:-URL worklets),
+`av_synth.js` (SYNTH card), build.py worklet embed, app_core wiring. Final battery green: smoke 11/11 ·
+feel 18/18 · keys 27/27 · midi 33/33 (logs in `verify/last-*.log`).
+
+**The measured number:** **128 voices at ~38.7 % of the 2667 µs budget** (three independent runs:
+1009.4 / 1030.9 / 1057.5 µs/q; monotone; every cell delivery-verified with the stats() barrier; baseline
+fixed cost 9.4 µs/q). The 50 %-budget knee extrapolates beyond the 128-note midi-space ceiling.
+Realtime: 64/64 stable ×3 reps both LIGHT and FAT, 0 underruns; SPN fallback 8v ≈ 68 µs mean.
+**10-minute stress GREEN** at cap 64: 0 underruns, heap +0.2 MB, 15/15 pool drains, 0 page errors.
+
+**Aliasing (`verify/cdp_alias.mjs`) — GATES NOT MET (the open blocker for "aliasing gates met"):**
+- VA saw C4 −52.8 / A4 −48.6 PASS; **saw C6 −39.8 FAIL** (23rd harmonic lands in the halfband
+  transition band 24.0–26.9 kHz and folds back partially attenuated).
+- **VA square −44.4/−39.5/−32.6, pulse −42.9/−37.7/−30.9 dBc — FAIL all pitches**; spurs sit at exact
+  2×-Nyquist folds = polyBLEP residual for harmonics above 48 kHz in the 2× domain (decimation cannot
+  fix them). Exactly the limit T5 §8 predicted for 2-point polyBLEP.
+- WT: real spurs −46.8 dBc on wt.saw/square/pulse25 @ A4 (harmonics 55–64 in the transition band);
+  other rows clean to the floor. The −80 dBc gate is NOT evaluable with the pinned ±3-bin Blackman
+  metric (leakage floor ≈ −57 dBc, proven with synthetic signals) — needs a Blackman-Harris window
+  amendment when the fix wave lands.
+- Determinism PASS (bit-identical pairs); 44.1 k spot PASS (saw C4 −53.1).
+
+**The fix wave (next, owner's call vs starting P2):** minBLEP "Classic" oscillator (already scoped in
+T5/research as the v1 quality tier) + a decimation/mip-margin policy pass (margin by the decimator's
+stopband edge, not 2× Nyquist) + alias-rig BH-window amendment → re-run cdp_alias.
+
+**Artifacts:** `bench-v{1,2,3}*.{log,json}` (full measurement story incl. two rejected designs),
+`last-cdp_bench.*` + `renders/p1-bench.png`; `cdp_alias.mjs` + `last-cdp_alias.log`; `cdp_stress.mjs` +
+`last-cdp_stress.log` + `renders/p1-stress.png`. **If resuming cold:** read `verify/_p1_wave.md`
+(AMENDMENTS at the end), then `verify/last-cdp_alias.log`.
