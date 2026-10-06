@@ -172,3 +172,23 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   **smoke 9/9 · feel 18/18 · keys 27/27 · midi 33/33 — P0 COMPLETE.**
 - Next milestone: **P1** — mixer AudioWorklet; PolyBLEP + wavetable osc; TPT SVF; env/LFO; voice pool +
   steal → run the T5 §7 proof benchmark and publish the measured voice count (spec docs/03 §2.1/§6).
+
+## Resume addendum 9 — 2026-10-07 (P1 wave started: engine contract frozen)
+
+- **P1 contract + pre-staged return plan: `verify/_p1_wave.md`** — read it FIRST when resuming. It pins
+  every interface: `av_dsp.js` (kernels + voice engine API + full param table + voice laws),
+  `av_voiceproc.js` (processor + message protocol), `av_engine.js` (tier ladder blob→data→spn, facade,
+  boot/resume, observables), `av_synth.js` (SYNTH card), build.py worklet embed, and the rig contracts
+  (cdp_bench / cdp_alias / cdp_stress).
+- **Halfband decimator designed + verified** (clean-room): `research/engine/hb_design.py` →
+  `research/engine/hb-coeffs.json`. Ship set = order 6 (3+3 allpass): 73.5 dB stopband, −3 dB @
+  23.999 kHz, power-comp err 4.7e-15; exact decimation algorithm verified 1.6e-12 (variant `sumB`:
+  even→A, odd→B, y = 0.5·(aOut[n] + bOut[n−1])).
+- **In flight: 4 file-scoped agents** — K: `src/av_dsp.js` + `src/av_voiceproc.js`; E:
+  `src/av_engine.js`; U: `src/av_synth.js`; B: `verify/cdp_bench.mjs` + `verify/_bench_mock.html`
+  (mock self-test only this phase; the real bench runs after integration). On return: verify files →
+  parent integration (contract §8) → build → **P0 battery re-run on the frozen bytes** → bench (B-run,
+  parent re-run owns the published number) → alias rig (C) → stress rig (D) — serialized, one browser
+  at a time. Voice count is published ONLY from the measured ramp (T5 §7).
+- P0 battery baseline (must still pass after integration): smoke 9/9 · feel 18/18 · keys 27/27 ·
+  midi 33/33 on cc601710.
