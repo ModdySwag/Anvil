@@ -7,19 +7,14 @@
    out {t:'ready', sr, maxVoices, os, version} | {t:'bench', id, data} | {t:'stats', id, data} */
 "use strict";
 
-/* Clock guard + windowed bench sampling. Chromium does NOT expose performance.* inside
-   AudioWorkletGlobalScope (probe-verified 2026-10-07 on this box: typeof performance ===
-   "undefined" in the audio scope, while the main thread has it), so the worklet's clock is
-   Date.now there - integer ms. Per-quantum ms reads would quantise the proof-benchmark ring to
-   0/1000/2000 us; with an ms clock the processor instead records ONE sample per 32-quanta
-   window (window us, frames = 32*128) - av_dsp.recordQuantum normalises to the per-128-frame
-   equivalent, keeping ~31 us precision per sample. Where a us clock exists (performance.now in
-   the audio scope, per browser), timing stays per-quantum as pinned by the contract. */
-const AV_PROC_PERF = (typeof performance !== 'undefined' && typeof performance.now === 'function');
-const NOW_US = AV_PROC_PERF
-  ? () => performance.now() * 1000
-  : () => Date.now() * 1000;
-const AV_PROC_WINDOW = AV_PROC_PERF ? 1 : 32;   /* quanta per bench sample */
+/* BENCH CLOCK (probe-verified 2026-10-07): Chromium does not expose performance.* inside
+   AudioWorkletGlobalScope, so the worklet clock is Date.now (integer ms) here: per-quantum
+   readings carry an ms lattice - the mean is ~unbiased over a hold; the tail is coarse below
+   1 ms. A 32-quanta windowed variant was tried and REJECTED: a window spans the device-paced
+   waiting between process() calls (a ~2.59 ms/quantum floor measured at ONE voice), so window
+   spans measure pacing, not render cost. Publishable cost numbers come from the offline
+   marginal-cost ramp (verify/cdp_bench.mjs); the live ring stays per-quantum. */
+const NOW = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? () => performance.now() : () => Date.now();
 
 class AVVoiceProcessor extends AudioWorkletProcessor {
   constructor(options) {
@@ -28,8 +23,6 @@ class AVVoiceProcessor extends AudioWorkletProcessor {
     const mo = (options && options.processorOptions) || {};
     const mv = mo.maxVoices || 64;
     this.engine = AVDSP.create({ sampleRate: sampleRate, maxVoices: mv });
-    this.win = 0;          /* bench-window state (ms-clock path only) */
-    this.winT0 = 0;
     this.port.onmessage = (ev) => {
       const m = (ev && ev.data) ? ev.data : {};
       const eng = this.engine;
@@ -61,21 +54,9 @@ class AVVoiceProcessor extends AudioWorkletProcessor {
     const out0 = outputs[0];
     const l = out0[0];
     const r = out0[1];
-    if (AV_PROC_WINDOW === 1) {
-      /* us clock available in the audio scope: per-quantum sample, as pinned */
-      const t0 = NOW_US();
-      AVDSP.render(this.engine, l, r, l.length);
-      AVDSP.recordQuantum(this.engine, NOW_US() - t0, l.length);
-      return true;
-    }
-    /* ms clock (Chromium worklets): one timed window per AV_PROC_WINDOW quanta */
-    if (this.win === 0) this.winT0 = NOW_US();
+    const t0 = NOW();
     AVDSP.render(this.engine, l, r, l.length);
-    this.win += 1;
-    if (this.win >= AV_PROC_WINDOW) {
-      AVDSP.recordQuantum(this.engine, NOW_US() - this.winT0, this.win * 128);
-      this.win = 0;
-    }
+    AVDSP.recordQuantum(this.engine, (NOW() - t0) * 1000, 128);
     return true;
   }
 }
