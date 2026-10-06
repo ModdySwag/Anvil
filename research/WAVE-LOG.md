@@ -68,3 +68,9 @@ Folding plan: parent-verify → `docs/06-github-goldmine.md` + implementation-sp
 - Files: `research/github/G1` (18 entries, 50.5 KB) · `G2` (20, 34.9 KB) · `G3` (17 + 80-row feature menu, 63.7 KB). Counts match self-reports.
 - Parent spot-checks: Airwindows MIT ✓ · SpessaSynth Apache-2.0 ✓ · Vaporizer2 GPL-3.0 ✓ · eurorack README live (per-file split child-verified, audit required before any port) · Dexed msfa path flagged.
 - Folded into `docs/06-github-goldmine.md` (headlines + v1×16 item list + adopt-lib shortlist) + 03 §8 pointer. Ranked menu: v1×16 / v1.x×41 / later×22.
+
+## P0 build — master tap ported (2026-10-07)
+
+- `src/av_tap.js` ported from PF `pfInstallAudioTap` discipline (T9 §12): destination-getter install BEFORE any AudioContext; chain `<sources> → KEYS bus → MASTER gain → speakers`; `ctx.destination` returns the KEYS bus; `?avtest=1` runtime self-test (viaTap/keysBus/masterNode) verified headless.
+- build.py `js_parts` = [av_tap.js, app_core.js]; **index.html 15,291 B · sha256 8ec7f726ccd417d77ec8be7ebfbd85638e4ed3b246911f632d00286d57d557f9**; screenshot `renders/p0-tap.png`.
+- Next: knob framework port (av_knob.js) → CDP harness + smoke suite.

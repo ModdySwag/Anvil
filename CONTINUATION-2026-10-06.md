@@ -9,13 +9,18 @@ folder still lingers it is a file-handle artifact — delete it whenever Windows
 - Build tree live: `build.py` (explicit js_parts order · `</script` guard · strict
   `node --check` parser guard · sha identity), `src/{head.html,styles.css,body.html,app_core.js}`,
   `verify/`, `harvest/`, `renders/`.
-- **index.html built: 6,853 bytes · sha256 2fc8e71862d20361add6f43500cc722618029217e3f8ff8bc2cfe9f7e47828e0**
+- **index.html built: sha256 2fc8e71862d20361add6f43500cc722618029217e3f8ff8bc2cfe9f7e47828e0** (shell)
 - First-light screenshot: `renders/p0-shell.png` (Edge headless, 1440×900).
 - Git repo initialized (main); commits: P0 scaffold + P0 build/shell.
 
+## Done since first pass
+- **Master tap PORTED** → `src/av_tap.js` (destination-getter install; KEYS bus → MASTER gain → speakers;
+avKeysFor/avMasterNodes/avMasterApply/avKeysApply + meter attach; offline renders excluded from live registry).
+- **index.html rebuilt: 15,291 bytes · sha256 8ec7f726ccd417d77ec8be7ebfbd85638e4ed3b246911f632d00286d57d557f9**
+- Runtime proof: open `index.html?avtest=1` → TAP SELFTEST line shows viaTap/keysBus/masterNode true (headless Edge screenshot `renders/p0-tap.png`).
+
 ## Next (Phase 0 remainder)
-1. **Master tap port** — `pfInstallAudioTap` semantics: patch `BaseAudioContext.prototype.destination`,
-   KEYS/BEATS/MASTER bus chain; witness laws (verifiers own their AnalyserNode; blend=synth).
+1. ~~Master tap port~~ **DONE (av_tap.js)** — extend with avKeysFor usage when the engine lands.
 2. **Knob framework port** (PF app_knob.js → av_knob.js) + feel suite.
 3. **Harness port** — CDP launch laws (1440×900 device metrics, --mute-audio, temp profile,
    explicit exit) + smoke suite (boot → `data-av-ready` → chips filled → zero console errors).

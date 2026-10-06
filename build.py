@@ -24,6 +24,7 @@ css = (SRC / "styles.css").read_text(encoding="utf-8")
 body = (SRC / "body.html").read_text(encoding="utf-8")
 
 js_parts = [
+    (SRC / "av_tap.js").read_text(encoding="utf-8"),   # LAW: the tap installs before any engine code
     (SRC / "app_core.js").read_text(encoding="utf-8"),
 ]
 
