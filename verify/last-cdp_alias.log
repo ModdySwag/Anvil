@@ -1,0 +1,62 @@
+freeze sha256 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0 (243193 B) [index.html]
+server: http://127.0.0.1:9500/ (repo root C:\Users\Moddy\anvil)
+devtools port: 9501
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+url: http://127.0.0.1:9500/index.html?avtest=1
+=== ANVIL alias rig === (contract §9.3; FFT 2^17 in-page; Blackman; mask ±3 bins; ignore < 20 Hz)
+protocol: 3 s renders · one held note per case · stats() delivery barrier (active===1) before startRendering · segment = last 2^17 samples
+cases: VA [saw,square,pulse,tri,sine] · WT [wt.saw,wt.square,wt.tri,wt.sine,wt.pulse25] @ C4 261.6256 Hz / A4 440.0000 Hz / C6 1046.5023 Hz
+gates: VA <= -45 dBc · WT <= -80 dBc · diagnostic: same spur with a ±30-bin mask (NOT the contract metric)
+engine surface: attr=worklet live={"tier":"worklet","url":"blob","sr":48000,"maxVoices":64,"ready":true} avEngineBoot=global
+--- analysis validation (synthetic, runs BEFORE any case) ---
+ on-bin sine 1831.0547 Hz -> worst spur -138.34 dBc  [require < -120] PASS
+ off-bin sine floors (Blackman leakage of the ±3-bin metric): C4 -57.46 dBc · A4 -57.13 dBc · C6 -58.18 dBc
+ hand-built bandlimited saw C4 -> -57.46 dBc (mask3, floor identity ok) · -106.06 dBc (mask30)
+--- cases (osc alone; levels 0/1 per case; lp12 20000 reso 0 envAmt 0; env1.s=1; ONE note held; stats barrier) ---
+  VA saw C4          spur3  -52.78 dBc @23930.42 Hz (gate -45 -> PASS) | m30  -52.78 dBc | tier worklet:blob active=1 rms=0.092 peak=0.188
+  VA saw A4          spur3  -48.61 dBc @23800.05 Hz (gate -45 -> PASS) | m30  -48.61 dBc | tier worklet:blob active=1 rms=0.091 peak=0.191
+  VA saw C6          spur3   -39.8 dBc @23930.42 Hz (gate -45 -> FAIL) | m30   -39.8 dBc | tier worklet:blob active=1 rms=0.089 peak=0.185
+  VA square C4       spur3  -44.41 dBc @2076.42 Hz (gate -45 -> FAIL) | m30  -44.41 dBc | tier worklet:blob active=1 rms=0.159 peak=0.215
+  VA square A4       spur3  -39.45 dBc @3160.03 Hz (gate -45 -> FAIL) | m30  -39.45 dBc | tier worklet:blob active=1 rms=0.159 peak=0.217
+  VA square C6       spur3  -32.63 dBc @768.31 Hz (gate -45 -> FAIL) | m30  -32.63 dBc | tier worklet:blob active=1 rms=0.158 peak=0.227
+  VA pulse C4        spur3  -42.88 dBc @5739.26 Hz (gate -45 -> FAIL) | m30  -42.88 dBc | tier worklet:blob active=1 rms=0.159 peak=0.215
+  VA pulse A4        spur3  -37.65 dBc @1400.02 Hz (gate -45 -> FAIL) | m30  -37.65 dBc | tier worklet:blob active=1 rms=0.159 peak=0.218
+  VA pulse C6        spur3  -30.94 dBc @7047.36 Hz (gate -45 -> FAIL) | m30  -30.94 dBc | tier worklet:blob active=1 rms=0.158 peak=0.226
+  VA tri C4          spur3  -57.46 dBc @262.94 Hz (gate -45 -> PASS) | m30  -94.56 dBc | tier worklet:blob active=1 rms=0.092 peak=0.159
+  VA tri A4          spur3  -57.13 dBc @441.28 Hz (gate -45 -> PASS) | m30  -81.54 dBc | tier worklet:blob active=1 rms=0.092 peak=0.158
+  VA tri C6          spur3  -58.18 dBc @1045.17 Hz (gate -45 -> PASS) | m30  -65.21 dBc | tier worklet:blob active=1 rms=0.092 peak=0.154
+  VA sine C4         spur3  -57.46 dBc @262.94 Hz (gate -45 -> PASS) | m30 -106.06 dBc | tier worklet:blob active=1 rms=0.113 peak=0.16
+  VA sine A4         spur3  -57.13 dBc @441.28 Hz (gate -45 -> PASS) | m30 -105.34 dBc | tier worklet:blob active=1 rms=0.113 peak=0.16
+  VA sine C6         spur3  -58.18 dBc @1045.17 Hz (gate -45 -> PASS) | m30 -106.97 dBc | tier worklet:blob active=1 rms=0.113 peak=0.16
+  WT wt.saw C4       spur3  -57.46 dBc @262.94 Hz (gate -80 -> FAIL) | m30 -106.06 dBc | tier worklet:blob active=1 rms=0.074 peak=0.148
+  WT wt.saw A4       spur3  -46.76 dBc @23800.05 Hz (gate -80 -> FAIL) | m30  -46.76 dBc | tier worklet:blob active=1 rms=0.074 peak=0.158
+  WT wt.saw C6       spur3  -58.18 dBc @1045.17 Hz (gate -80 -> FAIL) | m30 -106.97 dBc | tier worklet:blob active=1 rms=0.072 peak=0.144
+  WT wt.square C4    spur3  -57.46 dBc @262.94 Hz (gate -80 -> FAIL) | m30 -106.06 dBc | tier worklet:blob active=1 rms=0.128 peak=0.15
+  WT wt.square A4    spur3  -46.76 dBc @23800.05 Hz (gate -80 -> FAIL) | m30  -46.76 dBc | tier worklet:blob active=1 rms=0.128 peak=0.162
+  WT wt.square C6    spur3  -58.18 dBc @1045.17 Hz (gate -80 -> FAIL) | m30 -106.97 dBc | tier worklet:blob active=1 rms=0.126 peak=0.153
+  WT wt.tri C4       spur3  -57.46 dBc @262.94 Hz (gate -80 -> FAIL) | m30 -106.06 dBc | tier worklet:blob active=1 rms=0.088 peak=0.151
+  WT wt.tri A4       spur3  -57.13 dBc @441.28 Hz (gate -80 -> FAIL) | m30  -81.56 dBc | tier worklet:blob active=1 rms=0.088 peak=0.15
+  WT wt.tri C6       spur3  -58.18 dBc @1045.17 Hz (gate -80 -> FAIL) | m30 -106.97 dBc | tier worklet:blob active=1 rms=0.088 peak=0.147
+  WT wt.sine C4      spur3  -57.46 dBc @262.94 Hz (gate -80 -> FAIL) | m30 -106.06 dBc | tier worklet:blob active=1 rms=0.107 peak=0.152
+  WT wt.sine A4      spur3  -57.13 dBc @441.28 Hz (gate -80 -> FAIL) | m30 -105.34 dBc | tier worklet:blob active=1 rms=0.107 peak=0.152
+  WT wt.sine C6      spur3  -58.18 dBc @1045.17 Hz (gate -80 -> FAIL) | m30 -106.97 dBc | tier worklet:blob active=1 rms=0.107 peak=0.152
+  WT wt.pulse25 C4   spur3  -57.46 dBc @262.94 Hz (gate -80 -> FAIL) | m30 -106.06 dBc | tier worklet:blob active=1 rms=0.078 peak=0.151
+  WT wt.pulse25 A4   spur3  -46.76 dBc @23800.05 Hz (gate -80 -> FAIL) | m30  -46.76 dBc | tier worklet:blob active=1 rms=0.077 peak=0.159
+  WT wt.pulse25 C6   spur3  -58.18 dBc @1045.17 Hz (gate -80 -> FAIL) | m30 -106.97 dBc | tier worklet:blob active=1 rms=0.076 peak=0.154
+--- cross-rate spot (44.1 kHz) ---
+  cross 44.1k VA saw C4  spur3 -53.06 dBc @21861.92 Hz | m30 -53.06 dBc | tier worklet:blob active=1
+  cross 44.1k WT wt.saw A4 spur3 -50.45 dBc @21660.05 Hz | m30 -50.45 dBc | tier worklet:blob active=1
+--- determinism (two fresh offline engines, same patch/note; require max abs diff === 0) ---
+  det VA saw C4        maxAbsDiff=0 identical=true len=144000/144000
+  det WT wt.saw C4     maxAbsDiff=0 identical=true len=144000/144000
+==== ALIAS SUMMARY ====
+freeze: sha256 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0 (243193 B)
+validation: on-bin sine -138.34 dBc (< -120 required) -> PASS
+leakage floor (mask3, off-bin sine): C4 -57.46 · A4 -57.13 · C6 -58.18 dBc
+gates: VA FAIL (worst VA pulse C6 -30.94 dBc, gate -45) · WT FAIL (worst WT wt.saw A4 -46.76 dBc, gate -80; see floor note)
+determinism: PASS (det VA saw C4:0 · det WT wt.saw C4:0)
+failed cases: 0 · cross-rate rows: 2
+console messages: 2
+  [log] [anvil] boot — v0.1.0 tap=true knobs=true kb=true midi=true synth=true
+  [log] [anvil] engine ready — worklet:blob · sr 48000 · voices 64
+ALIAS-RESULT {"sha256":"08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0","verdict":"gates-not-met","validation":{"onBinDBc":-138.33694543328494,"onBinPass":true},"gates":{"va":{"verdict":"FAIL","threshold":-45,"cases":15,"worst":{"v":-30.935885936108733,"name":"VA pulse C6"}},"wt":{"verdict":"FAIL","threshold":-80,"cases":15,"worst":{"v":-46.75545359714506,"name":"WT wt.saw A4"}},"determinism":{"verdict":"PASS","pairs":[{"name":"det VA saw C4","maxAbsDiff":0,"identical":true},{"name":"det WT wt.saw C4","maxAbsDiff":0,"identical":true}]},"failedCases":0,"floorNote":"Blackman leakage floor of the ±3-bin metric is ~-57 dBc (validated: off-bin sine + hand-built saw both sit there). The WT -80 gate cannot be evaluated below that floor by this metric; the m30 diagnostic column is the leakage-excluded view (not the contract metric)."},"determinism":[{"name":"det VA saw C4","maxAbsDiff":0,"identical":true},{"name":"det WT wt.saw C4","maxAbsDiff":0,"identical":true}]}
