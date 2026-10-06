@@ -1,8 +1,9 @@
 /* av_dsp.js -- Anvil P1 voice engine: pure DSP kernels + the voice pool.
    Contract: verify/_p1_wave.md section 3 (halfband decimator, exact algorithm) and section 4
-   (av_dsp interface pin). One text, three scopes: bundled in the single-file app (the SPN tier
-   calls it directly), concatenated into the audio-worklet module with av_voiceproc.js (build.py),
-   and loaded verbatim by node scratch rigs. LAWS (do not drift):
+   (av_dsp interface pin); P1.x minBLEP wave: verify/_p1x_blep_wave.md (sections 2-3).
+   One text, three scopes: bundled in the single-file app (the SPN tier calls it directly),
+   concatenated into the audio-worklet module with av_voiceproc.js (build.py), and loaded
+   verbatim by node scratch rigs. LAWS (do not drift):
    - exactly ONE top-level name (`AVDSP`); the build's strict node --check must stay quiet.
    - no page/global-scope reach-ins of any kind: this file text runs verbatim inside the audio
      scope, where none of them exist.
@@ -12,6 +13,10 @@
      same note order gives bit-identical renders (the null/alias rigs rely on it).
    - voice core runs at 2x (osc + filter + sub + noise); the per-voice halfband decimator converts
      to base rate; amp env + LFO step at base rate. Nothing in absolute Hz-samples.
+   - VA saw/square/pulse/sub-square are the minBLEP "Classic" oscillator (P1.x): naive waveform
+     plus a band-limited step residual deposited into a per-slot correction ring; the ring's read
+     trails the deposit by the half-table span W (a fixed ~0.33 ms oscillator latency, inaudible,
+     and identical across all VA slots). tri/sine/WT stay as they were.
    - parameters: verify/_p1_wave.md section 4.2 is the single source of truth. Unknown path ->
      setParam returns false, never throws. */
 "use strict";
@@ -19,7 +24,7 @@
 const AVDSP = (function () {
 
   /* ---- constants ---- */
-  const VERSION = "p1.0";
+  const VERSION = "p1.1";
   const OS = 2;                                  /* voice-core oversampling factor */
   const TAU = Math.PI * 2;
   const SINE_N = 4096;                           /* sine LUT entries */
@@ -30,9 +35,36 @@ const AVDSP = (function () {
   const FILTER_MODES = ["lp12", "lp24", "bp", "hp"];
   const SUB_WAVES = ["square", "sine"];
   const LFO_SHAPES = ["sine", "tri", "square", "sh"];
-  /* halfband ship set: order 6, 3+3 allpass sections (research/engine/hb-coeffs.json) */
-  const HB_A = new Float64Array([0.0500126042527, 0.364414899325, 0.735773412262]);
-  const HB_B = new Float64Array([0.183957727747, 0.554852766862, 0.909374288911]);
+  /* halfband ship set: order 8, 4+4 allpass sections (P1.x decimator swap, contract 3c).
+     Was order 6 (3+3) from research/engine/hb-coeffs.json; the P1.x study (hb_design.py --study)
+     showed the 4+4 alternative is +22.1 dB (mean) deeper over 24-27 kHz with a flatter passband
+     (-0.13 dB @ 23.5k vs -0.5), and the node harness then improved every VA row by ~4-5 dB
+     (saw C6 -54.4 -> -59.0 dBc) with zero regressions - so it ships. hb_design.py --study prints
+     the search + comparison; the json still labels the old (3,3) set as ship (parent re-labels). */
+  const HB_A = new Float64Array([0.830835156043, 0.581828125595, 0.281947153869, 0.0376716808361]);
+  const HB_B = new Float64Array([0.140157501378, 0.435551190198, 0.713070914873, 0.942688824121]);
+
+  /* ---- minBLEP "Classic" oscillator constants (P1.x; contract section 2) ----------------
+     The band-limited step residual table is built ONCE in buildTables() from first principles
+     (own construction, no third-party tables): a Blackman-Harris-windowed sinc lowpass at
+     cutoff BLEP_FC * fs2 is cumulative-summed into a step response S(x), normalised so
+     S(-inf)=0 / S(+inf)=1, and the residual TAB[sub][i] = S(i - W + sub/SUBS) - [i >= W]
+     is sampled at 256 sub-sample positions ("sub") over 2W+1 taps ("i": the sample offsets
+     around the discontinuity). At a waveform jump of size J at fractional position p between
+     two 2x samples, the oscillator deposits J*TAB into a per-slot ring; the ring is read W
+     steps behind the write cursor, which is exactly the half-table lag that lets the pre-edge
+     samples of the residual window still be corrected (the classic efficient minBLEP form).
+     W=32 (65 taps) / M=128 design: residual truncation at the window edges ~ -57 dB, deposit
+     cost only at discontinuities; the design + calibration record lives in the P1.x scratch
+     harness (scratch/blep/alias_node.mjs) and the wave report. */
+  const BLEP_W = 32;                             /* ring half-span: deposit window = 2W+1 samples */
+  const BLEP_N = 2 * BLEP_W + 1;                 /* taps per discontinuity (65) */
+  const BLEP_RL = 128;                           /* per-slot ring length (pow2 >= BLEP_N) */
+  const BLEP_MASK = BLEP_RL - 1;
+  const BLEP_SUBS = 256;                         /* sub-sample positions */
+  const BLEP_M = 128;                            /* design taps (window support) */
+  const BLEP_FC = 0.229;                         /* design cutoff as a fraction of the 2x rate */
+  const WT_TOP = 0.49;                           /* mip margin: top kept harmonic < WT_TOP * base sr */
 
   /* ---- module tables (built once by buildTables) ---- */
   let tablesBuilt = false;
@@ -40,6 +72,7 @@ const AVDSP = (function () {
   const wtBank = [];
   const fftRe = new Float64Array(WT_N);
   const fftIm = new Float64Array(WT_N);
+  const blepTab = new Float64Array(BLEP_SUBS * BLEP_N);   /* minBLEP residual, [sub][i] */
 
   /* ---- small helpers (never called inside render's voice loop unless stated) ---- */
   function cl(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
@@ -47,13 +80,6 @@ const AVDSP = (function () {
   function mapEnum(value, list) {
     const i = list.indexOf(String(value));
     return i;
-  }
-
-  /* two-point polyBLEP, exact form pinned by the contract (section 4.3) */
-  function polyBLEP(t, dt) {
-    if (t < dt) { t /= dt; return 2 * (t - t * t / 2 - 0.5); }
-    if (t > 1 - dt) { t = (t - 1) / dt; return t * t + 2 * t + 1; }
-    return 0;
   }
 
   /* sine LUT, linear interpolation; phase in [0,1) (callers keep it there) */
@@ -186,6 +212,40 @@ const AVDSP = (function () {
           wtBank[w * WT_LEVELS + k] = fr;
         }
       }
+      /* minBLEP residual table (P1.x, contract section 2). Own deterministic construction:
+         h[n] = 2*fc*sinc(2*fc*(n - C)) * wBH(n), C = M/2, fc = BLEP_FC (fraction of fs2, so the
+         design is sample-rate independent); cumulate h into the step response S and normalise
+         S(+-inf) -> 0/1; sample the residual r(x) = S(x) - u(x) at x = i - W + sub/256.
+         The peak |r| at the table edges is the residual truncation (~1e-3 here); the matching
+         deposit/read scheme in voiceStep2x makes the corrected VA slots equal the naive
+         waveform minus its band-limited step error (calibrated by scratch/blep/alias_node.mjs). */
+      {
+        const M = BLEP_M, C = M / 2;
+        const h = new Float64Array(M);
+        for (let n = 0; n < M; n++) {
+          const d = n - C;
+          const sinc = (d === 0) ? 1 : Math.sin(TAU * BLEP_FC * d) / (TAU * BLEP_FC * d);
+          const wd = n / (M - 1);
+          const wbh = 0.35875 - 0.48829 * Math.cos(TAU * wd) + 0.14128 * Math.cos(2 * TAU * wd)
+                    - 0.01168 * Math.cos(3 * TAU * wd);
+          h[n] = 2 * BLEP_FC * sinc * wbh;
+        }
+        const cum = new Float64Array(M + 1);
+        for (let n = 0; n < M; n++) cum[n + 1] = cum[n] + h[n];
+        const total = cum[M];
+        for (let sub = 0; sub < BLEP_SUBS; sub++) {
+          const p = sub / BLEP_SUBS;
+          const base = sub * BLEP_N;
+          for (let i = 0; i < BLEP_N; i++) {
+            const xc = i - BLEP_W + p + C;             /* x + C, for the cumsum lookup */
+            let S;
+            if (xc <= 0) S = 0;
+            else if (xc >= M) S = total;
+            else { const k = xc | 0; S = cum[k] + (xc - k) * h[k]; }
+            blepTab[base + i] = S / total - (i >= BLEP_W ? 1 : 0);
+          }
+        }
+      }
       tablesBuilt = true;
     }
     return { ok: true, ms: Date.now() - t0 };
@@ -212,11 +272,20 @@ const AVDSP = (function () {
       out.wt.push({ name: WT_NAMES[w], first: f0[0], peak: peak });
       for (let k = 0; k < WT_LEVELS; k++) h = fnvF64(wtBank[w * WT_LEVELS + k], h);
     }
+    h = fnvF64(blepTab, h);
     out.hash = ("00000000" + h.toString(16)).slice(-8);
+    out.blep = { taps: BLEP_N, subs: BLEP_SUBS, mid: blepTab[(BLEP_SUBS >> 1) * BLEP_N + BLEP_W] };
     return out;
   }
 
   /* ---- voice construction (every field initialised here: monomorphic shape) ---- */
+  /* one bank of per-slot minBLEP rings (called only from makeVoice) */
+  function blepRingBank(n) {
+    const a = new Array(n);
+    for (let i = 0; i < n; i++) a[i] = new Float64Array(BLEP_RL);
+    return a;
+  }
+
   function makeVoice() {
     return {
       state: 0,                     /* 0 idle · 1 active · 2 released · 3 steal-fading */
@@ -230,6 +299,11 @@ const AVDSP = (function () {
       det1: new Float64Array(7), det2: new Float64Array(7),
       inc1v: new Float64Array(7), inc2v: new Float64Array(7),
       ph1: new Float64Array(7), ph2: new Float64Array(7), phSub: 0,
+      /* minBLEP state (P1.x): per-slot correction rings + delayed-naive buffers, one bank for
+         osc1's unison slots and one pair for the sub oscillator; all slots share t2x. */
+      bR1: blepRingBank(7), bN1: blepRingBank(7),
+      bRS: new Float64Array(BLEP_RL), bNS: new Float64Array(BLEP_RL),
+      t2x: 0,
       sa0: 0, sa1: 0, sa2: 0, sb0: 0, sb1: 0, sb2: 0, bPrev: 0,
       ic1a: 0, ic2a: 0, ic1b: 0, ic2b: 0,
       a1: 0, a2: 0, a3: 0, fk: 2,
@@ -410,8 +484,15 @@ const AVDSP = (function () {
     v.inc1 = f * eng.tune1F / eng.fs2;
     v.inc2 = f * eng.tune2F / eng.fs2;
     v.incSub = f / (2 * eng.fs2);
-    let k = Math.ceil(Math.log2(3072 * v.inc2));         /* contract 4.3 mip select */
+    let k = Math.ceil(Math.log2(3072 * v.inc2));         /* contract 4.3 base mip select */
     if (k > 10) k = 10; else if (k < 0) k = 0;
+    /* P1.x mip margin (contract section 3a): the base rule may leave the top kept harmonic up
+       to fs2/3 ~ 32 kHz, i.e. inside the halfband transition band, where partially-attenuated
+       content folds back through the decimator (measured pre-fix: WT @A4 -46.8 dBc). Step the
+       mip level up until the top harmonic sits below WT_TOP * sr - the decimator's essentially
+       flat region (droop < ~0.5 dB) - so nothing can fold. Levels are octave-spaced, so at
+       most one bump is ever needed (top halves <= 16 kHz, inside the flat region). */
+    while (k < 10 && (1024 >> k) * v.inc2 * eng.fs2 > WT_TOP * eng.sr) k++;
     v.mip2 = k;
     for (let i = 0; i < v.uni1; i++) v.inc1v[i] = v.inc1 * v.det1[i];
     for (let i = 0; i < v.uni2; i++) v.inc2v[i] = v.inc2 * v.det2[i];
@@ -444,6 +525,10 @@ const AVDSP = (function () {
     v.sb0 = 0; v.sb1 = 0; v.sb2 = 0;
     v.bPrev = 0;
     v.ic1a = 0; v.ic2a = 0; v.ic1b = 0; v.ic2b = 0;
+    /* minBLEP: fresh note -> zero every correction ring + delayed-naive buffer, step counter 0 */
+    for (let i = 0; i < 7; i++) { v.bR1[i].fill(0); v.bN1[i].fill(0); }
+    v.bRS.fill(0); v.bNS.fill(0);
+    v.t2x = 0;
     /* envelopes: attack linear at 1/(A*sr) per output sample; decay/release exp to -40 dB */
     v.e1Astep = 1 / (eng.e1a * eng.sr);
     v.e1Dc = Math.exp(-4.6 / (eng.e1d * eng.sr));
@@ -549,36 +634,61 @@ const AVDSP = (function () {
 
   /* ---- render --- */
 
-  /* one 2x-rate sample of the voice core: osc mix -> SVF (contract 4.3) */
+  /* deposit one discontinuity's residual into a slot ring (minBLEP, P1.x contract section 2).
+     ring: the slot's correction ring; t: 2x step index of the first post-edge sample; j: the
+     naive jump size (after - before); p: edge position as a fraction of the sample interval,
+     read as (phase AFTER the edge - edge phase)/increment, so p in [0,1) by construction.
+     Entry i lands on sample (t - W + i) at x = i - W + p; samples before the note start
+     (t - W + i < 0) are skipped - their reads never happen. */
+  function blepDeposit(ring, t, j, p) {
+    let sub = (p * BLEP_SUBS) | 0;
+    if (sub >= BLEP_SUBS) sub = BLEP_SUBS - 1;
+    const base = sub * BLEP_N;
+    const i0 = t < BLEP_W ? BLEP_W - t : 0;
+    for (let i = i0; i < BLEP_N; i++) {
+      const idx = (t - BLEP_W + i) & BLEP_MASK;
+      ring[idx] += j * blepTab[base + i];
+    }
+  }
+
+  /* one 2x-rate sample of the voice core: osc mix -> SVF (contract 4.3).
+     VA saw/square/pulse (and the sub square) run the minBLEP "Classic" oscillator: the naive
+     value is written into the slot's delayed-naive buffer and read back BLEP_W steps later
+     together with the slot's correction ring (which by then holds every edge's residual
+     deposit covering that sample); the sum is the band-limited waveform. Deposits run only at
+     discontinuities; reads are the flat 1-add/sample part. */
   function voiceStep2x(eng, v) {
+    const t = v.t2x;
+    v.t2x = t + 1;
     let o1 = 0;
     const t1 = eng.osc1Type, u1 = v.uni1, ph1 = v.ph1, inc1v = v.inc1v;
-    if (t1 === 0) {
-      for (let i = 0; i < u1; i++) {
-        const tt = ph1[i], dt = inc1v[i];
-        o1 += 2 * tt - 1 - polyBLEP(tt, dt);
-        let nn = tt + dt; if (nn >= 1) nn -= 1;
-        ph1[i] = nn;
-      }
-    } else if (t1 === 1) {
-      for (let i = 0; i < u1; i++) {
-        const tt = ph1[i], dt = inc1v[i];
-        o1 += (tt < 0.5 ? 1 : -1) - polyBLEP(tt, dt) + polyBLEP((tt + 0.5) % 1, dt);
-        let nn = tt + dt; if (nn >= 1) nn -= 1;
-        ph1[i] = nn;
-      }
-    } else if (t1 === 2) {
+    if (t1 < 3) {
       const pw = eng.cPw;
+      const E = (t1 === 1) ? 0.5 : pw;             /* square edge phase; pulse duty edge */
+      const jW = (t1 === 0) ? -2 : 2;              /* saw drops at the wrap; square/pulse rise */
       for (let i = 0; i < u1; i++) {
-        const tt = ph1[i], dt = inc1v[i];
-        o1 += (tt < pw ? 1 : -1) - polyBLEP(tt, dt) + polyBLEP((tt + 1 - pw) % 1, dt);
-        let nn = tt + dt; if (nn >= 1) nn -= 1;
-        ph1[i] = nn;
+        const dt = inc1v[i], phOld = ph1[i];
+        let ph = phOld + dt;
+        const phRaw = ph;
+        let pW = -1, pH = -1;
+        if (phRaw >= 1) { ph = phRaw - 1; pW = ph / dt; }
+        if (t1 !== 0 && phOld < E && phRaw >= E) pH = (phRaw - E) / dt;
+        if (pW >= 0) blepDeposit(v.bR1[i], t, jW, pW);
+        if (pH >= 0) blepDeposit(v.bR1[i], t, -2, pH);
+        const naive = (t1 === 0) ? (2 * ph - 1) : (ph < E ? 1 : -1);
+        const nb = v.bN1[i];
+        nb[t & BLEP_MASK] = naive;
+        if (t >= BLEP_W) {
+          const b = (t - BLEP_W) & BLEP_MASK;
+          o1 += nb[b] + v.bR1[i][b];
+          v.bR1[i][b] = 0;
+        }
+        ph1[i] = ph;
       }
     } else if (t1 === 3) {
       for (let i = 0; i < u1; i++) {
         const tt = ph1[i], dt = inc1v[i];
-        o1 += 1 - 4 * Math.abs(tt - 0.5);                       /* naive tri (upgrade lever) */
+        o1 += 1 - 4 * Math.abs(tt - 0.5);                       /* naive tri (unchanged) */
         let nn = tt + dt; if (nn >= 1) nn -= 1;
         ph1[i] = nn;
       }
@@ -602,14 +712,33 @@ const AVDSP = (function () {
       ph2[i] = nn;
     }
     o2 *= v.uni2Gain * eng.cOsc2Level;
-    /* sub -- polyBLEP square (or LUT sine) at f/2 */
+    /* sub -- minBLEP square (or LUT sine) at f/2 */
     let so = 0;
     if (eng.cSubLevel > 0) {
-      const tt = v.phSub, dt = v.incSub;
-      if (eng.subWave === 1) so = sineLut(tt);
-      else so = (tt < 0.5 ? 1 : -1) - polyBLEP(tt, dt) + polyBLEP((tt + 0.5) % 1, dt);
-      let nn = tt + dt; if (nn >= 1) nn -= 1;
-      v.phSub = nn;
+      const dt = v.incSub;
+      if (eng.subWave === 1) {
+        const tt = v.phSub;
+        so = sineLut(tt);
+        let nn = tt + dt; if (nn >= 1) nn -= 1;
+        v.phSub = nn;
+      } else {
+        const phOld = v.phSub;
+        let ph = phOld + dt;
+        const phRaw = ph;
+        let pW = -1, pH = -1;
+        if (phRaw >= 1) { ph = phRaw - 1; pW = ph / dt; }
+        if (phOld < 0.5 && phRaw >= 0.5) pH = (phRaw - 0.5) / dt;
+        if (pW >= 0) blepDeposit(v.bRS, t, 2, pW);
+        if (pH >= 0) blepDeposit(v.bRS, t, -2, pH);
+        const naive = (ph < 0.5) ? 1 : -1;
+        v.bNS[t & BLEP_MASK] = naive;
+        if (t >= BLEP_W) {
+          const b = (t - BLEP_W) & BLEP_MASK;
+          so = v.bNS[b] + v.bRS[b];
+          v.bRS[b] = 0;
+        }
+        v.phSub = ph;
+      }
       so *= eng.cSubLevel;
     }
     /* noise -- engine PRNG, bipolar */
