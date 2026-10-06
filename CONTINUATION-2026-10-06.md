@@ -41,3 +41,33 @@ Then **P1**: mixer AudioWorklet + PolyBLEP/wavetable osc + SVF + env/LFO + voice
 ## Open later-phase decisions (docs/05 §2)
 P1 backend green-light (default Cloudflare Workers+D1+R2); embed stance (default links-only);
 CC0-only community rule (default yes); MP3 export module (default WAV+Opus; MP3 optional).
+
+
+## Session close — 2026-10-07 (~444k context; start fresh)
+
+This session delivered: Brave-tabs research → full plan (docs 00–06, all verified) → owner decisions
+(Anvil · free · granular+sampler in v1) → Phase 0: scaffold, build pipeline, shell, **master tap (verified)**,
+GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
+
+### Start the next session with (in order)
+1. **KNOB FRAMEWORK PORT (av_knob.js)** — source already scouted (re-read for detail):
+   - Feel engine: `C:\Users\Moddy\pattern-forge\src\app_knob.js` (333 lines) — drag/twist arbitration
+     (6 px slide / 9 px rim-twist; rim = startR > rad*0.35), damped travel (0.40→2.0× over 260 px),
+     settle animation, wheel/click/dblclick/arrow-key, at-min/at-max/at-stop states, aria-slider.
+   - Skin: `pattern-forge\src\styles.css` "rotary knobs (Minimoog-style pointer caps)": ring =
+     conic-gradient(--knob-arc, 270° span), face radial-gradient, mark rotate(-135 + norm*270). Reskin to
+     Anvil tokens (teal/graphite); skip the marantz variant for now.
+   - Port decisions: av-namespace (avKnobHTML/Bind/Commit/RefreshAll/NormToVal/ValToNorm/Format/ApplyVisual/RowHTML);
+     commit hook = `avApplyParam(path,v)` if defined, else avParams map + CustomEvent 'av-param';
+     drop hub*/snapshot/koalaHint (optional guards).
+   - **Demo wiring (first live controls):** LEVELS card with INSTRUMENT + MASTER knobs → avApplyParam('keys'|'master')
+     → avKeysApply/avMasterApply (tap gains). Extend `?avtest=1` to commit a knob + assert.
+   - build.py js_parts becomes [av_tap.js, av_knob.js, app_core.js]; append knob CSS to src/styles.css.
+2. **CDP HARNESS + SMOKE suite** — port PF launch laws (cdp_smoke.mjs pattern): device metrics 1440×900,
+   --mute-audio, temp --user-data-dir, explicit exit; smoke = boot → data-av-ready → chips filled → tap armed → zero page errors.
+3. **P1 — worklet voice engine**: one mixer AudioWorklet, PolyBLEP + wavetable oscillators, TPT SVF, env/LFO,
+   voice pool + oldest-first steal → then run the T5 §7 proof benchmark and publish the measured voice count.
+
+### State at close
+- commits: be4da47 (scaffold) · d54000a (build+shell) · 5b816ad (G-wave) · 72cd49f (tap) · + this note.
+- index.html sha256 8ec7f726… (15,291 B) · tap selftest ✓ (renders/p0-tap.png) · tree clean at commit.
