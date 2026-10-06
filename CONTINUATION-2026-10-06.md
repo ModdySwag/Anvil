@@ -137,3 +137,12 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   `verify/_p0b_suite_wave.md` §2.
 - On both green: full battery (smoke + feel + cdp_keys + cdp_midi on the frozen sha) → commit B →
   README + mnemosyne refresh → P1 next.
+
+## Resume addendum 6 — 2026-10-07 (glide fix; keys 27/27; midi suite dispatched)
+
+- cdp_keys suite landed (`verify/cdp_keys.mjs`, 480 lines, 27 checks) and caught a REAL app bug: the
+  dock glide was dead — `pointerenter` never re-fires on the container for a held pointer crossing onto
+  a sibling key (latent in PF too). Fixed in `src/av_kb.js` (pointerover). Rebuilt + re-ran the trio:
+  **smoke 9/9 · feel 18/18 · keys 27/27** on build **sha cc601710…** (134,019 B); committed `481869a`.
+- cdp_midi suite (child B) dispatched against cc601710. On its report: verify → full battery → commit B
+  → README + mnemosyne refresh.
