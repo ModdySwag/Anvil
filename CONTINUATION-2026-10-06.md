@@ -225,6 +225,12 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   midi = i pattern (midi space caps N at 128; old 21+i capped at 107). Indicative true cost ≈ 9–11
   µs/voice/quantum → 50%-budget knee ≈ 120–130 voices. Evidence: `verify/bench-v2-delivery-race.log`
   + `last-cdp_bench.json` (verifiedFixProbe / groundTruth / indicativeTrueCosts).
-- **IN FLIGHT: bench-rev3 child (deleg_a09831c7)** — lands the sync barrier + steps [8..128] +
-  `--offline-only`, self-checks then full re-run. Then: parent `--offline-only` spot re-run → alias +
-  stress rigs child → final battery + `last-*` log refresh → README + addendum 11 + mnemosyne.
+- **BENCH MEASURED + COMMITTED (678873b):** **128 voices @ 38.7% budget** — three independent runs
+  (37.9 / 38.7 / 39.7% = 1009–1057 µs/q vs the 2667 µs budget), every cell delivery-verified
+  (active=N barrier), monotone; baseline 9.4 µs/q; the 50%-budget knee extrapolates beyond the
+  **128-note midi-space ceiling**. Realtime: **64/64 stable ×3 reps both variants, 0 underruns**;
+  SPN fallback cell 8v ≈ 68 µs mean. Artifacts: `bench-v{1,2,3}*.{log,json}` (all three revisions of
+  the story) + `last-cdp_bench.*` + `renders/p1-bench.png`. Rig: `--offline-only` flag exists.
+- **IN FLIGHT: alias + stress child (deleg_cab230c6)** — `verify/cdp_alias.mjs` (VA ≤ −45 dBc ≥C4 /
+  WT ≤ −80 dBc gates; determinism; 44.1 k spot) then `verify/cdp_stress.mjs` (10 min @ cap 64).
+  Then: final battery + `last-*` log refresh → README + addendum 11 + mnemosyne.
