@@ -1,0 +1,92 @@
+freeze sha256 31fefe60177a8b6a96b1ec26727ba92ecd523e5b504aa4eea9c8b0357a40744f (14317 B)
+serving [MOCK] verify/_bench_mock.html at /index.html
+server: http://127.0.0.1:9400/ (repo root C:\Users\Moddy\anvil)
+devtools port: 9401
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+url: http://127.0.0.1:9400/index.html?avtest=1
+=== ANVIL bench rig === mode: MOCK (verify/_bench_mock.html served at /index.html)
+protocol: variants light+fat · steps [1,2,4,8,16,24,32,48,64] · 3 rep(s) · hold 10 s · stable = p95Us<1333 && underruns==0
+--- sanity ---
+engine: attr=worklet tier=worklet url=blob sr=48000 maxVoices=64 os=2 [mock page] (boot 259 ms)
+sanity: PASS  state=running  advance=2.011s / wall 2.001s (ratio 1.005)  baseLatency=0.01  sampleRate=48000
+console messages: 0
+mock self-check: blobWorklet=true  delivery=blob  tier=worklet  url=blob  driver=true  clock=Date.now (ms x1000)
+mock driver run(8,1): {"n":8,"seconds":1,"meanUs":0,"p95Us":0,"maxUs":0,"underruns":0}
+--- ramp ---
+variant LIGHT: patch applied (all params accepted)
+  light r1 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  light r1 step  2  voices 2  mean 0  p95 0  max 0  underruns 0  n 3753  -> ok
+  light r1 step  4  voices 4  mean 0  p95 0  max 0  underruns 0  n 3753  -> ok
+  light r1 step  8  voices 8  mean 74.22  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  light r1 step 16  voices 16  mean 15.63  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 24  voices 24  mean 2000  p95 2000  max 2000  underruns 24  n 3754  -> UNSTABLE (p95 + underruns)
+  light r1 step 32  voices 32  mean 2000  p95 2000  max 2000  underruns 19  n 3753  -> UNSTABLE (p95 + underruns)
+  light r1 step 48  voices 48  mean 3000  p95 3000  max 3000  underruns 3338  n 3338  -> UNSTABLE (p95 + underruns)
+  light r1 step 64  voices 64  mean 3000  p95 3000  max 3000  underruns 3338  n 3338  -> UNSTABLE (p95 + underruns)
+  light rep 1 max stable: 16 / 64
+  light r2 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3750  -> ok
+  light r2 step  2  voices 2  mean 39.06  p95 0  max 1000  underruns 0  n 3750  -> ok
+  light r2 step  4  voices 4  mean 7.81  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r2 step  8  voices 8  mean 0  p95 0  max 0  underruns 0  n 3757  -> ok
+  light r2 step 16  voices 16  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  light r2 step 24  voices 24  mean 2003.91  p95 2000  max 3000  underruns 16  n 3753  -> UNSTABLE (p95 + underruns)
+  light r2 step 32  voices 32  mean 2000  p95 2000  max 2000  underruns 23  n 3750  -> UNSTABLE (p95 + underruns)
+  light r2 step 48  voices 48  mean 3000  p95 3000  max 3000  underruns 3337  n 3337  -> UNSTABLE (p95 + underruns)
+  light r2 step 64  voices 64  mean 3000  p95 3000  max 3000  underruns 3338  n 3338  -> UNSTABLE (p95 + underruns)
+  light rep 2 max stable: 16 / 64
+  light r3 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  light r3 step  2  voices 2  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  light r3 step  4  voices 4  mean 0  p95 0  max 0  underruns 0  n 3753  -> ok
+  light r3 step  8  voices 8  mean 7.81  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 16  voices 16  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  light r3 step 24  voices 24  mean 2000  p95 2000  max 2000  underruns 17  n 3757  -> UNSTABLE (p95 + underruns)
+  light r3 step 32  voices 32  mean 2015.63  p95 2000  max 3000  underruns 10  n 3750  -> UNSTABLE (p95 + underruns)
+  light r3 step 48  voices 48  mean 3000  p95 3000  max 3000  underruns 3334  n 3334  -> UNSTABLE (p95 + underruns)
+  light r3 step 64  voices 64  mean 3000  p95 3000  max 3000  underruns 3337  n 3337  -> UNSTABLE (p95 + underruns)
+  light rep 3 max stable: 16 / 64
+LIGHT PUBLISHED: 16
+variant FAT: patch applied (all params accepted)
+  fat r1 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3757  -> ok
+  fat r1 step  2  voices 2  mean 11.72  p95 0  max 1000  underruns 0  n 3753  -> ok
+  fat r1 step  4  voices 4  mean 0  p95 0  max 0  underruns 0  n 3750  -> ok
+  fat r1 step  8  voices 8  mean 0  p95 0  max 0  underruns 0  n 3753  -> ok
+  fat r1 step 16  voices 16  mean 50.78  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step 24  voices 24  mean 2000  p95 2000  max 2000  underruns 6  n 3750  -> UNSTABLE (p95 + underruns)
+  fat r1 step 32  voices 32  mean 2000  p95 2000  max 2000  underruns 18  n 3750  -> UNSTABLE (p95 + underruns)
+  fat r1 step 48  voices 48  mean 3000  p95 3000  max 3000  underruns 3337  n 3337  -> UNSTABLE (p95 + underruns)
+  fat r1 step 64  voices 64  mean 3000  p95 3000  max 3000  underruns 3338  n 3338  -> UNSTABLE (p95 + underruns)
+  fat rep 1 max stable: 16 / 64
+  fat r2 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3758  -> ok
+  fat r2 step  2  voices 2  mean 7.81  p95 0  max 1000  underruns 0  n 3750  -> ok
+  fat r2 step  4  voices 4  mean 39.06  p95 0  max 1000  underruns 0  n 3757  -> ok
+  fat r2 step  8  voices 8  mean 0  p95 0  max 0  underruns 0  n 3750  -> ok
+  fat r2 step 16  voices 16  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  fat r2 step 24  voices 24  mean 2000  p95 2000  max 2000  underruns 8  n 3754  -> UNSTABLE (p95 + underruns)
+  fat r2 step 32  voices 32  mean 2000  p95 2000  max 2000  underruns 22  n 3754  -> UNSTABLE (p95 + underruns)
+  fat r2 step 48  voices 48  mean 3000  p95 3000  max 3000  underruns 3337  n 3337  -> UNSTABLE (p95 + underruns)
+  fat r2 step 64  voices 64  mean 3000  p95 3000  max 3000  underruns 3337  n 3337  -> UNSTABLE (p95 + underruns)
+  fat rep 2 max stable: 16 / 64
+  fat r3 step  1  voices 1  mean 7.81  p95 0  max 1000  underruns 0  n 3758  -> ok
+  fat r3 step  2  voices 2  mean 0  p95 0  max 0  underruns 0  n 3750  -> ok
+  fat r3 step  4  voices 4  mean 0  p95 0  max 0  underruns 0  n 3750  -> ok
+  fat r3 step  8  voices 8  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  fat r3 step 16  voices 16  mean 0  p95 0  max 0  underruns 0  n 3753  -> ok
+  fat r3 step 24  voices 24  mean 2000  p95 2000  max 2000  underruns 20  n 3754  -> UNSTABLE (p95 + underruns)
+  fat r3 step 32  voices 32  mean 2042.97  p95 2000  max 3000  underruns 21  n 3754  -> UNSTABLE (p95 + underruns)
+  fat r3 step 48  voices 48  mean 3000  p95 3000  max 3000  underruns 3337  n 3337  -> UNSTABLE (p95 + underruns)
+  fat r3 step 64  voices 64  mean 3000  p95 3000  max 3000  underruns 3337  n 3337  -> UNSTABLE (p95 + underruns)
+  fat rep 3 max stable: 16 / 64
+FAT PUBLISHED: 16
+shot: renders/p1-bench-mock.png (84900 B)
+fallback cell: skipped in --mock (the mock page has no tier ladder; the file:// cell targets the real facade — §9.1)
+==== BENCH SUMMARY ====
+mode: mock
+freeze: sha256 31fefe60177a8b6a96b1ec26727ba92ecd523e5b504aa4eea9c8b0357a40744f (14317 B) [verify/_bench_mock.html]
+tier: worklet (delivery blob)
+sanity: PASS  advance=2.011s/2s  ratio=1.005  baseLatency=0.01
+mock: blobWorklet=true  driver={"n":8,"seconds":1,"meanUs":0,"p95Us":0,"maxUs":0,"underruns":0}
+published: {"light":16,"fat":16}
+json: verify/last-cdp_bench_mock.json
+log: verify/last-cdp_bench_mock.log
+shot: renders/p1-bench-mock.png
+BENCH-RESULT {"mode":"mock","quick":false,"tier":"worklet","url":"blob","realtimeRatio":1.005,"blobWorklet":true,"published":{"light":16,"fat":16},"invalidReads":0,"json":"verify/last-cdp_bench_mock.json","log":"verify/last-cdp_bench_mock.log"}

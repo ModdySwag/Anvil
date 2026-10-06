@@ -292,3 +292,11 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
   border-top: 1px solid var(--hair);
   font-size: 12px;
 }
+
+/* ============================================================================
+   SYNTH CARD (av_synth.js, P1) — selects row + grouped knob rows */
+.av-synth-selects { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 4px 0 10px; }
+.av-synth-pick { display: flex; flex-direction: column; gap: 4px; }
+.av-synth-pick-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+#av-synth .av-select { min-width: 96px; }
+#av-synth .av-knobs { margin: 4px 0 10px; }

@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Anvil bench mock — cdp_bench self-test</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; min-height: 100%; background: #0a0e11; color: #c9e4de;
+    font: 13px/1.55 "Cascadia Mono", Consolas, monospace; }
+  #wrap { padding: 18px 24px 26px; }
+  h1 { font-size: 14px; letter-spacing: .14em; color: #6fe3c8; margin: 0 0 2px; text-transform: uppercase; }
+  .sub { color: #67857f; margin-bottom: 14px; max-width: 980px; }
+  table { border-collapse: collapse; }
+  td, th { padding: 3px 16px 3px 0; text-align: left; vertical-align: top; }
+  th { color: #5d7d77; font-weight: 400; text-transform: uppercase; font-size: 10.5px; letter-spacing: .09em; white-space: nowrap; }
+  .v { color: #eef7f4; }
+  .ok { color: #7bea9f; }
+  .bad { color: #ff8d7a; }
+  .dim { color: #5d7d77; }
+  #clock { font-size: 30px; color: #6fe3c8; letter-spacing: .04em; margin: 10px 0 0; }
+  #clockcap { color: #5d7d77; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <h1>Anvil P1 &middot; bench mock</h1>
+  <div class="sub">Self-test page for <span class="v">verify/cdp_bench.mjs</span> — drives a realtime AudioContext
+    and a blob-URL AudioWorklet (<span class="v">'av-voice'</span>: small oscillator bank + 256-entry &micro;s timing ring
+    + underrun counter) through the same <span class="v">window.__avEngine</span> facade the real engine exposes,
+    so the rig exercises identical code paths. All numbers below are measured in the audio render thread.</div>
+  <div id="clock">&mdash;</div>
+  <div id="clockcap">AudioContext.currentTime — must advance in wall-clock realtime (rig sanity phase)</div>
+  <table id="tbl"></table>
+</div>
+<script>
+"use strict";
+/* ---------------------------------------------------------------------
+   The mock worklet source: oscillator bank + 256-entry ring.
+   Loaded via URL.createObjectURL(blob) -> audioWorklet.addModule.
+   Timing clock: performance.now() when the worklet scope exposes it,
+   else Date.now() with the ms diff booked as us (x1000, ms granularity)
+   — some Chromium builds ship AudioWorkletGlobalScope without a usable
+   performance object; the loads below are sized so BOTH clocks trip the
+   same rig gates (p95 >= 1333 us / underruns) at the same voice counts.
+   Synthetic load model:
+     <24 voices: no spin  |  24..47: 1.6 ms/quantum  |  >=48: 2.8 ms
+   budget @ 48 kHz = 128e6/48000 = 2666.7 us/quantum, so:
+     24..47 voices -> p95 fails the 1333 us gate, underruns stay 0
+     >=48 voices   -> quanta genuinely exceed budget -> underruns > 0
+   --------------------------------------------------------------------- */
+const WORKLET_SRC = `
+class MockVoiceProc extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.MAX = 64;
+    this.slotMidi = new Int32Array(this.MAX);
+    for (var i = 0; i < this.MAX; i++) this.slotMidi[i] = -1;
+    this.phase = new Float64Array(this.MAX);
+    this.stepf = new Float64Array(this.MAX);
+    this.amp = new Float64Array(this.MAX);
+    this.age = new Float64Array(this.MAX);
+    this.seq = 0;
+    this.ring = new Float64Array(256);
+    this.ringW = 0;
+    this.ringN = 0;
+    this.total = 0;
+    this.underruns = 0;
+    this.budgetUs = 128 * 1e6 / sampleRate;
+    this.params = {};
+    var HAS_PERF = (typeof performance !== 'undefined' && typeof performance.now === 'function');
+    var NOW = HAS_PERF ? function () { return performance.now(); } : function () { return Date.now(); };
+    this.NOW = NOW;
+    this.msScale = HAS_PERF ? 1 : 1000;
+    this.clockName = HAS_PERF ? 'performance.now (us)' : 'Date.now (ms x1000)';
+    this.logged = false;
+    var self = this;
+    this.port.onmessage = function (e) { self._msg(e.data); };
+    this.port.postMessage({ t: 'ready', sr: sampleRate, maxVoices: this.MAX, os: 2, version: 'mock.1', budgetUs: this.budgetUs, clock: this.clockName });
+  }
+  _active() {
+    var n = 0;
+    for (var i = 0; i < this.MAX; i++) if (this.slotMidi[i] >= 0) n++;
+    return n;
+  }
+  _slotFor(midi) {
+    var i, best = -1, bestAge = Infinity;
+    for (i = 0; i < this.MAX; i++) if (this.slotMidi[i] === midi) return i;
+    for (i = 0; i < this.MAX; i++) if (this.slotMidi[i] < 0) return i;
+    for (i = 0; i < this.MAX; i++) if (this.age[i] < bestAge) { bestAge = this.age[i]; best = i; }
+    return best < 0 ? 0 : best;
+  }
+  _on(midi, gain) {
+    var s = this._slotFor(midi);
+    this.slotMidi[s] = midi;
+    this.phase[s] = 0.13 + 0.71 * (((this.seq * 2654435761) % 1000) / 1000);
+    this.stepf[s] = 440 * Math.pow(2, (midi - 69) / 12) / sampleRate;
+    this.amp[s] = (gain == null) ? 0.8 : gain;
+    this.age[s] = ++this.seq;
+  }
+  _off(midi) {
+    for (var i = 0; i < this.MAX; i++) if (this.slotMidi[i] === midi) this.slotMidi[i] = -1;
+  }
+  _msg(m) {
+    if (!m || !m.t) return;
+    if (m.t === 'param') { this.params[m.path] = m.v; return; }
+    if (m.t === 'note') { if (m.on) this._on(m.midi, m.gain); else this._off(m.midi); return; }
+    if (m.t === 'allOff') { for (var i = 0; i < this.MAX; i++) this.slotMidi[i] = -1; return; }
+    if (m.t === 'bench') {
+      if (m.cmd === 'reset') {
+        this.ringW = 0; this.ringN = 0; this.total = 0; this.underruns = 0;
+        this.port.postMessage({ t: 'bench', id: m.id, data: { ok: true } });
+      } else {
+        this.port.postMessage({ t: 'bench', id: m.id, data: this._read() });
+      }
+      return;
+    }
+    if (m.t === 'stats') {
+      this.port.postMessage({ t: 'stats', id: m.id, data: { active: this._active(), released: 0, total: this.total, stolen: 0, maxVoices: this.MAX, sr: sampleRate } });
+      return;
+    }
+  }
+  _read() {
+    var n = this.ringN, arr = [], i;
+    for (i = 0; i < n; i++) arr.push(this.ring[(this.ringW - n + i + 512) % 256]);
+    var mean = 0, mx = 0;
+    for (i = 0; i < n; i++) { mean += arr[i]; if (arr[i] > mx) mx = arr[i]; }
+    mean = n > 0 ? mean / n : 0;
+    var sorted = arr.slice().sort(function (a, b) { return a - b; });
+    var p95 = sorted.length > 0 ? sorted[Math.max(0, Math.ceil(sorted.length * 0.95) - 1)] : 0;
+    return { n: this.total, meanUs: mean, p95Us: p95, maxUs: mx, underruns: this.underruns, ring: arr };
+  }
+  process(inputs, outputs, parameters) {
+    if (!this.logged) { this.logged = true; try { console.log('MOCK worklet timing clock: ' + this.clockName); } catch (e) { } }
+    var t0 = this.NOW();
+    var out = outputs[0];
+    var L = out[0], R = out[1];
+    var frames = L.length;
+    var active = this._active();
+    var spin = active >= 48 ? 2800 : (active >= 24 ? 1600 : 0);
+    for (var i = 0; i < frames; i++) {
+      var v = 0;
+      for (var k = 0; k < this.MAX; k++) {
+        var mid = this.slotMidi[k];
+        if (mid < 0) continue;
+        var ph = this.phase[k] + this.stepf[k];
+        if (ph >= 1) ph -= 1;
+        this.phase[k] = ph;
+        v += (ph * 2 - 1) * this.amp[k];
+      }
+      v *= 0.015;
+      L[i] = v; R[i] = v;
+    }
+    if (spin > 0) { var tEnd = this.NOW() + spin / 1000; while (this.NOW() < tEnd) { } }
+    var us = (this.NOW() - t0) * this.msScale;
+    var norm = frames > 0 ? us * 128 / frames : us;
+    this.ring[this.ringW] = norm;
+    this.ringW = (this.ringW + 1) % 256;
+    if (this.ringN < 256) this.ringN++;
+    this.total++;
+    if (norm > this.budgetUs) this.underruns++;
+    return true;
+  }
+}
+registerProcessor('av-voice', MockVoiceProc);
+`;
+
+const state = {
+  ctx: null, node: null, proto: null, blobWorklet: false, budgetUs: null, sr: null,
+  clockName: null, last: null, stat: null, driver: null, readyMsg: null,
+};
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let seq = 0;
+const pend = new Map();
+
+function r2(v) { return (typeof v === 'number' && isFinite(v)) ? (Math.round(v * 100) / 100) : null; }
+function fmt(v, unit) { return (typeof v === 'number' && isFinite(v)) ? (Math.round(v * 100) / 100) + (unit || '') : '\u2014'; }
+function tryResume(ctx) {
+  try { return Promise.race([ctx.resume().catch(() => { }), sleep(300)]); } catch (e) { return Promise.resolve(); }
+}
+
+/* request/response over the worklet port (same protocol the real av_voiceproc speaks) */
+function req(t, extra) {
+  return new Promise((res, rej) => {
+    const id = ++seq;
+    const to = setTimeout(() => { pend.delete(id); rej(new Error('worklet reply timeout for ' + t)); }, 3000);
+    pend.set(id, { res: (d) => { clearTimeout(to); res(d); }, rej: (e) => { clearTimeout(to); rej(e); } });
+    state.node.port.postMessage(Object.assign({ t: t }, extra, { id: id }));
+  });
+}
+
+function render() {
+  const ctx = state.ctx;
+  const e = window.__avEngine || {};
+  const rows = [
+    ['timing clock (worklet scope)', state.clockName || '?'],
+    ['tier', (e.tier || '\u2014') + (state.proto ? '   (delivery: ' + state.proto + ': URL)' : '')],
+    ['blobWorklet', state.blobWorklet ? 'true \u2014 addModule(blob:) accepted on this http origin' : 'FALSE'],
+    ['ctx.state', ctx ? ctx.state : '\u2014'],
+    ['sampleRate', ctx ? ctx.sampleRate + ' Hz' : '\u2014'],
+    ['baseLatency', (ctx && typeof ctx.baseLatency === 'number') ? ctx.baseLatency + ' s' : '\u2014'],
+    ['voices active', state.stat ? state.stat.active + ' / 64' : '\u2014'],
+    ['budget', state.budgetUs ? fmt(state.budgetUs) + ' \u00b5s per 128-frame quantum' : '\u2014'],
+    ['last bench read (rig path: __avEngine.bench)', state.last
+      ? ('n=' + state.last.n + '   mean=' + fmt(state.last.meanUs, ' \u00b5s') + '   p95=' + fmt(state.last.p95Us, ' \u00b5s') +
+         '   max=' + fmt(state.last.maxUs, ' \u00b5s') + '   underruns=' + state.last.underruns +
+         '   ring=' + (state.last.ring ? state.last.ring.length : 0))
+      : '\u2014'],
+    ['last driver run (__mockBench.run)', state.driver
+      ? ('n=' + state.driver.n + ' for ' + state.driver.seconds + ' s   mean=' + fmt(state.driver.meanUs, ' \u00b5s') +
+         '   p95=' + fmt(state.driver.p95Us, ' \u00b5s') + '   underruns=' + state.driver.underruns)
+      : '\u2014'],
+    ['load model', '<24 voices: none \u00b7 24\u201347: ~1.6 ms \u2192 p95 gate fails, underruns 0 \u00b7 \u226548: ~2.8 ms \u2192 over budget'],
+  ];
+  document.getElementById('tbl').innerHTML =
+    '<tbody>' + rows.map((r) => '<tr><th>' + r[0] + '</th><td class="v">' + r[1] + '</td></tr>').join('') + '</tbody>';
+  document.getElementById('clock').textContent = ctx ? (ctx.currentTime.toFixed(3) + ' s') : '\u2014';
+}
+
+async function boot() {
+  document.documentElement.setAttribute('data-av-mock', '1');
+  try {
+    const ctx = new AudioContext({ latencyHint: 'interactive' });
+    state.ctx = ctx;
+    if (ctx.state !== 'running') await tryResume(ctx);
+    const src = WORKLET_SRC;
+    let blobErr = null;
+    const blobUrl = URL.createObjectURL(new Blob([src], { type: 'application/javascript' }));
+    try {
+      await ctx.audioWorklet.addModule(blobUrl);
+      state.proto = 'blob';
+      state.blobWorklet = true;
+    } catch (e1) {
+      blobErr = String((e1 && e1.message) || e1);
+      await ctx.audioWorklet.addModule('data:application/javascript;charset=utf-8,' + encodeURIComponent(src));
+      state.proto = 'data';
+      state.blobWorklet = false;
+    }
+    const node = new AudioWorkletNode(ctx, 'av-voice', {
+      numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2], processorOptions: { maxVoices: 64 },
+    });
+    state.node = node;
+    const ready = new Promise((res, rej) => {
+      const to = setTimeout(() => rej(new Error('ready handshake timeout (2.5 s)')), 2500);
+      node.port.onmessage = (ev) => {
+        const m = ev.data || {};
+        if (m.t === 'ready') { clearTimeout(to); res(m); return; }
+        if ((m.t === 'bench' || m.t === 'stats') && m.id && pend.has(m.id)) {
+          const p = pend.get(m.id);
+          pend.delete(m.id);
+          p.res(m.data);
+        }
+      };
+    });
+    node.connect(ctx.destination);
+    const rm = await ready;
+    state.readyMsg = rm;
+    state.budgetUs = rm.budgetUs;
+    state.sr = rm.sr;
+    state.clockName = rm.clock || 'unknown';
+
+    /* the facade the rig drives — same surface as the real window.__avEngine (contract §6) */
+    window.__avEngine = {
+      ready: true, tier: 'worklet', url: state.proto, error: null,
+      sr: ctx.sampleRate, maxVoices: 64, os: 2,
+      noteOn: (midi, gain) => { node.port.postMessage({ t: 'note', on: true, midi: midi, gain: gain == null ? 0.8 : gain }); return true; },
+      noteOff: (midi) => { node.port.postMessage({ t: 'note', on: false, midi: midi }); },
+      allOff: () => { node.port.postMessage({ t: 'allOff' }); },
+      setParam: (path, v) => { node.port.postMessage({ t: 'param', path: path, v: v }); return true; },
+      bench: (cmd) => req('bench', { cmd: cmd || 'read' }).then((d) => { if (cmd !== 'reset') { state.last = d; render(); } return d; }),
+      stats: () => req('stats', {}).then((d) => { state.stat = d; render(); return d; }),
+      handle: { ctx: ctx, node: node },
+    };
+    window.__mockBench = {
+      version: 'mock.1', ctx: ctx, blobWorklet: state.blobWorklet, proto: state.proto,
+      budgetUs: state.budgetUs, clock: state.clockName, blobErr: blobErr,
+      run: async (n, seconds) => {
+        const E = window.__avEngine;
+        await E.bench('reset');
+        E.allOff();
+        await sleep(120);
+        for (let i = 0; i < n; i++) E.noteOn(21 + i, 0.8);
+        await sleep(Math.max(0.2, seconds) * 1000);
+        const d = await E.bench('read');
+        E.allOff();
+        state.driver = { n: n, seconds: seconds, meanUs: r2(d.meanUs), p95Us: r2(d.p95Us), maxUs: r2(d.maxUs), underruns: d.underruns };
+        render();
+        return state.driver;
+      },
+    };
+    document.documentElement.setAttribute('data-av-engine', 'worklet');
+    if (ctx.state !== 'running') await tryResume(ctx);
+    setInterval(() => render(), 250);
+    setInterval(() => { window.__avEngine.stats().catch(() => { }); }, 1000);
+    render();
+  } catch (err) {
+    window.__bootError = String((err && err.message) || err);
+    document.documentElement.setAttribute('data-av-engine', 'failed');
+    document.getElementById('tbl').innerHTML =
+      '<tbody><tr><th>BOOT FAILED</th><td class="bad">' + window.__bootError + '</td></tr></tbody>';
+    document.getElementById('clock').textContent = '\u2014';
+  }
+}
+boot();
+</script>
+</body>
+</html>

@@ -129,7 +129,7 @@ async function main() {
 
   /* 4. knobs mounted + bound on the LEVELS card */
   const knobsR = await ev(`(() => {
-    const els = [...document.querySelectorAll('.av-knob[data-knob]')];
+    const els = [...document.querySelectorAll('#av-levels .av-knob[data-knob]')];
     return { n: els.length,
              paths: els.map(e => e.dataset.knob).sort().join(','),
              bound: els.every(e => e.dataset.knobBound === '1'),
@@ -147,6 +147,15 @@ async function main() {
     await sleep(250);
   }
   check('KNOB SELFTEST ok', !!kst && kst.ok === true, JSON.stringify(kst));
+
+  /* 5b. the async ENGINE SELFTEST (?avtest=1) — tier + allocation */
+  let est = null;
+  for (let i = 0; i < 60; i++) {
+    const r = await ev(`window.__avEngineTest || null`);
+    if (r.value) { est = r.value; break; }
+    await sleep(250);
+  }
+  check('ENGINE SELFTEST ok (tier + allocation)', !!est && est.ok === true, JSON.stringify(est));
 
   /* 6. layout sanity at 1440 */
   const layR = await ev(`(() => {
@@ -170,6 +179,16 @@ async function main() {
   }))()`);
   const io = ioR.value || {};
   check('keyboard dock: 61 keys, snap handle, MIDI deck mounted', io.keys === 61 && io.dock === true && io.kbsnap === 'function' && io.midi === 'object' && io.midiBody === true, JSON.stringify(io));
+
+  /* 6c. the P1 SYNTH card + controls */
+  const synR = await ev(`(() => {
+    const host = document.getElementById('av-synth-knobs');
+    const knobs = [...document.querySelectorAll('#av-synth .av-knob[data-knob]')];
+    const sels = [...document.querySelectorAll('#av-synth select.av-select')];
+    return { host: !!host, knobs: knobs.length, bound: knobs.every(k => k.dataset.knobBound === '1'), sels: sels.length };
+  })()`);
+  const syn = synR.value || {};
+  check('synth card: knobs + selects mounted + bound', syn.host === true && syn.knobs >= 12 && syn.bound === true && syn.sels >= 3, JSON.stringify(syn));
 
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
