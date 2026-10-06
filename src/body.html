@@ -5,6 +5,7 @@
   <span class="av-spacer"></span>
   <span class="av-chip av-dim" id="av-tier">engine: pending</span>
   <span class="av-chip av-dim">voices: &mdash;</span>
+  <button class="av-btn" id="btn-piano" title="Piano dock — 61 keys at the bottom (Y)" aria-label="Piano dock">&#127929;</button>
   <button class="av-btn" id="av-help" title="Help (arrives with the tour)">?</button>
 </header>
 
@@ -19,6 +20,11 @@
     <h2>Levels</h2>
     <div id="av-levels-knobs"></div>
     <p class="av-note av-dim">Both knobs ride the master tap: <b>Instrument</b> sets the keys bus (what the instrument plays), <b>Master</b> is the final out. Drag or twist the rim &middot; wheel steps &middot; arrow keys when focused &middot; double-click resets.</p>
+  </section>
+
+  <section class="av-card" id="av-midi-card">
+    <h2>MIDI</h2>
+    <div id="av-midi-body"><p class="av-note av-dim">The hardware deck lands here — enable Web MIDI and your keys play Anvil through the same note path as the piano dock.</p></div>
   </section>
 
   <section class="av-card">
@@ -37,6 +43,25 @@
 <footer class="av-foot">
   <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Phase 0 scaffold &middot; AGPL-3.0-or-later</span>
 </footer>
+
+  <div id="piano-dock" aria-label="Piano — 61 keys">
+    <div id="piano-rail">
+      <button id="pk-close" class="av-btn mini" title="Hide the piano (Y)" aria-label="Hide the piano (Y)">✕</button>
+      <div id="pk-modes" class="pk-modes" role="group" aria-label="Input mode — what the computer keyboard drives">
+        <button class="pk-mode" data-mode="studio" title="STUDIO — single letters stay quiet; the KEYS chip or ` turns the typing keys into the dock">STUDIO</button>
+        <button class="pk-mode" data-mode="keys" title="KEYS — typing keys play the dock: A-row white (A = C), W-row black (W = C♯), Z / X hop octaves, Esc hands back"><span class="pk-sw-led" id="pk-arm-led"></span>KEYS</button>
+        <button class="pk-mode" data-mode="midi" title="MIDI — hardware plays the notes, PC letters stay quiet; Ctrl/Alt combos, F-keys and Space still work">MIDI</button>
+      </div>
+      <span id="pk-mode-hint" class="pk-mode-hint">STUDIO — letters are quiet here; ` or the KEYS chip makes the typing keys play.</span>
+      <div class="pk-rail-ctl">
+        <button id="pk-oct-down" class="av-btn mini" title="Window octave down ( [ )" aria-label="Window octave down">&minus;</button>
+        <span id="pk-win" class="pk-win">OCT C4</span>
+        <button id="pk-oct-up" class="av-btn mini" title="Window octave up ( ] )" aria-label="Window octave up">+</button>
+      </div>
+      <div class="pk-rail-note">click to play · hold to sustain · glide to sweep · ` flips STUDIO ↔ KEYS</div>
+    </div>
+    <div id="piano-keys"></div>
+  </div>
 
 <script id="AV_JS">
 </script>

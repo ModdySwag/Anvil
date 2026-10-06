@@ -160,6 +160,17 @@ async function main() {
   const lay = layR.value || {};
   check('layout: no horizontal overflow at 1440', lay.scroll <= lay.inner + 1, `scrollWidth ${lay.scroll} vs innerWidth ${lay.inner}` + (lay.bad && lay.bad.length ? ' | offenders: ' + lay.bad.join(' ; ') : ''));
 
+  /* 6b. keyboard + MIDI wired */
+  const ioR = await ev(`(() => ({
+    keys: document.querySelectorAll('.pk-key').length,
+    dock: !!document.getElementById('piano-dock'),
+    kbsnap: typeof window.__avKb,
+    midi: typeof window.__avMidi,
+    midiBody: !!document.querySelector('#av-midi-body .av-midi'),
+  }))()`);
+  const io = ioR.value || {};
+  check('keyboard dock: 61 keys, snap handle, MIDI deck mounted', io.keys === 61 && io.dock === true && io.kbsnap === 'function' && io.midi === 'object' && io.midiBody === true, JSON.stringify(io));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

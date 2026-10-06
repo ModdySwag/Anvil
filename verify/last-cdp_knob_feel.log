@@ -2,9 +2,9 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips and the app is wired
  ok   both knobs mounted in the LEVELS card, skinned + bound  -> {"ring":true,"bound":true,"inLevels":true}
  ok   first paint: label, readout and aria from the live store  -> {"label":"Master","keys":"Instrument","paint":true,"arc":"180.0deg"}
- ok   a short slide is fine, a long one is fast (the curve)  -> 20 px -> +0.090 (5/kpx), 120 px -> +1.120 (9/kpx)
+ ok   a short slide is fine, a long one is fast (the curve)  -> 20 px -> +0.070 (3/kpx), 120 px -> +1.000 (8/kpx)
  ok   twisting clockwise raises the level  -> +0.160 over a 90° twist
- ok   a flick keeps moving after release, then settles  -> release 0.7700 -> settles 1.2000 (lag +0.4300, overshoot 0.0000)
+ ok   a flick keeps moving after release, then settles  -> release 0.7500 -> settles 1.2000 (lag +0.4500, overshoot 0.0000)
  ok   it never overshoots the target (heavy, not springy)  -> max overshoot 0.0000
  ok   it stops dead at the maximum  -> value 1.2 (max 1.2), stop felt: true
  ok   the stop does not add a phantom step after the drag  -> value stayed 1.2

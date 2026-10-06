@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.0.3", phase: "P0 · knobs live", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.0.4", phase: "P0 · keys + midi live", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -21,6 +21,7 @@ function avSavedNumber(key, dflt) {
 const avState = {
   master: avSavedNumber("av-master", 0.8),
   keysVol: avSavedNumber("av-keys-vol", 1.0),
+  bpm: 120,               /* transport tempo — the MIDI clock-out reads it every tick; the sequencer will own it later */
 };
 
 function avApplyParam(path, v, meta) {
@@ -51,12 +52,15 @@ function avMountLevels() {
 (function avBoot() {
   const tapOk = (typeof avInstallAudioTap === "function") ? avInstallAudioTap() : false;
   const levelsOk = avMountLevels();
+  let kbOk = false, midiOk = false;
+  try { kbOk = (typeof avKbInit === "function") ? (avKbInit() !== false) : false; } catch (e) { console.warn("[anvil] kb init failed", e); }
+  try { midiOk = (typeof avMidiInit === "function") ? (avMidiInit() !== false) : false; } catch (e) { console.warn("[anvil] midi init failed", e); }
   const ver = document.getElementById("av-version");
   if (ver) ver.textContent = "v" + ANVIL.version;
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: pending (P1)" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

@@ -122,3 +122,6 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
 - **Two file-scoped port agents dispatched**: `src/av_kb.js` (61-key dock + ONE keydown dispatcher +
   typing note path) and `src/av_midi.js` (states/ports/decode/note-routing/monitor/out-tap/clock-out/
   CC map+learn/panel). On return: verify files → build → smoke+feel → keyboard+MIDI suites → battery → commit.
+- **Pre-staged (zero-idle) return plan: `verify/_p0b_suite_wave.md`** — parent verification steps,
+  both suite contracts (cdp_keys / cdp_midi), commit messages, close-out checklist. Read it FIRST
+  on resume.

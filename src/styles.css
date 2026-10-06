@@ -168,6 +168,124 @@ body.knob-dragging, body.knob-dragging * { cursor: ns-resize !important; }
 #av-levels .av-knobs { margin: 10px 0 14px; }
 .av-note.av-dim { color: var(--text-3); }
 
+/* mini buttons + toggle states (rail, MIDI deck) */
+.av-btn.mini { height: 22px; min-width: 24px; width: auto; padding: 0 8px; font-size: 11px; }
+.av-btn.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+
+/* ============================================================================
+   PIANO DOCK — 61-key keyboard, fixed to the bottom (Y toggles; PF port, teal skin).
+   Layout math: --dock-tax lifts the page content while the dock is out. */
+:root { --dock-h: 136px; --dock-tax: 0px; }
+body:not(.piano-closed) { --dock-tax: var(--dock-h, 136px); }
+body:not(.piano-closed) .av-main { padding-bottom: calc(20px + var(--dock-tax)); }
+body:not(.piano-closed) .av-foot { margin-bottom: var(--dock-tax); }
+#piano-dock {
+  position: fixed; left: 16px; right: 16px; bottom: 0; z-index: 41;
+  height: var(--dock-h, 136px);
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #10161b 0%, #0a0e11 100%);
+  border: 1px solid var(--hair); border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, .55);
+  user-select: none; -webkit-user-select: none; touch-action: none;
+  container-type: inline-size;
+}
+body.piano-closed #piano-dock { display: none; }
+body.kb-armed #piano-dock { box-shadow: 0 -8px 24px rgba(0,0,0,.55), 0 0 20px rgba(46,216,201,.30); }
+body.kb-midi #piano-dock { box-shadow: 0 -8px 24px rgba(0,0,0,.55), 0 0 20px rgba(86,180,233,.26); }
+#piano-rail {
+  display: flex; align-items: center; gap: 10px;
+  padding: 5px 10px;
+  background: linear-gradient(180deg, #161f26, #10161b);
+  border-bottom: 1px solid var(--hair);
+}
+.pk-modes { display: flex; align-items: stretch; gap: 3px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 5px; padding: 2px; }
+.pk-mode {
+  display: flex; align-items: center; gap: 6px;
+  background: transparent; color: var(--text-3);
+  border: 1px solid transparent; border-radius: 4px;
+  padding: 3px 9px; cursor: pointer;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+}
+.pk-mode:hover { color: var(--text-2); background: #12181d; }
+.pk-mode.on { color: var(--teal); background: #0d2422; border-color: var(--teal-deep); box-shadow: inset 0 0 7px rgba(46,216,201,.18); }
+.pk-mode:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
+.pk-sw-led { width: 10px; height: 10px; border-radius: 50%; background: #22303a; box-shadow: inset 0 0 3px #000; }
+.pk-sw-led.on { background: var(--teal); box-shadow: 0 0 9px var(--teal); }
+.pk-mode-hint { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+body.kb-armed .pk-mode-hint { color: var(--teal-glow); }
+body.kb-midi .pk-mode-hint { color: #9fd6ff; }
+.pk-win { font-family: var(--mono); font-size: 11px; color: var(--teal); min-width: 64px; text-align: center; }
+.pk-rail-ctl { display: flex; align-items: center; gap: 6px; }
+.pk-rail-note { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+#piano-keys { position: relative; display: flex; height: auto; flex: 1 1 auto; min-height: 52px; padding: 0 2px 2px; }
+.pk-key { border: 0; padding: 0; cursor: pointer; position: relative; }
+.pk-white {
+  flex: 1 1 0; min-width: 0;
+  background: linear-gradient(180deg, #eef4f4 0%, #dce6e7 6%, #c3d2d4 100%);
+  border: 1px solid #10161b; border-top: 0;
+  border-radius: 0 0 4px 4px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .14);
+  z-index: 1;
+}
+.pk-white.in-scale { background: linear-gradient(180deg, #e2fbf7 0%, #bdeee8 6%, #93d9d1 100%); }
+.pk-white.root { background: linear-gradient(180deg, #c9fff7 0%, #8ef0e4 6%, #52cdbf 100%); }
+.pk-white.in-win { background: linear-gradient(180deg, #f4fffd 0%, #dcf7f2 6%, #b5e6df 100%); }
+.pk-white:active, .pk-white.down { background: linear-gradient(180deg, #c3d2d4 0%, #9fb5b8 100%); box-shadow: inset 0 -2px 0 rgba(0,0,0,.2); }
+.pk-black {
+  position: absolute; top: 0; height: 62%;
+  width: 8.571%;
+  background: linear-gradient(180deg, #2a3841 0%, #10161b 70%, #161f26 100%);
+  border: 1px solid #05080b;
+  border-radius: 0 0 4px 4px;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .5), 1px 1px 3px rgba(0, 0, 0, .5);
+  z-index: 2;
+}
+.pk-black.in-scale { background: linear-gradient(180deg, #24413d 0%, #0c1f1c 70%, #10302b 100%); border-bottom: 3px solid var(--teal); }
+.pk-black.in-win { background: linear-gradient(180deg, #2e4a52 0%, #12232a 70%, #1a333c 100%); }
+.pk-black:active, .pk-black.down { background: linear-gradient(180deg, #0c1f1c 0%, #05080b 100%); }
+.pk-note { position: absolute; left: 50%; bottom: 3px; transform: translateX(-50%); font-family: var(--mono); font-size: 9px; color: #5f7a76; pointer-events: none; }
+.pk-keycap {
+  position: absolute; left: 50%; top: 26%; transform: translateX(-50%);
+  width: 17px; height: 17px; line-height: 17px; text-align: center;
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: #10302b; background: #f2fbfa; border: 1px solid #8fb5b0; border-radius: 3px;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, .2);
+  pointer-events: none;
+}
+.pk-black .pk-keycap { top: 20%; color: #d7f2ee; background: #16302c; border-color: #3f6b64; }
+body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: var(--teal); box-shadow: 0 0 6px rgba(46,216,201,.7); }
+.pk-black .pk-note { color: #4d6a66; }
+@media (max-width: 700px) { #piano-dock { left: 0; right: 0; } .pk-rail-note { display: none; } }
+@container (max-width: 1050px) { .pk-note { display: none; } }
+@container (max-width: 640px) { .pk-keycap { width: 12px; height: 12px; line-height: 12px; font-size: 8px; top: 32%; } .pk-rail-note { display: none; } .pk-win { min-width: 44px; font-size: 10px; } }
+
+/* ============================================================================
+   MIDI DECK (av_midi.js) — panel styles, Anvil skin */
+.av-midi { display: flex; flex-direction: column; gap: 12px; }
+.av-midi-sec { display: flex; flex-direction: column; gap: 6px; }
+.av-midi-sec > b { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); font-family: var(--mono); font-weight: 600; }
+.av-midi-stat { font-family: var(--mono); font-size: 12px; color: var(--text-2); }
+.av-midi-stat.ok { color: var(--teal); }
+.av-midi-stat.err { color: #ff8a7a; }
+.av-midi-stat.busy { color: var(--mod-orange); }
+.av-midi-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-midi-dev { display: flex; align-items: center; gap: 8px; padding: 4px 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; font-size: 12px; }
+.av-midi-dev b { color: var(--text); }
+.av-midi-dev .grow { flex: 1 1 auto; color: var(--text-3); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.av-midi-dev.on { border-color: var(--teal-deep); }
+.av-midi-none { color: var(--text-3); font-size: 11px; font-style: italic; }
+.av-midi-mon { font-family: var(--mono); font-size: 9.5px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; padding: 5px 7px; max-height: 170px; overflow: hidden; }
+.av-midi-mon-line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-3); }
+.av-midi-mon-line.on { color: var(--teal); }
+.av-midi-mon-line .t, .av-midi-mon-line .p { color: var(--text-3); }
+.av-midi-mon-line b { color: var(--mod-sky); font-weight: 600; }
+.av-midi-vel { display: inline-block; height: 6px; background: var(--teal); border-radius: 3px; vertical-align: middle; }
+.av-midi-note { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.av-midi-cap { font-size: 10.5px; color: var(--text-3); }
+.av-midi-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.av-select { background: var(--raised); color: var(--text); border: 1px solid var(--hair); border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 3px 6px; }
+
 /* footer */
 .av-foot {
   padding: 10px 16px;

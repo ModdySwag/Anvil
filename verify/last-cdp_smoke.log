@@ -1,11 +1,12 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v0.0.3","tier":"tap: armed · engine: pending (P1)","voices":true,"version":"0.0.3"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v0.0.4","tier":"tap: armed · engine: pending (P1)","voices":true,"version":"0.0.4"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":1,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
  ok   KNOB SELFTEST ok  -> {"ok":true,"knobFound":true,"keysBound":true,"committed":true,"params":true,"state":true,"aria":true,"readout":true,"ctxState":"running","gain":0.55,"gainOk":true}
- ok   layout: no horizontal overflow at 1440  -> scrollWidth 1440 vs innerWidth 1440
+ ok   layout: no horizontal overflow at 1440  -> scrollWidth 1425 vs innerWidth 1440
+ ok   keyboard dock: 61 keys, snap handle, MIDI deck mounted  -> {"keys":61,"dock":true,"kbsnap":"function","midi":"object","midiBody":true}
  ok   zero page errors
 
-8 passed, 0 failed
+9 passed, 0 failed
