@@ -140,4 +140,5 @@ Effort summary: roughly **≈10–14 part-time build weeks** for v1 as now scope
 ## 8. Pointers
 
 - Product/design framing → `01-design-doc.md` · UI → `02-ui-design-brief.md` · build handoff → `04-agent-build-handoff.md` · open decisions & readiness → `05-spec-review.md`.
-- Evidence tree → `research/` (T0 digest, T1–T9, WAVE-LOG). PF sources → `C:\Users\Moddy\pattern-forge` (annexes 01–06, verify/, build.py, CONTINUATION).
+- Evidence tree → `research/` (T0 digest, T1–T9, WAVE-LOG).
+- Depth corpora (GitHub scouting, 2026-10-07) → `research/github/G1–G3` + `docs/06-github-goldmine.md` — study-before-build lists: engine (MI Clouds/Rings, msfa FM), FX (Airwindows, ChowDSP), sequencer (Stochas, Helio, seq66), adopt-lib shortlist. PF sources → `C:\Users\Moddy\pattern-forge` (annexes 01–06, verify/, build.py, CONTINUATION).

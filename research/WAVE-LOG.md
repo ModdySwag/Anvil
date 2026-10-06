@@ -53,3 +53,18 @@
 - **Folder renamed** `forge-synth` → `anvil` (a stale, empty `forge-synth` may linger until a Windows file-handle releases; delete at leisure).
 - **Phase 0 started:** `build.py` ported (explicit js_parts · `</script` guard · strict `node --check` guard · sha identity); `src/{head.html,styles.css,body.html,app_core.js}` created (theme tokens per 02 §9 “Anvil Teal”); **index.html built — 6,853 B · sha256 2fc8e71862d20361add6f43500cc722618029217e3f8ff8bc2cfe9f7e47828e0**; first-light screenshot `renders/p0-shell.png` (Edge headless 1440×900, verified). Git repo initialized (main); commits: scaffold + build/shell.
 - **Next:** master-tap port → knob framework → CDP harness + smoke → P1 worklet engine + **voice-count proof benchmark** (T5 §7).
+
+## GitHub goldmine wave — dispatched 2026-10-06 (late)
+
+Owner ask: "other GitHub resources in this field… scrape for more features / useability / upgrades / plugins / modules / improvements."
+Dispatched 3 scout tasks → `research/github/`:
+- G1 — DSP engines & libraries to study/port (Mutable Instruments eurorack/stmlib, Airwindows, ChowDSP, fundsp, DPF/DISTRHO, …)
+- G2 — web-audio ecosystem (awesome-web-audio, WAM plugin index, socalabs, UI/widget libs, encoders, analysis, soundfont players)
+- G3 — OSS synth feature catalogs as design specs (Vaporizer2, Helm, OB-Xd, Dexed, Cardinal/VCV taxonomy, Stochas/seq66 sequencers)
+Folding plan: parent-verify → `docs/06-github-goldmine.md` + implementation-spec updates.
+
+## GitHub goldmine wave — COMPLETE ✓ VERIFIED (2026-10-07 ~00:26)
+
+- Files: `research/github/G1` (18 entries, 50.5 KB) · `G2` (20, 34.9 KB) · `G3` (17 + 80-row feature menu, 63.7 KB). Counts match self-reports.
+- Parent spot-checks: Airwindows MIT ✓ · SpessaSynth Apache-2.0 ✓ · Vaporizer2 GPL-3.0 ✓ · eurorack README live (per-file split child-verified, audit required before any port) · Dexed msfa path flagged.
+- Folded into `docs/06-github-goldmine.md` (headlines + v1×16 item list + adopt-lib shortlist) + 03 §8 pointer. Ranked menu: v1×16 / v1.x×41 / later×22.

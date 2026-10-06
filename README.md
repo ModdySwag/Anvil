@@ -26,6 +26,7 @@ Resume at `CONTINUATION-2026-10-06.md`.
 - `research/tabs/` — T0 tab digest (the seed) + raw ditty sources · T1 dittytoy deep-dive
 - `research/acid/T2` · `groovebox/T3` · `matrix/T4` · `engine/T5` · `multiuser/T6` · `ui/T7` ·
   `packs/T8` · `reuse/T9` (Pattern Forge inventory)
+- `research/github/` — G1–G3 GitHub scouting (goldmine addendum: `docs/06`)
 - `research/WAVE-LOG.md` — verification log + decisions + Phase-0 kickoff
 
 ## Laws (see docs for detail)
