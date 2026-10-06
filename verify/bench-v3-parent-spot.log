@@ -1,0 +1,40 @@
+freeze sha256 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0 (243193 B)
+serving index.html at /index.html
+server: http://127.0.0.1:9400/ (repo root C:\Users\Moddy\anvil)
+devtools port: 9401
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+url: http://127.0.0.1:9400/index.html?avtest=1
+=== ANVIL bench rig === mode: real [offline-only]
+protocol: variants light+fat · steps [1,2,4,8,16,24,32,48,64] · 3 rep(s) · hold 10 s · stable = p95Us<1333 && underruns==0
+--- sanity ---
+engine: attr=worklet tier=worklet url=blob sr=48000 maxVoices=64 os=2 (boot 256 ms)
+sanity: PASS  state=running  advance=1.912s / wall 2.002s (ratio 0.955)  baseLatency=0.01  sampleRate=48000
+console messages: 2
+  [log] [anvil] boot — v0.1.0 tap=true knobs=true kb=true midi=true synth=true
+  [log] [anvil] engine ready — worklet:blob · sr 48000 · voices 64
+--offline-only: realtime ramps skipped (variants light+fat · steps [1,2,4,8,16,24,32,48,64] · 3 rep(s))
+--- offline ramp (publishable metric; fresh OfflineAudioContexts; T1=1 s / T2=4 s per N) ---
+offline protocol: N = [0 (baseline), 8, 16, 32, 48, 64, 96, 128] · T1 1 s / T2 4 s · fresh context per render · publish ≤ 1333 µs/quantum (~50% budget @ 48 k)
+offline caps: midi-space cap — max measurable N = 128 (notes post as midi = i, i in 0..N-1; the facade rejects midi>127) · sync barrier: await h.stats() and require active === N before startRendering (one fresh-context retry per cell, then STOP)
+  offline n=  0 (baseline) w1=7.8ms w2=17.5ms us/q=8.62 (0.32% budget) tier worklet:blob pool 64 rms1=0 rms2=0 active=0/0 ack=0.3/0.1ms boot 22.2/14.4ms
+  offline n=  8         w1=29.8ms w2=108.2ms us/q=69.69 (2.61% budget) tier worklet:blob pool 8 rms1=0.268 rms2=0.232 active=8/8 ack=0.7/0.4ms boot 12/10.9ms
+  offline n= 16         w1=61.3ms w2=196.4ms us/q=120.09 (4.5% budget) tier worklet:blob pool 16 rms1=0.341 rms2=0.32 active=16/16 ack=0.8/0.8ms boot 14.6/14.7ms
+  offline n= 32         w1=103ms w2=401.4ms us/q=265.24 (9.95% budget) tier worklet:blob pool 32 rms1=0.495 rms2=0.454 active=32/32 ack=0.8/0.8ms boot 12.5/10.8ms
+  offline n= 48         w1=150.2ms w2=567.7ms us/q=371.11 (13.92% budget) tier worklet:blob pool 48 rms1=0.573 rms2=0.537 active=48/48 ack=1.3/1.4ms boot 13.2/12.6ms
+  offline n= 64         w1=206.6ms w2=778.3ms us/q=508.18 (19.06% budget) tier worklet:blob pool 64 rms1=0.659 rms2=0.62 active=64/64 ack=1.1/1.1ms boot 12.2/11.8ms
+  offline n= 96         w1=283.1ms w2=1114ms us/q=738.58 (27.7% budget) tier worklet:blob pool 96 rms1=0.763 rms2=0.726 active=96/96 ack=1.4/1.4ms boot 12.6/10.9ms
+  offline n=128         w1=385.6ms w2=1521.2ms us/q=1009.42 (37.85% budget) tier worklet:blob pool 128 rms1=0.819 rms2=0.779 active=128/128 ack=1.5/1.6ms boot 11.8/11.1ms
+OFFLINE PUBLISHED: 128 voices (us/q ≤ 1333 µs) [cap: last step 128 reached — max measurable N = 128 (midi space ≤128); cost still under the 50%-budget bar]
+OFFLINE knee: last-pass n=128 · first-fail n=none (≤ last step / midi-space cap) · monotone=true
+OFFLINE PUBLISHED: 128 voices · knee last-pass n=128 first-fail n=null [cap: 128 = last step / midi-space limit]
+--offline-only: screenshot + fallback cell skipped — exiting after the offline ramp
+==== BENCH SUMMARY ====
+mode: real (offline-only)
+freeze: sha256 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0 (243193 B) [index.html]
+tier: worklet (delivery blob)
+sanity: PASS  advance=1.912s/2s  ratio=0.955  baseLatency=0.01
+published: {}
+offline: published 128 voices · knee {"lastPassN":128,"firstFailN":null,"monotone":true}
+json: verify/last-cdp_bench.json
+log: verify/last-cdp_bench.log
+BENCH-RESULT {"mode":"real","quick":false,"offlineOnly":true,"tier":"worklet","url":"blob","realtimeRatio":0.955,"published":{},"offlinePublished":128,"offlineKnee":{"lastPassN":128,"firstFailN":null,"monotone":true},"invalidReads":0,"json":"verify/last-cdp_bench.json","log":"verify/last-cdp_bench.log"}

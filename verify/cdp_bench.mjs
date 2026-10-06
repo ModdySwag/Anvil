@@ -11,6 +11,24 @@
 //                 allOff + 0.5 s settle. Stable = p95Us < 1333 AND underruns == 0. 3 reps per variant.
 //                 Per rep: max stable step (largest step whose whole prefix is stable).
 //                 Published per variant = min over reps. JSON + human log + screenshot.
+//                 Realtime lattice note (rev2): the worklet clock is Date.now (integer ms) — live
+//                 ring readings resolve to 0/1000/2000 µs and a 0 is EXPECTED at this engine's
+//                 speed (sub-1 ms cost, the lattice just can't resolve it); 0 ≠ zero cost.
+//   2b. offline — THE publishable metric (rev3; supersedes the rejected 32-quanta windowed variant,
+//                 verify/bench-v1-windowed-rejected.log — a window spans device-paced waiting,
+//                 measuring pacing, not render cost). Runs in-page via the global avEngineBoot with
+//                 fresh OfflineAudioContexts: per N two renders, T1 = 1.0 s and T2 = 4.0 s (2 ch,
+//                 the app's rate); usPerQuantum = (w2 − w1)*1000 / ((T2 − T1)*sr/128);
+//                 published = max N ≤ 1333 µs (50% of the 2666.7 µs/quantum budget @ 48 k).
+//                 rev3 sync barrier (fixes rev2's delivery race, verify/bench-v2-delivery-race.log):
+//                 notes post as midi = i for i in 0..N−1 (the facade rejects midi>127, so the midi
+//                 space caps measurable N at 128); after posting and BEFORE startRendering, await
+//                 h.stats() — the reply proves the queued note messages were processed (same port,
+//                 FIFO) — and REQUIRE every noteOn() === true AND stats.active === N. On mismatch:
+//                 ONE fresh-context retry of the cell; still mismatched ⇒ STOP + raw evidence (no
+//                 massaging). Every row logs its active= proof.
+//                 Boot null/spn tier or silent T1 at the lowest step ⇒ STOP + raw evidence (no
+//                 substitutes). Skipped in --mock (the mock page exposes no avEngineBoot).
 //   3. fallback — file:// load of the same page, expect tier 'spn', sanity + p95 at 8 voices
 //                 (no full ramp: single-cell smoke of the degraded tier — the published number comes
 //                 from the http ramp only, §9.1).
@@ -21,10 +39,12 @@
 // Flags: --mock  serve verify/_bench_mock.html at /index.html (rig self-test; skips the fallback
 //                cell and writes *_mock output files, so real outputs are never clobbered)
 //        --quick light variant, 1 rep, steps [8,32,64]
+//        --offline-only  sanity + the offline ramp only, then exit (realtime ramps + fallback
+//                cell skipped) — spot re-runs of the publishable metric
 //        --file <path>  page to serve at /index.html (default ../index.html; ignored with --mock)
 //        --port <n>     pin the http port (default: first free from 9400)
 //
-//   node verify/cdp_bench.mjs [--mock] [--quick] [--file <path>] [--port N]
+//   node verify/cdp_bench.mjs [--mock] [--quick] [--offline-only] [--file <path>] [--port N]
 import { spawn, execSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, appendFileSync, mkdirSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -42,6 +62,7 @@ const argVal = (f, def) => { const i = argv.indexOf(f); return i > -1 && argv[i 
 
 const MOCK = hasFlag('--mock');
 const QUICK = hasFlag('--quick');
+const OFFLINE_ONLY = hasFlag('--offline-only');   /* real mode: sanity + offline ramp, then exit */
 
 /* ---- page resolution (--mock pins the self-test page) ---- */
 let pageFile = path.resolve(argVal('--file', path.join(repoRoot, 'index.html')));
@@ -55,6 +76,14 @@ const VARIANTS = QUICK ? ['light'] : ['light', 'fat'];
 const REPS = QUICK ? 1 : 3;
 const HOLD_MS = 10000, SETTLE_MS = 500;
 const P95_LIMIT_US = 1333, NOTE_GAIN = 0.8;
+/* offline marginal-cost ramp (rev3 — THE publishable metric); notes post as midi = i (i in 0..N−1)
+   and delivery is verified by an await h.stats() FIFO barrier before startRendering */
+const OFFLINE_STEPS = QUICK ? [32, 64, 128] : [8, 16, 32, 48, 64, 96, 128];
+const OFFLINE_MAX_N = 128;                      /* midi space: the facade rejects midi>127 — max measurable N */
+const OFFLINE_DELIVERY_STAGES = ['stats-null', 'note-rejected', 'active-mismatch'];   /* barrier failures */
+const OFFLINE_T1_S = 1.0, OFFLINE_T2_S = 4.0;   /* two fresh contexts per N; the wall delta cancels fixed cost */
+const OFFLINE_LIMIT_US = 1333;                  /* 50% of the 2666.7 µs/quantum budget at 48 k */
+const OFFLINE_SR_FALLBACK = 48000;              /* used only if the live ctx is unreachable */
 const EVAL_TIMEOUT_MS = 12000;
 const WATCHDOG_MS = 25 * 60 * 1000;
 
@@ -88,17 +117,20 @@ function log(s) {
 
 const RESULT = {
   kind: 'anvil-cdp-bench', version: 1,
-  mode: MOCK ? 'mock' : 'real', quick: QUICK,
+  mode: MOCK ? 'mock' : 'real', quick: QUICK, offlineOnly: OFFLINE_ONLY,
   startedAt: new Date().toISOString(), finishedAt: null,
   page: { file: pageRel, bytes: 0, sha256: null, servedPath: '/index.html', mockOverride: MOCK },
   protocol: {
     steps: STEPS, reps: REPS, variants: VARIANTS, holdMs: HOLD_MS, settleMs: SETTLE_MS,
     stability: 'p95Us < ' + P95_LIMIT_US + ' && underruns == 0',
     publishedRule: 'per rep: largest step whose stable-prefix is contiguous; per variant: min over reps',
+    offlineSteps: OFFLINE_STEPS, offlineT1Sec: OFFLINE_T1_S, offlineT2Sec: OFFLINE_T2_S, offlineLimitUs: OFFLINE_LIMIT_US,
+    offlineRule: 'fresh OfflineAudioContext per N (via page avEngineBoot, engine default patch); notes midi = i (i in 0..N−1; facade rejects midi>127 → max measurable N = ' + OFFLINE_MAX_N + '); sync barrier: await h.stats() after posting, before startRendering — every noteOn() === true && stats.active === N required (one fresh-context retry per cell, then STOP); usPerQuantum = (w2−w1)*1000 / ((T2−T1)*sr/128); published = max N ≤ ' + OFFLINE_LIMIT_US + ' µs',
+    realtimeLattice: 'worklet clock = Date.now ms lattice — ring readings 0/1000/2000 µs; 0 means sub-1 ms, not zero cost',
   },
   patches: PATCHES,
   env: { node: process.version, platform: process.platform },
-  engine: null, sanity: null, variants: {}, published: {},
+  engine: null, sanity: null, variants: {}, published: {}, offline: null,
   mock: MOCK ? {} : undefined, fallback: null,
   shot: null, console: [], pageErrors: [], verdict: null, exitCode: null,
 };
@@ -134,6 +166,7 @@ const server = http.createServer((req, res) => {
     const u = new URL(req.url, 'http://127.0.0.1');
     let p = decodeURIComponent(u.pathname);
     if (p === '/' || p === '') p = '/index.html';
+    if (p === '/favicon.ico') { res.writeHead(204); res.end(); return; }   /* rev2: kill the boot 404 noise */
     if (MOCK && p === '/index.html') {
       res.writeHead(200, { 'content-type': MIME['.html'], 'cache-control': 'no-store' });
       res.end(readFileSync(pageFile));
@@ -255,9 +288,9 @@ async function cdpConnect(wsUrl) {
       if (api.errors.length < 100) api.errors.push('LOG: ' + m.params.entry.text);
     }
   };
-  api.ev = async (expr, tries = 2) => {
+  api.ev = async (expr, tries = 2, timeoutMs = EVAL_TIMEOUT_MS) => {
     for (let t = 0; ; t++) {
-      const r = await api.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true, timeout: EVAL_TIMEOUT_MS });
+      const r = await api.send('Runtime.evaluate', { expression: expr, returnByValue: true, awaitPromise: true, timeout: timeoutMs });
       if (!r.exceptionDetails) return { value: r.result ? r.result.value : undefined };
       const desc = r.exceptionDetails.exception?.description || r.exceptionDetails.text || 'eval error';
       if (t < tries - 1 && /context was destroyed|Cannot find context|Inspected target navigated/i.test(desc)) { await sleep(400); continue; }
@@ -395,6 +428,198 @@ async function shoot(cdp, rel) {
   } catch (e) { log('shot FAILED: ' + e.message); return false; }
 }
 
+/* ---- offline marginal-cost ramp (rev3 — THE publishable metric; rev2's delivery race is closed
+   by the await h.stats() FIFO barrier + the midi = i note pattern) ----
+   Why this and not the ring: the live ring records per-quantum render duration with the worklet's
+   Date.now clock — an integer-ms lattice (0/1000/2000 µs) that cannot resolve sub-1 ms cost;
+   all-zero live readings are EXPECTED at this engine's speed. A 32-quanta windowed variant was
+   tried and REJECTED (verify/bench-v1-windowed-rejected.log): a window spans device-paced waiting
+   between process() calls (~2.59 ms/quantum floor at ONE voice), measuring pacing, not render cost.
+   This ramp measures steady render cost directly in-page: fresh OfflineAudioContext per N via the
+   page's global avEngineBoot; per N two renders T1 = 1.0 s and T2 = 4.0 s (2 ch, the app's rate);
+   the wall delta cancels per-context fixed overhead and divides by the extra quanta:
+     usPerQuantum = (w2 − w1) * 1000 [µs/ms] / ((T2 − T1) * sr / 128).                        */
+
+function offlineCellExpr(n, seconds) {
+  return `(async () => {
+  const live = window.__avEngine && window.__avEngine.handle;
+  const liveCtx = (live && live.ctx) || null;
+  const sr = (liveCtx && liveCtx.sampleRate) || ${OFFLINE_SR_FALLBACK};
+  if (typeof avEngineBoot !== 'function') return { stage: 'no-boot-global', err: 'avEngineBoot is not a page global' };
+  const n = ${n};
+  let oc = null;
+  try { oc = new OfflineAudioContext(2, Math.round(${seconds} * sr), sr); }
+  catch (e) { return { stage: 'oc-create', err: 'OfflineAudioContext create failed: ' + ((e && e.message) || e) }; }
+  const bt0 = performance.now();
+  let h = null;
+  try { h = await avEngineBoot(oc, { maxVoices: ${n}, offline: true }); }
+  catch (e) { return { stage: 'boot-threw', err: 'avEngineBoot threw: ' + ((e && e.message) || e), bootMs: performance.now() - bt0 }; }
+  const bootMs = performance.now() - bt0;
+  if (!h) return { stage: 'boot-null', err: 'avEngineBoot returned null', bootMs: bootMs };
+  const tier = h.tier, url = h.url, maxVoices = h.maxVoices;
+  /* rev3 sync barrier: post the N notes (pattern midi = i, i in 0..N−1; the facade rejects
+     midi>127), then await h.stats() — same port, FIFO: the reply proves every queued note
+     message was processed BEFORE startRendering. REQUIRE every noteOn() === true AND
+     stats.active === n; a mismatch is a delivery failure (retried once by the rig, then STOP). */
+  let posted = 0, rejected = 0, noteThrew = 0;
+  for (let i = 0; i < n; i++) {
+    let ok = false;
+    try { ok = h.noteOn(i, ${NOTE_GAIN}) === true; } catch (e) { noteThrew++; }
+    if (ok) posted++; else rejected++;
+  }
+  const at0 = performance.now();
+  let st = null, stErr = null;
+  try { st = await h.stats(); } catch (e) { stErr = String((e && e.message) || e); }
+  const ackMs = performance.now() - at0;
+  const active = (st && typeof st.active === 'number') ? st.active : null;
+  const base = { tier: tier, url: url, maxVoices: maxVoices, bootMs: bootMs, sr: sr,
+                 posted: posted, rejected: rejected, noteThrew: noteThrew, ackMs: ackMs, active: active };
+  if (!st) return Object.assign(base, { stage: 'stats-null', err: 'stats() barrier returned no reply (timeout/throw)' + (stErr ? ': ' + stErr : '') });
+  if (rejected > 0) return Object.assign(base, { stage: 'note-rejected', err: rejected + '/' + n + ' noteOn posts were not accepted' + (noteThrew ? ' (' + noteThrew + ' threw)' : '') });
+  if (active !== n) return Object.assign(base, { stage: 'active-mismatch', err: 'stats.active=' + active + ' != n=' + n });
+  const w0 = performance.now();
+  let buf = null;
+  try { buf = await oc.startRendering(); }
+  catch (e) { return Object.assign(base, { stage: 'render-fail', err: 'startRendering failed: ' + ((e && e.message) || e) }); }
+  const w1 = performance.now();
+  const d = buf.getChannelData(0);
+  let sum = 0, pk = 0;
+  for (let i = 0; i < d.length; i++) { const v = d[i]; sum += v * v; const a = v < 0 ? -v : v; if (a > pk) pk = a; }
+  return Object.assign(base, { stage: 'ok', ms: w1 - w0, rms: Math.sqrt(sum / d.length), peak: pk, len: d.length });
+})()`;
+}
+
+async function offlineCell(cdp, n, seconds) {
+  const r = await cdp.ev(offlineCellExpr(n, seconds), 1, 30000);   /* boot + render of one fresh context */
+  if (r && r.value && typeof r.value === 'object') return r.value;
+  return { stage: 'eval', err: (r && r.error) || 'offline eval returned no value' };
+}
+
+/* rev3: a delivery-stage failure means the note messages did not verifiably reach the worklet —
+   retry the cell ONCE with a fresh context (a new offlineCell call = new OfflineAudioContext);
+   if it fails again the caller stops the ramp with raw evidence (no massaging). */
+async function offlineCellVerified(cdp, n, seconds, label) {
+  let c = await offlineCell(cdp, n, seconds);
+  c.attempts = 1;
+  if (OFFLINE_DELIVERY_STAGES.includes(c.stage)) {
+    log('  offline retry: n=' + n + ' ' + label + ' barrier mismatch — ' + c.stage + ' (' + (c.err || '') + ') [' +
+      'stats ' + (c.active == null ? 'no-reply' : 'active=' + c.active) + ' · posted ' + (c.posted == null ? '?' : c.posted) + '/' + n +
+      '] — retrying once with a fresh context');
+    const first = { stage: c.stage, active: c.active, posted: c.posted, rejected: c.rejected, err: c.err || null };
+    c = await offlineCell(cdp, n, seconds);
+    c.attempts = 2; c.retried = true; c.firstAttempt = first;
+  }
+  return c;
+}
+
+function offlineLine(row) {
+  const n = String(row.n).padStart(3);
+  const proof = row.proof ? ' ' + row.proof : '';
+  if (row.invalid) return '  offline n=' + n + (row.n === 0 ? ' (baseline)' : '        ') + '  INVALID — ' + row.note + proof;
+  return '  offline n=' + n + (row.n === 0 ? ' (baseline)' : '        ') +
+    ' w1=' + row.w1Ms + 'ms w2=' + row.w2Ms + 'ms us/q=' + row.usPerQuantum +
+    ' (' + row.pctBudget + '% budget) tier ' + (row.tier || '?') +
+    ' pool ' + (row.pool == null ? '?' : row.pool) + ' rms1=' + row.rms1 + ' rms2=' + row.rms2 +
+    proof + ' boot ' + row.boot1Ms + '/' + row.boot2Ms + 'ms';
+}
+
+async function offlineRamp(cdp) {
+  const out = {
+    method: 'fresh OfflineAudioContext per N · T1 = ' + OFFLINE_T1_S + ' s / T2 = ' + OFFLINE_T2_S + ' s · usPerQuantum = (w2 − w1)*1000 / ((T2 − T1)*sr/128)',
+    patch: 'engine defaults (= LIGHT bench patch: saw 1.0 · wt.saw 0.5 · lp24 800/0.3/envAmt 2 · env1 .002/.3/.8/.2 · env2 .001/.5/.5/.3 · uni 1 · lfo 0)',
+    t1Sec: OFFLINE_T1_S, t2Sec: OFFLINE_T2_S, limitUs: OFFLINE_LIMIT_US,
+    maxMeasurableN: OFFLINE_MAX_N,
+    deliveryRule: 'sync barrier: await h.stats() after the note posts, before startRendering; every noteOn() === true AND stats.active === N required; one fresh-context retry per cell, then STOP',
+    midiRule: 'notes post as midi = i (i in 0..N−1); the facade rejects midi>127 — the midi space caps measurable N at ' + OFFLINE_MAX_N,
+    sr: null, budgetUs: null,
+    baseline: null, steps: [], published: null, poolCap: false, knee: null,
+    tierDeviations: [], fatal: null,
+  };
+  const lowestStep = OFFLINE_STEPS[0];
+  let stop = null;
+  log('offline protocol: N = [0 (baseline), ' + OFFLINE_STEPS.join(', ') + '] · T1 ' + OFFLINE_T1_S +
+    ' s / T2 ' + OFFLINE_T2_S + ' s · fresh context per render · publish ≤ ' + OFFLINE_LIMIT_US + ' µs/quantum (~50% budget @ 48 k)');
+  log('offline caps: midi-space cap — max measurable N = ' + OFFLINE_MAX_N + ' (notes post as midi = i, i in 0..N-1; the facade rejects midi>127) · sync barrier: await h.stats() and require active === N before startRendering (one fresh-context retry per cell, then STOP)');
+
+  for (const n of [0].concat(OFFLINE_STEPS)) {
+    const c1 = await offlineCellVerified(cdp, n, OFFLINE_T1_S, 'T1');
+    const c2 = await offlineCellVerified(cdp, n, OFFLINE_T2_S, 'T2');
+    const raw = { n: n, t1: c1, t2: c2 };
+    /* STOP conditions (rev2/rev3 brief): null boot anywhere; non-worklet (null/spn) tier anywhere;
+       persistent delivery-barrier failure after the one fresh-context retry (no massaging) */
+    for (const c of [c1, c2]) {
+      if (c.stage === 'boot-null' || c.stage === 'boot-threw') { stop = { kind: 'boot-' + c.stage.slice(5), raw: raw }; break; }
+      if (c.stage === 'ok' && !/^worklet/.test(String(c.tier || ''))) { stop = { kind: 'tier-' + String(c.tier), raw: raw }; break; }
+      if (OFFLINE_DELIVERY_STAGES.includes(c.stage)) { stop = { kind: 'delivery-' + c.stage, raw: raw }; break; }
+    }
+    if (stop) break;
+    /* the sanity gate: T1 at the LOWEST N>0 step must be non-silent (offline port-message delivery) */
+    if (n === lowestStep && c1.stage === 'ok' && !(c1.rms > 0)) { stop = { kind: 'offline-silent', raw: raw }; break; }
+    if (n === lowestStep && c1.stage !== 'ok') { stop = { kind: 't1-' + c1.stage, raw: raw }; break; }
+
+    const row = { n: n, tier: c1.tier || (c2 && c2.tier) || null, pool: (c1.maxVoices != null) ? c1.maxVoices : null,
+      boot1Ms: (typeof c1.bootMs === 'number') ? r2(c1.bootMs) : null, boot2Ms: (typeof c2.bootMs === 'number') ? r2(c2.bootMs) : null,
+      w1Ms: (typeof c1.ms === 'number') ? r2(c1.ms) : null, w2Ms: (typeof c2.ms === 'number') ? r2(c2.ms) : null,
+      rms1: (typeof c1.rms === 'number') ? r3(c1.rms) : null, rms2: (typeof c2.rms === 'number') ? r3(c2.rms) : null, sr: c1.sr || null,
+      active1: (typeof c1.active === 'number') ? c1.active : null, active2: (typeof c2.active === 'number') ? c2.active : null,
+      ack1Ms: (typeof c1.ackMs === 'number') ? r2(c1.ackMs) : null, ack2Ms: (typeof c2.ackMs === 'number') ? r2(c2.ackMs) : null,
+      posted1: (typeof c1.posted === 'number') ? c1.posted : null, posted2: (typeof c2.posted === 'number') ? c2.posted : null };
+    /* every row carries its barrier proof: active=<T1>/<T2> plus the ack round-trips */
+    row.proof = 'active=' + (row.active1 == null ? '?' : row.active1) + '/' + (row.active2 == null ? '?' : row.active2) +
+      ' ack=' + (row.ack1Ms == null ? '?' : row.ack1Ms) + '/' + (row.ack2Ms == null ? '?' : row.ack2Ms) + 'ms' +
+      ((c1.retried || c2.retried) ? ' retried' : '');
+    if (c1.stage === 'ok' && c2.stage === 'ok' && typeof c1.ms === 'number' && typeof c2.ms === 'number' && c1.sr === c2.sr && c1.sr > 0) {
+      const extraQuanta = (OFFLINE_T2_S - OFFLINE_T1_S) * c1.sr / 128;
+      const deltaMs = c2.ms - c1.ms;
+      const uq = deltaMs * 1000 / extraQuanta;
+      if (isFinite(uq) && uq > 0) {
+        row.usPerQuantum = r2(uq);
+        row.pctBudget = r2(uq / (128e6 / c1.sr) * 100);
+        if (out.sr == null) { out.sr = c1.sr; out.budgetUs = r2(128e6 / c1.sr); }
+      } else { row.invalid = true; row.note = 'non-positive wall delta (w2 ≤ w1) — flake or unmeasurable'; }
+    } else {
+      row.invalid = true;
+      row.note = 'cell stage t1=' + c1.stage + ' t2=' + c2.stage + ' · ' + JSON.stringify({ t1: c1.err || null, t2: c2.err || null });
+    }
+    if (row.tier === 'worklet:data') out.tierDeviations.push('n=' + n + ' landed on worklet:data (blob expected on http)');
+    if (n === 0) out.baseline = row; else out.steps.push(row);
+    log(offlineLine(row));
+    writeJson();
+    if (!row.invalid && out.sr != null && c1.sr !== out.sr) log('  offline note: sr changed mid-ramp (' + c1.sr + ' vs ' + out.sr + ')');
+  }
+
+  if (stop) {
+    out.fatal = stop;
+    log('OFFLINE STOP: ' + stop.kind + ' — stopping the offline ramp; no publishable number, no substitutes.');
+    if (stop.kind === 'offline-silent') log('OFFLINE STOP hint: silent T1 at the lowest step = offline port-message delivery timing issue (notes did not reach the worklet before startRendering).');
+    if (stop.kind.startsWith('tier-') || stop.kind === 'boot-null' || stop.kind === 'boot-threw') log('OFFLINE STOP hint: offline boot did not land on worklet:blob — check the facade ladder for OfflineAudioContext.');
+    if (stop.kind.startsWith('delivery-')) log('OFFLINE STOP hint: the sync barrier failed twice on a cell (after the one fresh-context retry) — note messages did not verifiably reach the offline worklet (delivery race or noteOn rejected); refusing to continue (no massaging).');
+    log('OFFLINE STOP raw: ' + JSON.stringify(stop.raw));
+    return out;
+  }
+
+  /* publish = max N with usPerQuantum <= limit; report the knee */
+  let lastPassN = null, firstFailN = null, prevUq = null, monotone = true;
+  for (const row of out.steps) {
+    if (row.invalid || typeof row.usPerQuantum !== 'number') continue;
+    if (row.usPerQuantum <= OFFLINE_LIMIT_US) lastPassN = row.n;
+    else if (firstFailN === null) firstFailN = row.n;
+    if (prevUq != null && row.usPerQuantum < prevUq * 0.9) monotone = false;   /* >10% dip = note it */
+    prevUq = row.usPerQuantum;
+  }
+  out.published = lastPassN;
+  out.poolCap = (lastPassN != null && lastPassN === OFFLINE_STEPS[OFFLINE_STEPS.length - 1]);
+  out.knee = { lastPassN: lastPassN, firstFailN: firstFailN, monotone: monotone };
+  if (out.published == null) {
+    log('OFFLINE: no N passed us/q ≤ ' + OFFLINE_LIMIT_US + ' µs — nothing published (raw rows above)');
+  } else {
+    log('OFFLINE PUBLISHED: ' + out.published + ' voices (us/q ≤ ' + OFFLINE_LIMIT_US + ' µs)' +
+      (out.poolCap ? ' [cap: last step ' + OFFLINE_STEPS[OFFLINE_STEPS.length - 1] + ' reached — max measurable N = ' + OFFLINE_MAX_N + ' (midi space ≤128); cost still under the 50%-budget bar]' : ''));
+    log('OFFLINE knee: last-pass n=' + lastPassN + ' · first-fail n=' + (firstFailN == null ? 'none (≤ last step / midi-space cap)' : firstFailN) + ' · monotone=' + monotone);
+  }
+  return out;
+}
+
 /* ---- fallback cell (real mode only: file:// load, expect tier spn) ---- */
 async function fallbackCell() {
   log('--- fallback cell (file:// load, expect tier spn; no full ramp: single-cell smoke of the degraded tier — the published number comes from the http ramp only) ---');
@@ -450,7 +675,7 @@ async function fallbackCell() {
 
 /* ---- main ---- */
 async function main() {
-  log('=== ANVIL bench rig === mode: ' + (MOCK ? 'MOCK (verify/_bench_mock.html served at /index.html)' : 'real') + (QUICK ? ' [quick]' : ''));
+  log('=== ANVIL bench rig === mode: ' + (MOCK ? 'MOCK (verify/_bench_mock.html served at /index.html)' : 'real') + (QUICK ? ' [quick]' : '') + (OFFLINE_ONLY ? ' [offline-only]' : ''));
   log('protocol: variants ' + VARIANTS.join('+') + ' · steps [' + STEPS.join(',') + '] · ' + REPS + ' rep(s) · hold ' + (HOLD_MS / 1000) + ' s · stable = p95Us<' + P95_LIMIT_US + ' && underruns==0');
 
   let target = null;
@@ -541,9 +766,13 @@ async function main() {
     RESULT.mock.driverRun = (dr && dr.value) || null;
   }
 
-  /* 2. ramp */
-  log('--- ramp ---');
+  /* 2. ramp (skipped with --offline-only — the offline metric is independent of the live ramp) */
   let invalidReads = 0;
+  if (OFFLINE_ONLY) {
+    log('--offline-only: realtime ramps skipped (variants ' + VARIANTS.join('+') + ' · steps [' + STEPS.join(',') + '] · ' + REPS + ' rep(s))');
+  } else {
+  log('--- ramp ---');
+  log('realtime ring semantics: worklet clock = Date.now (ms lattice) — ring readings resolve to 0/1000/2000 µs and 0 is EXPECTED at this engine speed (sub-1 ms cost); 0 ≠ zero cost — stability stays p95Us<' + P95_LIMIT_US + ' && underruns==0, and the publishable render cost comes from the offline ramp (fresh-context marginal cost).');
   for (const variant of VARIANTS) {
     const v = { patch: PATCHES[variant], reps: [], published: null };
     RESULT.variants[variant] = v;
@@ -567,37 +796,70 @@ async function main() {
     RESULT.published[variant] = v.published;
     log(variant.toUpperCase() + ' PUBLISHED: ' + v.published);
   }
+  }
 
-  /* 3. screenshot, fallback cell */
-  await sleep(350);
-  await shoot(cdp, shotRel);
+  /* 2b. offline marginal-cost ramp — THE publishable metric (rev3) */
+  log('--- offline ramp (publishable metric; fresh OfflineAudioContexts; T1=' + OFFLINE_T1_S + ' s / T2=' + OFFLINE_T2_S + ' s per N) ---');
+  let offlineFatal = false;
   if (MOCK) {
-    log('fallback cell: skipped in --mock (the mock page has no tier ladder; the file:// cell targets the real facade — §9.1)');
-    RESULT.fallback = { skipped: true, why: 'mock page has no spn tier; fallback cell targets the real facade ladder' };
+    log('offline ramp: skipped in --mock (the mock page exposes no avEngineBoot — the offline ramp targets the real facade)');
+    RESULT.offline = { skipped: true, why: 'mock page has no avEngineBoot; offline ramp targets the real facade' };
   } else {
-    await fallbackCell();
+    RESULT.offline = await offlineRamp(cdp);
+    const fo = RESULT.offline && RESULT.offline.fatal;
+    if (fo) {
+      offlineFatal = true;
+      log('OFFLINE STOP (' + fo.kind + ') — no publishable offline number from this run; raw evidence in the OFFLINE STOP lines above.');
+    } else if (RESULT.offline) {
+      const k = RESULT.offline.knee || {};
+      log('OFFLINE PUBLISHED: ' + RESULT.offline.published + ' voices · knee last-pass n=' + k.lastPassN + ' first-fail n=' + k.firstFailN +
+        (RESULT.offline.poolCap ? ' [cap: ' + OFFLINE_STEPS[OFFLINE_STEPS.length - 1] + ' = last step / midi-space limit]' : ''));
+    }
+  }
+
+  /* 3. screenshot, fallback cell (both skipped with --offline-only) */
+  if (OFFLINE_ONLY) {
+    log('--offline-only: screenshot + fallback cell skipped — exiting after the offline ramp');
+  } else {
+    await sleep(350);
+    await shoot(cdp, shotRel);
+    if (MOCK) {
+      log('fallback cell: skipped in --mock (the mock page has no tier ladder; the file:// cell targets the real facade — §9.1)');
+      RESULT.fallback = { skipped: true, why: 'mock page has no spn tier; fallback cell targets the real facade ladder' };
+    } else {
+      await fallbackCell();
+    }
   }
 
   /* summary */
   log('==== BENCH SUMMARY ====');
-  log('mode: ' + RESULT.mode + (QUICK ? ' (quick)' : ''));
+  log('mode: ' + RESULT.mode + (QUICK ? ' (quick)' : '') + (OFFLINE_ONLY ? ' (offline-only)' : ''));
   log('freeze: sha256 ' + RESULT.page.sha256 + ' (' + RESULT.page.bytes + ' B) [' + RESULT.page.file + ']');
   log('tier: ' + RESULT.engine.attr + ' (delivery ' + (RESULT.engine.url || '?') + ')');
   log('sanity: PASS  advance=' + RESULT.sanity.advanceSec + 's/2s  ratio=' + RESULT.sanity.ratio + '  baseLatency=' + RESULT.sanity.baseLatency);
   if (MOCK) log('mock: blobWorklet=' + RESULT.mock.blobWorklet + '  driver=' + JSON.stringify(RESULT.mock.driverRun));
   log('published: ' + JSON.stringify(RESULT.published));
+  log('offline: ' + (RESULT.offline && RESULT.offline.skipped ? 'skipped (--mock)' :
+    (RESULT.offline && RESULT.offline.fatal) ? ('STOPPED (' + RESULT.offline.fatal.kind + ') — no publishable number') :
+    (RESULT.offline && RESULT.offline.published != null) ? ('published ' + RESULT.offline.published + ' voices · knee ' + JSON.stringify(RESULT.offline.knee)) :
+    'no publishable number'));
   log('json: ' + relOut(jsonPath));
   log('log: ' + relOut(logPath));
   if (RESULT.shot) log('shot: ' + RESULT.shot.file);
   log('BENCH-RESULT ' + JSON.stringify({
-    mode: RESULT.mode, quick: QUICK, tier: RESULT.engine.attr, url: RESULT.engine.url,
+    mode: RESULT.mode, quick: QUICK, offlineOnly: OFFLINE_ONLY ? true : undefined,
+    tier: RESULT.engine.attr, url: RESULT.engine.url,
     realtimeRatio: RESULT.sanity.ratio,
     blobWorklet: MOCK && RESULT.mock ? RESULT.mock.blobWorklet : undefined,
-    published: RESULT.published, invalidReads, json: relOut(jsonPath), log: relOut(logPath),
+    published: RESULT.published,
+    offlinePublished: (RESULT.offline && RESULT.offline.published != null) ? RESULT.offline.published : null,
+    offlineKnee: (RESULT.offline && RESULT.offline.knee) || null,
+    offlineFatal: offlineFatal ? true : undefined,
+    invalidReads, json: relOut(jsonPath), log: relOut(logPath),
   }));
 
-  RESULT.verdict = 'complete';
-  finish(invalidReads > 0 ? 1 : 0);
+  RESULT.verdict = offlineFatal ? ('offline-' + (RESULT.offline && RESULT.offline.fatal ? RESULT.offline.fatal.kind : 'stop')) : 'complete';
+  finish((invalidReads > 0 || offlineFatal) ? 1 : 0);
 }
 
 main().catch((err) => {

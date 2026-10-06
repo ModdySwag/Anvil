@@ -1,0 +1,110 @@
+freeze sha256 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0 (243193 B)
+serving index.html at /index.html
+server: http://127.0.0.1:9400/ (repo root C:\Users\Moddy\anvil)
+devtools port: 9401
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+url: http://127.0.0.1:9400/index.html?avtest=1
+=== ANVIL bench rig === mode: real
+protocol: variants light+fat · steps [1,2,4,8,16,24,32,48,64] · 3 rep(s) · hold 10 s · stable = p95Us<1333 && underruns==0
+--- sanity ---
+engine: attr=worklet tier=worklet url=blob sr=48000 maxVoices=64 os=2 (boot 523 ms)
+sanity: PASS  state=running  advance=2s / wall 2.002s (ratio 0.999)  baseLatency=0.01  sampleRate=48000
+console messages: 2
+  [log] [anvil] boot — v0.1.0 tap=true knobs=true kb=true midi=true synth=true
+  [log] [anvil] engine ready — worklet:blob · sr 48000 · voices 64
+--- ramp ---
+realtime ring semantics: worklet clock = Date.now (ms lattice) — ring readings resolve to 0/1000/2000 µs and 0 is EXPECTED at this engine speed (sub-1 ms cost); 0 ≠ zero cost — stability stays p95Us<1333 && underruns==0, and the publishable render cost comes from the offline ramp (fresh-context marginal cost).
+variant LIGHT: patch applied (all params accepted)
+  light r1 step  1  voices 1  mean 31.25  p95 0  max 1000  underruns 0  n 3757  -> ok
+  light r1 step  2  voices 2  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  light r1 step  4  voices 4  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  light r1 step  8  voices 8  mean 31.25  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 16  voices 16  mean 19.53  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 24  voices 24  mean 70.31  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  light r1 step 32  voices 32  mean 332.03  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  light r1 step 48  voices 48  mean 468.75  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 64  voices 64  mean 535.16  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light rep 1 max stable: 64 / 64
+  light r2 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3758  -> ok
+  light r2 step  2  voices 2  mean 19.53  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r2 step  4  voices 4  mean 3.91  p95 0  max 1000  underruns 0  n 3750  -> ok
+  light r2 step  8  voices 8  mean 42.97  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r2 step 16  voices 16  mean 218.75  p95 1000  max 1000  underruns 0  n 3757  -> ok
+  light r2 step 24  voices 24  mean 257.81  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r2 step 32  voices 32  mean 261.72  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r2 step 48  voices 48  mean 375  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r2 step 64  voices 64  mean 480.47  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light rep 2 max stable: 64 / 64
+  light r3 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3757  -> ok
+  light r3 step  2  voices 2  mean 109.38  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  light r3 step  4  voices 4  mean 195.31  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r3 step  8  voices 8  mean 152.34  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 16  voices 16  mean 210.94  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r3 step 24  voices 24  mean 226.56  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 32  voices 32  mean 261.72  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r3 step 48  voices 48  mean 285.16  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  light r3 step 64  voices 64  mean 562.5  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light rep 3 max stable: 64 / 64
+LIGHT PUBLISHED: 64
+variant FAT: patch applied (all params accepted)
+  fat r1 step  1  voices 1  mean 39.06  p95 0  max 1000  underruns 0  n 3758  -> ok
+  fat r1 step  2  voices 2  mean 7.81  p95 0  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step  4  voices 4  mean 11.72  p95 0  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step  8  voices 8  mean 31.25  p95 0  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step 16  voices 16  mean 105.47  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat r1 step 24  voices 24  mean 195.31  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat r1 step 32  voices 32  mean 390.63  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step 48  voices 48  mean 519.53  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat r1 step 64  voices 64  mean 687.5  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat rep 1 max stable: 64 / 64
+  fat r2 step  1  voices 1  mean 3.91  p95 0  max 1000  underruns 0  n 3750  -> ok
+  fat r2 step  2  voices 2  mean 15.63  p95 0  max 1000  underruns 0  n 3750  -> ok
+  fat r2 step  4  voices 4  mean 15.63  p95 0  max 1000  underruns 0  n 3754  -> ok
+  fat r2 step  8  voices 8  mean 3.91  p95 0  max 1000  underruns 0  n 3750  -> ok
+  fat r2 step 16  voices 16  mean 234.38  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r2 step 24  voices 24  mean 292.97  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r2 step 32  voices 32  mean 351.56  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r2 step 48  voices 48  mean 476.56  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  fat r2 step 64  voices 64  mean 554.69  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat rep 2 max stable: 64 / 64
+  fat r3 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3753  -> ok
+  fat r3 step  2  voices 2  mean 23.44  p95 0  max 1000  underruns 0  n 3753  -> ok
+  fat r3 step  4  voices 4  mean 132.81  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat r3 step  8  voices 8  mean 234.38  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r3 step 16  voices 16  mean 238.28  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  fat r3 step 24  voices 24  mean 246.09  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r3 step 32  voices 32  mean 257.81  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r3 step 48  voices 48  mean 449.22  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat r3 step 64  voices 64  mean 742.19  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat rep 3 max stable: 64 / 64
+FAT PUBLISHED: 64
+--- offline ramp (publishable metric; fresh OfflineAudioContexts; T1=1 s / T2=4 s per N) ---
+offline protocol: N = [0 (baseline), 8, 16, 32, 48, 64, 96, 128] · T1 1 s / T2 4 s · fresh context per render · publish ≤ 1333 µs/quantum (~50% budget @ 48 k)
+offline caps: midi-space cap — max measurable N = 128 (notes post as midi = i, i in 0..N-1; the facade rejects midi>127) · sync barrier: await h.stats() and require active === N before startRendering (one fresh-context retry per cell, then STOP)
+  offline n=  0 (baseline) w1=5.1ms w2=15.7ms us/q=9.42 (0.35% budget) tier worklet:blob pool 64 rms1=0 rms2=0 active=0/0 ack=0.2/0.1ms boot 15/12.3ms
+  offline n=  8         w1=29.4ms w2=97ms us/q=60.09 (2.25% budget) tier worklet:blob pool 8 rms1=0.268 rms2=0.232 active=8/8 ack=0.5/0.6ms boot 11.9/11.7ms
+  offline n= 16         w1=53.8ms w2=189.3ms us/q=120.44 (4.52% budget) tier worklet:blob pool 16 rms1=0.341 rms2=0.32 active=16/16 ack=0.8/0.8ms boot 12.3/10.7ms
+  offline n= 32         w1=100.2ms w2=386.5ms us/q=254.49 (9.54% budget) tier worklet:blob pool 32 rms1=0.495 rms2=0.454 active=32/32 ack=0.9/0.9ms boot 12.9/12.2ms
+  offline n= 48         w1=154.5ms w2=572.8ms us/q=371.82 (13.94% budget) tier worklet:blob pool 48 rms1=0.573 rms2=0.537 active=48/48 ack=1/1.2ms boot 11.5/12ms
+  offline n= 64         w1=198.9ms w2=749.4ms us/q=489.33 (18.35% budget) tier worklet:blob pool 64 rms1=0.659 rms2=0.62 active=64/64 ack=1.1/1.1ms boot 14/12.1ms
+  offline n= 96         w1=295.8ms w2=1131.4ms us/q=742.76 (27.85% budget) tier worklet:blob pool 96 rms1=0.763 rms2=0.726 active=96/96 ack=1.4/1.5ms boot 11.7/12.3ms
+  offline n=128         w1=393.5ms w2=1553.3ms us/q=1030.93 (38.66% budget) tier worklet:blob pool 128 rms1=0.819 rms2=0.779 active=128/128 ack=1.7/1.7ms boot 13.2/12.7ms
+OFFLINE PUBLISHED: 128 voices (us/q ≤ 1333 µs) [cap: last step 128 reached — max measurable N = 128 (midi space ≤128); cost still under the 50%-budget bar]
+OFFLINE knee: last-pass n=128 · first-fail n=none (≤ last step / midi-space cap) · monotone=true
+OFFLINE PUBLISHED: 128 voices · knee last-pass n=128 first-fail n=null [cap: 128 = last step / midi-space limit]
+shot: renders/p1-bench.png (139783 B)
+--- fallback cell (file:// load, expect tier spn; no full ramp: single-cell smoke of the degraded tier — the published number comes from the http ramp only) ---
+fallback tier: spn (as expected)
+fallback sanity: PASS  state=running  advance=2s  ratio=0.999
+fallback 8-voice cell: mean 67.72  p95 87.5  max 112.5  underruns 0  -> stable
+==== BENCH SUMMARY ====
+mode: real
+freeze: sha256 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0 (243193 B) [index.html]
+tier: worklet (delivery blob)
+sanity: PASS  advance=2s/2s  ratio=0.999  baseLatency=0.01
+published: {"light":64,"fat":64}
+offline: published 128 voices · knee {"lastPassN":128,"firstFailN":null,"monotone":true}
+json: verify/last-cdp_bench.json
+log: verify/last-cdp_bench.log
+shot: renders/p1-bench.png
+BENCH-RESULT {"mode":"real","quick":false,"tier":"worklet","url":"blob","realtimeRatio":0.999,"published":{"light":64,"fat":64},"offlinePublished":128,"offlineKnee":{"lastPassN":128,"firstFailN":null,"monotone":true},"invalidReads":0,"json":"verify/last-cdp_bench.json","log":"verify/last-cdp_bench.log"}

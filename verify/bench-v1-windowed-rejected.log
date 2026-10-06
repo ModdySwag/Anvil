@@ -1,0 +1,94 @@
+freeze sha256 dff3721f6b23525a4114ebf2adab9b8ad6f2195c486befda81767cda33b4ca93 (244026 B)
+serving index.html at /index.html
+server: http://127.0.0.1:9400/ (repo root C:\Users\Moddy\anvil)
+devtools port: 9401
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+url: http://127.0.0.1:9400/index.html?avtest=1
+=== ANVIL bench rig === mode: real
+protocol: variants light+fat · steps [1,2,4,8,16,24,32,48,64] · 3 rep(s) · hold 10 s · stable = p95Us<1333 && underruns==0
+--- sanity ---
+engine: attr=worklet tier=worklet url=blob sr=48000 maxVoices=64 os=2 (boot 511 ms)
+sanity: PASS  state=running  advance=2s / wall 2.002s (ratio 0.999)  baseLatency=0.01  sampleRate=48000
+console messages: 2
+  [log] [anvil] boot — v0.1.0 tap=true knobs=true kb=true midi=true synth=true
+  [log] [anvil] engine ready — worklet:blob · sr 48000 · voices 64
+--- ramp ---
+variant LIGHT: patch applied (all params accepted)
+  light r1 step  1  voices 1  mean 2586  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r1 step  2  voices 2  mean 2586.81  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r1 step  4  voices 4  mean 2583.42  p95 2812.5  max 2843.75  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  light r1 step  8  voices 8  mean 2583.42  p95 2812.5  max 2843.75  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  light r1 step 16  voices 16  mean 2587.07  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  light r1 step 24  voices 24  mean 2592.15  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r1 step 32  voices 32  mean 2596.15  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r1 step 48  voices 48  mean 2595.35  p95 2812.5  max 2812.5  underruns 30  n 117  -> UNSTABLE (p95 + underruns)
+  light r1 step 64  voices 64  mean 2600.11  p95 2812.5  max 2812.5  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  light rep 1 max stable: 0 / 64
+  light r2 step  1  voices 1  mean 2586  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r2 step  2  voices 2  mean 2586.54  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r2 step  4  voices 4  mean 2583.95  p95 2812.5  max 2843.75  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  light r2 step  8  voices 8  mean 2586.6  p95 2812.5  max 2843.75  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  light r2 step 16  voices 16  mean 2588.41  p95 2812.5  max 2812.5  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  light r2 step 24  voices 24  mean 2592.68  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r2 step 32  voices 32  mean 2594.28  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r2 step 48  voices 48  mean 2595.62  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  light r2 step 64  voices 64  mean 2600.11  p95 2781.25  max 2812.5  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  light rep 2 max stable: 0 / 64
+  light r3 step  1  voices 1  mean 2583.07  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  light r3 step  2  voices 2  mean 2586.54  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r3 step  4  voices 4  mean 2586.6  p95 2812.5  max 2843.75  underruns 32  n 118  -> UNSTABLE (p95 + underruns)
+  light r3 step  8  voices 8  mean 2586.27  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  light r3 step 16  voices 16  mean 2585.47  p95 2812.5  max 2843.75  underruns 30  n 117  -> UNSTABLE (p95 + underruns)
+  light r3 step 24  voices 24  mean 2590.84  p95 2812.5  max 2843.75  underruns 32  n 118  -> UNSTABLE (p95 + underruns)
+  light r3 step 32  voices 32  mean 2595.89  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  light r3 step 48  voices 48  mean 2596.42  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  light r3 step 64  voices 64  mean 2598.56  p95 2781.25  max 2812.5  underruns 30  n 117  -> UNSTABLE (p95 + underruns)
+  light rep 3 max stable: 0 / 64
+LIGHT PUBLISHED: 0
+variant FAT: patch applied (all params accepted)
+  fat r1 step  1  voices 1  mean 2583.6  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat r1 step  2  voices 2  mean 2586.33  p95 2812.5  max 2843.75  underruns 32  n 118  -> UNSTABLE (p95 + underruns)
+  fat r1 step  4  voices 4  mean 2587.07  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r1 step  8  voices 8  mean 2583.6  p95 2812.5  max 2843.75  underruns 30  n 117  -> UNSTABLE (p95 + underruns)
+  fat r1 step 16  voices 16  mean 2588.19  p95 2812.5  max 2843.75  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  fat r1 step 24  voices 24  mean 2594.55  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r1 step 32  voices 32  mean 2597.22  p95 2812.5  max 2812.5  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r1 step 48  voices 48  mean 2598.82  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat r1 step 64  voices 64  mean 2604.34  p95 2812.5  max 2843.75  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  fat rep 1 max stable: 0 / 64
+  fat r2 step  1  voices 1  mean 2583.33  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat r2 step  2  voices 2  mean 2586.27  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r2 step  4  voices 4  mean 2586.33  p95 2812.5  max 2843.75  underruns 32  n 118  -> UNSTABLE (p95 + underruns)
+  fat r2 step  8  voices 8  mean 2583.33  p95 2812.5  max 2812.5  underruns 30  n 117  -> UNSTABLE (p95 + underruns)
+  fat r2 step 16  voices 16  mean 2588.68  p95 2812.5  max 2812.5  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat r2 step 24  voices 24  mean 2591.61  p95 2812.5  max 2812.5  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat r2 step 32  voices 32  mean 2595.89  p95 2812.5  max 2812.5  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r2 step 48  voices 48  mean 2598.02  p95 2781.25  max 2812.5  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat r2 step 64  voices 64  mean 2603.9  p95 2812.5  max 2843.75  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat rep 2 max stable: 0 / 64
+  fat r3 step  1  voices 1  mean 2583.69  p95 2812.5  max 2843.75  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  fat r3 step  2  voices 2  mean 2586  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r3 step  4  voices 4  mean 2587.07  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r3 step  8  voices 8  mean 2586.81  p95 2812.5  max 2812.5  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat r3 step 16  voices 16  mean 2586.81  p95 2812.5  max 2843.75  underruns 30  n 117  -> UNSTABLE (p95 + underruns)
+  fat r3 step 24  voices 24  mean 2590.81  p95 2812.5  max 2812.5  underruns 31  n 117  -> UNSTABLE (p95 + underruns)
+  fat r3 step 32  voices 32  mean 2595.09  p95 2812.5  max 2812.5  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r3 step 48  voices 48  mean 2600.16  p95 2812.5  max 2843.75  underruns 32  n 117  -> UNSTABLE (p95 + underruns)
+  fat r3 step 64  voices 64  mean 2603.28  p95 2781.25  max 2812.5  underruns 31  n 118  -> UNSTABLE (p95 + underruns)
+  fat rep 3 max stable: 0 / 64
+FAT PUBLISHED: 0
+shot: renders/p1-bench.png (139783 B)
+--- fallback cell (file:// load, expect tier spn; no full ramp: single-cell smoke of the degraded tier — the published number comes from the http ramp only) ---
+fallback tier: spn (as expected)
+fallback sanity: PASS  state=running  advance=2.011s  ratio=1.004
+fallback 8-voice cell: mean 77.78  p95 100  max 150  underruns 0  -> stable
+==== BENCH SUMMARY ====
+mode: real
+freeze: sha256 dff3721f6b23525a4114ebf2adab9b8ad6f2195c486befda81767cda33b4ca93 (244026 B) [index.html]
+tier: worklet (delivery blob)
+sanity: PASS  advance=2s/2s  ratio=0.999  baseLatency=0.01
+published: {"light":0,"fat":0}
+json: verify/last-cdp_bench.json
+log: verify/last-cdp_bench.log
+shot: renders/p1-bench.png
+BENCH-RESULT {"mode":"real","quick":false,"tier":"worklet","url":"blob","realtimeRatio":0.999,"published":{"light":0,"fat":0},"invalidReads":0,"json":"verify/last-cdp_bench.json","log":"verify/last-cdp_bench.log"}
