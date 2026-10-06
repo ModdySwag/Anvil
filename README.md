@@ -5,10 +5,9 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **Phase 0** — build pipeline, shell, master tap and the knob framework live;
-`index.html` sha 0a6b6232… (40,215 B); feel suite `verify/cdp_knob_feel.mjs` 18/18;
-shots `renders/p0-knobs*.png`.
-Next: CDP smoke suite → then P1 worklet engine + voice benchmark.
+Status 2026-10-07: **Phase 0** — build pipeline, shell, master tap, knob framework and CDP harness
+live (`cdp_smoke.mjs` 8/8, `cdp_knob_feel.mjs` 18/18); `index.html` sha 9a5c25c4… (40,240 B).
+Owner directive: full **61-key keyboard + MIDI** in v1 — building now.
 Resume at `CONTINUATION-2026-10-06.md`.
 
 ## Build

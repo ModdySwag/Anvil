@@ -39,7 +39,7 @@ body {
   display: flex;
   flex-direction: column;
 }
-code, .av-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--teal); }
+code, .av-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--teal); overflow-wrap: anywhere; }
 a { color: var(--teal); }
 
 /* header */

@@ -86,3 +86,18 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   Screenshots: `renders/p0-knobs.png` (card, 2×) + `renders/p0-knobs-full.png` (page 1440×900).
 - Next: **CDP smoke suite** (`verify/cdp_smoke.mjs` — boot → data-av-ready → chips filled → tap armed →
   selftest lines → zero page errors), then **P1**: worklet voice engine + measured voice benchmark.
+
+## Resume addendum 2 — 2026-10-07 (smoke suite + keyboard/MIDI directive)
+
+- **Smoke suite ported** → `verify/cdp_smoke.mjs` — **8/8 green** (log `verify/last-cdp_smoke.log`):
+  boot/`data-av-ready` → chips → tap armed + TAP SELFTEST → knobs mounted → KNOB SELFTEST → layout at
+  1440 → zero page errors. The layout check caught a selftest-line horizontal overflow; fixed with
+  `overflow-wrap: anywhere` on `.av-mono` (offender finder now built into the check). Feel suite
+  re-run green on the new bytes (log `verify/last-cdp_knob_feel.log`, 18/18).
+- **index.html rebuilt: 40,240 bytes · sha256 9a5c25c4583912bee6f057bfa6866cbd11227db6ed755eed3bdcc14b8b66e665**
+- **OWNER DIRECTIVE (2026-10-07): full 61-key keyboard + full MIDI support (PF-grade, "all the bells
+  and whistles") — must-have, same tier as the engine.** Recorded in `docs/05` §2.5 + `docs/03` §2.5/§6.
+  Building now: `av_kb.js` (piano dock + ONE keydown dispatcher + avNote bus) + `av_midi.js` (Web MIDI
+  in/out + panel + CC learn). Source digests in flight → `research/reuse/kb-port-digest.md` +
+  `research/reuse/midi-port-digest.md`.
+- After the ports land: full battery (smoke + feel + new keyboard/MIDI suites) → then **P1**.

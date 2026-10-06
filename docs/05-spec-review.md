@@ -25,7 +25,8 @@ Date: 2026-10-06 · Reviewer: Bob (Hermes) · Scope: the full package — `00-id
 2. **Monetisation: free** ✓ — instrument, packs and features all free; no monetisation at launch (fairness spine).
 3. **Granular + sampler: into v1** ✓ — re-scoped; phase plan revised (03 §6, 04 §4); effort updated to ≈10–14 part-time weeks.
 4. **Phase order: delegated** ✓ — locked as written, with the shared sample/grain core folded into P2–P3.
-5. **Still open (later-phase):** P1 backend green-light (default Cloudflare Workers+D1+R2), embed stance (default links-only), CC0-only community rule (default yes at P2), MP3 export module (default: WAV + Opus at launch; MP3 optional module).
+5. **Keyboard + MIDI: full 61-key piano dock + full Web MIDI in/out in v1** ✓ — owner directive 2026-10-07 ("must have… all the bells and whistles"); PF-grade port (`app_kb` + `app_midi`), note bus first-class, MIDI learn on the knob framework.
+6. **Still open (later-phase):** P1 backend green-light (default Cloudflare Workers+D1+R2), embed stance (default links-only), CC0-only community rule (default yes at P2), MP3 export module (default: WAV + Opus at launch; MP3 optional module).
 
 ## 3. Options needing verification (before the thing they gate)
 
