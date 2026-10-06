@@ -125,3 +125,15 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
 - **Pre-staged (zero-idle) return plan: `verify/_p0b_suite_wave.md`** — parent verification steps,
   both suite contracts (cdp_keys / cdp_midi), commit messages, close-out checklist. Read it FIRST
   on resume.
+
+## Resume addendum 5 — 2026-10-07 (ports LANDED; suite wave in flight)
+
+- **Keyboard + MIDI ports landed + committed `f56daf7`**: `src/av_kb.js` (423 lines) + `src/av_midi.js`
+  (1,279 lines); build **sha256 a69a684f…** (133,582 B). Wiring committed (build.py, app_core, body, styles).
+- Battery on the new bytes: **smoke 9/9** (new check: 61 keys + snap + deck mounted) + **feel 18/18**;
+  visual pass done (`renders/p0-keys.png`, `p0-keys-tall.png` — dock, rail, MIDI deck all render).
+- **Wave status: `verify/cdp_keys.mjs` running as child A (deleg_06e4181b); `verify/cdp_midi.mjs`
+  dispatches after A returns** (serialized — one browser suite at a time). Contracts in
+  `verify/_p0b_suite_wave.md` §2.
+- On both green: full battery (smoke + feel + cdp_keys + cdp_midi on the frozen sha) → commit B →
+  README + mnemosyne refresh → P1 next.
