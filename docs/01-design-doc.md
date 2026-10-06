@@ -1,0 +1,1 @@
+- ★ **Granular + sampler — v1** (decided 2026-10-06): shared sample core — import/decode (WAV / AIFF / FLAC / MP3 / OGG), waveform editing + loop tools, one-shot & multisample zones, drag-in; granular engine (Hann grains 10–200 ms, overlap 4–8, hard grain budget, position/rate clouds).

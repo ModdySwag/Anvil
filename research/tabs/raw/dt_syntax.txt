@@ -1,0 +1,826 @@
+ 
+ DittyToy API reference | Dittytoy 
+ Dittytoy 
+ Search 
+ Browse 
+ New Ditty 
+ Search 
+ Login 
+ Sign up 
+ Getting
+ Started 
+ Synthesizers 
+ Loops 
+ Envelopes 
+ Filters 
+ Options 
+ Input
+ Parameters 
+ Optimizations 
+ Built-in methods and
+ variables 
+ Example
+ Ditties 
+ Dittytoy API Reference 
+ Dittytoy lets you create code-driven music using a simple JavaScript API.
+ All music on Dittytoy is generated entirely in code. No timelines, no drag-and-drop. Just you and your code.
+ Dittytoy gives you complete freedom to generate sound. If you want to write a function that generates the entire
+ sound wave of your ditty, you can. In that case, open this boilerplate and get
+ started: #10 Minimal Sound Wave .
+ However, Dittytoy has several high-level building blocks that make creating sounds, musical patterns, and filters
+ easier. We will explain these tools below. The API syntax is loosely based on the syntax of Sonic Pi .
+ Prefer to learn from examples? These ditties show what's possible.
+ Getting Started 
+ To create a new ditty, click New Ditty and modify the example in the
+ editor to the right.
+ When creating music on Dittytoy, a number of basic building blocks can be used:
+ Synthesizers 
+ Loops 
+ Envelopes 
+ Filters 
+ And, there are some other useful concepts and built-in methods and variables that you can use to create your ditty:
+ Options 
+ Input Parameters 
+ Optimizations 
+ Built-in methods and variables 
+ Example Ditties 
+ Synthesizers 
+ The first building block for creating code-driven music on Dittytoy is the synthesizer. The synthesizer is a function
+ (or class) that generates a sound. You can create a synthesizer as follows:
+const osc = synth.def( (phase, env, tick, options) => Math.sin(phase * 2 * Math.PI) * env.value );
+ Note how the return value of the lambda function is multiplied by the env(elope) value. You don't have to do this,
+ but if you do, your synth will work seamlessly with the built-in support for envelopes .
+ The synthesizer can be triggered using the play method. The following code generates a short sound of a sine
+ wave with pitch c4 :
+const osc = synth.def( (phase, env, tick, options) => Math.sin(phase * 2 * Math.PI) * env.value );
+osc.play(c4);
+ You may want to define a more complicated synthesizer that has its own state. This can be done by
+ passing not a lambda function, but a class to synth.def() . For example:
+const osc = synth.def(
+ class {
+ constructor(options) {
+ // The value of the note argument of the play call is retrievable via options.note.
+ this.phase = 0;
+ }
+ process(note, env, tick, options) {
+ this.phase += midi_to_hz(note) * ditty.dt * (env.value ** options.xenv);
+ return Math.sin(this.phase * Math.PI * 2) * env.value;
+ }
+ }, { xenv: 0.5, amp: 1, attack: 0.01, release: 0.3 }
+);
+osc.play(c4, { pan: 0.5} );
+ Every time you call the play method a new object is created. You can retrieve the value of the note argument of the play call via options.note in the constructor of the synth class.
+ Options 
+ As you can see in the code examples above, you can set options when calling the play
+ method (as a second argument) and when defining a synthesizer. 
+ The options set when defining the synthesizer are the default options for this synthesizer. You can always override
+ these options later on a specific play call.
+ Default options are:
+ name (optional, the name of the synthesizer) 
+ amp (volume, default: 1) 
+ pan (panning, -1 to 1, default: 0) 
+ env (envelope, default: adsr) 
+ When defining a new synthesizer (or a filter or loop ),
+ you are free to add your own properties to the options object.
+ When you define a synth, or when you call the play method, you can also set the envelope options. For the default
+ ADSR envelope (see envelopes ), you can set the following options:
+ attack (in seconds, default: 0) 
+ decay (in seconds, default: 0) 
+ sustain (default: 1) 
+ release (in seconds, default: 0.5) 
+ curve (default: -2, the curvature value for the decay and release phase) 
+ duration (in ticks, default: 0) 
+ This ditty gives a clear illustration of the mechanics of the ADSR
+ envelope: #14 ADSR Envelope .
+ Note that you can also assign a lambda function ( (tick, options) => ... ) to an option, so you can have
+ continually changing properties.
+ The following code will play a sin wave with pitch c4 that pans from left to right in one tick:
+sine.play(c4, { pan: (tick, options) => Math.sin(tick * Math.PI), duration: 2 } );
+ Ticks vs seconds 
+ As you can see, some of the envelope option properties are in ticks, while others are expressed in seconds.
+ Dittytoy uses both ticks and seconds. So pay close attention when you call or implement a particular function, and
+ check the time unit of the variables used.
+ A tick (or beat or a quarter note) is inversely proportional to the number of beats per minute, which you can set
+ with ditty.bpm . The default bpm of a ditty is 120, in which case a tick will have a duration of 0.5
+ seconds.
+ You can use the built in functions tick_to_second(ticks) and second_to_tick(seconds) 
+ to convert ticks to seconds and back.
+ Midi numbers, traditional note names, chords and scales 
+ When calling the play method on a synth, you can enter the note as a midi number, but all notes are also pre-defined
+ as a variable (from C0 to B9 ).
+ If you want to make a note sharp, add an s after the note name such as Fs3 and if you want to make a
+ note flat, add a b such as Eb3 .
+ Octave number 
+ Note number 
+ C 
+ Db 
+ D 
+ Eb 
+ E 
+ F 
+ Gb 
+ G 
+ Ab 
+ A 
+ Bb 
+ B 
+ -1 
+ 0 
+ 1 
+ 2 
+ 3 
+ 4 
+ 5 
+ 6 
+ 7 
+ 8 
+ 9 
+ 10 
+ 11 
+ 0 
+ 12 
+ 13 
+ 14 
+ 15 
+ 16 
+ 17 
+ 18 
+ 19 
+ 20 
+ 21 
+ 22 
+ 23 
+ 1 
+ 24 
+ 25 
+ 26 
+ 27 
+ 28 
+ 29 
+ 30 
+ 31 
+ 32 
+ 33 
+ 34 
+ 35 
+ 2 
+ 36 
+ 37 
+ 38 
+ 39 
+ 40 
+ 41 
+ 42 
+ 43 
+ 44 
+ 45 
+ 46 
+ 47 
+ 3 
+ 48 
+ 49 
+ 50 
+ 51 
+ 52 
+ 53 
+ 54 
+ 55 
+ 56 
+ 57 
+ 58 
+ 59 
+ 4 
+ 60 
+ 61 
+ 62 
+ 63 
+ 64 
+ 65 
+ 66 
+ 67 
+ 68 
+ 69 
+ 70 
+ 71 
+ 5 
+ 72 
+ 73 
+ 74 
+ 75 
+ 76 
+ 77 
+ 78 
+ 79 
+ 80 
+ 81 
+ 82 
+ 83 
+ 6 
+ 84 
+ 85 
+ 86 
+ 87 
+ 88 
+ 89 
+ 90 
+ 91 
+ 92 
+ 93 
+ 94 
+ 95 
+ 7 
+ 96 
+ 97 
+ 98 
+ 99 
+ 100 
+ 101 
+ 102 
+ 103 
+ 104 
+ 105 
+ 106 
+ 107 
+ 8 
+ 108 
+ 109 
+ 110 
+ 111 
+ 112 
+ 113 
+ 114 
+ 115 
+ 116 
+ 117 
+ 118 
+ 119 
+ 9 
+ 120 
+ 121 
+ 122 
+ 123 
+ 124 
+ 125 
+ 126 
+ 127 
+ 128 
+ 129 
+ 130 
+ 131 
+ You can use the built in functions hz_to_midi(hz) and midi_to_hz(midi) 
+ to convert midi-numbers to frequencies and back.
+ Chords 
+ There are a lot of different scales and chords predefined in Dittytoy . You can use
+ the chord function to create an array with the notes of a chord:
+function chord(baseNote, notes) // returns an array with notes of the chord
+// this will give you an array with the notes of a c4 major chord:
+const notes = chord(c4, chords['major']);
+ Scales 
+ You can also create arrays with the notes of different scales using the scale function:
+function scale(baseNote, notes, octaves = 1) // returns an array with notes of the scale
+// this will give you an array with the notes of three octaves of the e4 minor pentatonic scale:
+const notes = scale(e4, scales['minor_pentatonic'], 3);
+ A full list of all predefined chords and scales can be found here .
+ Stereo 
+ In the pieces of sample code above, a single (mono) wave function is created by the synthesizer. You can also
+ return an array [left, right] for a stereo sound, for example:
+const tune = synth.def( (phase, tick, env, options) => [Math.sin(phase * Math.PI * 2) * env.value, Math.cos(phase * Math.PI * 2) * env.value]);
+ Minimal Sound Wave 
+ The simplest code on Dittytoy to play a sound is:
+synth.def( () => Math.sin(phase * 2 * Math.PI) ).play(c4, {env: one});
+ The {env: one} option indicates that the one-envelope should be used:
+ an envelope with constant value 1.
+ Built-in Synth 
+ One synth is built into in Dittytoy and available to use: the sine-synth that will generate a sine wave function.
+sine.play(c4, { amp: .5} );
+ Relevant example ditties 
+ Often you learn the most by studying existing code. Please have a look at these examples:
+ #03 Define Synths 
+ #06 Advanced Synths 
+ #10 Minimal Sound Wave 
+ Loops 
+ A second optional but important building block of Dittytoy is the loop. You can use a loop to define a repeating
+ music pattern:
+loop( (loopCount) => {
+ for (let i=0; i 
+ A loop often combines play calls and sleep commands. Note that the argument of the sleep command is in ticks, so its
+ duration depends on the beats per minute.
+ If you want to keep track of a state in a loop, you can also use a class for your loop:
+loop(
+ class {
+ constructor(options) {
+ this.note = c4;
+ }
+ process(loopCount) {
+ sine.play(this.note, { attack: 0.01, release: 0.75 });
+ this.note = (this.note+1) % 12;
+ sleep(0.5);
+ }
+ },
+ { amp: 0.5, name: 'loop with class' }
+);
+ The duration of a loop (in ticks) is equal to the total sleep time of all sleep function calls in the loop combined.
+ Note that calling a play method on a synth does not take time and is independent of the duration of the note being
+ played.
+ Thus, calling two play methods directly after each other in a loop will trigger the synths simultaneously.
+ It is also possible to set the duration of a loop using the sync option (see below).
+ Options 
+ A loop supports the following options by default (but you are free to add extra option
+ properties):
+ name (optional, the name of the loop) 
+ amp (volume, default: 1) 
+ pan (panning, -1 to 1, default: 0) 
+ sync (in ticks, optional) 
+ You can set the sync option to define the duration of the loop. So when, for example, sync 
+ is set to 4, the loop runs for precisely four ticks and then starts over. When sync is set, all play
+ commands after the duration of the loop are ignored.
+ Each loop runs in a separate worker 
+ Each loop runs in its own worker/thread. So by using multiple loops, you can parallelize your ditty, which makes it
+ a convenient way to optimize your ditty if it doesn't perform well.
+ A side effect of having each loop run in a separate worker is that it captures all global variables. This makes it
+ impossible to use (global) variables to communicate between different loops.
+ Loop evaluation and a Portamento 
+ The sleep function in the loop is a strange construction for users who know javascript well. After all, in native
+ javascript, there is no sleep function. Therefore, to avoid counter-intuitive results, it is crucial to understand
+ what happens behind the scenes in Dittytoy.
+ Every time Dittytoy starts a new iteration of a loop, the entire body of the loop is evaluated instantaneously. All
+ play-calls are collected and sorted based on the intervening sleep times and put on a timeline before playback
+ starts.
+ A side effect of having the body of a loop evaluated in its entirety is that if you assign a value to a variable
+ within a loop at different times, it thus has the last assigned value after the evaluation. This causes problems if,
+ for example, you want to write a loop where the synthesizer slides from one note to another using a smoother object
+ that lerps a current value to the target value:
+// This will not work, because target is equal to b3 during the whole playback of the loop.
+let target = c4;
+loop( (loopCount) => {
+ sine.play(() => smoother.update(target), { duration: 4 } );
+ sleep( 1.0 );
+ target = d4;
+ sleep( 1.0 );
+ target = e4;
+ sleep( 1.0 );
+ target = b3;
+ sleep( 1.0 );
+});
+ One possible solution to this problem is not to use a separate variable but to create an additional property in the
+ options object. When setting an options property value, it tracks the time of the
+ setter within the loop. The actual assignment of the value is then, like the play-calls, put on a timeline and
+ executed later at the appropriate time.
+ See #17 Portamento :
+loop( (loopCount) => {
+ const s = sine.play((tick, options) => smoother.update(options.target), { duration: 4, target: c4 } );
+ sleep( 1.0 );
+ s.options.target = d4;
+ sleep( 1.0 );
+ s.options.target = e4;
+ sleep( 1.0 );
+ s.options.target = b3;
+ sleep( 1.0 );
+});
+ Relevant example ditties 
+ Often you learn the most by studying existing code. Please have a look at these examples:
+ #02 Options 
+ #04 Loops 
+ #17 Portamento 
+ Envelopes 
+ Dittytoy uses envelopes to control the amplitude and duration of a synth's play call.
+ Defining your envelopes 
+ You can define your own envelope using env.def() . An envelope is a class that implements a duration 
+ and a value method:
+const sinenv = env.def(
+ class {
+ constructor(options) {
+ }
+ duration(options) {
+ return options.duration;
+ }
+ value(tick, options) {
+ return .5 - .5 * Math.cos(tick / options.duration * 2 * Math.PI);
+ }
+ },
+ { duration: 1, name: 'sinenv' }
+);
+sine.play( c4, { env: sinenv } );
+ Create and use an envelope manually 
+ For each play call, an envelope is automatically created to control the duration of the sound. If you want to
+ manually create and use an envelope, you can. You can create an envelope object using the create method
+ on the envelope definition:
+const myEnvelope = adsr.create( { attack: 0.1, decay: 0.2, release: 0.2, duration: 1 });
+ An envelope object has a value and a duration property. Note that you have to sample the
+ value property every frame to make sure the envelope is correctly updated.
+ See this example ditty: #13 Advanced Envelopes 
+ Built-in Envelopes 
+ There are four built-in envelopes available in Dittytoy: 
+ ADSR envelope adsr (attack, decay, sustain, duration, release) 
+ ADSR2 envelope adsr2 (attack, decay, sustain, release, attack_level, decay_level, sustain_level)
+ Segmented envelope segenv 
+ One envelope one 
+ ADSR envelope 
+ The default envelope in Dittytoy is the ADSR envelope ( { env: adsr } ).
+ Available options when using the ADSR envelope are (see: #14 ADSR Envelope ):
+ attack (in seconds, default: 0) 
+ decay (in seconds, default: 0) 
+ sustain (default: 1) 
+ release (in seconds, default: 0.5) 
+ curve (default: -2, the curvature value for the decay and release phase) 
+ duration (in ticks, default: 0) 
+ You can also set an array [0, -2, -2] to the curve option to separately set the curvature values for
+ the attack, decay, and release phases.
+ As you can see, some of the envelope option properties are in ticks, while others are expressed in seconds.
+ Dittytoy uses both ticks and seconds. So pay close attention when you call or
+ implement a particular function, and
+ check the time unit of the variables used.
+ ADSR2 envelope 
+ Another built-in envelope is the ADSR2 envelope. The ADSR2 envelope is added to Dittytoy to have an envelope
+ compatible with the default envelope used in Sonic Pi . The ADSR2 envelope works similarly to
+ the ADSR envelope, but the most significant difference is that all durations are in ticks.
+ You can enable the ADSR2 envelope by setting { env: adsr2 } when defining a synth or playing a note.
+ Available options when using the ADSR2 envelope are
+ (see: #15 ADSR2 enveloppe ):
+ attack (in ticks, default: 0) 
+ attack_level (default: 1) 
+ decay (in ticks, default: 0) 
+ decay_level (default: attack_level) 
+ sustain (in ticks, default: 0) 
+ sustain_level (default: decay_level) 
+ release (in ticks, default: 1) 
+ Segmented envelope 
+ The segmented envelope is the most flexible built-in envelope available. You can set the number and levels of
+ segments yourself and independently set the curvature value for each segment. This envelope is similar to the
+ segmented envelope used in Super Collider .
+ You can enable the segmented envelope by setting { env: segenv } when defining a synth or playing a
+ note.
+ Available options when using the segmented envelope are
+ (see: #16 Segmented envelope ):
+ levels (default: [0, 1, 0.5, 0]) 
+ times (in seconds, default: [0.1, 0.1, 0.25]) 
+ curves (default: [0, -2, -2]) 
+ releaseNode (default: 2) 
+ duration (in ticks, default: 0.5) 
+ One envelope 
+ The one envelope is an envelope with a constant value of 1. You can enable the One envelope by setting { env:
+ one } when defining a synth or playing a note.
+ Available options when using the one envelope are:
+ duration (in ticks, default: 1e5) 
+ Relevant example ditties 
+ Often you learn the most by studying existing code. Please have a look at these examples:
+ #07 Envelopes 
+ #13 Advanced Envelopes 
+ #14 ADSR Envelope 
+ #15 ADSR2 enveloppe 
+ #16 Segmented envelope 
+ Filters 
+ A filter is a function that modifies a signal. You can connect a chain of filters to a loop or other filters using
+ the connect method.
+ Defining your filters 
+ Similar to synths and envelopes ,
+ you can define a filter using filter.def() , and a simple lambda function (input, options) =>
+ output [l, r] : 
+const flipChannels = filter.def( (input, options) => [input[0], - input[1]], {});
+ Note: the input of a filter will always be a stereo signal, and you always have to return a stereo signal.
+ If you want to keep a state (for example, when creating a delay effect), you can also define a filter using a class
+ that implements a process method:
+const lowpass = filter.def(class {
+ constructor(options) {
+ this.hist0 = [0, 0];
+ this.hist1 = [0, 0];
+ }
+ process(input, options) {
+ const alpha = options.cutoff;
+ if (input) {
+ for (let i = 0; i 
+ An example ditty using the two example filters above might look like this:
+input.cutoff = 1;
+const kick = synth.def( (phase, env, tick, options) => Math.sin(phase * 2 * Math.PI * (1.5 - tick * 4)) * env.value);
+const tri = synth.def( (phase, env, tick, options) => { const v = (phase % 1) * 4; return (v {
+ kick.play(c, { attack: 0.05, release: 0.2, amp: 2 });
+}, { amp: 0.75, sync: 1 })
+ // chain two filters to one loop
+ .connect( flipChannels.create() ).connect( lowpass.create( { cutoff: () => input.cutoff } ));
+loop( (loopCount) => {
+ scale(c, scales.minor_pentatonic, 1).forEach( note => {
+ tri.play(note, { pan: Math.random() * 2 - 1 });
+ sleep(0.25);
+ });
+}).connect( lowpass.create( { cutoff: () => input.cutoff } ));
+ Shared filters 
+ In Dittytoy, each loop runs in a separate thread/worker. All filters chained to the
+ loop run, by default, in the same thread.
+ Sometimes, however, you want to run a filter in a separate thread. This can be for performance reasons (although
+ each additional thread also gives additional overhead). However, the most likely situation is that you want to
+ process the output of multiple loops through the same filter. You can enforce this by creating a filter with the
+ createShared() method (instead of create() ).
+ You can connect a (shared) filter to other (shared) filters using the connect method:
+// create a shared filter and connect it to another filter
+const shared = lowpass.createShared( { cutoff: () => input.cutoff } ).connect( flipChannels.create() );
+// create two loops that both use the same shared filter
+loop( (loopCount) => {
+ kick.play(c, { attack: 0.05, release: 0.2, amp: 2 });
+}, { amp: 0.75, sync: 1 }).connect( shared );
+loop( (loopCount) => {
+ scale(c, scales.minor_pentatonic, 1).forEach( note => {
+ tri.play(note, { pan: Math.random() * 2 - 1 });
+ sleep(0.25);
+ });
+}).connect( shared);
+ Note: after you connect a loop to a shared filter, you cannot connect it to subsequent filters. 
+ Note: using shared filters will increase latency a bit. 
+ Relevant example ditties 
+ Often you learn the most by studying existing code. Please have a look at these examples:
+ #08 Filters 
+ #12 Shared Filters 
+ Options 
+ The most commonly used construct on Dittytoy is the options object. You use it to set the default options when you
+ define a new synth, filter, or envelope, and you use it to set specific options at the play-call of a synth or when
+ you create a filter, envelope, or loop.
+ The options object contains key-value pairs { key: value, ... } . Values are often a constant but can
+ also be dynamic.
+ Dynamic Options 
+ A powerful feature of the options object is that you can not only assign a constant value to a property, but a
+ lambda function in the form (tick, options) => ... as well.
+ This makes it possible to create dynamic properties that change over time, which makes it very easy to create, for
+ example, a portamento or a Shepard tone.
+ The note argument of the play call on a synthesizer definition is, behind the scenes, an option property as well (it
+ is an alias for options.note). This also makes it possible to use a lambda function instead of a fixed midi number
+ when triggering the play call.
+ The following code will play a sin wave with pitch c4 that pans from left to right in one tick:
+sine.play(c4, { pan: (tick, options) => Math.sin(tick * Math.PI), duration: 2 } );
+ And a Shepard tone (original by athibaul):
+for(let i=0; i (40 + (t + 12*i)%72), {env:one, amp: (t) => Math.sin(Math.PI*(t+12*i)/72) * .25} );
+}
+ Options and loop evaluation 
+ Another important property of the options object is that when you assign a value to a property, it keeps track of
+ the time of this assignment within the loop. Read why this is useful here:
+ Loop evaluation and a Portamento .
+ Relevant example ditties 
+ Often you learn the most by studying existing code. Please have a look at these examples:
+ #02 Options 
+ #05 Advanced Options 
+ #17 Portamento 
+ Input parameters 
+ You can automatically create a (limited) GUI that controls variables in your ditty by using input parameters. You do
+ this by adding properties to the input object. For each new property, a slider (or pull-down) becomes visible to the
+ left of your ditty.
+input.value = x;
+ By default, the slider of an input parameter runs from 0 to 1. If you want a different range (or step size), you
+ must add a specially formatted comment after the input parameter declaration:
+input.value = x; // min=x, max=x, step=x
+ Finally, it is also possible to fill a pull-down for an input parameter with a limited number of steps.
+input.value = 0; // value=0, min=0, max=1, step=1 (No, Yes)
+ Note! Updating the input variables from user input is asynchronous and will not happen simultaneously for all loops. So
+ if you want to change, for example, the beats per minute using an input variable, you can be sure that your loops
+ will be out of sync very quickly.
+ MIDI Learn 
+ If you have a MIDI controller connected, you can use MIDI Learn to control input parameters with physical knobs,
+ faders, or keys. Click the MIDI Learn button 
+ next to any slider, then move a control on your MIDI device
+ to create a mapping. The mapping is saved in your browser and will be restored when you revisit the ditty.
+ Relevant example ditties 
+ Often you learn the most by studying existing code. Please have a look at these examples:
+ #09 Input Parameters 
+ Optimizations 
+ We optimize Dittytoy as much as possible. However, CPU will always be a limiting factor when you want to execute
+ javascript 44100 times per second in the browser.
+ If your ditty works too slowly and the music stutters, it's time to optimize. Step one is to figure out which part
+ of your code is responsible for the slowness. Generally, this will be code from a synthesizer, as it is most likely
+ to be executed the most. Obvious optimizations in that case are:
+ Try to minimize the number of synths active simultaneously. You can do this by looking closely at the envelope
+ duration for each play call. It may be possible to reduce this duration without any audible effect.
+ You can also spread active synths over several loops. Each loop runs in its own worker and thus is an excellent
+ way to parallelize the ditty.
+ Finally, you will also look at the code of your synth: is it possible to reduce the number of instructions in
+ the process loop? Are there memory allocations that you can move to the constructor?
+ Should you have one or more heavy filters in your ditty, you can move them to a separate worker by creating a shared filter .
+ Built-in methods and variables 
+ Global functions 
+ The following functions are available when writing a ditty;
+function hz_to_midi( hz );
+function midi_to_hz( midi );
+function clamp( t, min, max );
+function clamp01( t );
+function lerp( a, b, t );
+function tick_to_second( t );
+function second_to_tick( s );
+ Ditty object 
+ The ditty object contains mostly read-only properties that describe the global state of the ditty.
+ The only property that is (meaningfully) customizable is ditty.bpm .
+ You can use ditty.bpm to set the number of beats per minute and, thus, implicitly, the duration of a tick .
+ Keep in mind that each loop runs in its worker and thereby captures all global
+ variables.
+ This also applies to the ditty object. So when you modify ditty.bpm within a loop, this will not affect
+ the ditty.bpm in other loops or the global context.
+ditty.bpm // read/write - beats per minute, default: 120
+ditty.time // read only, time from start in seconds
+ditty.dt // read only, delta time (1 / ditty.sampleRate)
+ditty.tick // read only, ticks from start
+ditty.dtick // read only, delta tick (ditty.dt * ditty.bpm / 60)
+ditty.sampleRate // read only, samples per second of audio
+ Debug object 
+ Debugging your ditty while it runs 44100 times per second can be pretty hard. Unfortunately, you can't set
+ breakpoints, and writing values to the default console.log at this rate will most likely crash your browser.
+ However, Dittytoy allows you to log values to the console at the left of your screen. You can also log values to
+ probes.
+// debug log functionality. The log appears in the console at the left of your ditty. You can use:
+debug.log ( label, message )
+debug.warn ( label, message )
+debug.error( label, message )
+// debug probes (Safari not supported!). For each label an oscilloscope will appear left of your ditty.
+//
+// debug.probe( label, value, amp (optional), duration (horizontal resolution in seconds, optional) );
+//
+// a probe expects one value per sample (more will be ignored, less will pause the probe)
+debug.probe( label, value, amp, duration );
+ Array extensions 
+ Similar to Sonic Pi , several extensions have been added to the
+ array class, making it easy to loop through an array or choose a random element.
+ Note that these extensions also work on a string.
+// Loop over array. Same as: array[ index % array.length ]
+[1, 2, 3, ...].ring(index)
+// Choose a random element from the array
+[1, 2, 3, ...].choose()
+// Mirror an array. [1, 2, 3].mirror() will return [1, 2, 3, 3, 2, 1]
+[1, 2, 3, ...].mirror()
+ Chords 
+ There are a lot of different scales and chords predefined in Dittytoy. You can use the chord function
+ to create an array with the notes of a chord:
+function chord(baseNote, notes = [0]) // returns an array with notes of the chord
+// this will give you an array with the notes of a c4 major chord:
+const notes = chord(c4, chords['major']);
+ Predefined chords 
+ chords['+5'] 
+ chords['1'] 
+ chords['11'] 
+ chords['11+'] 
+ chords['13'] 
+ chords['5'] 
+ chords['6'] 
+ chords['6*9'] 
+ chords['7'] 
+ chords['7+5'] 
+ chords['7+5-9'] 
+ chords['7-10'] 
+ chords['7-11'] 
+ chords['7-13'] 
+ chords['7-5'] 
+ chords['7-9'] 
+ chords['7sus2'] 
+ chords['7sus4'] 
+ chords['9'] 
+ chords['9+5'] 
+ chords['9sus4'] 
+ chords['a'] 
+ chords['add11'] 
+ chords['add13'] 
+ chords['add2'] 
+ chords['add4'] 
+ chords['add9'] 
+ chords['augmented'] 
+ chords['dim'] 
+ chords['dim7'] 
+ chords['diminished'] 
+ chords['diminished7'] 
+ chords['dom7'] 
+ chords['halfdim'] 
+ chords['halfdiminished'] 
+ chords['i'] 
+ chords['i7'] 
+ chords['m'] 
+ chords['m+5'] 
+ chords['m11'] 
+ chords['m11+'] 
+ chords['m13'] 
+ chords['m6'] 
+ chords['m6*9'] 
+ chords['m7'] 
+ chords['m7+5'] 
+ chords['m7+5-9'] 
+ chords['m7+9'] 
+ chords['m7-5'] 
+ chords['m7-9'] 
+ chords['m7b5'] 
+ chords['m9'] 
+ chords['m9+5'] 
+ chords['madd11'] 
+ chords['madd13'] 
+ chords['madd2'] 
+ chords['madd4'] 
+ chords['madd9'] 
+ chords['maj'] 
+ chords['maj11'] 
+ chords['maj9'] 
+ chords['major'] 
+ chords['major7'] 
+ chords['min'] 
+ chords['minor'] 
+ chords['minor7'] 
+ chords['sus2'] 
+ chords['sus4'] 
+ Scales 
+ You can also create arrays with the notes of different scales using the scale function:
+function scale(baseNote, notes = [], octaves = 1) // returns an array with notes of the scale
+// this will give you an array with the notes of three octaves of the e4 minor pentatonic scale:
+const notes = scale(e4, scales['minor_pentatonic'], 3);
+ Predefined scale intervals 
+ scales['aeolian'] 
+ scales['ahirbhairav'] 
+ scales['augmented'] 
+ scales['augmented2'] 
+ scales['bartok'] 
+ scales['bhairav'] 
+ scales['blues_major'] 
+ scales['blues_minor'] 
+ scales['chinese'] 
+ scales['chromatic'] 
+ scales['diatonic'] 
+ scales['diminished'] 
+ scales['diminished2'] 
+ scales['dorian'] 
+ scales['egyptian'] 
+ scales['enigmatic'] 
+ scales['gong'] 
+ scales['harmonic_major'] 
+ scales['harmonic_minor'] 
+ scales['hex_aeolian'] 
+ scales['hex_dorian'] 
+ scales['hex_major6'] 
+ scales['hex_major7'] 
+ scales['hex_phrygian'] 
+ scales['hex_sus'] 
+ scales['hindu'] 
+ scales['hirajoshi'] 
+ scales['hungarian_minor'] 
+ scales['indian'] 
+ scales['ionian'] 
+ scales['iwato'] 
+ scales['jiao'] 
+ scales['kumoi'] 
+ scales['leading_whole'] 
+ scales['locrian'] 
+ scales['locrian_major'] 
+ scales['lydian'] 
+ scales['lydian_minor'] 
+ scales['major'] 
+ scales['major_pentatonic'] 
+ scales['marva'] 
+ scales['melodic_major'] 
+ scales['melodic_minor'] 
+ scales['melodic_minor_asc'] 
+ scales['melodic_minor_desc'] 
+ scales['messiaen1'] 
+ scales['messiaen2'] 
+ scales['messiaen3'] 
+ scales['messiaen4'] 
+ scales['messiaen5'] 
+ scales['messiaen6'] 
+ scales['messiaen7'] 
+ scales['minor'] 
+ scales['minor_pentatonic'] 
+ scales['mixolydian'] 
+ scales['neapolitan_major'] 
+ scales['neapolitan_minor'] 
+ scales['octatonic'] 
+ scales['pelog'] 
+ scales['phrygian'] 
+ scales['prometheus'] 
+ scales['purvi'] 
+ scales['ritusen'] 
+ scales['romanian_minor'] 
+ scales['scriabin'] 
+ scales['shang'] 
+ scales['spanish'] 
+ scales['super_locrian'] 
+ scales['todi'] 
+ scales['whole'] 
+ scales['whole_tone'] 
+ scales['yu'] 
+ scales['zhi'] 
+ Example Ditties 
+ Often you learn the most by studying existing code. Please have a look at these examples:
+ #01 Play a Melody 
+ #02 Options 
+ #03 Define Synths 
+ #04 Loops 
+ #05 Advanced Options 
+ #06 Advanced Synths 
+ #07 Envelopes 
+ #08 Filters 
+ #09 Input Parameters 
+ #10 Minimal Sound Wave 
+ #11 Debug your Ditty 
+ #12 Shared Filters 
+ #13 Advanced Envelopes 
+ #14 ADSR Envelope 
+ #15 ADSR2 enveloppe 
+ #16 Segmented envelope 
+ #17 Portamento 
+ About Dittytoy 
+ Documentation 
+ Terms & Privacy 
+ Examples 
+ User Stats 
+ × 
+ Ok
+ Cancel 
+ × 
+ Close 
+ 
