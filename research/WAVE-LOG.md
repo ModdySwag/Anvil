@@ -45,3 +45,11 @@
 - `docs/02-ui-design-brief.md` — T7 + platform lessons (T0/T1).
 - `docs/03-implementation-spec.md` — T5 + T9 + house build discipline (lab→battery→deploy).
 - `docs/04-agent-build-handoff.md` + `docs/05-spec-review.md` — synthesized from all waves.
+
+
+## Owner decisions + Phase 0 kickoff — 2026-10-06 (same day)
+
+- **Decisions recorded:** name **Anvil** · **free** (no monetisation) · **granular + sampler in v1** (phase plan revised: 03 §6, 04 §4; effort ≈10–14 part-time weeks) · phase order delegated and locked. Docs updated accordingly (00/01/03/04/05).
+- **Folder renamed** `forge-synth` → `anvil` (a stale, empty `forge-synth` may linger until a Windows file-handle releases; delete at leisure).
+- **Phase 0 started:** `build.py` ported (explicit js_parts · `</script` guard · strict `node --check` guard · sha identity); `src/{head.html,styles.css,body.html,app_core.js}` created (theme tokens per 02 §9 “Anvil Teal”); **index.html built — 6,853 B · sha256 2fc8e71862d20361add6f43500cc722618029217e3f8ff8bc2cfe9f7e47828e0**; first-light screenshot `renders/p0-shell.png` (Edge headless 1440×900, verified). Git repo initialized (main); commits: scaffold + build/shell.
+- **Next:** master-tap port → knob framework → CDP harness + smoke → P1 worklet engine + **voice-count proof benchmark** (T5 §7).

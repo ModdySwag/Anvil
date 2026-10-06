@@ -1,34 +1,35 @@
-# anvil — Anvil — project package
+# anvil — Anvil (a MODDYS Foundry instrument)
 
-A flagship web-based synthesizer for Moddy (moddys.net), in the Pattern Forge family: pro-grade
-multi-engine sound (acid / wavetable / FM / string / drums), a groovebox-grade sequencer, an FX
-rack, ten factory packs, and multi-user options (share links → cloud libraries → community store).
-**Status 2026-10-06: research complete + plan package written — awaiting owner review + decisions.**
+A flagship web synthesizer for Moddy (moddys.net), in the Pattern Forge family: pro-grade
+multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler), a
+groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
+(share links → cloud libraries → community store). **Free** — no monetisation.
+
+Status 2026-10-06: **Phase 0 started** — plan package complete & owner-decided; build pipeline
++ Phase-0 shell live (`index.html`, sha 2fc8e718…, 6,853 B); screenshot `renders/p0-shell.png`.
+Next: master-tap port, knob framework, CDP harness → then P1 worklet engine + voice benchmark.
+Resume at `CONTINUATION-2026-10-06.md`.
+
+## Build
+    python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)
 
 ## Read first
-1. `docs/01-design-doc.md` — the product (what we're building and why; decisions needed).
-2. `docs/05-spec-review.md` — readiness gate + the consolidated owner decisions + verification list.
+1. `docs/01-design-doc.md` — the product (vision, features, phases).
+2. `docs/05-spec-review.md` — decisions recorded + verification lists.
 3. `docs/00-idea-capture.md` — the trigger and the seed.
 
 ## The docs
-- `docs/00-idea-capture.md` — capture + condensed interview (defaults taken; owner decisions listed)
-- `docs/01-design-doc.md` — design doc (vision, features, phases, non-goals)
-- `docs/02-ui-design-brief.md` — screens, interaction grammar, palettes (teal), a11y, flair moves
-- `docs/03-implementation-spec.md` — architecture, reuse map, engine/content specs, verification
-- `docs/04-agent-build-handoff.md` — build-ready handoff (phases → tasks → gates, kickoff prompt)
-- `docs/05-spec-review.md` — readiness: PASS WITH CHANGES + decisions + options needing verification
+`docs/00-idea-capture.md` · `01-design-doc.md` · `02-ui-design-brief.md` ·
+`03-implementation-spec.md` · `04-agent-build-handoff.md` · `05-spec-review.md`
 
 ## The research (evidence tree — all parent-verified)
-- `research/tabs/` — T0 tab digest (the seed: Dittytoy ditties + the acid trail) + raw ditty sources
-- `research/tabs/T1-dittytoy-deepdive.md` · `research/acid/T2-acid-heritage.md` · `research/groovebox/T3-groovebox-sequencing.md`
-- `research/matrix/T4-synth-feature-matrix.md` · `research/engine/T5-web-audio-engine.md` · `research/multiuser/T6-multi-user-architecture.md`
-- `research/ui/T7-ui-flair.md` · `research/packs/T8-content-packs.md` · `research/reuse/T9-pattern-forge-reuse.md`
-- `research/WAVE-LOG.md` — verification log (spot-checks, corrections, conflicts, fold-ins)
+- `research/tabs/` — T0 tab digest (the seed) + raw ditty sources · T1 dittytoy deep-dive
+- `research/acid/T2` · `groovebox/T3` · `matrix/T4` · `engine/T5` · `multiuser/T6` · `ui/T7` ·
+  `packs/T8` · `reuse/T9` (Pattern Forge inventory)
+- `research/WAVE-LOG.md` — verification log + decisions + Phase-0 kickoff
 
-## Laws this project inherits (see docs for detail)
-- Lab → battery → frozen bytes → deploy; nothing ships without an engine-witness report.
-- Master tap first; verifiers own their AnalyserNode; wavetable witnesses are table-aware.
-- Licences: code MIT/ISC/Apache/Unlicense (verified per file); content own/CC0/PD/CC-BY-manifest;
-  dittytoy = clean-room (CC BY-NC-SA); Open303 (MIT) = the acid DSP foundation.
-- Fairness spine: local-first, no credits/metering, open formats, CC0-first with provenance.
-- Machine etiquette: hidden spawns only, ask before installs, one writer per file.
+## Laws (see docs for detail)
+lab → battery → frozen bytes → deploy; witness laws (own AnalyserNode on the master tap,
+wavetable witnesses table-aware); licences (MIT/ISC/Apache code; own/CC0/PD content;
+dittytoy clean-room; Open303 = acid foundation); fairness spine (local-first, free);
+hidden spawns only; one writer per file.

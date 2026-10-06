@@ -1,0 +1,120 @@
+/* Anvil — theme tokens + Phase 0 shell styles.
+   Palette per docs/02-ui-design-brief.md §9 ("Anvil Teal"): graphite base, one teal identity,
+   Okabe-Ito modulation accents. Values are the contract; do not drift without updating 02. */
+:root {
+  --bg: #0A0E11;
+  --panel: #10161B;
+  --raised: #161F26;
+  --hair: #22303A;
+  --teal: #2ED8C9;
+  --teal-deep: #0F8F85;
+  --teal-glow: #7FF3E8;
+  --text: #E8F1F2;
+  --text-2: #9FB3BC;
+  --text-3: #6B7F8A;
+  --mod-sky: #56B4E9;
+  --mod-orange: #E69F00;
+  --mod-green: #009E73;
+  --mod-purple: #CC79A7;
+  --mod-yellow: #F0E442;
+  --mod-vermillion: #D55E00;
+  --mod-blue: #0072B2;
+  --sans: "IBM Plex Sans", Inter, system-ui, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --grid: 4px;
+  --ctl-h: 32px;
+  --gap: 8px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+code, .av-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--teal); }
+a { color: var(--teal); }
+
+/* header */
+.av-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--panel);
+}
+.av-word {
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--teal);
+  font-size: 15px;
+}
+.av-spacer { flex: 1; }
+.av-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  color: var(--text-2);
+  background: var(--raised);
+}
+.av-chip.av-hot { color: var(--teal); border-color: var(--teal-deep); }
+.av-dim { color: var(--text-3); }
+.av-btn {
+  height: 26px; width: 26px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  background: var(--raised);
+  color: var(--text-2);
+  cursor: pointer;
+  font-weight: 600;
+}
+.av-btn:hover { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+
+/* main */
+.av-main {
+  flex: 1;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+}
+.av-card {
+  background: var(--panel);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  padding: 16px 18px;
+  position: relative;
+}
+.av-card::before {
+  content: "";
+  position: absolute; inset: 0 auto 0 0;
+  width: 2px; border-radius: 8px 0 0 8px;
+  background: var(--teal);
+}
+.av-card h1 { margin: 0 0 8px; font-size: 18px; letter-spacing: 0.02em; }
+.av-card h2 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-2); }
+.av-note { color: var(--text-2); margin: 0 0 8px; }
+.av-list { margin: 0; padding-left: 18px; color: var(--text-2); }
+.av-list b { color: var(--teal); }
+
+/* footer */
+.av-foot {
+  padding: 10px 16px;
+  border-top: 1px solid var(--hair);
+  font-size: 12px;
+}
