@@ -1,0 +1,76 @@
+=== drum_node.mjs — Anvil P2 DRUM engine node harness (child C) ===
+module: C:/Users/Moddy/anvil/src/av_drum.js   version=p2.0   prefix=drum
+rig: av_dsp.create + per-voice k (initVoiceK); fire=initVoice; step=stepVoice*vel*fade; done=state2 && isVoiceDone
+
+--- 1. self-registration footer ---
+  PASS  registerKind(3, AVDRUM) called exactly once  ::  calls=1 id=3
+
+--- 2. map complete + wrap law ---
+  PASS  map = exactly the 11 pinned notes  ::  miss=[] extra=[]
+  PASS  kitFor: pinned round-trip + all 16 page slots resolve 0..10  ::  bad=[]
+  PASS  kitFor wrap: 60->mt(7), 24->snare(1), 35->rim(?)  ::  60=7 24=1 35=10 12=7
+
+--- 3. per-voice battery (gain 1.0; held 100 ms; release; done ≤ 3 s) ---
+  PASS  slot 00 midi 36 kick  peak 1.034 rms 0.149  done 0.535s  nan 0
+  PASS  slot 01 midi 37 rim   peak 0.440 rms 0.044  done 0.100s  nan 0
+  PASS  slot 02 midi 38 snare peak 0.919 rms 0.075  done 0.294s  nan 0
+  PASS  slot 03 midi 39 clap  peak 0.321 rms 0.031  done 0.429s  nan 0
+  PASS  slot 04 midi 40 snare peak 0.919 rms 0.075  done 0.294s  nan 0
+  PASS  slot 05 midi 41 lt    peak 0.638 rms 0.107  done 0.535s  nan 0
+  PASS  slot 06 midi 42 ch    peak 0.305 rms 0.031  done 0.100s  nan 0
+  PASS  slot 07 midi 43 mt    peak 0.630 rms 0.107  done 0.468s  nan 0
+  PASS  slot 08 midi 44 mt    peak 0.630 rms 0.107  done 0.468s  nan 0
+  PASS  slot 09 midi 45 lt    peak 0.638 rms 0.107  done 0.535s  nan 0
+  PASS  slot 10 midi 46 oh    peak 0.336 rms 0.033  done 0.427s  nan 0
+  PASS  slot 11 midi 47 mt    peak 0.630 rms 0.107  done 0.468s  nan 0
+  PASS  slot 12 midi 48 ht    peak 0.654 rms 0.107  done 0.401s  nan 0
+  PASS  slot 13 midi 49 crash peak 0.392 rms 0.032  done 1.601s  nan 0
+  PASS  slot 14 midi 50 ht    peak 0.654 rms 0.107  done 0.401s  nan 0
+  PASS  slot 15 midi 51 ride  peak 0.258 rms 0.014  done 1.016s  nan 0
+  PASS  WORST slot 00 decay=2.0  peak 1.099  done 2.668s  nan 0
+  PASS  WORST slot 01 decay=2.0  peak 0.635  done 2.667s  nan 0
+  PASS  WORST slot 02 decay=2.0  peak 0.968  done 2.667s  nan 0
+  PASS  WORST slot 03 decay=2.0  peak 0.367  done 2.670s  nan 0
+  PASS  WORST slot 04 decay=2.0  peak 0.968  done 2.667s  nan 0
+  PASS  WORST slot 05 decay=2.0  peak 0.652  done 2.668s  nan 0
+  PASS  WORST slot 06 decay=2.0  peak 0.467  done 2.667s  nan 0
+  PASS  WORST slot 07 decay=2.0  peak 0.638  done 2.668s  nan 0
+  PASS  WORST slot 08 decay=2.0  peak 0.638  done 2.668s  nan 0
+  PASS  WORST slot 09 decay=2.0  peak 0.652  done 2.668s  nan 0
+  PASS  WORST slot 10 decay=2.0  peak 0.384  done 2.667s  nan 0
+  PASS  WORST slot 11 decay=2.0  peak 0.638  done 2.668s  nan 0
+  PASS  WORST slot 12 decay=2.0  peak 0.662  done 2.668s  nan 0
+  PASS  WORST slot 13 decay=2.0  peak 0.399  done 2.667s  nan 0
+  PASS  WORST slot 14 decay=2.0  peak 0.662  done 2.668s  nan 0
+  PASS  WORST slot 15 decay=2.0  peak 0.299  done 2.536s  nan 0
+
+--- 4. determinism pair (two fresh engines, same sequence) ---
+  PASS  bit-identical renders (maxAbsDiff === 0)  ::  maxAbsDiff=0
+
+--- 5. behavior probes (clap bursts, 909 hat choke, level=0 silence) ---
+  PASS  clap envelope re-strikes 3x within 90 ms (4 bursts)  ::  rises=3
+  PASS  ch chokes a ringing oh (< 0.12 s) while a lone oh lasts > 0.2 s  ::  choked=0.059s control=0.377s
+  PASS  drum.kick.level=0 renders exact silence  ::  peak=0
+
+--- 6. param table (paths / clamps / unknown -> false) ---
+  PASS  all 33 voice params + drum.split + drum.volume accepted  ::  bad=[]
+  PASS  unknown/non-drum paths -> false (never throws)  ::  bad=[]
+  PASS  clamps: tune->12, decay->0.02, level->1, split->127, volume->1  ::  tune=12 decay=0.02 level=1 split=127 vol=1
+  PASS  NaN value -> false (no NaN reaches the tables)
+  PASS  tune actually moves a voice (kitFor/law probe: tune=+12 doubles kick f0)
+
+--- 7. cross-rate 44.1k + alloc-free render ---
+  PASS  44.1k: all 11 render finite, peak ≤ 1.5, all reach done  ::  worstPeak=1.039 nan=0
+  PASS  alloc-free: heap does not grow (two 60 x 4800-frame bursts, 11 voices)  ::  dA=-1336 B dB=19720 B (gc both sides)
+
+--- 8. kits-demo WAV render ---
+  demo: 53 hits, 9 s, float peak 1.136 (normalised ×0.783), nan=0
+  kits used: kick(36)×7 rim(37)×2 snare(38)×7 clap(39)×1 ch(42)×24 lt(45)×2 oh(46)×4 mt(47)×1 crash(49)×2 ht(50)×1 ride(51)×2
+  PASS  kits-demo WAV written (finite, non-silent, all 11 voices used)  ::  file=C:\Users\Moddy\AppData\Local\hermes\profiles\deepseek\cache\scratch\p2\drum\kits_demo.wav bytes=1728044
+
+==== GATES ====
+per-voice battery (16 slots × defaults): PASS
+per-voice battery (16 slots × decay=2.0): PASS
+sanity checks fails: 0
+
+==== RESULT: ALL PASS ====

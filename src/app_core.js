@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.1.0", phase: "P1 · voice engine", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.2.0", phase: "P2 · sound identity", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -59,6 +59,10 @@ function avMountLevels() {
   try { kbOk = (typeof avKbInit === "function") ? (avKbInit() !== false) : false; } catch (e) { console.warn("[anvil] kb init failed", e); }
   try { midiOk = (typeof avMidiInit === "function") ? (avMidiInit() !== false) : false; } catch (e) { console.warn("[anvil] midi init failed", e); }
   try { synthOk = (typeof avSynthInit === "function") ? (avSynthInit() !== false) : false; } catch (e) { console.warn("[anvil] synth card failed", e); }
+  let padsOk = false, sampleOk = false, recOk = false;
+  try { padsOk = (typeof avPadsInit === "function") ? (avPadsInit() !== false) : false; } catch (e) { console.warn("[anvil] pads init failed", e); }
+  try { sampleOk = (typeof avSampleInit === "function") ? (avSampleInit() !== false) : false; } catch (e) { console.warn("[anvil] sample init failed", e); }
+  try { const r0 = (typeof avRecInit === "function") ? avRecInit() : null; recOk = !!(r0 && r0.ok === true); } catch (e) { console.warn("[anvil] rec init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -71,7 +75,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
@@ -162,7 +166,28 @@ async function avEngineSelfTest() {
     out.allocated = (s1.active || 0) >= 1;
     out.released = (s2.active || 0) === 0;
     out.voices = [s0.active || 0, s1.active || 0, s2.active || 0];
-    out.ok = !!out.tier && out.allocated === true;
+    /* P2: kind switch acceptance + drum routing round-trip */
+    out.kinds = {};
+    let kindsOk = true;
+    for (const k of ["va", "acid", "string", "drum"]) {
+      let acc = h.setParam("engine.kind", k) === true;
+      if (acc && k === "acid") acc = h.setParam("acid.cutoff", 900) === true;
+      if (acc && k === "string") acc = h.setParam("string.damp", 0.4) === true;
+      if (acc && k === "drum") acc = h.setParam("drum.kick.decay", 0.3) === true;
+      out.kinds[k] = acc;
+      kindsOk = kindsOk && acc;
+    }
+    h.setParam("engine.kind", "drum");
+    await new Promise(r => setTimeout(r, 150));
+    h.noteOn(36, 0.9);
+    await new Promise(r => setTimeout(r, 250));
+    const s3 = await h.stats();
+    out.drumNote = (s3.active || 0) >= 1;
+    h.allOff();
+    await new Promise(r => setTimeout(r, 150));
+    h.setParam("engine.kind", "va");
+    out.kindsOk = kindsOk;
+    out.ok = !!out.tier && out.allocated === true && kindsOk && out.drumNote === true;
   } catch (e) { out.error = String((e && e.message) || e); }
   avTestLine("ENGINE SELFTEST " + JSON.stringify(out), "av-enginetest");
   window.__avEngineTest = out;

@@ -1,0 +1,65 @@
+=== acid_node.mjs — Anvil P2 ACID engine node harness ===
+module: C:/Users/Moddy/anvil/src/av_acid.js version=p2.0 · engine: av_dsp.js (text-load + section-2.2 blep patch)
+driver: initEngineK/initVoiceK/initVoice/stepVoice/releaseVoice/isVoiceDone driven per base sample (parent voiceFrame pattern; return * v.vel * v.fade)
+
+--- S: interface ---
+  PASS  S0. footer registered kind 1 (AVDSP.registerKind spy)  ::  registerKind id1 === AVACID: true
+  PASS  S0. VERSION "p2.0" + PREFIX "acid" + all 9 exports  ::  version=p2.0 prefix=acid
+  PASS  S0. AVDSP.blep surface {W:32,N:65,RL:128,MASK:127,SUBS:256}  ::  {"W":32,"N":65,"RL":128,"MASK":127}
+  PASS  S1. all 16 acid.* params accepted  ::  16 params
+  PASS  S1. unknown path -> false, bad value -> false  ::  defaults kept
+  PASS  S1. ranges clamp (cutoff 20..20000, slide 0.06..0.36, overdrive 1..66.6)  ::  clamped
+
+--- S: behaviour ---
+  PASS  S2. no notes -> exact zeros
+  PASS  S3. render heap-flat over 60 x 4800 frames (alloc-free)  ::  heapDelta=-5352 B (gc both sides)
+  PASS  S4. determinism pair bit-identical (no PRNG in acid)  ::  maxAbsDiff=0 len=91200
+  PASS  S5. isVoiceDone false while active; fires after release (<= 1000 ms)  ::  fired after 73.42 ms
+
+--- T1: resonance peak at max reso (T2 L47-52; resonance tracks the knob; TD-3-MO tips over) ---
+  resonance transfer peak (reso 1.0 / 0.1, harmonic bins): 25.33 dB @ 1308 Hz (knob 1200; -180deg loop point ~1.16*fc = 1392)
+  PASS  T1a. resonance peak near cutoff (0.6x..2.5x fc) and >= 12 dB prominence  ::  f=1308 Hz prom=25.33 dB
+  PASS  T1b. stability sweep at max reso (no NaN/Inf, peak <= 6)  ::  worstPeak=3.272 @fc=8000 (raw pre-cOutScale; KMAX=15.2 vs continuous-loop kOsc~15.7)
+
+--- T2: accent step (T2 L75-84: 4 simultaneous changes; MEG forced ~200 ms) ---
+  amp: plain peak 0.165 -> accented peak 1.887  = 21.16 dB jump (includes +1.8 dB velocity step; accent VCA boost is the rest)
+  centroid [4-50 ms] (power-weighted 40 Hz-7 kHz): plain 3388.89 Hz -> accented 3850.67 Hz = +13.63 %
+  PASS  T2a. accent amplitude jump >= +1.5 dB  ::  21.16 dB
+  PASS  T2b. accent spectral-centroid jump >= +8 %  ::  +13.63 %
+  MEG settle (-40 dB, state trace): accented(decay param 1.0 s) 203.229 ms  vs  plain(decay 2.0 s) 2005.250 ms
+  PASS  T2c. accented MEG settles 150-250 ms (forced accentDecay, T2 L75)  ::  203.229 ms
+  PASS  T2d. plain MEG follows its own decay (> 1 s for decay=2 s; forced only on accents)  ::  2005.250 ms
+
+--- T3: accent-memory rise (T2 L82: consecutive accents MUST rise) ---
+  accent peak depth (4 x, 300 ms apart): 0.273 (0 dB step) · 0.310 (1.124 dB step) · 0.316 (0.163 dB step) · 0.342 (0.678 dB step)
+  accent 5 ms-RMS depth:  0.109 (0 dB step) · 0.121 (0.908 dB step) · 0.141 (1.341 dB step) · 0.146 (0.288 dB step)
+  accent centroid rise: 3651 Hz -> 3973 Hz -> 4004 Hz -> 3963 Hz
+  plain control peaks: 0.124 · 0.124 · 0.124 · 0.124
+  sweep-cap memory at each accent note-on (kext.cap BEFORE the accent charge): 0.500 · 0.705 · 0.788 · 0.823
+  PASS  T3a. 4 consecutive accents: measured depth STRICTLY rises (peak)  ::  0.273 < 0.310 < 0.316 < 0.342
+  PASS  T3b. measured depth STRICTLY rises (5 ms RMS, energy view)  ::  0.109 < 0.121 < 0.141 < 0.146
+  PASS  T3c. centroid climbs across the run (last > first)  ::  3651 -> 3973 -> 4004 -> 3963
+  PASS  T3d. plain control is flat (rise is memory, not envelope drift)  ::  0.124 · 0.124 · 0.124 · 0.124
+  cap memory (kext.cap after the run, lazy discharge at accent events): 0.823
+
+--- T4: slide (T2 L103: stock 60 ms, starts at the destination note; midpoint +-40%) ---
+  slide 60 ms up   C4->C5   midpoint(369.99 Hz) crossed @ 29.62 ms  (gate 18..42)
+  slide 60 ms down C5->C4   midpoint(369.99 Hz) crossed @ 30.74 ms  (gate 18..42)
+  slide 120 ms     C4->C5   midpoint(369.99 Hz) crossed @ 59.26 ms  (gate 36..84)
+  slide 360 ms     C3->G3   midpoint(160.12 Hz) crossed @ 178.46 ms  (gate 108..252)
+  PASS  T4a. 60 ms slide midpoint within +-40% of 30 ms  ::  up 29.62 ms · down 30.74 ms
+  PASS  T4b. 120 ms and 360 ms slides: midpoint within +-40%  ::  59.26 / 178.46 ms
+  PASS  T4c. non-overlap note does not glide (arrives immediately)  ::  measured 131.15 Hz after 40 ms
+
+--- T5: saw slope -6 +-2 dB/oct over 200 Hz - 4 kHz (contract 3.1) ---
+  C3 saw: 29 harmonics 200 Hz-4 kHz -> slope -6.46 dB/oct
+  C3 square (diagnostic, expect ~-6 for odd harmonics): 29 pts -> -2.13 dB/oct
+  PASS  T5. saw slope -6 +-2 dB/oct over 200 Hz-4 kHz  ::  -6.46 dB/oct (29 harmonics)
+
+--- perf (indicative only; parent runs cdp_bench) ---
+  1 voice, 20 s audio rendered in 97 ms  (101.04 ns/sample ≈ 206.19x realtime)
+
+--- demo renders (scratch WAVs for the owner pass) ---
+  demo_acid_line.wav  6.46 s @ 48k mono · 48-step acid line @125 BPM (accents + legato slides, overdrive 1.3) · pre-norm peak 2.241
+  demo_accent.wav     3.70 s @ 48k mono · 4 plain notes then 5 consecutive accents @300 ms (accent memory rise audible) · pre-norm peak 2.556
+  demo_slide.wav      5.60 s @ 48k mono · 4 legato slides (slide=0.12 s) + a no-slide control jump · pre-norm peak 0.226

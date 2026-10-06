@@ -18,13 +18,16 @@
      trails the deposit by the half-table span W (a fixed ~0.33 ms oscillator latency, inaudible,
      and identical across all VA slots). tri/sine/WT stay as they were.
    - parameters: verify/_p1_wave.md section 4.2 is the single source of truth. Unknown path ->
-     setParam returns false, never throws. */
+     setParam returns false, never throws.
+   - P2 (verify/_p2_wave.md section 2): KIND_MODS/registerKind + AVLADDER are the sanctioned
+     cross-module refs (guarded typeof); kind voices own their full per-sample chain via
+     stepVoice; v.kindId routes per note; engine.kind + drum.split routing; ladder24 + filter.drive. */
 "use strict";
 
 const AVDSP = (function () {
 
   /* ---- constants ---- */
-  const VERSION = "p1.1";
+  const VERSION = "p2.0";   /* P2: engine kinds (acid/string/drum) + ladder24 + drive */
   const OS = 2;                                  /* voice-core oversampling factor */
   const TAU = Math.PI * 2;
   const SINE_N = 4096;                           /* sine LUT entries */
@@ -32,7 +35,7 @@ const AVDSP = (function () {
   const WT_LEVELS = 11;                          /* mip levels k = 0..10 */
   const WT_NAMES = ["wt.saw", "wt.square", "wt.tri", "wt.sine", "wt.pulse25"];
   const OSC1_TYPES = ["saw", "square", "pulse", "tri", "sine"];
-  const FILTER_MODES = ["lp12", "lp24", "bp", "hp"];
+  const FILTER_MODES = ["lp12", "lp24", "bp", "hp", "ladder24"];   /* P2: 5th = Moog ladder */
   const SUB_WAVES = ["square", "sine"];
   const LFO_SHAPES = ["sine", "tri", "square", "sh"];
   /* halfband ship set: order 8, 4+4 allpass sections (P1.x decimator swap, contract 3c).
@@ -65,6 +68,22 @@ const AVDSP = (function () {
   const BLEP_M = 128;                            /* design taps (window support) */
   const BLEP_FC = 0.229;                         /* design cutoff as a fraction of the 2x rate */
   const WT_TOP = 0.49;                           /* mip margin: top kept harmonic < WT_TOP * base sr */
+
+  /* ---- P2 engine kinds (contract verify/_p2_wave.md section 2) ----
+     Kind modules (av_acid/av_string/av_drum) self-register at load. Kind voices own
+     osc+filter+env+decimation via stepVoice; shared = pool, steal, velocity, fade, state. */
+  const KIND_MODS = [null, null, null, null];    /* 0 va · 1 acid · 2 string · 3 drum */
+  function registerKind(id, mod) {
+    const i = Number(id);
+    if (!(i >= 1 && i <= 3) || !mod || typeof mod.stepVoice !== "function") return false;
+    KIND_MODS[i] = mod;
+    return true;
+  }
+  function routeKind(eng, midi) {
+    let k = eng.kind;
+    if (k === 3 && eng.kext && eng.kext.split > 0 && midi >= eng.kext.split) k = 0;
+    return k;
+  }
 
   /* ---- module tables (built once by buildTables) ---- */
   let tablesBuilt = false;
@@ -312,6 +331,10 @@ const AVDSP = (function () {
       lfoPhase: 0, lfoVal: 0, shVal: 0,
       fade: 0, fadeStep: 0,
       pending: 0, pendingMidi: -1, pendingVel: 0, pendingStart: 0,
+      kindId: 0,                    /* P2: engine kind for the current note (set in reinitVoice) */
+      k: {},                        /* P2: kind voice-state union (initVoiceK per module, at create) */
+      lad: (typeof AVLADDER !== "undefined" && AVLADDER && typeof AVLADDER.createState === "function")
+        ? AVLADDER.createState() : null,   /* P2: Moog-ladder state (filter.mode ladder24) */
     };
   }
 
@@ -362,7 +385,20 @@ const AVDSP = (function () {
       osCount: 0,
       /* bench ring (256 quanta) */
       ring: new Float64Array(256), ringI: 0, ringN: 0, underruns: 0, budgetUs: 128e6 / sr,
+      /* P2 kind machinery */
+      kind: 0, kext: {}, tDrive: 0, cDrive: 0,
     };
+    for (let kk = 1; kk <= 3; kk++) {
+      const m0 = KIND_MODS[kk];
+      if (m0 && typeof m0.initEngineK === "function") { try { m0.initEngineK(eng.kext); } catch (e) { } }
+    }
+    for (let vi0 = 0; vi0 < maxVoices; vi0++) {
+      const kv0 = voices[vi0].k;
+      for (let kk = 1; kk <= 3; kk++) {
+        const m0 = KIND_MODS[kk];
+        if (m0 && typeof m0.initVoiceK === "function") { try { m0.initVoiceK(kv0); } catch (e) { } }
+      }
+    }
     eng.msBoot = Date.now() - t0;
     return eng;
   }
@@ -451,7 +487,27 @@ const AVDSP = (function () {
       case "voice.bend": { const n = Number(value); if (!isFinite(n)) return false; eng.bend = cl(n, -12, 12); eng.pitchGen++; return true; }
       case "tune": { const n = Number(value); if (!isFinite(n)) return false; eng.tune = cl(n, -12, 12); eng.pitchGen++; return true; }
       case "engine.outScale": { const n = Number(value); if (!isFinite(n)) return false; eng.tOutScale = cl(n, 0.05, 1); return true; }
-      default: return false;
+      case "engine.kind": {
+        const e = mapEnum(value, ["va", "acid", "string", "drum"]);
+        if (e < 0) return false;
+        eng.kind = e;
+        return true;
+      }
+      case "filter.drive": { const n = Number(value); if (!isFinite(n)) return false; eng.tDrive = cl(n, 0, 1); return true; }
+      default: {
+        /* P2 kind params: prefix dispatch to the registered module that claims the prefix */
+        const dot = path.indexOf(".");
+        if (dot > 0) {
+          const pre = path.slice(0, dot);
+          for (let kk = 1; kk <= 3; kk++) {
+            const m0 = KIND_MODS[kk];
+            if (m0 && m0.PREFIX === pre && typeof m0.setParam === "function") {
+              try { return m0.setParam(eng, path, value) === true; } catch (e) { return false; }
+            }
+          }
+        }
+        return false;
+      }
     }
   }
 
@@ -501,6 +557,7 @@ const AVDSP = (function () {
 
   function reinitVoice(eng, v, midi, gain, start) {
     v.state = 1;
+    v.kindId = routeKind(eng, midi);
     v.noteMidi = midi;
     v.vel = cl(gain, 0.05, 1);
     v.seq = ++eng.seq;
@@ -545,6 +602,15 @@ const AVDSP = (function () {
     v.fade = 0;
     v.fadeStep = 1 / eng.fadeInSamples;
     computePitch(eng, v);
+    /* P2 (contract R2): kind per-note reset AFTER the core fields; AVACID reads v.pitch as the
+       slide origin and scans eng.voices for the legato origin. Ladder state resets per note. */
+    if (v.lad && typeof AVLADDER !== "undefined" && AVLADDER && typeof AVLADDER.resetState === "function") {
+      try { AVLADDER.resetState(v.lad); } catch (e) { }
+    }
+    if (v.kindId > 0) {
+      const m0 = KIND_MODS[v.kindId];
+      if (m0 && typeof m0.initVoice === "function") { try { m0.initVoice(eng, v); } catch (e) { } }
+    }
   }
 
   function releaseVoice(eng, v) {
@@ -553,6 +619,10 @@ const AVDSP = (function () {
     v.e1Stage = 4;
     v.e2Stage = 4;
     if (v.fadeStep < 0) v.fadeStep = 1 / eng.fadeInSamples;   /* cancel a steal fade-out */
+    if (v.kindId > 0) {
+      const m0 = KIND_MODS[v.kindId];
+      if (m0 && typeof m0.releaseVoice === "function") { try { m0.releaseVoice(eng, v); } catch (e) { } }
+    }
   }
 
   /* ---- notes ---- */
@@ -744,7 +814,17 @@ const AVDSP = (function () {
     /* noise -- engine PRNG, bipolar */
     let nz = 0;
     if (eng.cNoiseLevel > 0) nz = prngBip(eng) * eng.cNoiseLevel;
-    const x = o1 + o2 + so + nz;
+    let x = o1 + o2 + so + nz;
+    /* P2 drive stage: level-normalised soft drive (v1) ahead of both filter families */
+    if (eng.cDrive > 0) {
+      const dg = 1 + 7 * eng.cDrive;
+      const xa = x * dg;
+      x = (xa * (27 + xa * xa) / (27 + 9 * xa * xa)) / Math.sqrt(dg);
+    }
+    /* P2 ladder24: the AVLADDER kernel owns the filter when wired (mode index 4) */
+    if (eng.filterMode === 4 && v.lad && typeof AVLADDER !== "undefined" && AVLADDER && typeof AVLADDER.process === "function") {
+      return AVLADDER.process(v.lad, x, v.lad.g, v.lad.k);
+    }
     /* TPT SVF (T5 section 11), one stage; lp24 cascades a second stage */
     let v3 = x - v.ic2a;
     const v1 = v.a1 * v.ic1a + v.a2 * v3;
@@ -752,7 +832,7 @@ const AVDSP = (function () {
     v.ic1a = 2 * v1 - v.ic1a;
     v.ic2a = 2 * v2 - v.ic2a;
     const mo = eng.filterMode;
-    if (mo === 1) {
+    if (mo === 1 || mo === 4) {   /* 4 = ladder24 fallback when AVLADDER is absent */
       v3 = v2 - v.ic2b;
       const w1 = v.a1 * v.ic1b + v.a2 * v3;
       const w2 = v.ic2b + v.a2 * v.ic1b + v.a3 * v3;
@@ -777,6 +857,10 @@ const AVDSP = (function () {
     v.a2 = g * a1;
     v.a3 = g * g * a1;
     v.fk = k;
+    /* P2: keep the ladder kernel's coeffs in step (mode ladder24) */
+    if (eng.filterMode === 4 && v.lad && typeof AVLADDER !== "undefined" && AVLADDER && typeof AVLADDER.setCoeffs === "function") {
+      AVLADDER.setCoeffs(v.lad, fc, eng.fs2, eng.cReso);
+    }
   }
 
   function stepSmoothing(eng) {
@@ -789,10 +873,34 @@ const AVDSP = (function () {
     eng.cReso += (eng.tReso - eng.cReso) * eng.s15;
     eng.cEnvAmt += (eng.tEnvAmt - eng.cEnvAmt) * eng.s20;
     eng.cOutScale += (eng.tOutScale - eng.cOutScale) * eng.s20;
+    eng.cDrive += (eng.tDrive - eng.cDrive) * eng.s15;   /* P2 filter drive */
   }
 
   /* one output-sample frame of one voice; returns its contribution (amp-scaled) */
   function voiceFrame(eng, v) {
+    /* P2 kind path: the module owns osc/filter/env/decimation; shared = vel + fade + steal;
+       released kind voices end when the module says done (strings decay out, drums one-shot). */
+    if (v.kindId > 0) {
+      const m0 = KIND_MODS[v.kindId];
+      if (!m0) { v.state = 0; return 0; }
+      const y0 = m0.stepVoice(eng, v);
+      if (v.state === 3) {
+        v.fade += v.fadeStep;
+        if (v.fade <= 0) {
+          if (v.pending === 1) reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart);
+          else {
+            v.fade = 0; v.state = 2;
+            if (typeof m0.releaseVoice === "function") { try { m0.releaseVoice(eng, v); } catch (e) { } }
+            v.fadeStep = 1 / eng.fadeInSamples;
+          }
+        }
+      } else if (v.fade < 1) {
+        v.fade += v.fadeStep;
+        if (v.fade > 1) v.fade = 1;
+      }
+      if (v.state === 2 && typeof m0.isVoiceDone === "function" && m0.isVoiceDone(eng, v)) v.state = 0;
+      return y0 * v.vel * v.fade;
+    }
     /* envelopes: gate-less (held until noteOff); one step per output sample */
     if (v.e1Stage === 1) {
       v.e1Val += v.e1Astep;
@@ -943,5 +1051,8 @@ const AVDSP = (function () {
     benchReset: benchReset,
     benchRead: benchRead,
     recordQuantum: recordQuantum,
+    /* P2 additive surface (contract section 2.2) */
+    registerKind: registerKind,
+    blep: { W: BLEP_W, N: BLEP_N, RL: BLEP_RL, MASK: BLEP_MASK, SUBS: BLEP_SUBS, tab: blepTab, deposit: blepDeposit },
   };
 })();

@@ -1,0 +1,65 @@
+=== string_node.mjs -- Anvil P2 STRING engine node harness ===
+module: C:/Users/Moddy/anvil/src/av_string.js   version=p2.0  prefix=string
+drive: initEngineK -> setParam(string.*) -> initVoiceK -> initVoice -> stepVoice * v.vel -> releaseVoice/isVoiceDone
+protocol: 48 kHz unless noted; held notes; defaults damp=0.35 decay=0.55 pluck=0.28 exciter=noise tone=0.6
+
+--- interface + laws ---
+  PASS  I1. version p2.0 / prefix string  ::  version=p2.0 prefix=string
+  PASS  I2. footer registered kind id 2 with the module  ::  id=2 mod=AVSTRING
+  PASS  I3. exports complete  ::  VERSION,PREFIX,initEngineK,initVoiceK,initVoice,stepVoice,releaseVoice,isVoiceDone,setParam
+  PASS  I4. concatenated with av_dsp.js text loads (single-scope, strict)  ::  av_dsp=p1.1 av_string=p2.0
+  PASS  I5. law scan: no page-scope tokens, ONE top-level const, strict, pinned footer  ::  bad=none topConsts=1 strict=true footer=true
+  PASS  I6. setParam: known->true, unknown/enum/non-finite->false, ranges clamp  ::  string.damp -> true | string.decay -> true | string.pluck -> true | string.exciter -> true | string.tone -> true | string.exciter -> false | string.nope -> false | engine.kind -> false | string.damp -> false | string.pluck -> false
+
+--- G1 f0 accuracy (autocorrelation, +-0.5% gate) ---
+  C2   expect    65.406 Hz  solved    65.379 Hz  autocorr    65.380 Hz  err  -0.0401% (-0.69 ct, humanised detune)  r=0.9966  peak=0.4615
+  C3   expect   130.813 Hz  solved   130.757 Hz  autocorr   130.760 Hz  err  -0.0400% (-0.69 ct, humanised detune)  r=0.9992  peak=0.4001
+  C4   expect   261.626 Hz  solved   261.515 Hz  autocorr   261.522 Hz  err  -0.0397% (-0.69 ct, humanised detune)  r=0.9992  peak=0.4996
+  A4   expect   440.000 Hz  solved   439.812 Hz  autocorr   439.816 Hz  err  -0.0418% (-0.72 ct, humanised detune)  r=0.9999  peak=0.4262
+  C6   expect  1046.502 Hz  solved  1046.013 Hz  autocorr  1046.007 Hz  err  -0.0473% (-0.82 ct, humanised detune)  r=0.9999  peak=0.4384
+  44.1k A4 autocorr   439.815 Hz  err  -0.0421%  cap=4096  peak=0.4409
+  96k A4   autocorr   439.820 Hz  err  -0.0410%  cap=8192  peak=0.3606
+  96k C2   autocorr    65.379 Hz  err  -0.0413%  cap=8192  peak=0.4204
+  PASS  G1. f0 within +-0.5% on every row  ::  worst C6 err=-0.0473%
+
+--- G2 decay monotonic in string.decay (retention dB, window 0.05-0.15 s vs 0.45-0.55 s) ---
+  A4 decay=0.15  T60 target 0.13 s  retention -192.92 dB  peak 0.4262
+  A4 decay=0.35  T60 target 0.44 s  retention -57.89 dB  peak 0.4262
+  A4 decay=0.55  T60 target 1.53 s  retention -18.63 dB  peak 0.4262
+  A4 decay=0.75  T60 target 5.29 s  retention -7.27 dB  peak 0.4262
+  A4 decay=0.95  T60 target 18.32 s  retention -5.47 dB  peak 0.4262
+  PASS  G2. A4 retention strictly increasing in decay (>= 1 dB steps)  ::  -192.92 -> -57.89 -> -18.63 -> -7.27 -> -5.47
+  C3 decay=0.15  T60 target 0.13 s  retention -193.52 dB  peak 0.4001
+  C3 decay=0.35  T60 target 0.44 s  retention -58.80 dB  peak 0.4001
+  C3 decay=0.55  T60 target 1.53 s  retention -19.77 dB  peak 0.4001
+  C3 decay=0.75  T60 target 5.29 s  retention -8.49 dB  peak 0.4001
+  C3 decay=0.95  T60 target 18.32 s  retention -5.24 dB  peak 0.4001
+  PASS  G2. C3 retention strictly increasing in decay (>= 1 dB steps)  ::  -193.52 -> -58.80 -> -19.77 -> -8.49 -> -5.24
+
+--- G3 no NaN/Inf: full param cross x 2 pitches, edge notes, rapid re-init ---
+  PASS  G3a. full cross (216 combos): finite, no throw, peak in (0,1.5]  ::  peak 0.0199..1.2875 nonfinite=0 throws=0
+  PASS  G3b. edge notes (incl. clamped extremes) finite + non-silent  ::  m0 pk 0.5172 nf 0 solvedF0 11.74 | m8 pk 0.4858 nf 0 solvedF0 12.97 | m12 pk 0.4822 nf 0 solvedF0 16.34 | m21 pk 0.4831 nf 0 solvedF0 27.49 | m100 pk 0.3976 nf 0 solvedF0 2633.92 | m120 pk 0.3867 nf 0 solvedF0 8148.37 | m127 pk 0.3867 nf 0 solvedF0 8450.69
+  PASS  G3c. rapid re-init (300 notes, rotating patches, 64 samples each): finite, no throw  ::  throws=0 nonfinite=0
+
+--- G4 alloc-free render (heap-flat across stepVoice calls; --expose-gc sharpens) ---
+  PASS  G4. heap-flat: steady -8952 B, glide 248 B (|delta| < 65536)  ::  gc both sides
+
+--- G5 determinism (two fresh engines, same seed + sequence; require bit-identical) ---
+  noise            maxAbsDiff=0 sameLen=true
+  saw+decay0.9     maxAbsDiff=0 sameLen=true
+  pulse+pluck0.5   maxAbsDiff=0 sameLen=true
+  PASS  G5a. same seed -> bit-identical renders  ::  noise:0 saw+decay0.9:0 pulse+pluck0.5:0
+  PASS  G5b. different seed -> differs (rng really drives the render)  ::  maxAbsDiff=0.6445204651064422
+
+--- release semantics + isVoiceDone ---
+  PASS  R1. active voice never reports done  ::  activeDone=false
+  PASS  R2. released voice reaches done <= 3 s (damper tail)  ::  doneAt=1.01 s
+  PASS  R3. release tail amplitude decays (first 6.7 ms vs last 6.7 ms before done)  ::  earlyRms=0.0081 lateRms=0.0001 ratio=0.01
+  PASS  R4. live damp/decay sweeps mid-note: finite, bounded (params are per-note; ring must not glitch)  ::  sweeps=80 peak=0.4391 nonfinite=0
+  PASS  R5. glide does not retune a ringing string (pluck=pitch): finite, bounded, pitch locked  ::  peak=0.4627 nonfinite=0 f0=261.58 vs locked 261.61 (-0.0084%)
+
+--- pluck comb diagnostic (harmonics of f0; informational) ---
+  pluck=0.28  h2/h1=0.6714  h3/h1=0.2814
+  pluck=0.50  h2/h1=0.0689  h3/h1=0.7288
+  pluck=0.75  h2/h1=0.8462  h3/h1=0.9437
+  PASS  P1. pluck 0.5 suppresses even harmonic vs 0.28 (soft: h2/h1 at 0.5 < 0.25x at 0.28)  ::  h2/h1 0.0689 vs 0.6714

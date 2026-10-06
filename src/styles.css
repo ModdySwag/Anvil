@@ -300,3 +300,47 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-synth-pick-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
 #av-synth .av-select { min-width: 96px; }
 #av-synth .av-knobs { margin: 4px 0 10px; }
+
+/* ============================================================================
+   P2 — ENGINE select + kind panels (av_synth.js) */
+.av-synth-engine-row { display: flex; flex-wrap: wrap; gap: 10px 18px; margin: 4px 0 10px; }
+#av-synth-engine { min-width: 132px; font-weight: 600; }
+.av-synth-panel[hidden] { display: none; }
+.av-synth-sec { margin: 2px 0 8px; }
+.av-synth-sec-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); margin: 2px 0 4px; }
+.av-drum-kit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 10px; margin: 4px 0 10px; }
+.av-drum-voice { background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 5px 7px 4px; min-width: 0; }
+.av-drum-vname { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); margin-bottom: 2px; }
+.av-drum-voice .av-knobs { gap: 4px 8px; margin: 0; }
+.av-drum-globals { margin: 2px 0 4px; }
+
+/* P2 — DRUM pads (av_pads.js) */
+.av-pads { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 4px 0 8px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.av-pad { position: relative; min-height: 54px; background: var(--raised); border: 1px solid var(--hair); border-radius: 8px; color: var(--text-2); cursor: pointer; font-family: var(--mono); font-size: 9px; letter-spacing: .06em; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; touch-action: none; }
+.av-pad:hover { border-color: var(--teal-deep); color: var(--teal); }
+.av-pad.av-pad-off { opacity: .35; cursor: default; }
+.av-pad.av-pad-on { background: #0d2422; border-color: var(--teal); color: var(--teal-glow); box-shadow: 0 0 10px rgba(46,216,201,.35); }
+.av-pad-label { font-weight: 700; }
+.av-pad-note { color: var(--text-3); font-size: 8px; }
+
+/* P2 — sample core (av_sample.js) */
+.av-sample-drop { border: 1px dashed var(--hair); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.av-sample-drop.dragover { border-color: var(--teal); box-shadow: 0 0 10px rgba(46,216,201,.25); }
+.av-sample-dropmsg { color: var(--text-3); font-size: 12px; }
+.av-sample-file { font-size: 11px; color: var(--text-2); }
+.av-sample-list { display: flex; flex-direction: column; gap: 8px; }
+.av-sample-empty { color: var(--text-3); font-size: 12px; font-style: italic; }
+.av-sample-row { background: var(--raised); border: 1px solid var(--hair); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+.av-sample-head { display: flex; align-items: baseline; gap: 8px; }
+.av-sample-name { font-weight: 600; color: var(--text); font-size: 12px; }
+.av-sample-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sample-actions { display: flex; gap: 6px; margin-left: auto; }
+.av-sample-wave { width: 100%; height: 48px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; }
+
+/* P2 — recorder (av_rec.js) */
+.av-rec-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-rec-time { font-family: var(--mono); font-size: 12px; color: var(--teal); min-width: 64px; }
+.av-rec-state { font-family: var(--mono); font-size: 11px; color: var(--text-3); }
+.av-rec-link { color: var(--teal); font-size: 12px; }
+.av-rec-on { color: #ff8a7a !important; }
+.av-rec-err { color: #ff8a7a; font-size: 12px; }

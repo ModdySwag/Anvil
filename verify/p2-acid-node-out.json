@@ -1,0 +1,8 @@
+{
+ "harness": "acid_node.mjs",
+ "module": "src/av_acid.js",
+ "version": "p2.0",
+ "done": "2026-10-06T19:23:44.475Z",
+ "fails": 0,
+ "registerOk": true
+}

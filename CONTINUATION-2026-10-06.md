@@ -366,3 +366,27 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
 - **If resuming cold mid-P2:** check which files landed (`ls src/av_*.js`), read the child reports
   (task-*.log tails), then run the parent integration per `_p2_wave.md` §2.3–§7. Nothing else is
   authoritative — never integrate half-landed files.
+
+## Resume addendum 13 — 2026-10-07 (P2 wave INTEGRATED; battery ALL GREEN on 7ddfedf7)
+
+- **P2 integration landed** (parent, one counted-assert script, 29 edits): av_dsp **p2.0** (kind
+  dispatch registerKind/KIND_MODS · v.kindId per-note routing · v.k union + eng.kext · engine.kind +
+  drum.split · ladder24 + filter.drive · AVDSP.blep exposure · kind frame path + isVoiceDone end) ·
+  build.py (bundle + worklet concat = av_ladder+av_dsp+av_acid+av_string+av_drum+av_voiceproc) ·
+  app_core (pads/sample/rec boot + ENGINE SELFTEST extended: kind switches + drum routing
+  round-trip) · body.html (Drums/Samples/Recorder cards, P2 copy) · styles.css (P2 blocks).
+  New src: av_acid 478 · av_drum 474 · av_sample 582 · av_rec 445 · av_string 333 · av_ladder 200 ·
+  av_pads 170 · av_synth engine layer 343 lines.
+- **Frozen build: `index.html` = 7ddfedf7… (483,056 B).** Battery ALL GREEN on these bytes:
+  smoke 11/11 · feel 18/18 · keys 27/27 · midi 33/33 (pin now 7ddfedf7) · **cdp_sample 29/29**
+  (drop/file/host imports · HiDPI waveform · tap-witnessed 440 Hz preview) · **cdp_rec 29/29**
+  (tap capture → WAV parse+length · silence control · audible note take; one rig SPEC fix: control
+  duration = WAV-vs-wall-clock ±0.5 s — CDP round-trips stretch the arm span).
+- Child evidence: acid T1–T5 ALL PASS (accent memory rises 0.273<0.310<0.316<0.342 · slide 29.6/
+  30.7 ms @60 ms · saw −6.46 dB/oct) + 3 demo WAVs · string ALL PASS (f0 ±0.05 %) · drum 16-slot
+  gates + kits demo · ladder 44/44 (Huovilainen form, ampl→freq pull documented). Harness outputs
+  + demos archived (scratch/p2 → copies in verify/ + renders/).
+- **IN FLIGHT: PERF GATE (P·1)** — bench + stress chained on 7ddfedf7 (background; results commit
+  after). P1.x base for deltas: 56734133 = offline 128 @ 47.6 %.
+- **NEXT: P3** (FX rack ≥12 modules + mod matrix + macros + granular + sampler) per docs/05 §2.7–2.10;
+  carry: minBLEP cost-optimisation (P·2), smoke-check extension for the P2 cards.
