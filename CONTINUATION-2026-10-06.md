@@ -265,10 +265,34 @@ stopband edge, not 2× Nyquist) + alias-rig BH-window amendment → re-run cdp_a
 `last-cdp_stress.log` + `renders/p1-stress.png`. **If resuming cold:** read `verify/_p1_wave.md`
 (AMENDMENTS at the end), then `verify/last-cdp_alias.log`.
 
-## FIX WAVE (P1.x) — STARTED same session (owner GO)
+## FIX WAVE (P1.x) — ENGINE DELIVERED (commit 41938b3, rebuild 56734133)
 
-Contract + plan: **`verify/_p1x_blep_wave.md`** — minBLEP "Classic" oscillator (clean-room; per-osc
-correction ring + 256×L residual table), WT mip-margin policy, optional decimator study, node alias
-harness (scratch/blep/alias_node.mjs) as the acceptance instrument. Engine child dispatched this
-session (see transcript/commit); parent continuity steps in contract §6: verify → rebuild → browser
-rig v2 (BH-window amendment) → alias re-run + battery + `cdp_bench --offline-only` → commit + addendum 12.
+minBLEP Classic osc (65-tap × 256 subs, clean-room, calibrated) + WT mip-margin rule + 4+4 halfband;
+node alias harness ALL PASS (VA worst real −58.2 dBc, WT real ≤ −119 dBc, determinism, alloc-free).
+Re-verify child (deleg_2fa7136f) runs the browser suite on the new bytes → close-out commit +
+addendum 12 follows.
+
+## GOLDEN BUILD — owner directive 2026-10-07 ("build until completion, industry standard everything")
+
+Recorded in `docs/05` §2.7. Locked scope beyond P1 (no re-ask): STORE + add-on packs/modules; CODE
+section (user code creation/interaction); walkthrough + help; PF-grade keyboard incl. POPOUT; maximum
+varied sound modules/racks; many-configuration synth+store; outlandish sound extras; sound
+packs/loops/drum packs; full recording + varied file I/O; one-press STEM export (per-part WAVs,
+DAW-ready); pro deck display/readouts; seamless drum↔synth interchange; final deploy + live verify +
+owner pass. Agent discretion on clinical decisions; every wave battery-gated.
+
+PROGRAM (resume from the latest addendum; waves may split across sessions):
+1. **NOW:** P1.x close-out (re-verify child in flight) → commit + addendum 12 + owner report.
+2. **P2 wave:** ACID (Open303 clean-room foundation) + STRING (Karplus-Strong) + DRUM (expanded kit
+   + pads, drum-split law) engines; sample core begins (import WAV/FLAC/MP3/OGG, waveform display);
+   RECORDER core (tap recorder → WAV export); drum↔synth keyboard split.
+3. **P3 wave:** FX rack ≥12 modules (Dattorro plate / FDN / Freeverb, drive, bitcrush, chorus/
+   flanger/phaser, delay, EQ/comp/limiter); per-voice mod matrix + 8 macros; granular + sampler voice.
+4. **P4 wave:** sequencer/groovebox (step-objects, chains/songs, acid lane); LOOPS as patterns;
+   play/record; audio-clock scheduling.
+5. **P5 wave:** STORE — 10 factory packs (580 presets) + drum packs + loop packs; IDB install;
+   previews; add-on modules.
+6. **CODE section** (user code creation/interaction) + **WALKTHROUGH/help** + **POPOUT keyboard** +
+   pro deck display — folded into P3–P7 per wave capacity.
+7. **P6–P7:** share links, cloud, polish; STEM export; deploy + live verify + owner pass (the
+   golden build finish line).
