@@ -94,3 +94,68 @@ it extends it; fold into wave contracts as capacity allows.
 
 Batch-3 top picks: 41 (controller templates), 42 (MIDI-FX rack), 43 (scratch deck), 45-46 (wizards +
 starters), 47-48 (scene morph + looper layering).
+
+## I. Batch 4 (2026-10-07 — owner ask: "finalize to feature-rich outstanding": engine depth, platform, accessibility)
+
+60. ★ FM engine [moderate] — the scouted Dexed msfa core (Apache-2.0, G1) as a first-class voice
+    engine: 4–6 operators, matrix + DX-style envelopes. [P3]
+61. ★ MPE + per-note expression [moderate] — Web MIDI MPE zones; per-note bend/slide/aftertouch/
+    pan; expressive recording into patterns. Reserve engine hooks in the P2 contract. [P2→P3]
+62. Microtuning studio [moderate] — Scala .scl/.kbm import, per-part tuning, MTS-ESP live (SysEx),
+    equal↔just TUNE morph (the Overtonium idea, clean-room). [P3/P7]
+63. Analog-behaviour pass [moderate] — per-voice pitch/level drift, free-running oscillators,
+    tolerance modelling; seeded (determinism tests keep holding); per-patch opt-in. [P3]
+64. ★ Elastic audio [stretch] — WSOLA/phase-vocoder worklet: loops follow project tempo, key-lock,
+    sample time-stretch. [P3]
+65. Sample chop mode [moderate] — transient detect → pad map → slice-to-steps; trim/fade/normalise
+    editor (own engine, not a lib drop-in). [P2/P3]
+66. Wavetable editor [moderate] — draw/import 2048-frame tables, spectral tools, morph frames; user
+    table library rides packs. [P3]
+67. Convolution IR module [easy-moderate] — own CC0 IR set (plates/rooms/springs/cabs) + user IR
+    import; true-stereo; rides the FX rack. [P3]
+68. ★ Airwindows-style FX bank [moderate] — curate the MIT goldmine (G1) into bus tools (console/
+    tape/drive flavours); the attribution registry keeps the licence trail. [P3]
+69. Sends + sidechain [moderate] — per-part send rails (reverb/delay), sidechain duck input
+    (kick→pads), bus glue compressor. [P3/P4]
+70. Master chain [easy-moderate] — tape/console glue, limiter, LUFS-normalised render targets,
+    export dither (the export-quality end of #49). [P3→P7]
+
+71. ★ P-lock automation lanes [moderate] — per-step parameter locks + curved interpolation lanes;
+    copy/clear/morph. [P4]
+72. Generative toolkit [moderate] — euclidean, polyrhythm ratios, ratchets, per-track clock divide/
+    swing (companion to #42). [P4]
+73. ★ Song arranger [moderate] — chains → drag-arrange timeline, section repeats, quantised scene
+    transitions, arrangement export. [P4/P6]
+74. Live mode [stretch] — clip/scene launch grid, quantised start, follow actions, setlist. [P4]
+75. ★ Undo/redo + A/B compare [moderate] — bounded history across editor+sequencer; snapshot
+    compare folds #51 into a system; land it EARLY (editor wave), not last. [P4]
+
+76. Autosave + crash recovery [easy-moderate] — IDB session snapshots, versioned restore points,
+    "recovered session" flow (#52 stays the export path). [P4/P6]
+77. ★ File System Access I/O [moderate] — real open/save of .anvl projects + direct sample import
+    from disk; download fallback. [P5]
+78. PWA + offline [easy-moderate] — install, service-worker cache, full offline use; the local-
+    first spine made literal. [P6]
+79. ★ Accessibility pass [moderate] — keyboard-complete operation, screen-reader roles/labels,
+    high-contrast + reduced-motion variants; tested in the battery. [P7]
+80. Command palette + shortcut map [easy] — Ctrl-K palette; contextual "what is this knob?" help
+    overlays (the tooling half of #20). [P6]
+
+81. ★ Open module API [moderate-stretch] — the CODE section's engine: a documented sandboxed DSP
+    module contract (FX/source) that user code runs under; versioned loader; store lists user
+    modules. [P5/P6]
+82. Suite bridges round 2 [easy] — send loop → webmusic-hub library; world-radio "now playing"
+    cross-link; Resonance pack import (reverse of #7). [P6]
+83. Video/share capture [easy-moderate] — WebM clip export with the #56 visuals + rendered audio,
+    for socials and tutorials. [P6/P7]
+
+Program notes (process, not features):
+- P·1 Standing perf gate: every wave freeze runs bench (offline knee) + a stress pass; deltas go in
+  the addendum. Motivated by the P1.x close-out: minBLEP ≈ +20 % steady cost, heavier under unison.
+- P·2 minBLEP cost-optimisation pass — slot after the P2 planning pass; target: restore stress
+  headroom while the alias gates stay green.
+- P·3 MIT/Apache adoption registry — licence + attribution file grows as FM/FX modules land
+  (Dexed msfa, Airwindows, Mutable per-file MIT).
+
+Batch-4 top picks: 60 FM · 61 MPE · 64 elastic audio · 68 Airwindows bank · 71 p-locks ·
+73 arranger · 75 undo/redo · 77 File System Access · 79 accessibility · 81 open module API.
