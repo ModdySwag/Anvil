@@ -350,3 +350,19 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
   panel) + STRING (Karplus-Strong) + DRUM (expanded kit + pads + split law) + ladder filter/overdrive
   + sample core + recorder + drum↔synth; contract `verify/_p2_wave.md`. Mandates docs/05 §2.7–2.10;
   ideas docs/07; station docs/08. Resume phrase: **"continue anvil"**.
+
+## P2 wave STARTED — 2026-10-07 (7 children dispatched; integration pending)
+
+- Contract: `verify/_p2_wave.md` (kind interface §2 · engine specs §3 · sample §4 · rec §5 · UI §6 ·
+  gates §7 · reports §8).
+- Children — delegation `deleg_9846f2ce` (background; results re-enter the session when done):
+  sa-0 acid `av_acid.js` · sa-1 string `av_string.js` · sa-2 drum+pads `av_drum.js`+`av_pads.js` ·
+  sa-3 sample `av_sample.js`+`cdp_sample.mjs` · sa-4 rec `av_rec.js`+`cdp_rec.mjs` · sa-5 synth UI
+  (extends `av_synth.js`) · sa-6 ladder `av_ladder.js`. Transcripts:
+  `C:\Users\Moddy\AppData\Local\hermes\profiles\deepseek\cache\delegation\live\deleg_9846f2ce\task-{0..6}.log`.
+- On return: parent integrates per `_p2_wave.md` §2.3 (av_dsp kind dispatch + build.py + app_core/
+  body/styles + hosts), rebuild, P1 battery + the new rigs (parent-run only), PERF GATE (bench +
+  stress), commits + addendum 13 + owner report.
+- **If resuming cold mid-P2:** check which files landed (`ls src/av_*.js`), read the child reports
+  (task-*.log tails), then run the parent integration per `_p2_wave.md` §2.3–§7. Nothing else is
+  authoritative — never integrate half-landed files.
