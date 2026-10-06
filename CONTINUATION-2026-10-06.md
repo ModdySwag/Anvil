@@ -264,3 +264,11 @@ stopband edge, not 2× Nyquist) + alias-rig BH-window amendment → re-run cdp_a
 `last-cdp_bench.*` + `renders/p1-bench.png`; `cdp_alias.mjs` + `last-cdp_alias.log`; `cdp_stress.mjs` +
 `last-cdp_stress.log` + `renders/p1-stress.png`. **If resuming cold:** read `verify/_p1_wave.md`
 (AMENDMENTS at the end), then `verify/last-cdp_alias.log`.
+
+## FIX WAVE (P1.x) — STARTED same session (owner GO)
+
+Contract + plan: **`verify/_p1x_blep_wave.md`** — minBLEP "Classic" oscillator (clean-room; per-osc
+correction ring + 256×L residual table), WT mip-margin policy, optional decimator study, node alias
+harness (scratch/blep/alias_node.mjs) as the acceptance instrument. Engine child dispatched this
+session (see transcript/commit); parent continuity steps in contract §6: verify → rebuild → browser
+rig v2 (BH-window amendment) → alias re-run + battery + `cdp_bench --offline-only` → commit + addendum 12.
