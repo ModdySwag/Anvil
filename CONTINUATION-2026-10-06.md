@@ -149,7 +149,9 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
 
 ## Resume addendum 7 — 2026-10-07 (SESSION SAVE at ~96% context; midi suite in flight)
 
-- HEAD `5420543`; build **sha cc601710…** (134,019 B) — **smoke 9/9 · feel 18/18 · keys 27/27 GREEN** on these bytes.
+- HEAD `c01f35a` (this save commit — it swept in a WIP snapshot of the child's `verify/cdp_midi.mjs`;
+  **existence of that file is NOT "done"** — judge only by the child's completion report / log tail).
+  Build at save: **sha cc601710…** (134,019 B) — **smoke 9/9 · feel 18/18 · keys 27/27 GREEN** on these bytes.
 - **IN FLIGHT: `verify/cdp_midi.mjs` suite child** — subagent `sa-0-c6e017b1`, unit `deleg_e12d803b`, transcript
   `C:\Users\Moddy\AppData\Local\hermes\profiles\deepseek\cache\delegation\live\deleg_e12d803b\task-0.log`.
   Contract: §2 'Child B' of `verify/_p0b_suite_wave.md`; frozen build cc601710; may create ONLY
