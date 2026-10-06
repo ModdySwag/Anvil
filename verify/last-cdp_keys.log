@@ -1,0 +1,30 @@
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+ ok   boot: data-av-ready flips on the frozen build
+ ok   dock: #piano-dock on screen - exactly 61 keys (36 white / 25 black)  -> {"dock":true,"box":true,"visible":true,"total":61,"white":36,"black":25}
+ ok   black-key geometry: sampled left % sits on the piano boundary (+/-0.3; first 7 + 7 picks)  -> n=25 sampled=14 worst=0.001 offLeft=0 offStyle=0 offCentre=0
+ ok   black-key geometry: every black inside 0..100 of the bed  -> outside=0
+ ok   fresh state: STUDIO - one lit chip (aria-pressed), hint mentions STUDIO, no kb-armed/kb-midi  -> mode=studio on=["studio"] hint="STUDIO — letters are qui..." cls=""
+ ok   KEYS chip click (real mouse) - mode keys, armed, #pk-arm-led on, body.kb-armed  -> mode=keys armed=true led=true cls="kb-armed"
+ ok   typing: real A in KEYS - __lastNotePreview c4 + bus held [c4]  -> {"note":"c4","held":["c4"]}
+ ok   typing: keyup releases - bus held empty (no drone)  -> {"held":[]}
+ ok   ` toggles KEYS -> STUDIO (chip, LED and body class follow)  -> mode=studio led=false cls=""
+ ok   ` toggles STUDIO -> KEYS again  -> mode=keys armed=true led=true
+ ok   Escape disarms KEYS (armed false, LED off, chip back to STUDIO)  -> mode=studio armed=false led=false
+ ok   leaving KEYS under a held note stops it (STUDIO chip click -> bus held empty)  -> {"before":["c4"],"mode":"studio","after":[]}
+ ok   MIDI chip - mode midi, body.kb-midi; letters quiet (A: no preview change, no held, no error)  -> {"mode":"midi","note":"__midi_probe__","held":[],"errDelta":0}
+ ok   pointer: press on .pk-key[data-midi=72] centre plays its data-note (held + preview)  -> {"key":"c5","held":["c5"],"note":"c5"}
+ ok   pointer: release stops all - bus held empty  -> {"held":[]}
+ ok   pointer glide: holding and crossing onto the neighbour sounds BOTH keys  -> {"start":["c5"],"after":["c5","d5"],"note":"d5","end":[],"ptr":["out:c5","leave:c5","over:d5","enter:d5"]}
+ ok   octave: ] steps up to win 3 and clamps (#pk-win stays "OCT C5")  -> win 3->3 "OCT C5"->"OCT C5"
+ ok   octave: [ steps win 3->2->1 (#pk-win C4->C3)  -> win=1 "OCT C3"
+ ok   octave: the typing map shifted - A at win 1 = c3  -> {"win":1,"note":"c3","held":["c3"]}
+ ok   octave: clamps at win 0 (#pk-win "OCT C2" after two more [)  -> win=0 "OCT C2"
+ ok   a11y: Enter on a focused key button plays it (the detail-0 click path)  -> {"focus":true,"note":"c4","held":["c4"],"clicks":["c4@0"]}
+ ok   a11y: the note auto-releases (~350 ms timer) - held empty at +720 ms  -> {"held":[]}
+ ok   persistence: av-input-mode=keys survives a real reload  -> {"mode":"keys","armed":true,"keys":61,"led":true}
+ ok   persistence: the restored KEYS mode really plays (A -> c4 after the reload)  -> {"note":"c4","held":["c4"]}
+ ok   persistence: a corrupt stored mode ("klingon") falls back to STUDIO at boot  -> {"mode":"studio","on":["studio"],"keys":61,"cls":""}
+ ok   screenshot: dock closeup in KEYS mode -> renders/p0-keys-suite.png  -> C:\Users\Moddy\anvil\renders\p0-keys-suite.png (126668 bytes)
+ ok   zero console errors for the whole run
+
+27 passed, 0 failed

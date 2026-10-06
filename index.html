@@ -1210,7 +1210,12 @@ function avPianoBind(box) {
     avPianoMouseDown = true;
     avNoteDown(k.dataset.note);
   });
-  box.addEventListener("pointerenter", (e) => {
+  /* slider/glide uses pointerOVER, not pointerEnter: pointerenter never re-fires on the container
+     for a held pointer moving from one key onto a SIBLING key (non-bubbling; the container was
+     never "entered" again) — the sweep was silently dead. PF shipped the same latent bug; suite
+     cdp_keys caught it. pointerover bubbles from every key, so crossing sounds the new key while
+     the old one stays held until release. */
+  box.addEventListener("pointerover", (e) => {
     if (!avPianoMouseDown) return;
     const k = e.target.closest(".pk-key");
     if (k) avNoteDown(k.dataset.note);        /* glide: one note per key crossed while held */
