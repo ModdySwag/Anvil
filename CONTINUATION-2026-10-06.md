@@ -213,3 +213,11 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   refresh → README + addendum 11 + mnemosyne. One browser suite at a time — strictly serialized.
 - Reminder: the three rigs (bench/alias/stress) are NEW files this wave; smoke is 11 checks now; the
   engine tier strings: `data-av-engine` = base tier ('worklet'|'spn'), `__avEngine.url` = 'blob'|'data'.
+- **REVISION (bench rev2, same day):** the 32-quanta windowed clock was REJECTED by its first real run —
+  a window spans device-paced waiting (~2.59 ms/quantum floor at ONE voice; integrity finding in
+  `verify/last-cdp_bench.log`). `av_voiceproc.js` reverted to per-quantum Date.now lattice;
+  **rebuild = 08e3c38f (243,193 B)**; smoke 11/11 re-run; midi freeze pin updated. The publishable cost
+  number now comes from a NEW offline marginal-cost ramp in `verify/cdp_bench.mjs` (fresh
+  OfflineAudioContexts, 1 s vs 4 s renders, wall-timed on the page's µs clock; the difference isolates
+  steady µs/quantum). In flight: bench-rev2 child (edits + full run) → parent spot-verify (recompute
+  from raw rings + parent-run the offline ramp) → alias + stress rigs child → final battery + docs.
