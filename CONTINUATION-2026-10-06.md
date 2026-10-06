@@ -109,6 +109,16 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   G2 wavetable-import acceptance check, FL Studio 2026 (Harmor ideas), Ableton Live 12 Suite, Overtonium
   (AGPLv3) ideas — equal↔just TUNE morph (PERFECT TUNINGS candidate), per-partial drift. **Licence law:
   reference / private-test only — nothing ships.**
-- In flight: kb/midi port digests — agent files already on disk under `research/reuse/` (`kb-port-digest.md`,
-  `midi-port-digest.md`); **verify against source on receipt, then port** + suites. (Not committed until
-  verified.)
+## Resume addendum 4 — 2026-10-07 (digests verified; keyboard/MIDI ports dispatched)
+
+- kb + midi source digests COMMITTED (`research/reuse/kb-port-digest.md`, `research/reuse/midi-port-digest.md`)
+  after spot-verification against PF source (kbNoteName/kbNoteDown/kbNoteStopAll L249-487, MIDI prefs/monitor
+  caps/midiDecode L25-155, the headless stub — all matched).
+- **avNote bus** (`src/av_note.js`) landed: name-dedupe, gain clamp 0.05..1 @0.9, taken-set, stop-all,
+  engine sink registration for P1; observables `__lastNotePreview`/`__lastNoteCode`; `window.__avNotes`.
+- Parent wiring landed (uncommitted until the ports build): dock markup in `body.html` (+ header 🎹 toggle,
+  MIDI card host `#av-midi-body`), dock + MIDI panel CSS (teal skin), `build.py` js_parts order
+  (av_tap → av_knob → av_note → av_kb → av_midi → app_core), `app_core` boot calls + `avState.bpm`.
+- **Two file-scoped port agents dispatched**: `src/av_kb.js` (61-key dock + ONE keydown dispatcher +
+  typing note path) and `src/av_midi.js` (states/ports/decode/note-routing/monitor/out-tap/clock-out/
+  CC map+learn/panel). On return: verify files → build → smoke+feel → keyboard+MIDI suites → battery → commit.
