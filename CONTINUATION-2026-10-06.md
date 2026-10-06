@@ -101,3 +101,14 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   in/out + panel + CC learn). Source digests in flight → `research/reuse/kb-port-digest.md` +
   `research/reuse/midi-port-digest.md`.
 - After the ports land: full battery (smoke + feel + new keyboard/MIDI suites) → then **P1**.
+
+## Resume addendum 3 — 2026-10-07 (reference rig registered)
+
+- **Reference rig registered** → `research/external/REFERENCE-RIG.md`: Korg Collection ×21 (+ SGX-2
+  11 GB DB, reference-only), Serum 2 wavetable corpus (`Documents\Xfer\Serum 2 Presets\Tables\`) for the
+  G2 wavetable-import acceptance check, FL Studio 2026 (Harmor ideas), Ableton Live 12 Suite, Overtonium
+  (AGPLv3) ideas — equal↔just TUNE morph (PERFECT TUNINGS candidate), per-partial drift. **Licence law:
+  reference / private-test only — nothing ships.**
+- In flight: kb/midi port digests — agent files already on disk under `research/reuse/` (`kb-port-digest.md`,
+  `midi-port-digest.md`); **verify against source on receipt, then port** + suites. (Not committed until
+  verified.)

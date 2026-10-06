@@ -110,6 +110,7 @@ Chain per pack: **author gate** (schema/range/naming; byte change resets `verifi
 6. **Cross-rate parity** (44.1/48k) + **platform matrix** (Win Chrome/Edge, macOS Chrome+Safari, Firefox, iPad Safari; hosted + `file://` smoke).
 7. **Suites to port/retarget** (T9 §22): `cdp_synthx`, `cdp_depth`, `cdp_perf`, `cdp_mixvol`, `cdp_store`, `cdp_stress`, `test_midi`, `test_keys`, plus new: aliasing, THD, ramp, null; `test_live_site` for the deployed origin.
 8. **Deploy loop:** `build.py` → battery → `upload-site.py --only` → `--verify` (sha in-sync) → live tests. Rollback = re-upload previous artifact (sha recorded).
+9. **A/B reference rig** — installed on the build machine and registered in `research/external/REFERENCE-RIG.md` (Korg Collection ×21 + SGX-2, Serum 2 wavetable corpus, FL Studio 2026, Ableton Live 12 Suite, Overtonium ideas). Listening gates use it; **nothing from it ships**.
 
 ---
 
