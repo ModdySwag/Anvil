@@ -164,3 +164,11 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   then **P1 worklet engine** (the next milestone).
 - App bugs in the report: fix in src (parent-owned), rebuild, re-run keys+midi, then the battery.
 - Session cost ~$2.87 over 55 calls; all state committed; tree CLEAN at save.
+
+## Resume addendum 8 — 2026-10-07 (P0 CLOSE — keyboard + MIDI wave DONE)
+
+- cdp_midi suite landed + **parent-verified: 33/33 green** on frozen build cc601710 (134,019 B); freeze
+  sha unchanged across the run; shot `renders/p0-midi-suite.png`; full battery on frozen bytes:
+  **smoke 9/9 · feel 18/18 · keys 27/27 · midi 33/33 — P0 COMPLETE.**
+- Next milestone: **P1** — mixer AudioWorklet; PolyBLEP + wavetable osc; TPT SVF; env/LFO; voice pool +
+  steal → run the T5 §7 proof benchmark and publish the measured voice count (spec docs/03 §2.1/§6).

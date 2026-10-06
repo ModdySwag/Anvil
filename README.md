@@ -5,9 +5,9 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **Phase 0** — build pipeline, shell, master tap, knob framework and CDP harness
-live (`cdp_smoke.mjs` 8/8, `cdp_knob_feel.mjs` 18/18); `index.html` sha 9a5c25c4… (40,240 B).
-Owner directive: full **61-key keyboard + MIDI** in v1 — building now.
+Status 2026-10-07: **Phase 0 complete** — keyboard dock (61 keys) + MIDI deck live; battery green on
+frozen `index.html` sha cc601710… (134,019 B): smoke 9/9 · feel 18/18 · keys 27/27 · midi 33/33.
+Next: **P1** — worklet voice engine + measured voice-count benchmark.
 Resume at `CONTINUATION-2026-10-06.md`.
 
 ## Build

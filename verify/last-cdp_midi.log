@@ -1,0 +1,47 @@
+index.html sha256 (before): cc6017106547ddd8fac5c17dd33b15aaeb750900214dd2864c08bb7856e7c03f
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1791298362247
+ ok   freeze: index.html sha256 before = cc601710…  -> cc6017106547ddd8fac5c17dd33b15aaeb750900214dd2864c08bb7856e7c03f
+ ok   boot: data-av-ready flips (with the stub injected pre-boot)
+ ok   boot: MIDI deck mounted (#av-midi-body .av-midi) + __avMidi API + stub alive  -> {"panel":true,"api":true,"snapFn":true,"stub":true,"ourClass":true}
+ ok   unsupported: honest no-Web-MIDI copy (NO WEB MIDI · Safari named)  -> status=unsupported · NO WEB MIDI Web MIDI is missing in this browser, so hardware keys and hardware out are both off the table here. Chrome, 
+ ok   unsupported: NO enable action rendered  -> enable button present: false
+   · setMode(deny) + re-render, then a REAL click on ENABLE
+ ok   deny: NotAllowedError path ends DENIED BY BROWSER + padlock way-out copy  -> status=denied · err="Permission denied"
+ ok   no sysex: requestMIDIAccess called with NO options (log.calls[0].opts === null)  -> calls=1 · firstOpts=null
+   · setMode(grant) + two ports, then a REAL click on ENABLE
+ ok   grant: a real ENABLE click enables (status enabled, ENABLED counts copy, still no sysex)  -> status=enabled · calls=2
+ ok   grant: device rows render (in: KeyLab 61 · out: Rev2, both selected)  -> ["KeyLab 61Arturia · connected · closedIN USE","Rev2Sequential · connected · closedIN USE"]
+ ok   hotplug: addOut renders a new output row, no refresh click  -> rows=2 · snap=2
+ ok   hotplug: unplug clears + replug re-picks a new input, no refresh click  -> after unplug: 0 rows · after replug: ["Launchkey 49Novation · connected · closedIN USE"]
+ ok   play-in ON: note-on [90 48 64] plays through the bus (preview c5 · avNoteHeld · avMidiHeld)  -> {"preview":"c5","heldBus":["c5"],"heldMidi":["c5"],"notes":["c5"],"playIn":true}
+ ok   play-in: note-off [80 48 00] releases (bus + deck, gain cleared)  -> {"heldBus":[],"heldMidi":[],"gain":false}
+ ok   play-in: velocity 127 clamps the note gain to 1 (avNoteGains)  -> {"gain":1,"held":["c5"],"preview":"c5"}
+   · PLAY IN OFF via a real click; hardware notes must stay quiet
+ ok   play-in OFF: hardware notes stay quiet (no held · no preview change)  -> playIn=false · preview c5 → c5
+ ok   monitor flood: 1200 in → total 1200, ring 60 kept, dropped > 0  -> total={"in":1200,"out":0} · kept={"in":60,"out":0} · dropped={"in":960,"out":0}
+ ok   monitor flood: ≤12 DOM rows per direction + counter line present  -> rows in/out=12/0 · "60/60 kept · 1200 total · 960 dropped"
+ ok   monitor clear (real click): rings, totals, DOM all reset  -> {"total":{"in":0,"out":0},"kept":{"in":0,"out":0},"dropped":{"in":0,"out":0},"rowsIn":0,"rowsOut":0,"cntIn":"0/60 kept · 0 total · 0 dropped"}
+ ok   out tap: the deck patched the stub MIDIOutput prototype (isOurPortClass + snap.tap)  -> {"our":true,"tap":true}
+ ok   out tap: TEST NOTE sends real [0x90,60,100] then [0x80,60,0] at the stub port (recorded once)  -> {"wire":[{"d":[144,60,100],"name":"Rev2"},{"d":[128,60,0],"name":"Rev2"}],"mon":[{"type":"noteon","hex":"90 3c 64","name":"c4"},{"type":"noteoff","hex":"80 3c 00","name":"c4"}]}
+   · CC LEARN: arm via real click, pick CC 74 from hardware, click the keys knob
+ ok   CC learn: ARM LEARN arms (needs enabled)  -> {"armed":true,"enabled":true}
+ ok   CC learn: the first hardware CC picks the controller (CC 74 ch1)  -> {"cc":74,"chan":1,"armed":true}
+ ok   CC learn: real click on .av-knob[data-knob] binds WITHOUT turning the knob (aria unchanged)  -> aria {"aria":"1","norm":"0.8333"} → {"aria":"1","armed":false,"binds":[{"id":"b1","cc":74,"ch":1,"path":"keys","min":0,"max":1.2,"step":0.01}]}
+ ok   CC learn: the bound CC 74 moves the knob through avApplyParam (avParams · avState · aria)  -> {"exp":0.94,"param":0.94,"state":0.94,"aria":"0.94","readout":"94%","last":100,"applied":0.94}
+   · CC learn: ✕ unbind via real click
+ ok   CC learn: ✕ unbind removes the binding everywhere  -> {"n":0,"raw":0,"dom":0}
+   · CC learn: re-bind, then a 200-message CC burst must coalesce
+ ok   CC learn: a 200-message burst coalesces (writes bounded, final value wins)  -> hits=200 · writes=+2 · applied=0.67 (want 0.67)
+   · CLOCK OUT: on via real click, then avMidiClockTransport(true)
+ ok   clock out: transport(true) → exactly one 0xFA then 0xF8 ticks at ~24 ppqn (mean gap ±30% at 120 BPM)  -> FA=1 · ticks=31 · meanGap=20.83ms (want ~20.83) · ticking=true
+ ok   clock out: transport(false) sends 0xFC and the wire freezes  -> ticking=false · FC at 0/1 · last=[252]
+ ok   clock out: the wire stays frozen after the stop byte  -> 35 → 35
+   · CLOCK OUT: restart, then OFF (real click) must stop it
+ ok   clock out: OFF (real click) stops a running clock — 0xFC sent, wire frozen, pref off  -> was ticking=true · FC at 11/12 · frozen 63=63
+ ok   zero console errors for the whole run (exceptions · Log errors · console.error · stub listener errors)  -> page errors=0 · stub listener errors=0
+ ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 367551 bytes · clip 1048×1293 @2x
+index.html sha256 (after): cc6017106547ddd8fac5c17dd33b15aaeb750900214dd2864c08bb7856e7c03f
+ ok   freeze: index.html sha256 after = cc601710… (unchanged by the run)  -> cc6017106547ddd8fac5c17dd33b15aaeb750900214dd2864c08bb7856e7c03f
+
+33 passed, 0 failed
