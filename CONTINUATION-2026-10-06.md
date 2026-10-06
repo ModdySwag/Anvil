@@ -296,3 +296,19 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
    pro deck display — folded into P3–P7 per wave capacity.
 7. **P6–P7:** share links, cloud, polish; STEM export; deploy + live verify + owner pass (the
    golden build finish line).
+
+
+## SESSION SAVE — 2026-10-07 (~04:50; context full -> NEW SESSION)
+
+- HEAD: after the docs/07 batch-3 commit. P1.x engine fix COMMITTED (`41938b3`: minBLEP Classic osc
+  65x256 clean-room + WT margin rule + 4+4 halfband; av_dsp p1.1). Rebuild `index.html` =
+  **56734133** (on disk, uncommitted at save).
+- **IN FLIGHT at save: re-verify child `deleg_2fa7136f` / sa-0-3e5cb671** — browser suite on 56734133
+  (alias rig v2 BH-window + midi pin + battery + bench + stress). A /new session HALTS it; its partial
+  outputs are on disk (uncommitted: cdp_alias.mjs, cdp_midi.mjs, hb-coeffs.json, logs, renders,
+  index.html).
+- **FIRST MOVES in the continued session:** read the child's transcript tail
+  (`...cache/delegation/live/deleg_2fa7136f/task-0.log`) -> see which legs completed -> finish the
+  rest (one browser at a time) -> commit the P1.x close-out (+ addendum 12) -> then the **P2 wave**
+  per the GOLDEN BUILD program above. Mandate: `docs/05` §2.7. Ideas: `docs/07` (59, 3 batches).
+  Resume phrase: **"continue anvil"**.
