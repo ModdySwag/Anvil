@@ -210,5 +210,77 @@ def main():
     print(f"\nwrote {dest}")
     print(json.dumps(out, indent=1))
 
+# ---------------------------------------------------------------- P1.x decimator study (--study)
+# Study-only: runs a sharper-halfband search for the P1.x minBLEP wave and prints the numbers.
+# Writes NOTHING (hb-coeffs.json is the ship set and stays as-is unless a swap is decided later).
+
+STUDY_FREQS = [20000, 22050, 23000, 23500, 24000, 24070, 24200, 24500, 25000, 25500, 26000, 26500, 26900, 28000]
+
+def curve_at(ca, cb, freqs):
+    """Attenuation (dB) at absolute base-rate frequencies: Omega = 2*pi*f/INT_FS on the internal rate."""
+    out = {}
+    for f in freqs:
+        Om = np.array([2.0 * np.pi * (f / INT_FS)])
+        m = float(np.abs(H_analytic(Om, np.array(ca), np.array(cb))[0]))
+        out[f] = 20.0 * np.log10(max(m, 1e-300))
+    return out
+
+def study():
+    js = json.loads((pathlib.Path(__file__).parent / "hb-coeffs.json").read_text(encoding="utf-8"))
+    ca0 = np.array(js["coeffsA"]); cb0 = np.array(js["coeffsB"])
+    print("=== P1.x decimator study (no files written) ===")
+    print(f"ship set ({js['sections'][0]},{js['sections'][1]}), stopband {js['stopband_db']} dB, -3dB {js['m3db_khz']} kHz")
+    c0 = curve_at(ca0, cb0, STUDY_FREQS)
+    print("  ship att(dB): " + "  ".join(f"{f/1000:.2f}k {v:+.1f}" for f, v in c0.items()))
+    ZONE = [24000, 24070, 24200, 24500, 25000, 25500, 26000, 26500, 26900]
+
+    def zone_improvement(c):
+        return min(c0[f] - c[f] for f in ZONE), sum(c0[f] - c[f] for f in ZONE) / len(ZONE)
+
+    # existing HQ alternative from the ship json (zero design cost)
+    hq = js.get("hq") or {}
+    if hq:
+        caH = np.array(hq["coeffsA"]); cbH = np.array(hq["coeffsB"])
+        cH = curve_at(caH, cbH, STUDY_FREQS)
+        zmin, zmean = zone_improvement(cH)
+        print(f"  hq alt ({hq['sections'][0]},{hq['sections'][1]}), stopband {hq['stopband_db']} dB: "
+              f"24-27k improvement min {zmin:+.1f} / mean {zmean:+.1f} dB, droop @23.5k {cH[23500]:+.2f}")
+        print("  hq alt att(dB): " + "  ".join(f"{f/1000:.2f}k {cH[f]:+.1f}" for f in STUDY_FREQS))
+
+    # sharper/lower-transition search
+    cands = []
+    for (na, nb) in ((4, 4), (5, 5), (6, 6)):
+        for op in (0.462, 0.466, 0.470, 0.474, 0.478, 0.482):
+            for wid in (0.028, 0.036, 0.044, 0.056):
+                os_ = op + wid
+                if os_ >= 0.542:
+                    continue
+                p, rip, att = design(na, nb, op, os_, iters=2)
+                if att < 65.0 or rip > 0.6:
+                    continue
+                c = curve_at(p[:na], p[na:], STUDY_FREQS)
+                zmin, zmean = zone_improvement(c)
+                cands.append(dict(na=na, nb=nb, op=op, os=os_, wid=wid, att=float(att), rip=float(rip),
+                                  c=c, p=p, zmin=float(zmin), zmean=float(zmean),
+                                  droop23500=float(c[23500]), droop22050=float(c[22050])))
+    if not cands:
+        print("  search: no candidates met gates (>=65 dB stopband, <=0.6 dB ripple)")
+        return
+    cands.sort(key=lambda d: -d["zmin"])
+    print(f"  search: {len(cands)} feasible candidates; top by worst-case 24-27k improvement:")
+    for d in cands[:6]:
+        print(f"    ({d['na']},{d['nb']}) tr {d['op']:.3f}-{d['os']:.3f}pi  stop {d['att']:.1f} dB  "
+              f"24-27k: min {d['zmin']:+.1f} / mean {d['zmean']:+.1f} dB  droop@23.5k {d['droop23500']:+.2f} @22.05k {d['droop22050']:+.2f}")
+    best = cands[0]
+    print("  BEST per worst-case 24-27k improvement:")
+    print(f"    sections ({best['na']},{best['nb']})  A = {json.dumps([float(f'{v:.12g}') for v in best['p'][:best['na']]])}")
+    print(f"    sections ({best['na']},{best['nb']})  B = {json.dumps([float(f'{v:.12g}') for v in best['p'][best['na']:]])}")
+    print("    att(dB): " + "  ".join(f"{f/1000:.2f}k {best['c'][f]:+.1f}" for f in STUDY_FREQS))
+    print("  swap criterion (contract 3c): >= ~20 dB better at 24-27 kHz AND the node harness shows the saw C6 row improved")
+
 if __name__ == "__main__":
-    main()
+    import sys as _sys
+    if "--study" in _sys.argv:
+        study()
+    else:
+        main()

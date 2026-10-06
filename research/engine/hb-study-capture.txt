@@ -1,0 +1,6 @@
+=== hb_design.py --study (captured 2026-10-07; extended candidate search still running when killed) ===
+ship set (3,3), stopband 73.5 dB, -3dB 23.999 kHz
+  ship att(dB): 20.00k -0.0  22.05k -0.0  23.00k -0.1  23.50k -0.5  24.00k -3.0  24.07k -3.7  24.20k -5.3  24.50k -10.0  25.00k -19.4  25.50k -29.8  26.00k -41.5  26.50k -56.0  26.90k -74.7  28.00k -96.1
+  hq alt (4,4), stopband 100.6 dB: 24-27k improvement min -0.0 / mean +22.1 dB, droop @23.5k -0.13
+  hq alt att(dB): 20.00k -0.0  22.05k -0.0  23.00k -0.0  23.50k -0.1  24.00k -3.0  24.07k -4.2  24.20k -7.0  24.50k -15.5  25.00k -31.4  25.50k -49.2  26.00k -71.3  26.50k -122.7  26.90k -137.9  28.00k -111.7
+note: sign of the 'improvement' column was fixed mid-run (initial print had it inverted); values above are the corrected comparison.

@@ -312,3 +312,41 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
   rest (one browser at a time) -> commit the P1.x close-out (+ addendum 12) -> then the **P2 wave**
   per the GOLDEN BUILD program above. Mandate: `docs/05` §2.7. Ideas: `docs/07` (59, 3 batches).
   Resume phrase: **"continue anvil"**.
+
+## Resume addendum 12 — 2026-10-07 (P1.x CLOSE-OUT: aliasing gate CLOSED; full re-verify on 56734133)
+
+- Engine fix committed `41938b3` (av_dsp p1.1: minBLEP "Classic" oscillator 65×256 + WT mip-margin
+  rule + order-8 4+4 halfband); rebuild `index.html` = **56734133** (259,387 B, byte-reproducible —
+  re-verified at close-out). Node-harness evidence kept: `verify/p1x-node-alias-out.{log,json}`
+  (ALL PASS: VA worst real −58.2 dBc, WT real ≤ −119 dBc, determinism bit-identical, K-sanity, alloc-free).
+- **Browser re-verify on the frozen bytes** (alias+battery+bench completed by the save's child before
+  its halt; stress run by the parent — TWO runs):
+  - **alias rig v2** (`cdp_alias.mjs` + P1.x amendment: 4-term Blackman-Harris, ±4-bin mask, validated
+    synthetically first): **30/30 PASS** — VA worst −58.18 dBc (pulse C6; gate −45), WT worst −91.21 dBc
+    (wt.saw A4; gate −80); saw C6 −58.99 (was −39.8); determinism bit-identical; 44.1k spot clean.
+  - **battery** frozen: smoke 11/11 · feel 18/18 · keys 27/27 · midi 33/33 (freeze pin 08e3c38f →
+    56734133 in `cdp_midi.mjs` — the only test-side edit).
+  - **bench (full)**: realtime LIGHT 64/64 ×3 stable; FAT 64 marginal (2/3 reps pass the p95 bar, rep-1
+    p95 trip, 0 underruns every cell; means 0.87–1.00 ms vs 1.33 ms) → rig published {light:64, fat:48};
+    **offline (publishable): 128 voices @ 1268 µs/q = 47.6 % budget** (was 38.7 % on 08e3c38f; minBLEP
+    ≈ +1.65 µs/voice/q ≈ +20 %; knee at the 128-note midi cap). Record: `bench-v4-p1x-full.{log,json}`.
+  - **stress ×2, 10 min, cap 64 — verdict `asserts-not-met` in BOTH, for the same single reason**
+    (`stress-p1x-run1.log`; `last-cdp_stress.log` = run 2):
+    - verified-envelope deltas: **1 in each run, IDENTICAL** — one underrun, cycle 1 @ uni 3, first 15 s
+      (cold first-cap entry) → systematic cold-start edge, not a flake;
+    - uni-7 over-drive windows (beyond the bench envelope by design): 9 deltas (run 1) / 11 (run 2),
+      biggest cluster 13–15 in cycle 3; means ~1.3–1.5 ms vs ~0.6–0.7 ms pre-fix;
+    - everything else green both runs: heap +0.2 MB, drains 15/15, 0 page errors, ctx running,
+      coverage 27/27 cycles, driver errors 0.
+    - Reading: steady-patch cost inside budget; the minBLEP engine is AT THE MARGIN under unison-heavy
+      churn at cap 64 → feeds P·1 (per-wave perf gate) + P·2 (minBLEP cost-optimisation pass; docs/07
+      batch 4) — the optimisation is a named deliverable now.
+- Artifacts: `hb-coeffs.json` annotated (hq 4+4 = shipped; legacy fields relabel piggybacks P·2);
+  `hb_design.py --study` + `research/engine/hb-study-capture.txt` (design evidence).
+- Owner directives this session: docs/07 Batch 4 (items 60–83, picks) `b0e1a8d`; docs/08 STUDIO
+  mandate + competitor matrix + max packs/integrations `194b2da`; full build permission docs/05 §2.10.
+- **Frozen at close: `index.html` = 56734133 (259,387 B).**
+- **NEXT: P2 wave** — ACID (Open303 clean-room: 303 4-pole filter, accent memory, slide, EXPANDED
+  panel) + STRING (Karplus-Strong) + DRUM (expanded kit + pads + split law) + ladder filter/overdrive
+  + sample core + recorder + drum↔synth; contract `verify/_p2_wave.md`. Mandates docs/05 §2.7–2.10;
+  ideas docs/07; station docs/08. Resume phrase: **"continue anvil"**.

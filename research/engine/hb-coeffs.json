@@ -1,5 +1,6 @@
 {
  "schema": "anvil-hb-coeffs-v1",
+ "shipped_in_engine": "order-8 4+4 set — see coeffsA/coeffsB of the hq block; supersedes the order-6 set below (kept as legacy; P1.x, src/av_dsp.js)",
  "base_fs": 48000.0,
  "int_fs": 96000.0,
  "sections": [

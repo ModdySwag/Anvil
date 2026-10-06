@@ -4,22 +4,27 @@
 // chain exists, never live). Per case: ONE note held; delivery proven by the stats() barrier
 // (await h.stats() after the note post, before startRendering — the rev3 lesson from the bench rig:
 // without it the queued note messages race startRendering and you measure a 1-voice... or zero-voice
-// render). 3 s renders; the LAST 2^17 samples are Blackman-windowed and FFT'd IN-PAGE (own radix-2,
-// validated first on synthetic signals). Metric: worst NON-harmonic spur in dBc vs the carrier
-// (max |X| within the ±3-bin window around f0); bins below 20 Hz are ignored; ±3 bins around every
-// harmonic of f0 are masked. Cases: VA saw/square/pulse(pw .3)/tri/sine and the WT bank
+// render). 3 s renders; the LAST 2^17 samples are windowed and FFT'd IN-PAGE (own radix-2,
+// validated first on synthetic signals). AMENDED METRIC (P1.x; see the amendment note below): worst
+// NON-harmonic spur in dBc vs the carrier (max |X| within the ±4-bin window around f0); bins below
+// 20 Hz are ignored; ±4 bins around every harmonic of f0 are masked; window = 4-term Blackman-Harris.
+// Cases: VA saw/square/pulse(pw .3)/tri/sine and the WT bank
 // (wt.saw/wt.square/wt.tri/wt.sine/wt.pulse25) at C4 261.63 / A4 440 / C6 1046.5 (exact ET f0);
 // osc alone (other level 0, sub 0), filter lp12 20000 reso 0 envAmt 0 (static open), env sustain 1.
-// Gates: VA <= -45 dBc at >=C4; WT <= -80 dBc. Cross-rate spot: 44.1 kHz VA saw C4 + wt.saw A4.
+// Gates: VA <= -45 dBc at >=C4; WT <= -80 dBc (evaluated on the amended BH4 numbers).
+// Cross-rate spot: 44.1 kHz VA saw C4 + wt.saw A4.
 // Determinism: two fresh offline engines, same patch/note -> bit-identical (max abs diff === 0).
 //
-// MEASUREMENT FLOOR (honest record, discovered + proven in the validation phase): a Blackman-windowed
-// 2^17 FFT of any OFF-BIN signal leaks its first sidelobe at ~-57 dBc right outside a ±3-bin mask
-// (the fundamental's shoulder). Every case here is off-bin (C4/A4/C6 are not multiples of sr/2^17),
-// so the contract metric's floor is ~-57 dBc: VA can pass -45; the WT -80 gate cannot be evaluated
-// below that floor by this metric. The rig therefore also records, for interpretation ONLY (clearly
-// labeled diagnostic, NOT the contract metric): the same worst-spur computed with a ±30-bin mask
-// (leakage-excluded view, floor ~-106 dBc) and the per-pitch synthetic leakage floor.
+// AMENDMENT (P1.x fix wave, 2026-10-07; contract verify/_p1x_blep_wave.md §0/§6): the analysis window
+// is now the 4-term Blackman-Harris (a=[0.35875,0.48829,0.14128,0.01168], symmetric N-1 denominator)
+// with a ±4-bin PRIMARY mask around each harmonic (the BH mainlobe is ±4 bins; sidelobes ~-92 dB).
+// Rationale: the pre-amendment ±3-bin 3-term Blackman metric had a leakage floor of ~-57 dBc on
+// off-bin signals, so the WT -80 dBc gate was NOT evaluable. With BH4 the floor lands ~-92 dBc and
+// the -80 gate evaluates. The pre-amendment 3-term Blackman ±3-bin numbers are still computed and
+// printed as the BLK3 continuity column (compare against the previous last-cdp_alias.log; its ~-57
+// dBc floor persists there by design). A BH30 (±30-bin mask, BH window) column remains as the
+// leakage-excluded DIAGNOSTIC (NOT the contract metric). Validation before any case: on-bin sine
+// BH4 < -120 dBc (FFT pipeline) + off-bin sine floors (BH4 ~-92 dBc, fail-fast bound -85; BLK3 ~-57).
 //
 // Usage: node verify/cdp_alias.mjs [--port N]
 import { spawn, execSync } from 'node:child_process';
@@ -45,8 +50,9 @@ const WATCHDOG_MS = 15 * 60 * 1000;         /* expected ~3-8 min */
 const NOTE_GAIN = 0.8;                      /* same as the bench rig */
 const RENDER_SECONDS = 3;                   /* §9.3 pin */
 const FFT_N = 131072;                       /* 2^17 */
-const MASK_BINS = 3;                        /* §9.3 pin: ±3 bins around each harmonic */
-const DIAG_MASK_BINS = 30;                  /* diagnostic only: leakage-excluded view */
+const MASK_BINS = 4;                        /* AMENDED primary (§9.3 + P1.x amendment): ±4 bins = the BH mainlobe */
+const MASK_BINS_BLK = 3;                    /* pre-amendment ±3-bin 3-term Blackman (continuity column) */
+const DIAG_MASK_BINS = 30;                  /* diagnostic only: leakage-excluded view (BH window) */
 const SPUR_IGNORE_HZ = 20;                  /* §9.3 pin */
 const GATE_VA_DBC = -45, GATE_WT_DBC = -80; /* §9.3 gates */
 
@@ -103,7 +109,11 @@ const RESULT = {
   startedAt: new Date().toISOString(), finishedAt: null,
   page: { file: pageRel, bytes: 0, sha256: null },
   protocol: {
-    seconds: RENDER_SECONDS, fftN: FFT_N, window: 'Blackman', maskBins: MASK_BINS, diagMaskBins: DIAG_MASK_BINS,
+    seconds: RENDER_SECONDS, fftN: FFT_N,
+    window: '4-term Blackman-Harris (P1.x amendment; a=[0.35875,0.48829,0.14128,0.01168])', maskBins: MASK_BINS,
+    continuity: { window: '3-term Blackman', maskBins: MASK_BINS_BLK },
+    diag: { window: '4-term Blackman-Harris', maskBins: DIAG_MASK_BINS },
+    amendment: 'P1.x fix wave 2026-10-07 — primary BH4 (BH mainlobe ±4; sidelobes ~-92 dB); gates unchanged, evaluated on BH4',
     ignoreBelowHz: SPUR_IGNORE_HZ, gates: { vaDbc: GATE_VA_DBC, wtDbc: GATE_WT_DBC },
     segment: 'last 2^17 samples of the 3 s render', delivery: 'noteOn -> await h.stats() -> require active===1 -> startRendering',
   },
@@ -206,7 +216,7 @@ function finish(code) {
   }
   try { log('ALIAS-RESULT ' + JSON.stringify({
     sha256: RESULT.page.sha256, verdict: RESULT.verdict,
-    validation: RESULT.validation ? { onBinDBc: RESULT.validation.onBin.dBc, onBinPass: RESULT.validation.onBin.pass } : null,
+    validation: RESULT.validation ? { onBinDBc: RESULT.validation.onBin.dBc, onBinPass: RESULT.validation.onBin.pass, bh4FloorWorst: RESULT.validation.bh4FloorWorst, bh4Evaluable: RESULT.validation.bh4Evaluable } : null,
     gates: RESULT.gates, determinism: RESULT.determinism.map(d => ({ name: d.name, maxAbsDiff: d.maxAbsDiff, identical: d.identical })),
   })); } catch { }
   process.exit(code);
@@ -276,8 +286,14 @@ function dumpConsole(cdp, n) {
    ============================================================================================ */
 function aliasPageRuntime() {
   const N = 131072;                      /* 2^17 */
-  const win = new Float64Array(N);       /* Blackman (symmetric, N-1 denominator) */
-  for (let i = 0; i < N; i++) { const d = N - 1; win[i] = 0.42 - 0.5 * Math.cos(2 * Math.PI * i / d) + 0.08 * Math.cos(4 * Math.PI * i / d); }
+  /* windows (symmetric, N-1 denominator): WIN_BH = 4-term Blackman-Harris (AMENDED primary metric);
+     WIN_BLK = 3-term Blackman (pre-amendment metric; kept for continuity with last-cdp_alias.log). */
+  const WIN_BH = new Float64Array(N), WIN_BLK = new Float64Array(N);
+  for (let i = 0; i < N; i++) {
+    const d = N - 1, c1 = Math.cos(2 * Math.PI * i / d), c2 = Math.cos(4 * Math.PI * i / d), c3 = Math.cos(6 * Math.PI * i / d);
+    WIN_BH[i] = 0.35875 - 0.48829 * c1 + 0.14128 * c2 - 0.01168 * c3;
+    WIN_BLK[i] = 0.42 - 0.5 * c1 + 0.08 * c2;
+  }
 
   /* in-place iterative radix-2 DIT FFT */
   function fft(re, im) {
@@ -305,8 +321,8 @@ function aliasPageRuntime() {
   }
 
   /* worst non-harmonic spur (dBc vs carrier = max |X| in the ±M window around f0); bins < 20 Hz
-     ignored; ±M bins around every harmonic of f0 masked */
-  function analyzeMask(seg, sr, f0, M) {
+     ignored; ±M bins around every harmonic of f0 masked; caller supplies the window array */
+  function analyzeMask(seg, sr, f0, M, win) {
     const re = new Float64Array(N), im = new Float64Array(N);
     for (let i = 0; i < N; i++) re[i] = seg[i] * win[i];
     fft(re, im);
@@ -347,7 +363,12 @@ function aliasPageRuntime() {
     return { rms: Math.sqrt(sum / x.length), peak: pk };
   }
 
-  return { N: N, analyzeMask: analyzeMask, analyze3: (s, sr, f) => analyzeMask(s, sr, f, 3), genSine: genSine, genBandSaw: genBandSaw, sigStats: sigStats };
+  return {
+    N: N, analyzeMask: analyzeMask, genSine: genSine, genBandSaw: genBandSaw, sigStats: sigStats,
+    analyzeBH4: (s, sr, f) => analyzeMask(s, sr, f, 4, WIN_BH),     /* AMENDED primary: BH window, ±4 bins */
+    analyzeBLK3: (s, sr, f) => analyzeMask(s, sr, f, 3, WIN_BLK),   /* pre-amendment continuity: Blackman, ±3 bins */
+    analyzeBH30: (s, sr, f) => analyzeMask(s, sr, f, 30, WIN_BH),   /* diagnostic: BH window, ±30 bins */
+  };
 }
 
 /* cell runner: fresh OfflineAudioContext -> avEngineBoot -> params -> ONE note -> stats barrier
@@ -382,10 +403,12 @@ function aliasRunCase(spec) {
       const ss = rig.sigStats(seg);
       out.rms = ss.rms; out.peak = ss.peak;
       if (!(ss.peak > 0)) return Object.assign(out, { stage: 'silent', err: 'rendered segment is silent' });
-      const a3 = rig.analyze3(seg, spec.sr, spec.f0);
-      const a30 = rig.analyzeMask(seg, spec.sr, spec.f0, 30);
-      out.spur3 = a3.dBc; out.spur3Freq = a3.freq; out.spur3Bin = a3.bin; out.harmonics = a3.harmonics; out.df = a3.df;
-      out.spur30 = a30.dBc; out.spur30Freq = a30.freq;
+      const aBH4 = rig.analyzeBH4(seg, spec.sr, spec.f0);
+      const aBLK3 = rig.analyzeBLK3(seg, spec.sr, spec.f0);
+      const aBH30 = rig.analyzeBH30(seg, spec.sr, spec.f0);
+      out.spurBH4 = aBH4.dBc; out.spurBH4Freq = aBH4.freq; out.spurBH4Bin = aBH4.bin; out.harmonics = aBH4.harmonics; out.df = aBH4.df;
+      out.spurBLK3 = aBLK3.dBc; out.spurBLK3Freq = aBLK3.freq;
+      out.spurBH30 = aBH30.dBc; out.spurBH30Freq = aBH30.freq;
       out.stage = 'ok';
       return out;
     } catch (e) {
@@ -417,35 +440,56 @@ function aliasRunPair(spec) {
   })();
 }
 
-/* synthetic validation + per-pitch leakage floors (run BEFORE any case) */
+/* synthetic validation + per-pitch leakage floors (run BEFORE any case).
+   AMENDED: on-bin purity on BH4 (require < -120 dBc) + off-bin BH4 floors (~-92, must be <= -85 so the
+   WT -80 gate is evaluable) + BLK3 floors (~-57) for continuity with the pre-amendment metric. */
 function aliasValidate(sr, pitchList) {
   return (async () => {
     const rig = window.__aliasRig;
     const fBin = 5000 * sr / rig.N;                       /* an exact-bin sine: isolates this FFT's own error */
-    const vOn = rig.analyze3(rig.genSine(fBin, sr, rig.N), sr, fBin);
+    const vOnBH4 = rig.analyzeBH4(rig.genSine(fBin, sr, rig.N), sr, fBin);
+    const vOnBLK3 = rig.analyzeBLK3(rig.genSine(fBin, sr, rig.N), sr, fBin);
     const out = {
-      onBin: { f: fBin, dBc: vOn.dBc, pass: vOn.dBc !== null && vOn.dBc < -120, note: 'pure on-bin sine — validates the FFT/window pipeline itself (require < -120 dBc)' },
-      offBin: {}, saw: {},
+      onBin: {
+        f: fBin, dBc: vOnBH4.dBc, dBcBLK3: vOnBLK3.dBc,
+        pass: vOnBH4.dBc !== null && vOnBH4.dBc < -120,
+        note: 'pure on-bin sine — validates the FFT/window pipeline itself (require BH4 < -120 dBc)',
+      },
+      offBin: {}, saw: {}, bh4FloorWorst: null, bh4Evaluable: false,
     };
+    let bhWorst = null;
     for (const p of pitchList) {
       const off = rig.genSine(p.f0, sr, rig.N);
-      const o3 = rig.analyze3(off, sr, p.f0);
-      out.offBin[p.name] = { f: p.f0, dBc: o3.dBc, freq: o3.freq, note: 'off-bin pure sine — the Blackman leakage floor of the ±3-bin metric' };
+      const oBH = rig.analyzeBH4(off, sr, p.f0);
+      const oBLK = rig.analyzeBLK3(off, sr, p.f0);
+      out.offBin[p.name] = {
+        f: p.f0, dBc: oBH.dBc, freq: oBH.freq, dBcBLK3: oBLK.dBc, freqBLK3: oBLK.freq,
+        note: 'off-bin pure sine — leakage floor of the metric (BH4 expected ~-92 dBc; BLK3 ~-57 for continuity)',
+      };
+      if (oBH.dBc !== null && (bhWorst === null || oBH.dBc > bhWorst)) bhWorst = oBH.dBc;   /* worst = closest to 0 */
     }
+    out.bh4FloorWorst = bhWorst;
+    out.bh4Evaluable = bhWorst !== null && bhWorst <= -85;   /* WT -80 gate must sit above the floor */
     const sawSig = rig.genBandSaw(pitchList[0].f0, sr, rig.N);  /* hand-built saw-ish sanity (C4) */
-    const s3 = rig.analyze3(sawSig, sr, pitchList[0].f0);
-    const s30 = rig.analyzeMask(sawSig, sr, pitchList[0].f0, 30);
-    out.saw[pitchList[0].name] = { dBc3: s3.dBc, freq3: s3.freq, dBc30: s30.dBc, note: 'hand-built bandlimited saw (harmonics 1/h to Nyquist) — sanity + floor identity' };
+    const sBH4 = rig.analyzeBH4(sawSig, sr, pitchList[0].f0);
+    const sBLK3 = rig.analyzeBLK3(sawSig, sr, pitchList[0].f0);
+    const sBH30 = rig.analyzeBH30(sawSig, sr, pitchList[0].f0);
+    out.saw[pitchList[0].name] = {
+      dBcBH4: sBH4.dBc, freqBH4: sBH4.freq, dBcBLK3: sBLK3.dBc, dBcBH30: sBH30.dBc,
+      floorIdentityBH4: sBH4.dBc !== null && out.offBin[pitchList[0].name].dBc !== null && Math.abs(sBH4.dBc - out.offBin[pitchList[0].name].dBc) < 3,
+      note: 'hand-built bandlimited saw (harmonics 1/h to Nyquist) — sanity + floor identity (BH4)',
+    };
     return out;
   })();
 }
 
 /* ---- main ---- */
 async function main() {
-  log('=== ANVIL alias rig === (contract §9.3; FFT 2^17 in-page; Blackman; mask ±3 bins; ignore < 20 Hz)');
+  log('=== ANVIL alias rig === (contract §9.3 + P1.x amendment; FFT 2^17 in-page; AMENDED window: 4-term Blackman-Harris; primary mask ±' + MASK_BINS + ' bins; ignore < ' + SPUR_IGNORE_HZ + ' Hz)');
+  log('AMENDMENT 2026-10-07 (P1.x fix wave): window switched to 4-term Blackman-Harris a=[0.35875,0.48829,0.14128,0.01168] (sidelobes ~-92 dB); primary mask ±4 bins = the BH mainlobe; gates UNCHANGED (VA <= -45, WT <= -80) evaluated on the BH4 numbers. Pre-amendment 3-term Blackman ±3-bin numbers still printed as BLK3 for continuity with the previous log. BH30 = leakage-excluded diagnostic (NOT the contract metric).');
   log('protocol: ' + RENDER_SECONDS + ' s renders · one held note per case · stats() delivery barrier (active===1) before startRendering · segment = last 2^17 samples');
   log('cases: VA [' + VA_TYPES.join(',') + '] · WT [' + WT_TYPES.join(',') + '] @ ' + PITCHES.map(p => p.name + ' ' + p.f0.toFixed(4) + ' Hz').join(' / '));
-  log('gates: VA <= ' + GATE_VA_DBC + ' dBc · WT <= ' + GATE_WT_DBC + ' dBc · diagnostic: same spur with a ±' + DIAG_MASK_BINS + '-bin mask (NOT the contract metric)');
+  log('gates: VA <= ' + GATE_VA_DBC + ' dBc · WT <= ' + GATE_WT_DBC + ' dBc (evaluated on BH4) · columns: BH4 (primary) / BLK3 = Blackman ±' + MASK_BINS_BLK + ' continuity / BH30 = ±' + DIAG_MASK_BINS + '-bin diagnostic (NOT the contract metric)');
 
   let target = null;
   for (let i = 0; i < 150 && !target; i++) {
@@ -499,15 +543,19 @@ async function main() {
   if (!valR.value) { log('FATAL: validation eval failed: ' + (valR.error || 'no value')); RESULT.verdict = 'validation-eval-failed'; finish(1); return; }
   const val = valR.value;
   RESULT.validation = val;
-  log(' on-bin sine ' + val.onBin.f.toFixed(4) + ' Hz -> worst spur ' + r2(val.onBin.dBc) + ' dBc  [require < -120] ' + (val.onBin.pass ? 'PASS' : 'FAIL'));
+  log(' on-bin sine ' + val.onBin.f.toFixed(4) + ' Hz -> BH4 worst spur ' + r2(val.onBin.dBc) + ' dBc (BLK3 ' + r2(val.onBin.dBcBLK3) + ' dBc)  [require BH4 < -120] ' + (val.onBin.pass ? 'PASS' : 'FAIL'));
   if (!val.onBin.pass) {
     log('VALIDATION FAIL: the FFT/window pipeline does not meet the -120 dBc synthetic purity bound — stopping (no case numbers would be trustworthy).');
     RESULT.verdict = 'validation-fail'; finish(1); return;
   }
-  log(' off-bin sine floors (Blackman leakage of the ±3-bin metric): ' + PITCHES.map(p => p.name + ' ' + r2(val.offBin[p.name].dBc) + ' dBc').join(' · '));
+  log(' off-bin sine floors (BH4 ~-92 expected; BLK3 ~-57 continuity): ' + PITCHES.map(p => p.name + ' BH4 ' + r2(val.offBin[p.name].dBc) + ' / BLK3 ' + r2(val.offBin[p.name].dBcBLK3)).join(' · '));
+  if (!val.bh4Evaluable) {
+    log('VALIDATION FAIL: a BH4 off-bin floor sits above -85 dBc (worst ' + r2(val.bh4FloorWorst) + ' dBc) — the amended metric does not make the WT -80 gate evaluable; stopping (amendment not in effect / window regression).');
+    RESULT.verdict = 'validation-fail'; finish(1); return;
+  }
   const saw = val.saw[PITCHES[0].name];
-  const identity = Math.abs(saw.dBc3 - val.offBin[PITCHES[0].name].dBc) < 3;
-  log(' hand-built bandlimited saw C4 -> ' + r2(saw.dBc3) + ' dBc (mask3, floor identity ' + (identity ? 'ok' : 'MISMATCH') + ') · ' + r2(saw.dBc30) + ' dBc (mask30)');
+  const identity = saw.floorIdentityBH4;
+  log(' hand-built bandlimited saw C4 -> BH4 ' + r2(saw.dBcBH4) + ' dBc (floor identity ' + (identity ? 'ok' : 'MISMATCH') + ') · BLK3 ' + r2(saw.dBcBLK3) + ' · BH30 ' + r2(saw.dBcBH30) + ' dBc');
   if (!identity) { log('VALIDATION WARN: saw floor does not sit at the sine floor — investigation needed (continuing, raw numbers below).'); }
 
   /* the 30 contract cases */
@@ -526,11 +574,12 @@ async function main() {
     RESULT.cases.push(row);
     if (row.stage === 'ok') {
       const gate = spec.kind === 'va' ? GATE_VA_DBC : GATE_WT_DBC;
-      const pass = row.spur3 !== null && row.spur3 <= gate;
+      const pass = row.spurBH4 !== null && row.spurBH4 <= gate;
       row.gate = gate; row.pass = pass;
-      log('  ' + row.name.padEnd(18) + ' spur3 ' + String(r2(row.spur3)).padStart(7) + ' dBc @' + r2(row.spur3Freq) + ' Hz' +
+      log('  ' + row.name.padEnd(18) + ' BH4 ' + String(r2(row.spurBH4)).padStart(7) + ' dBc @' + r2(row.spurBH4Freq) + ' Hz' +
         ' (gate ' + gate + ' -> ' + (pass ? 'PASS' : 'FAIL') + ')' +
-        ' | m30 ' + String(r2(row.spur30)).padStart(7) + ' dBc' +
+        ' | BLK3 ' + String(r2(row.spurBLK3)).padStart(7) + ' dBc @' + r2(row.spurBLK3Freq) + ' Hz' +
+        ' | BH30 ' + String(r2(row.spurBH30)).padStart(7) + ' dBc' +
         ' | tier ' + row.tier + ' active=' + row.active + ' rms=' + r3(row.rms) + ' peak=' + r3(row.peak) +
         (row.badParams && row.badParams.length ? ' BAD-PARAMS:' + row.badParams.join(',') : ''));
     } else {
@@ -550,7 +599,7 @@ async function main() {
     const c = await cdp.ev('window.__aliasRunCase(' + JSON.stringify(spec) + ')', 1, EVAL_TIMEOUT_MS);
     const row = (c && c.value) || { name: spec.name, stage: 'eval', err: (c && c.error) || 'no value' };
     RESULT.cross.push(row);
-    if (row.stage === 'ok') log('  ' + row.name.padEnd(22) + ' spur3 ' + r2(row.spur3) + ' dBc @' + r2(row.spur3Freq) + ' Hz | m30 ' + r2(row.spur30) + ' dBc | tier ' + row.tier + ' active=' + row.active);
+    if (row.stage === 'ok') log('  ' + row.name.padEnd(22) + ' BH4 ' + r2(row.spurBH4) + ' dBc @' + r2(row.spurBH4Freq) + ' Hz | BLK3 ' + r2(row.spurBLK3) + ' dBc | BH30 ' + r2(row.spurBH30) + ' dBc | tier ' + row.tier + ' active=' + row.active);
     else log('  ' + row.name.padEnd(22) + ' FAILED ' + JSON.stringify(row));
   }
 
@@ -569,22 +618,25 @@ async function main() {
   const wtRows = RESULT.cases.filter(r => r.kind === 'wt' && r.stage === 'ok');
   const vaAllOk = vaRows.length === VA_TYPES.length * PITCHES.length && vaRows.every(r => r.pass);
   const wtAllOk = wtRows.length === WT_TYPES.length * PITCHES.length && wtRows.every(r => r.pass);
-  const vaWorst = vaRows.reduce((m, r) => ok3(r.spur3) && (m === null || r.spur3 > m.v) ? { v: r.spur3, name: r.name } : m, null);
-  const wtWorst = wtRows.reduce((m, r) => ok3(r.spur3) && (m === null || r.spur3 > m.v) ? { v: r.spur3, name: r.name } : m, null);
+  const vaWorst = vaRows.reduce((m, r) => ok3(r.spurBH4) && (m === null || r.spurBH4 > m.v) ? { v: r.spurBH4, name: r.name } : m, null);
+  const wtWorst = wtRows.reduce((m, r) => ok3(r.spurBH4) && (m === null || r.spurBH4 > m.v) ? { v: r.spurBH4, name: r.name } : m, null);
+  const vaWorstBLK3 = vaRows.reduce((m, r) => ok3(r.spurBLK3) && (m === null || r.spurBLK3 > m.v) ? { v: r.spurBLK3, name: r.name } : m, null);
+  const wtWorstBLK3 = wtRows.reduce((m, r) => ok3(r.spurBLK3) && (m === null || r.spurBLK3 > m.v) ? { v: r.spurBLK3, name: r.name } : m, null);
   const detOk = RESULT.determinism.length > 0 && RESULT.determinism.every(d => d.ok && d.identical === true);
   RESULT.gates = {
-    va: { verdict: vaAllOk ? 'PASS' : 'FAIL', threshold: GATE_VA_DBC, cases: vaRows.length, worst: vaWorst },
-    wt: { verdict: wtAllOk ? 'PASS' : 'FAIL', threshold: GATE_WT_DBC, cases: wtRows.length, worst: wtWorst },
+    va: { verdict: vaAllOk ? 'PASS' : 'FAIL', threshold: GATE_VA_DBC, cases: vaRows.length, worst: vaWorst, worstBLK3: vaWorstBLK3 },
+    wt: { verdict: wtAllOk ? 'PASS' : 'FAIL', threshold: GATE_WT_DBC, cases: wtRows.length, worst: wtWorst, worstBLK3: wtWorstBLK3 },
     determinism: { verdict: detOk ? 'PASS' : 'FAIL', pairs: RESULT.determinism.map(d => ({ name: d.name, maxAbsDiff: d.maxAbsDiff, identical: d.identical })) },
     failedCases: failedCases,
-    floorNote: 'Blackman leakage floor of the ±3-bin metric is ~-57 dBc (validated: off-bin sine + hand-built saw both sit there). The WT -80 gate cannot be evaluated below that floor by this metric; the m30 diagnostic column is the leakage-excluded view (not the contract metric).',
+    floorNote: 'AMENDED (P1.x, 2026-10-07): the BH4 metric (4-term Blackman-Harris window, ±4-bin mask) floor lands ~-92 dBc (validated synthetically: off-bin sine + hand-built saw), so the WT -80 dBc gate is evaluable. The BLK3 column is the pre-amendment ±3-bin 3-term Blackman metric (floor ~-57 dBc; kept for continuity with the previous log). BH30 is the leakage-excluded diagnostic view (not the contract metric).',
   };
   log('==== ALIAS SUMMARY ====');
   log('freeze: sha256 ' + RESULT.page.sha256 + ' (' + RESULT.page.bytes + ' B)');
-  log('validation: on-bin sine ' + r2(val.onBin.dBc) + ' dBc (< -120 required) -> ' + (val.onBin.pass ? 'PASS' : 'FAIL'));
-  log('leakage floor (mask3, off-bin sine): ' + PITCHES.map(p => p.name + ' ' + r2(val.offBin[p.name].dBc)).join(' · ') + ' dBc');
-  log('gates: VA ' + RESULT.gates.va.verdict + ' (worst ' + (vaWorst ? vaWorst.name + ' ' + r2(vaWorst.v) + ' dBc' : 'n/a') + ', gate ' + GATE_VA_DBC + ')' +
-    ' · WT ' + RESULT.gates.wt.verdict + ' (worst ' + (wtWorst ? wtWorst.name + ' ' + r2(wtWorst.v) + ' dBc' : 'n/a') + ', gate ' + GATE_WT_DBC + '; see floor note)');
+  log('validation: on-bin sine BH4 ' + r2(val.onBin.dBc) + ' dBc (< -120 required) -> ' + (val.onBin.pass ? 'PASS' : 'FAIL') + ' · BH4 off-bin floor worst ' + r2(val.bh4FloorWorst) + ' dBc (evaluable ' + (val.bh4Evaluable ? 'yes' : 'NO') + ')');
+  log('floors (off-bin sine): BH4 ' + PITCHES.map(p => p.name + ' ' + r2(val.offBin[p.name].dBc)).join(' · ') + ' dBc (~-92 expected) · BLK3 ' + PITCHES.map(p => p.name + ' ' + r2(val.offBin[p.name].dBcBLK3)).join(' · ') + ' dBc (~-57 continuity)');
+  log('gates (BH4, the amended contract metric): VA ' + RESULT.gates.va.verdict + ' (worst ' + (vaWorst ? vaWorst.name + ' ' + r2(vaWorst.v) + ' dBc' : 'n/a') + ', gate ' + GATE_VA_DBC + ')' +
+    ' · WT ' + RESULT.gates.wt.verdict + ' (worst ' + (wtWorst ? wtWorst.name + ' ' + r2(wtWorst.v) + ' dBc' : 'n/a') + ', gate ' + GATE_WT_DBC + ')');
+  log('continuity (BLK3, pre-amendment metric): VA worst ' + (vaWorstBLK3 ? vaWorstBLK3.name + ' ' + r2(vaWorstBLK3.v) + ' dBc' : 'n/a') + ' · WT worst ' + (wtWorstBLK3 ? wtWorstBLK3.name + ' ' + r2(wtWorstBLK3.v) + ' dBc' : 'n/a') + ' (its ~-57 dBc floor limits this view)');
   log('determinism: ' + RESULT.gates.determinism.verdict + ' (' + RESULT.determinism.map(d => d.name + ':' + d.maxAbsDiff).join(' · ') + ')');
   log('failed cases: ' + failedCases + ' · cross-rate rows: ' + RESULT.cross.length);
   dumpConsole(cdp, 12);

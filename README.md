@@ -5,13 +5,16 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **P1 core in** — worklet voice engine live (PolyBLEP + wavetable osc · TPT SVF ·
-env/LFO · unison/glide · pool + steal); battery green on frozen `index.html` sha 08e3c38f… (243,193 B):
-smoke 11/11 · feel 18/18 · keys 27/27 · midi 33/33; **measured: 128 voices at 38.7 % of the audio
-budget** (3 independent runs, delivery-verified) + 10-minute stress green at the 64-voice cap.
-OPEN (recorded): aliasing floors — saw passes C4/A4; VA square/pulse (all pitches) and saw C6 exceed
-the −45 dBc gate; WT rows show transition-band folds. Fix wave = minBLEP "Classic" oscillator +
-decimation/mip-margin policy. Resume at `CONTINUATION-2026-10-06.md` addendum 11.
+Status 2026-10-07: **P1 core in — aliasing gate CLOSED (P1.x)** — worklet voice engine live
+(minBLEP "Classic" + wavetable osc · TPT SVF · env/LFO · unison/glide · pool + steal). Frozen
+`index.html` sha 56734133… (259,387 B): battery smoke 11/11 · feel 18/18 · keys 27/27 · midi 33/33;
+alias rig v2 (4-term Blackman-Harris metric): 30/30 PASS — VA worst −58.2 dBc, WT worst −91.2 dBc
+(gates −45/−80); **measured: 128 voices at 47.6 % of the audio budget** (offline ramp, delivery-
+verified; minBLEP ≈ +20 % vs the polyBLEP ship). Stress ×2 at cap 64: all dimensions green except
+rare deadline crossings under unison-heavy churn (one cold-start delta, reproduced both runs, plus
+hot uni-7 probe cycles) — recorded raw; cost-optimisation pass queued (docs/07 P·2). Next: P2 sound
+identity (acid/string/drum + sample core + recorder). Resume at `CONTINUATION-2026-10-06.md`
+addendum 12.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)

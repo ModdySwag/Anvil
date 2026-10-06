@@ -104,3 +104,13 @@ deviations[]}.
    re-run → gate table; also re-run battery (smoke/feel/keys/midi) + `node verify/cdp_bench.mjs
    --offline-only` to refresh the published cost number (voice count expected to hold ≥ ~120).
 3. Commit wave + docs (addendum 12); owner report.
+
+## 7. Close-out record (2026-10-07; continuation addendum 12)
+
+Re-verify on frozen 56734133: alias rig v2 (BH4 amendment) 30/30 PASS — VA worst −58.18 dBc, WT worst
+−91.21 dBc; saw C6 −58.99 (was −39.8). Battery 11/18/27/33. Bench: offline 128 @ 47.6 % (minBLEP
+≈ +20 % steady); realtime light 64×3 stable, fat 64 marginal → rig published fat 48. Stress ×2:
+`asserts-not-met` both runs — ONE verified-window delta, identical cold-start entry in each (cycle 1
+@ uni 3, first 15 s), plus hot uni-7 over-drive windows (by design beyond the envelope); all other
+dimensions green. Cost-optimisation pass recorded as P·2 (docs/07 batch 4). Evidence:
+`last-cdp_alias.log`, `bench-v4-p1x-full.*`, `stress-p1x-run{1,2}.log`, `p1x-node-alias-out.*`.

@@ -1,7 +1,7 @@
-index.html sha256 (before): 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0
+index.html sha256 (before): 5673413337f082a48fe1ed2675f7c625189265b2656008bc9c7c1844bc5b71f3
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1791308073055
- ok   freeze: index.html sha256 before = 08e3c38f…  -> 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0
+cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1791310734112
+ ok   freeze: index.html sha256 before = 56734133…  -> 5673413337f082a48fe1ed2675f7c625189265b2656008bc9c7c1844bc5b71f3
  ok   boot: data-av-ready flips (with the stub injected pre-boot)
  ok   boot: MIDI deck mounted (#av-midi-body .av-midi) + __avMidi API + stub alive  -> {"panel":true,"api":true,"snapFn":true,"stub":true,"ourClass":true}
  ok   unsupported: honest no-Web-MIDI copy (NO WEB MIDI · Safari named)  -> status=unsupported · NO WEB MIDI Web MIDI is missing in this browser, so hardware keys and hardware out are both off the table here. Chrome, 
@@ -40,8 +40,8 @@ cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1791308073
    · CLOCK OUT: restart, then OFF (real click) must stop it
  ok   clock out: OFF (real click) stops a running clock — 0xFC sent, wire frozen, pref off  -> was ticking=true · FC at 10/11 · frozen 62=62
  ok   zero console errors for the whole run (exceptions · Log errors · console.error · stub listener errors)  -> page errors=0 · stub listener errors=0
- ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 366556 bytes · clip 1048×1293 @2x
-index.html sha256 (after): 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0
- ok   freeze: index.html sha256 after = 08e3c38f… (unchanged by the run)  -> 08e3c38f9b4ff62993fb90abe8801a0fd9a438bfccc57afecc1a4b25c68efec0
+ ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 368389 bytes · clip 1048×1293 @2x
+index.html sha256 (after): 5673413337f082a48fe1ed2675f7c625189265b2656008bc9c7c1844bc5b71f3
+ ok   freeze: index.html sha256 after = 56734133… (unchanged by the run)  -> 5673413337f082a48fe1ed2675f7c625189265b2656008bc9c7c1844bc5b71f3
 
 33 passed, 0 failed

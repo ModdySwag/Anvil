@@ -1,0 +1,72 @@
+=== alias_node.mjs — Anvil P1.x node alias harness ===
+module: C:/Users/Moddy/anvil/src/av_dsp.js   version=p1.1
+protocol: 3 s renders (48 kHz unless noted) · one held note (gain 0.8) · params = rig CASE_BASE · segment = last 2^17 samples
+metric: worst non-harmonic spur dBc vs the ±3-bin carrier window; ±3 bins around every harmonic masked; < 20 Hz ignored
+windows: BH = 4-term Blackman-Harris (amended); BLK = original 3-term Blackman; BH30 = ±30-bin diagnostic
+
+--- analysis validation (synthetic) ---
+ on-bin sine 1831.0547 Hz -> BH -159.88 dBc · BLK -138.34 dBc  [require < -120] PASS
+ off-bin sine floor C4: BH -58.80 dBc · BLK -57.46 dBc
+ off-bin sine floor A4: BH -54.31 dBc · BLK -57.13 dBc
+ off-bin sine floor C6: BH -62.53 dBc · BLK -58.18 dBc
+ hand-built bandlimited saw C4 -> BH-mask3 -58.80 dBc · BH-mask30 -119.54 dBc
+
+--- cases (30 of 30) ---
+  VA saw C4          BH  -58.80 dBc @   263 Hz (gate -45 -> PASS) | BH4  -71.29 | BLK  -57.46 @   263 Hz | BH30  -71.29 | rms 0.114 peak 0.220
+  VA saw A4          BH  -54.31 dBc @   441 Hz (gate -45 -> PASS) | BH4  -66.27 | BLK  -57.13 @   441 Hz | BH30  -66.27 | rms 0.113 peak 0.219
+  VA saw C6          BH  -58.99 dBc @ 12280 Hz (gate -45 -> PASS) | BH4  -58.99 | BLK  -58.18 @  1045 Hz | BH30  -58.99 | rms 0.110 peak 0.210
+  VA square C4       BH  -58.80 dBc @   263 Hz (gate -45 -> PASS) | BH4  -71.33 | BLK  -57.46 @   263 Hz | BH30  -71.33 | rms 0.198 peak 0.224
+  VA square A4       BH  -54.31 dBc @   441 Hz (gate -45 -> PASS) | BH4  -66.27 | BLK  -57.13 @   441 Hz | BH30  -66.27 | rms 0.197 peak 0.226
+  VA square C6       BH  -59.45 dBc @ 13326 Hz (gate -45 -> PASS) | BH4  -59.45 | BLK  -58.18 @  1045 Hz | BH30  -59.45 | rms 0.194 peak 0.228
+  VA pulse C4        BH  -58.80 dBc @   263 Hz (gate -45 -> PASS) | BH4  -69.73 | BLK  -57.46 @   263 Hz | BH30  -69.73 | rms 0.198 peak 0.224
+  VA pulse A4        BH  -54.31 dBc @   441 Hz (gate -45 -> PASS) | BH4  -64.68 | BLK  -57.13 @   441 Hz | BH30  -64.68 | rms 0.197 peak 0.226
+  VA pulse C6        BH  -58.18 dBc @ 14373 Hz (gate -45 -> PASS) | BH4  -58.18 | BLK  -58.18 @  1045 Hz | BH30  -58.18 | rms 0.194 peak 0.228
+  VA tri C4          BH  -58.80 dBc @   263 Hz (gate -45 -> PASS) | BH4  -89.00 | BLK  -57.46 @   263 Hz | BH30  -89.00 | rms 0.115 peak 0.198
+  VA tri A4          BH  -54.31 dBc @   441 Hz (gate -45 -> PASS) | BH4  -78.61 | BLK  -57.13 @   441 Hz | BH30  -78.61 | rms 0.115 peak 0.196
+  VA tri C6          BH  -62.53 dBc @  1045 Hz (gate -45 -> PASS) | BH4  -64.37 | BLK  -58.18 @  1045 Hz | BH30  -64.37 | rms 0.115 peak 0.191
+  VA sine C4         BH  -58.80 dBc @   263 Hz (gate -45 -> PASS) | BH4  -91.91 | BLK  -57.46 @   263 Hz | BH30 -119.88 | rms 0.141 peak 0.200
+  VA sine A4         BH  -54.31 dBc @   441 Hz (gate -45 -> PASS) | BH4  -91.21 | BLK  -57.13 @   441 Hz | BH30 -119.45 | rms 0.141 peak 0.200
+  VA sine C6         BH  -62.53 dBc @  1045 Hz (gate -45 -> PASS) | BH4  -93.19 | BLK  -58.18 @  1045 Hz | BH30 -120.92 | rms 0.141 peak 0.199
+  WT wt.saw C4       BH  -58.80 dBc @   263 Hz (gate -80 -> FAIL) | BH4  -91.91 | BLK  -57.46 @   263 Hz | BH30 -119.73 | rms 0.092 peak 0.175
+  WT wt.saw A4       BH  -54.31 dBc @   441 Hz (gate -80 -> FAIL) | BH4  -91.21 | BLK  -57.13 @   441 Hz | BH30 -119.51 | rms 0.091 peak 0.175
+  WT wt.saw C6       BH  -62.53 dBc @  1045 Hz (gate -80 -> FAIL) | BH4  -93.19 | BLK  -58.18 @  1045 Hz | BH30 -120.86 | rms 0.089 peak 0.168
+  WT wt.square C4    BH  -58.80 dBc @   263 Hz (gate -80 -> FAIL) | BH4  -91.91 | BLK  -57.46 @   263 Hz | BH30 -119.85 | rms 0.160 peak 0.178
+  WT wt.square A4    BH  -54.31 dBc @   441 Hz (gate -80 -> FAIL) | BH4  -91.21 | BLK  -57.13 @   441 Hz | BH30 -119.52 | rms 0.159 peak 0.181
+  WT wt.square C6    BH  -62.53 dBc @  1045 Hz (gate -80 -> FAIL) | BH4  -93.19 | BLK  -58.18 @  1045 Hz | BH30 -120.90 | rms 0.156 peak 0.180
+  WT wt.tri C4       BH  -58.80 dBc @   263 Hz (gate -80 -> FAIL) | BH4  -91.92 | BLK  -57.46 @   263 Hz | BH30 -119.90 | rms 0.110 peak 0.188
+  WT wt.tri A4       BH  -54.31 dBc @   441 Hz (gate -80 -> FAIL) | BH4  -91.21 | BLK  -57.13 @   441 Hz | BH30 -119.58 | rms 0.110 peak 0.186
+  WT wt.tri C6       BH  -62.53 dBc @  1045 Hz (gate -80 -> FAIL) | BH4  -93.19 | BLK  -58.18 @  1045 Hz | BH30 -120.91 | rms 0.109 peak 0.181
+  WT wt.sine C4      BH  -58.80 dBc @   263 Hz (gate -80 -> FAIL) | BH4  -91.92 | BLK  -57.46 @   263 Hz | BH30 -119.89 | rms 0.134 peak 0.190
+  WT wt.sine A4      BH  -54.31 dBc @   441 Hz (gate -80 -> FAIL) | BH4  -91.21 | BLK  -57.13 @   441 Hz | BH30 -119.56 | rms 0.134 peak 0.190
+  WT wt.sine C6      BH  -62.53 dBc @  1045 Hz (gate -80 -> FAIL) | BH4  -93.19 | BLK  -58.18 @  1045 Hz | BH30 -120.91 | rms 0.134 peak 0.189
+  WT wt.pulse25 C4   BH  -58.80 dBc @   263 Hz (gate -80 -> FAIL) | BH4  -91.92 | BLK  -57.46 @   263 Hz | BH30 -120.06 | rms 0.097 peak 0.182
+  WT wt.pulse25 A4   BH  -54.31 dBc @   441 Hz (gate -80 -> FAIL) | BH4  -91.22 | BLK  -57.13 @   441 Hz | BH30 -119.53 | rms 0.096 peak 0.184
+  WT wt.pulse25 C6   BH  -62.53 dBc @  1045 Hz (gate -80 -> FAIL) | BH4  -93.19 | BLK  -58.18 @  1045 Hz | BH30 -120.93 | rms 0.094 peak 0.184
+
+--- cross-rate spot (44.1 kHz) ---
+  cross 44.1k VA saw C4      BH -59.02 dBc @260 Hz | BLK -57.50 dBc | BH30 -70.15 | rms 0.114
+  cross 44.1k WT wt.saw A4   BH -60.83 dBc @881 Hz | BLK -60.33 dBc | BH30 -123.76 | rms 0.091
+
+--- determinism (two fresh engines, same patch/note; require maxAbsDiff === 0) ---
+  det VA saw C4        maxAbsDiff=0 identical=true len=144000/144000
+  det WT wt.saw C4     maxAbsDiff=0 identical=true len=144000/144000
+
+==== GATES ====
+VA (gate -45, BH mask3): PASS  worst VA tri A4 -54.31
+WT (pinned BH mask3): FAIL  worst WT wt.pulse25 A4 -54.31
+WT (real spurs, BH mask4 - the evaluable -80 view; mask3 is floor-limited ~-54..-63): PASS  worst -91.21
+determinism: PASS
+
+--- sanity (K-style) ---
+  PASS  S0. version === "p1.1"  ::  version=p1.1
+  PASS  S1. buildTables idempotent + hash stable  ::  ms=0/0 hash=ad0cc5ee
+  PASS  S1. buildTables < 500 ms  ::  ms=0/0
+  PASS  S1. fresh instance: blep table hash identical + first build < 500 ms  ::  freshMs=10 hash=ad0cc5ee blep={"taps":65,"subs":256,"mid":-0.49974212727356215}
+  PASS  S2. silence render = exact zeros
+  PASS  S3. 1 s note: no NaN/Inf, peak in (0,1.5]  ::  peak=0.275 rms=0.115 nan=0
+  PASS  S4. allOff -> pool drains to 0 (≤ 8 s)  ::  drained after 0.40 s
+  PASS  S4. noteOff -> pool drains to 0 (≤ 8 s)  ::  drained after 0.40 s
+  PASS  S5. saw-A4 zero crossings within ±20%  ::  crossings=88 expected=88
+  PASS  S6. setParam known -> true / unknown path -> false / bad enum -> false
+  PASS  S7. steal: all noteOns alloc true, active <= 4, no NaN  ::  active=4 stolen=2 maxActive=4
+  PASS  S8. render heap-flat over 100 x 4800 frames (alloc-free check)  ::  heapDelta=-72 B (gc both sides)
