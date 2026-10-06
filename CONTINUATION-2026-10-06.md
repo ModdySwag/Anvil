@@ -215,9 +215,16 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   engine tier strings: `data-av-engine` = base tier ('worklet'|'spn'), `__avEngine.url` = 'blob'|'data'.
 - **REVISION (bench rev2, same day):** the 32-quanta windowed clock was REJECTED by its first real run —
   a window spans device-paced waiting (~2.59 ms/quantum floor at ONE voice; integrity finding in
-  `verify/last-cdp_bench.log`). `av_voiceproc.js` reverted to per-quantum Date.now lattice;
+  `verify/bench-v1-windowed-rejected.log`). `av_voiceproc.js` reverted to per-quantum Date.now lattice;
   **rebuild = 08e3c38f (243,193 B)**; smoke 11/11 re-run; midi freeze pin updated. The publishable cost
-  number now comes from a NEW offline marginal-cost ramp in `verify/cdp_bench.mjs` (fresh
-  OfflineAudioContexts, 1 s vs 4 s renders, wall-timed on the page's µs clock; the difference isolates
-  steady µs/quantum). In flight: bench-rev2 child (edits + full run) → parent spot-verify (recompute
-  from raw rings + parent-run the offline ramp) → alias + stress rigs child → final battery + docs.
+  number now comes from a NEW offline marginal-cost ramp in `verify/cdp_bench.mjs`.
+- **BENCH REV2 RESULT (delivery race caught; NO number published):** realtime = 64/64 stable ×3 reps
+  both variants, 0 underruns (means ~527/543 µs at cap). Offline ramp INVALID as run — fire-and-forget
+  noteOn posts raced startRendering (~1-voice renders in 15/20 cells); the bogus 'published 256' was
+  refused. Fix VERIFIED by probe = `stats()` FIFO barrier (require active===N before rendering) +
+  midi = i pattern (midi space caps N at 128; old 21+i capped at 107). Indicative true cost ≈ 9–11
+  µs/voice/quantum → 50%-budget knee ≈ 120–130 voices. Evidence: `verify/bench-v2-delivery-race.log`
+  + `last-cdp_bench.json` (verifiedFixProbe / groundTruth / indicativeTrueCosts).
+- **IN FLIGHT: bench-rev3 child (deleg_a09831c7)** — lands the sync barrier + steps [8..128] +
+  `--offline-only`, self-checks then full re-run. Then: parent `--offline-only` spot re-run → alias +
+  stress rigs child → final battery + `last-*` log refresh → README + addendum 11 + mnemosyne.
