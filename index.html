@@ -131,6 +131,62 @@ a { color: var(--teal); }
 .av-list { margin: 0; padding-left: 18px; color: var(--text-2); }
 .av-list b { color: var(--teal); }
 
+/* ============================================================================
+   ROTARY KNOBS — Minimoog-style pointer caps (the ported PF feel engine, Anvil skin).
+   Ring = 270° conic arc from 225°; cap = machined graphite; mark = the teal pointer. */
+.av-knobs { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: flex-start; }
+.av-knob-wrap { display: inline-flex; flex-direction: column; align-items: center; gap: 2px; flex: none; }
+.av-knob {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, #33434e 0%, #1b2730 52%, #0b1116 100%);
+  border: 1px solid #05080b;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.10), inset 0 -2px 5px rgba(0, 0, 0, 0.6);
+  cursor: ns-resize;
+  touch-action: none;
+  outline: none;
+  user-select: none;
+}
+.av-knob:hover { box-shadow: 0 0 0 1px rgba(46, 216, 201, 0.40), 0 2px 4px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12); }
+.av-knob:focus-visible { box-shadow: 0 0 0 2px var(--teal), 0 2px 4px rgba(0, 0, 0, 0.7); }
+.av-knob.dragging { box-shadow: 0 0 0 2px var(--teal), 0 0 14px rgba(46, 216, 201, 0.45); }
+body.knob-dragging, body.knob-dragging * { cursor: ns-resize !important; }
+.av-knob-ring {
+  position: absolute; inset: -3px; border-radius: 50%;
+  background: conic-gradient(from 225deg,
+    var(--teal) 0deg var(--knob-arc, 0deg),
+    rgba(46, 216, 201, 0.14) var(--knob-arc, 0deg) 270deg,
+    transparent 270deg 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 64%, #000 65%);
+  mask: radial-gradient(circle, transparent 0 64%, #000 65%);
+  opacity: 0.95; pointer-events: none;
+}
+.av-knob-face {
+  position: absolute; inset: 15%; border-radius: 50%;
+  background: radial-gradient(circle at 42% 30%, #46545e 0%, #2a3841 55%, #151f26 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), inset 0 -2px 4px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+.av-knob-mark {
+  position: absolute; left: calc(50% - 1px); top: 6%; width: 2px; height: 36%;
+  border-radius: 2px; background: var(--teal);
+  box-shadow: 0 0 5px rgba(46, 216, 201, 0.55);
+  transform-origin: 50% 122%;   /* the pointer sweeps around the knob centre */
+}
+.av-knob.at-min .av-knob-mark { background: var(--teal-deep); box-shadow: none; }
+.av-knob.at-max .av-knob-mark { background: var(--teal-glow); box-shadow: 0 0 7px rgba(127, 243, 232, 0.7); }
+.av-knob.at-stop { animation: avKnobStop 150ms ease-out; }
+@keyframes avKnobStop { 0% { transform: scale(1); } 45% { transform: scale(0.975); } 100% { transform: scale(1); } }
+.av-knob-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: 0.08em; color: var(--text-3); text-transform: uppercase; white-space: nowrap; }
+.av-knob-val { font-family: var(--mono); font-size: 9.5px; color: var(--teal); text-shadow: 0 0 6px rgba(46, 216, 201, 0.30); white-space: nowrap; }
+.k-sm .av-knob-lbl { font-size: 7.5px; }
+.k-sm .av-knob-val { font-size: 8.5px; }
+
+/* levels card — the first live controls on the master-tap gains */
+#av-levels .av-knobs { margin: 10px 0 14px; }
+.av-note.av-dim { color: var(--text-3); }
+
 /* footer */
 .av-foot {
   padding: 10px 16px;
@@ -156,6 +212,12 @@ a { color: var(--teal); }
     <h1>Phase 0 &mdash; shell is live</h1>
     <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
     <p class="av-note">Next in line: the AudioWorklet voice engine and the measured voice-count benchmark, then the ACID &middot; STRING &middot; DRUM engines. The plan lives in <code>docs/03-implementation-spec.md</code> and <code>docs/04-agent-build-handoff.md</code>.</p>
+  </section>
+
+  <section class="av-card" id="av-levels">
+    <h2>Levels</h2>
+    <div id="av-levels-knobs"></div>
+    <p class="av-note av-dim">Both knobs ride the master tap: <b>Instrument</b> sets the keys bus (what the instrument plays), <b>Master</b> is the final out. Drag or twist the rim &middot; wheel steps &middot; arrow keys when focused &middot; double-click resets.</p>
   </section>
 
   <section class="av-card">
@@ -356,23 +418,427 @@ function avTapInfo() {
 window.__avTap = avTap;
 
 
-/* Anvil — core shell (Phase 0). Boot contract: arm the master tap FIRST, then fill the header
-   chips. `?avtest=1` runs a runtime proof that the destination patch builds the bus chain. */
+/* Anvil — rotary controls (ported from Pattern Forge's app_knob.js "Hardware Forge" feel engine;
+   T9 §12 reuse map). Theme-appropriate turnable knobs: drag up/down or twist the rim to change a
+   value, wheel to nudge, double-click to reset, arrow keys when focused, Shift for fine control.
+   Everything here is DOM-free at top level; avKnobBind() is only ever called from the browser
+   with a real root element.
+
+   Port decisions (recorded in CONTINUATION-2026-10-06.md):
+   - av-namespaced: avKnobHTML/Bind/Commit/RefreshAll/NormToVal/ValToNorm/Format/ApplyVisual/
+     RowHTML (+ local avKnobEsc / avKnobCssEscape helpers).
+   - commit hook: avApplyParam(path, v, meta) when the app defines it, else the avParams map +
+     a bubbling 'av-param' CustomEvent on window.
+   - dropped from the PF original: hub additions, snapshot(), koalaHint() calls, the marantz
+     skin variant. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.0.2", phase: "P0 · tap armed", built: "2026-10-07" });
+/* ---------- value mapping (pure) ---------- */
+
+/* linear | log | exp curves between min and max */
+const avKnobNormToVal = (norm, min, max, curve, step) => {
+  let n = Math.max(0, Math.min(1, Number(norm) || 0));
+  let v;
+  if (curve === "log") {
+    const lo = Math.max(1e-6, min), hi = Math.max(lo * 1.000001, max);
+    v = lo * Math.pow(hi / lo, n);
+  } else if (curve === "exp") {
+    v = min + (max - min) * Math.pow(n, 2);
+  } else {
+    v = min + (max - min) * n;
+  }
+  const st = Number(step) || 0;
+  if (st > 0) {
+    /* snap to the nearest step measured from min (log curves keep their own resolution) */
+    if (curve === "log") {
+      const steps = Math.max(1, Math.round((max - min) / st));
+      const idx = Math.round(((v - min) / (max - min)) * steps);
+      v = min + (max - min) * (idx / steps);
+    } else {
+      v = min + Math.round((v - min) / st) * st;
+    }
+    const dec = String(st).includes(".") ? String(st).split(".")[1].length : 0;
+    v = Number(v.toFixed(Math.max(0, Math.min(6, dec))));
+  }
+  return Math.max(min, Math.min(max, v));
+};
+
+const avKnobValToNorm = (val, min, max, curve) => {
+  const v = Math.max(min, Math.min(max, Number(val)));
+  let n;
+  if (curve === "log") {
+    const lo = Math.max(1e-6, min), hi = Math.max(lo * 1.000001, max);
+    n = Math.log(Math.max(lo, v) / lo) / Math.log(hi / lo);
+  } else if (curve === "exp") {
+    n = Math.sqrt(Math.max(0, (v - min) / Math.max(1e-9, max - min)));
+  } else {
+    n = (v - min) / Math.max(1e-9, max - min);
+  }
+  return Math.max(0, Math.min(1, isFinite(n) ? n : 0));
+};
+
+/* readable value text for the little display under every knob */
+function avKnobFormat(val, opts = {}) {
+  const unit = opts.unit || "";
+  const v = Number(val);
+  if (!isFinite(v)) return "—";
+  switch (opts.fmt) {
+    case "hz": return v >= 1000 ? (Math.round(v / 10) / 100) + "k" : Math.round(v) + "";
+    case "ms": return v >= 1 ? (Math.round(v * 100) / 100) + "s" : Math.round(v * 1000) + "ms";
+    case "db": return (v > 0 ? "+" : "") + (Math.round(v * 10) / 10) + "dB";
+    case "pct": return Math.round(v * 100) + "%";
+    case "pan": return Math.abs(v) < 0.005 ? "C" : (v < 0 ? "L" : "R") + Math.round(Math.abs(v) * 100);
+    case "ct": return (Math.round(v * 10) / 10) + "ct";
+    case "x": return (Math.round(v * 100) / 100) + "×";
+    case "int": return String(Math.round(v));
+    default: {
+      const s = Math.round(v * 1000) / 1000;
+      return unit ? s + unit : String(s);
+    }
+  }
+}
+
+/* ---------- markup (pure string builders) ---------- */
+
+/* local escaper: av_knob.js is treated as standalone by the build's parser guard, so it cannot
+   lean on any core helper (same rules as the app_core copy) */
+const avKnobEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* avKnobHTML — one rotary control bound to a parameter path.
+   opts: { min, max, step, def, value, curve, unit, fmt, size, w, hint, sens } */
+function avKnobHTML(path, label, opts = {}) {
+  /* NUMBERS ONLY at the boundary. These fields may be fed from live state or a stored patch, so
+     a string here is a markup injection waiting to happen, not a value (PF audit F1). Coerce
+     first, then escape as a second belt. */
+  const num = (v, d) => { const n = Number(v); return isFinite(n) ? n : d; };
+  const min = opts.min != null ? num(opts.min, 0) : 0;
+  const max = opts.max != null ? num(opts.max, 1) : 1;
+  const step = opts.step != null ? num(opts.step, 0.01) : 0.01;
+  const val = num(opts.value != null ? opts.value : (opts.def != null ? opts.def : min), min);
+  const defv = num(opts.def != null ? opts.def : min, min);
+  const norm = avKnobValToNorm(val, min, max, opts.curve);
+  const size = opts.size || "md";
+  const w = opts.w || (size === "lg" ? 62 : size === "sm" ? 44 : 54);
+  const txt = avKnobFormat(val, opts);
+  const tip = (label ? label + " — " : "") + txt + (opts.hint ? " · " + opts.hint : "") +
+    " (drag up/down or twist around the rim · wheel · double-click resets)";
+  return '<div class="av-knob-wrap k-' + size + '" style="width:' + w + 'px">' +
+    '<div class="av-knob" tabindex="0" role="slider" data-knob="' + avKnobEsc(path) + '"' +
+    ' data-min="' + avKnobEsc(min) + '" data-max="' + avKnobEsc(max) + '" data-step="' + avKnobEsc(step) + '"' +
+    (opts.curve ? ' data-curve="' + avKnobEsc(opts.curve) + '"' : '') +
+    ' data-def="' + avKnobEsc(defv) + '"' +
+    ' data-unit="' + avKnobEsc(opts.unit || "") + '" data-fmt="' + avKnobEsc(opts.fmt || "") + '"' +
+    ' data-sens="' + avKnobEsc(opts.sens != null ? opts.sens : 150) + '"' +
+    ' data-norm="' + norm.toFixed(4) + '"' +
+    ' aria-valuemin="' + avKnobEsc(min) + '" aria-valuemax="' + avKnobEsc(max) + '" aria-valuenow="' + avKnobEsc(val) + '"' +
+    ' aria-label="' + avKnobEsc(label || path) + '" title="' + avKnobEsc(tip) + '">' +
+    '<div class="av-knob-ring"></div>' +
+    '<div class="av-knob-face"><span class="av-knob-mark"></span></div>' +
+    '</div>' +
+    '<div class="av-knob-lbl">' + avKnobEsc(label || "") + '</div>' +
+    '<div class="av-knob-val" data-kval="' + avKnobEsc(path) + '">' + avKnobEsc(txt) + '</div>' +
+    '</div>';
+}
+
+/* knob cluster: several knobs in a plate, e.g. an ADSR row */
+const avKnobRowHTML = (items, cls) => '<div class="av-knobs ' + (cls || "") + '">' + items.join("") + '</div>';
+
+/* label/value refresh for every knob bound to a path (keeps all readouts in sync) */
+function avKnobApplyVisual(el, value) {
+  if (!el) return;
+  const min = parseFloat(el.dataset.min), max = parseFloat(el.dataset.max);
+  const curve = el.dataset.curve || "lin";
+  const norm = avKnobValToNorm(value, min, max, curve);
+  el.dataset.norm = norm.toFixed(4);
+  el.setAttribute("aria-valuenow", String(value));
+  const mark = el.querySelector(".av-knob-mark");
+  if (mark) mark.style.transform = "rotate(" + (-135 + norm * 270).toFixed(1) + "deg)";
+  const ring = el.querySelector(".av-knob-ring");
+  if (ring) ring.style.setProperty("--knob-arc", (norm * 270).toFixed(1) + "deg");
+  const step = parseFloat(el.dataset.step) || 0;
+  el.classList.toggle("at-min", value <= min + step / 2);
+  el.classList.toggle("at-max", value >= max - step / 2);
+}
+
+const avKnobCssEscape = (s) => (typeof CSS !== "undefined" && CSS.escape)
+  ? CSS.escape(String(s))
+  : String(s).replace(/[^a-zA-Z0-9_-]/g, ch => "\\" + ch);
+
+/* ---------- browser wiring ---------- */
+
+/* the knob framework's own path→value mirror — first paint and refresh read this; the app-side
+   avApplyParam() (and, without one, the 'av-param' event) carries the value to the engine */
+const avParams = {};
+
+/* commit a knob value: writes the model mirror, updates UI, tells the engine */
+function avKnobCommit(el, value, opts = {}) {
+  const path = el.dataset.knob;
+  const min = parseFloat(el.dataset.min), max = parseFloat(el.dataset.max);
+  const step = parseFloat(el.dataset.step) || 0;
+  const curve = el.dataset.curve || "lin";
+  /* value may arrive as a raw value (click/wheel/keys) or as a normalised position (drag) */
+  const v = opts.norm
+    ? avKnobNormToVal(value, min, max, curve, step)
+    : avKnobNormToVal(avKnobValToNorm(value, min, max, curve), min, max, curve, step);
+  const fmtOpts = { fmt: el.dataset.fmt || "", unit: el.dataset.unit || "" };
+  const txt = avKnobFormat(v, fmtOpts);
+  avParams[path] = v;
+  if (typeof avApplyParam === "function") {
+    try { avApplyParam(path, v, { from: "knob", el, txt }); }
+    catch (e) { console.warn("[anvil] avApplyParam(" + path + ") failed", e); }
+  } else {
+    try { window.dispatchEvent(new CustomEvent("av-param", { detail: { path, value: v, txt, el, from: "knob" } })); }
+    catch (e) { /* no fan-out */ }
+  }
+  document.querySelectorAll('[data-kval="' + avKnobCssEscape(path) + '"]').forEach(n => { n.textContent = txt; });
+  avKnobApplyVisual(el, v);
+  return v;
+}
+
+function avKnobBind(root) {
+  if (!root || !root.querySelectorAll) return;
+  root.querySelectorAll(".av-knob[data-knob]").forEach(el => {
+    if (el.dataset.knobBound === "1") return;
+    el.dataset.knobBound = "1";
+    const min = parseFloat(el.dataset.min), max = parseFloat(el.dataset.max);
+    const curve = el.dataset.curve || "lin";
+    /* visual sync on first paint */
+    const liveVal = avParams[el.dataset.knob];
+    avKnobApplyVisual(el, typeof liveVal === "number" ? liveVal : avKnobNormToVal(parseFloat(el.dataset.norm), min, max, curve, 0));
+
+    /* ---- the feel of the knob ----------------------------------------------------------------
+       Two gestures, both natural to a hand on a real knob: slide up/down, or twist around the
+       rim. Whichever the hand commits to first (a few px) wins the drag, so neither fights the
+       other. The travel curve makes the first millimetres fine and the later ones fast, exactly
+       like sliding a finger along a fader, and the value follows the pointer through a damped
+       filter — a heavy, viscous weight: it lags slightly, then settles dead on release, never
+       snapping to a pixel and never spinning past the stop. */
+    let drag = null;
+    let dragGen = 0;
+    el.addEventListener("pointerdown", (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      el.focus({ preventScroll: true });
+      dragGen += 1;
+      el._gen = dragGen;            /* cancels a settle still running from the previous drag */
+      const r = el.getBoundingClientRect();
+      const n0 = parseFloat(el.dataset.norm) || 0;
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      drag = {
+        y: e.clientY, cx, cy, rad: Math.max(10, r.width / 2),
+        startR: Math.hypot(e.clientX - cx, e.clientY - cy),   /* a twist needs a hand on the rim */
+        disp: n0, target: n0, lin: 0, rot: 0, travel: 0, mode: null,
+        ang: Math.atan2(e.clientY - cy, e.clientX - cx),
+        last: performance.now(), gen: dragGen,
+      };
+      el.classList.add("dragging");
+      try { el.setPointerCapture(e.pointerId); } catch (err) { /* capture unsupported */ }
+      el.style.cursor = "ns-resize";
+      document.body.classList.add("knob-dragging");
+    });
+    el.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      e.preventDefault();
+      const now = performance.now();
+      /* a hand never moves the value in one instant — but a burst of events inside 8 ms (a 120 Hz
+         mouse, a coalesced frame, a synthetic test) must still advance it, or tiny moves stick */
+      const dt = Math.max(8, Math.min(90, now - drag.last));
+      drag.last = now;
+      const sens = (parseFloat(el.dataset.sens) || 150) * (e.shiftKey ? 4 : 1);
+      /* slide: up is more. twist: clockwise is more. */
+      const dy = drag.y - e.clientY;                       /* + = up */
+      drag.y = e.clientY;
+      const ang = Math.atan2(e.clientY - drag.cy, e.clientX - drag.cx);
+      let dAng = ang - drag.ang;
+      while (dAng > Math.PI) dAng -= 2 * Math.PI;
+      while (dAng < -Math.PI) dAng += 2 * Math.PI;
+      drag.ang = ang;
+      const arc = dAng * drag.rad;                         /* + = clockwise, in pixels travelled */
+      drag.lin += dy;
+      drag.rot += arc;
+      drag.travel += Math.abs(dy) + Math.abs(arc) * 0.6;
+      if (!drag.mode) {
+        /* the first few pixels decide the gesture — a slide needs 6 px, a twist 9 px of arc.
+           A hand that landed on the cap (not the rim) can never twist: at the dead centre the
+           angle is undefined, and reading it there turned a straight slide into a phantom spin. */
+        const rim = drag.startR > drag.rad * 0.35;
+        if (Math.abs(drag.lin) > 6 && (Math.abs(drag.lin) >= Math.abs(drag.rot) || !rim)) drag.mode = "lin";
+        else if (rim && Math.abs(drag.rot) > 9) drag.mode = "rot";
+        else return;
+      }
+      /* a twist is read in degrees of the knob's own rim; clamp one frame's worth so crossing
+         the centre can never inject a jump */
+      const px = drag.mode === "rot" ? Math.max(-0.6, Math.min(0.6, dAng)) * drag.rad : dy;
+      /* the curve: 0.40x at the start of the travel, easing to 2.0x once the hand has moved 260 px */
+      const t = Math.min(1, drag.travel / 260);
+      const rate = 0.40 + 1.60 * (t * t * (3 - 2 * t));
+      drag.target = Math.max(0, Math.min(1, drag.target + (px * rate) / sens));
+      /* the weight: the model (and so the sound) glides to the new target instead of jumping */
+      drag.disp += (drag.target - drag.disp) * (1 - Math.exp(-dt / 60));
+      if (Math.abs(drag.disp - drag.target) < 0.0004) drag.disp = drag.target;
+      avKnobCommit(el, drag.disp, { norm: true });
+      if (drag.target <= 0.0001 || drag.target >= 0.9999) {   /* the mechanical stop */
+        el.classList.remove("at-stop");
+        void el.offsetWidth;
+        el.classList.add("at-stop");
+      }
+    });
+    const endDrag = (e) => {
+      if (!drag) return;
+      const d = drag;
+      drag = null;
+      el.classList.remove("dragging");
+      el.style.cursor = "";
+      document.body.classList.remove("knob-dragging");
+      try { el.releasePointerCapture(e.pointerId); } catch (err) { /* already released */ }
+      if (d.travel > 2) {
+        el._supClick = true;                    /* a drag is not also a step-click */
+        setTimeout(() => { el._supClick = false; }, 80);
+      }
+      /* settle: whatever the damping still owes arrives with the same weight — eased, no snap */
+      const rest = d.target - d.disp;
+      if (Math.abs(rest) > 0.0008) {
+        const gen = d.gen;
+        const t0 = performance.now();
+        const settle = () => {
+          if (el._gen !== gen) return;          /* a new drag took over */
+          const t = Math.min(1, (performance.now() - t0) / 140);
+          avKnobCommit(el, d.disp + rest * (1 - Math.pow(1 - t, 3)), { norm: true });
+          if (t < 1) requestAnimationFrame(settle);
+        };
+        el._gen = gen;
+        requestAnimationFrame(settle);
+      }
+    };
+    el.addEventListener("pointerup", endDrag);
+    el.addEventListener("pointercancel", endDrag);
+    /* click without a drag = one step up (shift: one step down, alt: a 5% jump) */
+    el.addEventListener("click", (e) => {
+      if (drag || el._supClick) return;
+      const step = parseFloat(el.dataset.step) || 0.01;
+      const cur = avKnobNormToVal(parseFloat(el.dataset.norm), min, max, curve, step);
+      const span = max - min;
+      const bigStep = Math.max(step, Math.round((span * 0.05) / Math.max(step, 1e-9)) * step);
+      const d = e.altKey ? bigStep : step;
+      avKnobCommit(el, e.shiftKey ? cur - d : cur + d);
+    });
+    el.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      const def = parseFloat(el.dataset.def);
+      avKnobCommit(el, isFinite(def) ? def : min);
+    });
+    el.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const step = parseFloat(el.dataset.step) || 0.01;
+      const cur = avKnobNormToVal(parseFloat(el.dataset.norm), min, max, curve, step);
+      const dir = e.deltaY < 0 ? 1 : -1;
+      avKnobCommit(el, cur + dir * (e.shiftKey ? step / 4 : step));
+    }, { passive: false });
+    el.addEventListener("keydown", (e) => {
+      const step = parseFloat(el.dataset.step) || 0.01;
+      const cur = avKnobNormToVal(parseFloat(el.dataset.norm), min, max, curve, step);
+      const big = e.shiftKey ? 10 : 1;
+      let d = 0;
+      if (e.key === "ArrowUp" || e.key === "ArrowRight") d = step * big;
+      else if (e.key === "ArrowDown" || e.key === "ArrowLeft") d = -step * big;
+      else if (e.key === "Home") { e.preventDefault(); avKnobCommit(el, min); return; }
+      else if (e.key === "End") { e.preventDefault(); avKnobCommit(el, max); return; }
+      else return;
+      e.preventDefault();
+      avKnobCommit(el, cur + d);
+    });
+  });
+}
+
+/* refresh every knob on screen from the model (after project load / undo) */
+function avKnobRefreshAll(root) {
+  const scope = root || document;
+  scope.querySelectorAll(".av-knob[data-knob]").forEach(el => {
+    const v = avParams[el.dataset.knob];
+    if (typeof v === "number") {
+      avKnobApplyVisual(el, v);
+      const txt = avKnobFormat(v, { fmt: el.dataset.fmt || "", unit: el.dataset.unit || "" });
+      document.querySelectorAll('[data-kval="' + avKnobCssEscape(el.dataset.knob) + '"]').forEach(n => { n.textContent = txt; });
+    }
+  });
+}
+
+
+/* Anvil — core shell (Phase 0). Boot contract: arm the master tap FIRST, then mount the knob
+   framework on the LEVELS card and fill the header chips last; `data-av-ready` flips when all
+   of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
+"use strict";
+
+const ANVIL = Object.freeze({ version: "0.0.3", phase: "P0 · knobs live", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
+/* ---------- the value store ----------
+   avState is what the master tap reads for every new AudioContext (master / keysVol).
+   avParams (owned by av_knob.js) is the knob framework's path→value mirror; avApplyParam
+   below is the app-side commit hook that keeps both in sync and routes to the engine. */
+function avSavedNumber(key, dflt) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw == null) return dflt;
+    const v = Number(raw);
+    return isFinite(v) ? Math.max(0, Math.min(1.2, v)) : dflt;
+  } catch (e) { return dflt; }
+}
+const avState = {
+  master: avSavedNumber("av-master", 0.8),
+  keysVol: avSavedNumber("av-keys-vol", 1.0),
+};
+
+function avApplyParam(path, v, meta) {
+  if (path === "master") { avState.master = v; avParams[path] = v; return avMasterApply(v); }
+  if (path === "keys") { avState.keysVol = v; avParams[path] = v; return avKeysApply(v); }
+  avParams[path] = v;      /* not an engine parameter yet — parked for the P1 layers */
+  return false;
+}
+
+/* ---------- the LEVELS card: the first live controls on the master-tap gains ---------- */
+const AV_LEVELS = [
+  { path: "keys", label: "Instrument", opts: { min: 0, max: 1.2, step: 0.01, def: 1.0, fmt: "pct", size: "lg" } },
+  { path: "master", label: "Master", opts: { min: 0, max: 1.2, step: 0.01, def: 0.8, fmt: "pct", size: "lg" } },
+];
+
+function avMountLevels() {
+  const host = document.getElementById("av-levels-knobs");
+  if (!host || typeof avKnobHTML !== "function") return false;
+  avParams.keys = avState.keysVol;        /* first paint reads the live store, not the markup */
+  avParams.master = avState.master;
+  host.innerHTML = avKnobRowHTML(AV_LEVELS.map(k =>
+    avKnobHTML(k.path, k.label, Object.assign({ value: avParams[k.path] }, k.opts))));
+  avKnobBind(host);
+  return true;
+}
+
+/* ---------- boot ---------- */
 (function avBoot() {
-  document.documentElement.setAttribute("data-av-ready", "1");
   const tapOk = (typeof avInstallAudioTap === "function") ? avInstallAudioTap() : false;
+  const levelsOk = avMountLevels();
   const ver = document.getElementById("av-version");
   if (ver) ver.textContent = "v" + ANVIL.version;
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: pending (P1)" : "tap: UNAVAILABLE";
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk);
-  if (/[?&]avtest=1/.test(location.search)) { try { avTapSelfTest(); } catch (e) { console.warn("avtest", e); } }
+  document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk);
+  if (/[?&]avtest=1/.test(location.search)) {
+    try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
+    try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
+  }
 })();
+
+/* ---------- runtime proofs (?avtest=1) ---------- */
+function avTestLine(text, id) {
+  const p = document.createElement("p");
+  p.className = "av-mono";
+  if (id) p.id = id;
+  p.textContent = text;
+  const main = document.querySelector(".av-main");
+  if (main) main.appendChild(p);
+  return p;
+}
 
 function avTapSelfTest() {
   const c = new AudioContext();
@@ -384,11 +850,46 @@ function avTapSelfTest() {
     live: (avTap.live || []).filter(x => x.state !== "closed").length,
     ctxState: c.state,
   };
-  const p = document.createElement("p");
-  p.className = "av-mono"; p.id = "av-taptest";
-  p.textContent = "TAP SELFTEST " + JSON.stringify(t);
-  document.querySelector(".av-main").appendChild(p);
+  avTestLine("TAP SELFTEST " + JSON.stringify(t), "av-taptest");
   try { c.close(); } catch (e) { /* ok */ }
+}
+
+async function avKnobSelfTest() {
+  const out = { ok: false };
+  try {
+    const el = document.querySelector('.av-knob[data-knob="master"]');
+    const keysEl = document.querySelector('.av-knob[data-knob="keys"]');
+    out.knobFound = !!el && el.dataset.knobBound === "1";
+    out.keysBound = !!keysEl && keysEl.dataset.knobBound === "1";
+    if (!el) throw new Error("master knob not mounted");
+    const before = avState.master;
+    const c = new AudioContext();
+    void c.destination;                          /* build the bus chain for this context */
+    try { await c.resume(); } catch (e) { /* gesture-gated in some browsers */ }
+    out.committed = avKnobCommit(el, 0.55) === 0.55;
+    out.params = avParams.master === 0.55;
+    out.state = avState.master === 0.55;
+    out.aria = el.getAttribute("aria-valuenow") === "0.55";
+    const readout = document.querySelector('[data-kval="master"]');
+    out.readout = !!readout && readout.textContent === "55%";
+    out.ctxState = c.state;
+    if (c.state === "running") {
+      await new Promise(r => setTimeout(r, 300));
+      const m = (typeof avMasterFor === "function") ? avMasterFor(c) : null;
+      out.gain = m ? Number(m.gain.value.toFixed(4)) : null;
+      out.gainOk = !!m && Math.abs(m.gain.value - 0.55) < 0.02;
+    } else {
+      out.gain = "skipped (ctx " + c.state + ")";
+      out.gainOk = null;
+    }
+    out.ok = ["knobFound", "keysBound", "committed", "params", "state", "aria", "readout"].every(k => out[k] === true)
+      && out.gainOk !== false;
+    avKnobCommit(el, before);                    /* leave the user's value exactly as found */
+    try { c.close(); } catch (e) { /* ok */ }
+  } catch (e) { out.error = String((e && e.message) || e); }
+  avTestLine("KNOB SELFTEST " + JSON.stringify(out), "av-knobtest");
+  window.__avKnobTest = out;
+  return out;
 }
 
 </script>

@@ -25,6 +25,7 @@ body = (SRC / "body.html").read_text(encoding="utf-8")
 
 js_parts = [
     (SRC / "av_tap.js").read_text(encoding="utf-8"),   # LAW: the tap installs before any engine code
+    (SRC / "av_knob.js").read_text(encoding="utf-8"),  # the knob feel engine, before the shell that mounts it
     (SRC / "app_core.js").read_text(encoding="utf-8"),
 ]
 
