@@ -192,3 +192,24 @@ GitHub goldmine wave (G1–G3). Session stat: $3.64 over 71 calls.
   at a time. Voice count is published ONLY from the measured ramp (T5 §7).
 - P0 battery baseline (must still pass after integration): smoke 9/9 · feel 18/18 · keys 27/27 ·
   midi 33/33 on cc601710.
+
+## Resume addendum 10 — 2026-10-07 (engine LANDED; battery green; bench in flight)
+
+- **P1 engine core COMMITTED `9e748dd`** — `src/av_dsp.js` (818 lines) + `av_voiceproc.js` (83; adds
+  the windowed bench clock) + `av_engine.js` (blob→data→spn ladder; file: skips the doomed blob rung —
+  probe-verified refusal) + `av_synth.js` (SYNTH card: 3 selects + 15 knobs). `build.py` embeds the
+  worklet source (AV_WORKLET_SRC + SHA + standalone `node --check`); app_core boots the engine eagerly,
+  routes `avApplyParam`→engine, and runs ENGINE SELFTEST (`window.__avEngineTest`).
+- **Build frozen: `dff3721f` (244,026 B). Battery green on those bytes: smoke 11/11 · feel 18/18 ·
+  keys 27/27 · midi 33/33** (midi freeze pin updated cc601710→dff3721f — the only test-side edit).
+  Probes (2026-10-07): file:// boots the real worklet via **data: URL** (blob refused on file:, data ok);
+  `performance.*` is **absent** in AudioWorkletGlobalScope on this Chromium ⇒ the bench ring records
+  32-quanta windows (≈31 µs precision) when only Date.now exists.
+- **IN FLIGHT: bench run child** (deleg_750cbd31 / sa-0-8a0259df): `node verify/cdp_bench.mjs` real mode
+  against dff3721f (~12–17 min; writes `verify/last-cdp_bench.{log,json}` + `renders/p1-bench.png`; the
+  file:// spn cell forces `?avengine=spn`). On return: digest → **parent re-runs the full bench** (owns
+  the published number) → alias rig `verify/cdp_alias.mjs` (write+run, contract §9.3) → stress rig
+  `verify/cdp_stress.mjs` (§9.4; its cap fills from the bench) → final battery pass + `last-*` log
+  refresh → README + addendum 11 + mnemosyne. One browser suite at a time — strictly serialized.
+- Reminder: the three rigs (bench/alias/stress) are NEW files this wave; smoke is 11 checks now; the
+  engine tier strings: `data-av-engine` = base tier ('worklet'|'spn'), `__avEngine.url` = 'blob'|'data'.
