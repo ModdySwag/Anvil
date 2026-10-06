@@ -59,3 +59,38 @@ it extends it; fold into wave contracts as capacity allows.
 1) Rolling capture + jam-to-pattern (signature feel)  2) Stem suite + MIDI I/O (his ask, DAW glue)
 3) ACID MODE (the emotional core)  4) XY morph + taste-weighted randomizer (endless usable patches)
 5) MULTI zones (seamless drum<->synth)  6) Deck displays (pro readouts)  7) Demo song + lessons.
+
+
+## H. Batch 3 (final round — performance, pedagogy, ecosystem, utility)
+
+41. Controller template library [easy] — built-in maps for common surfaces (KeyLab / Launchkey / APC
+    etc.); plug a controller in, pick its template, everything is assigned.
+42. MIDI-FX rack [moderate] — reorderable pre-voice MIDI processors: strum/chord-spread, humanize,
+    note-gate, in-key harmonizer, probability, velocity curves. "Many modules" answered twice.
+43. Scratch deck [moderate] — a turntable/platter emulation for scrubbing samples with realistic
+    jog physics (velocity, slip/release). Outlandish fun.
+44. Vocal harmonizer/tuner [stretch] — audio-in, key-aware real-time harmonization for vocal takes.
+45. Sound wizards [easy] — guided patch builders ("bass / pad / pluck / lead" via a few choices) —
+    the walkthrough system's productive half.
+46. Starter templates [easy] — boot presets: beat starter / bass starter / full-band starter (a
+    jam-ready layout out of the box).
+47. Scene morphing [moderate] — interpolated transitions between scenes over N bars (performance gold).
+48. Looper-style layering [moderate] — loop-record + overdub passes with per-layer undo (pedal looper
+    workflow inside the sequencer).
+49. Auto-mix assistant [moderate] — one press "balance the mix": LUFS analysis across parts -> sane
+    fader/level defaults.
+50. MIDI clock IN [moderate] — slave Anvil to external clock (hardware/DAW as master).
+51. Patch diff view [easy] — parameter deltas between two patches (learning + collab tool).
+52. Backup/restore everything [easy] — one-click full backup zip (packs, patches, sequences, samples).
+53. Factory demo songs [moderate] — 3-4 shipped shorts (showcase + learning material).
+54. Odd-meter grooves [easy] — 7/8, 5/4 techno presets + prominent time-signature controls.
+55. Ideas shelf [easy] — recent auditions/randomizations collect as draggable clips you can pull into
+    scenes (captured ideation).
+56. Artist/video mode [easy] — big visuals + on-screen key/note display for recording tutorials.
+57. Finger-drumming trainer [easy] — pad timing accuracy feedback (small game, big practice value).
+58. Take naming [easy] — producer-style auto-naming for exports/renders (anvil_teal_tuesday_v3 vibes).
+59. "Foundry check" boot animation [easy] — retro power-on self-test easter egg + scale-highlight pads
+    on the dock.
+
+Batch-3 top picks: 41 (controller templates), 42 (MIDI-FX rack), 43 (scratch deck), 45-46 (wizards +
+starters), 47-48 (scene morph + looper layering).
