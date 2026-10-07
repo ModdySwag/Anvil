@@ -126,7 +126,7 @@ function avSynthDefaults() {
 /* the three waveform/mode picks — plain <select class="av-select"> (the parent skins them) */
 const AV_SYNTH_SELECTS = [
   { path: "osc1.type", label: "OSC1", aria: "Oscillator 1 waveform", options: ["saw", "square", "pulse", "tri", "sine"] },
-  { path: "osc2.type", label: "OSC2", aria: "Oscillator 2 wavetable", options: ["wt.saw", "wt.square", "wt.tri", "wt.sine", "wt.pulse25"] },
+  { path: "osc2.type", label: "OSC2", aria: "Oscillator 2 wavetable (factory + your own tables)", options: ["wt.saw", "wt.square", "wt.tri", "wt.sine", "wt.pulse25"], optionsFn: avSynthWtOptions },
   { path: "filter.mode", label: "FILTER", aria: "Filter mode", options: ["lp12", "lp24", "bp", "hp"] },
 ];
 
@@ -160,7 +160,7 @@ const AV_SYNTH_ROWS = [
 /* the six engine kinds (§2.1 + P3 §5/§6) — the card shows one panel per kind; the ordinal
    mapping (0 = va · 1 = acid · 2 = string · 3 = drum · 4 = grain · 5 = sampler) matches the
    worklet registerKind ids (KIND 4/5, per verify/_p3_wave.md §5/§6) */
-const AV_SYNTH_KINDS = ["va", "acid", "string", "drum", "grain", "sampler"];
+const AV_SYNTH_KINDS = ["va", "acid", "string", "drum", "grain", "sampler", "fm"];
 
 /* accept the string enum or the §2.1/P3 ordinal (0 = va · 1 = acid · 2 = string · 3 = drum ·
    4 = grain · 5 = sampler); anything else → null */
@@ -201,10 +201,39 @@ function avSynthKindOptionsRefresh() {
   } catch (e) { return false; }
 }
 
+/* M1: the OSC2 pick offers your installed wavetables after the factory five */
+function avSynthWtOptions() {
+  const base = ["wt.saw", "wt.square", "wt.tri", "wt.sine", "wt.pulse25"];
+  try {
+    if (typeof avWtUserOscNames === "function") {
+      const extra = avWtUserOscNames();
+      if (extra && extra.length) return base.concat(extra.map(x => String((x && x.value) || x)).filter(Boolean));
+    }
+  } catch (e) { /* wavetable editor absent — factory five only */ }
+  return base;
+}
+function avSynthOscOptionsRefresh() {
+  try {
+    const sel = document.querySelector('select[data-param="osc2.type"]');
+    if (!sel) return false;
+    [...sel.querySelectorAll("option")].forEach(o => { if (o.dataset.userWt === "1") o.remove(); });
+    for (const name of avSynthWtOptions()) {
+      if (![...sel.options].some(o => o.value === name)) {
+        const o = document.createElement("option");
+        o.value = name; o.textContent = name; o.dataset.userWt = "1";
+        sel.appendChild(o);
+      }
+    }
+    const cur = avParams["osc2.type"];
+    if (typeof cur === "string" && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+    return true;
+  } catch (e) { return false; }
+}
+
 /* the ENGINE pick — always at the top of the card, data-knob-free (§6) */
 const AV_SYNTH_ENGINE = {
   path: "engine.kind", id: "av-synth-engine", label: "ENGINE",
-  aria: "Engine — voice architecture (va · acid · string · drum · grain · sampler)",
+  aria: "Engine — voice architecture (va · acid · string · drum · grain · sampler · fm)",
 };
 
 /* ACID (§3.1) — the hero row (8) and the EXPANDED mods row (8) */
@@ -286,7 +315,8 @@ const avSynthEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({
 /* one labelled select with its current option pre-selected from the live mirror */
 function avSynthSelectHTML(spec) {
   const cur = avParams[spec.path];
-  const opts = spec.options.map(o =>
+  const list = (typeof spec.optionsFn === "function") ? spec.optionsFn() : spec.options;
+  const opts = list.map(o =>
     '<option value="' + avSynthEsc(o) + '"' + (o === cur ? " selected" : "") + ">" + avSynthEsc(o) + "</option>").join("");
   return '<label class="av-synth-pick"><span class="av-synth-pick-lbl">' + avSynthEsc(spec.label) + "</span>" +
     '<select class="av-select"' + (spec.id ? ' id="' + avSynthEsc(spec.id) + '"' : "") + ' data-param="' + avSynthEsc(spec.path) + '" aria-label="' + avSynthEsc(spec.aria) + '">' +
@@ -356,7 +386,11 @@ function avSynthBodyHTML() {
   const smpl = avSynthPanelHTML("sampler", kind === "sampler",
     avSynthKnobSpecRowHTML("av-synth-sampler", AV_SYNTH_SAMPLER_KNOBS));
 
-  return engineRow + va + acid + str + drum + grain + smpl;
+  /* fm — the operators live on the FM card; the panel keeps the kind switch legible */
+  const fmp = avSynthPanelHTML("fm", kind === "fm",
+    '<p class="av-note av-dim">Six-operator FM — the operator grid, algorithms and envelopes live on the FM card above.</p>');
+
+  return engineRow + va + acid + str + drum + grain + smpl + fmp;
 }
 
 /* the shared commit path for picks/kind: mirror first, then the app-side hook (with avKnobCommit's
@@ -435,6 +469,7 @@ function avSynthInit() {
     avKnobBind(host);
     avSynthBindSelects(host);
     avSynthSetKind(avParams["engine.kind"], { commit: false });
+    try { avSynthOscOptionsRefresh(); } catch (e) { /* osc options are best-effort */ }
     return true;
   } catch (e) {
     console.warn("[anvil] synth card mount failed", e);

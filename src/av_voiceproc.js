@@ -38,6 +38,8 @@ class AVVoiceProcessor extends AudioWorkletProcessor {
       if (m.t === 'sample') { AVDSP.setSample(eng, m.id, m.name, m.rate, m.ch1, m.ch2); return; }
       if (m.t === 'zones') { AVDSP.setZones(eng, m.zones); return; }
       if (m.t === 'mod') { AVDSP.setMod(eng, m.macros, m.slots); return; }
+      if (m.t === 'wtab') { AVDSP.setUserWt(eng, m.slot, m.name, m.frames); return; }
+      if (m.t === 'conv') { AVDSP.setConvImpulse(eng, m.id, m.name, m.rate, m.ch1, m.ch2); return; }
       /* S5: user modules (av_umod_wl) — eval + registry + params run in this worklet scope */
       if (m.t === 'umod') {
         try {

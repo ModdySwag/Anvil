@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.3.0", phase: "S5 · code · keys · help", built: "2026-10-08" });
+const ANVIL = Object.freeze({ version: "1.4.0", phase: "M1 · fm · flavours · conv · wavetable", built: "2026-10-08" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -127,6 +127,10 @@ function avMountLevels() {
   try { helpOk = (typeof avHelpInit === "function") ? (avHelpInit() !== false) : false; } catch (e) { console.warn("[anvil] help init failed", e); }
   try { palOk = (typeof avPaletteInit === "function") ? (avPaletteInit() !== false) : false; } catch (e) { console.warn("[anvil] palette init failed", e); }
   try { lessonsOk = (typeof avLessonsInit === "function") ? (avLessonsInit() !== false) : false; } catch (e) { console.warn("[anvil] lessons init failed", e); }
+  /* M1: the FM card + the wavetable editor */
+  let fmUiOk = false, wtUiOk = false;
+  try { fmUiOk = (typeof avFmUiInit === "function") ? (avFmUiInit() !== false) : false; } catch (e) { console.warn("[anvil] fm card init failed", e); }
+  try { wtUiOk = (typeof avWtUiInit === "function") ? (avWtUiInit() !== false) : false; } catch (e) { console.warn("[anvil] wt editor init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -142,7 +146,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
@@ -236,13 +240,14 @@ async function avEngineSelfTest() {
     /* P2: kind switch acceptance + drum routing round-trip */
     out.kinds = {};
     let kindsOk = true;
-    for (const k of ["va", "acid", "string", "drum", "grain", "sampler"]) {
+    for (const k of ["va", "acid", "string", "drum", "grain", "sampler", "fm"]) {
       let acc = h.setParam("engine.kind", k) === true;
       if (acc && k === "acid") acc = h.setParam("acid.cutoff", 900) === true;
       if (acc && k === "string") acc = h.setParam("string.damp", 0.4) === true;
       if (acc && k === "drum") acc = h.setParam("drum.kick.decay", 0.3) === true;
       if (acc && k === "grain") acc = h.setParam("grain.pos", 0.25) === true;
       if (acc && k === "sampler") acc = h.setParam("sampler.root", 60) === true;
+      if (acc && k === "fm") acc = h.setParam("fm.fb", 0.2) === true;
       out.kinds[k] = acc;
       kindsOk = kindsOk && acc;
     }

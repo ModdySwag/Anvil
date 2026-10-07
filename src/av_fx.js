@@ -58,6 +58,18 @@ const AV_FX_MODULES = [
     ],
   },
   {
+    mod: "aw", label: "FLAVOUR", cap: "console · tape · drive · air · warm",
+    toggle: { path: "fx.aw.on", aria: "Studio flavours module on/off" },
+    selects: [
+      { path: "fx.aw.mode", label: "MODE", aria: "Flavour mode (console · tape · drive · air · warm)", options: ["console", "tape", "drive", "air", "warm"], def: "console" },
+    ],
+    knobs: [
+      { path: "fx.aw.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 1, fmt: "pct" } },
+      { path: "fx.aw.amount", label: "AMOUNT", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct", hint: "flavour depth" } },
+      { path: "fx.aw.tone", label: "TONE", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct", hint: "50% neutral" } },
+    ],
+  },
+  {
     mod: "mod", label: "MOD", cap: "chorus · ensemble · flanger · phaser",
     toggle: { path: "fx.mod.on", aria: "Mod module on/off" },
     selects: [
@@ -95,6 +107,20 @@ const AV_FX_MODULES = [
       { path: "fx.verb.decay", label: "DECAY", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct", hint: "≈ T60 0.3–12 s" } },
       { path: "fx.verb.damp", label: "DAMP", opts: { min: 0, max: 1, step: 0.01, def: 0.3, fmt: "pct" } },
     ],
+  },
+  {
+    mod: "conv", label: "CONV", cap: "plate · room · hall · spring · cab · user",
+    toggle: { path: "fx.conv.on", aria: "Convolution IR module on/off" },
+    selects: [
+      { path: "fx.conv.mode", label: "MODE", aria: "IR mode (plate · room · hall · spring · cab · user)", options: ["plate", "room", "hall", "spring", "cab", "user"], def: "plate" },
+    ],
+    knobs: [
+      { path: "fx.conv.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 0.25, fmt: "pct" } },
+      { path: "fx.conv.size", label: "SIZE", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct" } },
+      { path: "fx.conv.decay", label: "DECAY", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct" } },
+      { path: "fx.conv.damp", label: "DAMP", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct" } },
+    ],
+    button: { id: "av-fx-conv-import", label: "IMPORT IR", statusId: "av-fx-conv-status" },
   },
   {
     mod: "dyn", label: "DYN", cap: "comp · limiter · soft-clip",
@@ -166,6 +192,7 @@ function avFxStripHTML(m, idx) {
     '<div class="av-fx-strip-head"><span class="av-fx-mod">' + avFxEsc(m.label) + "</span>" +
     '<span class="av-fx-cap">' + avFxEsc(m.cap) + "</span>" + toggle + "</div>" +
     '<div class="av-fx-ctl">' + sels + avKnobRowHTML(knobs, "av-fx-knobs") + "</div>" +
+    (m.button ? '<div class="av-fx-actions"><button type="button" class="av-btn mini av-fx-btn" id="' + avFxEsc(m.button.id) + '" aria-label="' + avFxEsc(m.button.label) + '">' + avFxEsc(m.button.label) + '</button><span class="av-fx-status" id="' + avFxEsc(m.button.statusId) + '"></span></div>' : "") +
     "</div>";
 }
 
@@ -174,7 +201,7 @@ function avFxBodyHTML() {
   const strips = AV_FX_MODULES.map((m, i) => avFxStripHTML(m, i)).join("");
   return '<div class="av-fx" data-av-fx="1">' +
     '<div class="av-fx-head"><span class="av-fx-title">FX RACK</span>' +
-    '<span class="av-fx-cap">drive → mod → delay → verb → dyn · inside the mixer worklet · every module off = bit-identical bypass</span></div>' +
+    '<span class="av-fx-cap">drive → flavour → mod → delay → verb → conv → dyn · inside the mixer worklet · every module off = bit-identical bypass</span></div>' +
     '<div class="av-fx-strips">' + strips + "</div>" +
     "</div>";
 }
@@ -262,9 +289,13 @@ function avFxWire(host) {
     const t = e.target;
     if (!t || typeof t.closest !== "function") return;
     const btn = t.closest("[data-fx-toggle]");
-    if (!btn) return;
-    const path = btn.dataset.fxToggle;
-    avFxCommit(path, avParams[path] ? 0 : 1, btn, "toggle");
+    if (btn) {
+      const path = btn.dataset.fxToggle;
+      avFxCommit(path, avParams[path] ? 0 : 1, btn, "toggle");
+      return;
+    }
+    const b2 = t.closest(".av-fx-btn");
+    if (b2 && b2.id === "av-fx-conv-import") avFxConvImport();
   });
   return true;
 }
@@ -311,7 +342,7 @@ function avFxInventory() {
 function avFxClasses() {
   return ["av-fx", "av-fx-head", "av-fx-title", "av-fx-cap", "av-fx-strips", "av-fx-strip",
     "av-fx-on", "av-fx-strip-head", "av-fx-mod", "av-fx-toggle", "av-fx-ctl",
-    "av-fx-pick", "av-fx-pick-lbl", "av-fx-knobs"];
+    "av-fx-pick", "av-fx-pick-lbl", "av-fx-knobs", "av-fx-actions", "av-fx-btn", "av-fx-status"];
 }
 
 /* ---------- init (mount) ---------- */
@@ -392,6 +423,70 @@ function avFxSnap() {
     inv.forEach(e => { if (Object.prototype.hasOwnProperty.call(avParams, e.path)) snap.params[e.path] = avParams[e.path]; });
   }
   return snap;
+}
+
+
+/* ---------- M1: the CONV IR import leg (page-owned; the worklet module stays pure DSP) ---------- */
+
+function avFxConvStatus(text) {
+  try {
+    const el = document.getElementById("av-fx-conv-status");
+    if (el) el.textContent = String(text == null ? "" : text);
+  } catch (e) { /* no DOM */ }
+}
+
+/* linear-interpolating resample to the engine rate (IRs only; quality is ample, zero deps) */
+function avFxConvResample(data, rate, sr) {
+  if (Math.abs(rate - sr) < 1) return data.slice(0);
+  const n = Math.max(1, Math.round(data.length * sr / rate));
+  const out = new Float64Array(n);
+  const step = rate / sr;
+  for (let i = 0; i < n; i++) {
+    const x = i * step;
+    const i0 = Math.floor(x);
+    const i1 = Math.min(data.length - 1, i0 + 1);
+    const t2 = x - i0;
+    out[i] = data[i0] * (1 - t2) + data[i1] * t2;
+  }
+  return out;
+}
+
+function avFxConvImport() {
+  try {
+    const inp = document.createElement("input");
+    inp.type = "file";
+    inp.accept = "audio/*,.wav,.aif,.aiff,.ogg,.flac,.mp3";
+    inp.style.display = "none";
+    document.body.appendChild(inp);
+    inp.addEventListener("change", async () => {
+      try {
+        const file = inp.files && inp.files[0];
+        if (!file) return;
+        avFxConvStatus("decoding " + file.name + "…");
+        const bytes = await file.arrayBuffer();
+        const AC = window.AudioContext || window.webkitAudioContext;
+        const dcx = new AC();
+        let buf = null;
+        try { buf = await dcx.decodeAudioData(bytes); }
+        finally { try { dcx.close(); } catch (e2) { } }
+        if (!buf) { avFxConvStatus("decode failed"); return; }
+        const sr = (window.__avEngine && window.__avEngine.sr) || 48000;
+        const cap = Math.floor(sr * 2.0);
+        let ch1 = avFxConvResample(buf.getChannelData(0), buf.sampleRate, sr);
+        let ch2 = (buf.numberOfChannels > 1) ? avFxConvResample(buf.getChannelData(1), buf.sampleRate, sr) : null;
+        if (ch1.length > cap) ch1 = ch1.slice(0, cap);
+        if (ch2 && ch2.length > cap) ch2 = ch2.slice(0, cap);
+        if (typeof avEngineConv !== "function") { avFxConvStatus("engine not ready"); return; }
+        const ok = avEngineConv(0, file.name.replace(/\.[^.]+$/, ""), sr, ch1, ch2);
+        if (ok) {
+          avFxCommit("fx.conv.mode", "user", null, "conv-import");
+          avFxConvStatus("loaded: " + file.name);
+        } else avFxConvStatus("engine refused the impulse (engine ready?)");
+      } catch (e2) { avFxConvStatus("import failed: " + String((e2 && e2.message) || e2)); }
+      finally { try { inp.remove(); } catch (e2) { } }
+    });
+    inp.click();
+  } catch (e) { avFxConvStatus("import failed"); }
 }
 
 /* ---------- debug handle (rigs + parent call these; names are the contract) ---------- */

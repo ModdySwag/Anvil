@@ -17,7 +17,7 @@
 //      bound (data-knob-bound), every toggle/select bound (data-fx-bound), host wired marker,
 //      exports live (avFxInit/avFxSnap/avFxClasses/avFxInventory + window.__avFx).
 //   1b. absent-host contract: with #av-fx-host detached avFxInit() returns false WITHOUT throwing;
-//      re-attaching the host and calling avFxInit() re-mounts the card (5 strips, all re-bound).
+//      re-attaching the host and calling avFxInit() re-mounts the card (7 strips, all re-bound).
 //   2. REAL input: a real CDP mouse click on the VERB toggle enables the module (mirror +
 //      aria-pressed + strip .av-fx-on), and a real CDP drag on the VERB MIX knob lands it on 1
 //      (mirror 1, aria-valuenow 1, readout 100%).
@@ -32,7 +32,7 @@
 //      BEFORE startRendering). A ≡ B bit-identical (maxAbsDiff 0, the wave's bypass null);
 //      C ≡ A bit-identical (§2.2: an enabled module leaves the signal bit-identical at mix=0);
 //      A is NON-VACUOUS (dry RMS > 0.01) and W differs from A (the verb actually processes).
-//   5. PARAM ROUND-TRIP: every mount path (29 controls) — the bound control is provoked with a
+//   5. PARAM ROUND-TRIP: every mount path (40 controls) — the bound control is provoked with a
 //      real wheel/change event through its own handler (the av-knob / select wiring), then
 //      avApplyParam(path, v) must return true (accepted for delivery by the engine facade —
 //      the pinned semantics; the worklet param protocol has no ack) with an exact avParams
@@ -60,7 +60,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    P3: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = '7accc9fd7953c9cf0f47aefc481d3cb6d21dc027c67cfbdd1b6035b1947671cc';
+const EXPECT_SHA = '335f4bd06f7aafff68725c1645a1b00518936a9c74fd90969221a7d2ce7d0d15';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -334,9 +334,9 @@ const NULLTEST_FN = `window.__fxNullTest = async function () {
   };
 }; true`;
 
-/* the 29 mounted controls are counted from the frozen table (a drift between av_fx.js and this
+/* the 40 mounted controls are counted from the frozen table (a drift between av_fx.js and this
    rig is a real failure, not a silent pass) */
-const WANT_CONTROLS = 29, WANT_KNOBS = 20, WANT_TOGGLES = 5, WANT_SELECTS = 4;
+const WANT_CONTROLS = 40, WANT_KNOBS = 27, WANT_TOGGLES = 7, WANT_SELECTS = 6;
 
 /* §3 paths NOT mounted by the v1 rack — swept for delivery acceptance after the mount paths */
 const SWEEP = [
@@ -448,11 +448,11 @@ async function main() {
   /* the rack card mounts into the parent-owned #av-fx-host (parent adds host + calls avFxInit) */
   let fxUp = false;
   for (let i = 0; i < 100 && !fxUp; i++) {
-    const r = await ev(`!!(document.getElementById('av-fx-host') && document.querySelector('#av-fx-host .av-fx') && document.querySelectorAll('#av-fx-host .av-fx-strip[data-mod]').length === 5)`);
+    const r = await ev(`!!(document.getElementById('av-fx-host') && document.querySelector('#av-fx-host .av-fx') && document.querySelectorAll('#av-fx-host .av-fx-strip[data-mod]').length === 7)`);
     if (r.value === true) { fxUp = true; break; }
     await sleep(150);
   }
-  check('fx rack mounted: #av-fx-host + card root + 5 strips', fxUp);
+  check('fx rack mounted: #av-fx-host + card root + 7 strips', fxUp);
   if (!fxUp) { console.error('FX HOST MISSING — parent adds #av-fx-host and calls avFxInit()'); process.exit(1); }
 
   const exportsR = await ev(`(() => ({
@@ -492,19 +492,19 @@ async function main() {
     };
   })()`);
   const dom = domR.value || {};
-  check('strips: fixed order drive,mod,delay,verb,dyn — each 1 toggle + 4 knobs (+1 enum pick except dyn)',
-    dom.order === 'drive,mod,delay,verb,dyn' &&
-    (dom.perStrip || []).every(s => s.knobs === 4 && s.toggles === 1 && (s.mod === 'dyn' ? s.selects === 0 : s.selects === 1)),
+  check('strips: fixed order drive,aw,mod,delay,verb,conv,dyn — 1 toggle each + per-module knobs (aw 3 · rest 4) + 1 enum pick except dyn (conv adds the IR import button)',
+    dom.order === 'drive,aw,mod,delay,verb,conv,dyn' &&
+    (dom.perStrip || []).every(s => s.toggles === 1 && (s.mod === 'aw' ? s.knobs === 3 : s.knobs === 4) && (s.mod === 'dyn' ? s.selects === 0 : s.selects === 1)),
     JSON.stringify(dom.perStrip));
-  check('controls mounted + bound: 20 knobs (all data-knob-bound), 5 toggles + 4 selects (all data-fx-bound), host wired',
+  check('controls mounted + bound: 27 knobs (all data-knob-bound), 7 toggles + 6 selects (all data-fx-bound), host wired',
     dom.knobs === WANT_KNOBS && dom.boundKnobs === WANT_KNOBS && dom.toggles === WANT_TOGGLES && dom.selects === WANT_SELECTS && dom.boundTS === WANT_TOGGLES + WANT_SELECTS && dom.wired === true,
     JSON.stringify({ knobs: dom.knobs, boundKnobs: dom.boundKnobs, toggles: dom.toggles, selects: dom.selects, boundTS: dom.boundTS, wired: dom.wired }));
 
   const snapR = await ev(`avFxSnap()`);
   const snap = snapR.value || {};
-  check('avFxSnap(): inited + host + wired + card + 5 strips in order + counts = 29 controls (20/5/4)',
-    snap.inited === true && snap.host === true && snap.wired === true && snap.card === true && snap.strips === 5 &&
-    snap.order && snap.order.join(',') === 'drive,mod,delay,verb,dyn' &&
+  check('avFxSnap(): inited + host + wired + card + 7 strips in order + counts = 40 controls (27/7/6)',
+    snap.inited === true && snap.host === true && snap.wired === true && snap.card === true && snap.strips === 7 &&
+    snap.order && snap.order.join(',') === 'drive,aw,mod,delay,verb,conv,dyn' &&
     snap.expect && snap.expect.controls === WANT_CONTROLS && snap.expect.knobs === WANT_KNOBS && snap.expect.toggles === WANT_TOGGLES && snap.expect.selects === WANT_SELECTS &&
     snap.controls && snap.controls.knobs === WANT_KNOBS && snap.controls.boundKnobs === WANT_KNOBS && snap.controls.toggles === WANT_TOGGLES && snap.controls.selects === WANT_SELECTS && snap.controls.bound === WANT_TOGGLES + WANT_SELECTS &&
     Array.isArray(snap.inventory) && snap.inventory.length === WANT_CONTROLS && Array.isArray(snap.classes) && snap.classes.length >= 10,
@@ -533,7 +533,7 @@ async function main() {
   const probe = probeR.value || {};
   check('absent-host contract: avFxInit() -> false without throwing, and a re-attached host re-mounts the card',
     probe.absent === false && probe.absentThrew === false && probe.remount === true && probe.remountThrew === false &&
-    probe.strips === 5 && probe.knobsBound === WANT_KNOBS && probe.boundTS === WANT_TOGGLES + WANT_SELECTS && probe.wired === true,
+    probe.strips === 7 && probe.knobsBound === WANT_KNOBS && probe.boundTS === WANT_TOGGLES + WANT_SELECTS && probe.wired === true,
     JSON.stringify(probe));
 
   /* ── 2. REAL input: click the VERB toggle, drag the VERB MIX knob to 1 ── */

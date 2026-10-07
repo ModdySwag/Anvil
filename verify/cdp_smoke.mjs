@@ -180,7 +180,7 @@ async function main() {
   const io = ioR.value || {};
   check('keyboard dock: 61 keys, snap handle, MIDI deck mounted', io.keys === 61 && io.dock === true && io.kbsnap === 'function' && io.midi === 'object' && io.midiBody === true, JSON.stringify(io));
 
-  /* 6c. the SYNTH card + controls (P3 counts: 85 knobs, six engine kinds) */
+  /* 6c. the SYNTH card + controls (P3 counts: 85 knobs, seven engine kinds with M1) */
   const synR = await ev(`(() => {
     const host = document.getElementById('av-synth-knobs');
     const knobs = [...document.querySelectorAll('#av-synth .av-knob[data-knob]')];
@@ -190,7 +190,7 @@ async function main() {
   })()`);
   const syn = synR.value || {};
   check('synth card: knobs + selects mounted + bound (85 knobs)', syn.host === true && syn.knobs >= 85 && syn.bound === true && syn.sels >= 3, JSON.stringify(syn));
-  check('synth card: ENGINE select offers all six kinds', JSON.stringify(syn.engOpts) === JSON.stringify(['va', 'acid', 'string', 'drum', 'grain', 'sampler']), JSON.stringify(syn.engOpts));
+  check('synth card: ENGINE select offers all seven kinds', JSON.stringify(syn.engOpts) === JSON.stringify(['va', 'acid', 'string', 'drum', 'grain', 'sampler', 'fm']), JSON.stringify(syn.engOpts));
 
   /* 6d. the P3 FX rack + mod matrix cards */
   const p3R = await ev(`(() => {
@@ -207,12 +207,13 @@ async function main() {
       knobs: knobs.length, knobsBound: knobs.filter(k => k.dataset.knobBound === '1').length,
       toggles: toggles.filter(t => t.dataset.fxBound === '1').length,
       sels: sels.filter(s => s.dataset.fxBound === '1').length,
+      imp: !!(fx && fx.querySelector('#av-fx-conv-import')),
       macros: macroKnobs.length, macrosBound: macroKnobs.filter(k => k.dataset.knobBound === '1').length,
     };
   })()`);
   const p3 = p3R.value || {};
-  check('P3 fx rack: 5 strips (drive,mod,delay,verb,dyn) · 20 knobs + 5 toggles + 4 selects all bound',
-    p3.fx === true && p3.order === 'drive,mod,delay,verb,dyn' && p3.strips === 5 && p3.knobs === 20 && p3.knobsBound === 20 && p3.toggles === 5 && p3.sels === 4, JSON.stringify(p3));
+  check('M1 fx rack: 7 strips (drive,aw,mod,delay,verb,conv,dyn) · 27 knobs + 7 toggles + 6 selects all bound + IR import',
+    p3.fx === true && p3.order === 'drive,aw,mod,delay,verb,conv,dyn' && p3.strips === 7 && p3.knobs === 27 && p3.knobsBound === 27 && p3.toggles === 7 && p3.sels === 6 && p3.imp === true, JSON.stringify(p3));
   check('P3 mod matrix: card mounted with 8 bound macro knobs', p3.mod === true && p3.macros === 8 && p3.macrosBound === 8, JSON.stringify({ macros: p3.macros, bound: p3.macrosBound }));
 
   /* 6e. the P4 sequencer card */
@@ -440,6 +441,30 @@ async function main() {
   const s5S = s5R.value || {};
   check('S5: CODE card mounted + wired (editor \u00b7 library \u00b7 params \u00b7 status) + popout buttons + help/palette/lessons/popout APIs live',
     s5S.card === true && s5S.host === true && s5S.src === true && s5S.lib === true && s5S.run === true && s5S.stop === true && s5S.params === true && s5S.status === true && s5S.pop === true && s5S.ret === true && s5S.helpApi === 'function' && s5S.palApi === 'function' && s5S.lesApi === 'function' && s5S.popApi === 'function' && s5S.codeApi === 'function' && s5S.kindsApi === 'function' && s5S.codeUi === 'object' && s5S.codeHandle === 'object', JSON.stringify(s5S));
+
+
+  /* 6o. the M1 layer: FM card + wavetable editor */
+  const m1R = await ev(`(() => {
+    const fm = document.getElementById('av-fm');
+    const fmHost = document.getElementById('av-fm-host');
+    const wt = document.getElementById('av-wt');
+    const wtHost = document.getElementById('av-wt-host');
+    const fmKnobs = fmHost ? [...fmHost.querySelectorAll('.av-knob[data-knob]')] : [];
+    return { fmCard: !!fm, fmHost: !!fmHost, wtCard: !!wt, wtHost: !!wtHost,
+             tabs: fmHost ? fmHost.querySelectorAll('.av-fm-op-tab').length : 0,
+             algo: !!(fmHost && fmHost.querySelector('#av-fm-algo')),
+             knobs: fmKnobs.length, knobsBound: fmKnobs.filter(k => k.dataset.knobBound === '1').length,
+             canvas: !!(wtHost && wtHost.querySelector('#av-wt-canvas')),
+             lib: !!(wtHost && wtHost.querySelector('#av-wt-lib')),
+             install: !!(wtHost && wtHost.querySelector('#av-wt-install')),
+             fmUi: typeof window.__avFmUi, wtUi: typeof window.__avWtUi,
+             wtApi: typeof avWtMips, installApi: typeof avWtInstall };
+  })()`);
+  const m1S = m1R.value || {};
+  check('M1 FM: card mounted + wired (6 op tabs \u00b7 algo select \u00b7 knobs bound \u00b7 api)',
+    m1S.fmCard === true && m1S.fmHost === true && m1S.tabs === 6 && m1S.algo === true && m1S.knobs >= 10 && m1S.knobsBound === m1S.knobs && m1S.fmUi === 'object', JSON.stringify(m1S));
+  check('M1 WT: editor card mounted + wired (canvas \u00b7 library \u00b7 install \u00b7 api)',
+    m1S.wtCard === true && m1S.wtHost === true && m1S.canvas === true && m1S.lib === true && m1S.install === true && m1S.wtUi === 'object' && m1S.wtApi === 'function' && m1S.installApi === 'function', JSON.stringify(m1S));
 
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

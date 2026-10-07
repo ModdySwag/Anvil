@@ -689,3 +689,27 @@ function avEngineZones(zones) {
   }
   try { return AVDSP.setZones(h.engine, zones) === true; } catch (e) { return false; }
 }
+
+/* M1: send a user wavetable (11 mip frames of 2048 F64) to the engine — structured clone,
+   never a transfer list (the caller keeps its library copies). */
+function avEngineWt(slot, name, frames) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  if (!frames || typeof frames.length !== "number" || frames.length !== 11) return false;
+  if (h.kind === "worklet") {
+    try { h.node.port.postMessage({ t: "wtab", slot: slot, name: name, frames: frames }); return true; }
+    catch (e) { return false; }
+  }
+  try { return AVDSP.setUserWt(h.engine, slot, name, frames) === true; } catch (e) { return false; }
+}
+/* M1: send a convolution impulse (pre-resampled to the engine rate) — structured clone. */
+function avEngineConv(id, name, rate, ch1, ch2) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  if (!ch1 || typeof ch1.length !== "number" || ch1.length <= 0) return false;
+  if (h.kind === "worklet") {
+    try { h.node.port.postMessage({ t: "conv", id: id, name: name, rate: rate, ch1: ch1, ch2: ch2 || null }); return true; }
+    catch (e) { return false; }
+  }
+  try { return AVDSP.setConvImpulse(h.engine, id, name, rate, ch1, ch2) === true; } catch (e) { return false; }
+}

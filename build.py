@@ -27,7 +27,7 @@ css = (SRC / "styles.css").read_text(encoding="utf-8")
 body = (SRC / "body.html").read_text(encoding="utf-8")
 
 # ---- the worklet module source (P3: av_ladder + av_dsp + av_acid + av_string + av_drum + av_grain +
-#      av_sampler + av_fx_verb + av_fx_delay + av_fx_mod + av_fx_drive + av_fx_dyn + av_voiceproc) ----
+#      av_sampler + av_fx_verb + av_fx_delay + av_fx_mod + av_fx_drive + av_fx_dyn + av_fm + av_fx_aw + av_fx_conv + av_voiceproc) ----
 # blob:/data: addModule cannot fetch extra files from a file:// page, so the single-file build
 # carries the module source itself; the same av_dsp.js also ships as a normal part (SPN tier).
 _lad_src = (SRC / "av_ladder.js").read_text(encoding="utf-8")
@@ -37,21 +37,26 @@ _str_src = (SRC / "av_string.js").read_text(encoding="utf-8")
 _drum_src = (SRC / "av_drum.js").read_text(encoding="utf-8")
 _grain_src = (SRC / "av_grain.js").read_text(encoding="utf-8")
 _samp_src = (SRC / "av_sampler.js").read_text(encoding="utf-8")
+_fm_src = (SRC / "av_fm.js").read_text(encoding="utf-8")
 _fxv_src = (SRC / "av_fx_verb.js").read_text(encoding="utf-8")
 _fxd_src = (SRC / "av_fx_delay.js").read_text(encoding="utf-8")
 _fxm_src = (SRC / "av_fx_mod.js").read_text(encoding="utf-8")
 _fxdr_src = (SRC / "av_fx_drive.js").read_text(encoding="utf-8")
 _fxdy_src = (SRC / "av_fx_dyn.js").read_text(encoding="utf-8")
+_fxaw_src = (SRC / "av_fx_aw.js").read_text(encoding="utf-8")
+_fxconv_src = (SRC / "av_fx_conv.js").read_text(encoding="utf-8")
 _proc_src = (SRC / "av_voiceproc.js").read_text(encoding="utf-8")
 _umod_src = (SRC / "av_umod_wl.js").read_text(encoding="utf-8")
 _worklet_src = (_lad_src + "\n" + _dsp_src + "\n" + _acid_src + "\n" + _str_src + "\n" + _drum_src + "\n"
-                + _grain_src + "\n" + _samp_src + "\n" + _fxv_src + "\n" + _fxd_src + "\n" + _fxm_src + "\n"
-                + _fxdr_src + "\n" + _fxdy_src + "\n" + _umod_src + "\n" + _proc_src)
+                + _grain_src + "\n" + _samp_src + "\n" + _fm_src + "\n" + _fxv_src + "\n" + _fxd_src + "\n"
+                + _fxm_src + "\n" + _fxdr_src + "\n" + _fxdy_src + "\n" + _fxaw_src + "\n" + _fxconv_src + "\n"
+                + _umod_src + "\n" + _proc_src)
 assert "registerProcessor('av-voice'" in _worklet_src, "worklet source must register 'av-voice'"
 assert ("AVACID" in _worklet_src and "AVSTRING" in _worklet_src and "AVDRUM" in _worklet_src
         and "AVGRAIN" in _worklet_src and "AVSAMPLER" in _worklet_src
         and "AVFXVERB" in _worklet_src and "AVFXDELAY" in _worklet_src and "AVFXMOD" in _worklet_src
         and "AVFXDRIVE" in _worklet_src and "AVFXDYN" in _worklet_src
+        and "AVFM" in _worklet_src and "AVFXAW" in _worklet_src and "AVFXCONV" in _worklet_src
         and "AVUMOD" in _worklet_src), "P3 kind/FX modules missing from the worklet source"
 _wcheck = ROOT / "verify" / "_worklet_check.mjs"
 _wcheck.parent.mkdir(exist_ok=True)
@@ -63,7 +68,7 @@ assert _proc.returncode == 0, "worklet source failed node --check:\n" + _proc.st
 _wsha = hashlib.sha256(_worklet_src.encode("utf-8")).hexdigest()
 # '<' escaped so the HTML parser can never see '</script' inside the embedded string
 _worklet_part = (
-    "/* Anvil worklet module — src/av_ladder + av_dsp + av_acid + av_string + av_drum + av_grain + av_sampler + av_fx_verb + av_fx_delay + av_fx_mod + av_fx_drive + av_fx_dyn + av_voiceproc · sha256 " + _wsha + " */\n"
+    "/* Anvil worklet module — src/av_ladder + av_dsp + av_acid + av_string + av_drum + av_grain + av_sampler + av_fx_verb + av_fx_delay + av_fx_mod + av_fx_drive + av_fx_dyn + av_fm + av_fx_aw + av_fx_conv + av_voiceproc · sha256 " + _wsha + " */\n"
     "const AV_WORKLET_SHA = \"" + _wsha + "\";\n"
     "const AV_WORKLET_SRC = " + json.dumps(_worklet_src).replace("<", "\\u003c") + ";\n"
 )
@@ -83,14 +88,19 @@ js_parts = [
     (SRC / "av_drum.js").read_text(encoding="utf-8"),   # P2 kind 3: DRUM engine (self-registers)
     (SRC / "av_grain.js").read_text(encoding="utf-8"),  # P3 kind 4: GRANULAR voice (self-registers)
     (SRC / "av_sampler.js").read_text(encoding="utf-8"),# P3 kind 5: SAMPLER voice (self-registers)
+    (SRC / "av_fm.js").read_text(encoding="utf-8"),    # M1 kind 6: FM voice engine (self-registers)
     (SRC / "av_fx_verb.js").read_text(encoding="utf-8"),   # P3 FX: reverb (self-registers)
     (SRC / "av_fx_delay.js").read_text(encoding="utf-8"),  # P3 FX: stereo delay (self-registers)
     (SRC / "av_fx_mod.js").read_text(encoding="utf-8"),    # P3 FX: chorus/ensemble/flanger/phaser (self-registers)
     (SRC / "av_fx_drive.js").read_text(encoding="utf-8"),  # P3 FX: drive/fold/crush (self-registers)
     (SRC / "av_fx_dyn.js").read_text(encoding="utf-8"),    # P3 FX: EQ/comp/limiter/soft-clip (self-registers)
+    (SRC / "av_fx_aw.js").read_text(encoding="utf-8"),   # M1 FX: studio flavours bank (self-registers)
+    (SRC / "av_fx_conv.js").read_text(encoding="utf-8"), # M1 FX: convolution IR (self-registers)
     _worklet_part,                                      # AV_WORKLET_SRC + AV_WORKLET_SHA (generated above)
     (SRC / "av_rec.js").read_text(encoding="utf-8"),    # P2 recorder core (page module)
     (SRC / "av_sample.js").read_text(encoding="utf-8"), # P2 sample core (page module)
+    (SRC / "av_wt.js").read_text(encoding="utf-8"),     # M1: wavetable authoring core (page module)
+    (SRC / "av_wt_ui.js").read_text(encoding="utf-8"),  # M1: the WT EDITOR card (page module)
     (SRC / "av_pads.js").read_text(encoding="utf-8"),   # P2 drum pads (page module)
     (SRC / "av_engine.js").read_text(encoding="utf-8"), # the facade: blob→data→spn tier ladder + message protocol
     (SRC / "av_code.js").read_text(encoding="utf-8"),    # S5: CODE engine — user-module facade + persistence
@@ -134,6 +144,7 @@ js_parts = [
     (SRC / "av_video.js").read_text(encoding="utf-8"),           # S4: video clip capture (page module)
     (SRC / "av_files_ui.js").read_text(encoding="utf-8"),        # S4: the PROJECT & SHARE card (page module)
     (SRC / "av_synth.js").read_text(encoding="utf-8"),  # the SYNTH card (P3 engine layer)
+    (SRC / "av_fm_ui.js").read_text(encoding="utf-8"),   # M1: the FM card (page module)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]
 

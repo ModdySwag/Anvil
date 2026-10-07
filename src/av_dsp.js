@@ -81,7 +81,7 @@ const AVDSP = (function () {
   const KIND_MODS = [null, null, null, null, null, null];  /* 0 va · 1 acid · 2 string · 3 drum · 4 grain · 5 sampler */
   function registerKind(id, mod) {
     const i = Number(id);
-    if (!(i >= 1 && i <= 5) || !mod || typeof mod.stepVoice !== "function") return false;
+    if (!(i >= 1 && i <= 6) || !mod || typeof mod.stepVoice !== "function") return false;
     KIND_MODS[i] = mod;
     return true;
   }
@@ -94,7 +94,7 @@ const AVDSP = (function () {
   /* S5: kind dispatch resolves user kind modules (av_umod_wl, ids >= 64) through AVUMOD;
      core kinds 1..5 stay the array; unknown id -> null (the voice ends, honest). */
   function kindModOf(id) {
-    if (id >= 1 && id <= 5) return KIND_MODS[id];
+    if (id >= 1 && id <= 6) return KIND_MODS[id];
     try {
       if (typeof AVUMOD !== "undefined" && AVUMOD && typeof AVUMOD.kindById === "function") return AVUMOD.kindById(id);
     } catch (e) { }
@@ -109,8 +109,8 @@ const AVDSP = (function () {
      blends); mod/delay write their FINAL mix (parent copies). st.on === 0 = skipped entirely,
      so the chain is bit-identical to P2 when every module is off. */
   const FX_MODS = [];                                      /* registered modules, index = slot */
-  const FX_PREFIX = ["drive", "mod", "delay", "verb", "dyn"];
-  const FX_WET = [1, 0, 0, 1, 1];                          /* 1 = wet (blend) · 0 = final (copy) */
+  const FX_PREFIX = ["drive", "aw", "mod", "delay", "verb", "conv", "dyn"];
+  const FX_WET = [1, 1, 0, 0, 1, 1, 1];                          /* 1 = wet (blend) · 0 = final (copy) */
   function registerFx(prefix, mod) {
     const fi = FX_PREFIX.indexOf(String(prefix));
     if (fi < 0 || !mod || typeof mod.createState !== "function" || typeof mod.process !== "function") return false;
@@ -427,14 +427,15 @@ const AVDSP = (function () {
       modMacros: new Float64Array(8), modSlots: new Float64Array(128),
       modCount: 0, modPitchOn: 0, modPanOn: 0,
       fx: [],
+      userWt: [],
     };
-    for (let kk = 1; kk <= 5; kk++) {
+    for (let kk = 1; kk <= 6; kk++) {
       const m0 = KIND_MODS[kk];
       if (m0 && typeof m0.initEngineK === "function") { try { m0.initEngineK(eng.kext); } catch (e) { } }
     }
     for (let vi0 = 0; vi0 < maxVoices; vi0++) {
       const kv0 = voices[vi0].k;
-      for (let kk = 1; kk <= 5; kk++) {
+      for (let kk = 1; kk <= 6; kk++) {
         const m0 = KIND_MODS[kk];
         if (m0 && typeof m0.initVoiceK === "function") { try { m0.initVoiceK(kv0); } catch (e) { } }
       }
@@ -475,9 +476,12 @@ const AVDSP = (function () {
       case "osc1.spread": { const n = Number(value); if (!isFinite(n)) return false; eng.osc1Spread = cl(n, 0, 50); return true; }
       case "osc2.type": {
         const e = mapEnum(value, WT_NAMES);
-        if (e < 0) return false;
-        eng.osc2Type = e;
-        return true;
+        if (e >= 0) { eng.osc2Type = e; return true; }
+        /* M1: user wavetables wt.user0..wt.user15 -> osc2 types 5..20 */
+        const um = /^wt\.user(\d{1,2})$/.exec(String(value));
+        const un = um ? Number(um[1]) : -1;
+        if (un >= 0 && un <= 15) { eng.osc2Type = 5 + un; return true; }
+        return false;
       }
       case "osc2.level": { const n = Number(value); if (!isFinite(n)) return false; eng.tOsc2Level = cl(n, 0, 1); return true; }
       case "osc2.tune": {
@@ -538,7 +542,7 @@ const AVDSP = (function () {
       case "tune": { const n = Number(value); if (!isFinite(n)) return false; eng.tune = cl(n, -12, 12); eng.pitchGen++; return true; }
       case "engine.outScale": { const n = Number(value); if (!isFinite(n)) return false; eng.tOutScale = cl(n, 0.05, 1); return true; }
       case "engine.kind": {
-        const e = mapEnum(value, ["va", "acid", "string", "drum", "grain", "sampler"]);
+        const e = mapEnum(value, ["va", "acid", "string", "drum", "grain", "sampler", "fm"]);
         if (e < 0) {
           /* S5: user kind modules accept their name (av_umod_wl registry; ids >= 64) */
           let uk = null;
@@ -572,7 +576,7 @@ const AVDSP = (function () {
         const dot = path.indexOf(".");
         if (dot > 0) {
           const pre = path.slice(0, dot);
-          for (let kk = 1; kk <= 5; kk++) {
+          for (let kk = 1; kk <= 6; kk++) {
             const m0 = KIND_MODS[kk];
             if (m0 && m0.PREFIX === pre && typeof m0.setParam === "function") {
               try { return m0.setParam(eng, path, value) === true; } catch (e) { return false; }
@@ -855,7 +859,10 @@ const AVDSP = (function () {
     o1 *= v.uni1Gain * ((v.modL1 !== 0) ? cl(eng.cOsc1Level + v.modL1, 0, 1) : eng.cOsc1Level);
     /* osc2 -- wavetable mip, cubic read */
     let o2 = 0;
-    const frame = wtBank[eng.osc2Type * WT_LEVELS + v.mip2];
+    const o2t = eng.osc2Type;
+    const frame = (o2t < 5)
+      ? wtBank[o2t * WT_LEVELS + v.mip2]
+      : ((eng.userWt[o2t - 5] && eng.userWt[o2t - 5].frames[v.mip2]) ? eng.userWt[o2t - 5].frames[v.mip2] : wtBank[3 * WT_LEVELS + v.mip2]);
     const u2 = v.uni2, ph2 = v.ph2, inc2v = v.inc2v;
     for (let i = 0; i < u2; i++) {
       const tt = ph2[i], dt = inc2v[i];
@@ -1192,6 +1199,27 @@ const AVDSP = (function () {
     for (let i = n; i < 40; i++) eng.zones[i] = 0;
     return true;
   }
+  function setUserWt(eng, slot, name, frames) {
+    const i = Number(slot);
+    if (!(i >= 0 && i <= 15) || !frames || typeof frames.length !== "number" || frames.length !== 11) return false;
+    const bank = [];
+    for (let k = 0; k < 11; k++) {
+      const f = frames[k];
+      if (!f || typeof f.length !== "number" || f.length !== 2048) return false;
+      bank.push(f);
+    }
+    eng.userWt[i] = { name: String(name == null ? "" : name), frames: bank };
+    return true;
+  }
+  function setConvImpulse(eng, id, name, rate, ch1, ch2) {
+    for (let j = 0; j < eng.fx.length; j++) {
+      const e0 = eng.fx[j];
+      if (e0.mod && e0.mod.PREFIX === "conv" && typeof e0.mod.loadImpulse === "function") {
+        try { return e0.mod.loadImpulse(e0.st, name, rate, ch1, ch2) === true; } catch (e) { return false; }
+      }
+    }
+    return false;
+  }
   function setMod(eng, macros, slots) {
     if (macros && typeof macros.length === "number") {
       const n = Math.min(8, macros.length);
@@ -1243,6 +1271,8 @@ const AVDSP = (function () {
     return {
       active: active, released: released, total: active + released,
       maxVoices: eng.maxVoices, sr: eng.sr, os: OS, stolen: eng.stolen, msBoot: eng.msBoot,
+      uwt: (eng.userWt || []).filter(Boolean).length,
+      fxChain: eng.fx.map(function (e0) { return e0.mod && e0.mod.PREFIX; }).join(" "),
     };
   }
 
@@ -1309,5 +1339,7 @@ const AVDSP = (function () {
     setSample: setSample,
     setZones: setZones,
     setMod: setMod,
+    setUserWt: setUserWt,
+    setConvImpulse: setConvImpulse,
   };
 })();
