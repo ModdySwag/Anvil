@@ -1163,3 +1163,20 @@ battery 15 → gate → addendum 29 + README.
   module API) · walkthrough/help (#20/#45/#80) — then max modules / platform (share/cloud/PWA, #78/#82)
   → P7 polish → deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups · PERFECT
   TUNINGS · optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.
+
+## SESSION SAVE — 2026-10-08 ~02:00 (S4 wave CLOSED + committed; nothing in flight — clean handoff)
+
+- **State: ALL CLOSED.** HEAD `2f09919` (tree clean, `?? cache/` only) · `index.html` on disk =
+  `c92a4445…` (2,269,601 B) = the frozen S4 build the whole gate ran against · pins all on `c92a4445`
+  (13 files) · 16-suite battery green · perf gate + A/B records committed (`verify/s4-gate-attribution.txt`,
+  `bench-v16-s4-full.*`, `stress-s4-run1/2.log`) · addendum 30 + README in the close commit.
+- **Nothing running** — 0 background jobs, 0 live subagents, 0 real process strays (the census's residual
+  hits are Hermes's own toolchain). The `cache/` scratch is intentionally untracked.
+- **The continued session opens on the next GOLDEN BUILD block** (no mid-wave work owed): PF-grade
+  popout keyboard · CODE (#81 open module API) · walkthrough/help (#20/#45/#80) — then max modules /
+  platform (share/cloud/PWA, #78/#82) → P7 polish → deploy + live verify + owner pass.
+- Wave-specific assets a next session may want: contract `verify/_s4_wave.md` · rig `verify/cdp_s4.mjs`
+  (37 checks) · fix scripts `cache/scratch/s4/integrate/_s4_{rigfix,cardfix,cardfix2,pins}.py` ·
+  children transcripts `cache/delegation/live/deleg_4b764d01/task-{0..4}.log` · gate chain
+  `cache/scratch/s4/integrate/{battery-s4,gate-s4,ab-s4}.log`.
+- **Resume phrase: "continue anvil".**
