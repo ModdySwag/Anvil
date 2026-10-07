@@ -1,0 +1,13 @@
+PLATFORM perf gate attribution - 2026-10-08 (build b34a28b6, frozen; 3,343,688 B)
+bench (publishable metric): offline 128 voices - knee last-pass n=128, first-fail none, monotone=true
+  @ 48.33% budget (1288.71 us/q at n=128; ramp 479/611/954/1288 us/q at 48/64/96/128).
+  Unchanged family (P1.x-P4/S5/M1/M2 all 128 monotone). The platform wave is PAGE-SIDE ONLY: no worklet
+  change (AV_WORKLET_SHA stays d7f0ee41... - sw.js/manifest/icons/inbox + av_pwa/av_gnaural/av_family
+  ride index.html only). Realtime published light 64 / fat 48 (realtimeRatio 1.004).
+stress x2 (raw):
+  run1 :: verdict=asserts-not-met | heapGrowthMb=0.1 | underrunDeltas=22 | drains=PASS | pageErrors=0
+  run2 :: verdict=asserts-not-met | heapGrowthMb=0.8 | underrunDeltas=24 | drains=PASS | pageErrors=0
+attribution: environment-quiet, no control run needed - both deltas (22 / 24) sit at/below the M2 record
+(20 / 32) and far below the M1 record (30 / 66) and the S5 record (360 / 183); same known assert profile
+(drains PASS, heap flat, 0 page errors). The 128-voice cell sits ~1% under the cap on this machine, and
+it held the knee under the gate's own load.

@@ -1428,3 +1428,48 @@ Resume phrase: **"continue anvil"**.
 - **NEXT SESSION OPENS ON: the PLATFORM wave** — PWA offline (#78) · suite bridges (#82) → P7 polish (#79)
   → deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups · PERFECT TUNINGS ·
   optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.
+
+## Resume addendum 34 - 2026-10-08 (PLATFORM wave INTEGRATED + CLOSED - battery ALL GREEN on `b34a28b6`; PWA offline #78 + suite bridges #82 ship)
+
+- Children `deleg_8ff73b5f` (5 parallel): sa-A `src/av_pwa.js` (784) + `src/av_sw.js` (176) + `src/av_icon.py`
+  (418) - sa-B `inbox.html` (633) - sa-C `src/av_gnaural.js` (789; harness 122/122) - sa-D `src/av_family.js`
+  (1507) - sa-E `verify/cdp_platform.mjs` (52 checks, write-only). Parent re-ran the icon selftest + the
+  gnaural harness green; artifacts verified on disk before integration.
+- Integration `_platform_integrate.py` (11 counted edits / 7 files + styles): build.py js_parts + PWA emission
+  block (sw.js from the template tokens + manifest.webmanifest + three stdlib-rendered PNG icons), body card
+  `#av-family`, app_core 1.6.0 "PLATFORM" + inits + PWA proof line, `avProjOpenText` (the File Handling seam),
+  smoke platform checks. Build `87a59b08` -> final **`b34a28b6` (3,343,688 B)**.
+- **Shipped surfaces:** **PWA**: SW registration (https/localhost only; `?nosw=1` opt-out; never on file:),
+  versioned cache `anvil-<sha8>`, offline boot, UPDATE READY flow (never auto-skipWaiting), install capture +
+  iOS hint, offline chip, File Handling for .anvl (launchQueue -> avProjOpenText), manifest <link> INJECTED at
+  init (a static link made Chrome fetch the manifest on file:// and log CORS errors - the smoke zero-error
+  contract caught it). **FAMILY bridges:** HUB (bounce -> same-origin IDB outbox -> `inbox.html` list/play/
+  download/delete; download-only fallback off-origin) - RESONANCE (fetch `moddys.net/resonance/app/pack/<id>.zip`,
+  deflate-zip reader, clean-room .gnaural parse, offline render, master-tap preview, WAV save; 18 real packs
+  listed; FFT-witnessed binaural pair L=base-beat/2 R=base+beat/2) - RADIO (reads the radio's own rbg-last/
+  rbg-meta, OPEN RADIO + `#q=` deep links).
+- **Triage (rig SPEC fixes, all evidence-driven):** P2d `ServiceWorkerState` is `'activated'` (never `'active'`);
+  waitForRoot/waitForReload needed the raw-DOM fallback (a fresh navigation wipes the page-side rig helper -
+  __platw-only waits deadlock); `Browser.setDownloadBehavior` is session-scoped - the browser ws must stay OPEN
+  (round-2 downloaded into ~/Downloads; found + removed); the P4 emulated-offline window and the P8i deliberate
+  404 log browser-level console messages no page code can suppress -> sanctioned by exact class + window,
+  COUNTED and reported (predicate unchanged, everything else still fails P10); `<link rel="icon">` declared
+  (Chrome probed /favicon.ico on every http load). Smoke: manifest link injected-only-when-supported check.
+  **PIN LESSON: the 17 existing pin files carry FULL 64-hex shas - the sweep must replace the full value**
+  (a prefix-only swap corrupted all 18 pins; all freeze legs failed until fixed).
+- **BATTERY ALL GREEN - 21 suites:** smoke 31 - studio - sessions - comp - mix - knob_feel - keys - midi -
+  sample - rec - fx - seq - store - bounce - deck - s4 - s5 - code - m1 - m2 (fade-tail flake 39/40 in-battery,
+  re-ran 40/40 pinned on the idle machine - the documented decaying-tail class) - **platform 52/52 pinned**.
+- **PERF GATE:** bench-v20 knee **128 monotone @ 48.33%** (unchanged family; worklet sha d7f0ee41 UNCHANGED -
+  platform is page-side only) - stress x2 deltas **22 / 24** (at/below the M2 record 20/32 - environment-quiet,
+  no control run). Records `verify/platform-gate-attribution.txt` + `bench-v20-platform-full.*` +
+  `stress-platform-run1/2.log`.
+- Close commits: integration+battery `2e395fd` - then this close. **NOTHING RUNNING.**
+- **DEPLOY NOTES for the final wave:** upload set = index.html + sw.js + manifest.webmanifest + icon-192.png +
+  icon-512.png + icon-maskable-512.png + inbox.html into the anvil folder (SW scope is relative `./` - no path
+  edits needed) + the `packs/` tree MUST sit alongside (the store fetches packs/index.json over http). FAMILY
+  pack base defaults to https://moddys.net/resonance/app/pack/. The HUB handshake is same-origin only
+  (moddys.net/anvil -> IDB -> anvil/inbox.html).
+- **NEXT SESSION OPENS ON: P7 polish (#79 accessibility pass) -> deploy + live verify + owner pass.** Carried:
+  P·2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - optional quiet-window bench re-runs. Resume phrase:
+  **"continue anvil"**.
