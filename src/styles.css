@@ -714,3 +714,118 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-comp-warn-head { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--mod-orange); margin-bottom: 2px; }
 .av-comp-warn-item { color: var(--mod-orange); font-size: 10.5px; margin: 0; overflow-wrap: anywhere; }
 .av-comp-foot { margin: 0; }
+
+/* ============================================================================
+   S3 — the MIX card (av_mix_ui.js) + the mix & master layer */
+.av-mix { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-mix-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-mix-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-mix-cap { font-size: 10.5px; color: var(--text-3); }
+.av-mix-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-mix-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-mix-msg { color: var(--text-2); }
+.av-mix-err { color: #ff8a7a; }
+.av-mix-sect { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.av-mix-sect-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-mix-sect-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.av-mix-hint { font-size: 10px; }
+.av-mix-track-n { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-mix-rev { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-mix-btn { }
+.av-mix-clear { }
+.av-mix-add-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-mix-select { min-width: 120px; max-width: 260px; }
+.av-mix-add-src { min-width: 210px; max-width: 360px; }
+.av-mix-eng { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.av-mix-eng[hidden] { display: none; }
+.av-mix-eng-mask { display: inline-flex; gap: 4px; align-items: center; }
+.av-mix-eng-loops { width: 58px; }
+.av-mix-eng-tail { width: 58px; }
+.av-mix-num { background: #0a0e11; color: var(--text); border: 1px solid var(--hair); border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 3px 6px; }
+.av-mix-add { }
+.av-mix-tracks { display: flex; flex-direction: column; gap: 6px; }
+.av-mix-track { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 5px 8px; min-width: 0; }
+.av-mix-track-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; flex: 1 1 100%; }
+.av-mix-track-name { font-family: var(--mono); font-size: 11px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.av-mix-track-src { font-family: var(--mono); font-size: 10px; color: var(--mod-sky); }
+.av-mix-track-knobs { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.av-mix-track-extra { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-mix-mute { }
+.av-mix-solo { }
+.av-mix-on { color: var(--teal); }
+.av-mix-mute-on { color: var(--mod-orange); border-color: #5c4520; }
+.av-mix-solo-on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-mix-fx-btn { }
+.av-mix-fx-open { color: var(--teal); }
+.av-mix-remove { }
+.av-mix-remove:hover { color: #ff8a7a; border-color: #ff8a7a; }
+.av-mix-duck { }
+.av-mix-fx { display: flex; flex-direction: column; gap: 4px; flex: 1 1 100%; border-left: 2px solid var(--hair); padding-left: 8px; margin-left: 2px; }
+.av-mix-fx[hidden] { display: none; }
+.av-mix-fx-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-mix-check { accent-color: var(--teal); }
+.av-mix-none { margin: 0; }
+.av-mix-tracks-none[hidden] { display: none; }
+.av-mix-knob-none { margin: 0; }
+.av-mix-knob-box { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.av-mix-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-mix-lab { font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-mix-sub { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); }
+.av-mix-send-a-return { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-send-a-mode { min-width: 92px; }
+.av-mix-send-a-decay { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-send-b-return { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-send-b-time { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-send-b-feedback { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-glue-on { }
+.av-mix-glue-thresh { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-glue-ratio { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-md-on { }
+.av-mix-md-amount { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-mdyn-on { }
+.av-mix-mdyn-eqlo { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-mdyn-eqhi { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-mdyn-thresh { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-mdyn-ratio { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-mdyn-ceil { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-norm-on { }
+.av-mix-norm-target { min-width: 84px; }
+.av-mix-norm-ceil { display: inline-flex; align-items: center; gap: 6px; }
+.av-mix-meters { display: flex; flex-wrap: wrap; gap: 14px; }
+.av-mix-meter { display: inline-flex; align-items: baseline; gap: 6px; }
+.av-mix-meter-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--text-3); }
+.av-mix-meter-val { font-family: var(--mono); font-size: 12px; color: var(--teal); }
+.av-mix-meter-norm { color: var(--text-2); font-size: 10px; }
+.av-mix-render { }
+.av-mix-render-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); overflow-wrap: anywhere; }
+.av-mix-export { }
+.av-mix-export-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); overflow-wrap: anywhere; }
+.av-mix-bits { min-width: 70px; }
+.av-mix-dither { min-width: 92px; }
+.av-mix-auto-target { min-width: 84px; }
+.av-mix-auto { }
+.av-mix-auto-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-mix-auto-table { display: flex; flex-direction: column; gap: 3px; }
+.av-mix-auto-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 8px; }
+.av-mix-auto-id { font-family: var(--mono); font-size: 10px; color: var(--mod-sky); }
+.av-mix-auto-name { font-family: var(--mono); font-size: 10px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.av-mix-auto-lufs { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.av-mix-auto-delta { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.av-mix-auto-gain { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-mix-auto-note { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-mix-file { }
+.av-mix-ref-file { max-width: 260px; font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.av-mix-ref-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-mix-compare { }
+.av-mix-cmp-val { font-family: var(--mono); font-size: 10px; color: var(--text-2); overflow-wrap: anywhere; }
+.av-mix-playab { }
+.av-mix-ab-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-mix-warnings { border: 1px solid #5c4520; border-radius: 6px; padding: 6px 8px; }
+.av-mix-warnings[hidden] { display: none; }
+.av-mix-warn-head { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--mod-orange); margin-bottom: 2px; }
+.av-mix-warn-item { color: var(--mod-orange); font-size: 10.5px; margin: 0; overflow-wrap: anywhere; }
+.av-mix-foot { margin: 0; }
+.av-mix-m-lufs { }
+.av-mix-m-dbtp { }
+.av-mix-m-peak { }
+.av-mix-m-norm { }

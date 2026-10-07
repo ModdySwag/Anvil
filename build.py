@@ -115,6 +115,9 @@ js_parts = [
     (SRC / "av_session_ui.js").read_text(encoding="utf-8"),    # S2 sessions: the Sessions card (page module)
     (SRC / "av_comp.js").read_text(encoding="utf-8"),           # S2.1 comp: the comp engine (take lanes / pick-best / trims + crossfades) (page module)
     (SRC / "av_comp_ui.js").read_text(encoding="utf-8"),        # S2.1 comp: the Comp card (page module)
+    (SRC / "av_loud.js").read_text(encoding="utf-8"),           # S3 mix: loudness suite - LUFS/true-peak (page module)
+    (SRC / "av_mix.js").read_text(encoding="utf-8"),            # S3 mix: the mix engine (page module)
+    (SRC / "av_mix_ui.js").read_text(encoding="utf-8"),         # S3 mix: the MIX card (page module)
     (SRC / "av_synth.js").read_text(encoding="utf-8"),  # the SYNTH card (P3 engine layer)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]

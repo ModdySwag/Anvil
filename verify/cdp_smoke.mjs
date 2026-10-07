@@ -336,6 +336,35 @@ async function main() {
   check('S2.1 comp: card mounted + wired (lanes \u00b7 comp select \u00b7 segments \u00b7 ADD/AUTO/RENDER/EXPORT) + comp API live',
     s21.card === true && s21.host === true && s21.root === true && s21.wired === true && s21.status === true && s21.lanes === true && s21.list === true && s21.segs === true && s21.add === true && s21.auto === true && s21.fade === true && s21.render === true && s21.exportBtn === true && s21.ui === 'object' && s21.compApi === 'function' && s21.autoApi === 'function' && s21.renderApi === 'function' && s21.exportApi === 'function' && s21.handles === 'object|function', JSON.stringify(s21));
 
+  /* 6k. the S3 mix card (mix desk \u00b7 sends \u00b7 glue \u00b7 master \u00b7 render/export \u00b7 auto-mix \u00b7 A/B) */
+  const s3R = await ev(`(() => {
+    const card = document.getElementById('av-mix');
+    const host = document.getElementById('av-mix-host');
+    return { card: !!card, host: !!host,
+             root: !!(host && host.querySelector('.av-mix')),
+             wired: !!(host && host.dataset && host.dataset.avMixUiWired === '1'),
+             status: !!document.getElementById('av-mix-status'),
+             addSrc: !!document.getElementById('av-mix-add-src'),
+             add: !!document.getElementById('av-mix-add'),
+             tracks: !!document.getElementById('av-mix-tracks'),
+             render: !!document.getElementById('av-mix-render'),
+             exportBtn: !!document.getElementById('av-mix-export'),
+             bits: !!document.getElementById('av-mix-bits'),
+             dither: !!document.getElementById('av-mix-dither'),
+             auto: !!document.getElementById('av-mix-auto'),
+             refFile: !!document.getElementById('av-mix-ref-file'),
+             compare: !!document.getElementById('av-mix-compare'),
+             playab: !!document.getElementById('av-mix-playab'),
+             ui: typeof window.__avMixUi,
+             mixApi: typeof avMixRender, autoApi: typeof avMixAutoBalance,
+             refApi: typeof avMixSetRef, cmpApi: typeof avMixCompare,
+             loudApi: typeof avLoudLufs,
+             handles: typeof window.__avMix + '|' + typeof window.__avLoud };
+  })()`);
+  const s3 = s3R.value || {};
+  check('S3 mix: card mounted + wired (ADD \u00b7 render \u00b7 export \u00b7 auto-mix \u00b7 A/B) + mix/loud API live',
+    s3.card === true && s3.host === true && s3.root === true && s3.wired === true && s3.status === true && s3.addSrc === true && s3.add === true && s3.tracks === true && s3.render === true && s3.exportBtn === true && s3.bits === true && s3.dither === true && s3.auto === true && s3.refFile === true && s3.compare === true && s3.playab === true && s3.ui === 'object' && s3.mixApi === 'function' && s3.autoApi === 'function' && s3.refApi === 'function' && s3.cmpApi === 'function' && s3.loudApi === 'function' && s3.handles === 'object|object', JSON.stringify(s3));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
