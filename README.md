@@ -5,22 +5,24 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-08: **S4 deliver extras in — .anvl project open/save (File System Access with a download fallback), direct sample import from disk, patch share cards (PNG + offline QR link), and one-press video clip capture with the rendered audio printed in.**
-The instrument carries P1–P6 + S1–S4 in one single-file page: the studio chain builds a mixdown from
+Status 2026-10-08: **S5 code · keys · help in — the CODE section (write your own sandboxed DSP modules — FX or whole voice engines — and run them live in the engine), the Pattern-Forge-grade popout keyboard, the Ctrl-K command palette, the 60-second tour + tooltips + guides, and the lesson ladder with the demo groove and sound wizards.**
+The instrument carries P1–P6 + S1–S5 in one single-file page: the studio chain builds a mixdown from
 takes, comps and the engine pattern (per-track gain / pan / send rails / ducking / insert FX · a verb +
 delay send pair · bus glue · the master chain with normalize + dither), renders it offline and
 deterministically in memory, and exports 16/24/32f WAVs; A/B plays the mixdown against a
-loudness-matched reference. The deck attaches to the live master tap read-only; the S4 card saves/opens
-projects as .anvl, imports samples, builds share cards (the QR encoder is verified byte-for-byte against
-the reference implementation) and renders WebM clips of the deck with the mix. Nothing uploads — every
-artifact is local. The comp engine stitches the studio's takes; sessions version the whole state; the
-store serves 9 packs / 548 presets. Frozen `index.html` sha c92a4445… (2,269,601 B): battery ALL GREEN —
-16 suites (smoke 23 · studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 ·
-sample 29 · rec 29 · fx 27 · seq 31 · store 28 · bounce 32 · deck 35 · s4 37); the perf gate's
-same-conditions A/B read identical offline knees on old and new bytes (environment, not regression);
-worklet sha `6e66274e…` unchanged.
-Next: popout keyboard · CODE · help then P7 polish → deploy + owner pass.
-Resume at `CONTINUATION-2026-10-06.md` addendum 30.
+loudness-matched reference. The deck attaches to the live master tap read-only; the S5 CODE section
+evaluates user module source inside the audio worklet (the probe-verified `new Function` path), adds it
+to the live engine and keeps a local module library; the popout keyboard adopts the 61-key bed into its
+own window with key forwarding; help ships the shortcut map, the 60-second tour, tooltips and the four
+outcome guides; the palette runs 41 commands from Ctrl-K. Nothing uploads — every artifact is local.
+The comp engine stitches the studio's takes; sessions version the whole state; the store serves 9 packs
+/ 548 presets. Frozen `index.html` sha 7accc9fd… (2,608,972 B): battery ALL GREEN — 18 suites (smoke 24 ·
+studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 ·
+seq 31 · store 28 · bounce 32 · deck 35 · s4 37 · s5 36 · code 36); the perf-gate bench knee is
+unchanged (96/128 · monotone) and the old-bytes same-conditions control proved the stress-window jump
+environmental; worklet sha `e2601849…` (the CODE runtime joined the worklet concat by design).
+Next: max modules / platform (PWA, suite bridges) → P7 polish → deploy + live verify + owner pass.
+Resume at `CONTINUATION-2026-10-06.md` addendum 31.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)

@@ -1,0 +1,16 @@
+S5 perf-gate attribution — 2026-10-08 (build 7accc9fd7953c9cf0f47aefc481d3cb6d21dc027c67cfbdd1b6035b1947671cc, 2,608,972 B)
+
+- bench-v17-s5-full: offline knee 96/128 · monotone · realtime {light 64 · fat 48} · ratio 1.002 · 0 invalid reads.
+  IDENTICAL knee to the S4 record (bench-v16: 96/128) — the publishable steady-state metric is unchanged.
+- Worklet sha e2601849… (changed by design this wave: av_umod_wl — the CODE user-module runtime — joined the
+  worklet concat; av_dsp gained kindModOf + AVUMOD fallbacks). Inertness: AVUMOD does nothing unless a umod
+  message arrives; the offline bench proves no steady-state cost.
+- Stress x2 raw counts jumped vs the S4 quiet-window record (20/16):
+  run1 360 · at-cap 15 [verified-window 1 · uni>3-window 14] · run2 183 · at-cap 18 [verified 4 · uni>3 14].
+- DECISIVE CONTROL (adjacent-window law): the PREVIOUS frozen bytes (c92a4445, git show 2f09919:index.html)
+  were swapped in back-to-back and the same stress ran under the SAME conditions (03:03–03:14):
+  total 230 · at-cap 15 [verified-window 1 · uni>3-window 14] — the same burst envelope + cluster shape as the
+  S5 runs, on the old bytes. index.html restored + sha-verified (7accc9fd…).
+- Active console: moddy's session active throughout (brave · explorer · audiodg · Killer services) — the machine
+  was never quiet.
+- VERDICT: environment, not regression. Drains PASS · heap <= +0.2 MB · 0 page errors on all three runs.

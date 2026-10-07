@@ -1180,3 +1180,40 @@ battery 15 → gate → addendum 29 + README.
   children transcripts `cache/delegation/live/deleg_4b764d01/task-{0..4}.log` · gate chain
   `cache/scratch/s4/integrate/{battery-s4,gate-s4,ab-s4}.log`.
 - **Resume phrase: "continue anvil".**
+
+## Resume addendum 31 — 2026-10-08 (S5 CODE · KEYS POPOUT · HELP INTEGRATED + CLOSED — battery ALL GREEN on `7accc9fd`; the CODE section ships)
+
+- Children `deleg_1bb78706` (8 parallel): sa-A `src/av_kb_pop.js` (472; harness 49/0) · sa-B
+  `src/av_umod_wl.js` (410) + `src/av_code.js` (1039) + `docs/09-code-module-api.md` (541; AVUMOD harness
+  106/0 + SPN end-to-end) · sa-C `src/av_code_ui.js` (1651; 93) · sa-D `src/av_help.js` (954; 49) ·
+  sa-E `src/av_palette.js` (793; 40) · sa-F `src/av_lessons.js` (1198; 45 + 32-path wizard audit) ·
+  sa-G1 `verify/cdp_s5.mjs` + sa-G2 `verify/cdp_code.mjs` (rigs, write-only). Parent re-ran every harness green.
+- Probe first (load-bearing): `new Function` WORKS inside AudioWorkletGlobalScope; fetch/URL/performance/
+  TextEncoder/structuredClone are ALL undefined there → user modules eval in-worklet with an injected API
+  (evidence `cache/scratch/s5/probe/`).
+- Parent integration (`_s5_integrate.py`, 32 counted edits): build parts + worklet concat gains av_umod_wl ·
+  `#av-code` card + `#pk-pop`/`#pk-return` rail buttons · styles S5 block · app_core **1.3.0 "S5 · code ·
+  keys · help"** + six guarded boots · av_dsp kindModOf + user-kind acceptance + AVUMOD fallbacks ·
+  av_voiceproc umod branch · av_engine umod reply routing · av_kb bed-root + popout hooks + the ONE
+  avUiKeyHook line · av_synth user-kind options + refresh. Smoke 23→24.
+- Rig first runs: cdp_s5 29/35 · cdp_code 34/35 → **8 rig SPEC fixes** (`_s5_rigfix.py`; no app defects —
+  palette state read via `isOpen()`, lesson tour handle captured from `r.handle`, wizard picks re-query the
+  re-rendered rows, engine facade re-read after the ensure await) → **both 35/35** → pins (`_s5_pins.py`;
+  13 updated + 2 filled = 15 files) → pinned runs 36/36 each.
+- **Frozen `index.html` = `7accc9fd…` (2,608,972 B)** · **BATTERY ALL GREEN — 18 suites**
+  (`cache/scratch/s5/integrate/battery-s5.log`): smoke 24 · studio 37 · sessions 41 · comp 41 · mix 46 ·
+  feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31 · store 28 · bounce 32 · deck 35 ·
+  s4 37 · **s5 36 · code 36 pinned**. Screenshots `renders/s5-suite.png` + `renders/code-suite.png`.
+- **PERF GATE:** bench `bench-v17-s5-full.{log,json}` — knee 96/128 monotone (IDENTICAL to v16); worklet sha
+  `e2601849…` (av_umod_wl joined the worklet concat by design; inert — bench unchanged). Stress ×2: 360/183
+  vs the S4 quiet record 20/16; the **decisive old-bytes control** (c92a4445 swapped back-to-back, same
+  active-console conditions) read **230 [verified 1 · uni>3 14]** — same envelope shape → **environment,
+  not regression** (Moddy active: brave/explorer/audiodg; never-quiet machine). Records:
+  `verify/s5-gate-attribution.txt` + `stress-s5-control.log`.
+- Close commits: integration+battery `f1d46a4` · then this close (gate records + addendum 31 + README +
+  docs/05 status). **NOTHING RUNNING** — no background jobs, no live subagents.
+- **NEXT SESSION OPENS ON: the next GOLDEN BUILD block** — max modules/racks (FM engine #60 · MPE #61 ·
+  chop #65 · wavetable editor #66 · IR #67 · Airwindows bank #68 · sends/sidechain #69 · master chain #70 ·
+  generative #72 · arranger #73 · autosave #76 · …) then platform (PWA #78 · suite bridges #82) → P7 polish
+  (#79) → deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups · PERFECT TUNINGS ·
+  optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.
