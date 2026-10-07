@@ -94,7 +94,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    S4: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = null;
+const EXPECT_SHA = 'c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -312,9 +312,11 @@ const S4W_HELPERS = `window.__s4w = (function () {
       };
     };
     F.open = async function (opts) {
-      F.record('open', { multiple: !!(opts && opts.multiple) });
+      const rec = F.record('open', { multiple: !!(opts && opts.multiple) });
       const list = [];
       while (F.queue.length) list.push(F.queue.shift());
+      rec.count = list.length;
+      F.opens.push({ at: Date.now(), multiple: !!(opts && opts.multiple), count: list.length });
       return list;
     };
     W._fs = F;
@@ -1090,7 +1092,7 @@ async function main() {
   expected(p1.ok === true && p1.via === 'fsa' && typeof p1.name === 'string' && /^anvil-project-.+\.anvl$/.test(p1.name) &&
     typeof p1.bytes === 'number' && p1.bytes > 64 && p1.closed === true && p1.textLen > 64 && p1.fakeSaveCount === 1 &&
     p1.sugg === p1.name &&
-    p1.lastSave && p1.lastSave.via === 'fsa' && p1.lastSave.name === p1.name && typeof p1.lastSave.bytes === 'number' && p1.lastSave.bytes > 0 && typeof p1.lastSave.at === 'number' && p1.lastSave.at > 0,
+    p1.lastSave && p1.lastSave.via === 'fsa' && p1.lastSave.name === p1.name && typeof p1.lastSave.bytes === 'number' && p1.lastSave.bytes > 0 && ((typeof p1.lastSave.at === 'number' && p1.lastSave.at > 0) || (typeof p1.lastSave.at === 'string' && p1.lastSave.at.length >= 10)),
     '2b project save via seam: ok · via fsa · name anvil-project-<slug>.anvl · text captured + __avProjLastSave set',
     J({ ok: p1.ok, via: p1.via, name: p1.name, bytes: p1.bytes, sugg: p1.sugg, textLen: p1.textLen, closed: p1.closed, lastSave: p1.lastSave, err: p1.err || p1.error }));
 

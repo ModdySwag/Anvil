@@ -338,6 +338,39 @@ function avCardFirst(v1, v2) {
 
 /* ---------- avCardBuild (§2.2) — live defaults: name/kind/params/macros ---------- */
 
+/* S4 fix (parent, 2026-10-08): compact the LIVE patch — mirror entries that equal their knob
+   default (data-def on .av-knob[data-knob], av_knob.js) are omitted: a share card carries the
+   CHANGES; defaults ride every install. No DOM / no defs -> nothing omitted (DOM-free paths and
+   the node harness stay lossless — the wire keeps its exact round-trip). */
+function avCardPatchDiff(p) {
+  try {
+    if (!p || typeof p !== "object") return p;
+    const d = (typeof document !== "undefined") ? document : null;
+    if (!d || typeof d.querySelectorAll !== "function") return p;
+    const nodes = d.querySelectorAll(".av-knob[data-knob][data-def]");
+    if (!nodes || !nodes.length) return p;
+    const defs = {};
+    for (let i = 0; i < nodes.length; i++) {
+      let path = null, def = NaN;
+      try {
+        path = nodes[i].getAttribute("data-knob");
+        def = Number(nodes[i].getAttribute("data-def"));
+      } catch (e2) { continue; }
+      if (path && isFinite(def) && !(path in defs)) defs[path] = def;
+    }
+    const out = {};
+    const keys = Object.keys(p);
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      const v = p[k];
+      const nv = (typeof v === "boolean") ? (v ? 1 : 0) : v;
+      if ((k in defs) && typeof nv === "number" && isFinite(nv) && nv === defs[k]) continue;
+      out[k] = v;
+    }
+    return out;
+  } catch (e) { return p; }
+}
+
 function avCardBuild(patch) {
   const warnings = [];
   try {
@@ -351,7 +384,7 @@ function avCardBuild(patch) {
     } catch (e) { /* no mirror */ }
     const liveP = avCardParamsNorm(avCardParamsMirror());
     if (liveP.dropped > 0) { avCardNote("build dropped " + liveP.dropped + " param entries"); warnings.push("params: " + liveP.dropped + " entries dropped"); }
-    let p = liveP.p;
+    let p = avCardPatchDiff(liveP.p);
     let m = avCardMacrosFromPayload();
     /* overrides (payload shape n/k/p/m first, house aliases name/kind/params/macros second) */
     const oName = avCardFirst(o.n, o.name);
@@ -1422,14 +1455,12 @@ function avCardShare(opts) {
                   return;
                 }
                 warnings.push("share failed (" + (nm || "error") + ") — downloaded instead");
-                avCardDownloadShare(receipt, png.blob, fname, warnings);
-                res(receipt);
+                avCardDownloadShare(receipt, png.blob, fname, warnings).then(function () { res(receipt); });
               });
               return;
             }
           }
-          avCardDownloadShare(receipt, png.blob, fname, warnings);
-          res(receipt);
+          avCardDownloadShare(receipt, png.blob, fname, warnings).then(function () { res(receipt); });
         } catch (e) {
           receipt.error = avCardErrMsg(e);
           avCard.lastShare = { ok: false, via: "none", pngBytes: receipt.pngBytes };
@@ -1447,36 +1478,50 @@ function avCardShare(opts) {
   });
 }
 
-/* the download leg shared by share's fallbacks: avDeliverDownload when callable, own anchor else */
+/* the download leg shared by share's fallbacks: avDeliverDownload when callable, own anchor else.
+   avDeliverDownload's contract takes bytes (byteLength) — the PNG Blob converts via arrayBuffer()
+   FIRST (the av_video seam lesson), else the local anchor takes the Blob directly. */
 function avCardDownloadShare(receipt, blob, fname, warnings) {
-  try {
-    const deliver = avCardDeliver();
-    let ok = false;
-    if (deliver) {
-      try { ok = deliver(blob, fname) === true; } catch (e) { ok = false; }
-    }
-    if (!ok) {
-      try { ok = avCardAnchor(blob, fname); } catch (e) { ok = false; }
-      if (ok) warnings.push("used the local anchor fallback");
-    }
-    if (ok) {
-      receipt.ok = true;
-      receipt.via = "download";
-      avCard.lastShare = { ok: true, via: "download", pngBytes: receipt.pngBytes };
-      avCardRecordLast(receipt.enc, receipt.url, receipt.pngBytes, "download");
-    } else {
-      receipt.ok = false;
-      receipt.error = receipt.error || "no share or download path available";
-      receipt.via = "none";
-      avCard.lastShare = { ok: false, via: "none", pngBytes: receipt.pngBytes };
-      avCardRecordLast(receipt.enc, receipt.url, receipt.pngBytes, "none");
-    }
-    receipt.warnings = warnings.slice(0, AV_CARD_NOTE_CAP);
-  } catch (e) {
-    receipt.ok = false;
-    receipt.error = avCardErrMsg(e);
-    receipt.via = "none";
-  }
+  return new Promise(function (res) {
+    const finish = function (bytes) {
+      try {
+        const deliver = avCardDeliver();
+        let ok = false;
+        if (deliver && bytes) {
+          try { ok = deliver(bytes, fname) === true; } catch (e) { ok = false; }
+        }
+        if (!ok) {
+          try { ok = avCardAnchor(blob, fname); } catch (e) { ok = false; }
+          if (ok) warnings.push("used the local anchor fallback");
+        }
+        if (ok) {
+          receipt.ok = true;
+          receipt.via = "download";
+          avCard.lastShare = { ok: true, via: "download", pngBytes: receipt.pngBytes };
+          avCardRecordLast(receipt.enc, receipt.url, receipt.pngBytes, "download");
+        } else {
+          receipt.ok = false;
+          receipt.error = receipt.error || "no share or download path available";
+          receipt.via = "none";
+          avCard.lastShare = { ok: false, via: "none", pngBytes: receipt.pngBytes };
+          avCardRecordLast(receipt.enc, receipt.url, receipt.pngBytes, "none");
+        }
+        receipt.warnings = warnings.slice(0, AV_CARD_NOTE_CAP);
+      } catch (e) {
+        receipt.ok = false;
+        receipt.error = avCardErrMsg(e);
+        receipt.via = "none";
+      }
+      res(receipt);
+    };
+    try {
+      if (blob && typeof blob.arrayBuffer === "function") {
+        blob.arrayBuffer().then(function (ab) { finish(ab); }, function () { finish(null); });
+      } else {
+        finish(blob);
+      }
+    } catch (e) { finish(null); }
+  });
 }
 
 /* clipboard fallback: the legacy execCommand path, guarded */
