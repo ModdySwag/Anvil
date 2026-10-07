@@ -766,3 +766,28 @@ Resume phrase: **"continue anvil"**.
 8. Watch items: `avStoreInstalled()` must stay SYNC (sa-3 seam — sa-0 complies); preview parity
    (no offline mod macros) documented; sa-1's rig exits early with a message if hosts are missing.
 
+
+## SESSION SAVE — 2026-10-07 ~15:45 (context ~91% → NEW SESSION opens the P5 integration block)
+
+- HEAD **`d669610`**, tree clean. P5 stage-0 + stage-1 ALL LANDED (see the two sections above);
+  the ONLY remaining step is the **parent integration block** (flags 1–8 in "P5 stage-1 LANDED").
+  P4 closed (frozen 83e4b478, battery green, bench-v7 128 @ 48.47%).
+- **FIRST MOVES in the continued session:** read the "P5 stage-1 LANDED" section + `verify/_p5_wave.md`
+  §4b; then apply flags 1–8 as ONE counted-assert script (suggested scratch path
+  `cache/scratch/p5/integrate/_p5_integrate.py`) → `python3 build.py` → smoke + `verify_avpacks.mjs`
+  re-run (expect 228/228) + `cdp_store` first run (pin EXPECT_SHA) → FULL battery (re-pin midi/
+  sample/rec/fx/seq/store to the new sha) → PERF GATE (bench + stress, quiet window if possible) →
+  commits + addendum 20+.
+- **Anchor hints (verified 2026-10-07):** `src/av_store.js` `avStoreStatus()` at ~L816 — add the
+  manifest entries to its `index` object (`packs: st.index ? st.index.packs : null`).
+  `avStoreUiClasses()` returns 50 names (src/av_store_ui.js, search "function avStoreUiClasses");
+  `avBankClasses()` returns 13 (src/av_bank.js). build.py: insert `av_store` → `av_bank` →
+  `av_store_ui` between `av_seq_ui` and `av_synth` in `js_parts`. body.html: `#av-store` card after
+  the `#av-seq` card; `#av-synth-bank-host` div inside `#av-synth` right after its `<h2>Synth</h2>`.
+  cdp_smoke.mjs: add the store check after the P4 `seqC` block. app_core boot: after the `undoOk`
+  line add `avStoreInit()` → `avBankInit()` → `avStoreUiInit()` (guarded) + `avStoreOnChange` →
+  `avBankRefresh` wire + extend the boot console.log. Styles: append the store + bank class blocks
+  (`av-store-*` 50 incl. `.av-pf-filter`/`.av-pf-n`/`.av-pack-*`/`.installed`/`.busy`/`.av-store-off-chip`
+  families; `av-bank-*` 13).
+- Resume phrase: **"continue anvil"**.
+
