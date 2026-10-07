@@ -1132,3 +1132,34 @@ battery 15 → gate → addendum 29 + README.
   verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups (fill control wiring, chains/scenes undo
   checkpoints, acid accent-flag decision) · PERFECT TUNINGS (tuning engine) · optional quiet-window bench
   re-runs. Resume phrase: **"continue anvil"**.
+
+## Resume addendum 30 — 2026-10-08 (S4 DELIVER EXTRAS INTEGRATED + CLOSED — battery ALL GREEN on `c92a4445`; projects · cards · clips ship)
+
+- Children `deleg_4b764d01` (5 parallel): sa-A `src/av_proj.js` (835; harness 273/273) · sa-B `src/av_card.js`
+  (1624; 272/272 — QR proven byte-for-byte vs reference qrcode@1.5.4 for all 8 masks × 5 texts) · sa-C
+  `src/av_video.js` (1146; 162/162) · sa-D `src/av_files_ui.js` (1032; 274/274) · sa-E `verify/cdp_s4.mjs`
+  (rig 37 checks). Parent re-ran every harness green.
+- Parent integration (`_s4_integrate.py`, 10 edits): build parts `av_proj → av_card → av_video →
+  av_files_ui` (after av_deck_ui) · `#av-files` card + host after `#av-deck` · styles block (22-class
+  coverage via `_s4_classes.mjs`) · app_core **1.2.0 "S4 · deliver extras"** + guarded boots + the
+  `avCardUrlApply()` #avp= boot hook · smoke 22→23.
+- Rig first runs: 29/36 → THREE classified fixes → **36/36** (pins → battery run = 37/37 pinned):
+  (1) rig SPEC ×2 (`_s4_rigfix.py`: fake FSA open recorder; lastSave.at ISO-or-epoch tolerance);
+  (2) app fix (`_s4_cardfix.py`: the live card wire is a knob-default DIFF — a share link must be
+  compact, not the full 127-param mirror); (3) app fix (`_s4_cardfix2.py`: share→download converts the
+  PNG Blob via arrayBuffer() before avDeliverDownload — the byteLength seam).
+- **Frozen `index.html` = `c92a4445…` (2,269,601 B)** · pins moved (13 files; `_s4_pins.py`) ·
+  **BATTERY ALL GREEN — 16 suites** (`cache/scratch/s4/integrate/battery-s4.log`): smoke 23 · studio 37 ·
+  sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31 ·
+  store 28 · bounce 32 · deck 35 · **s4 37 pinned**. Screenshot `renders/s4-suite.png`.
+- **PERF GATE:** bench `bench-v16-s4-full.{log,json}` — knee 96/128 @ 59.81% this window; the decisive
+  same-conditions A/B (old 45cc39d7 vs new c92a4445, offline-only, back-to-back) read IDENTICAL knees
+  (96/128; 1374.76 vs 1335.91 µs/q — new marginally faster) → **environment, not regression**;
+  worklet sha `6e66274e…` byte-identical (no engine work). Stress ×2: 20 / 16 deltas (the quietest of
+  the night; drains PASS, 0 page errors). Records: `verify/s4-gate-attribution.txt`.
+- Close commits: integration `04ef4c6` · fixes+pins `4bf10a4` · battery `d4d6836` · then this close.
+  **NOTHING RUNNING** — no background jobs, no live subagents.
+- **NEXT SESSION OPENS ON: the next GOLDEN BUILD block** — PF-grade popout keyboard · CODE (#81 open
+  module API) · walkthrough/help (#20/#45/#80) — then max modules / platform (share/cloud/PWA, #78/#82)
+  → P7 polish → deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups · PERFECT
+  TUNINGS · optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.

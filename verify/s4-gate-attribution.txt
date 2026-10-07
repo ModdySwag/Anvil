@@ -1,0 +1,23 @@
+S4 perf-gate record — bench (v16) + stress ×2 + the same-conditions A/B control
+(2026-10-08 ~01:55; Moddy's live console, ACTIVE throughout)
+
+=== Bench — verify/bench-v16-s4-full.{log,json} (new build c92a4445) ===
+- offline knee last-pass 96 · first-fail 128 · monotone · n=128 @ 1594.93 µs/q (59.81% budget)
+- realtime/other cells in the log; worklet sha = 6e66274e… (grep index.html) — byte-identical engine.
+- Context: v15 (DECK, 45cc39d7) read knee 128 @ 49.42% on a quieter window. The knee moved 128→96
+  between those windows — the standing A/B law requires the decisive same-conditions probe when the
+  bench (the publishable metric) drops.
+
+=== DECISIVE A/B — old frozen bytes vs new, offline-only, BACK-TO-BACK (cache/scratch/s4/integrate/) ===
+  old = 45cc39d7 (DECK close, extracted from dd9b227) · new = c92a4445 (S4 build); same machine, same hour
+- old (ab-old.log): OFFLINE knee last-pass 96 · first-fail 128 · monotone · n=128 @ 1374.76 µs/q (51.55%)
+- new (ab-new.log): OFFLINE knee last-pass 96 · first-fail 128 · monotone · n=128 @ 1335.91 µs/q (50.10%)
+Verdict: IDENTICAL knees, identical first-fail, byte-identical worklet → **environment, not regression**
+(the new build is marginally faster on the same control — page modules only, no engine delta).
+
+=== Stress ×2 — verify/stress-s4-run1/2.log ===
+- run1: total delta 20 over 41 intervals; nonzero 11; [verified-window 1 · uni>3-window 10]; verdict asserts-not-met (standing shape)
+- run2: total delta 16; nonzero 10; [verified-window 1 · uni>3-window 9]
+- drains PASS ×2 · page errors 0 ×2 — the LOWEST deltas of the whole run (the machine was quiet during
+  this window; the DECK-era 887/322/760 figures were the loaded-window artifacts already attributed).
+- P·1 satisfied raw; no engine work this wave (S4 touches page modules only — worklet untouched).
