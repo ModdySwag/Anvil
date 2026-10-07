@@ -1266,3 +1266,77 @@ body.av-palette-open { }
 .av-seq-song-file { display: none; }
 .av-seq-song-openbtn { }
 .av-seq-song-status { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+
+/* ==== PLATFORM wave (av_pwa.js + av_family.js) - generated block from avPwaClasses() + avFamilyClasses().
+   Tokens: the house :root set. Chips ride the hidden attribute (av_pwa toggles it). */
+
+/* ---- PWA chips (av_pwa.js) ---- */
+.av-pwa-chips {
+  position: fixed; right: 16px; bottom: calc(16px + var(--dock-tax, 0px));
+  z-index: 46; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  pointer-events: none;
+}
+.av-pwa-chip {
+  pointer-events: auto;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  color: var(--text-2); background: rgba(16, 22, 27, .94);
+  border: 1px solid var(--hair); border-radius: 999px; padding: 5px 11px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .45);
+  max-width: 340px; overflow-wrap: anywhere; text-align: right;
+}
+.av-pwa-chip[hidden] { display: none; }
+button.av-pwa-chip { cursor: pointer; }
+button.av-pwa-chip:hover { border-color: var(--teal-deep); color: var(--text); }
+#av-pwa-install { color: var(--teal); border-color: var(--teal-deep); }
+#av-pwa-update { color: var(--teal-glow); border-color: var(--teal); }
+#av-pwa-offline { color: var(--mod-orange); border-color: #5c4520; }
+#av-pwa-ios { color: var(--text-3); }
+
+/* ---- FAMILY card (av_family.js) ---- */
+.av-family { display: flex; flex-direction: column; gap: 10px; }
+.av-fam-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.av-fam-title { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
+.av-fam-cap { font-size: 11px; color: var(--text-3); }
+.av-fam-row {
+  display: flex; flex-direction: column; gap: 8px;
+  background: rgba(16, 22, 27, .62);
+  border: 1px solid var(--hair); border-radius: 8px; padding: 10px 12px;
+}
+.av-fam-row-title { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal-deep); font-weight: 600; }
+.av-fam-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-fam-field { display: inline-flex; flex-direction: column; gap: 2px; }
+.av-fam-field-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.av-fam-btn {
+  font-family: var(--mono); font-size: 11px; color: var(--text);
+  background: var(--raised); border: 1px solid var(--hair); border-radius: 6px;
+  padding: 5px 11px; cursor: pointer;
+}
+.av-fam-btn:hover { border-color: var(--teal-deep); }
+.av-fam-btn:disabled { opacity: .55; cursor: default; }
+.av-fam-select, .av-fam-text {
+  background: var(--raised); color: var(--text); border: 1px solid var(--hair);
+  border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 4px 7px;
+}
+.av-fam-select:focus, .av-fam-text:focus { outline: none; border-color: var(--teal-deep); }
+.av-fam-file { display: inline-flex; align-items: center; }
+.av-fam-file-in { max-width: 190px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-fam-loops { min-width: 64px; }
+.av-fam-pack { min-width: 150px; }
+.av-fam-search { min-width: 130px; }
+.av-fam-status-line { font-size: 11px; color: var(--text-2); min-height: 14px; }
+.av-fam-msg { color: var(--text-2); }
+.av-fam-err { color: #ff8a7a; }
+.av-fam-list { display: flex; flex-direction: column; gap: 4px; max-height: 190px; overflow-y: auto; }
+.av-fam-session {
+  display: flex; flex-direction: column; gap: 2px;
+  border: 1px solid var(--hair); border-radius: 6px; padding: 6px 9px; cursor: pointer;
+  background: rgba(10, 14, 17, .35);
+}
+.av-fam-session:hover { border-color: var(--teal-deep); }
+.av-fam-session-name { font-size: 12px; color: var(--text); overflow-wrap: anywhere; }
+.av-fam-session-sub { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-fam-selected { border-color: var(--teal); box-shadow: inset 0 0 0 1px rgba(46, 216, 201, .22); }
+.av-fam-bad .av-fam-session-sub { color: #ff8a7a; }
+.av-fam-empty { font-size: 11px; color: var(--text-3); }
+.av-fam-note { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-fam-busy { opacity: .65; }

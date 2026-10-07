@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<!--
+  Anvil - HUB INBOX (platform wave artifact B1; pins: verify/_platform_wave.md section 2.4).
+
+  Part of Anvil, a MODDYS Foundry instrument - Copyright (C) 2026 Modtech (a.k.a. Moddy),
+  released under the GNU AGPL-3.0-or-later (see LICENSE). This page is static and
+  self-contained: inline CSS + inline JS, zero external resources, no build step; every
+  reference is relative and same-origin, so it works straight from moddys.net/anvil/ as
+  well as from any local test server.
+
+  What it is: the receiving end of the HUB handshake. The Anvil app's FAMILY card
+  ("SEND TO HUB") bounces the current loop to WAV bytes and writes one record into the
+  shared, same-origin bridge store:
+
+      IndexedDB database "moddys-bridges" version 1, objectStore "outbox" (keyPath "id")
+      record: { id: "<at>-<rand>", name, kind: "loop", bpm, bars, sec, sr, ch, bytes,
+                at (epoch ms), wav (ArrayBuffer of the WAV file bytes) }
+
+  This page lists the outbox newest-first, plays each loop from a Blob of the stored WAV
+  bytes (audio/wav), offers a Download (blob URL + download attribute), deletes records on
+  request, and revokes every object URL when it re-renders or unloads. The handshake is
+  local: same origin, nothing uploaded. Where IndexedDB is unavailable the page says so
+  honestly - no crash and no console noise either way. Debug handle: window.__avInbox =
+  { list(), remove(id), state() }.
+
+  Look: dark ground #16140f (the wave pin, same value as the PWA manifest's
+  background_color / theme_color); every other colour, font and shape token below is
+  copied from the app's own src/styles.css :root at authoring (--panel #10161B,
+  --raised #161F26, --hair #22303A, --teal #2ED8C9, --teal-deep #0F8F85,
+  --teal-glow #7FF3E8, --text #E8F1F2, --text-2 #9FB3BC, --text-3 #6B7F8A,
+  --mod-vermillion #D55E00, --sans / --mono font stacks), so the card matches the app.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anvil - Music Hub Inbox</title>
+<meta name="description" content="Anvil HUB INBOX - bounced loops from the Anvil app, read from the local same-origin bridge store (moddys-bridges / outbox). Nothing is uploaded.">
+<meta name="theme-color" content="#16140f">
+<link rel="icon" href="data:,">
+<style>
+  /* Tokens - copied from src/styles.css :root (exact values at authoring), plus the ground pin. */
+  :root {
+    --ground: #16140f;      /* page ground: wave contract section 2.4 + manifest background/theme */
+    --bg: #0A0E11;
+    --panel: #10161B;
+    --raised: #161F26;
+    --hair: #22303A;
+    --teal: #2ED8C9;
+    --teal-deep: #0F8F85;
+    --teal-glow: #7FF3E8;
+    --text: #E8F1F2;
+    --text-2: #9FB3BC;
+    --text-3: #6B7F8A;
+    --mod-vermillion: #D55E00;
+    --sans: "IBM Plex Sans", Inter, system-ui, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    --gap: 8px;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+  }
+  a { color: var(--teal); }
+
+  /* header - the app's .av-head look (src/styles.css) */
+  .av-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--hair);
+    background: var(--panel);
+  }
+  .av-word { font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--teal); font-size: 15px; }
+  h1.av-word { margin: 0; }
+  .av-arrow { color: var(--teal-glow); font-weight: 700; font-size: 15px; }
+  .av-spacer { flex: 1; }
+  .av-chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border: 1px solid var(--hair);
+    border-radius: 999px;
+    color: var(--text-2);
+    background: var(--raised);
+    white-space: nowrap;
+  }
+  .av-chip.av-hot { color: var(--teal); border-color: var(--teal-deep); }
+  .av-dim { color: var(--text-3); }
+
+  /* buttons - the app's .av-btn, stretched to carry text */
+  .av-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    padding: 0 10px;
+    border: 1px solid var(--hair);
+    border-radius: 6px;
+    background: var(--raised);
+    color: var(--text-2);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12px;
+    font-family: var(--sans);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .av-btn:hover { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+  .av-btn:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
+  .av-del:hover { color: var(--mod-vermillion); border-color: var(--mod-vermillion); box-shadow: 0 0 6px rgba(213,94,0,.28); }
+
+  /* main + card - the app's .av-main / .av-card look */
+  .av-main {
+    flex: 1;
+    width: 100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .av-card {
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: 8px;
+    padding: 16px 18px;
+    position: relative;
+  }
+  .av-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 2px;
+    border-radius: 8px 0 0 8px;
+    background: var(--teal);
+  }
+  .av-note { color: var(--text-2); margin: 8px 0; }
+  .av-note.av-dim { color: var(--text-3); }
+  .av-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  /* inbox bar + rows */
+  .av-hub-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 10px 0 2px; }
+  .av-hub-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+  .av-hub-row {
+    background: var(--raised);
+    border: 1px solid var(--hair);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .av-hub-rowhead { display: flex; align-items: baseline; gap: 8px; }
+  .av-hub-name { flex: 1; min-width: 0; font-family: var(--mono); font-size: 13px; color: var(--teal-glow); overflow-wrap: anywhere; }
+  .av-hub-time { flex: none; font-family: var(--mono); font-size: 11px; color: var(--text-3); white-space: nowrap; }
+  .av-hub-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--mono); font-size: 11.5px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .av-hub-ctl { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+  .av-hub-ctl audio { flex: 1 1 320px; min-width: 240px; max-width: 560px; }
+</style>
+</head>
+<body>
+<header class="av-head">
+  <h1 class="av-word">ANVIL <span class="av-arrow">-&gt;</span> MUSIC HUB INBOX</h1>
+  <span class="av-chip av-hot">local handshake</span>
+  <span class="av-spacer"></span>
+  <a class="av-btn" href="./index.html">Open Anvil</a>
+</header>
+
+<main class="av-main">
+  <section class="av-card" id="av-hub">
+    <p class="av-note">The handshake is local: bounced loops travel from Anvil into this page's own same-origin store - same machine, same origin, nothing uploaded.</p>
+    <div class="av-hub-bar">
+      <span class="av-chip av-hot" id="av-hub-count" data-count="0">0 loops</span>
+      <span class="av-spacer"></span>
+      <span class="av-chip av-dim av-mono">store: moddys-bridges / outbox</span>
+    </div>
+    <p class="av-note av-dim" id="av-hub-empty" hidden>Nothing here yet &mdash; bounce a loop in Anvil and press SEND TO HUB.</p>
+    <p class="av-note av-dim" id="av-hub-note" hidden></p>
+    <div class="av-hub-list" id="av-hub-list"></div>
+    <noscript><p class="av-note av-dim">This page reads the bridge store with its inline script - enable JavaScript to see bounced loops.</p></noscript>
+  </section>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ------------------------------------------------------------------------ *
+   * Pinned contract (verify/_platform_wave.md section 2.4) - the same-origin
+   * bridge store the Anvil app's HUB row writes into.
+   * ------------------------------------------------------------------------ */
+  var DB_NAME = "moddys-bridges";
+  var DB_VERSION = 1;
+  var STORE = "outbox";
+  var UNAVAILABLE_COPY = "The bridge store is unavailable in this browser context - " +
+    "IndexedDB is off or blocked here. Bounce a loop in Anvil and open this inbox on " +
+    "moddys.net (both pages must share one origin).";
+
+  /* ------------------------------------------------------------------------ *
+   * Page state
+   * ------------------------------------------------------------------------ */
+  var items = [];    // raw outbox records, newest first (wav bytes kept for playback)
+  var urls = {};     // record id -> live Blob object URL (revoked on re-render / unload)
+  var db = null;     // open IDBDatabase, or null
+  var pulling = false;
+  var lastSig = null;
+  var state = {
+    ok: true, available: false, ready: false,
+    db: DB_NAME, store: STORE, version: DB_VERSION,
+    count: 0, bytes: 0, newest: 0, oldest: 0,
+    error: null
+  };
+
+  /* ------------------------------------------------------------------------ *
+   * Small helpers
+   * ------------------------------------------------------------------------ */
+  function $(id) { return document.getElementById(id); }
+  function num(v) { var n = Number(v); return isFinite(n) ? n : 0; }
+  function numOrNull(v) { var n = Number(v); return isFinite(n) ? n : null; }
+  function fail(e) {
+    var s = (e && e.message) ? String(e.message) : String(e);
+    return s.slice(0, 200);
+  }
+  function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+  function fmtTime(at) {
+    var ms = num(at);
+    if (ms <= 0) return "-";
+    var d = new Date(ms);
+    if (!isFinite(d.getTime())) return "-";
+    return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) +
+      " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+  }
+  function fmtBpm(bpm) {
+    var n = Number(bpm);
+    if (!isFinite(n) || n <= 0) return "-";
+    return (Math.round(n) === n ? String(n) : n.toFixed(1)) + " bpm";
+  }
+  function fmtBars(bars) {
+    var n = Number(bars);
+    if (!isFinite(n) || n <= 0) return "-";
+    var shown = Math.round(n) === n ? String(n) : n.toFixed(1);
+    return shown + (n === 1 ? " bar" : " bars");
+  }
+  function fmtSec(sec) {
+    var n = Number(sec);
+    if (!isFinite(n) || n <= 0) return "-";
+    return n.toFixed(1) + " s";
+  }
+  function fmtKB(bytes) {
+    var n = Number(bytes);
+    if (!isFinite(n) || n < 0) return "-";
+    return (n / 1024).toFixed(1) + " KB";
+  }
+
+  /* ------------------------------------------------------------------------ *
+   * Record accessors (tolerant of any record shape)
+   * ------------------------------------------------------------------------ */
+  function isWavBytes(w) {
+    if (!w || typeof w !== "object") return false;
+    try { if (w instanceof ArrayBuffer) return true; } catch (e) { }
+    try { if (ArrayBuffer.isView && ArrayBuffer.isView(w)) return true; } catch (e) { }
+    try { if (Object.prototype.toString.call(w) === "[object ArrayBuffer]") return true; } catch (e) { }
+    return false;
+  }
+  function wavBytes(rec) {
+    var w = rec ? rec.wav : null;
+    return isWavBytes(w) ? w : null;
+  }
+  function recBytes(rec) {
+    var n = Number(rec && rec.bytes);
+    if (isFinite(n) && n >= 0) return n;
+    var w = wavBytes(rec);
+    return w ? w.byteLength : 0;
+  }
+  function readable(rec) {
+    return {
+      id: String(rec && rec.id),
+      name: rec && rec.name ? String(rec.name) : "(unnamed loop)",
+      kind: rec && rec.kind ? String(rec.kind) : "loop",
+      bpm: numOrNull(rec && rec.bpm),
+      bars: numOrNull(rec && rec.bars),
+      sec: numOrNull(rec && rec.sec),
+      sr: numOrNull(rec && rec.sr),
+      ch: numOrNull(rec && rec.ch),
+      bytes: recBytes(rec),
+      at: num(rec && rec.at),
+      time: fmtTime(rec && rec.at)
+    };
+  }
+  function dlName(rec) {
+    var n = rec && rec.name ? String(rec.name).trim() : "";
+    if (!n) n = "anvil-loop-" + String((rec && rec.id) || "record");
+    if (!/\.wav$/i.test(n)) n += ".wav";
+    return n;
+  }
+  function sigOf(list) {
+    var parts = [], i;
+    for (i = 0; i < list.length; i++) {
+      parts.push(String(list[i].id) + ":" + num(list[i].at) + ":" + recBytes(list[i]));
+    }
+    return parts.join("|");
+  }
+  function sortNewestFirst(list) {
+    list.sort(function (a, b) {
+      var d = num(b && b.at) - num(a && a.at);
+      if (d) return d;
+      var ai = String(a && a.id), bi = String(b && b.id);
+      return ai < bi ? 1 : (ai > bi ? -1 : 0);
+    });
+    return list;
+  }
+
+  /* ------------------------------------------------------------------------ *
+   * IndexedDB - the same-origin bridge store
+   * ------------------------------------------------------------------------ */
+  function openDb() {
+    return new Promise(function (resolve, reject) {
+      var idb;
+      try { idb = window.indexedDB || null; } catch (e) { idb = null; }
+      if (!idb) { reject(new Error("IndexedDB is not available")); return; }
+      var req;
+      try { req = idb.open(DB_NAME, DB_VERSION); } catch (e) { reject(e); return; }
+      if (!req || typeof req !== "object") { reject(new Error("indexedDB.open returned nothing")); return; }
+      var watchdog = null;
+      function clearWatch() { if (watchdog) { clearTimeout(watchdog); watchdog = null; } }
+      req.onupgradeneeded = function () {
+        try {
+          var d = req.result;
+          if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: "id" });
+        } catch (e) { }
+      };
+      req.onsuccess = function () { clearWatch(); resolve(req.result); };
+      req.onerror = function () {
+        clearWatch();
+        reject(req.error || new Error("the bridge store could not be opened"));
+      };
+      req.onblocked = function () {
+        if (watchdog) return;
+        watchdog = setTimeout(function () {
+          reject(new Error("the bridge store is blocked by another open tab"));
+        }, 12000);
+      };
+    });
+  }
+  function readAll(d) {
+    return new Promise(function (resolve, reject) {
+      var tx, store;
+      try { tx = d.transaction(STORE, "readonly"); store = tx.objectStore(STORE); }
+      catch (e) { reject(e); return; }
+      if (typeof store.getAll !== "function") { reject(new Error("this IndexedDB has no getAll")); return; }
+      var req;
+      try { req = store.getAll(); } catch (e) { reject(e); return; }
+      req.onsuccess = function () { resolve(req.result || []); };
+      req.onerror = function () { reject(req.error || new Error("could not read the outbox")); };
+    });
+  }
+  function deleteRow(d, id) {
+    return new Promise(function (resolve, reject) {
+      var tx, store;
+      try { tx = d.transaction(STORE, "readwrite"); store = tx.objectStore(STORE); }
+      catch (e) { reject(e); return; }
+      var req;
+      try { req = store.delete(id); } catch (e) { reject(e); return; }
+      req.onerror = function () { reject(req.error || new Error("could not delete the record")); };
+      tx.oncomplete = function () { resolve(true); };
+      tx.onerror = function () { reject(tx.error || new Error("could not delete the record")); };
+      tx.onabort = function () { reject(tx.error || new Error("the delete was aborted")); };
+    });
+  }
+
+  /* ------------------------------------------------------------------------ *
+   * Rendering
+   * ------------------------------------------------------------------------ */
+  function revokeAll() {
+    for (var id in urls) {
+      try { window.URL.revokeObjectURL(urls[id]); } catch (e) { }
+    }
+    urls = {};
+  }
+  function recompute() {
+    var bytes = 0, newest = 0, oldest = 0, i;
+    for (i = 0; i < items.length; i++) {
+      var b = recBytes(items[i]);
+      if (isFinite(b) && b > 0) bytes += b;
+      var at = num(items[i].at);
+      if (at > 0) {
+        if (!newest || at > newest) newest = at;
+        if (!oldest || at < oldest) oldest = at;
+      }
+    }
+    state.count = items.length;
+    state.bytes = bytes;
+    state.newest = newest;
+    state.oldest = oldest;
+  }
+  function setMarker() {
+    var v = state.available ? "ready" : "unavailable";
+    try { if (document.body) document.body.setAttribute("data-av-inbox", v); } catch (e) { }
+    try { document.documentElement.setAttribute("data-av-inbox", v); } catch (e) { }
+  }
+  function render() {
+    var list = $("av-hub-list");
+    var cnt = $("av-hub-count");
+    var empty = $("av-hub-empty");
+    var note = $("av-hub-note");
+    revokeAll();
+    if (list) list.textContent = "";
+    var n = items.length;
+    if (cnt) {
+      cnt.textContent = n + (n === 1 ? " loop" : " loops");
+      cnt.setAttribute("data-count", String(n));
+    }
+    if (empty) empty.hidden = !(state.ready && state.available && n === 0 && !state.error);
+    if (note) {
+      if (state.ready && !state.available) {
+        note.hidden = false;
+        note.textContent = UNAVAILABLE_COPY + (state.error ? " (" + state.error + ")" : "");
+      } else if (state.ready && state.error) {
+        note.hidden = false;
+        note.textContent = "The inbox could not read the bridge store: " + state.error;
+      } else {
+        note.hidden = true;
+        note.textContent = "";
+      }
+    }
+    if (list && state.available) {
+      for (var i = 0; i < n; i++) list.appendChild(buildRow(items[i]));
+    }
+    lastSig = sigOf(items);
+  }
+  function buildRow(rec) {
+    var row = document.createElement("div");
+    row.className = "av-hub-row";
+    row.setAttribute("data-id", String(rec.id));
+
+    var head = document.createElement("div");
+    head.className = "av-hub-rowhead";
+    var name = document.createElement("span");
+    name.className = "av-hub-name";
+    name.textContent = rec.name ? String(rec.name) : "(unnamed loop)";
+    var when = document.createElement("span");
+    when.className = "av-hub-time";
+    when.textContent = fmtTime(rec.at);
+    head.appendChild(name);
+    head.appendChild(when);
+    row.appendChild(head);
+
+    var meta = document.createElement("div");
+    meta.className = "av-hub-meta";
+    var cells = [fmtBpm(rec.bpm), fmtBars(rec.bars), fmtSec(rec.sec), fmtKB(recBytes(rec))];
+    for (var m = 0; m < cells.length; m++) {
+      var cell = document.createElement("span");
+      cell.textContent = cells[m];
+      meta.appendChild(cell);
+    }
+    row.appendChild(meta);
+
+    var ctl = document.createElement("div");
+    ctl.className = "av-hub-ctl";
+    var wav = wavBytes(rec);
+    var url = null;
+    if (wav) {
+      try { url = window.URL.createObjectURL(new Blob([wav], { type: "audio/wav" })); }
+      catch (e) { url = null; }
+    }
+    if (url) {
+      urls[String(rec.id)] = url;
+      var audio = document.createElement("audio");
+      audio.controls = true;
+      audio.preload = "metadata";
+      audio.setAttribute("aria-label", "Preview " + (rec.name ? String(rec.name) : "loop"));
+      audio.src = url;
+      ctl.appendChild(audio);
+      var dl = document.createElement("a");
+      dl.className = "av-btn";
+      dl.setAttribute("download", dlName(rec));
+      dl.href = url;
+      dl.textContent = "Download";
+      ctl.appendChild(dl);
+    } else {
+      var missing = document.createElement("span");
+      missing.className = "av-note av-dim";
+      missing.textContent = "no audio bytes on this record";
+      ctl.appendChild(missing);
+    }
+
+    var del = document.createElement("button");
+    del.type = "button";
+    del.className = "av-btn av-del";
+    del.textContent = "Delete";
+    del.setAttribute("data-id", String(rec.id));
+    del.addEventListener("click", function () {
+      try { remove(String(rec.id)); } catch (e) { }
+    });
+    ctl.appendChild(del);
+
+    row.appendChild(ctl);
+    return row;
+  }
+
+  /* ------------------------------------------------------------------------ *
+   * State transitions + refresh
+   * ------------------------------------------------------------------------ */
+  function finish(ready, available, error) {
+    state.ready = !!ready;
+    state.available = !!available;
+    state.error = error ? String(error) : null;
+    recompute();
+    setMarker();
+    render();
+  }
+  function pull() {
+    if (!db || pulling) return;
+    pulling = true;
+    readAll(db).then(function (got) {
+      var incoming = [], i;
+      for (i = 0; i < (got || []).length; i++) {
+        var rec = got[i];
+        if (rec && typeof rec === "object" && rec.id != null) incoming.push(rec);
+      }
+      sortNewestFirst(incoming);
+      if (state.ready && state.available && !state.error && sigOf(incoming) === lastSig) {
+        return; // nothing changed - leave the DOM and its object URLs alone
+      }
+      items = incoming;
+      finish(true, true, null);
+    }).catch(function (e) {
+      finish(true, true, fail(e));
+    }).then(function () { pulling = false; });
+  }
+  function remove(id) {
+    id = String(id == null ? "" : id);
+    var idx = -1, i;
+    for (i = 0; i < items.length; i++) {
+      if (String(items[i].id) === id) { idx = i; break; }
+    }
+    if (idx < 0) return Promise.resolve({ ok: false, id: id, error: "no such id" });
+    var gone = items[idx];
+    items.splice(idx, 1);
+    recompute();
+    render();
+    if (!db) return Promise.resolve({ ok: false, id: id, error: "the bridge store is unavailable" });
+    return deleteRow(db, id).then(function () {
+      recompute();
+      return { ok: true, id: id, name: String(gone.name || "") };
+    }).catch(function (e) {
+      items.push(gone);
+      sortNewestFirst(items);
+      recompute();
+      render();
+      return { ok: false, id: id, error: fail(e) };
+    });
+  }
+  function reload() {
+    if (db) pull();
+  }
+
+  /* ------------------------------------------------------------------------ *
+   * Debug handle (contract): list() / remove(id) / state()
+   * ------------------------------------------------------------------------ */
+  window.__avInbox = {
+    list: function () {
+      var out = [], i;
+      for (i = 0; i < items.length; i++) out.push(readable(items[i]));
+      return out;
+    },
+    remove: function (id) { return remove(id); },
+    state: function () {
+      return {
+        ok: !state.error,
+        available: state.available,
+        ready: state.ready,
+        db: state.db,
+        store: state.store,
+        version: state.version,
+        count: state.count,
+        bytes: state.bytes,
+        newest: state.newest,
+        oldest: state.oldest,
+        error: state.error
+      };
+    }
+  };
+
+  /* ------------------------------------------------------------------------ *
+   * Boot / lifecycle
+   * ------------------------------------------------------------------------ */
+  function boot() {
+    try {
+      finish(false, false, null);   // first paint: nothing known yet
+      openDb().then(function (d) {
+        db = d;
+        pull();
+      }).catch(function (e) {
+        db = null;
+        finish(true, false, fail(e));
+      });
+    } catch (e) {
+      try { finish(true, false, fail(e)); } catch (e2) { }
+    }
+  }
+  window.addEventListener("pagehide", function () { try { revokeAll(); } catch (e) { } });
+  window.addEventListener("beforeunload", function () { try { revokeAll(); } catch (e) { } });
+  window.addEventListener("focus", function () { try { reload(); } catch (e) { } });
+  document.addEventListener("visibilitychange", function () {
+    try { if (document.visibilityState === "visible") reload(); } catch (e) { }
+  });
+  if ($("av-hub-list") || $("av-hub-count")) {
+    boot();   // the script sits at the end of body, so the nodes already exist
+  } else if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+})();
+</script>
+</body>
+</html>

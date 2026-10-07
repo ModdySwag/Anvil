@@ -1,0 +1,22 @@
+CHAIN smoke exit=0
+CHAIN studio exit=0
+CHAIN sessions exit=0
+CHAIN comp exit=0
+CHAIN mix exit=0
+CHAIN knob_feel exit=0
+CHAIN keys exit=0
+CHAIN midi exit=0
+CHAIN sample exit=0
+CHAIN rec exit=0
+CHAIN fx exit=0
+CHAIN seq exit=0
+CHAIN store exit=0
+CHAIN bounce exit=0
+CHAIN deck exit=0
+CHAIN s4 exit=0
+CHAIN s5 exit=0
+CHAIN code exit=0
+CHAIN m1 exit=0
+CHAIN m2 exit=1
+CHAIN platform exit=0
+BATTERY-DONE

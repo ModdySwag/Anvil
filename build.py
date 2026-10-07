@@ -151,6 +151,9 @@ js_parts = [
     (SRC / "av_files_ui.js").read_text(encoding="utf-8"),        # S4: the PROJECT & SHARE card (page module)
     (SRC / "av_synth.js").read_text(encoding="utf-8"),  # the SYNTH card (P3 engine layer)
     (SRC / "av_fm_ui.js").read_text(encoding="utf-8"),   # M1: the FM card (page module)
+    (SRC / "av_gnaural.js").read_text(encoding="utf-8"),  # PLATFORM: .gnaural parse/render/zip core (page module)
+    (SRC / "av_pwa.js").read_text(encoding="utf-8"),      # PLATFORM: the PWA module (page module)
+    (SRC / "av_family.js").read_text(encoding="utf-8"),   # PLATFORM: the FAMILY card - suite bridges (page module)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]
 
@@ -188,3 +191,54 @@ size = OUT.stat().st_size
 sha = hashlib.sha256(html.encode("utf-8")).hexdigest()
 print(f"built {OUT}  ({size:,} bytes)")
 print(f"sha256 {sha}")
+
+
+# ---------- PLATFORM wave: PWA emission (sw.js + manifest.webmanifest + icons) ----------
+
+_sw_tpl = (SRC / "av_sw.js").read_text(encoding="utf-8")
+assert "__AV_SW_VERSION__" in _sw_tpl, "sw template: __AV_SW_VERSION__ token missing"
+assert "__AV_SW_ASSETS__" in _sw_tpl, "sw template: __AV_SW_ASSETS__ token missing"
+import json as _json
+_sw_assets = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png",
+              "./icon-512.png", "./icon-maskable-512.png", "./inbox.html"]
+_sw = _sw_tpl.replace("__AV_SW_VERSION__", sha[:8]).replace("__AV_SW_ASSETS__", _json.dumps(_sw_assets))
+assert "__AV_" not in _sw, "sw template: unsubstituted token remains"
+_swout = ROOT / "sw.js"
+_swout.write_text(_sw, encoding="utf-8", newline="\n")
+print("built %s  (%d bytes)" % (_swout.name, _swout.stat().st_size))
+print("sw sha256 %s" % hashlib.sha256(_sw.encode("utf-8")).hexdigest())
+
+_MANIFEST = {
+    "name": "Anvil",
+    "short_name": "Anvil",
+    "description": "A MODDYS Foundry instrument \u2014 acid, wavetable, FM, string, drum, granular and sampler engines in one local-first browser synth.",
+    "id": "./",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#16140f",
+    "theme_color": "#16140f",
+    "categories": ["music", "entertainment"],
+    "icons": [
+        {"src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+        {"src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+        {"src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+    ],
+    "file_handlers": [
+        {"action": "./index.html", "accept": {"application/x-anvil-project": [".anvl"]}},
+    ],
+}
+_mf = ROOT / "manifest.webmanifest"
+_mf.write_text(_json.dumps(_MANIFEST, indent=2, ensure_ascii=False) + "\n", encoding="utf-8", newline="\n")
+print("built %s  (%d bytes)" % (_mf.name, _mf.stat().st_size))
+
+import importlib.util as _ilu
+_spec = _ilu.spec_from_file_location("av_icon", str(SRC / "av_icon.py"))
+_icon = _ilu.module_from_spec(_spec)
+_spec.loader.exec_module(_icon)
+for _nm, _sz, _mk in (("icon-192.png", 192, False), ("icon-512.png", 512, False), ("icon-maskable-512.png", 512, True)):
+    _png = _icon.render_icon(_sz, _mk)
+    assert isinstance(_png, (bytes, bytearray)) and len(_png) > 66, "icon render failed: " + _nm
+    (ROOT / _nm).write_bytes(bytes(_png))
+    print("wrote %s (%d bytes, sha256 %s)" % (_nm, len(_png), hashlib.sha256(bytes(_png)).hexdigest()))

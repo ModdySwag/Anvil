@@ -1,6 +1,6 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v1.5.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.5.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v1.6.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.6.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":2,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
@@ -27,6 +27,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   M2 MPE: deck row + API live + engine expression sender  -> {"chopCard":true,"chopHost":true,"detect":true,"pads":true,"apply":true,"chopUi":"object","chopApi":"function","mpeRow":true,"mpeApi":"object","mpeSet":"function","mpeExprApi":"function","gen":true,"rows":true,"songPlay":true,"trackCtl":true,"songApi":"object"}
  ok   M2 CHOP: card mounted + wired (detect / pads / apply) + api  -> {"chopCard":true,"chopHost":true,"detect":true,"pads":true,"apply":true,"chopUi":"object","chopApi":"function","mpeRow":true,"mpeApi":"object","mpeSet":"function","mpeExprApi":"function","gen":true,"rows":true,"songPlay":true,"trackCtl":true,"songApi":"object"}
  ok   M2 arranger + generative: GEN block / song rows / PLAY SONG / track ctl + song api  -> {"chopCard":true,"chopHost":true,"detect":true,"pads":true,"apply":true,"chopUi":"object","chopApi":"function","mpeRow":true,"mpeApi":"object","mpeSet":"function","mpeExprApi":"function","gen":true,"rows":true,"songPlay":true,"trackCtl":true,"songApi":"object"}
+ ok   PLATFORM family: card mounted + wired (3 bridge rows + hub/res/radio controls + api)  -> {"famCard":true,"host":true,"rows":3,"hub":true,"loopSel":true,"res":true,"resSel":true,"rad":true,"famApi":"object","famInitApi":"function","pwaApi":"object","pwaSupported":false,"manifest":false}
+ ok   PLATFORM pwa: file:// guard (module live, unsupported here, manifest link NOT injected)  -> {"famCard":true,"host":true,"rows":3,"hub":true,"loopSel":true,"res":true,"resSel":true,"rad":true,"famApi":"object","famInitApi":"function","pwaApi":"object","pwaSupported":false,"manifest":false}
  ok   zero page errors
 
-29 passed, 0 failed
+31 passed, 0 failed

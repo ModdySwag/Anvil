@@ -776,6 +776,35 @@ async function avProjImportSamplesRun() {
   return avProjImportInputPick(importFn);
 }
 
+/* ---------- PLATFORM: avProjOpenText — the File Handling entry (a launched .anvl) ----------
+   The read half of avProjOpenRun for text that arrives from outside (the PWA launchQueue consumer):
+   parse -> apply through the injected session module (avSessionApply) -> record. Receipt shape
+   matches avProjOpenRun's; never throws. */
+function avProjOpenText(name, text) {
+  const warnings = [];
+  const nm = avProjCleanName(name) || "launched.anvl";
+  if (typeof text !== "string" || !text) return avProjOpenRefuse("the launched file was empty", nm, warnings);
+  const p = avProjParse(text);
+  if (!p.ok) return avProjOpenRefuse(p.error || "parse failed", nm, warnings);
+  const project = p.project;
+  const pname = project.name || nm;
+  const applyFn = avProjApplyFn();
+  if (!applyFn) return avProjOpenRefuse("no session module", pname, warnings);
+  let ap = null;
+  try { ap = applyFn(project.state); } catch (e) { ap = null; }
+  if (!avProjObj(ap)) return avProjOpenRefuse("apply failed", pname, warnings);
+  const applied = (typeof ap.applied === "number" && isFinite(ap.applied)) ? ap.applied : 0;
+  const skipped = avProjStringList(ap.skipped);
+  const ok = ap.ok === true;
+  let errText = null;
+  if (!ok && typeof ap.error === "string" && ap.error) errText = ap.error.slice(0, AV_PROJ_MSG_CAP);
+  const receipt = { ok: ok, error: ok ? null : (errText || "apply refused"), name: pname, applied: applied, skipped: skipped, warnings: warnings };
+  avProj.lastOpen = avProjClone(receipt) || receipt;
+  avProj.lastError = receipt.error;
+  avProjRecordOpen(pname, ok, applied, skipped);
+  return receipt;
+}
+
 /* ---------- avProjInit / avProjSetFs / avProjState / avProjClasses (§2.1) ---------- */
 
 function avProjInit() {
@@ -826,6 +855,7 @@ if (typeof window !== "undefined" && window) {
       setFs: avProjSetFs,
       build: avProjBuild,
       parse: avProjParse,
+      openText: avProjOpenText,
       save: avProjSave,
       open: avProjOpen,
       samples: avProjImportSamples,

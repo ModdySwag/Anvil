@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.5.0", phase: "M2 · expression · chop · generative · arranger", built: "2026-10-08" });
+const ANVIL = Object.freeze({ version: "1.6.0", phase: "PLATFORM · pwa · family bridges", built: "2026-10-08" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -133,6 +133,10 @@ function avMountLevels() {
   try { fmUiOk = (typeof avFmUiInit === "function") ? (avFmUiInit() !== false) : false; } catch (e) { console.warn("[anvil] fm card init failed", e); }
   try { wtUiOk = (typeof avWtUiInit === "function") ? (avWtUiInit() !== false) : false; } catch (e) { console.warn("[anvil] wt editor init failed", e); }
   try { chopUiOk = (typeof avChopUiInit === "function") ? (avChopUiInit() !== false) : false; } catch (e) { console.warn("[anvil] chop ui init failed", e); }
+  /* PLATFORM: the PWA module + the FAMILY card */
+  let pwaOk = false, familyOk = false;
+  try { pwaOk = (typeof avPwaInit === "function") ? (avPwaInit() !== false) : false; } catch (e) { console.warn("[anvil] pwa init failed", e); }
+  try { familyOk = (typeof avFamilyInit === "function") ? (avFamilyInit() !== false) : false; } catch (e) { console.warn("[anvil] family init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -150,11 +154,12 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
     try { avEngineSelfTest(); } catch (e) { console.warn("avtest engine", e); }
+    try { if (typeof avPwaProof === "function") { const _ps = avPwaProof(); if (_ps) avTestLine(_ps, "av-pwatest"); } } catch (e) { console.warn("avtest pwa", e); }
   }
 })();
 

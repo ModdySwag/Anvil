@@ -16,6 +16,9 @@
 <meta name="description" content="Anvil: a flagship browser synthesizer — acid, wavetable and string engines, a drum kit, granular and sampler voices, an FX rack, a groovebox sequencer, a recording studio, a pack store, and a CODE section for your own DSP modules. S5 build.">
 <meta name="author" content="Modtech (a.k.a. Moddy) — modtech@gmail.com">
 <meta name="copyright" content="© 2026 Modtech (Moddy). Released under the GNU AGPL-3.0-or-later licence.">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#16140f">
 <style>
 /* Anvil — theme tokens + Phase 0 shell styles.
    Palette per docs/02-ui-design-brief.md §9 ("Anvil Teal"): graphite base, one teal identity,
@@ -1286,6 +1289,80 @@ body.av-palette-open { }
 .av-seq-song-openbtn { }
 .av-seq-song-status { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
 
+/* ==== PLATFORM wave (av_pwa.js + av_family.js) - generated block from avPwaClasses() + avFamilyClasses().
+   Tokens: the house :root set. Chips ride the hidden attribute (av_pwa toggles it). */
+
+/* ---- PWA chips (av_pwa.js) ---- */
+.av-pwa-chips {
+  position: fixed; right: 16px; bottom: calc(16px + var(--dock-tax, 0px));
+  z-index: 46; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
+  pointer-events: none;
+}
+.av-pwa-chip {
+  pointer-events: auto;
+  font-family: var(--mono); font-size: 10px; letter-spacing: .08em;
+  color: var(--text-2); background: rgba(16, 22, 27, .94);
+  border: 1px solid var(--hair); border-radius: 999px; padding: 5px 11px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .45);
+  max-width: 340px; overflow-wrap: anywhere; text-align: right;
+}
+.av-pwa-chip[hidden] { display: none; }
+button.av-pwa-chip { cursor: pointer; }
+button.av-pwa-chip:hover { border-color: var(--teal-deep); color: var(--text); }
+#av-pwa-install { color: var(--teal); border-color: var(--teal-deep); }
+#av-pwa-update { color: var(--teal-glow); border-color: var(--teal); }
+#av-pwa-offline { color: var(--mod-orange); border-color: #5c4520; }
+#av-pwa-ios { color: var(--text-3); }
+
+/* ---- FAMILY card (av_family.js) ---- */
+.av-family { display: flex; flex-direction: column; gap: 10px; }
+.av-fam-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.av-fam-title { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
+.av-fam-cap { font-size: 11px; color: var(--text-3); }
+.av-fam-row {
+  display: flex; flex-direction: column; gap: 8px;
+  background: rgba(16, 22, 27, .62);
+  border: 1px solid var(--hair); border-radius: 8px; padding: 10px 12px;
+}
+.av-fam-row-title { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal-deep); font-weight: 600; }
+.av-fam-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-fam-field { display: inline-flex; flex-direction: column; gap: 2px; }
+.av-fam-field-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.av-fam-btn {
+  font-family: var(--mono); font-size: 11px; color: var(--text);
+  background: var(--raised); border: 1px solid var(--hair); border-radius: 6px;
+  padding: 5px 11px; cursor: pointer;
+}
+.av-fam-btn:hover { border-color: var(--teal-deep); }
+.av-fam-btn:disabled { opacity: .55; cursor: default; }
+.av-fam-select, .av-fam-text {
+  background: var(--raised); color: var(--text); border: 1px solid var(--hair);
+  border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 4px 7px;
+}
+.av-fam-select:focus, .av-fam-text:focus { outline: none; border-color: var(--teal-deep); }
+.av-fam-file { display: inline-flex; align-items: center; }
+.av-fam-file-in { max-width: 190px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-fam-loops { min-width: 64px; }
+.av-fam-pack { min-width: 150px; }
+.av-fam-search { min-width: 130px; }
+.av-fam-status-line { font-size: 11px; color: var(--text-2); min-height: 14px; }
+.av-fam-msg { color: var(--text-2); }
+.av-fam-err { color: #ff8a7a; }
+.av-fam-list { display: flex; flex-direction: column; gap: 4px; max-height: 190px; overflow-y: auto; }
+.av-fam-session {
+  display: flex; flex-direction: column; gap: 2px;
+  border: 1px solid var(--hair); border-radius: 6px; padding: 6px 9px; cursor: pointer;
+  background: rgba(10, 14, 17, .35);
+}
+.av-fam-session:hover { border-color: var(--teal-deep); }
+.av-fam-session-name { font-size: 12px; color: var(--text); overflow-wrap: anywhere; }
+.av-fam-session-sub { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-fam-selected { border-color: var(--teal); box-shadow: inset 0 0 0 1px rgba(46, 216, 201, .22); }
+.av-fam-bad .av-fam-session-sub { color: #ff8a7a; }
+.av-fam-empty { font-size: 11px; color: var(--text-3); }
+.av-fam-note { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-fam-busy { opacity: .65; }
+
 </style>
 </head>
 
@@ -1413,6 +1490,11 @@ body.av-palette-open { }
   <section class="av-card" id="av-code">
     <h2>CODE &mdash; write your own modules</h2>
     <div id="av-code-host"><p class="av-note av-dim">The CODE card lands here &mdash; write a sandboxed DSP module (an FX or a whole voice engine), run it live in the audio engine, and keep it in your own local library. Everything stays on this machine.</p></div>
+  </section>
+
+  <section class="av-card" id="av-family">
+    <h2>FAMILY &mdash; the MODDYS suite bridges</h2>
+    <div id="av-family-host"><p class="av-note av-dim">The suite bridges land here &mdash; bounce a loop into the Music Hub inbox, import Resonance session packs, and jump to World Radio. Everything local; nothing is uploaded.</p></div>
   </section>
 
   <section class="av-card">
@@ -57852,6 +57934,35 @@ async function avProjImportSamplesRun() {
   return avProjImportInputPick(importFn);
 }
 
+/* ---------- PLATFORM: avProjOpenText — the File Handling entry (a launched .anvl) ----------
+   The read half of avProjOpenRun for text that arrives from outside (the PWA launchQueue consumer):
+   parse -> apply through the injected session module (avSessionApply) -> record. Receipt shape
+   matches avProjOpenRun's; never throws. */
+function avProjOpenText(name, text) {
+  const warnings = [];
+  const nm = avProjCleanName(name) || "launched.anvl";
+  if (typeof text !== "string" || !text) return avProjOpenRefuse("the launched file was empty", nm, warnings);
+  const p = avProjParse(text);
+  if (!p.ok) return avProjOpenRefuse(p.error || "parse failed", nm, warnings);
+  const project = p.project;
+  const pname = project.name || nm;
+  const applyFn = avProjApplyFn();
+  if (!applyFn) return avProjOpenRefuse("no session module", pname, warnings);
+  let ap = null;
+  try { ap = applyFn(project.state); } catch (e) { ap = null; }
+  if (!avProjObj(ap)) return avProjOpenRefuse("apply failed", pname, warnings);
+  const applied = (typeof ap.applied === "number" && isFinite(ap.applied)) ? ap.applied : 0;
+  const skipped = avProjStringList(ap.skipped);
+  const ok = ap.ok === true;
+  let errText = null;
+  if (!ok && typeof ap.error === "string" && ap.error) errText = ap.error.slice(0, AV_PROJ_MSG_CAP);
+  const receipt = { ok: ok, error: ok ? null : (errText || "apply refused"), name: pname, applied: applied, skipped: skipped, warnings: warnings };
+  avProj.lastOpen = avProjClone(receipt) || receipt;
+  avProj.lastError = receipt.error;
+  avProjRecordOpen(pname, ok, applied, skipped);
+  return receipt;
+}
+
 /* ---------- avProjInit / avProjSetFs / avProjState / avProjClasses (§2.1) ---------- */
 
 function avProjInit() {
@@ -57902,6 +58013,7 @@ if (typeof window !== "undefined" && window) {
       setFs: avProjSetFs,
       build: avProjBuild,
       parse: avProjParse,
+      openText: avProjOpenText,
       save: avProjSave,
       open: avProjOpen,
       samples: avProjImportSamples,
@@ -62887,12 +62999,3114 @@ if (typeof window !== "undefined") {
 }
 
 
+/* Anvil -- .gnaural clean-room core (PLATFORM wave, C1): tolerant session-XML parse, general
+   zip reader, session extraction from packs, info summary, and a deterministic offline
+   renderer (pure loop, no AudioContext).
+
+   CLEAN-ROOM REIMPLEMENTATION. The .gnaural file format is by Gnaural
+   (gnaural.sourceforge.net), semantics learned from the format + observed behaviour of preset
+   files; reimplemented clean-room for Anvil. The Resonance app that also consumes .gnaural
+   carries GPL lineage -- no code was copied from it or from any other implementation.
+
+   Pins (verify/_platform_wave.md §2.5):
+
+   - avGnParse(xmlText) -> { ok, error?, session }
+     session = { title, description, author, totalSeconds, voiceCount, voices: [{ index, type,
+     typeName, state, mono, mute, duration, playable, entries: [{ duration, volL, volR, beat,
+     base }] }], warnings[] }.
+     Types: 0 binaural, 1 pink noise, 2 PCM file, 3/4 isopulse, 5/6 other Gnaural ext, 7 white
+     noise, 8 brown noise (7/8 are Resonance extension types). playable = 0/7/8 (v1 renderer).
+     Tolerant: unknown fields ignored, numbers via tolerant float parse, empty <entries> warns,
+     a voice's entry list is capped at 4096 (extra entries dropped with a warning). Voices are
+     matched from consecutive entries by `parent` where ids line up (the upstream loader is
+     flat; <voice>/<entries> nesting is cosmetic); otherwise consecutive parent runs are paired
+     with <voice> blocks by document order. Header counts (voicecount/totalentrycount/totaltime)
+     are advisory only -- durations derive from entry sums, totalSeconds = max voice duration.
+     state stays the raw voice_state number (truthiness decides rendering); mute/mono booleans.
+
+   - avGnUnzip(arrayBuffer) -> Promise<{ ok, error?, files: [{ name, bytes(Uint8Array) }],
+     errors[] }>. General zip READER: comment-aware EOCD scan, central-directory walk, STORE (0)
+     = slice, DEFLATE (8) = DecompressionStream("deflate-raw") (absent/unusable -> honest
+     per-entry error), CRC-32 check only when avZipCrc32 is available (typeof-guarded; never a
+     hard dependency). Folder names kept verbatim; non-.gnaural entries pass through (caller
+     filters). zip64 and encrypted entries -> honest refusals (zip64 refuses the archive,
+     encrypted entries are skipped with an error each); a per-entry size sanity cap applies.
+
+   - avGnSessionsFromZip(zipBuf) -> Promise<{ ok, error?, sessions: [{ name, xml, bytes }],
+     errors[] }>. Filters `.gnaural` entries case-insensitively, decodes UTF-8 BOM-tolerant.
+
+   - avGnInfo(session) -> { totalSeconds, voiceCount, playableVoices, types[], renderable }.
+     playableVoices counts voices actually renderable by v1 (state-truthy, unmuted, type 0/7/8);
+     types[] is every type present, ascending; renderable = playableVoices > 0.
+
+   - avGnRender(session, opts) -> Promise<{ ok, error?, sr, seconds, frames, l, r, warnings[] }>
+     with l/r Float32Array. Render set = state-truthy, unmuted voices; timeline = max voice
+     duration over that set; length = min(timeline, opts.maxSeconds), default 120 s, hard cap
+     600 s; opts.frames overrides the length for harnesses (still hard-capped at 600 sr).
+     sr default 48000 (opts.sr honored within 1 kHz..384 kHz). Parameter curve pin: value at
+     t = linear interpolation where entry k's values are REACHED at the cumulative end of entry
+     k; entry 0's values hold over its own span; values hold past the last entry; a voice keeps
+     sounding across the whole render window (the held tail, upstream's voice-stretch spirit).
+     Type 0 binaural: left sine at base - beat/2, right sine at base + beat/2, phase-continuous,
+     frequency updated per sample along the ramp (magnitude clamped at Nyquist; a negative
+     carrier wraps the phase backwards rather than rectifying to DC). Type 7 white noise:
+     seeded xorshift32, deterministic per parse -- seed from the FNV-1a hash of session.title
+     mixed with the voice index. Type 8 brown noise: leaky-integrated white (leak 0.02, output
+     gain 10 = near RMS parity with the white voice). Amplitude = ramped volL/volR clamped to
+     0..1, summed across voices. Headroom pin: sum first; only when the absolute peak exceeds
+     0.95, scale both channels by 0.9/maxAbs and record a warning (nothing else is clamped).
+
+   Craft laws: "use strict", classic script (no modules/imports), node-loadable (no DOM reach at
+   load, no top-level side effects), one namespace (avGn* + AV_GN_*), never throws, no console
+   output, ASCII where practical. */
+
+"use strict";
+
+const AV_GN_VERSION = "platform.0";
+const AV_GN_FORMAT_VERSION = "1.20101006";      /* gnauralfile_version written by Gnaural */
+const AV_GN_SR_DEFAULT = 48000;
+const AV_GN_SR_MIN = 1000;
+const AV_GN_SR_MAX = 384000;
+const AV_GN_MAX_SECONDS = 120;                  /* §2.5 preview cap */
+const AV_GN_HARD_CAP_SECONDS = 600;             /* §2.5 hard cap */
+const AV_GN_MAX_ENTRIES = 4096;                 /* per voice, §2.5 parse cap */
+const AV_GN_HEADROOM_FLOOR = 0.95;              /* §2.5: scale only above this */
+const AV_GN_HEADROOM_TARGET = 0.9;              /* §2.5: scale to this */
+const AV_GN_NOISE_LEAK = 0.02;                  /* brown integrator leak */
+const AV_GN_NOISE_GAIN = 10;                    /* brown output gain (RMS parity) */
+const AV_GN_ENTRY_LIMIT = 256 * 1024 * 1024;    /* zip entry sanity cap, bytes */
+const AV_GN_TWO_PI = Math.PI * 2;
+
+const AV_GN_PLAYABLE_TYPES = { 0: true, 7: true, 8: true };
+const AV_GN_TYPE_NAMES = {
+  0: "binaural", 1: "pink noise", 2: "PCM file", 3: "isopulse", 4: "isopulse",
+  5: "gnaural ext", 6: "gnaural ext", 7: "white noise", 8: "brown noise"
+};
+
+/* ---------- generic helpers (never throw) ---------- */
+
+function avGnBytes(x) {
+  try {
+    if (x === null || x === undefined) return null;
+    if (typeof ArrayBuffer !== "undefined" && x instanceof ArrayBuffer) return new Uint8Array(x);
+    if (typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView && ArrayBuffer.isView(x)) {
+      return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+    }
+    return null;
+  } catch (e) { return null; }
+}
+
+function avGnNum(v, dflt) {
+  if (v === undefined || v === null || v === "") return dflt;
+  const f = parseFloat(v);
+  return isFinite(f) ? f : dflt;
+}
+
+function avGnInt(v, dflt) {
+  const f = avGnNum(v, null);
+  return f === null ? dflt : Math.round(f);
+}
+
+function avGnClamp01(x) {
+  if (!isFinite(x)) return 0;
+  return x < 0 ? 0 : (x > 1 ? 1 : x);
+}
+
+function avGnFreqClamp(f, nyq) {
+  if (!isFinite(f)) return 0;
+  if (f > nyq) return nyq;
+  if (f < -nyq) return -nyq;
+  return f;
+}
+
+function avGnVoiceSeconds(v) {
+  if (!v || typeof v !== "object") return 0;
+  const d = avGnNum(v.duration, null);
+  if (d !== null) return d > 0 ? d : 0;
+  let acc = 0;
+  const es = Array.isArray(v.entries) ? v.entries : [];
+  for (let i = 0; i < es.length; i++) {
+    const x = avGnNum(es[i] && es[i].duration, 0);
+    if (x > 0) acc += x;
+  }
+  return acc;
+}
+
+/* ---------- tiny XML helpers (tolerant scanner; no DOM) ---------- */
+
+function avGnStrip(src) {
+  /* comments, processing instructions and declarations removed so tag scans never see them */
+  return String(src)
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<\?[\s\S]*?\?>/g, " ")
+    .replace(/<![\s\S]*?>/g, " ");
+}
+
+function avGnUnesc(s) {
+  try {
+    return String(s === null || s === undefined ? "" : s)
+      .replace(/&#x([0-9a-fA-F]+);/g, function (_, h) {
+        const cp = parseInt(h, 16);
+        return (isFinite(cp) && cp >= 0 && cp <= 0x10FFFF) ? String.fromCodePoint(cp) : "";
+      })
+      .replace(/&#(\d+);/g, function (_, d) {
+        const cp = parseInt(d, 10);
+        return (isFinite(cp) && cp >= 0 && cp <= 0x10FFFF) ? String.fromCodePoint(cp) : "";
+      })
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+      .replace(/&amp;/g, "&");
+  } catch (e) { return ""; }
+}
+
+function avGnTagText(src, name, dflt) {
+  try {
+    const re = new RegExp("<" + name + "(?=[\\s\\/>])[^>]*>([\\s\\S]*?)<\\/" + name + "\\s*>", "i");
+    const m = re.exec(src);
+    if (!m) return dflt;
+    const t = avGnUnesc(m[1]).trim();
+    return t === "" ? dflt : t;
+  } catch (e) { return dflt; }
+}
+
+function avGnAttrs(s) {
+  const out = {};
+  try {
+    const re = /([A-Za-z_][-A-Za-z0-9_:.]*)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
+    let m;
+    while ((m = re.exec(s)) !== null) out[m[1]] = avGnUnesc(m[2] !== undefined ? m[2] : m[3]);
+  } catch (e) { /* partial attrs are fine */ }
+  return out;
+}
+
+function avGnVoiceBlocks(src) {
+  /* content of every <voice> element; self-closing voices yield "". <voicecount>/<voice_state>
+     etc. never match because the char after "voice" must be space, "/" or ">". */
+  const blocks = [];
+  try {
+    const tags = [];
+    const re = /<voice(?=[\s\/>])[^>]*>/g;
+    let m;
+    while ((m = re.exec(src)) !== null) tags.push({ at: m.index, end: re.lastIndex, text: m[0] });
+    for (let i = 0; i < tags.length; i++) {
+      const stop = (i + 1 < tags.length) ? tags[i + 1].at : src.length;
+      blocks.push(/\/>\s*$/.test(tags[i].text) ? "" : src.slice(tags[i].end, stop));
+    }
+  } catch (e) { /* partial list is fine */ }
+  return blocks;
+}
+
+function avGnEntryTags(src) {
+  const out = [];
+  try {
+    const re = /<entry(?=[\s\/>])[^>]*>/g;
+    let m;
+    while ((m = re.exec(src)) !== null) out.push(m[0]);
+  } catch (e) { /* partial list is fine */ }
+  return out;
+}
+
+/* ---------- UTF-8 decode (BOM-tolerant; TextDecoder when present, manual fallback) ---------- */
+
+function avGnUtf8Decode(bytes) {
+  try {
+    let off = 0;
+    if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) off = 3;
+    const view = off > 0 ? bytes.subarray(off) : bytes;
+    if (typeof TextDecoder !== "undefined") {
+      return new TextDecoder("utf-8", { fatal: false }).decode(view);
+    }
+    /* manual tolerant decoder: invalid sequences become U+FFFD */
+    let s = "", i = 0;
+    while (i < view.length) {
+      const c = view[i++];
+      if (c < 0x80) { s += String.fromCharCode(c); continue; }
+      let need = 0, cp = 0;
+      if (c >= 0xC0 && c < 0xE0) { need = 1; cp = c & 0x1F; }
+      else if (c >= 0xE0 && c < 0xF0) { need = 2; cp = c & 0x0F; }
+      else if (c >= 0xF0 && c < 0xF8) { need = 3; cp = c & 0x07; }
+      else { s += "\uFFFD"; continue; }
+      let ok = true;
+      for (let k = 0; k < need; k++) {
+        const c2 = view[i];
+        if (c2 === undefined || c2 < 0x80 || c2 > 0xBF) { ok = false; break; }
+        cp = (cp << 6) | (c2 & 0x3F); i++;
+      }
+      if (!ok || cp > 0x10FFFF) { s += "\uFFFD"; continue; }
+      if (cp < 0x10000) s += String.fromCharCode(cp);
+      else { cp -= 0x10000; s += String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 0x3FF)); }
+    }
+    return s;
+  } catch (e) { return ""; }
+}
+
+/* ---------- raw DEFLATE inflate via DecompressionStream (honest refusal when absent) ---------- */
+
+async function avGnInflateRaw(bytes) {
+  if (typeof DecompressionStream === "undefined") {
+    return { ok: false, error: "DecompressionStream is not available here" };
+  }
+  if (typeof ReadableStream === "undefined") {
+    return { ok: false, error: "ReadableStream is not available here" };
+  }
+  let ds;
+  try { ds = new DecompressionStream("deflate-raw"); }
+  catch (e) { return { ok: false, error: "the deflate-raw format is not supported here" }; }
+  try {
+    const src = new ReadableStream({
+      start: function (ctrl) { ctrl.enqueue(bytes); ctrl.close(); }
+    });
+    const reader = src.pipeThrough(ds).getReader();
+    const chunks = [];
+    let total = 0;
+    for (;;) {
+      const r = await reader.read();
+      if (!r || r.done) break;
+      if (r.value && r.value.length) { chunks.push(r.value); total += r.value.length; }
+    }
+    const out = new Uint8Array(total);
+    let o = 0;
+    for (let i = 0; i < chunks.length; i++) { out.set(chunks[i], o); o += chunks[i].length; }
+    return { ok: true, error: null, bytes: out };
+  } catch (e) { return { ok: false, error: "inflate failed" }; }
+}
+
+/* ---------- parse ---------- */
+
+function avGnParse(xmlText) {
+  try {
+    if (typeof xmlText !== "string") return { ok: false, error: "input is not a string", session: null };
+    let text = xmlText;
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    if (!text.trim()) return { ok: false, error: "empty input", session: null };
+
+    const warnings = [];
+    const clean = avGnStrip(text);
+
+    const title = avGnTagText(clean, "title", "");
+    const description = avGnTagText(clean, "schedule_description", "");
+    const author = avGnTagText(clean, "author", "");
+
+    const version = avGnTagText(clean, "gnauralfile_version", null);
+    if (version !== null && version !== AV_GN_FORMAT_VERSION) {
+      warnings.push("file claims format version " + version + " (expected " + AV_GN_FORMAT_VERSION + ") -- reading anyway");
+    }
+    if (!/<schedule(?=[\s\/>])/i.test(clean)) warnings.push("no <schedule> element -- parsing anyway");
+    if (avGnTagText(clean, "loops", null) !== null) {
+      const loops = avGnInt(avGnTagText(clean, "loops", null), null);
+      if (loops === 0) warnings.push("loops=0 (infinite) -- v1 renders a single pass");
+      else if (loops !== null && loops > 1) warnings.push("loops=" + loops + " -- v1 renders a single pass");
+    }
+
+    /* voice metadata blocks, document order */
+    const blocks = avGnVoiceBlocks(clean);
+    const meta = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const b = blocks[i];
+      meta.push({
+        id: avGnInt(avGnTagText(b, "id", null), null),
+        type: avGnInt(avGnTagText(b, "type", null), 0),
+        state: avGnInt(avGnTagText(b, "voice_state", null), 0),
+        mute: avGnInt(avGnTagText(b, "voice_mute", null), 0) !== 0,
+        mono: avGnInt(avGnTagText(b, "voice_mono", null), 0) !== 0,
+        hasBlock: true
+      });
+    }
+    if (blocks.length === 0) warnings.push("no <voice> blocks -- entries grouped by consecutive parent runs");
+
+    /* entries, document order */
+    const tags = avGnEntryTags(clean);
+    const raw = [];
+    for (let i = 0; i < tags.length; i++) {
+      const a = avGnAttrs(tags[i]);
+      const volL = avGnNum(a.volume_left, 1);
+      const parent = (typeof a.parent === "string") ? a.parent.trim() : null;
+      raw.push({
+        parent: parent,
+        duration: Math.max(0, avGnNum(a.duration, 0)),
+        volL: volL,
+        volR: avGnNum(a.volume_right, volL),
+        beat: avGnNum(a.beatfreq, 0),
+        base: avGnNum(a.basefreq, 0)
+      });
+    }
+    if (raw.length === 0) {
+      if (blocks.length === 0) return { ok: false, error: "no <voice> or <entry> elements found", session: null };
+    }
+
+    /* group entries into voices: by matching parent ids when they line up, else consecutive runs */
+    let groups = [];
+    if (raw.length > 0) {
+      let byId = true;
+      if (meta.length === 0) byId = false;
+      for (let i = 0; i < meta.length && byId; i++) if (meta[i].id === null) byId = false;
+      if (byId) {
+        const idToGroup = {};
+        for (let i = 0; i < meta.length; i++) if (idToGroup[meta[i].id] === undefined) idToGroup[meta[i].id] = i;
+        for (let i = 0; i < raw.length; i++) {
+          const p = (raw[i].parent === null) ? null : avGnNum(raw[i].parent, null);
+          if (p === null || idToGroup[p] === undefined) { byId = false; break; }
+        }
+      }
+      if (byId) {
+        groups = meta.map(function () { return []; });
+        const idToGroup = {};
+        for (let i = 0; i < meta.length; i++) if (idToGroup[meta[i].id] === undefined) idToGroup[meta[i].id] = i;
+        for (let i = 0; i < raw.length; i++) groups[idToGroup[avGnNum(raw[i].parent, 0)]].push(raw[i]);
+      } else {
+        let cur = null, curKey = null;
+        for (let i = 0; i < raw.length; i++) {
+          const key = raw[i].parent === null ? "" : raw[i].parent;
+          if (cur === null || key !== curKey) { cur = []; curKey = key; groups.push(cur); }
+          cur.push(raw[i]);
+        }
+      }
+    }
+
+    const voices = [];
+    const nGroups = Math.max(groups.length, meta.length);
+    for (let i = 0; i < nGroups; i++) {
+      const m = meta[i] || {};
+      const mtype = m.hasBlock ? m.type : 0;
+      const mstate = m.hasBlock ? m.state : 1;   /* synthesized flat-file voice: enabled */
+      const mmute = m.hasBlock ? m.mute : false;
+      const mmono = m.hasBlock ? m.mono : false;
+      let entries = groups[i] || [];
+      if (entries.length > AV_GN_MAX_ENTRIES) {
+        warnings.push("voice #" + i + ": " + entries.length + " entries exceed the " + AV_GN_MAX_ENTRIES + " cap -- extra entries dropped");
+        entries = entries.slice(0, AV_GN_MAX_ENTRIES);
+      }
+      let duration = 0;
+      for (let k = 0; k < entries.length; k++) duration += entries[k].duration;
+      const type = mtype;
+      voices.push({
+        index: i,
+        type: type,
+        typeName: AV_GN_TYPE_NAMES[type] || ("type " + type),
+        state: mstate,
+        mono: !!mmono,
+        mute: !!mmute,
+        duration: duration,
+        playable: !!AV_GN_PLAYABLE_TYPES[type],
+        entries: entries
+      });
+      if (entries.length === 0) warnings.push("voice #" + i + " has no entries");
+    }
+    if (groups.length > meta.length && meta.length > 0) {
+      warnings.push(groups.length - meta.length + " entry group(s) had no <voice> block -- synthesized (binaural, enabled)");
+    }
+
+    const declared = avGnInt(avGnTagText(clean, "voicecount", null), null);
+    if (declared !== null && declared !== voices.length) {
+      warnings.push("voicecount says " + declared + ", parsed " + voices.length + " (header counts are advisory)");
+    }
+
+    let totalSeconds = 0;
+    for (let i = 0; i < voices.length; i++) if (voices[i].duration > totalSeconds) totalSeconds = voices[i].duration;
+
+    return {
+      ok: true,
+      error: null,
+      session: {
+        title: title,
+        description: description,
+        author: author,
+        totalSeconds: totalSeconds,
+        voiceCount: voices.length,
+        voices: voices,
+        warnings: warnings
+      }
+    };
+  } catch (e) {
+    return { ok: false, error: "parse failed", session: null };
+  }
+}
+
+/* ---------- zip reader (general; EOCD comment-aware; STORE + DEFLATE) ---------- */
+
+async function avGnUnzip(buf) {
+  const errors = [];
+  try {
+    const b = avGnBytes(buf);
+    if (!b) return { ok: false, error: "unsupported input (ArrayBuffer or view required)", files: [], errors: [] };
+    const n = b.length;
+    if (n < 22) return { ok: false, error: "too short for a zip archive", files: [], errors: [] };
+
+    /* EOCD: backwards scan, comment-aware (max comment 65535) */
+    let eocd = -1, loose = -1;
+    const floor = Math.max(0, n - 22 - 0xFFFF);
+    for (let i = n - 22; i >= floor; i--) {
+      if (b[i] === 0x50 && b[i + 1] === 0x4B && b[i + 2] === 0x05 && b[i + 3] === 0x06) {
+        const clen = b[i + 20] | (b[i + 21] << 8);
+        if (i + 22 + clen === n) { eocd = i; break; }
+        if (loose < 0 && i + 22 + clen <= n) loose = i;
+      }
+    }
+    let usedLoose = false;
+    if (eocd < 0) { eocd = loose; usedLoose = true; }
+    if (eocd < 0) return { ok: false, error: "no end-of-central-directory record (not a zip archive?)", files: [], errors: [] };
+    if (usedLoose) errors.push("EOCD only found with trailing-data tolerance -- read anyway");
+
+    const u16 = function (p) { return b[p] | (b[p + 1] << 8); };
+    const u32 = function (p) { return (b[p] | (b[p + 1] << 8) | (b[p + 2] << 16) | (b[p + 3] << 24)) >>> 0; };
+
+    const count = u16(eocd + 10);
+    const cdSize = u32(eocd + 12);
+    const cdOff = u32(eocd + 16);
+    const hasZip64Locator = eocd >= 20 &&
+      b[eocd - 20] === 0x50 && b[eocd - 19] === 0x4B && b[eocd - 18] === 0x06 && b[eocd - 17] === 0x07;
+    if (hasZip64Locator || count === 0xFFFF || cdOff === 0xFFFFFFFF || cdSize === 0xFFFFFFFF) {
+      return { ok: false, error: "zip64 archives are not supported (refused)", files: [], errors: [] };
+    }
+    if (cdOff + cdSize > n) return { ok: false, error: "central directory out of range", files: [], errors: [] };
+
+    const files = [];
+    let p = cdOff;
+    for (let i = 0; i < count; i++) {
+      if (p + 46 > n) { errors.push("central directory truncated at entry " + i); break; }
+      if (!(b[p] === 0x50 && b[p + 1] === 0x4B && b[p + 2] === 0x01 && b[p + 3] === 0x02)) {
+        errors.push("bad central-directory signature at entry " + i);
+        break;
+      }
+      const flags = u16(p + 8);
+      const method = u16(p + 10);
+      const crc = u32(p + 16);
+      const csize = u32(p + 20);
+      const usize = u32(p + 24);
+      const nlen = u16(p + 28);
+      const elen = u16(p + 30);
+      const clen = u16(p + 32);
+      const loff = u32(p + 42);
+      if (p + 46 + nlen > n) { errors.push("central-directory name truncated at entry " + i); break; }
+      const name = avGnUtf8Decode(b.subarray(p + 46, p + 46 + nlen));
+      p += 46 + nlen + elen + clen;
+
+      if (csize === 0xFFFFFFFF || usize === 0xFFFFFFFF || loff === 0xFFFFFFFF) {
+        errors.push("zip64 entry refused: " + name);
+        continue;
+      }
+      if (flags & 0x0001) {                                 /* bit 0 = encrypted */
+        errors.push("encrypted entry refused: " + name);
+        continue;
+      }
+      if (usize > AV_GN_ENTRY_LIMIT) {
+        errors.push("entry exceeds the size sanity cap, refused: " + name);
+        continue;
+      }
+      if (loff + 30 > n) { errors.push("local header out of range: " + name); continue; }
+      if (!(b[loff] === 0x50 && b[loff + 1] === 0x4B && b[loff + 2] === 0x03 && b[loff + 3] === 0x04)) {
+        errors.push("bad local-header signature: " + name);
+        continue;
+      }
+      const lfn = u16(loff + 26);
+      const lel = u16(loff + 28);
+      const dataStart = loff + 30 + lfn + lel;
+      if (dataStart + csize > n) { errors.push("entry data out of range: " + name); continue; }
+
+      let bytes = null;
+      if (method === 0) {
+        bytes = b.slice(dataStart, dataStart + csize);
+        if (csize !== usize) errors.push("stored size mismatch (kept anyway): " + name);
+      } else if (method === 8) {
+        const inf = await avGnInflateRaw(b.subarray(dataStart, dataStart + csize));
+        if (!inf.ok) { errors.push("DEFLATE entry failed (" + inf.error + "): " + name); continue; }
+        bytes = inf.bytes;
+        if (bytes.length !== usize) errors.push("inflated size mismatch (kept anyway): " + name);
+      } else {
+        errors.push("unsupported compression method " + method + ", refused: " + name);
+        continue;
+      }
+
+      if (typeof avZipCrc32 === "function") {
+        const got = avZipCrc32(bytes);
+        if ((got >>> 0) !== (crc >>> 0)) errors.push("CRC-32 mismatch (kept anyway): " + name);
+      }
+      files.push({ name: name, bytes: bytes });
+    }
+    return { ok: true, error: null, files: files, errors: errors };
+  } catch (e) {
+    return { ok: false, error: "zip read failed", files: [], errors: errors };
+  }
+}
+
+/* ---------- sessions from a pack zip ---------- */
+
+async function avGnSessionsFromZip(zipBuf) {
+  try {
+    const un = await avGnUnzip(zipBuf);
+    const errors = (un && Array.isArray(un.errors)) ? un.errors.slice() : [];
+    if (!un || !un.ok) {
+      return { ok: false, error: (un && un.error) || "unzip failed", sessions: [], errors: errors };
+    }
+    const sessions = [];
+    for (let i = 0; i < un.files.length; i++) {
+      const f = un.files[i];
+      if (!f || typeof f.name !== "string" || !/\.gnaural$/i.test(f.name)) continue;
+      const bytes = f.bytes;
+      sessions.push({ name: f.name, xml: avGnUtf8Decode(bytes), bytes: bytes });
+    }
+    if (sessions.length === 0 && un.files.length > 0) {
+      errors.push("no .gnaural entries in the zip (" + un.files.length + " entries read)");
+    }
+    return { ok: true, error: null, sessions: sessions, errors: errors };
+  } catch (e) {
+    return { ok: false, error: "session extraction failed", sessions: [], errors: [] };
+  }
+}
+
+/* ---------- info ---------- */
+
+function avGnInfo(session) {
+  const out = { totalSeconds: 0, voiceCount: 0, playableVoices: 0, types: [], renderable: false };
+  try {
+    if (!session || typeof session !== "object") return out;
+    const voices = Array.isArray(session.voices) ? session.voices : [];
+    out.voiceCount = voices.length;
+    const seen = {};
+    let maxDur = 0;
+    for (let i = 0; i < voices.length; i++) {
+      const v = voices[i];
+      if (!v || typeof v !== "object") continue;
+      const t = avGnInt(v.type, 0);
+      seen[t] = true;
+      if (!!v.state && !v.mute && AV_GN_PLAYABLE_TYPES[t]) out.playableVoices++;
+      const d = avGnVoiceSeconds(v);
+      if (d > maxDur) maxDur = d;
+    }
+    out.types = Object.keys(seen).map(function (k) { return parseInt(k, 10); }).sort(function (a, b) { return a - b; });
+    const ts = avGnNum(session.totalSeconds, null);
+    out.totalSeconds = (ts !== null && ts > 0) ? ts : maxDur;
+    out.renderable = out.playableVoices > 0;
+  } catch (e) { /* zeros stand */ }
+  return out;
+}
+
+/* ---------- deterministic noise ---------- */
+
+function avGnTitleSeed(session) {
+  /* FNV-1a 32 over the session title; deterministic per parse */
+  const s = (session && typeof session.title === "string") ? session.title : "";
+  let h = 0x811C9DC5;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i) & 0xFF;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h >>> 0;
+}
+
+function avGnXor32(seed) {
+  /* xorshift32; returns a uint32 stream function */
+  let x = seed >>> 0;
+  if (x === 0) x = 0x9E3779B9;
+  return function () {
+    x ^= (x << 13); x >>>= 0;
+    x ^= (x >>> 17);
+    x ^= (x << 5); x >>>= 0;
+    return x >>> 0;
+  };
+}
+
+/* ---------- render ---------- */
+
+async function avGnRender(session, opts) {
+  const warnings = [];
+  const fail = function (error, sr) {
+    return { ok: false, error: error, sr: sr || 0, seconds: 0, frames: 0, l: null, r: null, warnings: warnings };
+  };
+  try {
+    if (!session || typeof session !== "object" || !Array.isArray(session.voices)) {
+      return fail("no session to render");
+    }
+    const o = (opts && typeof opts === "object") ? opts : {};
+
+    let sr = AV_GN_SR_DEFAULT;
+    if (o.sr !== undefined && o.sr !== null) {
+      const s = avGnNum(o.sr, null);
+      if (s !== null && s >= AV_GN_SR_MIN && s <= AV_GN_SR_MAX) sr = Math.round(s);
+      else warnings.push("opts.sr ignored (out of range) -- using " + AV_GN_SR_DEFAULT);
+    }
+
+    let maxS = AV_GN_MAX_SECONDS;
+    if (o.maxSeconds !== undefined && o.maxSeconds !== null) {
+      const m = avGnNum(o.maxSeconds, null);
+      if (m !== null && m > 0) maxS = m;
+      else warnings.push("opts.maxSeconds ignored -- using " + AV_GN_MAX_SECONDS);
+    }
+    if (maxS > AV_GN_HARD_CAP_SECONDS) {
+      warnings.push("maxSeconds clamped to the " + AV_GN_HARD_CAP_SECONDS + " s hard cap");
+      maxS = AV_GN_HARD_CAP_SECONDS;
+    }
+
+    /* render set: state-truthy, unmuted voices only */
+    const set = [];
+    for (let i = 0; i < session.voices.length; i++) {
+      const v = session.voices[i];
+      if (!v || typeof v !== "object") continue;
+      if (!!v.state && !v.mute) set.push(v);
+    }
+    if (set.length === 0) {
+      return fail("nothing to render (no state-truthy, unmuted voices)", sr);
+    }
+    const playable = [];
+    for (let i = 0; i < set.length; i++) {
+      const v = set[i];
+      const t = avGnInt(v.type, 0);
+      if (AV_GN_PLAYABLE_TYPES[t]) playable.push(v);
+      else {
+        const idx = (v.index === undefined || v.index === null) ? set.indexOf(v) : v.index;
+        warnings.push("voice #" + idx + " (" + (v.typeName || ("type " + t)) + ") is not renderable in v1 -- skipped");
+      }
+    }
+    if (playable.length === 0) {
+      return fail("nothing renderable in v1 (no binaural/white/brown voice in the render set)", sr);
+    }
+
+    let timeline = 0;
+    for (let i = 0; i < set.length; i++) {
+      const d = avGnVoiceSeconds(set[i]);
+      if (d > timeline) timeline = d;
+    }
+
+    let frames = 0;
+    let seconds = 0;
+    const fOverride = avGnNum(o.frames, null);
+    if (fOverride !== null && fOverride > 0) {
+      frames = Math.floor(fOverride);
+      const capF = sr * AV_GN_HARD_CAP_SECONDS;
+      if (frames > capF) {
+        warnings.push("frames clamped to the " + AV_GN_HARD_CAP_SECONDS + " s hard cap");
+        frames = capF;
+      }
+    } else {
+      if (timeline <= 0) return fail("nothing to render (zero-length timeline)", sr);
+      seconds = Math.min(timeline, maxS);
+      if (timeline > maxS) {
+        warnings.push("render capped at " + maxS + " s (timeline " + (Math.round(timeline * 100) / 100) + " s)");
+      }
+      frames = Math.round(seconds * sr);
+    }
+    if (!(frames >= 1)) return fail("nothing to render (0 frames)", sr);
+    seconds = frames / sr;
+
+    const l = new Float32Array(frames);
+    const r = new Float32Array(frames);
+    const titleSeed = avGnTitleSeed(session);
+    const nyq = sr / 2;
+
+    for (let vi = 0; vi < playable.length; vi++) {
+      const v = playable[vi];
+      const type = avGnInt(v.type, 0);
+      const entries = Array.isArray(v.entries) ? v.entries : [];
+      const n = entries.length;
+      const vIndex = avGnInt(v.index, vi);
+      if (n === 0) {
+        warnings.push("voice #" + vIndex + " has no entries -- silent");
+        continue;
+      }
+      const ends = new Float64Array(n);
+      const vl = new Float64Array(n);
+      const vr = new Float64Array(n);
+      const bt = new Float64Array(n);
+      const bs = new Float64Array(n);
+      let acc = 0;
+      for (let k = 0; k < n; k++) {
+        const e = entries[k] || {};
+        const d = avGnNum(e.duration, 0);
+        acc += (d > 0 ? d : 0);
+        ends[k] = acc;
+        vl[k] = avGnClamp01(avGnNum(e.volL, 1));
+        vr[k] = avGnClamp01(avGnNum(e.volR, avGnNum(e.volL, 1)));
+        bt[k] = avGnNum(e.beat, 0);
+        bs[k] = avGnNum(e.base, 0);
+      }
+      const rng = avGnXor32((titleSeed ^ Math.imul((vIndex + 1) >>> 0, 0x9E3779B9)) >>> 0);
+      let seg = 0;
+      let phL = 0, phR = 0;
+      let brownL = 0, brownR = 0;
+
+      for (let i = 0; i < frames; i++) {
+        const t = i / sr;
+        while (seg < n - 1 && t > ends[seg]) seg++;
+        let ia, ib, f;
+        if (t <= ends[0]) { ia = 0; ib = 0; f = 0; }
+        else if (t > ends[n - 1]) { ia = n - 1; ib = n - 1; f = 0; }
+        else {
+          ia = seg > 0 ? seg - 1 : 0;
+          ib = seg;
+          const span = ends[ib] - ends[ia];
+          f = span > 0 ? (t - ends[ia]) / span : 1;
+        }
+        const vL = vl[ia] + (vl[ib] - vl[ia]) * f;
+        const vR = vr[ia] + (vr[ib] - vr[ia]) * f;
+
+        if (type === 0) {
+          const bF = bt[ia] + (bt[ib] - bt[ia]) * f;
+          const cF = bs[ia] + (bs[ib] - bs[ia]) * f;
+          const fL = avGnFreqClamp(cF - bF / 2, nyq);
+          const fR = avGnFreqClamp(cF + bF / 2, nyq);
+          phL += AV_GN_TWO_PI * fL / sr;
+          if (phL >= AV_GN_TWO_PI) phL -= AV_GN_TWO_PI;
+          else if (phL < 0) phL += AV_GN_TWO_PI;
+          phR += AV_GN_TWO_PI * fR / sr;
+          if (phR >= AV_GN_TWO_PI) phR -= AV_GN_TWO_PI;
+          else if (phR < 0) phR += AV_GN_TWO_PI;
+          l[i] += vL * Math.sin(phL);
+          r[i] += vR * Math.sin(phR);
+        } else if (type === 7) {
+          const wL = (rng() / 4294967296) * 2 - 1;
+          const wR = (rng() / 4294967296) * 2 - 1;
+          l[i] += vL * wL;
+          r[i] += vR * wR;
+        } else if (type === 8) {
+          const wL = (rng() / 4294967296) * 2 - 1;
+          const wR = (rng() / 4294967296) * 2 - 1;
+          brownL = (brownL + AV_GN_NOISE_LEAK * wL) / (1 + AV_GN_NOISE_LEAK);
+          brownR = (brownR + AV_GN_NOISE_LEAK * wR) / (1 + AV_GN_NOISE_LEAK);
+          l[i] += vL * brownL * AV_GN_NOISE_GAIN;
+          r[i] += vR * brownR * AV_GN_NOISE_GAIN;
+        }
+      }
+    }
+
+    /* headroom pin: sum, then scale by 0.9/maxAbs only when maxAbs > 0.95 */
+    let maxAbs = 0;
+    for (let i = 0; i < frames; i++) {
+      const a = Math.abs(l[i]);
+      if (a > maxAbs) maxAbs = a;
+      const c = Math.abs(r[i]);
+      if (c > maxAbs) maxAbs = c;
+    }
+    if (maxAbs > AV_GN_HEADROOM_FLOOR) {
+      const gain = AV_GN_HEADROOM_TARGET / maxAbs;
+      for (let i = 0; i < frames; i++) { l[i] *= gain; r[i] *= gain; }
+      warnings.push("headroom: abs peak " + maxAbs.toFixed(4) + " > " + AV_GN_HEADROOM_FLOOR +
+                    " -- scaled by " + gain.toFixed(4));
+    }
+
+    return { ok: true, error: null, sr: sr, seconds: seconds, frames: frames, l: l, r: r, warnings: warnings };
+  } catch (e) {
+    return fail("render failed");
+  }
+}
+
+
+/* Anvil - PWA + offline page module (PLATFORM wave, child sa-A, #78; verify/_platform_wave.md 2.1).
+
+   WHAT THIS MODULE IS - the page-side half of the installable/offline story:
+     - REGISTRATION: avPwaInit() registers ./sw.js (scope ./) only where a service worker can
+       actually run: https:, or host localhost / 127.0.0.1 / [::1]. On file: (every other suite
+       plus the smoke) it is an honest no-op: supported false, zero registration attempts, zero
+       errors. ?nosw=1 skips registration entirely (the platform rig opt-out).
+     - STATE: avPwaState() and window.__avPwa.state() report the truth as one JSON-safe object:
+       supported, registered, active, waiting, controlled, online, scope, swUrl, errors
+       (capped at 16) - plus the honest extras documented below.
+     - UPDATE FLOW: a waiting worker sets body class av-pwa-update and shows the chip
+       #av-pwa-update ("UPDATE READY - RELOAD"). Its click posts { t: "av-skip-waiting" } to the
+       waiting worker; the controllerchange that follows reloads the page ONCE. This module
+       NEVER calls skipWaiting itself and never reloads unasked - the chip click is the only path.
+     - INSTALL: beforeinstallprompt is captured (preventDefault; the event stored; canInstall
+       true; chip #av-pwa-install "INSTALL APP" shown) - click runs prompt() and awaits
+       userChoice; appinstalled sets installed true and hides the chip. On iOS/iPadOS where no
+       beforeinstallprompt ever fires, the hint chip #av-pwa-ios ("Share -> Add to Home Screen")
+       shows when the page is not already standalone.
+     - OFFLINE: online/offline events plus navigator.onLine drive body class av-pwa-offline and
+       the chip #av-pwa-offline ("OFFLINE - everything is local, keep going").
+     - FILE HANDLING: when window.launchQueue exists, its consumer reads the launched file and
+       hands the text to avProjOpenText(name, text) when that seam exists (av_proj.js), else
+       dispatches a window CustomEvent "av-launch-file" with detail { name, text }.
+     - PROOF: avPwaProof() RETURNS one line - PWA SELFTEST {"supported":...,"installPath":...}
+       (app_core appends it under ?avtest=1; this module never prints and never calls avTestLine).
+
+   CONTRACT SURFACE (rig + smoke rely on these exact ids):
+     chips container #av-pwa-chips (class av-pwa-chips) appended to document.body, holding
+     #av-pwa-install / #av-pwa-ios / #av-pwa-offline / #av-pwa-update (class av-pwa-chip; shown
+     via the hidden attribute). Body classes: av-pwa-offline, av-pwa-update. Body dataset:
+     avPwa = "1" (supported) | "0" (not).
+     Debug handle window.__avPwa = { version, supported, registered, active, waiting, state(),
+     init, installPrompt(), canInstall, installed, online, swUrl, scope, errors[] } - the value
+     members are live getters; state()/installPrompt() are the pinned test hooks.
+
+   LAWS: "use strict"; classic script; ONE namespace avPwa* / AV_PWA_*; node-loadable (no DOM or
+   global reach at load - every reach is typeof-guarded inside a function); never throws (honest
+   refusals in state, no console output - errors[] leaves via state() only); one writer (child
+   sa-A); nothing is uploaded anywhere. */
+
+"use strict";
+
+const AV_PWA_VERSION = "platform.0";
+const AV_PWA_SW_URL = "./sw.js";
+const AV_PWA_SW_SCOPE = "./";
+const AV_PWA_ERRORS_CAP = 16;      /* state().errors cap (contract 2.1) */
+const AV_PWA_UPDATE_MS = 60000;    /* registration.update() at most once a minute */
+const AV_PWA_CLASSES = Object.freeze(["av-pwa-chips", "av-pwa-chip", "av-pwa-offline", "av-pwa-update"]);
+
+/* ---------- module state (the one truth store; no DOM, no globals touched at load) ---------- */
+const avPwa = {
+  inited: false,
+  wired: false,
+  schedRegister: false,      /* a load-listener registration is pending */
+  supported: false,
+  nosw: false,               /* ?nosw=1 seen at init */
+  registering: false,
+  registered: false,
+  active: false,
+  controlled: false,
+  updating: false,           /* updatefound -> installed while controlled */
+  scope: "",
+  swUrl: "",
+  reg: null,                 /* the ServiceWorkerRegistration once register() resolves */
+  regWatched: false,
+  updateTimer: null,
+  updateCheckedAt: 0,
+  updates: 0,                /* updatefound count */
+  controllerChanges: 0,
+  installEvent: null,        /* the captured beforeinstallprompt event */
+  installCaptured: false,    /* a beforeinstallprompt was seen at least once */
+  installConsumed: false,
+  canInstall: false,
+  installed: false,
+  installOutcome: "",        /* "", "prompted", "accepted", "dismissed", "installed", "error" */
+  installNote: "",
+  iosHint: false,
+  launchQueue: false,        /* a launchQueue consumer was installed */
+  launchCount: 0,
+  lastLaunch: null,          /* { name, chars, via } */
+  launchNote: "",
+  updateNote: "",
+  reloadWanted: false,       /* set by the update chip click - the only reload path */
+  reloading: false,
+  errors: [],                /* capped at AV_PWA_ERRORS_CAP; reported via state() only */
+};
+
+/* ---------- guarded platform reaches (no DOM/global access at load) ---------- */
+
+function avPwaWin() {
+  try { if (typeof window !== "undefined") return window; } catch (e) { /* absent */ }
+  return null;
+}
+
+function avPwaDoc() {
+  try { if (typeof document !== "undefined") return document; } catch (e) { /* absent */ }
+  return null;
+}
+
+function avPwaLoc() {
+  try { if (typeof location !== "undefined") return location; } catch (e) { /* absent */ }
+  return null;
+}
+
+function avPwaNav() {
+  try { if (typeof navigator !== "undefined") return navigator; } catch (e) { /* absent */ }
+  return null;
+}
+
+function avPwaErrText(e) {
+  try {
+    if (e && typeof e === "object") {
+      if (typeof e.message === "string" && e.message) return e.message;
+      if (typeof e.name === "string" && e.name) return e.name;
+    }
+    if (typeof e === "string" && e) return e;
+  } catch (e2) { /* fall through */ }
+  return "unknown error";
+}
+
+/* the ONE error sink - state().errors, capped, never console */
+function avPwaErr(msg) {
+  try {
+    const t = String(msg == null ? "" : msg).replace(/\s+/g, " ").trim();
+    if (!t) return false;
+    avPwa.errors.push(t);
+    while (avPwa.errors.length > AV_PWA_ERRORS_CAP) avPwa.errors.shift();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- tiny guarded facts ---------- */
+
+/* ?nosw=1 anywhere in the query (the rig opt-out; same pattern as avtest in app_core) */
+function avPwaNoswRequested() {
+  try {
+    const loc = avPwaLoc();
+    if (!loc) return false;
+    return /[?&]nosw=1/.test(String(loc.search || ""));
+  } catch (e) { return false; }
+}
+
+/* supported = serviceWorker in navigator AND (https: OR localhost/127.0.0.1/[::1]). */
+function avPwaSupported() {
+  try {
+    const loc = avPwaLoc();
+    if (!loc) return false;
+    let swIn = false;
+    try { const nav = avPwaNav(); swIn = !!nav && ("serviceWorker" in nav); } catch (e) { swIn = false; }
+    if (!swIn) return false;
+    if (String(loc.protocol || "") === "https:") return true;
+    const host = String(loc.hostname || "");
+    return host === "localhost" || host === "127.0.0.1" || host === "[::1]" || host === "::1";
+  } catch (e) { return false; }
+}
+
+function avPwaSwUrlNow() {
+  try {
+    const loc = avPwaLoc();
+    if (loc && typeof loc.href === "string" && typeof URL === "function") {
+      return new URL(AV_PWA_SW_URL, loc.href).href;
+    }
+  } catch (e) { /* fall back to the relative form */ }
+  return AV_PWA_SW_URL;
+}
+
+function avPwaOnlineNow() {
+  try {
+    const nav = avPwaNav();
+    if (nav) return nav.onLine !== false;
+  } catch (e) { /* treat unknown as online */ }
+  return true;
+}
+
+function avPwaStandaloneNow() {
+  try {
+    const nav = avPwaNav();
+    if (nav && nav.standalone === true) return true;
+    const w = avPwaWin();
+    if (w && typeof w.matchMedia === "function") {
+      const mq = w.matchMedia("(display-mode: standalone)");
+      if (mq && mq.matches === true) return true;
+    }
+  } catch (e) { /* not standalone */ }
+  return false;
+}
+
+function avPwaIsIOS() {
+  try {
+    const nav = avPwaNav();
+    if (!nav) return false;
+    const ua = String(nav.userAgent || "");
+    if (ua.indexOf("iPad") !== -1 || ua.indexOf("iPhone") !== -1 || ua.indexOf("iPod") !== -1) return true;
+    /* iPadOS reports a desktop UA - the pointer count is the tell */
+    if (String(nav.platform || "") === "MacIntel" && Number(nav.maxTouchPoints || 0) > 1) return true;
+  } catch (e) { /* not iOS */ }
+  return false;
+}
+
+/* live facts read through the platform, cached flags only as a fallback */
+function avPwaActiveNow() {
+  try { if (avPwa.reg && avPwa.reg.active) return true; } catch (e) { /* reg gone */ }
+  return avPwa.active === true;
+}
+
+function avPwaControlledNow() {
+  try {
+    const nav = avPwaNav();
+    if (nav && nav.serviceWorker && nav.serviceWorker.controller) return true;
+  } catch (e) { /* none */ }
+  return avPwa.controlled === true;
+}
+
+function avPwaWaitingNow() {
+  let w = false;
+  try { w = !!(avPwa.reg && avPwa.reg.waiting); } catch (e) { w = false; }
+  return w || avPwa.updating === true;
+}
+
+/* "bip" | "ios" | "none" - which install path this environment offers */
+function avPwaInstallPath() {
+  if (avPwa.installCaptured === true) return "bip";
+  if (avPwa.iosHint === true) return "ios";
+  return "none";
+}
+
+/* ---------- body + chips (all DOM reached only from inside guarded functions) ---------- */
+
+function avPwaBody() {
+  try {
+    const d = avPwaDoc();
+    return (d && d.body) ? d.body : null;
+  } catch (e) { return null; }
+}
+
+function avPwaBodyClass(cls, on) {
+  try {
+    const b = avPwaBody();
+    if (!b || !b.classList) return false;
+    if (on) b.classList.add(cls); else b.classList.remove(cls);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avPwaChip(d, tag, id, text, title) {
+  const el = d.createElement(tag);
+  el.id = id;
+  el.className = "av-pwa-chip";
+  el.textContent = text;
+  try { el.title = title; } catch (e) { /* attribute refused */ }
+  if (tag === "button") { try { el.type = "button"; } catch (e2) { /* attribute refused */ } }
+  if (id === "av-pwa-ios" || id === "av-pwa-offline") { try { el.setAttribute("role", "status"); } catch (e3) { /* attribute refused */ } }
+  el.hidden = true;
+  return el;
+}
+
+/* the chips container, created on first need and reused after (id #av-pwa-chips) */
+function avPwaChips() {
+  try {
+    const d = avPwaDoc();
+    if (!d || !d.body || typeof d.getElementById !== "function" || typeof d.createElement !== "function") return null;
+    const found = d.getElementById("av-pwa-chips");
+    if (found) return found;
+    const box = d.createElement("div");
+    box.id = "av-pwa-chips";
+    box.className = "av-pwa-chips";
+    box.appendChild(avPwaChip(d, "button", "av-pwa-install", "INSTALL APP", "install Anvil as an app"));
+    box.appendChild(avPwaChip(d, "span", "av-pwa-ios", "Share -> Add to Home Screen", "iOS: Share, then Add to Home Screen"));
+    box.appendChild(avPwaChip(d, "span", "av-pwa-offline", "OFFLINE \u2014 everything is local, keep going", "the network is gone - Anvil is local-first"));
+    box.appendChild(avPwaChip(d, "button", "av-pwa-update", "UPDATE READY \u2014 RELOAD", "a new build is waiting - reload to switch to it"));
+    if (typeof box.addEventListener === "function") box.addEventListener("click", avPwaChipClick);
+    d.body.appendChild(box);
+    return box;
+  } catch (e) { return null; }
+}
+
+function avPwaChipShow(box, id, on) {
+  try {
+    if (!box || typeof box.querySelector !== "function") return false;
+    const el = box.querySelector("#" + id);
+    if (!el) return false;
+    const want = !on;
+    if (el.hidden !== want) el.hidden = want;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* one delegated click listener on the container - a listener never throws outward */
+function avPwaChipClick(ev) {
+  try {
+    const t = ev && ev.target;
+    if (!t || typeof t.closest !== "function") return;
+    if (t.closest("#av-pwa-install")) { avPwaInstallClick(); return; }
+    if (t.closest("#av-pwa-update")) { avPwaUpdateClick(); return; }
+  } catch (e) { /* swallow */ }
+}
+
+/* ---------- the paint: body dataset + classes + chip visibility ---------- */
+
+function avPwaSync() {
+  try {
+    const s = avPwa;
+    s.active = avPwaActiveNow();
+    s.controlled = avPwaControlledNow();
+    const waiting = avPwaWaitingNow();
+    const online = avPwaOnlineNow();
+    const b = avPwaBody();
+    if (b && b.dataset) b.dataset.avPwa = s.supported ? "1" : "0";
+    avPwaBodyClass("av-pwa-offline", !online);
+    avPwaBodyClass("av-pwa-update", waiting);
+    const box = avPwaChips();
+    if (box) {
+      avPwaChipShow(box, "av-pwa-install", !!(s.canInstall && !s.installed));
+      avPwaChipShow(box, "av-pwa-ios", s.iosHint === true);
+      avPwaChipShow(box, "av-pwa-offline", !online);
+      avPwaChipShow(box, "av-pwa-update", waiting);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- online / offline ---------- */
+
+function avPwaOnOnline() {
+  try { avPwaSync(); } catch (e) { /* a listener never throws outward */ }
+}
+
+function avPwaOnOffline() {
+  try { avPwaSync(); } catch (e) { /* a listener never throws outward */ }
+}
+
+/* ---------- install (beforeinstallprompt + iOS hint) ---------- */
+
+function avPwaOnBeforeInstallPrompt(ev) {
+  try {
+    const s = avPwa;
+    if (ev && typeof ev.preventDefault === "function") {
+      try { ev.preventDefault(); } catch (e) { /* not cancelable - fine */ }
+    }
+    s.installEvent = ev || null;
+    s.installCaptured = true;
+    s.canInstall = true;
+    s.installNote = "";
+    s.iosHint = false;              /* a real prompt beats the hint */
+    avPwaSync();
+  } catch (e) { avPwaErr("install capture failed: " + avPwaErrText(e)); }
+}
+
+function avPwaOnAppInstalled() {
+  try {
+    const s = avPwa;
+    s.installed = true;
+    s.canInstall = false;
+    s.installOutcome = "installed";
+    avPwaSync();
+  } catch (e) { avPwaErr("appinstalled handling failed: " + avPwaErrText(e)); }
+}
+
+/* one beforeinstallprompt can be prompted once - after the choice the chip retires */
+function avPwaInstallConsumed() {
+  try {
+    const s = avPwa;
+    s.canInstall = false;
+    s.installConsumed = true;
+    avPwaSync();
+  } catch (e) { /* consume is best-effort paint */ }
+}
+
+function avPwaInstallClick() {
+  const s = avPwa;
+  const ev = s.installEvent;
+  if (!ev || typeof ev.prompt !== "function") {
+    s.installNote = "no install prompt is pending";
+    avPwaSync();
+    return false;
+  }
+  let prompted = false;
+  try { ev.prompt(); prompted = true; }
+  catch (e) { avPwaErr("install prompt failed: " + avPwaErrText(e)); }
+  if (!prompted) { avPwaSync(); return false; }
+  s.installOutcome = "prompted";
+  try {
+    const uc = ev.userChoice;
+    if (uc && typeof uc.then === "function") {
+      uc.then(function (res) {
+        s.installOutcome = (res && res.outcome) ? String(res.outcome) : "unknown";
+        avPwaInstallConsumed();
+      }, function () {
+        s.installOutcome = "error";
+        avPwaInstallConsumed();
+      });
+    } else {
+      avPwaInstallConsumed();
+    }
+  } catch (e) {
+    s.installOutcome = "error";
+    avPwaInstallConsumed();
+  }
+  avPwaSync();
+  return true;
+}
+
+/* ---------- the update flow (chip click is the ONLY skipWaiting + reload path) ---------- */
+
+function avPwaMarkUpdate() {
+  try {
+    avPwa.updating = true;
+    avPwaSync();
+  } catch (e) { /* paint is best-effort */ }
+}
+
+function avPwaUpdateClick() {
+  const s = avPwa;
+  if (s.reloading) return false;
+  let sw = null;
+  try { sw = (s.reg && s.reg.waiting) ? s.reg.waiting : null; } catch (e) { sw = null; }
+  if (!sw || typeof sw.postMessage !== "function") {
+    s.updateNote = "no waiting worker - reload the page to update";
+    avPwaSync();
+    return false;
+  }
+  s.reloadWanted = true;             /* the controllerchange that follows reloads once */
+  try {
+    sw.postMessage({ t: "av-skip-waiting" });
+    s.updateNote = "";
+    return true;
+  } catch (e) {
+    s.reloadWanted = false;
+    avPwaErr("update skip message failed: " + avPwaErrText(e));
+    avPwaSync();
+    return false;
+  }
+}
+
+function avPwaOnControllerChange() {
+  try {
+    const s = avPwa;
+    s.controlled = true;
+    s.controllerChanges += 1;
+    try { if (!s.reg || !s.reg.waiting) s.updating = false; } catch (e) { s.updating = false; }
+    avPwaSync();
+    if (!s.reloadWanted || s.reloading) return;   /* first claim / external change: stay put */
+    s.reloading = true;
+    try {
+      const loc = avPwaLoc();
+      if (loc && typeof loc.reload === "function") loc.reload();
+    } catch (e) { avPwaErr("reload after update failed: " + avPwaErrText(e)); }
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* ---------- registration + update checks (all guarded, all late) ---------- */
+
+function avPwaRegWatch(reg) {
+  const s = avPwa;
+  try {
+    if (!reg || typeof reg.addEventListener !== "function" || s.regWatched) return false;
+    s.regWatched = true;
+    reg.addEventListener("updatefound", function () {
+      try {
+        s.updates += 1;
+        const nu = reg.installing;
+        if (!nu || typeof nu.addEventListener !== "function") return;
+        nu.addEventListener("statechange", function () {
+          try {
+            /* installed while a controller exists = an update is waiting for the chip click */
+            if (nu.state === "installed" && avPwaControlledNow()) avPwaMarkUpdate();
+          } catch (e) { /* never throws outward */ }
+        });
+      } catch (e) { /* never throws outward */ }
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+function avPwaCheckWaiting(reg) {
+  try { if (reg && reg.waiting && avPwaControlledNow()) avPwaMarkUpdate(); } catch (e) { /* none */ }
+  return false;
+}
+
+function avPwaUpdateCheck() {
+  const s = avPwa;
+  if (!s.reg || typeof s.reg.update !== "function") return false;
+  const now = Date.now();
+  if (s.updateCheckedAt && (now - s.updateCheckedAt) < AV_PWA_UPDATE_MS) return false;   /* once a minute at most */
+  s.updateCheckedAt = now;
+  try {
+    const p = s.reg.update();
+    if (p && typeof p.then === "function") {
+      p.then(function () { avPwaCheckWaiting(s.reg); }, function () { /* offline is normal */ });
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avPwaStartUpdateTimer() {
+  const s = avPwa;
+  try {
+    if (s.updateTimer || typeof setInterval !== "function") return false;
+    s.updateTimer = setInterval(function () { try { avPwaUpdateCheck(); } catch (e) { /* a timer never throws */ } }, AV_PWA_UPDATE_MS);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avPwaRegisterNow() {
+  const s = avPwa;
+  try {
+    if (!s.supported || s.nosw || s.registered || s.registering) return false;
+    const nav = avPwaNav();
+    if (!nav || !nav.serviceWorker || typeof nav.serviceWorker.register !== "function") return false;
+    s.registering = true;
+    let p = null;
+    try { p = nav.serviceWorker.register(AV_PWA_SW_URL, { scope: AV_PWA_SW_SCOPE }); }
+    catch (e) {
+      s.registering = false;
+      avPwaErr("service worker registration failed: " + avPwaErrText(e));
+      return false;
+    }
+    Promise.resolve(p).then(function (reg) {
+      s.registering = false;
+      if (!reg) { avPwaErr("service worker registration returned nothing"); avPwaSync(); return; }
+      s.reg = reg;
+      s.registered = true;
+      try { s.scope = (typeof reg.scope === "string" && reg.scope) ? reg.scope : ""; } catch (e) { s.scope = ""; }
+      s.active = avPwaActiveNow();
+      avPwaRegWatch(reg);
+      avPwaCheckWaiting(reg);
+      avPwaStartUpdateTimer();
+      avPwaSync();
+    }, function (err) {
+      s.registering = false;
+      avPwaErr("service worker registration failed: " + avPwaErrText(err));
+      avPwaSync();
+    });
+    return true;
+  } catch (e) {
+    s.registering = false;
+    avPwaErr("service worker registration failed: " + avPwaErrText(e));
+    return false;
+  }
+}
+
+/* register AFTER window load (or immediately when the load already happened) */
+function avPwaScheduleRegister() {
+  const s = avPwa;
+  try {
+    if (!s.supported || s.nosw || s.registered || s.registering || s.schedRegister) return false;
+    const d = avPwaDoc();
+    const w = avPwaWin();
+    if (d && d.readyState === "complete") return avPwaRegisterNow();
+    if (!w || typeof w.addEventListener !== "function") return avPwaRegisterNow();
+    s.schedRegister = true;
+    w.addEventListener("load", function () {
+      try { avPwaRegisterNow(); }
+      catch (e) { avPwaErr("service worker registration failed: " + avPwaErrText(e)); }
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- launchQueue file handling ---------- */
+
+function avPwaDecodeUtf8(ab) {
+  try { if (typeof TextDecoder === "function") return new TextDecoder("utf-8").decode(ab); } catch (e) { /* fallback */ }
+  try {
+    const u = new Uint8Array(ab);
+    let out = "";
+    for (let i = 0; i < u.length; i++) out += String.fromCharCode(u[i]);
+    return out;
+  } catch (e2) { return ""; }
+}
+
+/* hand off: avProjOpenText(name, text) when that seam exists, else the av-launch-file event */
+function avPwaLaunchHandoff(name, text) {
+  const w = avPwaWin();
+  let fn = null;
+  try { if (typeof avProjOpenText === "function") fn = avProjOpenText; } catch (e) { fn = null; }
+  if (!fn && w) { try { if (typeof w.avProjOpenText === "function") fn = w.avProjOpenText; } catch (e) { fn = null; } }
+  if (fn) {
+    try {
+      const r = fn(name, text);
+      if (r && typeof r.then === "function") {
+        try { r.then(null, function (e) { avPwaErr("avProjOpenText rejected: " + avPwaErrText(e)); }); } catch (e2) { /* ok */ }
+      }
+    } catch (e) { avPwaErr("avProjOpenText threw: " + avPwaErrText(e)); }
+    return "avProjOpenText";
+  }
+  try {
+    if (w && typeof w.dispatchEvent === "function" && typeof w.CustomEvent === "function") {
+      w.dispatchEvent(new w.CustomEvent("av-launch-file", { detail: { name: name, text: text } }));
+      return "event";
+    }
+  } catch (e) { avPwaErr("av-launch-file dispatch failed: " + avPwaErrText(e)); }
+  return "none";
+}
+
+async function avPwaLaunchHandle(params) {
+  const s = avPwa;
+  try {
+    const h0 = (params && params.files && params.files.length) ? params.files[0] : null;
+    if (!h0) return false;
+    let file = h0;
+    if (typeof h0.getFile === "function") file = await h0.getFile();
+    const name = (file && file.name != null && String(file.name)) ? String(file.name) : "launched.anvl";
+    let text = "";
+    if (file && typeof file.text === "function") text = await file.text();
+    else if (file && typeof file.arrayBuffer === "function") text = avPwaDecodeUtf8(await file.arrayBuffer());
+    if (typeof text !== "string") text = "";
+    s.launchCount += 1;
+    s.launchNote = "";
+    const via = avPwaLaunchHandoff(name, text);
+    s.lastLaunch = { name: name, chars: text.length, via: via };
+    avPwaSync();
+    return true;
+  } catch (e) {
+    s.launchNote = "the launched file could not be read";
+    avPwaErr("launch file failed: " + avPwaErrText(e));
+    avPwaSync();
+    return false;
+  }
+}
+
+/* ---------- wire (one pass; listeners are plain, so a synthetic event drives the same code) ---------- */
+
+function avPwaWire() {
+  const s = avPwa;
+  const w = avPwaWin();
+  if (!w || typeof w.addEventListener !== "function") return false;
+  if (s.wired) return true;
+  s.wired = true;
+  try { w.addEventListener("beforeinstallprompt", avPwaOnBeforeInstallPrompt); } catch (e) { /* none */ }
+  try { w.addEventListener("appinstalled", avPwaOnAppInstalled); } catch (e) { /* none */ }
+  try { w.addEventListener("online", avPwaOnOnline); } catch (e) { /* none */ }
+  try { w.addEventListener("offline", avPwaOnOffline); } catch (e) { /* none */ }
+  try {
+    const nav = avPwaNav();
+    if (nav && nav.serviceWorker && typeof nav.serviceWorker.addEventListener === "function") {
+      nav.serviceWorker.addEventListener("controllerchange", avPwaOnControllerChange);
+    }
+  } catch (e) { /* no serviceWorker container */ }
+  try {
+    if (w.launchQueue && typeof w.launchQueue.setConsumer === "function") {
+      w.launchQueue.setConsumer(function (params) {
+        try {
+          const p = avPwaLaunchHandle(params);
+          if (p && typeof p.catch === "function") p.catch(function (e) { avPwaErr("launch handling failed: " + avPwaErrText(e)); });
+        } catch (e) { avPwaErr("launch handling failed: " + avPwaErrText(e)); }
+      });
+      s.launchQueue = true;
+    }
+  } catch (e) { avPwaErr("launchQueue consumer failed: " + avPwaErrText(e)); }
+  return true;
+}
+
+/* a late sync so the chips land even when init ran before <body> existed */
+function avPwaScheduleLoadSync() {
+  try {
+    const d = avPwaDoc();
+    const w = avPwaWin();
+    if (!w || typeof w.addEventListener !== "function") return false;
+    if (d && d.readyState === "complete") return true;    /* nothing owed */
+    w.addEventListener("load", function () {
+      try { avPwaSync(); } catch (e) { /* load sync never throws */ }
+      try { avPwaCheckWaiting(avPwa.reg); } catch (e) { /* reg may be null */ }
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- init / state / proof / classes ---------- */
+
+/* the manifest <link> is injected at init, NEVER statically: a static link makes the browser fetch
+   manifest.webmanifest on file:// and log a CORS console error (the smoke zero-error law) */
+function avPwaLinkManifest() {
+  try {
+    const d = avPwaDoc();
+    if (!d || !d.head || typeof d.createElement !== "function") return false;
+    if (typeof d.querySelector === "function" && d.querySelector('link[rel="manifest"]')) return true;
+    const l = d.createElement("link");
+    l.rel = "manifest";
+    l.href = "manifest.webmanifest";
+    d.head.appendChild(l);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avPwaInit() {
+  let out = false;
+  try {
+    const s = avPwa;
+    s.supported = avPwaSupported();
+    s.nosw = avPwaNoswRequested();
+    s.swUrl = avPwaSwUrlNow();
+    if (s.supported) avPwaLinkManifest();
+    avPwaWire();
+    if (!s.inited) {
+      s.inited = true;
+      avPwaScheduleLoadSync();
+      /* the iOS hint is a static fact - decided once (Chromium never shows it) */
+      s.iosHint = !!(s.supported && avPwaIsIOS() && !avPwaStandaloneNow());
+    }
+    if (s.supported && !s.nosw) avPwaScheduleRegister();
+    avPwaSync();
+    out = s.supported;
+  } catch (e) {
+    avPwaErr("pwa init failed: " + avPwaErrText(e));
+    out = false;
+  }
+  return out;
+}
+
+function avPwaState() {
+  const s = avPwa;
+  try {
+    return {
+      supported: avPwaSupported(),
+      registered: s.registered === true,
+      active: avPwaActiveNow(),
+      waiting: avPwaWaitingNow(),
+      controlled: avPwaControlledNow(),
+      online: avPwaOnlineNow(),
+      scope: (typeof s.scope === "string") ? s.scope : "",
+      swUrl: avPwaSwUrlNow(),
+      errors: s.errors.slice(),
+      nosw: s.nosw === true,
+      registering: s.registering === true,
+      updates: s.updates,
+      canInstall: s.canInstall === true,
+      installed: s.installed === true,
+      installPath: avPwaInstallPath(),
+      installOutcome: String(s.installOutcome || ""),
+      installNote: s.installNote,
+      iosHint: s.iosHint === true,
+      launchQueue: s.launchQueue === true,
+      launchCount: s.launchCount,
+      lastLaunch: s.lastLaunch ? { name: s.lastLaunch.name, chars: s.lastLaunch.chars, via: s.lastLaunch.via } : null,
+      launchNote: s.launchNote,
+      updateNote: s.updateNote,
+      reloading: s.reloading === true,
+    };
+  } catch (e) {
+    return {
+      supported: false, registered: false, active: false, waiting: false, controlled: false,
+      online: avPwaOnlineNow(), scope: "", swUrl: avPwaSwUrlNow(), errors: [],
+    };
+  }
+}
+
+/* one line for app_core's ?avtest=1 list - this module never prints anything itself */
+function avPwaProof() {
+  const out = {
+    supported: false, registered: false, active: false, waiting: false,
+    installPath: "none", launch: 0,
+  };
+  try {
+    const st = avPwaState();
+    out.supported = st.supported === true;
+    out.registered = st.registered === true;
+    out.active = st.active === true;
+    out.waiting = st.waiting === true;
+    out.installPath = (st.installPath === "bip" || st.installPath === "ios") ? st.installPath : "none";
+    out.launch = isFinite(st.launchCount) ? Math.round(st.launchCount) : 0;
+  } catch (e) { /* keep the honest defaults */ }
+  try { return "PWA SELFTEST " + JSON.stringify(out); } catch (e2) { return "PWA SELFTEST {}"; }
+}
+
+function avPwaInstallPrompt() {
+  return avPwa.installEvent ? avPwa.installEvent : null;
+}
+
+function avPwaClasses() {
+  return AV_PWA_CLASSES.slice();
+}
+
+/* ---------- the debug/test handle (contract surface; live getters) ---------- */
+
+if (typeof window !== "undefined") {
+  try {
+    const handle = {};
+    const def = function (name, fn) {
+      try { Object.defineProperty(handle, name, { get: fn, enumerable: true, configurable: true }); }
+      catch (e) { try { handle[name] = fn(); } catch (e2) { /* frozen handle */ } }
+    };
+    handle.version = AV_PWA_VERSION;
+    def("supported", function () { return avPwaSupported(); });
+    def("registered", function () { return avPwa.registered === true; });
+    def("active", function () { return avPwaActiveNow(); });
+    def("waiting", function () { return avPwaWaitingNow(); });
+    def("canInstall", function () { return avPwa.canInstall === true; });
+    def("installed", function () { return avPwa.installed === true; });
+    def("online", function () { return avPwaOnlineNow(); });
+    def("swUrl", function () { return avPwa.swUrl || avPwaSwUrlNow(); });
+    def("scope", function () { return (typeof avPwa.scope === "string") ? avPwa.scope : ""; });
+    def("errors", function () { return avPwa.errors.slice(); });
+    handle.state = function () { return avPwaState(); };
+    handle.init = function () { return avPwaInit(); };
+    handle.installPrompt = function () { return avPwaInstallPrompt(); };
+    window.__avPwa = handle;
+  } catch (e) { /* no window - nothing to publish */ }
+}
+
+
+/* Anvil — PLATFORM wave (suite bridges #82): the FAMILY card — three local handshakes mounted
+   into the parent-owned host `#av-family-host` (the parent adds the `#av-family` card at
+   integration, like the other cards; this module only fills the host). Per verify/_platform_wave.md
+   §2.6, plus the parent ID pin (2026-10-08):
+
+     HUB        bounce the current loop (master) offline -> encode it 16-bit / 48 k ->
+                write the bridge record into IDB `moddys-bridges`/`outbox` (database version 1,
+                objectStore keyPath "id") -> open `./inbox.html` in the named target
+                "av-hub-inbox". On file:// (or when the store refuses) the WAV is downloaded
+                instead and the row says the inbox needs moddys.net (same origin).
+     RESONANCE  import Resonance session packs (`https://moddys.net/resonance/app/pack/<id>.zip`,
+                overridable via setPackBase — the rig points it at its own server) or a local
+                `.zip` / `.gnaural` file -> session list (name + minutes + type names, refusals
+                listed) -> preview renders via avGnRender at the 120 s cap, builds an AudioBuffer
+                on the LIVE tap context and plays it through the MASTER tap input — NEVER
+                ctx.destination (standing witness law: avTap.ctx + avMasterNodes()/avMasterFor()).
+                save() encodes the last rendered buffer with avWavEncode -> house download.
+     RADIO      read the radio's OWN same-origin localStorage (`rbg-last`, `rbg-meta`) tolerantly
+                (foreign keys: any shape, never throws, never writes) and show the last station
+                (name + country) + OPEN RADIO + a search deep link `https://moddys.net/#q=<term>`.
+
+   LAWS (house): "use strict"; classic script, no imports; node-loadable (no DOM/global reach at
+   load — every reach typeof-guarded inside a function); ONE namespace avFamily* / AV_FAMILY_*;
+   never throws (refuse honestly, receipt-shaped { ok, error?, note?, ... }); NO console output;
+   ONE op at a time (busy guard); every cross-module call (avBounce · avWavEncode · avGnParse ·
+   avGnUnzip · avGnSessionsFromZip · avGnInfo · avGnRender · avSeqSnap · avDeliverDownload ·
+   avTap/avMasterNodes/avMasterFor/avKeysFor · avEngineEnsure) is typeof-guarded PER CALL and
+   degrades to an honest refusal when its module is absent. IDB writes are structured clones —
+   NEVER a transfer list. No new .av-knob controls: selects, buttons, text inputs only.
+
+   ID INVENTORY (rig + smoke pin; all inside #av-family-host):
+     root `.av-family[data-av-family="1"]` · row wrapper `.av-fam-row[data-av-fam-row=hub|resonance|radio]`
+     (exactly 3) · per-row status lines `.av-fam-status` (ids #av-fam-hub-status ·
+     #av-fam-res-status · #av-fam-radio-status) ·
+     hub: #av-fam-hub-loops (select 2/4/8, default 8) · #av-fam-hub-send ·
+     resonance: #av-fam-res-pack (select of the known pack ids) · #av-fam-res-import ·
+     #av-fam-res-preview · #av-fam-res-save · #av-fam-res-file (local .zip/.gnaural input) ·
+     #av-fam-res-list (session rows, [data-av-fam-session="<i>"]) ·
+     radio: #av-fam-radio-open · #av-fam-radio-q (text) · #av-fam-radio-go.
+   OBSERVABLES: avFamilyInit() -> bool · avFamilyState() -> JSON-safe snapshot (lastReceipt per
+   row) · avFamilySend(opts) -> Promise<receipt> · avFamilyImportPack(src) -> Promise<receipt> ·
+   avFamilyPreview(i) -> Promise<receipt> · avFamilySave() -> bool · avFamilyStop() -> bool ·
+   avFamilyOpenRadio(q) -> URL string · avFamilySetPackBase(url) -> bool ·
+   avFamilyInboxAvailable() -> bool (IndexedDB present && protocol http(s)) ·
+   avFamilyClasses() -> string[] · window.__avFamily = { version, init, state, send, importPack,
+   preview, save, stop, openRadio, setPackBase, classes }. (save is on the handle because §2.6
+   prose + the P8 rig call save() directly.)
+
+   ONE writer (child sa-D). Never throws. */
+
+"use strict";
+
+const AV_FAMILY_VERSION = "platform.1";
+const AV_FAMILY_HOST_ID = "av-family-host";
+
+/* hub bridge store pin (§2.4) */
+const AV_FAMILY_DB = "moddys-bridges";
+const AV_FAMILY_DB_VER = 1;
+const AV_FAMILY_OS = "outbox";
+const AV_FAMILY_INBOX_URL = "./inbox.html";
+const AV_FAMILY_INBOX_TARGET = "av-hub-inbox";
+const AV_FAMILY_DB_TIMEOUT_MS = 4000;      /* a hung/blocked open must not wedge the card */
+const AV_FAMILY_LOOP_DEF = 8;
+const AV_FAMILY_LOOPS_MIN = 1;
+const AV_FAMILY_LOOPS_MAX = 64;
+const AV_FAMILY_HUB_TAIL_S = 2;
+const AV_FAMILY_HUB_SR = 48000;
+
+/* resonance pin (§2.6) — the known pack ids, verbatim from the wave contract enumeration
+   (breathing classic depth focus gnaural-web-complete listener schumann sleep sleepladder
+   solfeggio speakers tours wave1..7) */
+const AV_FAMILY_PACK_BASE = "https://moddys.net/resonance/app/pack/";
+const AV_FAMILY_PACK_IDS = [
+  "breathing", "classic", "depth", "focus", "gnaural-web-complete", "listener",
+  "schumann", "sleep", "sleepladder", "solfeggio", "speakers", "tours",
+  "wave1", "wave2", "wave3", "wave4", "wave5", "wave6", "wave7",
+];
+const AV_FAMILY_FETCH_MS = 30000;          /* pack download timeout (store precedent) */
+const AV_FAMILY_PREVIEW_CAP_S = 120;       /* live preview cap (hard cap 600 in the renderer) */
+const AV_FAMILY_SESSIONS_CAP = 32;         /* list render cap — never a wall of DOM */
+const AV_FAMILY_TYPES_CAP = 4;
+
+/* radio pin (§2.6) */
+const AV_FAMILY_RADIO_URL = "https://moddys.net/";
+const AV_FAMILY_RADIO_TARGET = "av-world-radio";
+const AV_FAMILY_RADIO_LS_LAST = "rbg-last";
+const AV_FAMILY_RADIO_LS_META = "rbg-meta";
+
+/* the .gnaural type vocabulary (§2.5 pin) — fallback when a typeName is not carried */
+const AV_FAMILY_GN_TYPES = ["binaural", "pink noise", "pcm file", "isopulse", "isopulse", "gnaural ext", "gnaural ext", "white noise", "brown noise"];
+const AV_FAMILY_GN_PLAYABLE = [true, false, false, false, false, false, false, true, true];
+
+/* ---------- module state (UI state only — nothing else cached) ---------- */
+
+const avFamilySt = {
+  inited: false, mounts: 0,
+  busy: false, busyOp: "",
+  packBase: "",                  /* "" = the pinned default */
+  sessions: [],                  /* internal: { name, ok, error, info, parsed (full parse), bytes } */
+  selected: -1,
+  lastRender: null,              /* { l, r, sr, seconds, frames, name, capped } — save() reads this */
+  preview: null,                 /* { src, ctx } */
+  receipts: { hub: null, resonance: null, radio: null },   /* lastReceipt per row */
+  statuses: { hub: "", resonance: "", radio: "" },
+  resNote: "",                   /* decoy/unzip-notes line under the resonance list */
+  lastSessionsHtml: null,
+  radio: null,                   /* last painted radio view */
+  lastError: "",
+};
+
+/* ---------- tiny value laws (never throw) ---------- */
+
+const avFamilyEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function avFamilyMsg(e) {
+  try { return String((e && (e.message || e.name)) || e) || "unknown error"; } catch (e2) { return "unknown error"; }
+}
+
+function avFamilyClean(s, max) {
+  let t = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  if (max && t.length > max) t = t.slice(0, max - 1) + "\u2026";
+  return t;
+}
+
+function avFamilyNum(v, d) { const n = Number(v); return isFinite(n) ? n : d; }
+
+function avFamilyInt(v, d, lo, hi) {
+  const n = Number(v);
+  if (!isFinite(n)) return d;
+  const r = Math.round(n);
+  return r < lo ? lo : (r > hi ? hi : r);
+}
+
+function avFamilyErrText(r, fallback) {
+  try {
+    if (r && typeof r === "object") {
+      if (typeof r.error === "string" && r.error) return r.error;
+      if (typeof r.reason === "string" && r.reason) return r.reason;
+      if (typeof r.message === "string" && r.message) return r.message;
+    }
+    if (typeof r === "string" && r) return r;
+  } catch (e) { /* refuse */ }
+  return fallback || "refused";
+}
+
+/* normalize ArrayBuffer | typed view -> a real ArrayBuffer (or null); never throws */
+function avFamilyAb(x) {
+  try {
+    if (!x) return null;
+    if (typeof ArrayBuffer !== "undefined" && x instanceof ArrayBuffer) return x;
+    if (typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView && ArrayBuffer.isView(x)) {
+      if (x.byteOffset === 0 && x.byteLength === x.buffer.byteLength) return x.buffer;
+      return x.buffer.slice(x.byteOffset, x.byteOffset + x.byteLength);
+    }
+  } catch (e) { /* refuse */ }
+  return null;
+}
+
+function avFamilyByteLen(x) {
+  try { const n = Number(x && x.byteLength); return isFinite(n) && n > 0 ? Math.round(n) : 0; } catch (e) { return 0; }
+}
+
+function avFamilyFmtSize(bytes) {
+  const n = Number(bytes);
+  if (!isFinite(n) || n <= 0) return "0 B";
+  if (n < 1024) return Math.round(n) + " B";
+  if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+  return (n / 1048576).toFixed(2) + " MB";
+}
+
+function avFamilyFmtDur(sec) {
+  const n = Number(sec);
+  if (!isFinite(n) || n < 0) return "?";
+  const s = Math.round(n);
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return m + ":" + (r < 10 ? "0" : "") + r;
+}
+
+function avFamilyHex6() {
+  try { return ("00000" + Math.floor(Math.random() * 0x1000000).toString(16)).slice(-6); }
+  catch (e) { return "000000"; }
+}
+
+/* filesystem-safe base for a loop/session name */
+function avFamilySafeName(s, fallback) {
+  let t = String(s == null ? "" : s).replace(/[\\/:*?"<>|\u0000-\u001f]+/g, "_").replace(/\s+/g, "_");
+  t = t.replace(/^_+|_+$/g, "").slice(0, 48);
+  return t || (fallback || "anvil_loop");
+}
+
+/* musical bars from the bounce facts: 16 steps = one bar (the house 16-step grid); deterministic,
+   documented approximation (an 8t grid is 12 steps/bar — the count stays honest, not exact) */
+function avFamilyBars(loops, cycleSteps) {
+  const l = avFamilyInt(loops, 1, 1, 64);
+  const c = avFamilyInt(cycleSteps, 16, 1, 64);
+  const bars = Math.round((l * c) / 16);
+  return bars >= 1 ? bars : 1;
+}
+
+/* ---------- guarded environment reaches ---------- */
+
+function avFamilyWin() {
+  try { if (typeof window !== "undefined" && window) return window; } catch (e) { /* none */ }
+  return null;
+}
+
+function avFamilyGlobal() {
+  const w = avFamilyWin();
+  if (w) return w;
+  try { if (typeof globalThis !== "undefined") return globalThis; } catch (e) { /* none */ }
+  return null;
+}
+
+function avFamilyDoc() {
+  try { if (typeof document !== "undefined" && document) return document; } catch (e) { /* none */ }
+  return null;
+}
+
+function avFamilyHost() {
+  try {
+    const d = avFamilyDoc();
+    if (d && typeof d.getElementById === "function") return d.getElementById(AV_FAMILY_HOST_ID);
+  } catch (e) { /* no document */ }
+  return null;
+}
+
+function avFamilyLs() {
+  try { if (typeof localStorage !== "undefined" && localStorage) return localStorage; } catch (e) { /* blocked */ }
+  try { const w = avFamilyWin(); if (w && w.localStorage) return w.localStorage; } catch (e) { /* blocked */ }
+  return null;
+}
+
+function avFamilyIdbSource() {
+  try { if (typeof indexedDB !== "undefined" && indexedDB) return indexedDB; } catch (e) { /* none */ }
+  try { const w = avFamilyWin(); if (w && w.indexedDB) return w.indexedDB; } catch (e) { /* none */ }
+  return null;
+}
+
+/* ---------- guarded cross-module resolution (resolved PER CALL; late arrival is normal) ---------- */
+
+const AV_FAMILY_FNS = [
+  ["bounce", "avBounce"], ["wav", "avWavEncode"],
+  ["gnParse", "avGnParse"], ["gnUnzip", "avGnUnzip"], ["gnSessions", "avGnSessionsFromZip"],
+  ["gnInfo", "avGnInfo"], ["gnRender", "avGnRender"],
+  ["download", "avDeliverDownload"],
+  ["masterNodes", "avMasterNodes"], ["masterFor", "avMasterFor"], ["keysFor", "avKeysFor"],
+  ["engineEnsure", "avEngineEnsure"], ["seqSnap", "avSeqSnap"],
+];
+
+function avFamilyFns() {
+  const f = {};
+  for (let i = 0; i < AV_FAMILY_FNS.length; i++) f[AV_FAMILY_FNS[i][0]] = null;
+  /* bare-identifier pass (the concat scope); each reach is its own guard — never a dynamic lookup */
+  try { if (typeof avBounce === "function") f.bounce = avBounce; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avWavEncode === "function") f.wav = avWavEncode; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avGnParse === "function") f.gnParse = avGnParse; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avGnUnzip === "function") f.gnUnzip = avGnUnzip; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avGnSessionsFromZip === "function") f.gnSessions = avGnSessionsFromZip; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avGnInfo === "function") f.gnInfo = avGnInfo; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avGnRender === "function") f.gnRender = avGnRender; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avDeliverDownload === "function") f.download = avDeliverDownload; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avMasterNodes === "function") f.masterNodes = avMasterNodes; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avMasterFor === "function") f.masterFor = avMasterFor; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avKeysFor === "function") f.keysFor = avKeysFor; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avEngineEnsure === "function") f.engineEnsure = avEngineEnsure; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avSeqSnap === "function") f.seqSnap = avSeqSnap; } catch (e) { /* absent/TDZ */ }
+  try { if (typeof avTap !== "undefined" && avTap) f.tap = avTap; } catch (e) { /* absent/TDZ */ }
+  /* global-property pass (separate script scopes, rigs) */
+  try {
+    const g = avFamilyGlobal();
+    if (g) {
+      for (let i = 0; i < AV_FAMILY_FNS.length; i++) {
+        const k = AV_FAMILY_FNS[i][0], n = AV_FAMILY_FNS[i][1];
+        if (!f[k] && typeof g[n] === "function") f[k] = g[n];
+      }
+      if (!f.tap) f.tap = (g.avTap && g.avTap.ctx !== undefined) ? g.avTap : (g.__avTap || null);
+    }
+  } catch (e) { /* no global scope */ }
+  return f;
+}
+
+/* the live tap context: avTap.ctx (av_tap.js) — the ONE live AudioContext; never a new one */
+function avFamilyLiveCtx(fns) {
+  try {
+    const t = (fns && fns.tap) || null;
+    if (t && t.ctx && t.ctx.state !== "closed") return t.ctx;
+  } catch (e) { /* no tap */ }
+  return null;
+}
+
+/* the MASTER tap input (standing witness law): avMasterFor(ctx) first, then the avMasterNodes()
+   list (prefer the node of the live ctx), NEVER ctx.destination */
+function avFamilyMasterInput(fns, ctx) {
+  try { if (fns && fns.masterFor && ctx) { const n = fns.masterFor(ctx); if (n && n.gain) return n; } } catch (e) { /* fall through */ }
+  try {
+    if (fns && fns.masterNodes) {
+      const list = fns.masterNodes();
+      if (list && typeof list.length === "number" && list.length) {
+        for (let i = 0; i < list.length; i++) {
+          const n = list[i];
+          if (n && n.gain && (!ctx || n.context === ctx)) return n;
+        }
+        if (list[0] && list[0].gain) return list[0];
+      }
+    }
+  } catch (e) { /* no masters */ }
+  return null;
+}
+
+/* ---------- house download path (avDeliverDownload when loaded; local anchor else) ---------- */
+
+function avFamilyAnchor(bytes, name, mime) {
+  try {
+    const d = avFamilyDoc();
+    const w = avFamilyWin();
+    if (!d || typeof d.createElement !== "function") return false;
+    if (typeof Blob === "undefined" || !w || !w.URL || typeof w.URL.createObjectURL !== "function") return false;
+    const url = w.URL.createObjectURL(new Blob([bytes], { type: mime || "application/octet-stream" }));
+    const a = d.createElement("a");
+    a.href = url;
+    a.download = name;
+    try { a.rel = "noopener"; } catch (e) { /* attribute refused */ }
+    const body = d.body;
+    let attached = false;
+    if (body && typeof body.appendChild === "function") { try { body.appendChild(a); attached = true; } catch (e) { attached = false; } }
+    try { a.click(); } catch (e) { /* a click never throws outward here */ }
+    if (attached && body && typeof body.removeChild === "function") { try { body.removeChild(a); } catch (e) { /* ok */ } }
+    try { if (typeof setTimeout === "function") setTimeout(function () { try { w.URL.revokeObjectURL(url); } catch (e) { /* ok */ } }, 8000); } catch (e) { /* ok */ }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFamilyDownload(bytes, name) {
+  try {
+    if (!bytes || typeof bytes.byteLength !== "number" || bytes.byteLength <= 0) return false;
+    const fns = avFamilyFns();
+    let ok = false, via = "refused";
+    if (fns.download) {
+      try { ok = fns.download(bytes, name) === true; if (ok) via = "deliver"; } catch (e) { ok = false; }
+    }
+    if (!ok) { ok = avFamilyAnchor(bytes, name, "audio/wav"); if (ok) via = "anchor"; }
+    try {
+      const w = avFamilyWin();
+      if (w) w.__avFamilyLastDownload = { name: name, bytes: avFamilyByteLen(bytes), at: Date.now(), via: via };
+    } catch (e) { /* observability is a nicety */ }
+    return ok;
+  } catch (e) { return false; }
+}
+
+/* ---------- the bridge store write (guarded open/migrate, structured clone, no transfer list) ---------- */
+
+function avFamilyOutboxPut(rec) {
+  return new Promise(function (resolve) {
+    let settled = false;
+    const done = function (r) { if (!settled) { settled = true; resolve(r); } };
+    let timer = null;
+    try {
+      const idb = avFamilyIdbSource();
+      if (!idb || typeof idb.open !== "function") { done({ ok: false, error: "no-indexeddb" }); return; }
+      try { if (typeof setTimeout === "function") timer = setTimeout(function () { done({ ok: false, error: "timeout" }); }, AV_FAMILY_DB_TIMEOUT_MS); } catch (e) { timer = null; }
+      let rq = null;
+      try { rq = idb.open(AV_FAMILY_DB, AV_FAMILY_DB_VER); } catch (e) { done({ ok: false, error: "open:" + avFamilyMsg(e) }); return; }
+      rq.onupgradeneeded = function () {
+        try {
+          const db = rq.result;
+          if (!db.objectStoreNames || !db.objectStoreNames.contains(AV_FAMILY_OS)) db.createObjectStore(AV_FAMILY_OS, { keyPath: "id" });
+        } catch (e) { /* upgrade raced — the put below decides */ }
+      };
+      rq.onerror = function () { try { if (timer) clearTimeout(timer); } catch (e) { /* ok */ } done({ ok: false, error: "open:error" }); };
+      rq.onblocked = function () { try { if (timer) clearTimeout(timer); } catch (e) { /* ok */ } done({ ok: false, error: "open:blocked" }); };
+      rq.onsuccess = function () {
+        if (settled) { try { rq.result.close(); } catch (e) { /* ok */ } return; }
+        try {
+          const db = rq.result;
+          const tx = db.transaction(AV_FAMILY_OS, "readwrite");
+          /* structured clone of the record — the wav ArrayBuffer is cloned BY the store;
+             never a transfer list (the encoder's bytes must stay addressable) */
+          tx.objectStore(AV_FAMILY_OS).put(rec);
+          tx.oncomplete = function () {
+            try { if (timer) clearTimeout(timer); } catch (e) { /* ok */ }
+            try { db.close(); } catch (e) { /* ok */ }
+            done({ ok: true });
+          };
+          tx.onerror = function () { try { if (timer) clearTimeout(timer); } catch (e) { /* ok */ } done({ ok: false, error: "put:error" }); };
+          tx.onabort = function () { try { if (timer) clearTimeout(timer); } catch (e) { /* ok */ } done({ ok: false, error: "put:abort" }); };
+        } catch (e) { try { if (timer) clearTimeout(timer); } catch (e2) { /* ok */ } done({ ok: false, error: "tx:" + avFamilyMsg(e) }); }
+      };
+    } catch (e) {
+      try { if (timer) clearTimeout(timer); } catch (e2) { /* ok */ }
+      done({ ok: false, error: "idb:" + avFamilyMsg(e) });
+    }
+  });
+}
+
+/* §2.6 pin: IndexedDB present AND the page is same-origin-capable (http/https) for inbox.html */
+function avFamilyInboxAvailable() {
+  try {
+    if (!avFamilyIdbSource()) return false;
+    let proto = "";
+    try { proto = (typeof location !== "undefined" && location) ? String(location.protocol || "") : ""; } catch (e) { proto = ""; }
+    return proto === "http:" || proto === "https:";
+  } catch (e) { return false; }
+}
+
+/* ---------- network + file reads (guarded; resolve null on any failure) ---------- */
+
+function avFamilyFetch(url, ms) {
+  return new Promise(function (resolve) {
+    try {
+      let fn = null;
+      try { if (typeof fetch === "function") fn = fetch; } catch (e) { fn = null; }
+      if (!fn) { try { const w = avFamilyWin(); if (w && typeof w.fetch === "function") fn = w.fetch; } catch (e) { fn = null; } }
+      if (!fn) return resolve(null);
+      let ctl = null, timer = null;
+      try {
+        if (typeof AbortController === "function") {
+          ctl = new AbortController();
+          if (typeof setTimeout === "function") timer = setTimeout(function () { try { ctl.abort(); } catch (e) { /* ok */ } }, ms || AV_FAMILY_FETCH_MS);
+        }
+      } catch (e) { ctl = null; timer = null; }
+      let p = null;
+      try { p = fn(url, ctl ? { signal: ctl.signal } : undefined); } catch (e) { return resolve(null); }
+      Promise.resolve(p).then(
+        function (r) { try { if (timer) clearTimeout(timer); } catch (e) { /* ok */ } resolve(r || null); },
+        function () { try { if (timer) clearTimeout(timer); } catch (e) { /* ok */ } resolve(null); }
+      );
+    } catch (e) { resolve(null); }
+  });
+}
+
+function avFamilyFileBuffer(file) {
+  return new Promise(function (resolve) {
+    try {
+      if (file && typeof file.arrayBuffer === "function") {
+        Promise.resolve(file.arrayBuffer()).then(
+          function (b) { resolve(b || null); },
+          function () { resolve(null); }
+        );
+        return;
+      }
+      if (typeof FileReader === "function") {
+        const fr = new FileReader();
+        fr.onload = function () { resolve(fr.result || null); };
+        fr.onerror = function () { resolve(null); };
+        fr.readAsArrayBuffer(file);
+        return;
+      }
+    } catch (e) { /* fall through */ }
+    resolve(null);
+  });
+}
+
+function avFamilyText(u8) {
+  try {
+    if (typeof TextDecoder === "function") {
+      const t = new TextDecoder("utf-8").decode(u8);
+      return (t && t.charCodeAt(0) === 0xFEFF) ? t.slice(1) : t;
+    }
+  } catch (e) { /* fallback below */ }
+  try {
+    const b = (u8 instanceof Uint8Array) ? u8 : new Uint8Array(u8);
+    let s = "";
+    for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+    return s;
+  } catch (e) { return ""; }
+}
+
+/* a zip always starts "PK" (local header 0x04034b50 or an empty zip's EOCD 0x06054b50) */
+function avFamilyLooksZip(buf) {
+  try {
+    const u8 = new Uint8Array(buf, 0, Math.min(2, buf.byteLength));
+    return u8.length >= 2 && u8[0] === 0x50 && u8[1] === 0x4B;
+  } catch (e) { return false; }
+}
+
+function avFamilyLooksXml(text) {
+  try {
+    const t = String(text == null ? "" : text).replace(/^\uFEFF/, "").trim();
+    return t.charAt(0) === "<";
+  } catch (e) { return false; }
+}
+
+/* ---------- pack base + names ---------- */
+
+function avFamilyPackBase() {
+  try { const u = avFamilySt.packBase; if (typeof u === "string" && u) return u; } catch (e) { /* default */ }
+  return AV_FAMILY_PACK_BASE;
+}
+
+function avFamilySetPackBase(url) {
+  try {
+    if (url == null || url === "") { avFamilySt.packBase = ""; return true; }   /* reset to default */
+    if (typeof url !== "string") return false;
+    let u = url.trim();
+    if (!u) { avFamilySt.packBase = ""; return true; }
+    if (u.charAt(u.length - 1) !== "/") u += "/";
+    avFamilySt.packBase = u;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFamilyPackUrl(id) {
+  const s = avFamilyClean(id, 80);
+  const suffix = /\.zip$/i.test(s) ? "" : ".zip";    /* tolerate a full file name */
+  return avFamilyPackBase() + s + suffix;
+}
+
+/* ---------- the radio read (foreign keys: tolerate ANY shape; never throws; never writes) ---------- */
+
+function avFamilyRadioRead() {
+  const out = { ok: false, name: "", country: "", id: "", ts: 0, raw: false };
+  try {
+    const ls = avFamilyLs();
+    if (!ls || typeof ls.getItem !== "function") return out;
+    let lastObj = null;
+    try { const s = ls.getItem(AV_FAMILY_RADIO_LS_LAST); if (s) lastObj = JSON.parse(s); } catch (e) { lastObj = null; }
+    if (lastObj == null || typeof lastObj !== "object") return out;
+    out.raw = true;
+    try { const t = Number(lastObj.ts); if (isFinite(t) && t > 0) out.ts = t; } catch (e) { /* no ts */ }
+
+    const pickStr = function (obj, keys) {
+      try {
+        for (let i = 0; i < keys.length; i++) {
+          const v = obj ? obj[keys[i]] : null;
+          if (typeof v === "string" && v.trim()) return v.trim().slice(0, 80);
+          if (typeof v === "number" && isFinite(v)) return String(v);
+        }
+      } catch (e) { /* keep trying */ }
+      return "";
+    };
+    const cands = [];
+    try {
+      if (lastObj.m && typeof lastObj.m === "object") cands.push(lastObj.m);
+      if (lastObj.station && typeof lastObj.station === "object") cands.push(lastObj.station);
+      if (typeof lastObj.n === "string" || typeof lastObj.name === "string" || typeof lastObj.title === "string") cands.push(lastObj);
+    } catch (e) { /* no candidates */ }
+    for (let i = 0; i < cands.length; i++) {
+      if (!out.name) out.name = pickStr(cands[i], ["n", "name", "title", "s"]);
+      if (!out.country) out.country = pickStr(cands[i], ["c", "country"]);
+      if (!out.id) out.id = pickStr(cands[i], ["i", "id", "sid"]);
+    }
+    /* rbg-meta may carry the missing name/country (or a map keyed by station id) */
+    if (!out.name || !out.country) {
+      let metaObj = null;
+      try { const s2 = ls.getItem(AV_FAMILY_RADIO_LS_META); if (s2) metaObj = JSON.parse(s2); } catch (e) { metaObj = null; }
+      if (metaObj && typeof metaObj === "object") {
+        const mc = [];
+        try {
+          if (metaObj.m && typeof metaObj.m === "object") mc.push(metaObj.m);
+          if (out.id && metaObj[out.id] && typeof metaObj[out.id] === "object") mc.push(metaObj[out.id]);
+          if (typeof metaObj.n === "string" || typeof metaObj.name === "string") mc.push(metaObj);
+        } catch (e) { /* no candidates */ }
+        for (let i = 0; i < mc.length; i++) {
+          if (!out.name) out.name = pickStr(mc[i], ["n", "name", "title", "s"]);
+          if (!out.country) out.country = pickStr(mc[i], ["c", "country"]);
+          if (!out.id) out.id = pickStr(mc[i], ["i", "id", "sid"]);
+        }
+      }
+    }
+    out.ok = !!out.name;
+    return out;
+  } catch (e) {
+    return { ok: false, name: "", country: "", id: "", ts: 0, raw: false };
+  }
+}
+
+/* the radio deep link (the live page's hash format); q empty -> the base URL. Pure + exact. */
+function avFamilyOpenRadio(q) {
+  try {
+    const term = (q == null) ? "" : String(q).trim();
+    if (!term) return AV_FAMILY_RADIO_URL;
+    return AV_FAMILY_RADIO_URL + "#q=" + encodeURIComponent(term);
+  } catch (e) { return AV_FAMILY_RADIO_URL; }
+}
+
+/* never about:blank, never "_blank" (family popout law: named targets only) */
+function avFamilyWindowOpen(url, target) {
+  try {
+    const w = avFamilyWin();
+    if (w && typeof w.open === "function") return w.open(url, target);
+  } catch (e) { /* blocked / no window */ }
+  return null;
+}
+
+/* ---------- resonance: one parsed session record ---------- */
+
+function avFamilyTypeName(v) {
+  try {
+    const n = Number(v.type);
+    if (isFinite(n)) {
+      const i = Math.round(n);
+      if (typeof v.typeName === "string" && v.typeName.trim()) return v.typeName.trim();
+      if (i >= 0 && i < AV_FAMILY_GN_TYPES.length) return AV_FAMILY_GN_TYPES[i];
+      return "type " + i;
+    }
+  } catch (e) { /* fall through */ }
+  return "";
+}
+
+function avFamilyTypesOf(session) {
+  const out = [];
+  try {
+    const voices = (session && Array.isArray(session.voices)) ? session.voices : [];
+    for (let i = 0; i < voices.length && out.length < AV_FAMILY_TYPES_CAP; i++) {
+      const t = avFamilyTypeName(voices[i]);
+      if (t && out.indexOf(t) < 0) out.push(t);
+    }
+  } catch (e) { /* none */ }
+  return out;
+}
+
+function avFamilyPlayableCount(session) {
+  let n = 0;
+  try {
+    const voices = (session && Array.isArray(session.voices)) ? session.voices : [];
+    for (let i = 0; i < voices.length; i++) {
+      const ti = Math.round(Number(voices[i] && voices[i].type));
+      if (isFinite(ti) && ti >= 0 && ti < AV_FAMILY_GN_PLAYABLE.length && AV_FAMILY_GN_PLAYABLE[ti]) n += 1;
+    }
+  } catch (e) { /* 0 */ }
+  return n;
+}
+
+/* name + xml -> the list record; parse refusals are kept visible, never hidden */
+function avFamilySessionRec(name, xml) {
+  const rec = { name: "", ok: false, error: "", info: null, parsed: null, bytes: 0 };
+  try {
+    rec.name = avFamilyClean(name, 80) || "session";
+    const fns = avFamilyFns();
+    if (!fns.gnParse) { rec.error = "the Resonance reader (av_gnParse) is not loaded"; return rec; }
+    let pr = null;
+    try { pr = fns.gnParse(xml); } catch (e) { pr = null; }
+    if (!pr || pr.ok !== true || !pr.session) {
+      rec.error = pr ? avFamilyErrText(pr, "parse refused") : "the parser refused this session";
+      return rec;
+    }
+    rec.parsed = pr;
+    rec.ok = true;
+    const session = pr.session;
+    let info = null;
+    if (fns.gnInfo) { try { info = fns.gnInfo(session); } catch (e) { info = null; } }
+    if (!info || typeof info !== "object") {
+      info = {
+        totalSeconds: avFamilyNum(session.totalSeconds, 0),
+        voiceCount: avFamilyInt(session.voiceCount, 0, 0, 4096),
+        playableVoices: avFamilyPlayableCount(session),
+        types: avFamilyTypesOf(session),
+        renderable: avFamilyPlayableCount(session) > 0,
+      };
+    }
+    rec.info = {
+      totalSeconds: avFamilyNum(info.totalSeconds, avFamilyNum(session.totalSeconds, 0)),
+      voiceCount: avFamilyInt(info.voiceCount, avFamilyInt(session.voiceCount, 0, 0, 4096), 0, 4096),
+      playableVoices: avFamilyInt(info.playableVoices, avFamilyPlayableCount(session), 0, 4096),
+      types: Array.isArray(info.types) && info.types.length ? info.types.slice(0, AV_FAMILY_TYPES_CAP) : avFamilyTypesOf(session),
+      renderable: info.renderable !== false,
+    };
+    try { rec.bytes = String(xml == null ? "" : xml).length; } catch (e) { rec.bytes = 0; }
+    return rec;
+  } catch (e) {
+    rec.error = "session parse failed: " + avFamilyMsg(e);
+    return rec;
+  }
+}
+
+/* build {name, xml} items from an avGnUnzip file list (the fallback when avGnSessionsFromZip
+   is absent or refuses) — .gnaural entries only, case-insensitive, BOM-tolerant decode */
+function avFamilySessionsFromFiles(files) {
+  const out = [];
+  try {
+    const list = Array.isArray(files) ? files : [];
+    for (let i = 0; i < list.length && out.length < AV_FAMILY_SESSIONS_CAP; i++) {
+      const f = list[i];
+      if (!f || typeof f.name !== "string" || !/\.gnaural$/i.test(f.name)) continue;
+      const bytes = f.bytes;
+      const xml = (typeof bytes === "string") ? bytes : avFamilyText(bytes);
+      out.push({ name: f.name, xml: xml, bytes: avFamilyByteLen(bytes) });
+    }
+  } catch (e) { /* empty */ }
+  return out;
+}
+
+/* ---------- resonance: import ---------- */
+
+async function avFamilyImportRun(src) {
+  const st = avFamilySt;
+  const fns = avFamilyFns();
+  try {
+    if (!fns.gnUnzip && !fns.gnParse) {
+      return { ok: false, error: "the Resonance reader (av_gnaural.js) is not loaded — import is unavailable" };
+    }
+    let buf = null;
+    let label = "";
+    let isLocalName = "";
+    if (typeof src === "string") {
+      const id = src.trim();
+      if (!id) return { ok: false, error: "no pack selected" };
+      label = id;
+      const url = avFamilyPackUrl(id);
+      avFamilySetRowStatus("resonance", "fetching " + avFamilyClean(url, 72) + "\u2026", "msg");
+      const res = await avFamilyFetch(url, AV_FAMILY_FETCH_MS);
+      if (!res || res.ok !== true) {
+        const detail = res && res.status != null ? ("HTTP " + res.status) : "network/blocked";
+        return {
+          ok: false, error: "could not fetch pack \"" + id + "\" (" + detail + ")",
+          note: "packs live on moddys.net; import a .zip from disk instead",
+        };
+      }
+      let ab = null;
+      try { ab = await res.arrayBuffer(); } catch (e) { ab = null; }
+      buf = avFamilyAb(ab);
+      if (!buf) return { ok: false, error: "the pack download returned no bytes", note: "import a .zip from disk instead" };
+    } else if (src && typeof src === "object" && typeof src.arrayBuffer === "function") {
+      label = (typeof src.name === "string" && src.name) ? src.name : "local file";
+      isLocalName = label;
+      const ab = await avFamilyFileBuffer(src);
+      buf = avFamilyAb(ab);
+      if (!buf) return { ok: false, error: "the file could not be read" };
+    } else {
+      buf = avFamilyAb(src);
+      if (!buf) return { ok: false, error: "nothing to import (pass a pack id, a File, or zip bytes)" };
+      label = "local file";
+    }
+
+    const byteLen = avFamilyByteLen(buf);
+    if (!byteLen) return { ok: false, error: "the import is empty" };
+
+    /* single .gnaural (local leg): a loose XML file, not a zip — parse it directly */
+    const singleXml = /\.gnaural$/i.test(isLocalName) && !avFamilyLooksZip(buf);
+
+    let recs = [];
+    let note = "";
+    if (singleXml) {
+      const xml = avFamilyText(new Uint8Array(buf));
+      if (!avFamilyLooksXml(xml)) return { ok: false, error: "this file is not .gnaural XML" };
+      recs = [avFamilySessionRec(isLocalName.replace(/\.gnaural$/i, ""), xml)];
+    } else {
+      if (!fns.gnUnzip) return { ok: false, error: "the zip reader (avGnUnzip) is not loaded" };
+      avFamilySetRowStatus("resonance", "unzipping " + avFamilyClean(label, 60) + "\u2026", "msg");
+      let zr = null;
+      try { zr = await fns.gnUnzip(buf); } catch (e) { zr = null; }
+      if (!zr || zr.ok !== true) {
+        /* a mislabeled / non-zip loose XML still gets one honest chance */
+        const xml = avFamilyText(new Uint8Array(buf));
+        if (avFamilyLooksXml(xml)) {
+          recs = [avFamilySessionRec(String(label).replace(/\.(zip|gnaural)$/i, ""), xml)];
+        } else {
+          return { ok: false, error: "unzip refused: " + (zr ? avFamilyErrText(zr, "not a readable zip") : "the reader threw") };
+        }
+      } else {
+        const files = Array.isArray(zr.files) ? zr.files : [];
+        const decoys = [];
+        for (let i = 0; i < files.length && decoys.length < 3; i++) {
+          const nm = (files[i] && typeof files[i].name === "string") ? files[i].name : "";
+          if (nm && !/\.gnaural$/i.test(nm) && nm.charAt(nm.length - 1) !== "/") decoys.push(nm);
+        }
+        const zrn = [];
+        if (decoys.length) zrn.push("skipped " + decoys.length + " non-session file(s): " + decoys.join(", "));
+        if (Array.isArray(zr.errors) && zr.errors.length) zrn.push("reader notes: " + zr.errors.slice(0, 2).join(" | "));
+        note = zrn.join(" \u00b7 ");
+        let items = null;
+        if (fns.gnSessions) {
+          try { const sr = await fns.gnSessions(buf); if (sr && sr.ok === true && Array.isArray(sr.sessions)) items = sr.sessions; } catch (e) { items = null; }
+        }
+        if (!items) items = avFamilySessionsFromFiles(files);
+        if (!items.length) {
+          return { ok: false, error: "no .gnaural sessions in this pack", note: note || undefined };
+        }
+        for (let i = 0; i < items.length && recs.length < AV_FAMILY_SESSIONS_CAP; i++) {
+          const it = items[i] || {};
+          const nm = (typeof it.name === "string" && it.name) ? it.name : ("session " + (i + 1));
+          const xml = (typeof it.xml === "string") ? it.xml : avFamilyText(it.bytes);
+          recs.push(avFamilySessionRec(nm, xml));
+        }
+      }
+    }
+
+    if (!recs.length) return { ok: false, error: "no sessions found in this import" };
+    st.sessions = recs;
+    st.selected = -1;
+    for (let i = 0; i < recs.length; i++) if (recs[i].ok) { st.selected = i; break; }
+    st.resNote = note;
+    const failed = recs.length - recs.filter(function (r) { return r.ok; }).length;
+    const receipt = {
+      ok: true, source: avFamilyClean(label, 80), sessions: recs.length, failed: failed,
+    };
+    if (note) receipt.note = note;
+    st.receipts.resonance = receipt;
+    avFamilySetRowStatus("resonance", "imported " + avFamilyClean(label, 48) + " \u2014 " + recs.length + " session" + (recs.length === 1 ? "" : "s") + (failed ? " (" + failed + " refused)" : ""), "msg");
+    return receipt;
+  } catch (e) {
+    return { ok: false, error: "import failed: " + avFamilyMsg(e) };
+  }
+}
+
+function avFamilyImportPack(src) {
+  return new Promise(function (resolve) {
+    try {
+      const st = avFamilySt;
+      if (st.busy) { resolve({ ok: false, error: "an operation is already running (" + (st.busyOp || "working") + ") \u2014 one at a time" }); return; }
+      st.busy = true;
+      st.busyOp = "import";
+      avFamilyPaint(avFamilyHost());
+      avFamilyImportRun(src).then(
+        function (r) {
+          st.busy = false; st.busyOp = "";
+          if (r && r.ok !== true) avFamilySetRowStatus("resonance", "import refused \u2014 " + avFamilyClean(avFamilyErrText(r, "refused"), 80) + (r.note ? " \u00b7 " + avFamilyClean(r.note, 90) : ""), "err");
+          avFamilyPaint(avFamilyHost()); resolve(r);
+        },
+        function (e) { st.busy = false; st.busyOp = ""; avFamilySetRowStatus("resonance", "import failed \u2014 " + avFamilyMsg(e), "err"); avFamilyPaint(avFamilyHost()); resolve({ ok: false, error: avFamilyMsg(e) }); }
+      );
+    } catch (e) {
+      resolve({ ok: false, error: avFamilyMsg(e) });
+    }
+  });
+}
+
+/* ---------- resonance: preview / stop / save ---------- */
+
+async function avFamilyPreviewRun(i) {
+  const st = avFamilySt;
+  const fns = avFamilyFns();
+  try {
+    if (!st.sessions.length) return { ok: false, error: "no sessions imported \u2014 fetch a pack or import a file first" };
+    let idx = avFamilyInt(i, st.selected, -1, 4096);
+    if (idx < 0 || idx >= st.sessions.length) {
+      idx = st.selected >= 0 && st.selected < st.sessions.length ? st.selected : -1;
+    }
+    if (idx < 0) return { ok: false, error: "no session selected" };
+    const rec = st.sessions[idx];
+    if (!rec || rec.ok !== true || !rec.parsed || !rec.parsed.session) {
+      return { ok: false, error: "session refused \u2014 " + (rec ? (rec.error || "parse refused") : "missing") };
+    }
+    if (rec.info && rec.info.renderable === false) {
+      return { ok: false, error: "this session has no playable voices (v1 renders binaural / white / brown noise)" };
+    }
+    if (!fns.gnRender) return { ok: false, error: "the renderer (avGnRender) is not loaded" };
+
+    avFamilyStopInternal();   /* one preview at a time — a new one replaces the old */
+
+    let ctx = avFamilyLiveCtx(fns);
+    if (!ctx && fns.engineEnsure) {
+      try { await fns.engineEnsure(); } catch (e) { /* refused — checked below */ }
+      ctx = avFamilyLiveCtx(fns);
+    }
+    if (!ctx) return { ok: false, error: "no live audio context yet \u2014 unlock the engine first (press a key or play a note)" };
+    const master = avFamilyMasterInput(fns, ctx);
+    if (!master) return { ok: false, error: "the master tap is not available yet \u2014 start the engine first" };
+
+    avFamilySetRowStatus("resonance", "rendering \u00ab" + avFamilyClean(rec.name, 40) + "\u00bb \u2014 capped at " + AV_FAMILY_PREVIEW_CAP_S + " s\u2026", "msg");
+    let r = null;
+    try { r = await fns.gnRender(rec.parsed.session, { maxSeconds: AV_FAMILY_PREVIEW_CAP_S }); } catch (e) { r = null; }
+    if (!r || r.ok !== true) {
+      return { ok: false, error: "render refused: " + (r ? avFamilyErrText(r, "refused") : "the renderer threw") };
+    }
+    const l = r.l, rr = r.r;
+    if (!l || !rr || typeof l.length !== "number" || l.length <= 0 || rr.length !== l.length) {
+      return { ok: false, error: "the render returned no usable channels" };
+    }
+    const n = Math.min(l.length, rr.length);
+    const sr = avFamilyNum(r.sr, ctx.sampleRate) || 48000;
+    const seconds = avFamilyNum(r.seconds, n / sr);
+
+    let buf = null;
+    try {
+      buf = ctx.createBuffer(2, n, sr);
+      buf.getChannelData(0).set(l.subarray ? l.subarray(0, n) : l);
+      buf.getChannelData(1).set(rr.subarray ? rr.subarray(0, n) : rr);
+    } catch (e) { buf = null; }
+    if (!buf) return { ok: false, error: "could not build the preview buffer on the live context" };
+
+    let src = null;
+    try {
+      src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(master);                        /* the MASTER tap input — never ctx.destination */
+      src.start();
+    } catch (e) {
+      try { if (src && src.disconnect) src.disconnect(); } catch (e2) { /* ok */ }
+      return { ok: false, error: "starting the preview failed: " + avFamilyMsg(e) };
+    }
+    st.preview = { src: src, ctx: ctx };
+    st.lastRender = { l: l, r: rr, sr: sr, seconds: seconds, frames: n, name: avFamilyClean(rec.name, 60) || "session", capped: false };
+    try {
+      src.onended = function () {
+        try { if (avFamilySt.preview && avFamilySt.preview.src === src) { avFamilySt.preview = null; avFamilyPaint(avFamilyHost()); } }
+        catch (e) { /* ok */ }
+      };
+    } catch (e) { /* onended is a nicety */ }
+
+    const total = rec.info && isFinite(Number(rec.info.totalSeconds)) ? Number(rec.info.totalSeconds) : null;
+    const capped = (total != null && total > seconds + 0.05) || (seconds >= AV_FAMILY_PREVIEW_CAP_S - 0.01);
+    st.lastRender.capped = capped;
+    const receipt = { ok: true, seconds: seconds, sr: sr, frames: n, capped: capped, via: "master-tap", index: idx, name: st.lastRender.name };
+    if (capped) receipt.note = "preview capped at " + AV_FAMILY_PREVIEW_CAP_S + " s (the session is longer)";
+    st.receipts.resonance = receipt;
+    avFamilySetRowStatus("resonance", "previewing \u00ab" + st.lastRender.name + "\u00bb \u2014 " + avFamilyFmtDur(seconds) + " @ " + sr + " Hz" + (capped ? " \u00b7 capped at " + AV_FAMILY_PREVIEW_CAP_S + " s" : ""), "msg");
+    return receipt;
+  } catch (e) {
+    return { ok: false, error: "preview failed: " + avFamilyMsg(e) };
+  }
+}
+
+function avFamilyPreview(i) {
+  return new Promise(function (resolve) {
+    try {
+      const st = avFamilySt;
+      if (st.busy) { resolve({ ok: false, error: "an operation is already running (" + (st.busyOp || "working") + ") \u2014 one at a time" }); return; }
+      st.busy = true;
+      st.busyOp = "preview";
+      avFamilyPaint(avFamilyHost());
+      avFamilyPreviewRun(i).then(
+        function (r) {
+          st.busy = false; st.busyOp = "";
+          if (r && r.ok !== true) avFamilySetRowStatus("resonance", "preview refused \u2014 " + avFamilyClean(avFamilyErrText(r, "refused"), 80) + (r.note ? " \u00b7 " + avFamilyClean(r.note, 90) : ""), "err");
+          avFamilyPaint(avFamilyHost()); resolve(r);
+        },
+        function (e) { st.busy = false; st.busyOp = ""; avFamilyPaint(avFamilyHost()); resolve({ ok: false, error: avFamilyMsg(e) }); }
+      );
+    } catch (e) {
+      resolve({ ok: false, error: avFamilyMsg(e) });
+    }
+  });
+}
+
+function avFamilyStopInternal() {
+  try {
+    const st = avFamilySt;
+    if (!st.preview) return false;
+    const p = st.preview;
+    st.preview = null;
+    try { if (p.src && typeof p.src.stop === "function") p.src.stop(); } catch (e) { /* already ended */ }
+    try { if (p.src && typeof p.src.disconnect === "function") p.src.disconnect(); } catch (e) { /* gone */ }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFamilyStop() {
+  try {
+    const was = avFamilyStopInternal();
+    if (was) {
+      avFamilySt.receipts.resonance = { ok: true, stopped: true };
+      avFamilySetRowStatus("resonance", "preview stopped", "msg");
+    }
+    avFamilyPaint(avFamilyHost());
+    return was;
+  } catch (e) { return false; }
+}
+
+/* save the LAST rendered buffer as a WAV via avWavEncode (the same call pattern as
+   av_deliver_ui.js: { l, r, sr, bits, dither }) -> the house download path */
+function avFamilySave() {
+  try {
+    const st = avFamilySt;
+    if (!st.lastRender) {
+      avFamilySetRowStatus("resonance", "save refused \u2014 render a preview first", "err");
+      avFamilyPaint(avFamilyHost());
+      return false;
+    }
+    const fns = avFamilyFns();
+    if (!fns.wav) {
+      avFamilySetRowStatus("resonance", "save refused \u2014 the WAV encoder (av_wavio.js) is not loaded", "err");
+      avFamilyPaint(avFamilyHost());
+      return false;
+    }
+    const lr = st.lastRender;
+    let wav = null;
+    try { wav = fns.wav({ l: lr.l, r: lr.r, sr: lr.sr, bits: 16, dither: "auto" }); } catch (e) { wav = null; }
+    wav = avFamilyAb(wav);
+    if (!wav) {
+      avFamilySetRowStatus("resonance", "save refused \u2014 the WAV encode returned no bytes", "err");
+      avFamilyPaint(avFamilyHost());
+      return false;
+    }
+    const name = "resonance_" + avFamilySafeName(lr.name, "session") + ".wav";
+    const ok = avFamilyDownload(wav, name);
+    const receipt = ok
+      ? { ok: true, name: name, bytes: wav.byteLength, sr: lr.sr, seconds: lr.seconds }
+      : { ok: false, error: "the browser refused the download" };
+    st.receipts.resonance = receipt;
+    avFamilySetRowStatus("resonance", ok ? ("saved " + name + " \u00b7 " + avFamilyFmtSize(wav.byteLength)) : receipt.error, ok ? "msg" : "err");
+    avFamilyPaint(avFamilyHost());
+    return ok;
+  } catch (e) { return false; }
+}
+
+/* ---------- hub: bounce -> encode -> outbox -> inbox ---------- */
+
+function avFamilySnapName(fns) {
+  try {
+    if (fns && fns.seqSnap) {
+      const s = fns.seqSnap();
+      if (s && typeof s.name === "string" && s.name.trim()) return s.name.trim();
+    }
+  } catch (e) { /* no name */ }
+  return "";
+}
+
+async function avFamilySendRun(opts) {
+  const st = avFamilySt;
+  const fns = avFamilyFns();
+  try {
+    const o = (opts && typeof opts === "object") ? opts : {};
+    let loops = null;
+    if (o.loops != null && isFinite(Number(o.loops))) loops = avFamilyInt(o.loops, AV_FAMILY_LOOP_DEF, AV_FAMILY_LOOPS_MIN, AV_FAMILY_LOOPS_MAX);
+    if (loops == null) loops = avFamilyLoopsRead(avFamilyHost());
+
+    if (!fns.bounce) return { ok: false, error: "the offline renderer (av_bounce.js) is not loaded \u2014 the hub handshake is unavailable" };
+    avFamilySetRowStatus("hub", "bouncing " + loops + " loop" + (loops === 1 ? "" : "s") + " offline\u2026", "msg");
+
+    let r = null;
+    try { r = await fns.bounce({ loops: loops, includeParts: false, includeMaster: true, tailS: AV_FAMILY_HUB_TAIL_S, sr: AV_FAMILY_HUB_SR }); }
+    catch (e) { r = null; }
+    if (!r || r.ok !== true) {
+      const why = r ? avFamilyErrText(r, "the renderer refused") : "the renderer threw";
+      return { ok: false, error: "bounce refused \u2014 " + why };
+    }
+    const master = r.master;
+    const usable = !!(master && master.l && master.r &&
+      typeof master.l.length === "number" && master.l.length > 0 && master.l.length === master.r.length);
+    if (!usable) return { ok: false, error: "the bounce returned no master channels (empty pattern?)" };
+
+    const sr = avFamilyInt(r.sr, AV_FAMILY_HUB_SR, 8000, 192000);
+    const sec = Math.round(avFamilyNum(r.seconds, master.l.length / sr) * 1000) / 1000;
+    const bpm = avFamilyInt(r.bpm, 120, 20, 300);
+    const cycleSteps = avFamilyInt(r.cycleSteps, 16, 1, 64);
+    const bars = avFamilyBars(loops, cycleSteps);
+
+    if (!fns.wav) return { ok: false, error: "the WAV encoder (av_wavio.js) is not loaded \u2014 the hub handshake is unavailable" };
+    let wav = null;
+    try { wav = fns.wav({ l: master.l, r: master.r, sr: sr, bits: 16, dither: "auto" }); } catch (e) { wav = null; }
+    wav = avFamilyAb(wav);
+    if (!wav || wav.byteLength <= 0) return { ok: false, error: "the master WAV encode returned no bytes" };
+
+    const base = avFamilySafeName(avFamilySnapName(fns), "anvil_loop");
+    const name = base + "_" + bpm + "bpm_" + loops + "loops.wav";
+    const bytes = wav.byteLength;
+
+    if (avFamilyInboxAvailable()) {
+      const at = Date.now();
+      const rec = {
+        id: String(at) + "-" + avFamilyHex6(),
+        name: name,
+        kind: "loop",
+        bpm: bpm,
+        bars: bars,
+        sec: sec,
+        sr: sr,
+        ch: 2,
+        bytes: bytes,
+        at: at,
+        wav: wav,             /* structured clone by the store — never a transfer list */
+      };
+      avFamilySetRowStatus("hub", "writing the bridge record\u2026", "msg");
+      const wr = await avFamilyOutboxPut(rec);
+      if (wr && wr.ok === true) {
+        const w = avFamilyWindowOpen(AV_FAMILY_INBOX_URL, AV_FAMILY_INBOX_TARGET);
+        const receipt = { ok: true, via: "inbox", bytes: bytes, sec: sec, bpm: bpm, bars: bars, name: name, loops: loops };
+        if (!w) receipt.note = "the inbox popup was blocked \u2014 open inbox.html from the app folder";
+        st.receipts.hub = receipt;
+        avFamilySetRowStatus("hub", "sent to the hub inbox \u2014 " + name + " \u00b7 " + avFamilyFmtSize(bytes) + " \u00b7 " + avFamilyFmtDur(sec), "msg");
+        return receipt;
+      }
+      /* the store refused after all — honest fallback to the file */
+      return avFamilySendFallback(wav, name, bytes, sec, bpm, bars, loops,
+        "the bridge store refused (" + ((wr && wr.error) || "unknown") + ") \u2014 saved as a file instead; the hub inbox needs moddys.net (same origin)");
+    }
+    return avFamilySendFallback(wav, name, bytes, sec, bpm, bars, loops,
+      "saved as a file \u2014 the hub inbox needs moddys.net (same origin)");
+  } catch (e) {
+    return { ok: false, error: "hub send failed: " + avFamilyMsg(e) };
+  }
+}
+
+function avFamilySendFallback(wav, name, bytes, sec, bpm, bars, loops, note) {
+  try {
+    const st = avFamilySt;
+    const ok = avFamilyDownload(wav, name);
+    const receipt = ok
+      ? { ok: true, via: "download", bytes: bytes, sec: sec, bpm: bpm, bars: bars, name: name, loops: loops, note: note }
+      : { ok: false, via: "download", error: "the browser refused the download", note: note };
+    st.receipts.hub = receipt;
+    avFamilySetRowStatus("hub", ok ? ("saved " + name + " \u00b7 " + avFamilyFmtSize(bytes) + " \u2014 the hub inbox needs moddys.net") : receipt.error, ok ? "msg" : "err");
+    return receipt;
+  } catch (e) {
+    return { ok: false, error: avFamilyMsg(e), note: note };
+  }
+}
+
+function avFamilySend(opts) {
+  return new Promise(function (resolve) {
+    try {
+      const st = avFamilySt;
+      if (st.busy) { resolve({ ok: false, error: "an operation is already running (" + (st.busyOp || "working") + ") \u2014 one at a time" }); return; }
+      st.busy = true;
+      st.busyOp = "send";
+      avFamilyPaint(avFamilyHost());
+      avFamilySendRun(opts).then(
+        function (r) {
+          st.busy = false; st.busyOp = "";
+          if (r && r.ok !== true) avFamilySetRowStatus("hub", "send refused \u2014 " + avFamilyClean(avFamilyErrText(r, "refused"), 80) + (r.note ? " \u00b7 " + avFamilyClean(r.note, 90) : ""), "err");
+          avFamilyPaint(avFamilyHost()); resolve(r);
+        },
+        function (e) { st.busy = false; st.busyOp = ""; avFamilySetRowStatus("hub", "send failed \u2014 " + avFamilyMsg(e), "err"); avFamilyPaint(avFamilyHost()); resolve({ ok: false, error: avFamilyMsg(e) }); }
+      );
+    } catch (e) {
+      resolve({ ok: false, error: avFamilyMsg(e) });
+    }
+  });
+}
+
+/* ---------- loops select read ---------- */
+
+function avFamilyLoopsRead(hostArg) {
+  try {
+    const host = hostArg || avFamilyHost();
+    if (host && typeof host.querySelector === "function") {
+      const el = host.querySelector("#av-fam-hub-loops");
+      if (el) return avFamilyInt(el.value, AV_FAMILY_LOOP_DEF, AV_FAMILY_LOOPS_MIN, AV_FAMILY_LOOPS_MAX);
+    }
+  } catch (e) { /* default */ }
+  return AV_FAMILY_LOOP_DEF;
+}
+
+/* ---------- painting (every reach guarded; no console) ---------- */
+
+function avFamilySetRowStatus(row, msg, kind) {
+  try {
+    const st = avFamilySt;
+    if (st.statuses && row in st.statuses) st.statuses[row] = { msg: String(msg == null ? "" : msg), kind: (kind === "err") ? "err" : "msg" };
+    avFamilyPaintRowStatus(row);
+  } catch (e) { /* nicety */ }
+}
+
+function avFamilyPaintRowStatus(row) {
+  try {
+    const host = avFamilyHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const ids = { hub: "#av-fam-hub-status", resonance: "#av-fam-res-status", radio: "#av-fam-radio-status" };
+    const el = host.querySelector(ids[row]);
+    if (!el) return false;
+    let rec = avFamilySt.statuses ? avFamilySt.statuses[row] : null;
+    if (rec && typeof rec === "object" && rec.msg) {
+      if (el.textContent !== rec.msg) el.textContent = rec.msg;
+      const cls = "av-fam-status " + (rec.kind === "err" ? "av-fam-err" : "av-fam-msg");
+      if (el.className !== cls) el.className = cls;
+      return true;
+    }
+    return false;
+  } catch (e) { return false; }
+}
+
+function avFamilyRadioLine() {
+  try {
+    const rd = avFamilyRadioRead();
+    avFamilySt.radio = rd;
+    if (rd.ok) return "MODDYS WORLD RADIO \u2014 you last played: " + rd.name + (rd.country ? " (" + rd.country + ")" : "");
+    if (rd.raw) return "MODDYS WORLD RADIO \u2014 history found, but no station name in it \u2014 open the radio to play";
+    return "MODDYS WORLD RADIO \u2014 no history yet \u2014 open the radio to play";
+  } catch (e) { return "MODDYS WORLD RADIO"; }
+}
+
+function avFamilyPaintRadio() {
+  try {
+    /* a stored action message stays; otherwise the honest last-played line (re-read per paint) */
+    const st = avFamilySt;
+    if (!st.statuses.radio) st.statuses.radio = { msg: avFamilyRadioLine(), kind: "msg" };
+    return avFamilyPaintRowStatus("radio");
+  } catch (e) { return false; }
+}
+
+function avFamilySessionHTML(rec, i, selected) {
+  const sub = rec.ok
+    ? (avFamilyFmtDur(rec.info ? rec.info.totalSeconds : 0) + (rec.info && rec.info.types.length ? " \u00b7 " + rec.info.types.join(" \u00b7 ") : ""))
+    : ("refused \u2014 " + avFamilyClean(rec.error || "parse refused", 90));
+  const cls = "av-fam-session" + (i === selected ? " av-fam-selected" : "") + (rec.ok ? "" : " av-fam-bad");
+  return '<div class="' + cls + '" data-av-fam-session="' + i + '" role="option" aria-selected="' + (i === selected ? "true" : "false") + '">' +
+    '<span class="av-fam-session-name">' + avFamilyEsc(rec.name) + "</span>" +
+    '<span class="av-fam-session-sub av-dim">' + avFamilyEsc(sub) + "</span></div>";
+}
+
+function avFamilyPaintSessions() {
+  try {
+    const host = avFamilyHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const el = host.querySelector("#av-fam-res-list");
+    if (!el) return false;
+    const st = avFamilySt;
+    let html = "";
+    if (!st.sessions.length) {
+      html = '<p class="av-fam-note av-fam-empty av-dim">no sessions yet \u2014 fetch a pack or pick a local file</p>';
+    } else {
+      for (let i = 0; i < st.sessions.length && i < AV_FAMILY_SESSIONS_CAP; i++) html += avFamilySessionHTML(st.sessions[i], i, st.selected);
+    }
+    if (html !== st.lastSessionsHtml) { st.lastSessionsHtml = html; el.innerHTML = html; }
+    const noteEl = host.querySelector("#av-fam-res-note");
+    if (noteEl) {
+      const t = String(st.resNote || "");
+      noteEl.hidden = !t;
+      if (t && noteEl.textContent !== t) noteEl.textContent = t;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFamilyPaintBusy() {
+  try {
+    const host = avFamilyHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const st = avFamilySt;
+    const root = host.querySelector(".av-family");
+    if (root && root.classList && typeof root.classList.toggle === "function") {
+      try { root.classList.toggle("av-fam-busy", !!st.busy); } catch (e) { /* nicety */ }
+    }
+    const anyOk = st.sessions.some(function (r) { return r.ok; });
+    const sets = [
+      ["#av-fam-hub-send", !!st.busy],
+      ["#av-fam-res-import", !!st.busy],
+      ["#av-fam-res-preview", !!st.busy || !anyOk],
+      ["#av-fam-res-save", !!st.busy || !st.lastRender],
+    ];
+    for (let i = 0; i < sets.length; i++) {
+      const el = host.querySelector(sets[i][0]);
+      if (el && el.disabled !== sets[i][1]) el.disabled = sets[i][1];
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFamilyPaint(hostArg) {
+  try {
+    avFamilyPaintRowStatus("hub");
+    avFamilyPaintRowStatus("resonance");
+    avFamilyPaintRadio();
+    avFamilyPaintSessions();
+    avFamilyPaintBusy();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- markup (pure string builders) ---------- */
+
+function avFamilyPackOptionsHTML() {
+  let html = "";
+  for (let i = 0; i < AV_FAMILY_PACK_IDS.length; i++) {
+    const id = AV_FAMILY_PACK_IDS[i];
+    html += '<option value="' + avFamilyEsc(id) + '"' + (i === 0 ? " selected" : "") + ">" + avFamilyEsc(id) + "</option>";
+  }
+  return html;
+}
+
+function avFamilyChromeHTML() {
+  return '<div class="av-family" data-av-family="1">' +
+    '<div class="av-fam-head"><span class="av-fam-title">FAMILY</span>' +
+    '<span class="av-fam-cap av-dim">three local bridges \u2014 bounce the loop into the Music Hub inbox, import Resonance sessions and play them through the master tap, and cross-link MODDYS World Radio. Nothing is uploaded.</span></div>' +
+
+    '<div class="av-fam-row" data-av-fam-row="hub">' +
+    '<div class="av-fam-row-title">SUITE \u2192 MUSIC HUB</div>' +
+    '<div class="av-fam-controls">' +
+    '<label class="av-fam-field"><span class="av-fam-field-lbl">LOOPS</span>' +
+    '<select class="av-select av-fam-select av-fam-loops" id="av-fam-hub-loops" aria-label="Loop length in pattern cycles">' +
+    '<option value="2">2</option><option value="4">4</option><option value="8" selected>8</option></select></label>' +
+    '<button type="button" class="av-btn mini av-fam-btn" id="av-fam-hub-send" title="Bounce the master offline (16-bit / 48 kHz), drop it in the hub inbox and open it">SEND TO HUB</button>' +
+    "</div>" +
+    '<div class="av-fam-status-line"><span class="av-fam-status av-fam-msg" id="av-fam-hub-status" role="status">ready \u2014 bounce the current loop and send it to the hub inbox</span></div>' +
+    "</div>" +
+
+    '<div class="av-fam-row" data-av-fam-row="resonance">' +
+    '<div class="av-fam-row-title">RESONANCE</div>' +
+    '<div class="av-fam-controls">' +
+    '<label class="av-fam-field"><span class="av-fam-field-lbl">PACK</span>' +
+    '<select class="av-select av-fam-select av-fam-pack" id="av-fam-res-pack" aria-label="Resonance pack id">' +
+    avFamilyPackOptionsHTML() + "</select></label>" +
+    '<button type="button" class="av-btn mini av-fam-btn" id="av-fam-res-import" title="Fetch the selected pack from moddys.net and list its sessions">FETCH AND IMPORT</button>' +
+    '<label class="av-btn mini av-fam-btn av-fam-file" title="Import a Resonance .zip or a single .gnaural from disk">LOCAL FILE' +
+    '<input type="file" class="av-fam-file-in" id="av-fam-res-file" hidden accept=".zip,.gnaural,application/zip,application/xml,text/xml"></label>' +
+    '<button type="button" class="av-btn mini av-fam-btn" id="av-fam-res-preview" title="Render the selected session (120 s cap) and play it through the master tap" disabled>PREVIEW</button>' +
+    '<button type="button" class="av-btn mini av-fam-btn" id="av-fam-res-save" title="Save the last rendered preview as a WAV" disabled>SAVE WAV</button>' +
+    "</div>" +
+    '<div class="av-fam-status-line"><span class="av-fam-status av-fam-msg" id="av-fam-res-status" role="status">no pack yet \u2014 fetch a pack or import a .zip / .gnaural</span></div>' +
+    '<div class="av-fam-list" id="av-fam-res-list" role="listbox" aria-label="imported sessions"></div>' +
+    '<p class="av-fam-note av-dim" id="av-fam-res-note" hidden></p>' +
+    "</div>" +
+
+    '<div class="av-fam-row" data-av-fam-row="radio">' +
+    '<div class="av-fam-row-title">MODDYS WORLD RADIO</div>' +
+    '<div class="av-fam-controls">' +
+    '<button type="button" class="av-btn mini av-fam-btn" id="av-fam-radio-open" title="Open MODDYS World Radio in a new tab">OPEN RADIO</button>' +
+    '<label class="av-fam-field"><span class="av-fam-field-lbl">SEARCH</span>' +
+    '<input type="text" class="av-fam-text av-fam-search" id="av-fam-radio-q" placeholder="station or genre" spellcheck="false" autocomplete="off" aria-label="Search MODDYS World Radio"></label>' +
+    '<button type="button" class="av-btn mini av-fam-btn" id="av-fam-radio-go" title="Open the radio search deep link">GO</button>' +
+    "</div>" +
+    '<div class="av-fam-status-line"><span class="av-fam-status av-fam-msg" id="av-fam-radio-status" role="status">MODDYS WORLD RADIO</span></div>' +
+    '<p class="av-fam-note av-dim">reads your radio history (rbg-last / rbg-meta) when both run on moddys.net \u2014 same-origin localStorage only; nothing is written and nothing is uploaded.</p>' +
+    "</div>" +
+
+    "</div>";
+}
+
+/* ---------- wiring (one delegation per host, guarded) ---------- */
+
+function avFamilyRadioOpenAction(url, label) {
+  try {
+    const w = avFamilyWindowOpen(url, AV_FAMILY_RADIO_TARGET);
+    const receipt = { ok: true, url: url, target: AV_FAMILY_RADIO_TARGET };
+    if (!w) receipt.note = "the popup was blocked \u2014 allow popups for moddys.net";
+    avFamilySt.receipts.radio = receipt;
+    avFamilySetRowStatus("radio", (label || "opening") + " \u2014 " + url, "msg");
+    return receipt;
+  } catch (e) {
+    return { ok: false, error: avFamilyMsg(e) };
+  }
+}
+
+function avFamilyClick(ev) {
+  try {
+    const t = ev && ev.target;
+    if (!t || typeof t.closest !== "function") return;
+    if (t.closest("#av-fam-hub-send")) { avFamilySend(); return; }
+    if (t.closest("#av-fam-res-import")) { avFamilyImportPack(avFamilyPackSelectValue()); return; }
+    if (t.closest("#av-fam-res-preview")) { avFamilyPreview(); return; }
+    if (t.closest("#av-fam-res-save")) { avFamilySave(); return; }
+    if (t.closest("#av-fam-radio-open")) { avFamilyRadioOpenAction(AV_FAMILY_RADIO_URL, "opening MODDYS World Radio"); return; }
+    if (t.closest("#av-fam-radio-go")) { avFamilyRadioGo(); return; }
+    const sRow = t.closest("[data-av-fam-session]");
+    if (sRow) {
+      const idx = Math.round(Number(sRow.getAttribute && sRow.getAttribute("data-av-fam-session")));
+      if (isFinite(idx) && idx >= 0 && idx < avFamilySt.sessions.length && avFamilySt.selected !== idx) {
+        avFamilySt.selected = idx;
+        avFamilyPaintSessions();
+      }
+    }
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+function avFamilyRadioGo() {
+  try {
+    const host = avFamilyHost();
+    let term = "";
+    if (host && typeof host.querySelector === "function") {
+      const el = host.querySelector("#av-fam-radio-q");
+      if (el) term = String(el.value == null ? "" : el.value);
+    }
+    const url = avFamilyOpenRadio(term);
+    return avFamilyRadioOpenAction(url, term.trim() ? ("searching \u00ab" + avFamilyClean(term, 30) + "\u00bb") : "opening MODDYS World Radio");
+  } catch (e) { return { ok: false, error: avFamilyMsg(e) }; }
+}
+
+function avFamilyKeyDown(ev) {
+  try {
+    const t = ev && ev.target;
+    if (!t || t.id !== "av-fam-radio-q") return;
+    const key = (ev.key != null) ? String(ev.key) : "";
+    if (key === "Enter") { ev.preventDefault(); avFamilyRadioGo(); }
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+function avFamilyChange(ev) {
+  try {
+    const t = ev && ev.target;
+    if (!t || typeof t.closest !== "function") return;
+    if (t.closest("#av-fam-res-file")) {
+      const file = (t.files && t.files[0]) ? t.files[0] : null;
+      try { t.value = ""; } catch (e) { /* the picker resets so the same file can be picked again */ }
+      if (file) avFamilyImportPack(file);
+      return;
+    }
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+function avFamilyWire(host) {
+  if (!host || typeof host.addEventListener !== "function") return false;
+  try {
+    if (host.dataset && host.dataset.avFamilyWired === "1") return true;
+    if (host.dataset) host.dataset.avFamilyWired = "1";
+    host.addEventListener("click", avFamilyClick);
+    host.addEventListener("change", avFamilyChange);
+    host.addEventListener("keydown", avFamilyKeyDown);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFamilyPackSelectValue() {
+  try {
+    const host = avFamilyHost();
+    if (host && typeof host.querySelector === "function") {
+      const el = host.querySelector("#av-fam-res-pack");
+      if (el && typeof el.value === "string" && el.value) return el.value;
+    }
+  } catch (e) { /* default */ }
+  return AV_FAMILY_PACK_IDS[0];
+}
+
+/* ---------- init / state / classes ---------- */
+
+function avFamilyInit() {
+  const host = avFamilyHost();
+  if (!host) return false;
+  try {
+    let root = null;
+    try { root = (typeof host.querySelector === "function") ? host.querySelector(".av-family") : null; } catch (e) { root = null; }
+    if (!root) {
+      /* fresh markup replaces the parent's dim placeholder; repaint from live state */
+      host.innerHTML = avFamilyChromeHTML();
+      avFamilySt.lastSessionsHtml = null;
+      try { root = (typeof host.querySelector === "function") ? host.querySelector(".av-family") : null; } catch (e) { root = null; }
+    }
+    avFamilyWire(host);
+    avFamilySt.inited = true;
+    avFamilySt.mounts += 1;
+    if (!avFamilySt.statuses.radio) avFamilySt.statuses.radio = { msg: avFamilyRadioLine(), kind: "msg" };
+    avFamilyPaint(host);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFamilySessionState(rec) {
+  try {
+    return {
+      name: rec.name,
+      ok: !!rec.ok,
+      error: rec.error || "",
+      info: rec.info ? {
+        totalSeconds: rec.info.totalSeconds,
+        voiceCount: rec.info.voiceCount,
+        playableVoices: rec.info.playableVoices,
+        types: Array.isArray(rec.info.types) ? rec.info.types.slice() : [],
+        renderable: rec.info.renderable !== false,
+      } : null,
+    };
+  } catch (e) { return { name: "", ok: false, error: "state failed", info: null }; }
+}
+
+function avFamilyState() {
+  try {
+    const st = avFamilySt;
+    let radio = null;
+    try { radio = avFamilyRadioRead(); } catch (e) { radio = null; }
+    return {
+      version: AV_FAMILY_VERSION,
+      inited: !!st.inited,
+      mounts: st.mounts,
+      busy: !!st.busy,
+      busyOp: st.busyOp,
+      host: !!avFamilyHost(),
+      inboxAvailable: avFamilyInboxAvailable(),
+      packBase: avFamilyPackBase(),
+      packCustom: typeof st.packBase === "string" && !!st.packBase,
+      sessions: st.sessions.map(avFamilySessionState),
+      sessionCount: st.sessions.length,
+      selected: st.selected,
+      previewing: !!st.preview,
+      lastRender: st.lastRender ? {
+        name: st.lastRender.name, seconds: st.lastRender.seconds, sr: st.lastRender.sr,
+        frames: st.lastRender.frames, capped: !!st.lastRender.capped,
+      } : null,
+      lastReceipt: {
+        hub: st.receipts.hub,
+        resonance: st.receipts.resonance,
+        radio: st.receipts.radio,
+      },
+      radio: radio ? { ok: radio.ok, name: radio.name, country: radio.country, id: radio.id, ts: radio.ts, raw: radio.raw } : null,
+      statuses: {
+        hub: st.statuses.hub && st.statuses.hub.msg ? st.statuses.hub.msg : "",
+        resonance: st.statuses.resonance && st.statuses.resonance.msg ? st.statuses.resonance.msg : "",
+        radio: st.statuses.radio && st.statuses.radio.msg ? st.statuses.radio.msg : "",
+      },
+      lastError: st.lastError,
+    };
+  } catch (e) {
+    return { version: AV_FAMILY_VERSION, inited: false, error: avFamilyMsg(e) };
+  }
+}
+
+/* the NEW css classes this card introduces (the parent styles them from this list) */
+function avFamilyClasses() {
+  return [
+    "av-family", "av-fam-head", "av-fam-title", "av-fam-cap",
+    "av-fam-row", "av-fam-row-title", "av-fam-controls", "av-fam-field", "av-fam-field-lbl",
+    "av-fam-btn", "av-fam-file", "av-fam-file-in", "av-fam-select", "av-fam-text",
+    "av-fam-loops", "av-fam-pack", "av-fam-search",
+    "av-fam-status-line", "av-fam-status", "av-fam-msg", "av-fam-err",
+    "av-fam-list", "av-fam-session", "av-fam-session-name", "av-fam-session-sub",
+    "av-fam-selected", "av-fam-bad", "av-fam-empty", "av-fam-note", "av-fam-busy",
+  ];
+}
+
+/* ---------- debug/verify handle (house style; window only) ---------- */
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avFamily = {
+      version: AV_FAMILY_VERSION,
+      init: function () { return avFamilyInit(); },
+      state: function () { return avFamilyState(); },
+      send: function (opts) { return avFamilySend(opts); },
+      importPack: function (src) { return avFamilyImportPack(src); },
+      preview: function (i) { return avFamilyPreview(i); },
+      save: function () { return avFamilySave(); },
+      stop: function () { return avFamilyStop(); },
+      openRadio: function (q) { return avFamilyOpenRadio(q); },
+      setPackBase: function (url) { return avFamilySetPackBase(url); },
+      classes: function () { return avFamilyClasses(); },
+    };
+  } catch (e) { /* no window — nothing to publish */ }
+}
+
+
 /* Anvil — core shell (Phase 0). Boot contract: arm the master tap FIRST, then mount the knob
    framework on the LEVELS card and fill the header chips last; `data-av-ready` flips when all
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.5.0", phase: "M2 · expression · chop · generative · arranger", built: "2026-10-08" });
+const ANVIL = Object.freeze({ version: "1.6.0", phase: "PLATFORM · pwa · family bridges", built: "2026-10-08" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -63022,6 +66236,10 @@ function avMountLevels() {
   try { fmUiOk = (typeof avFmUiInit === "function") ? (avFmUiInit() !== false) : false; } catch (e) { console.warn("[anvil] fm card init failed", e); }
   try { wtUiOk = (typeof avWtUiInit === "function") ? (avWtUiInit() !== false) : false; } catch (e) { console.warn("[anvil] wt editor init failed", e); }
   try { chopUiOk = (typeof avChopUiInit === "function") ? (avChopUiInit() !== false) : false; } catch (e) { console.warn("[anvil] chop ui init failed", e); }
+  /* PLATFORM: the PWA module + the FAMILY card */
+  let pwaOk = false, familyOk = false;
+  try { pwaOk = (typeof avPwaInit === "function") ? (avPwaInit() !== false) : false; } catch (e) { console.warn("[anvil] pwa init failed", e); }
+  try { familyOk = (typeof avFamilyInit === "function") ? (avFamilyInit() !== false) : false; } catch (e) { console.warn("[anvil] family init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -63039,11 +66257,12 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
     try { avEngineSelfTest(); } catch (e) { console.warn("avtest engine", e); }
+    try { if (typeof avPwaProof === "function") { const _ps = avPwaProof(); if (_ps) avTestLine(_ps, "av-pwatest"); } } catch (e) { console.warn("avtest pwa", e); }
   }
 })();
 

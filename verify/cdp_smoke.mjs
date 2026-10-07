@@ -492,6 +492,26 @@ async function main() {
   check('M2 arranger + generative: GEN block / song rows / PLAY SONG / track ctl + song api',
     m2S.gen === true && m2S.rows === true && m2S.songPlay === true && m2S.trackCtl === true && m2S.songApi === 'object', JSON.stringify(m2S));
 
+  /* PLATFORM: the FAMILY card (suite bridges) + the PWA file:// guard */
+  const pfR = await ev(`(() => {
+    const host = document.getElementById('av-family-host');
+    return { famCard: !!document.getElementById('av-family'), host: !!host,
+             rows: host ? host.querySelectorAll('.av-fam-row').length : 0,
+             hub: !!(host && host.querySelector('#av-fam-hub-send')),
+             loopSel: !!(host && host.querySelector('#av-fam-hub-loops')),
+             res: !!(host && host.querySelector('#av-fam-res-import')),
+             resSel: !!(host && host.querySelector('#av-fam-res-pack')),
+             rad: !!(host && host.querySelector('#av-fam-radio-open')),
+             famApi: typeof window.__avFamily, famInitApi: typeof avFamilyInit,
+             pwaApi: typeof window.__avPwa, pwaSupported: !!(window.__avPwa && window.__avPwa.supported === true),
+             manifest: !!document.querySelector('link[rel="manifest"]') };
+  })()`);
+  const pfS = pfR.value || {};
+  check('PLATFORM family: card mounted + wired (3 bridge rows + hub/res/radio controls + api)',
+    pfS.famCard === true && pfS.host === true && pfS.rows === 3 && pfS.hub === true && pfS.loopSel === true && pfS.res === true && pfS.resSel === true && pfS.rad === true && pfS.famApi === 'object' && pfS.famInitApi === 'function', JSON.stringify(pfS));
+  check('PLATFORM pwa: file:// guard (module live, unsupported here, manifest link NOT injected)',
+    pfS.pwaApi === 'object' && pfS.pwaSupported === false && pfS.manifest === false, JSON.stringify(pfS));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
