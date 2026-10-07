@@ -5,18 +5,18 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **S1 record core in — mic/line input, count-in metronome and lap takes ship.**
-The instrument carries P1–P6 plus the first studio wave: audio input riding the engine's own context
-(same-context law · monitor off by default), a lookahead click scheduler with a 1–4-bar count-in,
-and lap takes that split at sequencer cycle boundaries with one-click WAV export — all driven by the
-Studio card. The store serves 9 packs / 548 presets (sha-256 verified installs · IndexedDB ·
-offline-ready). Frozen `index.html` sha 75c9c2eb… (1,448,104 B): battery smoke 18 · studio 37 ·
-bounce 32 · store 28 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31;
-**measured: realtime published {light 64 · fat 64} · offline 128 voices** (knee monotone; engine
-byte-identical since the P1.x minBLEP ship). Stress ×2: the known margin profile only (one cold-start
-delta + unison-heavy probe windows — recorded raw). Next: the next studio waves (sessions ·
-mix/master · deck · popout keyboard · CODE · help) then P7 polish → deploy + owner pass. Resume at
-`CONTINUATION-2026-10-06.md` addendum 25.
+Status 2026-10-07: **S2 sessions in — versioned snapshots, autosave + crash recovery, and a one-press backup zip.**
+The instrument carries P1–P6 + S1 + S2: the sessions layer versions the whole working state (16 per
+session), autosaves while you work and offers crash recovery on the next load, and the backup zip
+carries sessions + samples + installed packs (store-method reader · sha-256-verified restore). The
+store serves 9 packs / 548 presets (sha-256 verified installs · IndexedDB · offline-ready). Frozen
+`index.html` sha 31087322… (1,635,639 B): battery smoke 19 · sessions 41 · studio 37 · bounce 32 ·
+store 28 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31; **the perf gate ran on
+a loaded machine — bench read 96 with realtime fat 48, and a back-to-back A/B against the S1 control
+bytes under the same conditions shows the identical knee (environment, not regression; engine
+byte-identical since the P1.x minBLEP ship; quiet-window re-run queued)**. Next: S2.1 takes &
+comping · S3 mix/master · deck · popout keyboard · CODE · help then P7 polish → deploy + owner pass.
+Resume at `CONTINUATION-2026-10-06.md` addendum 26.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)
