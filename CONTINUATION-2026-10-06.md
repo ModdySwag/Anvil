@@ -827,3 +827,10 @@ Resume phrase: **"continue anvil"**.
 - **No rebuild / battery / pins** — `index.html` untouched by design (packs are runtime data; the canonical verifier is the wave gate).
 - **NEXT: P5.2** (BASS FORGE · LEAD LAB · FX & RISERS → 548 presets) then PERFECT TUNINGS (blocked on the tuning engine); carried: P·2 minBLEP pass · P4 follow-ups (fill control wiring, chains/scenes undo checkpoints, acid accent-flag decision). Resume phrase: **"continue anvil"**.
 
+
+## P5.2 wave DISPATCHED — 2026-10-07 (content wave: BASS FORGE · LEAD LAB · FX & RISERS)
+
+- Contract: **`verify/_p5c_wave.md`** — scope = T8 §12 Phase 3 (64/64/48 presets); child law = `verify/_p5b_wave.md` §2; format/witness/gates INHERIT `verify/_p5_wave.md` §1/§2; no `seq` fields.
+- Children — delegation **`deleg_79138ec1`** (3 in parallel): sa-0 `packs/bass-forge.avbank.json` · sa-1 `packs/lead-lab.avbank.json` · sa-2 `packs/fx-risers.avbank.json`. Transcripts: `C:/Users/Moddy/AppData/Local/hermes/profiles/deepseek/cache/delegation/live/deleg_79138ec1/task-{0..2}.log`; scratch `cache/scratch/p5c/<name>/`.
+- **On return:** FULL canonical verify (expect **548/548**) → `--index` (9 packs) → commit + addendum 23. No rebuild/battery/pins (index.html untouched).
+- **If resuming cold mid-P5.2:** read `verify/_p5c_wave.md`; `ls packs/`; per pack `node verify/verify_avpacks.mjs --only <id>`; integrate per §2.
