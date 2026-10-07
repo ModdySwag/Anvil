@@ -18,6 +18,61 @@
       "engine": "acid"
     },
     {
+      "id": "blade-pads",
+      "name": "BLADE PADS",
+      "file": "blade-pads.avbank.json",
+      "sha256": "af3726a8627b6014c2817661ff34062adcb494a388246f2c1557f7bb928c230e",
+      "bytes": 57129,
+      "presetCount": 56,
+      "tags": [
+        "pad",
+        "ensemble",
+        "swell",
+        "unison",
+        "chorus",
+        "reverb",
+        "formant"
+      ],
+      "engine": "va"
+    },
+    {
+      "id": "deep-space",
+      "name": "DEEP SPACE",
+      "file": "deep-space.avbank.json",
+      "sha256": "5b8e1762816bc67cc43f7e3b7f92ff9015e8552ba1c7e2c4ff807a1a3b5c98cf",
+      "bytes": 47520,
+      "presetCount": 40,
+      "tags": [
+        "deep-space",
+        "drone",
+        "ambient",
+        "wavetable",
+        "atmospheric",
+        "texture",
+        "space"
+      ],
+      "engine": "mixed"
+    },
+    {
+      "id": "neon-strings",
+      "name": "NEON STRINGS",
+      "file": "neon-strings.avbank.json",
+      "sha256": "090ae6b5f96b0ed9fdd14f22f7d3d1747db0deacf1a20bd74c93b0b1adab75f5",
+      "bytes": 32309,
+      "presetCount": 48,
+      "tags": [
+        "strings",
+        "karplus",
+        "pluck",
+        "nylon",
+        "koto",
+        "prepared",
+        "glass",
+        "hybrid"
+      ],
+      "engine": "string"
+    },
+    {
       "id": "starter-100",
       "name": "STARTER 100",
       "file": "starter-100.avbank.json",

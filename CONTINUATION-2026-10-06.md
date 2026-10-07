@@ -818,3 +818,12 @@ Resume phrase: **"continue anvil"**.
 - **On return:** FULL canonical verify (expect **372/372**) → `node verify/verify_avpacks.mjs --index` regenerate `packs/index.json` (6 packs) → commit + addendum 22. **NO rebuild / battery / pins** — `index.html` untouched (packs are runtime data; the verifier is the wave gate).
 - **If resuming cold mid-P5.1:** read `verify/_p5b_wave.md`; `ls packs/` for what landed; per pack run `node verify/verify_avpacks.mjs --only <id>`; transcripts as above; integrate per `_p5b_wave.md` §3.
 
+## Resume addendum 22 — 2026-10-07 (P5.1 content wave LANDED + integrated — 372/372; the store now serves 6 packs)
+
+- **Children landed** (deleg_3d52b269, all completed, ~5 min wall): `packs/neon-strings.avbank.json` (48 presets · 32,309 B · sha `090ae6b5…`) · `packs/blade-pads.avbank.json` (56 · 57,129 B · sha `af3726a8…`) · `packs/deep-space.avbank.json` (40 · 47,520 B · sha `5b8e1762…`). Each child self-verified with the canonical verifier (`--only`, strict exit); scratch generators retained in `cache/scratch/p5b/<name>/`.
+- **Parent re-verification (THE gate):** FULL canonical verify on the integrated tree — **372/372 presets PASS** (6 packs · harness fails 0 · preset fails 0 · warnings 6 · seqShorthand 6 = the stage-0 packs only; P5.1 packs carry no seq). Independent `sha256sum` cross-check of all three files matches the children's claims exactly.
+- **`packs/index.json` regenerated (`--index`, strict exit)** — 6 entries: acid-vault 64 · blade-pads 56 · deep-space 40 · neon-strings 48 · starter-100 100 · techno-foundry 64. **The store now serves 372 presets.**
+- Design notes (children's reports): NEON STRINGS = string-kind core, NYLON/KOTO/PREPARED/GLASS/HYBRID (hybrids encode the pair-alongside recipe; string voices own the per-sample chain by design) · BLADE PADS = VA ensembles (bp-vowel formant translation, unison 4–7 wide, 1.9–3.4 s swells, ensemble chorus + plate/fdn verbs) · DEEP SPACE = WT beds + sub + slow-LFO/macro motion + long verbs (4 grain atmospheres on sample slot 0, the starter-GRAIN contract).
+- **No rebuild / battery / pins** — `index.html` untouched by design (packs are runtime data; the canonical verifier is the wave gate).
+- **NEXT: P5.2** (BASS FORGE · LEAD LAB · FX & RISERS → 548 presets) then PERFECT TUNINGS (blocked on the tuning engine); carried: P·2 minBLEP pass · P4 follow-ups (fill control wiring, chains/scenes undo checkpoints, acid accent-flag decision). Resume phrase: **"continue anvil"**.
+

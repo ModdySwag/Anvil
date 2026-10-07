@@ -1,0 +1,1324 @@
+{
+  "v": 1,
+  "id": "neon-strings",
+  "meta": {
+    "name": "NEON STRINGS",
+    "author": "MODDYS Foundry",
+    "license": "CC0-1.0",
+    "tags": [
+      "strings",
+      "karplus",
+      "pluck",
+      "nylon",
+      "koto",
+      "prepared",
+      "glass",
+      "hybrid"
+    ],
+    "description": "Forty-eight own-authored Karplus-Strong string presets in five sections — NYLON · KOTO · PREPARED · GLASS · HYBRID: pluck-position comb, damping, decay, exciter and tone shaping; plate / FDN / Freeverb spaces, echo, drive and dynamics; and string-led VA/WT hybrid voices with macros. Clean-room DSP content for the Anvil string engine.",
+    "engine": "string"
+  },
+  "presets": [
+    {
+      "name": "OPEN NYLON",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "pluck"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.35,
+        "string.decay": 0.62,
+        "string.pluck": 0.26,
+        "string.exciter": "noise",
+        "string.tone": 0.45,
+        "engine.outScale": 0.75
+      }
+    },
+    {
+      "name": "SOFT THUMB NYLON",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "soft"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.52,
+        "string.decay": 0.5,
+        "string.pluck": 0.15,
+        "string.exciter": "noise",
+        "string.tone": 0.3,
+        "engine.outScale": 0.7,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.18,
+        "fx.verb.size": 0.45,
+        "fx.verb.decay": 0.45,
+        "fx.verb.damp": 0.3,
+        "fx.verb.predelay": 0.02
+      }
+    },
+    {
+      "name": "STRUM SPACE",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "delay"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.3,
+        "string.decay": 0.6,
+        "string.pluck": 0.22,
+        "string.exciter": "noise",
+        "string.tone": 0.55,
+        "engine.outScale": 0.7,
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/8",
+        "fx.delay.bpm": 96,
+        "fx.delay.feedback": 0.24,
+        "fx.delay.pingpong": 0.35,
+        "fx.delay.duck": 0.3,
+        "fx.delay.spread": 0.12,
+        "fx.delay.mix": 0.22
+      }
+    },
+    {
+      "name": "BRIGHT PICK",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "pick"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.2,
+        "string.decay": 0.55,
+        "string.pluck": 0.33,
+        "string.exciter": "noise",
+        "string.tone": 0.7,
+        "engine.outScale": 0.65,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.18,
+        "fx.drive.mix": 0.45,
+        "fx.drive.tone": 0.55
+      }
+    },
+    {
+      "name": "FELT VEIL",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "felt"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.62,
+        "string.decay": 0.45,
+        "string.pluck": 0.12,
+        "string.exciter": "noise",
+        "string.tone": 0.22,
+        "engine.outScale": 0.75,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "fdn",
+        "fx.verb.mix": 0.3,
+        "fx.verb.size": 0.6,
+        "fx.verb.decay": 0.55,
+        "fx.verb.damp": 0.4,
+        "fx.verb.predelay": 0.03
+      }
+    },
+    {
+      "name": "HARP ROLL",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "harp"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.28,
+        "string.decay": 0.72,
+        "string.pluck": 0.18,
+        "string.exciter": "noise",
+        "string.tone": 0.5,
+        "engine.outScale": 0.6,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.34,
+        "fx.verb.size": 0.7,
+        "fx.verb.decay": 0.6,
+        "fx.verb.damp": 0.35,
+        "fx.verb.predelay": 0.02,
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/8d",
+        "fx.delay.bpm": 92,
+        "fx.delay.feedback": 0.28,
+        "fx.delay.pingpong": 0.45,
+        "fx.delay.duck": 0.3,
+        "fx.delay.spread": 0.15,
+        "fx.delay.mix": 0.2
+      }
+    },
+    {
+      "name": "LOW GUTTER",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "low"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "tune": -12,
+        "string.damp": 0.42,
+        "string.decay": 0.68,
+        "string.pluck": 0.3,
+        "string.exciter": "noise",
+        "string.tone": 0.4,
+        "engine.outScale": 0.6,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.12,
+        "fx.drive.mix": 0.3,
+        "fx.drive.tone": 0.5
+      }
+    },
+    {
+      "name": "IBERIAN DUSK",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "spanish"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.25,
+        "string.decay": 0.58,
+        "string.pluck": 0.4,
+        "string.exciter": "saw",
+        "string.tone": 0.6,
+        "engine.outScale": 0.7,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.22,
+        "fx.drive.mix": 0.5,
+        "fx.drive.tone": 0.6,
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 0.85,
+        "fx.dyn.eqLo": -1.5,
+        "fx.dyn.eqHi": 2.5
+      }
+    },
+    {
+      "name": "CAPO HIGH",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "high"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "tune": 12,
+        "string.damp": 0.38,
+        "string.decay": 0.5,
+        "string.pluck": 0.2,
+        "string.exciter": "noise",
+        "string.tone": 0.55,
+        "engine.outScale": 0.65
+      }
+    },
+    {
+      "name": "PALM MUTE",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "mute"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.7,
+        "string.decay": 0.3,
+        "string.pluck": 0.24,
+        "string.exciter": "noise",
+        "string.tone": 0.35,
+        "engine.outScale": 0.85,
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 0.8,
+        "fx.dyn.comp.thresh": -18,
+        "fx.dyn.comp.ratio": 4,
+        "fx.dyn.comp.att": 0.005,
+        "fx.dyn.comp.rel": 0.18,
+        "fx.dyn.comp.makeup": 4
+      }
+    },
+    {
+      "name": "DEW AMBIENT",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "ambient"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.45,
+        "string.decay": 0.78,
+        "string.pluck": 0.15,
+        "string.exciter": "noise",
+        "string.tone": 0.38,
+        "engine.outScale": 0.65,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "fdn",
+        "fx.verb.mix": 0.4,
+        "fx.verb.size": 0.8,
+        "fx.verb.decay": 0.7,
+        "fx.verb.damp": 0.5,
+        "fx.verb.predelay": 0.04,
+        "mod.macro1": 0.4,
+        "mod.macro2": 0.6
+      }
+    },
+    {
+      "name": "ENSEMBLE STRUM",
+      "section": "NYLON",
+      "tags": [
+        "nylon",
+        "ensemble"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.33,
+        "string.decay": 0.64,
+        "string.pluck": 0.2,
+        "string.exciter": "noise",
+        "string.tone": 0.5,
+        "engine.outScale": 0.65,
+        "fx.mod.on": 1,
+        "fx.mod.mode": "ensemble",
+        "fx.mod.rate": 0.27,
+        "fx.mod.depth": 0.35,
+        "fx.mod.mix": 0.3,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.22,
+        "fx.verb.size": 0.5,
+        "fx.verb.decay": 0.5
+      }
+    },
+    {
+      "name": "KYOTO NEON",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "bright"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.18,
+        "string.decay": 0.5,
+        "string.pluck": 0.45,
+        "string.exciter": "saw",
+        "string.tone": 0.8,
+        "engine.outScale": 0.8
+      }
+    },
+    {
+      "name": "SILK PICK",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "pluck"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.22,
+        "string.decay": 0.55,
+        "string.pluck": 0.5,
+        "string.exciter": "pulse",
+        "string.tone": 0.72,
+        "engine.outScale": 0.8
+      }
+    },
+    {
+      "name": "SHAMISEN EDGE",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "edge"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.12,
+        "string.decay": 0.42,
+        "string.pluck": 0.62,
+        "string.exciter": "saw",
+        "string.tone": 0.85,
+        "engine.outScale": 0.75,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.2,
+        "fx.drive.mix": 0.4,
+        "fx.drive.tone": 0.6
+      }
+    },
+    {
+      "name": "KOTO BASS RUN",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "low"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "tune": -12,
+        "string.damp": 0.2,
+        "string.decay": 0.6,
+        "string.pluck": 0.35,
+        "string.exciter": "saw",
+        "string.tone": 0.7,
+        "engine.outScale": 0.7,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.15,
+        "fx.drive.mix": 0.35
+      }
+    },
+    {
+      "name": "TEMPLE ECHO",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "echo"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.25,
+        "string.decay": 0.62,
+        "string.pluck": 0.5,
+        "string.exciter": "pulse",
+        "string.tone": 0.75,
+        "engine.outScale": 0.7,
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/4",
+        "fx.delay.bpm": 92,
+        "fx.delay.feedback": 0.35,
+        "fx.delay.pingpong": 0.6,
+        "fx.delay.duck": 0.4,
+        "fx.delay.spread": 0.2,
+        "fx.delay.mix": 0.28,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "fdn",
+        "fx.verb.mix": 0.18,
+        "fx.verb.size": 0.55,
+        "fx.verb.decay": 0.5
+      }
+    },
+    {
+      "name": "GUTS SNAP",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "perc"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.1,
+        "string.decay": 0.3,
+        "string.pluck": 0.7,
+        "string.exciter": "noise",
+        "string.tone": 0.88,
+        "engine.outScale": 0.8,
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 0.85,
+        "fx.dyn.comp.thresh": -20,
+        "fx.dyn.comp.ratio": 6,
+        "fx.dyn.comp.att": 0.002,
+        "fx.dyn.comp.rel": 0.12,
+        "fx.dyn.comp.makeup": 5
+      }
+    },
+    {
+      "name": "LACQUER TABLE",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "lacquer"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.08,
+        "string.decay": 0.45,
+        "string.pluck": 0.3,
+        "string.exciter": "saw",
+        "string.tone": 0.95,
+        "engine.outScale": 0.75,
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 0.85,
+        "fx.dyn.eqLo": -3.0,
+        "fx.dyn.eqHi": 4.0
+      }
+    },
+    {
+      "name": "KOTO HARMONIC",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "comb"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.15,
+        "string.decay": 0.58,
+        "string.pluck": 0.88,
+        "string.exciter": "pulse",
+        "string.tone": 0.8,
+        "engine.outScale": 0.7
+      }
+    },
+    {
+      "name": "PAPER KOTO",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "paper"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.45,
+        "string.decay": 0.4,
+        "string.pluck": 0.4,
+        "string.exciter": "noise",
+        "string.tone": 0.65,
+        "engine.outScale": 0.75,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.1,
+        "fx.drive.mix": 0.3
+      }
+    },
+    {
+      "name": "MOON KOTO",
+      "section": "KOTO",
+      "tags": [
+        "koto",
+        "moon"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.16,
+        "string.decay": 0.8,
+        "string.pluck": 0.55,
+        "string.exciter": "saw",
+        "string.tone": 0.78,
+        "engine.outScale": 0.65,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.3,
+        "fx.verb.size": 0.6,
+        "fx.verb.decay": 0.65,
+        "fx.verb.damp": 0.3,
+        "fx.verb.predelay": 0.03,
+        "mod.macro1": 0.5
+      }
+    },
+    {
+      "name": "PREPARED FELT",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "felt"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.75,
+        "string.decay": 0.35,
+        "string.pluck": 0.1,
+        "string.exciter": "noise",
+        "string.tone": 0.2,
+        "engine.outScale": 0.85,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.15,
+        "fx.drive.mix": 0.5,
+        "fx.drive.tone": 0.4
+      }
+    },
+    {
+      "name": "TACK PIANO",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "tack"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.55,
+        "string.decay": 0.25,
+        "string.pluck": 0.08,
+        "string.exciter": "pulse",
+        "string.tone": 0.55,
+        "engine.outScale": 0.85,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "crush",
+        "fx.drive.amount": 0.3,
+        "fx.drive.mix": 0.6,
+        "fx.drive.tone": 0.55,
+        "fx.drive.bits": 9,
+        "fx.drive.down": 2
+      }
+    },
+    {
+      "name": "WIRE BUZZ",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "wire"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.05,
+        "string.decay": 0.35,
+        "string.pluck": 0.05,
+        "string.exciter": "saw",
+        "string.tone": 0.9,
+        "engine.outScale": 0.8,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "fold",
+        "fx.drive.amount": 0.35,
+        "fx.drive.mix": 0.5,
+        "fx.drive.tone": 0.5
+      }
+    },
+    {
+      "name": "WOOD BLOCK",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "perc"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.8,
+        "string.decay": 0.18,
+        "string.pluck": 0.5,
+        "string.exciter": "noise",
+        "string.tone": 0.45,
+        "engine.outScale": 0.9,
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 0.85,
+        "fx.dyn.comp.thresh": -16,
+        "fx.dyn.comp.ratio": 8,
+        "fx.dyn.comp.att": 0.001,
+        "fx.dyn.comp.rel": 0.1,
+        "fx.dyn.comp.makeup": 6,
+        "mod.macro1": 0.6
+      }
+    },
+    {
+      "name": "TAPE PREP",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "tape"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.6,
+        "string.decay": 0.52,
+        "string.pluck": 0.28,
+        "string.exciter": "noise",
+        "string.tone": 0.5,
+        "engine.outScale": 0.8,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.3,
+        "fx.drive.mix": 0.7,
+        "fx.drive.tone": 0.4,
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/8",
+        "fx.delay.bpm": 88,
+        "fx.delay.feedback": 0.3,
+        "fx.delay.pingpong": 0.3,
+        "fx.delay.duck": 0.5,
+        "fx.delay.spread": 0.1,
+        "fx.delay.mix": 0.25
+      }
+    },
+    {
+      "name": "MUTED THUMB",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "mute"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.85,
+        "string.decay": 0.22,
+        "string.pluck": 0.18,
+        "string.exciter": "noise",
+        "string.tone": 0.25,
+        "engine.outScale": 0.9
+      }
+    },
+    {
+      "name": "BOTTLE GLASS",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "bottle"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.1,
+        "string.decay": 0.5,
+        "string.pluck": 0.12,
+        "string.exciter": "pulse",
+        "string.tone": 0.95,
+        "engine.outScale": 0.8,
+        "fx.mod.on": 1,
+        "fx.mod.mode": "flanger",
+        "fx.mod.rate": 0.2,
+        "fx.mod.depth": 0.6,
+        "fx.mod.mix": 0.35,
+        "fx.mod.feedback": 0.5
+      }
+    },
+    {
+      "name": "DETUNE PINS",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "detune"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "tune": 0.25,
+        "string.damp": 0.2,
+        "string.decay": 0.6,
+        "string.pluck": 0.42,
+        "string.exciter": "saw",
+        "string.tone": 0.7,
+        "engine.outScale": 0.75,
+        "fx.mod.on": 1,
+        "fx.mod.mode": "phaser",
+        "fx.mod.rate": 0.35,
+        "fx.mod.depth": 0.5,
+        "fx.mod.mix": 0.4,
+        "fx.mod.feedback": 0.3,
+        "fx.mod.stages": 6
+      }
+    },
+    {
+      "name": "RUBBER BAND",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "rubber"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.5,
+        "string.decay": 0.7,
+        "string.pluck": 0.6,
+        "string.exciter": "noise",
+        "string.tone": 0.35,
+        "engine.outScale": 0.8,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.2,
+        "fx.drive.mix": 0.4,
+        "mod.macro1": 0.3
+      }
+    },
+    {
+      "name": "SPLINTER",
+      "section": "PREPARED",
+      "tags": [
+        "prepared",
+        "splinter"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.02,
+        "string.decay": 0.45,
+        "string.pluck": 0.93,
+        "string.exciter": "pulse",
+        "string.tone": 0.85,
+        "engine.outScale": 0.7,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "fold",
+        "fx.drive.amount": 0.25,
+        "fx.drive.mix": 0.45,
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 0.85,
+        "fx.dyn.lim.ceiling": -1.0
+      }
+    },
+    {
+      "name": "NEON GLASS",
+      "section": "GLASS",
+      "tags": [
+        "glass",
+        "bright"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.04,
+        "string.decay": 0.86,
+        "string.pluck": 0.12,
+        "string.exciter": "noise",
+        "string.tone": 0.92,
+        "engine.outScale": 0.7,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.4,
+        "fx.verb.size": 0.75,
+        "fx.verb.decay": 0.7,
+        "fx.verb.damp": 0.25,
+        "fx.verb.predelay": 0.04
+      }
+    },
+    {
+      "name": "CRYSTAL DROPLET",
+      "section": "GLASS",
+      "tags": [
+        "glass",
+        "droplet"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.06,
+        "string.decay": 0.75,
+        "string.pluck": 0.08,
+        "string.exciter": "noise",
+        "string.tone": 0.85,
+        "engine.outScale": 0.75,
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/8d",
+        "fx.delay.bpm": 104,
+        "fx.delay.feedback": 0.3,
+        "fx.delay.pingpong": 0.5,
+        "fx.delay.duck": 0.35,
+        "fx.delay.spread": 0.2,
+        "fx.delay.mix": 0.3,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.3,
+        "fx.verb.size": 0.6,
+        "fx.verb.decay": 0.6
+      }
+    },
+    {
+      "name": "GLASS BELL LONG",
+      "section": "GLASS",
+      "tags": [
+        "glass",
+        "bell"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.03,
+        "string.decay": 0.93,
+        "string.pluck": 0.2,
+        "string.exciter": "saw",
+        "string.tone": 0.9,
+        "engine.outScale": 0.6,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "fdn",
+        "fx.verb.mix": 0.45,
+        "fx.verb.size": 0.85,
+        "fx.verb.decay": 0.8,
+        "fx.verb.damp": 0.3,
+        "fx.verb.predelay": 0.05
+      }
+    },
+    {
+      "name": "PRISM SHIMMER",
+      "section": "GLASS",
+      "tags": [
+        "glass",
+        "shimmer"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.05,
+        "string.decay": 0.8,
+        "string.pluck": 0.3,
+        "string.exciter": "pulse",
+        "string.tone": 0.88,
+        "engine.outScale": 0.65,
+        "fx.mod.on": 1,
+        "fx.mod.mode": "ensemble",
+        "fx.mod.rate": 0.4,
+        "fx.mod.depth": 0.5,
+        "fx.mod.mix": 0.4,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.35,
+        "fx.verb.size": 0.7,
+        "fx.verb.decay": 0.65
+      }
+    },
+    {
+      "name": "VITREOUS",
+      "section": "GLASS",
+      "tags": [
+        "glass",
+        "pure"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.01,
+        "string.decay": 0.7,
+        "string.pluck": 0.05,
+        "string.exciter": "noise",
+        "string.tone": 0.98,
+        "engine.outScale": 0.7,
+        "mod.macro1": 0.3,
+        "mod.macro2": 0.7,
+        "mod.macro3": 0.5
+      }
+    },
+    {
+      "name": "FROZEN GLASS",
+      "section": "GLASS",
+      "tags": [
+        "glass",
+        "frozen"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.02,
+        "string.decay": 0.97,
+        "string.pluck": 0.16,
+        "string.exciter": "noise",
+        "string.tone": 0.9,
+        "engine.outScale": 0.55,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "fdn",
+        "fx.verb.mix": 0.5,
+        "fx.verb.size": 0.9,
+        "fx.verb.decay": 0.9,
+        "fx.verb.damp": 0.45,
+        "fx.verb.predelay": 0.06,
+        "mod.macro1": 0.45
+      }
+    },
+    {
+      "name": "TINTED TONES",
+      "section": "GLASS",
+      "tags": [
+        "glass",
+        "tint"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.12,
+        "string.decay": 0.68,
+        "string.pluck": 0.6,
+        "string.exciter": "noise",
+        "string.tone": 0.72,
+        "engine.outScale": 0.75,
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 0.85,
+        "fx.dyn.eqLo": -4.0,
+        "fx.dyn.eqHi": 3.0,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.25,
+        "fx.verb.size": 0.5,
+        "fx.verb.decay": 0.55
+      }
+    },
+    {
+      "name": "GLASSBLOOM",
+      "section": "GLASS",
+      "tags": [
+        "glass",
+        "bloom"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.07,
+        "string.decay": 0.9,
+        "string.pluck": 0.16,
+        "string.exciter": "noise",
+        "string.tone": 0.95,
+        "engine.outScale": 0.65,
+        "fx.mod.on": 1,
+        "fx.mod.mode": "chorus",
+        "fx.mod.rate": 0.35,
+        "fx.mod.depth": 0.45,
+        "fx.mod.mix": 0.35,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.42,
+        "fx.verb.size": 0.72,
+        "fx.verb.decay": 0.75,
+        "fx.verb.damp": 0.3,
+        "fx.verb.predelay": 0.04,
+        "mod.macro1": 0.5,
+        "mod.macro2": 0.35
+      }
+    },
+    {
+      "name": "STRING MACHINE",
+      "section": "HYBRID",
+      "tags": [
+        "hybrid",
+        "sub"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.3,
+        "string.decay": 0.66,
+        "string.pluck": 0.3,
+        "string.exciter": "saw",
+        "string.tone": 0.6,
+        "engine.outScale": 0.65,
+        "sub.level": 0.25,
+        "sub.wave": "sine",
+        "osc2.type": "wt.sine",
+        "osc2.level": 0.18,
+        "osc2.tune": 12,
+        "osc2.uni": 3,
+        "osc2.spread": 18,
+        "filter.mode": "lp24",
+        "filter.cutoff": 3200,
+        "filter.reso": 0.2,
+        "filter.envAmt": 1.2,
+        "filter.ktrk": 0.3,
+        "env1.a": 0.002,
+        "env1.d": 1.2,
+        "env1.s": 0.6,
+        "env1.r": 0.9,
+        "lfo.shape": "sine",
+        "lfo.rate": 0.4,
+        "lfo.toCut": 0.15,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.25,
+        "fx.verb.size": 0.6,
+        "fx.verb.decay": 0.6,
+        "mod.macro1": 0.35
+      }
+    },
+    {
+      "name": "KOTO SAW LAYER",
+      "section": "HYBRID",
+      "tags": [
+        "hybrid",
+        "koto"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.2,
+        "string.decay": 0.55,
+        "string.pluck": 0.5,
+        "string.exciter": "pulse",
+        "string.tone": 0.78,
+        "engine.outScale": 0.65,
+        "osc1.type": "saw",
+        "osc1.level": 0.3,
+        "osc1.uni": 4,
+        "osc1.spread": 15,
+        "filter.mode": "lp12",
+        "filter.cutoff": 4800,
+        "filter.envAmt": 1.5,
+        "env1.a": 0.001,
+        "env1.d": 0.8,
+        "env1.s": 0.5,
+        "env1.r": 0.6,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.2,
+        "fx.drive.mix": 0.4,
+        "fx.drive.tone": 0.6,
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/8",
+        "fx.delay.bpm": 96,
+        "fx.delay.feedback": 0.25,
+        "fx.delay.pingpong": 0.4,
+        "fx.delay.duck": 0.3,
+        "fx.delay.spread": 0.12,
+        "fx.delay.mix": 0.22,
+        "mod.macro1": 0.4,
+        "mod.macro2": 0.6
+      }
+    },
+    {
+      "name": "GLASS WT CHOIR",
+      "section": "HYBRID",
+      "tags": [
+        "hybrid",
+        "glass",
+        "choir"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.08,
+        "string.decay": 0.82,
+        "string.pluck": 0.18,
+        "string.exciter": "noise",
+        "string.tone": 0.88,
+        "engine.outScale": 0.6,
+        "osc2.type": "wt.tri",
+        "osc2.level": 0.22,
+        "osc2.tune": 12,
+        "osc2.uni": 5,
+        "osc2.spread": 25,
+        "filter.mode": "lp24",
+        "filter.cutoff": 6200,
+        "filter.reso": 0.15,
+        "env2.a": 0.4,
+        "env2.d": 2.0,
+        "env2.s": 0.7,
+        "env2.r": 1.5,
+        "lfo.shape": "tri",
+        "lfo.rate": 0.25,
+        "lfo.toCut": 0.2,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.4,
+        "fx.verb.size": 0.75,
+        "fx.verb.decay": 0.7,
+        "fx.verb.damp": 0.35,
+        "fx.verb.predelay": 0.04,
+        "mod.macro1": 0.5,
+        "mod.macro2": 0.3
+      }
+    },
+    {
+      "name": "CLANG HYBRID",
+      "section": "HYBRID",
+      "tags": [
+        "hybrid",
+        "prepared"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.12,
+        "string.decay": 0.4,
+        "string.pluck": 0.07,
+        "string.exciter": "pulse",
+        "string.tone": 0.7,
+        "engine.outScale": 0.7,
+        "osc2.type": "wt.pulse25",
+        "osc2.level": 0.2,
+        "osc2.tune": -12,
+        "osc2.spread": 10,
+        "filter.mode": "bp",
+        "filter.cutoff": 1800,
+        "filter.reso": 0.5,
+        "filter.envAmt": -1.5,
+        "env2.a": 0.01,
+        "env2.d": 0.8,
+        "env2.s": 0.3,
+        "env2.r": 0.6,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "fold",
+        "fx.drive.amount": 0.3,
+        "fx.drive.mix": 0.45,
+        "fx.drive.tone": 0.55,
+        "mod.macro1": 0.6
+      }
+    },
+    {
+      "name": "SUBSTRATE",
+      "section": "HYBRID",
+      "tags": [
+        "hybrid",
+        "sub",
+        "low"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "tune": -12,
+        "string.damp": 0.35,
+        "string.decay": 0.7,
+        "string.pluck": 0.34,
+        "string.exciter": "saw",
+        "string.tone": 0.45,
+        "engine.outScale": 0.55,
+        "sub.level": 0.3,
+        "sub.wave": "square",
+        "osc1.type": "tri",
+        "osc1.level": 0.2,
+        "osc1.uni": 3,
+        "osc1.spread": 12,
+        "filter.mode": "lp24",
+        "filter.cutoff": 900,
+        "filter.reso": 0.25,
+        "filter.ktrk": 0.35,
+        "env1.a": 0.004,
+        "env1.d": 1.5,
+        "env1.s": 0.7,
+        "env1.r": 1.2,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.25,
+        "fx.drive.mix": 0.5,
+        "fx.drive.tone": 0.5,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "fdn",
+        "fx.verb.mix": 0.2,
+        "fx.verb.size": 0.6,
+        "fx.verb.decay": 0.6,
+        "mod.macro1": 0.45,
+        "mod.macro2": 0.55,
+        "mod.macro3": 0.35
+      }
+    },
+    {
+      "name": "AIR TABLE",
+      "section": "HYBRID",
+      "tags": [
+        "hybrid",
+        "wt",
+        "air"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.25,
+        "string.decay": 0.72,
+        "string.pluck": 0.22,
+        "string.exciter": "noise",
+        "string.tone": 0.62,
+        "engine.outScale": 0.6,
+        "osc2.type": "wt.tri",
+        "osc2.level": 0.15,
+        "osc2.uni": 6,
+        "osc2.spread": 30,
+        "noise.level": 0.06,
+        "filter.mode": "hp",
+        "filter.cutoff": 250,
+        "filter.reso": 0.1,
+        "lfo.shape": "tri",
+        "lfo.rate": 0.22,
+        "lfo.toCut": 0.15,
+        "lfo.toPitch": 0.08,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.45,
+        "fx.verb.size": 0.8,
+        "fx.verb.decay": 0.72,
+        "fx.verb.damp": 0.35,
+        "fx.verb.predelay": 0.05,
+        "mod.macro1": 0.4
+      }
+    },
+    {
+      "name": "CHOIR KARPLUS",
+      "section": "HYBRID",
+      "tags": [
+        "hybrid",
+        "choir"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.28,
+        "string.decay": 0.68,
+        "string.pluck": 0.26,
+        "string.exciter": "noise",
+        "string.tone": 0.6,
+        "engine.outScale": 0.6,
+        "osc2.type": "wt.square",
+        "osc2.level": 0.18,
+        "osc2.tune": 12,
+        "osc2.uni": 4,
+        "osc2.spread": 20,
+        "filter.mode": "lp24",
+        "filter.cutoff": 5400,
+        "filter.reso": 0.12,
+        "filter.envAmt": 1.0,
+        "env1.a": 0.05,
+        "env1.d": 1.4,
+        "env1.s": 0.65,
+        "env1.r": 1.4,
+        "fx.mod.on": 1,
+        "fx.mod.mode": "ensemble",
+        "fx.mod.rate": 0.3,
+        "fx.mod.depth": 0.4,
+        "fx.mod.mix": 0.35,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.3,
+        "fx.verb.size": 0.65,
+        "fx.verb.decay": 0.65,
+        "mod.macro1": 0.35,
+        "mod.macro2": 0.5
+      }
+    },
+    {
+      "name": "NEON ORCHESTRA",
+      "section": "HYBRID",
+      "tags": [
+        "hybrid",
+        "orchestra"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.22,
+        "string.decay": 0.74,
+        "string.pluck": 0.28,
+        "string.exciter": "saw",
+        "string.tone": 0.68,
+        "engine.outScale": 0.6,
+        "osc1.type": "tri",
+        "osc1.level": 0.2,
+        "osc1.uni": 5,
+        "osc1.spread": 18,
+        "osc2.type": "wt.saw",
+        "osc2.level": 0.15,
+        "osc2.tune": 7,
+        "osc2.uni": 3,
+        "osc2.spread": 22,
+        "sub.level": 0.12,
+        "sub.wave": "sine",
+        "filter.mode": "lp24",
+        "filter.cutoff": 5200,
+        "filter.reso": 0.18,
+        "filter.envAmt": 1.4,
+        "filter.ktrk": 0.4,
+        "env1.a": 0.01,
+        "env1.d": 1.6,
+        "env1.s": 0.7,
+        "env1.r": 1.4,
+        "env2.a": 0.3,
+        "env2.d": 2.0,
+        "env2.s": 0.6,
+        "env2.r": 1.8,
+        "lfo.shape": "sine",
+        "lfo.rate": 0.18,
+        "lfo.toCut": 0.12,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.18,
+        "fx.drive.mix": 0.4,
+        "fx.drive.tone": 0.55,
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/4",
+        "fx.delay.bpm": 100,
+        "fx.delay.feedback": 0.3,
+        "fx.delay.pingpong": 0.5,
+        "fx.delay.duck": 0.5,
+        "fx.delay.spread": 0.15,
+        "fx.delay.mix": 0.2,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.35,
+        "fx.verb.size": 0.75,
+        "fx.verb.decay": 0.7,
+        "fx.verb.damp": 0.3,
+        "fx.verb.predelay": 0.03,
+        "mod.macro1": 0.2,
+        "mod.macro2": 0.4,
+        "mod.macro3": 0.6,
+        "mod.macro4": 0.8
+      }
+    }
+  ]
+}
