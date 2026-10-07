@@ -210,8 +210,9 @@ function avSeqUiCleanPatch(patch) {
   return Object.keys(out).length ? out : null;
 }
 
-/* mutate a copy of the snapshot, then load it. The undo restore point is pushed only once the
-   mutation is known to be valid — F's avUndoPush capture semantics: push BEFORE the load. */
+/* mutate a copy of the snapshot, then load it. The undo checkpoint is pushed AFTER the load —
+   F's avUndoPush is push-after-change; avUndoInit() captured the boot baseline (probe-verified:
+   init + push-after is the working pairing; push-before leaves the first edit unrestorable). */
 function avSeqUiModelEdit(mutator, label) {
   try {
     const snap = avSeqUiPatternSnapshot();
@@ -219,8 +220,8 @@ function avSeqUiModelEdit(mutator, label) {
     let ok = false;
     try { ok = mutator(snap) !== false; } catch (e) { return false; }
     if (!ok) return false;
-    try { if (typeof avUndoPush === "function") avUndoPush("seq", label || "edit"); } catch (e) { /* F optional */ }
     const loaded = avSeqUiPatternLoad(snap);
+    if (loaded) { try { if (typeof avUndoPush === "function") avUndoPush("seq", label || "edit"); } catch (e) { /* F optional */ } }
     avSeqUiSchedPush();
     avSeqUiSync();
     return loaded;
@@ -667,7 +668,10 @@ function avSeqUiImport() {
       ok = obj ? avSeqUiPatternLoad(obj) : false;
     }
   } catch (e) { ok = false; }
-  if (ok) { avSeqUiSchedPush(); avSeqUiSync(); }
+  if (ok) {
+    try { if (typeof avUndoPush === "function") avUndoPush("seq", "import"); } catch (e) { /* F optional */ }
+    avSeqUiSchedPush(); avSeqUiSync();
+  }
   return ok;
 }
 

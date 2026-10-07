@@ -215,6 +215,21 @@ async function main() {
     p3.fx === true && p3.order === 'drive,mod,delay,verb,dyn' && p3.strips === 5 && p3.knobs === 20 && p3.knobsBound === 20 && p3.toggles === 5 && p3.sels === 4, JSON.stringify(p3));
   check('P3 mod matrix: card mounted with 8 bound macro knobs', p3.mod === true && p3.macros === 8 && p3.macrosBound === 8, JSON.stringify({ macros: p3.macros, bound: p3.macrosBound }));
 
+  /* 6e. the P4 sequencer card */
+  const seqR = await ev(`(() => {
+    const card = document.getElementById('av-seq');
+    const host = document.getElementById('av-seq-host');
+    const rows = host ? [...host.querySelectorAll('.av-seq-row')] : [];
+    const cells = host ? [...host.querySelectorAll('.av-seq-cell')] : [];
+    return { card: !!card, host: !!host, rows: rows.length, cells: cells.length,
+             play: !!document.getElementById('av-seq-play'), stop: !!document.getElementById('av-seq-stop'),
+             rec: !!document.getElementById('av-seq-rec'), pos: !!document.getElementById('av-seq-pos'),
+             bpmKnob: !!document.querySelector('#av-seq .av-knob[data-knob="bpm"]') };
+  })()`);
+  const seqC = seqR.value || {};
+  check('P4 sequencer: card + grid mounted (4 rows · ≥64 cells) + transport controls + bpm knob',
+    seqC.card === true && seqC.host === true && seqC.rows === 4 && seqC.cells >= 64 && seqC.play === true && seqC.stop === true && seqC.rec === true && seqC.pos === true && seqC.bpmKnob === true, JSON.stringify(seqC));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

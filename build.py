@@ -91,6 +91,13 @@ js_parts = [
     (SRC / "av_engine.js").read_text(encoding="utf-8"), # the facade: blob→data→spn tier ladder + message protocol
     (SRC / "av_fx.js").read_text(encoding="utf-8"),     # P3 FX rack card (page module)
     (SRC / "av_mod.js").read_text(encoding="utf-8"),    # P3 mod matrix card (page module)
+    (SRC / "av_seq_core.js").read_text(encoding="utf-8"),    # P4 sequencer: model (page module)
+    (SRC / "av_seq_sched.js").read_text(encoding="utf-8"),   # P4 sequencer: audio-clock scheduler
+    (SRC / "av_plock.js").read_text(encoding="utf-8"),       # P4 p-lock lanes
+    (SRC / "av_seq_capture.js").read_text(encoding="utf-8"), # P4 step/live capture
+    (SRC / "av_undo.js").read_text(encoding="utf-8"),        # P4 undo/redo + A/B
+    (SRC / "av_seq_acid.js").read_text(encoding="utf-8"),    # P4 ACID lane
+    (SRC / "av_seq_ui.js").read_text(encoding="utf-8"),      # P4 sequencer card
     (SRC / "av_synth.js").read_text(encoding="utf-8"),  # the SYNTH card (P3 engine layer)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]

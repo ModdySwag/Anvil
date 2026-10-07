@@ -344,3 +344,73 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-rec-link { color: var(--teal); font-size: 12px; }
 .av-rec-on { color: #ff8a7a !important; }
 .av-rec-err { color: #ff8a7a; font-size: 12px; }
+
+/* ============================================================================
+   P4 — SEQUENCER (av_seq_ui.js · av_plock.js · av_seq_acid.js) — grid card skin */
+.av-seq { display: flex; flex-direction: column; gap: 8px; }
+.av-seq-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-seq-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-seq-cap { font-size: 10.5px; color: var(--text-3); }
+.av-seq-transport { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-seq-btn { }
+.av-seq-btn.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.35); }
+.av-seq-pos { font-family: var(--mono); font-size: 11px; color: var(--teal); min-width: 56px; text-align: center; }
+.av-seq-bpm { }
+.av-seq-gridwrap { overflow-x: auto; padding-bottom: 2px; }
+.av-seq-grid { display: flex; flex-direction: column; gap: 3px; min-width: 640px; }
+.av-seq-row { display: flex; align-items: center; gap: 5px; }
+.av-seq-row-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .08em; color: var(--text-3); min-width: 40px; text-transform: uppercase; }
+.av-seq-row-mute { }
+.av-seq-row-mute.on { color: #ff8a7a; border-color: #ff8a7a; }
+.av-seq-cell {
+  flex: 1 1 0; min-width: 14px; height: 24px;
+  background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px;
+  cursor: pointer;
+}
+.av-seq-cell:hover { border-color: var(--teal-deep); }
+.av-seq-cell.on { background: #0d2422; border-color: var(--teal-deep); box-shadow: inset 0 0 6px rgba(46,216,201,.25); }
+.av-seq-cell.cur { border-color: var(--teal-glow); box-shadow: 0 0 8px rgba(127,243,232,.5); }
+.av-seq-cell.sel { outline: 1px solid var(--teal); outline-offset: 1px; }
+.av-seq-insp { background: var(--raised); border: 1px solid var(--hair); border-radius: 8px; padding: 8px 10px; }
+.av-seq-insp-head { display: flex; align-items: baseline; gap: 8px; }
+.av-seq-insp-at { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-seq-insp-empty { color: var(--text-3); font-size: 12px; font-style: italic; }
+.av-seq-insp-body { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 6px; }
+.av-seq-insp-row { display: flex; flex-direction: column; gap: 3px; min-width: 72px; }
+.av-seq-insp-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-seq-insp-ctl { }
+.av-seq-insp-val { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-seq-range { accent-color: var(--teal); }
+.av-seq-check { accent-color: var(--teal); }
+.av-seq-song { display: flex; flex-direction: column; gap: 6px; }
+.av-seq-song-head { display: flex; align-items: baseline; gap: 8px; }
+.av-seq-song-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.av-seq-chains { display: flex; flex-wrap: wrap; gap: 6px; }
+.av-seq-chain { font-family: var(--mono); font-size: 10px; color: var(--text-2); background: var(--raised); border: 1px solid var(--hair); border-radius: 5px; padding: 2px 7px; }
+.av-seq-scene-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.av-seq-scene-name { }
+.av-seq-scene-sel { }
+.av-seq-io { display: flex; flex-direction: column; gap: 4px; }
+.av-seq-io-row { display: flex; gap: 6px; }
+.av-seq-io-area { font-family: var(--mono); font-size: 10px; background: #0a0e11; color: var(--text-2); border: 1px solid var(--hair); border-radius: 6px; padding: 6px; min-height: 54px; width: 100%; resize: vertical; }
+
+/* P4 — p-lock lanes (av_plock.js) */
+.av-seq-plock { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.av-seq-plock-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-seq-plock-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.av-seq-plock-add { }
+.av-seq-plock-lanes { display: flex; flex-direction: column; gap: 5px; }
+.av-seq-plock-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 7px; }
+.av-seq-plock-path { }
+.av-seq-plock-custom { }
+.av-seq-plock-interp { }
+.av-seq-plock-cells { display: flex; gap: 3px; flex: 1 1 100%; }
+.av-seq-plock-cell { flex: 1 1 0; min-width: 12px; height: 16px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 3px; cursor: pointer; }
+.av-seq-plock-cell.on { background: #23223a; border-color: var(--mod-purple); }
+.av-seq-plock-del { }
+.av-seq-plock-empty { color: var(--text-3); font-size: 11px; font-style: italic; }
+
+/* P4 — ACID lane (av_seq_acid.js) */
+.av-seq-acid-cols { display: flex; gap: 5px; align-items: center; }
+.av-seq-acid-cell { min-width: 34px; height: 22px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px; color: var(--text-3); font-family: var(--mono); font-size: 9px; cursor: pointer; }
+.av-seq-acid-cell.on { background: #2a1804; border-color: var(--mod-orange); color: var(--mod-orange); }

@@ -1,7 +1,7 @@
-index.html sha256 (before): 5861d7d650a75810b2f9af5abd781dd20473c04435bdbabcfe696132a80b9b76
+index.html sha256 (before): 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1791342237686
- ok   freeze: index.html sha256 before = 5861d7d6…  -> 5861d7d650a75810b2f9af5abd781dd20473c04435bdbabcfe696132a80b9b76
+cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1791345838292
+ ok   freeze: index.html sha256 before = 5861d7d6…  -> 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
  ok   boot: data-av-ready flips (with the stub injected pre-boot)
  ok   boot: MIDI deck mounted (#av-midi-body .av-midi) + __avMidi API + stub alive  -> {"panel":true,"api":true,"snapFn":true,"stub":true,"ourClass":true}
  ok   unsupported: honest no-Web-MIDI copy (NO WEB MIDI · Safari named)  -> status=unsupported · NO WEB MIDI Web MIDI is missing in this browser, so hardware keys and hardware out are both off the table here. Chrome, 
@@ -34,14 +34,14 @@ cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1791342237
    · CC learn: re-bind, then a 200-message CC burst must coalesce
  ok   CC learn: a 200-message burst coalesces (writes bounded, final value wins)  -> hits=200 · writes=+2 · applied=0.67 (want 0.67)
    · CLOCK OUT: on via real click, then avMidiClockTransport(true)
- ok   clock out: transport(true) → exactly one 0xFA then 0xF8 ticks at ~24 ppqn (mean gap ±30% at 120 BPM)  -> FA=1 · ticks=31 · meanGap=20.87ms (want ~20.83) · ticking=true
+ ok   clock out: transport(true) → exactly one 0xFA then 0xF8 ticks at ~24 ppqn (mean gap ±30% at 120 BPM)  -> FA=1 · ticks=31 · meanGap=20.80ms (want ~20.83) · ticking=true
  ok   clock out: transport(false) sends 0xFC and the wire freezes  -> ticking=false · FC at 0/1 · last=[252]
  ok   clock out: the wire stays frozen after the stop byte  -> 35 → 35
    · CLOCK OUT: restart, then OFF (real click) must stop it
  ok   clock out: OFF (real click) stops a running clock — 0xFC sent, wire frozen, pref off  -> was ticking=true · FC at 10/11 · frozen 62=62
  ok   zero console errors for the whole run (exceptions · Log errors · console.error · stub listener errors)  -> page errors=0 · stub listener errors=0
- ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 368809 bytes · clip 1048×1293 @2x
-index.html sha256 (after): 5861d7d650a75810b2f9af5abd781dd20473c04435bdbabcfe696132a80b9b76
- ok   freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)  -> 5861d7d650a75810b2f9af5abd781dd20473c04435bdbabcfe696132a80b9b76
+ ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 368511 bytes · clip 1048×1293 @2x
+index.html sha256 (after): 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
+ ok   freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)  -> 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
 
 33 passed, 0 failed

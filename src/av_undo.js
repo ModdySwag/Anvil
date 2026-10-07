@@ -351,7 +351,12 @@ function avUndoParamTap(path) {
 function avUndoParamEvent(ev) {
   try {
     const d = ev && ev.detail;
-    if (d && typeof d.path === "string") avUndoParamTap(d.path);
+    if (!d || typeof d.path !== "string") return;
+    /* plock playback writes skip the params tap (their own domain tracks them) */
+    if (d.from === "plock") return;
+    const m = d.meta;
+    if (m && (m.from === "plock" || m.plock === true || m.src === "plock")) return;
+    avUndoParamTap(d.path);
   } catch (e) { /* never break the fan-out */ }
 }
 
@@ -377,7 +382,10 @@ function avUndoEnsureWrap() {
       }
       const orig = avApplyParam;
       const wrapped = function (path, v, meta) {
-        try { avUndoParamTap(path); } catch (e) { /* never break the funnel */ }
+        /* plock playback writes skip the params tap (their own domain tracks them) */
+        if (!meta || (meta.from !== "plock" && meta.plock !== true && meta.src !== "plock")) {
+          try { avUndoParamTap(path); } catch (e) { /* never break the funnel */ }
+        }
         return orig(path, v, meta);
       };
       wrapped.__avUndoWrap = true;

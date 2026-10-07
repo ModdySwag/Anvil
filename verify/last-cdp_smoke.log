@@ -1,6 +1,6 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v0.3.0","tier":"tap: armed · engine: booting","voices":true,"version":"0.3.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v0.4.0","tier":"tap: armed · engine: booting","voices":true,"version":"0.4.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":1,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
@@ -12,6 +12,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   synth card: ENGINE select offers all six kinds  -> ["va","acid","string","drum","grain","sampler"]
  ok   P3 fx rack: 5 strips (drive,mod,delay,verb,dyn) · 20 knobs + 5 toggles + 4 selects all bound  -> {"fx":true,"mod":true,"order":"drive,mod,delay,verb,dyn","strips":5,"knobs":20,"knobsBound":20,"toggles":5,"sels":4,"macros":8,"macrosBound":8}
  ok   P3 mod matrix: card mounted with 8 bound macro knobs  -> {"macros":8,"bound":8}
+ ok   P4 sequencer: card + grid mounted (4 rows · ≥64 cells) + transport controls + bpm knob  -> {"card":true,"host":true,"rows":4,"cells":64,"play":true,"stop":true,"rec":true,"pos":true,"bpmKnob":true}
  ok   zero page errors
 
-14 passed, 0 failed
+15 passed, 0 failed

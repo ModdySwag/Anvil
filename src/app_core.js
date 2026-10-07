@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.3.0", phase: "P3 · colour", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.4.0", phase: "P4 · sequencing", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -27,6 +27,16 @@ const avState = {
 function avApplyParam(path, v, meta) {
   if (path === "master") { avState.master = v; avParams[path] = v; return avMasterApply(v); }
   if (path === "keys") { avState.keysVol = v; avParams[path] = v; return avKeysApply(v); }
+  if (path === "bpm") {    /* P4: the sequencer owns the transport tempo (20..300) */
+    const n = Number(v);
+    if (!isFinite(n)) return false;
+    avState.bpm = Math.max(20, Math.min(300, n));
+    avParams[path] = avState.bpm;
+    if (window.__avEngine && window.__avEngine.ready && typeof window.__avEngine.setParam === "function") {
+      try { window.__avEngine.setParam("fx.delay.bpm", avState.bpm); } catch (e) { /* mirror is best-effort */ }
+    }
+    return true;
+  }
   avParams[path] = v;      /* engine parameters (P1): route to the live engine once it is ready */
   if (window.__avEngine && window.__avEngine.ready && typeof window.__avEngine.setParam === "function") {
     try { window.__avEngine.setParam(path, v); return true; } catch (e) { return false; }
@@ -66,6 +76,12 @@ function avMountLevels() {
   let fxOk = false, modOk = false;
   try { fxOk = (typeof avFxInit === "function") ? (avFxInit() !== false) : false; } catch (e) { console.warn("[anvil] fx rack init failed", e); }
   try { modOk = (typeof avModInit === "function") ? (avModInit() !== false) : false; } catch (e) { console.warn("[anvil] mod matrix init failed", e); }
+  let seqOk = false, seqUiOk = false, capOk = false, undoOk = false;
+  try { seqOk = (typeof avSeqInit === "function") ? (avSeqInit() !== false) : false; } catch (e) { console.warn("[anvil] seq sched init failed", e); }
+  try { if (typeof avPlockInit === "function") avPlockInit(); } catch (e) { console.warn("[anvil] plock init failed", e); }
+  try { seqUiOk = (typeof avSeqUiInit === "function") ? (avSeqUiInit() !== false) : false; } catch (e) { console.warn("[anvil] seq ui init failed", e); }
+  try { capOk = (typeof avSeqCaptureInit === "function") ? (avSeqCaptureInit() !== false) : false; } catch (e) { console.warn("[anvil] seq capture init failed", e); }
+  try { undoOk = (typeof avUndoInit === "function") ? (avUndoInit() !== false) : false; } catch (e) { console.warn("[anvil] undo init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -81,7 +97,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

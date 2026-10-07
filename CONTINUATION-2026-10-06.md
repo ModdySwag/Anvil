@@ -616,3 +616,32 @@ Resume phrase: **"continue anvil"**.
    · smoke additions · rebuild → repin ALL suites (midi/sample/rec/fx + cdp_seq) → full battery →
    cdp_seq rig → PERF GATE (quiet) → commits + addendum 17.
 
+
+## Resume addendum 17 — 2026-10-07 (P4 wave INTEGRATED — battery ALL GREEN on 83e4b478; perf gate pending)
+
+- **Parent integration landed** (ONE counted-assert script, all-or-nothing;
+  `cache/scratch/p4/integrate/_p4_integrate.py`): build.py js_parts (core→sched→plock→capture→undo→
+  acid→ui after av_mod, before av_synth) · app_core (avSeqInit / avPlockInit / avSeqUiInit /
+  avSeqCaptureInit / avUndoInit-after-cards boot; the **"bpm" branch** — clamp 20..300 +
+  `fx.delay.bpm` mirror; ANVIL 0.4.0 "P4 · sequencing") · body `#av-seq` card + `#av-seq-host` ·
+  styles (the P4 block: 39 UI + 13 plock + 2 acid classes) · cdp_smoke P4 card check (15 checks now).
+- **Two seam fixes beyond the flags** (probe- and rig-driven):
+  1. **Undo call order** — `avSeqUiModelEdit` pushes the "seq" checkpoint AFTER the load
+     (probe-verified with F's real module: init+push-after is the working pairing; push-before
+     leaves the first edit unrestorable). Probe evidence: `cache/scratch/p4/integrate/undo_probe3.mjs`.
+  2. **Import checkpoints** — the UI import path AND the cdp_seq loader push a "seq" checkpoint
+     after a successful load (undo must restore the pre-edit pattern; the rig's snap0 comparison
+     demands it). Plus: `av_undo.js` skips plock playback writes (funnel + event belt) so playback
+     never opens "params" burst entries.
+- **Frozen build: `index.html` = 83e4b478… (993,145 B).**
+- **Battery ALL GREEN on the frozen bytes** (logs refreshed `verify/last-*.log`): smoke **15/15** ·
+  cdp_fx 27/27 · **cdp_seq 31/31** (timing mean |Δ| ≈ 3.5 ms · ZERO drift over 8 bars · swing
+  +24.9 ms ≈ 16 % stepDur · prob 0/100 deterministic · p-lock 800 witnessed + base restored ·
+  undo/redo deep-equal + repaint · screenshot `renders/p4-seq-suite.png`) · feel 18/18 · keys 27/27 ·
+  midi 33/33 · sample 29/29 · rec 29/29. Pins moved to 83e4b478 (midi/sample/rec/fx/seq).
+- **PERF GATE: running next** — bench + stress records + the close in the next commit (addendum 18).
+- NEXT after the gate: **P5** (STORE — 10 packs / 580 presets + drum packs + loop packs; IDB
+  install; preview renders) per the GOLDEN BUILD program; carried: **P·2 minBLEP pass**; follow-ups:
+  fill control wiring, chains/scenes undo checkpoints, acid accent-flag mapping decision (flag 4),
+  F's plock skip DONE. Resume phrase: **"continue anvil"**.
+
