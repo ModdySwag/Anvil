@@ -1055,3 +1055,33 @@ Resume phrase: **"continue anvil"**.
 - **If resuming cold mid-DECK:** read `verify/_deck_wave.md` + this section; `ls src/av_deck.js
   src/av_deck_ui.js verify/cdp_deck.mjs` for what landed; child transcripts as above. Resume phrase:
   **"continue anvil"**.
+
+## SESSION SAVE — 2026-10-07 ~24:05 (DECK wave mid-flight: integrated + smoke green; rig 33/34 — ONE open check)
+
+- **Chain:** contract `f65f0df` → children `deleg_37e0ff7f` LANDED (`f4c5dc5`: av_deck.js 956 — harness
+  125/0 · av_deck_ui.js 1479 — 231/231, 41 classes · cdp_deck.mjs — 34 checks, EXPECT_SHA null; parent
+  re-ran all three harnesses green) → integration 11 edits (`cache/scratch/deck/integrate/_deck_integrate.py`)
+  → **rebuild `index.html` = `0ff22c9c…` (2,063,258 B)** (`f56c4de`) → **smoke 22/22** → rig first run
+  **28/40** → parent triage → rig SPEC fixes 10 edits (`_deck_rigfix.py`: deferred-RPC null tolerance at
+  2d/2f · −1 no-peak sentinel at 2e · dB-aware `bandMax` metric + waterfall ring extraction in the
+  `__deckw` wrappers at 2e/2f/3c/4a) → **re-run 33/34** (`2dd3641`).
+- **OPEN — the ONE failing check, 4b:** "waterfall canvas CHANGES while playing" — the waterfall canvas
+  digest is BYTE-IDENTICAL (ink 0 · sumLum 1291008) across ~2 s of stepping while `rows` advance (4a is
+  green — the wrapper now extracts the row from the core's `cols`/`data` ring). Reading: the waterfall
+  CANVAS receives no paint at all in forced steps (flat near-black); scope + spectrum + meters all draw
+  fine. **Hypotheses for the next session:** (a) sa-B's ring-mode/push-mode waterfall path doesn't engage
+  inside `avDeckUiDrawAll(true)`; (b) the 96×96 ImageData blit silently no-ops / paints all-black
+  (dB→dbFloor mapping); (c) the forced-step path skips the wf pane. **Next move:** probe a live page with
+  a note held (the `engine_probe.mjs` pattern): read `window.__avDeckUi.state` (wf counters) + call
+  `__avDeckUi.step()` repeatedly + digest the canvas; then read `av_deck_ui.js` `avDeckUiDrawAll` +
+  `avDeckUiWf*` (and `av_deck.js` wf frame `cols`/`data` layout if needed) and patch — **parent-owned app
+  fix** (the file landed; the parent now owns it). Rebuild → smoke → rig re-run → expect 34/34 + pin leg.
+- **AFTER 4b GREEN:** pin `EXPECT_SHA` (cdp_deck null→sha; `_deck_pins.py` pattern) + re-run → FULL
+  battery (15 suites; re-pin every freeze file) → PERF GATE (bench within variance of bench-v14 — the
+  deck adds no offline cost; worklet sha must stay `6e66274e`) → commits + **addendum 29** + README +
+  mnemosyne.
+- **Nothing running** — children all completed; no background jobs; tree clean except `?? cache/`.
+- Watch-outs carried from the child reports: `lufsShort` honestly null until ~3 s of ring audio (rig
+  sustains for it — G5 green) · `lastNote.vel` null (the bus exposes no velocity) · attach retry cadence
+  2 s (boot comps `avDeckInit` only; the card attaches) · `rowMs` wall-clock gate + 4-step fallback.
+- Resume phrase: **"continue anvil"**.
