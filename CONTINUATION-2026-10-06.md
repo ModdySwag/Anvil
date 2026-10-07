@@ -731,3 +731,38 @@ Resume phrase: **"continue anvil"**.
   src/av_bank.js verify/av_bank_schema.mjs verify/verify_avpacks.mjs packs/` for what landed; child
   transcripts as above. Resume phrase: **"continue anvil"**.
 
+
+### P5 stage-1 LANDED — 2026-10-07 (all 4 green; parent integration PENDING = next session block)
+
+- `src/av_store.js` (895) — harness 108/108; API per §4b + extras (Get·Hydrate·OnChange·Adopt·…);
+  IDB `av-packs-store` / LS `av-packs-ls`; sha256-before-commit; quota = fallback only on
+  unavailability ("nothing durable → not installed"); `avStoreStatus()` shape {backend,count,
+  installed,index{},net,note,dbGaveUp,adopt}.
+- `src/av_store_ui.js` (1042, 50 classes) + `verify/cdp_store.mjs` (674, EXPECT_SHA null) — mount
+  harness 27/27 · rig dry-run 13/13 (the rig itself is parent-run; its storeui mount-harness log
+  stays in scratch — re-runnable).
+- `verify/av_bank_schema.mjs` + `verify/verify_avpacks.mjs` + `packs/index.json` — **verifier RUN:
+  228/228 PASS** (2790 paths · 54 seq canon · 6 warnings) · index regenerated with verified sha256s
+  · strict exit · `--index` / `--only` modes · outputs `verify/last-av_packs_verify.*`.
+- `src/av_bank.js` (744) — harness 63/63; apply law = every path via the CURRENT avApplyParam
+  binding, `engine.kind` first, booleans→1/0, mod acceptance belt (`__avModWrap` marker); preview =
+  the offline witness recipe (no seq render in v1 — documented).
+- Evidence: `verify/p5-store-node-out.*` · `verify/p5-bank-node-out.log` ·
+  `verify/last-av_packs_verify.*`.
+
+**INTEGRATION BLOCK (next session; apply in ONE counted-assert script):**
+1. **av_store.js one-liner:** `avStoreStatus().index` must carry the manifest `packs` entries
+   (sa-1's card + the cdp_store canary read it; today the card renders its honest degraded note).
+2. build.py js_parts: `av_store` → `av_bank` → `av_store_ui` (after av_seq_ui, before av_synth/
+   app_core — store before bank before ui).
+3. app_core boot: `avStoreInit()` → `avBankInit()` → `avStoreUiInit()` guarded + log line; wire
+   `avBankRefresh()` on store change (`avStoreOnChange`) so the BANK select follows installs.
+4. body.html: `#av-store` card + `#av-store-host`; `#av-synth-bank-host` div inside `#av-synth`.
+5. styles.css: `avStoreUiClasses()` (50) + `avBankClasses()` lists.
+6. cdp_smoke: add the store-card check (house style like the seq card check).
+7. Rebuild → child harness re-runs + `verify_avpacks.mjs` (228/228) + `cdp_store` (pin EXPECT_SHA;
+   mock via `avStoreSetFetch` + `localStorage['av-store-url']`) → FULL battery on frozen bytes →
+   PERF GATE (quiet window if possible) → commits + addendum 20.
+8. Watch items: `avStoreInstalled()` must stay SYNC (sa-3 seam — sa-0 complies); preview parity
+   (no offline mod macros) documented; sa-1's rig exits early with a message if hosts are missing.
+

@@ -1,0 +1,126 @@
+
+== P0 surface + pins ==
+ ok   module loads in plain node (no stubs, no top-level side effects)
+ ok   pinned verb avStore* present: avStoreInit
+ ok   pinned verb avStore* present: avStoreIndex
+ ok   pinned verb avStore* present: avStoreInstall
+ ok   pinned verb avStore* present: avStoreRemove
+ ok   pinned verb avStore* present: avStoreStatus
+ ok   pinned verb avStore* present: avStoreInstalled
+ ok   pinned verb avStore* present: avStoreSetFetch
+ ok   AV_STORE_DB pinned 'av-packs-store'
+ ok   AV_STORE_LS pinned 'av-packs-ls'
+ ok   AV_STORE_MODES = idb|ls|mem
+ ok   AV_STORE_MAX_BYTES = 20 MB (rig law)
+ ok   status is JSON-safe
+ ok   status honest on a cold boot
+ ok   install with no index -> 'no-index' (never throws)
+ ok   file:// note null when not a file page
+
+== P1 index fetch + corrupt-index handling ==
+ ok   index ok, count 2
+ ok   index fetched once at 'packs/index.json'
+ ok   second index call is cached (no extra fetch)
+ ok   force re-fetches
+ ok   status.index ready/base/count
+ ok   net counters show the seam
+ ok   index HTTP 404 -> 'http'
+ ok   index corrupt JSON -> 'json'
+ ok   index wrong shape -> 'bad-manifest'
+ ok   index future version -> 'bad-manifest'
+ ok   garbage entries dropped (2 kept, 7 dropped)
+ ok   unreachable host -> 'fetch' (honest)
+ ok   status.index error is reportable
+ ok   index recovers after an error (no wedged state)
+
+== P2 lifecycle on stubs (idb mode) ==
+ ok   avStoreInit true; hydrate -> idb
+ ok   status: backend idb, count 0
+ ok   index loaded (2 packs)
+ ok   install alpha -> ok, backend idb
+ ok   status after install: count 1 from idb
+ ok   installed() summary: id/name/presetCount/sha
+ ok   ground truth: independent DB read holds the record + manifest sha
+ ok   status JSON-safe mid-life
+ ok   avStoreGet: full record incl. presets
+ ok   avStoreGet returns a detached copy (mutation-proof)
+ ok   reinstall idempotent: one record, same sha
+ ok   remove alpha -> true; gone from memory AND idb
+ ok   install beta ok (for the relaunch step)
+ ok   offline relaunch: hydrate from IDB, no network
+ ok   offline relaunch: presets recover from IDB
+ ok   remove refused when durable drop fails; memory kept
+ ok   remove after the store heals
+ ok   install invalid id "" -> 'no-id'
+ ok   install invalid id "Bad Id" -> 'no-id'
+ ok   install invalid id "UPPER" -> 'no-id'
+ ok   install invalid id 42 -> 'no-id'
+ ok   install invalid id null -> 'no-id'
+ ok   install invalid id {} -> 'no-id'
+ ok   install invalid id undefined -> 'no-id'
+ ok   install unknown id -> 'no-pack'
+
+== P2b seam is the ONLY network path ==
+ ok   seam run touches global fetch 0 times
+ ok   seam cleared -> real fetch is used (and its failure is honest)
+
+== P3 quota + fallback chain (idb -> ls -> mem) ==
+ ok   Q0 idb quota -> {ok:false,'quota',idb}; not installed
+ ok   Q0 quota not swallowed into idb
+ ok   Q0 no silent LS downgrade on idb quota
+ ok   Q1 no idb + ls quota -> {ok:false,'quota',ls}; not installed
+ ok   Q2 no idb + ls blocked -> mem volatile ok
+ ok   Q2 relaunch proves mem was volatile (gone)
+ ok   Q3 no storage at all -> mem volatile ok
+ ok   Q4 no idb + ls ok -> backend 'ls' (promoted)
+ ok   Q4 LS snapshot carries the record
+ ok   Q4 offline relaunch hydrates from LS
+ ok   Q5 idb write error -> {ok:false,'idb:UnknownError'}
+ ok   Q5 next call heals (no wedged writer)
+ ok   Q6 InvalidStateError refused honestly
+ ok   Q6 one reopen attempt made
+ ok   Q6 healed connection lands the next write
+ ok   Q7 degraded install lands in ls
+ ok   Q7 degraded remove succeeds (recorded in droppedNoDb)
+ ok   Q7 adoption brings the DB up
+ ok   Q7 stale DB record NOT resurrected
+ ok   Q7 stale DB record deleted (write-through)
+ ok   Q8 degraded install (beta) held in ls
+ ok   Q8 adoption lands beta into idb
+
+== P4 corrupt persisted data ==
+ ok   C1 corrupt LS JSON tolerated -> empty
+ ok   C2 junk LS entries dropped, good one kept
+ ok   C2 snapshot imported into idb + key retired
+ ok   C3 corrupt db record dropped; count 1
+ ok   C3 duplicate id: the snapshot wins
+ ok   C3 snapshot written through to idb
+
+== P5 never-throw on garbage ==
+ ok   no verb throws on garbage input
+ ok   remove(null) -> false
+ ok   get({}) -> null
+ ok   status() sane after garbage
+ ok   seam throws synchronously -> {ok:false,'fetch'}
+ ok   seam rejects -> {ok:false,'fetch'}
+ ok   seam returns garbage -> 'http' (no throw)
+ ok   response whose text() throws -> 'read'
+ ok   weird preset bodies accepted (schema's job, not the store's)
+ ok   throwing listener never breaks the store
+ ok   sha mismatch refused
+ ok   sha mismatch: NOTHING committed (memory, idb, writer untouched)
+ ok   crypto.subtle missing -> 'no-crypto', nothing committed
+ ok   over-cap pack refused pre-fetch ('too-big')
+ ok   non-JSON pack -> 'bad-pack'
+ ok   pack without presets[] -> 'bad-pack'
+ ok   file:// note honest (seam)
+ ok   file:// note honest (real fetch may be blocked)
+ ok   note honest with no fetch at all
+ ok   index with no fetch -> 'no-fetch'
+
+== P6 hung IDB open (1.8 s give-up cap) ==
+ ok   hung open gives up instead of wedging the boot (~1.8 s)
+ ok   give-up reported honestly (dbGaveUp true, db null)
+ ok   store still usable in the degraded lane
+
+STORE-CORE 108/108  PASS

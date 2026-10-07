@@ -1,0 +1,65 @@
+ ok   1.1 module loads in a bare sandbox (no window/document) without throwing
+ ok   1.2 exports are functions  -> all present
+ ok   1.3 avBankInit() without a DOM → false, no throw
+ ok   1.4 avBankRefresh() without a DOM → false, no throw
+ ok   1.5 avBankPacks()/avBankPresets() without the store → []
+ ok   1.6 avBankClasses() lists the row classes  -> ["av-bank","av-bank-wrap","av-bank-head","av-bank-title","av-bank-cap","av-bank-row","av-bank-pick","av-bank-pick-lbl","av-bank-pack","av-bank-preset","av-bank-apply","av-bank-preview","av-bank-hint"]
+ ok   1.7 avBankSnap() works DOM-free
+ ok   1.8 apply forwards through the stubbed funnel with no DOM (true, all paths, kind first)  -> calls=engine.kind,osc1.type,filter.cutoff,env1.a,mod.macro1
+ ok   2.1 document without #av-synth-bank-host and without #av-synth h2 → false
+ ok   2.2 avBankInit into #av-synth-bank-host → true
+ ok   2.3 row markup: pack select + preset select + APPLY + PREVIEW
+ ok   2.4 wiring bound (delegated change+click listeners)
+ ok   2.5 paint lists installed packs + presets + hint  -> 2 packs · 3 presets — pick one, then APPLY or PREVIEW.
+ ok   2.6 re-mountable: second init → true, mounts counted
+ ok   2.7 pack change repaints presets from the store
+ ok   2.8 APPLY click applies the selected preset through the funnel  -> calls=engine.kind=acid,acid.cutoff=900
+ ok   2.9 hint reports the apply (patch + seq)  -> applied: Squelch — 2/2 paths + seq.
+ ok   2.10 h2 fallback: init true, wrap inserted once after the h2  -> inserted=1
+ ok   2.11 fallback row carries the four controls
+ ok   2.12 degenerate document (no createElement) → false, no throw
+ ok   2.13 avBankRefresh repaints after a store change  -> 3 packs · 4 presets — pick one, then APPLY or PREVIEW.
+ ok   3.1 every path forwarded exactly once; kind ordered FIRST  -> ["engine.kind","osc1.type","filter.cutoff","env1.a","mod.macro1"]
+ ok   3.2 receipt: forwarded 5, accepted 5, refused [], ok true
+ ok   3.3 meta passed with each commit
+ ok   3.4 one funnel false → bool false, ALL paths still forwarded, refused named  -> refused=["filter.cutoff"]
+ ok   3.5 mod wrap present: mod.macro1 ridden through the wrap counts accepted (SPN passthrough false tolerated)
+ ok   3.6 mod path false WITHOUT the wrap marker → refused (strict funnel word)
+ ok   3.7 boolean values normalise to 1/0 at the funnel  -> [1,0]
+ ok   3.8 seq-only preset: avSeqLoad → avSeqSetPattern(sanitised snap) → avSeqUiSync, bool true  -> ["load","set","ui"]
+ ok   3.9 patch+seq preset: funnel first (kind first), then the seq legs; bool true
+ ok   3.10 avSeqLoad refuses → bool false, scheduler/UI never touched
+ ok   3.11 avSeqSetPattern refuses → bool false
+ ok   3.12 without avSeqSnap the raw seq feeds avSeqSetPattern
+ ok   3.13 without avSeqUiSync the seq still lands (repaint is a nicety)
+ ok   3.14 seq present but the seq modules absent → bool false (no silent drop)
+ ok   3.15 hostile seq (string / array) refused before avSeqLoad, no throw
+ ok   3.16 no funnel → bool false, forwarded 0, every path refused with a reason
+ ok   3.17 hostile-arg battery: all refused as false, never a throw
+ ok   3.18 hostile values + __proto__ path refused, only legal rows forwarded  -> ["__proto__","x.y","a.b"]
+ ok   3.19 a throwing funnel is contained (bool false, no escape)
+ ok   3.20 the funnel binding is resolved per call (a reassigned wrap is honoured)
+ ok   4.1 preview without OfflineAudioContext resolves null honestly  -> OfflineAudioContext unavailable
+ ok   4.2 preview hostile-arg battery: always null, never a throw
+ ok   4.3 render recipe: OfflineAudioContext(2, 88200, 44100) + avEngineBoot offline  -> [2,88200,44100]
+ ok   4.4 patch applied via the offline handle's setParam, kind first, note on(60, 0.9), startRendering once  -> notes=[[60,0.9]]
+ ok   4.5 receipt: ok / sr 44100 / secs 2 / frames 88200 / peak 0.5 / played on the live ctx  -> {"ok":true,"sr":44100,"secs":2,"frames":88200,"length":88200,"midi":60,"gain":0.9,"tier":"worklet:data","refused":[],"peak":0.5,"played":true,"seq":false}
+ ok   4.6 the buffer was started on the live ctx's source, riding its destination
+ ok   4.7 drum-kind preset plays noteOn(36, 0.9) (the §2 witness routing)  -> [[36,0.9]]
+ ok   4.8 seq argument accepted and reported without changing the witness render
+ ok   4.9 one preview voice: the new preview stops the old source
+ ok   4.10 offline boot failure → null + reason  -> offline engine boot failed
+ ok   4.11 note rejected by the offline engine → null
+ ok   4.12 startRendering throw → null, never a rejection escape
+ ok   4.13 silent render (peak 0) → null (the §2 audibility floor)
+ ok   4.14 preview receipt names refused paths  -> ["fx.reject.me"]
+ ok   4.15 webkitOfflineAudioContext accepted; without a live out the receipt is render-only (played false)
+ ok   4.16 preview commits nothing through avApplyParam (live state untouched)
+ ok   5.1 avBankPacks reads records via the guarded avStore API (pack object preferred)
+ ok   5.2 avBankPresets() flattens every installed preset with packId/i/name/section/patch/seq  -> ["starter-100:0","starter-100:1","acid-vault:0"]
+ ok   5.3 avBankPresets(packId) filters to one pack
+ ok   5.4 hostile store records are skipped, never a throw  -> ["ok"]
+ ok   5.5 a thenable store result is treated as absent (sync read contract)
+ ok   5.6 snap reports version/mounted/counts/last* fields
+
+P5 sa-3 av_bank harness — PASS 63 / FAIL 0

@@ -1,0 +1,48 @@
+{
+  "v": 1,
+  "packs": [
+    {
+      "id": "acid-vault",
+      "name": "ACID VAULT",
+      "file": "acid-vault.avbank.json",
+      "sha256": "1e1040e303464331d2f92a982c19902c0772af3369e781d056f854cb02d0f8ce",
+      "bytes": 635329,
+      "presetCount": 64,
+      "tags": [
+        "acid",
+        "303",
+        "bass",
+        "rave",
+        "classic"
+      ],
+      "engine": "acid"
+    },
+    {
+      "id": "starter-100",
+      "name": "STARTER 100",
+      "file": "starter-100.avbank.json",
+      "sha256": "1d24f444ae8f359675b4fca36bbc2ddfd37c49c7557b748b4790e1c1be745f24",
+      "bytes": 55382,
+      "presetCount": 100,
+      "tags": [
+        "starter"
+      ],
+      "engine": "mixed"
+    },
+    {
+      "id": "techno-foundry",
+      "name": "TECHNO FOUNDRY",
+      "file": "techno-foundry.avbank.json",
+      "sha256": "e99527ed114686abf016599c1414a7f1229566b956fdf5f3be635486736181a2",
+      "bytes": 1066964,
+      "presetCount": 64,
+      "tags": [
+        "drums",
+        "techno",
+        "kits",
+        "patterns"
+      ],
+      "engine": "drum"
+    }
+  ]
+}

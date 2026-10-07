@@ -1,0 +1,263 @@
+== verify_avpacks — canonical P5 pack witness (verify/_p5_wave.md section 2) ==
+repo C:\Users\Moddy\anvil · node v26.7.0 · sr 48000 · render 2 s
+
+== harness ==
+  PASS  engine concat loads in ONE scope (12 parts)  ::  
+  PASS  av_seq_core.js loads separately  ::  
+  AVDSP version p3.0 · mod rule = av_mod.js (shipped)
+  PASS  seq loader negative control (null / v=2 / array refused)
+  PASS  mod page rule: mod.macro1..8 -> 0..7, near-misses refused (av_mod.js (shipped))  ::  clean
+  PASS  mod clamp01 parity (0.5, -1->0, 2->1, non-numeric->0)
+  PASS  schema self-check (coverage + source parity)  ::  packs 3 · paths 152/152 covered · parity 114 case + 5 drum + 1 mod · errors 0
+  PASS  packs discovered  ::  acid-vault.avbank.json, starter-100.avbank.json, techno-foundry.avbank.json
+  PASS  pack readable: acid-vault.avbank.json
+
+== pack acid-vault (acid-vault.avbank.json, 635329 bytes) ==
+  PASS  schema gate: acid-vault.avbank.json  ::  clean
+  PASS  [  1/64] BASS    VAULT SUB                paths=17       peak=0.093162  hash=16f90136/16f90136  det=y
+  PASS  [  2/64] BASS    BASEMENT PLATE           paths=17       peak=0.107672  hash=06626fb2/06626fb2  det=y
+  PASS  [  3/64] BASS    CONCRETE SAW             paths=17       peak=0.095322  hash=9d4f453a/9d4f453a  det=y
+  PASS  [  4/64] BASS    ROTARY CELL              paths=17       peak=0.102537  hash=7d816408/7d816408  det=y
+  PASS  [  5/64] BASS    SQUARE CELL              paths=17       peak=0.121402  hash=654fd833/654fd833  det=y
+  PASS  [  6/64] BASS    RESO ANCHOR              paths=17       peak=0.073457  hash=24208e1b/24208e1b  det=y
+  PASS  [  7/64] BASS    MUFFLED MONK             paths=17       peak=0.102183  hash=ac4118b8/ac4118b8  det=y
+  PASS  [  8/64] BASS    DRIVE SHAFT              paths=17       peak=0.096117  hash=94ab4441/94ab4441  det=y
+  PASS  [  9/64] BASS    SLIDE RULE               paths=17       peak=0.069090  hash=1e163dc1/1e163dc1  det=y
+  PASS  [ 10/64] BASS    GLIDE DEPOT              paths=17       peak=0.068039  hash=1b96b641/1b96b641  det=y
+  PASS  [ 11/64] BASS    TRACKED FLOOR            paths=17       peak=0.094212  hash=061dde4e/061dde4e  det=y
+  PASS  [ 12/64] BASS    LOW OCTAVE               paths=17       peak=0.094072  hash=af3a40e3/af3a40e3  det=y
+  PASS  [ 13/64] BASS    ACID CARPET              paths=17       peak=0.069246  hash=c04b9859/c04b9859  det=y
+  PASS  [ 14/64] BASS    PLASTIC BASS             paths=17       peak=0.037773  hash=e05a7629/e05a7629  det=y
+  PASS  [ 15/64] BASS    WAPP ENGINE              paths=17       peak=0.076399  hash=dfa95fbb/dfa95fbb  det=y
+  PASS  [ 16/64] BASS    CAP MEMORY               paths=17       peak=0.081751  hash=d69e3460/d69e3460  det=y
+  PASS  [ 17/64] BASS    STACCATO TABLE           paths=17       peak=0.086929  hash=ee538913/ee538913  det=y
+  PASS  [ 18/64] BASS    SOFT DOOR                paths=17       peak=0.072085  hash=22bab484/22bab484  det=y
+  PASS  [ 19/64] BASS    KICKER WEIGHT            paths=17       peak=0.118867  hash=5af1b8b8/5af1b8b8  det=y
+  PASS  [ 20/64] BASS    RUBBER BAND              paths=17       peak=0.086947  hash=2345ed19/2345ed19  det=y
+  PASS  [ 21/64] LEAD    SQUELCH WIRE             paths=17       peak=0.764438  hash=18b7e641/18b7e641  det=y
+  PASS  [ 22/64] LEAD    NEEDLE CLAW              paths=17       peak=0.647608  hash=8dd4c30c/8dd4c30c  det=y
+  PASS  [ 23/64] LEAD    HIGH WIRE                paths=17       peak=0.570627  hash=625d56e3/625d56e3  det=y
+  PASS  [ 24/64] LEAD    TRACK MASTER             paths=17       peak=0.233013  hash=8602b47f/8602b47f  det=y
+  PASS  [ 25/64] LEAD    SWEEP DREAMS             paths=17       peak=0.438944  hash=bd618cf6/bd618cf6  det=y
+  PASS  [ 26/64] LEAD    ACID SIREN               paths=17       peak=0.582260  hash=aeaf8788/aeaf8788  det=y
+  PASS  [ 27/64] LEAD    GLASS CUTTER             paths=17       peak=0.492958  hash=1938ae19/1938ae19  det=y
+  PASS  [ 28/64] LEAD    TIN ROOF                 paths=17       peak=0.524805  hash=cfb15fbc/cfb15fbc  det=y
+  PASS  [ 29/64] LEAD    MOTOR SQUELCH            paths=17       peak=0.782273  hash=bce6fdf4/bce6fdf4  det=y
+  PASS  [ 30/64] LEAD    PING LEAD                paths=23       peak=0.397559  hash=205d11d8/065bc302  det=y
+  PASS  [ 31/64] LEAD    ECHO VAULT               paths=24       peak=0.237640  hash=82642137/c7aa1e52  det=y
+  PASS  [ 32/64] LEAD    CATHEDRAL LINE           paths=24       peak=0.385063  hash=18b3bf21/05a35a4a  det=y
+  PASS  [ 33/64] LEAD    SCREAMING TRACK          paths=17       peak=0.510953  hash=4d4d572b/4d4d572b  det=y
+  PASS  [ 34/64] LEAD    WHISTLE TIP              paths=17       peak=0.488659  hash=50a9c88c/50a9c88c  det=y
+  PASS  [ 35/64] LEAD    FIVE AM                  paths=17       peak=0.509134  hash=9a2852fb/9a2852fb  det=y
+  PASS  [ 36/64] LEAD    CANDLE SNAKE             paths=24       peak=0.428189  hash=0e2ba66a/28706f90  det=y
+  PASS  [ 37/64] STAB    RAVE GRID                paths=17       peak=0.464105  hash=b4100fc6/b4100fc6  det=y
+  PASS  [ 38/64] STAB    WAREHOUSE JAB            paths=17       peak=0.537013  hash=87796059/87796059  det=y
+  PASS  [ 39/64] STAB    LAZER POKE               paths=17       peak=0.568148  hash=18e4ac8f/18e4ac8f  det=y
+  PASS  [ 40/64] STAB    STROBE HIT               paths=23       peak=0.276790  hash=b9cfe3ff/5a99b289  det=y
+  PASS  [ 41/64] STAB    SMOKE MACHINE            paths=24       peak=0.356163  hash=04d93160/d1a44390  det=y
+  PASS  [ 42/64] STAB    FREEFALL                 paths=17       peak=0.476034  hash=36a0d63c/36a0d63c  det=y
+  PASS  [ 43/64] STAB    CHROME KNIFE             paths=17       peak=0.453518  hash=64ea736c/64ea736c  det=y
+  PASS  [ 44/64] STAB    SIREN SLICE              paths=17       peak=0.619264  hash=d45db335/d45db335  det=y
+  PASS  [ 45/64] STAB    VACUUM SLIDE             paths=17       peak=0.476826  hash=757a07d7/757a07d7  det=y
+  PASS  [ 46/64] STAB    PAPER CUT                paths=17       peak=0.488525  hash=eca0cb0f/eca0cb0f  det=y
+  PASS  [ 47/64] STAB    GRIDLOCK                 paths=17       peak=0.306477  hash=ac77b577/ac77b577  det=y
+  PASS  [ 48/64] STAB    FLASH FRAME              paths=23       peak=0.326445  hash=7d50a733/2596616e  det=y
+  PASS  [ 49/64] PATTERN VAULT LINE 01 P          paths=17       peak=0.103009  hash=a8a64dfd/a8a64dfd  det=y [seq VAULT LINE 01 bpm=132 swing=60 ons=8]
+  PASS  [ 50/64] PATTERN VAULT LINE 02 P          paths=17       peak=0.102804  hash=a3123f1d/a3123f1d  det=y [seq VAULT LINE 02 bpm=130 swing=62 ons=7]
+  PASS  [ 51/64] PATTERN VAULT LINE 03 P          paths=17       peak=0.103626  hash=57e3bd54/57e3bd54  det=y [seq VAULT LINE 03 bpm=128 swing=64 ons=8]
+  PASS  [ 52/64] PATTERN VAULT LINE 04 P          paths=17       peak=0.103691  hash=caf7f490/caf7f490  det=y [seq VAULT LINE 04 bpm=134 swing=60 ons=11]
+  PASS  [ 53/64] PATTERN VAULT LINE 05 P          paths=17       peak=0.089184  hash=114d9b3c/114d9b3c  det=y [seq VAULT LINE 05 bpm=126 swing=66 ons=7]
+  PASS  [ 54/64] PATTERN VAULT LINE 06 P          paths=17       peak=0.093591  hash=00f6fe89/00f6fe89  det=y [seq VAULT LINE 06 bpm=132 swing=60 ons=9]
+  PASS  [ 55/64] PATTERN VAULT LINE 07 P          paths=17       peak=0.090763  hash=c9f347b6/c9f347b6  det=y [seq VAULT LINE 07 bpm=130 swing=62 ons=9]
+  PASS  [ 56/64] PATTERN VAULT LINE 08 P          paths=17       peak=0.099029  hash=d4575169/d4575169  det=y [seq VAULT LINE 08 bpm=128 swing=64 ons=10]
+  PASS  [ 57/64] PATTERN VAULT LINE 09 P          paths=17       peak=0.071090  hash=33532344/33532344  det=y [seq VAULT LINE 09 bpm=124 swing=70 ons=7]
+  PASS  [ 58/64] PATTERN VAULT LINE 10 P          paths=17       peak=0.093607  hash=8f9182e1/8f9182e1  det=y [seq VAULT LINE 10 bpm=136 swing=60 ons=10]
+  PASS  [ 59/64] PATTERN VAULT LINE 11 P          paths=17       peak=0.087396  hash=8833b882/8833b882  det=y [seq VAULT LINE 11 bpm=133 swing=62 ons=9]
+  PASS  [ 60/64] PATTERN VAULT LINE 12 P          paths=17       peak=0.078098  hash=8baf78ba/8baf78ba  det=y [seq VAULT LINE 12 bpm=129 swing=64 ons=8]
+  PASS  [ 61/64] PATTERN VAULT LINE 13 P          paths=17       peak=0.068526  hash=515fd8ac/515fd8ac  det=y [seq VAULT LINE 13 bpm=122 swing=66 ons=7]
+  PASS  [ 62/64] PATTERN VAULT LINE 14 P          paths=17       peak=0.090576  hash=b4dc61d9/b4dc61d9  det=y [seq VAULT LINE 14 bpm=130 swing=60 ons=11]
+  PASS  [ 63/64] PATTERN VAULT LINE 15 P          paths=17       peak=0.281678  hash=b4d6141a/b4d6141a  det=y [seq VAULT LINE 15 bpm=132 swing=62 ons=10]
+  PASS  [ 64/64] PATTERN VAULT LINE 16 P          paths=23       peak=0.062867  hash=0ad032ec/13d54d6b  det=y [seq VAULT LINE 16 bpm=128 swing=64 ons=8]
+  -- acid-vault: 64/64 pass · 1140 paths applied (0 mod-routed) · 16 seq (0 shorthand) · warnings 0
+  PASS  pack readable: starter-100.avbank.json
+
+== pack starter-100 (starter-100.avbank.json, 55382 bytes) ==
+  PASS  schema gate: starter-100.avbank.json  ::  clean
+  PASS  [  1/100] VA      Saw Basics               paths= 2       peak=0.266429  hash=4bca6eab/4bca6eab  det=y
+  PASS  [  2/100] VA      Square Basics            paths= 2       peak=0.316689  hash=aedf526b/aedf526b  det=y
+  PASS  [  3/100] VA      Pulse Width              paths= 3       peak=0.316702  hash=4fece2d1/4fece2d1  det=y
+  PASS  [  4/100] VA      Triangle Soft            paths= 4       peak=0.303677  hash=b68398a2/b68398a2  det=y
+  PASS  [  5/100] VA      Sine Pure                paths= 4       peak=0.190155  hash=97e6ad92/97e6ad92  det=y
+  PASS  [  6/100] VA      Two Oscillators          paths= 3       peak=0.264521  hash=dca2712a/dca2712a  det=y
+  PASS  [  7/100] VA      Wavetable Square         paths= 3       peak=0.321152  hash=f8eb157e/f8eb157e  det=y
+  PASS  [  8/100] VA      Wavetable Tri            paths= 4       peak=0.303920  hash=194900f2/194900f2  det=y
+  PASS  [  9/100] VA      Wavetable Sine           paths= 3       peak=0.327213  hash=2b8191f7/2b8191f7  det=y
+  PASS  [ 10/100] VA      Wavetable Pulse25        paths= 3       peak=0.262444  hash=42d3bb06/42d3bb06  det=y
+  PASS  [ 11/100] VA      Octave Stack             paths= 3       peak=0.280123  hash=2aa5d7f9/2aa5d7f9  det=y
+  PASS  [ 12/100] VA      Sub Sine                 paths= 3       peak=0.279641  hash=97323f77/97323f77  det=y
+  PASS  [ 13/100] VA      Noise Wind               paths= 7       peak=0.164738  hash=9b16a8a8/9b16a8a8  det=y
+  PASS  [ 14/100] VA      Filter Drop              paths= 5       peak=0.264979  hash=dea37e1e/dea37e1e  det=y
+  PASS  [ 15/100] VA      Negative Env             paths= 5       peak=0.265369  hash=05e506a9/05e506a9  det=y
+  PASS  [ 16/100] VA      Highpass Sweep           paths= 4       peak=0.202465  hash=184700fe/184700fe  det=y
+  PASS  [ 17/100] VA      Bandpass Voice           paths= 4       peak=0.243502  hash=de0727a9/de0727a9  det=y
+  PASS  [ 18/100] VA      LP12 Bright              paths= 4       peak=0.259841  hash=741b971a/741b971a  det=y
+  PASS  [ 19/100] VA      Ladder Drive             paths= 5       peak=0.117625  hash=313cda0b/313cda0b  det=y
+  PASS  [ 20/100] VA      Key Tracking             paths= 4       peak=0.264039  hash=fb5f6353/fb5f6353  det=y
+  PASS  [ 21/100] VA      Pluck Envelope           paths= 5       peak=0.254948  hash=6cf37b5f/6cf37b5f  det=y
+  PASS  [ 22/100] VA      Pad Attack               paths= 5       peak=0.256313  hash=e1a3eab3/e1a3eab3  det=y
+  PASS  [ 23/100] VA      Glide Portamento         paths= 3       peak=0.304338  hash=a2d7cce5/a2d7cce5  det=y
+  PASS  [ 24/100] VA      Unison Saws              paths= 3       peak=0.286116  hash=9e97e5f8/9e97e5f8  det=y
+  PASS  [ 25/100] VA      Supersaw Wide            paths= 5       peak=0.390044  hash=c9436c66/c9436c66  det=y
+  PASS  [ 26/100] VA      LFO Cutoff Wobble        paths= 5       peak=0.267117  hash=6e85c007/6e85c007  det=y
+  PASS  [ 27/100] VA      LFO Sample & Hold        paths= 4       peak=0.263163  hash=1c5eabba/1c5eabba  det=y
+  PASS  [ 28/100] VA      Vibrato LFO              paths= 4       peak=0.267551  hash=3a28df5d/3a28df5d  det=y
+  PASS  [ 29/100] ACID    Acid Basics              paths= 2       peak=0.078528  hash=90673c0b/90673c0b  det=y
+  PASS  [ 30/100] ACID    Acid Square Wave         paths= 2       peak=0.087732  hash=cd291b27/cd291b27  det=y
+  PASS  [ 31/100] ACID    Acid Cutoff Low          paths= 2       peak=0.068532  hash=bd7661bc/bd7661bc  det=y
+  PASS  [ 32/100] ACID    Acid Resonance           paths= 3       peak=0.066668  hash=35fdf48c/35fdf48c  det=y
+  PASS  [ 33/100] ACID    Acid Env Mod             paths= 4       peak=0.073309  hash=362f0644/362f0644  det=y
+  PASS  [ 34/100] ACID    Acid Accent Punch        paths= 3       peak=0.095503  hash=6f866c88/6f866c88  det=y
+  PASS  [ 35/100] ACID    Acid Slide Legato        paths= 3       peak=0.077832  hash=e273e344/e273e344  det=y
+  PASS  [ 36/100] ACID    Acid Muffled             paths= 3       peak=0.077497  hash=31bf9e90/31bf9e90  det=y
+  PASS  [ 37/100] ACID    Acid Overdrive           paths= 3       peak=0.099403  hash=00258851/00258851  det=y
+  PASS  [ 38/100] ACID    Acid Soft Attack         paths= 6       peak=0.074012  hash=dbcc42cf/dbcc42cf  det=y
+  PASS  [ 39/100] STRING  String Pluck             paths= 1       peak=0.123476  hash=5f5eb606/5f5eb606  det=y
+  PASS  [ 40/100] STRING  String Nylon Soft        paths= 4       peak=0.072600  hash=f4bc90f2/f4bc90f2  det=y
+  PASS  [ 41/100] STRING  String Koto Bright       paths= 4       peak=0.165246  hash=f7340fdc/f7340fdc  det=y
+  PASS  [ 42/100] STRING  String Pulse Pick        paths= 3       peak=0.225000  hash=980d0eae/980d0eae  det=y
+  PASS  [ 43/100] STRING  String Long Decay        paths= 3       peak=0.123476  hash=e7788a22/e7788a22  det=y
+  PASS  [ 44/100] STRING  String Muted Short       paths= 3       peak=0.123476  hash=9bc4658d/9bc4658d  det=y
+  PASS  [ 45/100] STRING  String Comb Position     paths= 2       peak=0.110154  hash=86b7eb10/86b7eb10  det=y
+  PASS  [ 46/100] STRING  String Dark Wood         paths= 3       peak=0.025847  hash=74184fd9/74184fd9  det=y
+  PASS  [ 47/100] STRING  String Glassy            paths= 4       peak=0.184632  hash=29a47f6d/29a47f6d  det=y
+  PASS  [ 48/100] STRING  String Chime Reverb      paths= 7       peak=0.064330  hash=ac24b981/4228c0c2  det=y
+  PASS  [ 49/100] DRUM    Drum Kick Classic        paths= 1       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 50/100] DRUM    Drum Kick Deep           paths= 3       peak=0.238302  hash=b96c1e6b/b96c1e6b  det=y
+  PASS  [ 51/100] DRUM    Drum Snare Crack         paths= 4       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 52/100] DRUM    Drum Clap Wide           paths= 3       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 53/100] DRUM    Drum Rim Tick            paths= 3       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 54/100] DRUM    Drum Hat Closed          paths= 3       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 55/100] DRUM    Drum Hat Open            paths= 3       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 56/100] DRUM    Drum Toms Row            paths= 5       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 57/100] DRUM    Drum Crash Ride          paths= 5       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 58/100] DRUM    Drum Kit Balance         paths= 6       peak=0.206697  hash=90f7ca21/90f7ca21  det=y
+  PASS  [ 59/100] DRUM    Drum Split Point         paths= 3       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 60/100] DRUM    Drum Bus Drive           paths= 6       peak=0.273456  hash=01976570/01976570  det=y
+  PASS  [ 61/100] GRAIN   Grain Basics             paths= 2       peak=0.026788  hash=e2dd26cb/e2dd26cb  det=y
+  PASS  [ 62/100] GRAIN   Grain Position Scan      paths= 2       peak=0.012129  hash=ef65fbd0/ef65fbd0  det=y
+  PASS  [ 63/100] GRAIN   Grain Long Window        paths= 3       peak=0.021487  hash=a15e7310/a15e7310  det=y
+  PASS  [ 64/100] GRAIN   Grain Dense Cloud        paths= 3       peak=0.029835  hash=dd39bc9d/dd39bc9d  det=y
+  PASS  [ 65/100] GRAIN   Grain Pitch Up           paths= 3       peak=0.022646  hash=1a3f0d25/1a3f0d25  det=y
+  PASS  [ 66/100] GRAIN   Grain Jitter Drift       paths= 4       peak=0.012562  hash=f7ab6083/f7ab6083  det=y
+  PASS  [ 67/100] GRAIN   Grain Stereo Spread      paths= 3       peak=0.030028  hash=843866d9/843866d9  det=y
+  PASS  [ 68/100] GRAIN   Grain Amb Pad            paths= 7       peak=0.015645  hash=6146097a/f1af80a3  det=y
+  PASS  [ 69/100] SAMPLER Sampler One Shot         paths= 3       peak=0.122059  hash=9736c4cb/9736c4cb  det=y
+  PASS  [ 70/100] SAMPLER Sampler Root Shift       paths= 3       peak=0.122059  hash=06157b8d/06157b8d  det=y
+  PASS  [ 71/100] SAMPLER Sampler Tune Up          paths= 2       peak=0.122045  hash=102536ba/102536ba  det=y
+  PASS  [ 72/100] SAMPLER Sampler Loop On          paths= 2       peak=0.122296  hash=be237b08/be237b08  det=y
+  PASS  [ 73/100] SAMPLER Sampler Loop Window      paths= 4       peak=0.122059  hash=9d2d2313/9d2d2313  det=y
+  PASS  [ 74/100] SAMPLER Sampler Volume Trim      paths= 2       peak=0.076287  hash=0e9ad70e/0e9ad70e  det=y
+  PASS  [ 75/100] FX      Drive Soft Sat           paths= 6       peak=0.611057  hash=46f9873e/46f9873e  det=y
+  PASS  [ 76/100] FX      Drive Fold Wall          paths= 6       peak=0.885854  hash=ad6acd7c/ad6acd7c  det=y
+  PASS  [ 77/100] FX      Drive Crush Bits         paths= 7       peak=0.850913  hash=52b62075/52b62075  det=y
+  PASS  [ 78/100] FX      Mod Chorus Wide          paths= 6       peak=0.222859  hash=6d46cd20/89c3329f  det=y
+  PASS  [ 79/100] FX      Mod Ensemble Slow        paths= 7       peak=0.214024  hash=7dd3c01e/ec570abe  det=y
+  PASS  [ 80/100] FX      Mod Flanger Jet          paths= 8       peak=0.307439  hash=b8672305/ad5dcaeb  det=y
+  PASS  [ 81/100] FX      Mod Phaser Haze          paths= 8       peak=0.273522  hash=4a02d750/6ff4215e  det=y
+  PASS  [ 82/100] FX      Delay Quarter            paths= 6       peak=0.201015  hash=22ec684a/8c6e5672  det=y
+  PASS  [ 83/100] FX      Delay Ping Pong          paths= 7       peak=0.159858  hash=7361b130/1cb1e544  det=y
+  PASS  [ 84/100] FX      Delay Ducked             paths= 6       peak=0.230548  hash=6bc178a7/8bdcab83  det=y
+  PASS  [ 85/100] FX      Verb Plate Small         paths= 8       peak=0.187279  hash=518edabc/e8c73c4c  det=y
+  PASS  [ 86/100] FX      Verb FDN Hall            paths= 8       peak=0.427991  hash=7852a790/44b4dcd8  det=y
+  PASS  [ 87/100] FX      Verb Freeverb Bright     paths= 7       peak=0.231242  hash=d02f6b06/0dc9dccc  det=y
+  PASS  [ 88/100] FX      Dyn Compressor Glue      paths= 9       peak=0.702435  hash=946aef3e/946aef3e  det=y
+  PASS  [ 89/100] FX      Dyn Limiter EQ           paths= 7       peak=0.226941  hash=18114ab8/18114ab8  det=y
+  PASS  [ 90/100] MOD     Macro One                paths= 2(mod:1)  peak=0.266429  hash=4bca6eab/4bca6eab  det=y
+  PASS  [ 91/100] MOD     Macro Pair A B           paths= 4(mod:2)  peak=0.291040  hash=197ecc58/197ecc58  det=y
+  PASS  [ 92/100] MOD     Macro Plus Env2          paths= 7(mod:1)  peak=0.255647  hash=7b840880/7b840880  det=y
+  PASS  [ 93/100] MOD     Macro Pitch Setup        paths= 5(mod:2)  peak=0.304338  hash=a2d7cce5/a2d7cce5  det=y
+  PASS  [ 94/100] MOD     Macros All Eight         paths=11(mod:8)  peak=0.281536  hash=36c2eeb5/36c2eeb5  det=y
+  PASS  [ 95/100] SEQ     Seq Step Grid            paths= 4       peak=0.301880  hash=ddd1bb5a/ddd1bb5a  det=y [seq STEP GRID bpm=120 swing=50 ons=8]  ~seq shorthand: engine fills defaults/pads on load (825 field(s) defaulted, steps padded)
+  PASS  [ 96/100] SEQ     Seq Swing 8T             paths= 1       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq SWING 8T bpm=128 swing=66 ons=10]  ~seq shorthand: engine fills defaults/pads on load (673 field(s) defaulted, steps padded)
+  PASS  [ 97/100] SEQ     Seq Probability          paths= 3       peak=0.267271  hash=be850794/be850794  det=y [seq PROBABILITY bpm=124 swing=58 ons=5]  ~seq shorthand: engine fills defaults/pads on load (824 field(s) defaulted, steps padded)
+  PASS  [ 98/100] SEQ     Seq Ratchet Micro        paths= 4       peak=0.301925  hash=142ef7c4/142ef7c4  det=y [seq RATCHET bpm=120 swing=50 ons=4]  ~seq shorthand: engine fills defaults/pads on load (823 field(s) defaulted, steps padded)
+  PASS  [ 99/100] SEQ     Seq Acid Lane            paths= 5       peak=0.213330  hash=fa56dbc5/fa56dbc5  det=y [seq ACID LANE bpm=130 swing=62 ons=8]  ~seq shorthand: engine fills defaults/pads on load (804 field(s) defaulted, steps padded)
+  PASS  [100/100] SEQ     Seq PLock Ride           paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PLOCK RIDE bpm=126 swing=62 ons=14]  ~seq shorthand: engine fills defaults/pads on load (810 field(s) defaulted, steps padded)
+  -- starter-100: 100/100 pass · 416 paths applied (14 mod-routed) · 6 seq (6 shorthand) · warnings 6
+  PASS  pack readable: techno-foundry.avbank.json
+
+== pack techno-foundry (techno-foundry.avbank.json, 1066964 bytes) ==
+  PASS  schema gate: techno-foundry.avbank.json  ::  clean
+  PASS  [  1/64] KIT     Concrete Kick            paths=35       peak=0.236554  hash=3e40e0e4/3e40e0e4  det=y
+  PASS  [  2/64] KIT     Warehouse Stomp          paths=35       peak=0.227471  hash=bfd69ca0/bfd69ca0  det=y
+  PASS  [  3/64] KIT     Berghain Deep            paths=35       peak=0.240478  hash=b17875fb/b17875fb  det=y
+  PASS  [  4/64] KIT     Peak Time Punch          paths=35       peak=0.214987  hash=073c8272/073c8272  det=y
+  PASS  [  5/64] KIT     Sub Boom 808             paths=42       peak=0.390253  hash=f4b15441/f4b15441  det=y
+  PASS  [  6/64] KIT     Miami Circuit            paths=35       peak=0.208173  hash=e5864abb/e5864abb  det=y
+  PASS  [  7/64] KIT     Low Rider Toms           paths=35       peak=0.239164  hash=f502e8d6/f502e8d6  det=y
+  PASS  [  8/64] KIT     Industrial Hammer        paths=35       peak=0.221531  hash=c03cc80b/c03cc80b  det=y
+  PASS  [  9/64] KIT     Rubble Crush             paths=42       peak=0.424369  hash=fc4e7821/fc4e7821  det=y
+  PASS  [ 10/64] KIT     Sheet Metal              paths=35       peak=0.220434  hash=9bae9eba/9bae9eba  det=y
+  PASS  [ 11/64] KIT     Minimal Tick             paths=35       peak=0.218877  hash=861bec1a/861bec1a  det=y
+  PASS  [ 12/64] KIT     Dub Chamber              paths=41       peak=0.154309  hash=fc8d87ee/0fbc2def  det=y
+  PASS  [ 13/64] KIT     Micro Click              paths=35       peak=0.225587  hash=67e48568/67e48568  det=y
+  PASS  [ 14/64] KIT     Tape Dust                paths=44       peak=0.229862  hash=5170dd63/5170dd63  det=y
+  PASS  [ 15/64] KIT     Boom Bap Basement        paths=44       peak=0.376940  hash=5f9063e2/5f9063e2  det=y
+  PASS  [ 16/64] KIT     Trap Skitter             paths=35       peak=0.246117  hash=e93f1352/e93f1352  det=y
+  PASS  [ 17/64] KIT     Tumbao Corner            paths=35       peak=0.208316  hash=bc536f85/bc536f85  det=y
+  PASS  [ 18/64] KIT     Afro Ratio               paths=35       peak=0.214776  hash=dc0a9755/dc0a9755  det=y
+  PASS  [ 19/64] KIT     Rave Stamper             paths=35       peak=0.224504  hash=8730f258/8730f258  det=y
+  PASS  [ 20/64] KIT     Old Skool Break          paths=35       peak=0.232036  hash=c1cc0bc7/c1cc0bc7  det=y
+  PASS  [ 21/64] KIT     Acid House 88            paths=35       peak=0.225483  hash=83a1ad87/83a1ad87  det=y
+  PASS  [ 22/64] KIT     Glass Foundry            paths=35       peak=0.203545  hash=d62c881c/d62c881c  det=y
+  PASS  [ 23/64] KIT     Concrete Pad             paths=35       peak=0.249921  hash=7291363d/7291363d  det=y
+  PASS  [ 24/64] KIT     Static Wash              paths=41       peak=0.109866  hash=2a9537ba/d2fcbd99  det=y
+  PASS  [ 25/64] KIT     Tom Choir                paths=35       peak=0.197662  hash=0d696e6c/0d696e6c  det=y
+  PASS  [ 26/64] KIT     Bell Tower               paths=35       peak=0.204192  hash=12fc2f89/12fc2f89  det=y
+  PASS  [ 27/64] KIT     Tight Room               paths=35       peak=0.217615  hash=d1da859c/d1da859c  det=y
+  PASS  [ 28/64] KIT     Silent Hall              paths=41       peak=0.128970  hash=eee79222/27baf212  det=y
+  PASS  [ 29/64] KIT     Utility Flat             paths=35       peak=0.218855  hash=6ac113f8/6ac113f8  det=y
+  PASS  [ 30/64] KIT     Layer Cake               paths=35       peak=0.220768  hash=30284d7b/30284d7b  det=y
+  PASS  [ 31/64] KIT     Hard Groove              paths=35       peak=0.221287  hash=e19277f9/e19277f9  det=y
+  PASS  [ 32/64] KIT     Detroit Line             paths=35       peak=0.236022  hash=8edd8f6c/8edd8f6c  det=y
+  PASS  [ 33/64] PAT     Pattern 01 - Four Floor  paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 01 4 FLOOR bpm=130 swing=62 ons=11]
+  PASS  [ 34/64] PAT     Pattern 02 - Rolling 4x4 paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 02 ROLLING bpm=132 swing=64 ons=12]
+  PASS  [ 35/64] PAT     Pattern 03 - Warehouse Roll paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 03 WAREHOUSE bpm=134 swing=66 ons=16]
+  PASS  [ 36/64] PAT     Pattern 04 - Peak Time Stomp paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 04 STOMP bpm=136 swing=62 ons=12]
+  PASS  [ 37/64] PAT     Pattern 05 - Offbeat Tool paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 05 OFFBEAT bpm=128 swing=60 ons=14]
+  PASS  [ 38/64] PAT     Pattern 06 - Skank Groove paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 06 SKANK bpm=130 swing=64 ons=18]
+  PASS  [ 39/64] PAT     Pattern 07 - Hat Runner  paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 07 RUNNER bpm=133 swing=66 ons=22]
+  PASS  [ 40/64] PAT     Pattern 08 - Tom Trail   paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 08 TOM TRAIL bpm=131 swing=63 ons=14]
+  PASS  [ 41/64] PAT     Pattern 09 - Perc Cascade paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 09 CASCADE bpm=134 swing=65 ons=16]
+  PASS  [ 42/64] PAT     Pattern 10 - Rim Talk    paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 10 RIM TALK bpm=129 swing=64 ons=14]
+  PASS  [ 43/64] PAT     Pattern 11 - Shuffle Cell paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 11 SHUFFLE bpm=128 swing=70 ons=15]
+  PASS  [ 44/64] PAT     Pattern 12 - Triplet Hat paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 12 TRIPLET bpm=130 swing=66 ons=19]
+  PASS  [ 45/64] PAT     Pattern 13 - Break Study paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 13 BREAK bpm=133 swing=61 ons=16]
+  PASS  [ 46/64] PAT     Pattern 14 - Two Step    paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 14 TWO STEP bpm=135 swing=63 ons=9]
+  PASS  [ 47/64] PAT     Pattern 15 - Skitter 16  paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 15 SKITTER bpm=140 swing=60 ons=22]
+  PASS  [ 48/64] PAT     Pattern 16 - Half Time Plod paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 16 HALF TIME bpm=126 swing=64 ons=8]
+  PASS  [ 49/64] PAT     Pattern 17 - Rolling Tom paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 17 POLY TOM bpm=130 swing=65 ons=14]
+  PASS  [ 50/64] PAT     Pattern 18 - Euclid Field paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 18 EUCLID bpm=132 swing=62 ons=16]
+  PASS  [ 51/64] PAT     Pattern 19 - Ghost Chamber paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 19 GHOSTS bpm=129 swing=66 ons=15]
+  PASS  [ 52/64] PAT     Pattern 20 - Micro Shuffle paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 20 MICRO bpm=128 swing=68 ons=11]
+  PASS  [ 53/64] PAT     Pattern 21 - Ratchet Machine paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 21 RATCHET bpm=134 swing=64 ons=11]
+  PASS  [ 54/64] PAT     Pattern 22 - Probability Web paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 22 WEB bpm=130 swing=66 ons=16]
+  PASS  [ 55/64] PAT     Pattern 23 - Fill Beacon paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 23 FILL bpm=131 swing=63 ons=14]
+  PASS  [ 56/64] PAT     Pattern 24 - Modulo Talk paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 24 MODULO bpm=133 swing=65 ons=11]
+  PASS  [ 57/64] PAT     Pattern 25 - First Flag  paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 25 FIRST bpm=130 swing=62 ons=12]
+  PASS  [ 58/64] PAT     Pattern 26 - Aux Perc    paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 26 AUX PERC bpm=134 swing=64 ons=14]
+  PASS  [ 59/64] PAT     Pattern 27 - Sub Sway    paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 27 SUB SWAY bpm=128 swing=66 ons=11]
+  PASS  [ 60/64] PAT     Pattern 28 - Open Wide   paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 28 OPEN WIDE bpm=132 swing=63 ons=14]
+  PASS  [ 61/64] PAT     Pattern 29 - Crash Landing paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 29 CRASH bpm=136 swing=61 ons=12]
+  PASS  [ 62/64] PAT     Pattern 30 - Hats Off    paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 30 HATS OFF bpm=138 swing=60 ons=21]
+  PASS  [ 63/64] PAT     Pattern 31 - Clinic Grid paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 31 GRID bpm=128 swing=60 ons=11]
+  PASS  [ 64/64] PAT     Pattern 32 - Machine Code paths= 2       peak=0.218855  hash=6ac113f8/6ac113f8  det=y [seq PAT 32 MACHINE bpm=135 swing=67 ons=27]
+  -- techno-foundry: 64/64 pass · 1234 paths applied (0 mod-routed) · 32 seq (0 shorthand) · warnings 0
+
+== totals ==
+  acid-vault      OK   64/64  paths 1140  seq 16  bytes 635329  sha256 1e1040e30346
+  starter-100     OK   100/100  paths 416  seq 6  bytes 55382  sha256 1d24f444ae8f
+  techno-foundry  OK   64/64  paths 1234  seq 32  bytes 1066964  sha256 e99527ed1146
+
+AV PACKS VERIFY: 228/228 presets PASS · packs 3 · harness fails 0 · preset fails 0 · warnings 6 · seqShorthand 6
+VERDICT: PASS (strict exit 0)
