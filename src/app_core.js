@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.6.0", phase: "P6 · deliver", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.7.0", phase: "S1 · record core", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -94,6 +94,11 @@ function avMountLevels() {
   } catch (e) { console.warn("[anvil] store→bank wire failed", e); }
   let deliverOk = false;
   try { deliverOk = (typeof avDeliverUiInit === "function") ? (avDeliverUiInit() !== false) : false; } catch (e) { console.warn("[anvil] deliver ui init failed", e); }
+  let inputOk = false, metroOk = false, takesOk = false, studioUiOk = false;
+  try { inputOk = (typeof avInputInit === "function") ? (avInputInit() !== false) : false; } catch (e) { console.warn("[anvil] input init failed", e); }
+  try { metroOk = (typeof avMetroInit === "function") ? (avMetroInit() !== false) : false; } catch (e) { console.warn("[anvil] metro init failed", e); }
+  try { takesOk = (typeof avTakesInit === "function") ? (avTakesInit() !== false) : false; } catch (e) { console.warn("[anvil] takes init failed", e); }
+  try { studioUiOk = (typeof avStudioUiInit === "function") ? (avStudioUiInit() !== false) : false; } catch (e) { console.warn("[anvil] studio ui init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -109,7 +114,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

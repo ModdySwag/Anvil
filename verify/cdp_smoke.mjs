@@ -269,6 +269,27 @@ async function main() {
   check('P6 deliver: card mounted + wired (loops/bits · both run buttons · download) + offline-export API live',
     dlC.card === true && dlC.host === true && dlC.root === true && dlC.wired === true && dlC.run === true && dlC.master === true && dlC.loops === true && dlC.bits === true && dlC.dl === true && dlC.api === 'object' && dlC.bounce === 'function' && dlC.wav === 'function' && dlC.mid === 'function' && dlC.zip === 'function', JSON.stringify(dlC));
 
+  /* 6h. the S1 studio card (record core) */
+  const st1R = await ev(`(() => {
+    const card = document.getElementById('av-studio');
+    const host = document.getElementById('av-studio-host');
+    return { card: !!card, host: !!host,
+             root: !!(host && host.querySelector('.av-studio')),
+             wired: !!(host && host.dataset && host.dataset.avStudioUiWired === '1'),
+             enable: !!document.getElementById('av-studio-enable'),
+             rec: !!document.getElementById('av-studio-rec'),
+             device: !!document.getElementById('av-studio-device'),
+             meter: !!document.getElementById('av-studio-meter'),
+             countin: !!document.getElementById('av-studio-countin'),
+             takes: !!document.getElementById('av-studio-takes'),
+             ui: typeof window.__avStudioUi,
+             inputApi: typeof avInputEnable, metroApi: typeof avMetroCountIn, takesApi: typeof avTakesStart,
+             takesN: (typeof avTakesClasses === 'function') ? avTakesClasses().length : 0 };
+  })()`);
+  const st1 = st1R.value || {};
+  check('S1 studio: card mounted + wired (ENABLE \u00b7 REC \u00b7 device \u00b7 meter \u00b7 count-in \u00b7 takes list) + input/metro/takes API live',
+    st1.card === true && st1.host === true && st1.root === true && st1.wired === true && st1.enable === true && st1.rec === true && st1.device === true && st1.meter === true && st1.countin === true && st1.takes === true && st1.ui === 'object' && st1.inputApi === 'function' && st1.metroApi === 'function' && st1.takesApi === 'function' && st1.takesN >= 8, JSON.stringify(st1));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

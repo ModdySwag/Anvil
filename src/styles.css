@@ -514,3 +514,87 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-deliver-degrade { color: var(--mod-orange); font-size: 10.5px; }
 .av-deliver-foot { }
 .av-deliver-busy { opacity: .75; }
+
+/* ============================================================================
+   S1 — the STUDIO record core (av_studio_ui.js · av_input.js · av_takes.js) */
+.av-studio { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-studio-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-studio-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-studio-cap { font-size: 10.5px; color: var(--text-3); }
+.av-studio-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-studio-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-studio-msg { color: var(--text-2); }
+.av-studio-err { color: #ff8a7a; }
+.av-studio-sect { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.av-studio-sect-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-studio-sect-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.av-studio-input-state { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-studio-lab { font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-studio-btn { }
+.av-studio-btn.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-studio-enable { }
+.av-studio-device { min-width: 170px; max-width: 280px; }
+.av-studio-range { accent-color: var(--teal); width: 150px; }
+.av-studio-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 36px; }
+.av-studio-unit { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-monitor { }
+.av-studio-monitor.on { color: var(--mod-orange); border-color: #5c4520; box-shadow: 0 0 6px rgba(230,159,0,.3); }
+.av-studio-offset { width: 72px; background: #0a0e11; color: var(--text); border: 1px solid var(--hair); border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 3px 6px; }
+.av-studio-meter-row { flex-wrap: wrap; }
+.av-studio-meter { position: relative; flex: 1 1 160px; min-width: 120px; height: 10px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px; overflow: hidden; }
+.av-studio-meter-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, var(--teal-deep), var(--teal)); transition: width 60ms linear; }
+.av-studio-meter-bar.hot { background: linear-gradient(90deg, var(--mod-orange), var(--mod-vermillion)); }
+.av-studio-meter-rms { position: absolute; left: 0; bottom: 0; height: 3px; width: 0%; background: var(--teal-glow); opacity: .85; transition: width 60ms linear; }
+.av-studio-meter-val { min-width: 0; }
+.av-studio-latency { margin: 0; }
+.av-studio-metro { }
+.av-studio-metro.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-studio-metro-bpm { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-rec { }
+.av-studio-rec.on { color: #ff8a7a; border-color: #ff8a7a; box-shadow: 0 0 7px rgba(255,138,122,.3); }
+.av-studio-take-n { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-takes { display: flex; flex-direction: column; gap: 5px; }
+.av-studio-none { margin: 0; }
+.av-studio-none[hidden] { display: none; }
+.av-studio-take { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 8px; min-width: 0; }
+.av-studio-take.partial { border-color: #5c4520; }
+.av-studio-take-name { font-family: var(--mono); font-size: 11px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.av-studio-take-secs { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-take-lap { font-family: var(--mono); font-size: 10px; color: var(--mod-sky); }
+.av-studio-take.partial .av-studio-take-lap { color: var(--mod-orange); }
+.av-studio-take-export { }
+.av-studio-take-del { }
+.av-studio-take-del:hover { color: #ff8a7a; border-color: #ff8a7a; }
+.av-studio-warnings { border: 1px solid #5c4520; border-radius: 6px; padding: 6px 8px; }
+.av-studio-warnings[hidden] { display: none; }
+.av-studio-warn-head { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--mod-orange); margin-bottom: 2px; }
+.av-studio-warn-item { color: var(--mod-orange); font-size: 10.5px; margin: 0; overflow-wrap: anywhere; }
+.av-studio-foot { margin: 0; }
+
+/* S1 — the input + takes module class hooks (av_input.js · av_takes.js — declared inventories;
+   the Studio card renders through its own av-studio-* surface; these skin the module surfaces) */
+.av-input-row, .av-takes-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-input-btn { }
+.av-takes-btn { }
+.av-input-device { min-width: 150px; max-width: 260px; }
+.av-input-gain { accent-color: var(--teal); }
+.av-input-level { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-input-mon { }
+.av-input-mon.on { color: var(--mod-orange); border-color: #5c4520; }
+.av-input-on { color: var(--teal); }
+.av-input-err { color: #ff8a7a; font-size: 11px; }
+.av-takes-list { display: flex; flex-direction: column; gap: 5px; }
+.av-takes-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 8px; min-width: 0; }
+.av-takes-name { font-family: var(--mono); font-size: 11px; color: var(--text); }
+.av-takes-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-takes-lap { font-family: var(--mono); font-size: 10px; color: var(--mod-sky); }
+.av-takes-partial { color: var(--mod-orange); }
+.av-takes-export { }
+.av-takes-del { }
+.av-takes-del:hover { color: #ff8a7a; border-color: #ff8a7a; }
+.av-takes-status { font-family: var(--mono); font-size: 10.5px; color: var(--text-2); }
+.av-takes-arm { }
+.av-takes-arm.on { color: var(--teal); border-color: var(--teal-deep); }
+.av-takes-on { color: #ff8a7a; }
+.av-takes-err { color: #ff8a7a; font-size: 11px; }

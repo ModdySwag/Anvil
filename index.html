@@ -534,6 +534,90 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-deliver-foot { }
 .av-deliver-busy { opacity: .75; }
 
+/* ============================================================================
+   S1 — the STUDIO record core (av_studio_ui.js · av_input.js · av_takes.js) */
+.av-studio { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-studio-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-studio-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-studio-cap { font-size: 10.5px; color: var(--text-3); }
+.av-studio-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-studio-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-studio-msg { color: var(--text-2); }
+.av-studio-err { color: #ff8a7a; }
+.av-studio-sect { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.av-studio-sect-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-studio-sect-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.av-studio-input-state { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-studio-lab { font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-studio-btn { }
+.av-studio-btn.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-studio-enable { }
+.av-studio-device { min-width: 170px; max-width: 280px; }
+.av-studio-range { accent-color: var(--teal); width: 150px; }
+.av-studio-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 36px; }
+.av-studio-unit { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-monitor { }
+.av-studio-monitor.on { color: var(--mod-orange); border-color: #5c4520; box-shadow: 0 0 6px rgba(230,159,0,.3); }
+.av-studio-offset { width: 72px; background: #0a0e11; color: var(--text); border: 1px solid var(--hair); border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 3px 6px; }
+.av-studio-meter-row { flex-wrap: wrap; }
+.av-studio-meter { position: relative; flex: 1 1 160px; min-width: 120px; height: 10px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px; overflow: hidden; }
+.av-studio-meter-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, var(--teal-deep), var(--teal)); transition: width 60ms linear; }
+.av-studio-meter-bar.hot { background: linear-gradient(90deg, var(--mod-orange), var(--mod-vermillion)); }
+.av-studio-meter-rms { position: absolute; left: 0; bottom: 0; height: 3px; width: 0%; background: var(--teal-glow); opacity: .85; transition: width 60ms linear; }
+.av-studio-meter-val { min-width: 0; }
+.av-studio-latency { margin: 0; }
+.av-studio-metro { }
+.av-studio-metro.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-studio-metro-bpm { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-rec { }
+.av-studio-rec.on { color: #ff8a7a; border-color: #ff8a7a; box-shadow: 0 0 7px rgba(255,138,122,.3); }
+.av-studio-take-n { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-takes { display: flex; flex-direction: column; gap: 5px; }
+.av-studio-none { margin: 0; }
+.av-studio-none[hidden] { display: none; }
+.av-studio-take { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 8px; min-width: 0; }
+.av-studio-take.partial { border-color: #5c4520; }
+.av-studio-take-name { font-family: var(--mono); font-size: 11px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.av-studio-take-secs { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-studio-take-lap { font-family: var(--mono); font-size: 10px; color: var(--mod-sky); }
+.av-studio-take.partial .av-studio-take-lap { color: var(--mod-orange); }
+.av-studio-take-export { }
+.av-studio-take-del { }
+.av-studio-take-del:hover { color: #ff8a7a; border-color: #ff8a7a; }
+.av-studio-warnings { border: 1px solid #5c4520; border-radius: 6px; padding: 6px 8px; }
+.av-studio-warnings[hidden] { display: none; }
+.av-studio-warn-head { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--mod-orange); margin-bottom: 2px; }
+.av-studio-warn-item { color: var(--mod-orange); font-size: 10.5px; margin: 0; overflow-wrap: anywhere; }
+.av-studio-foot { margin: 0; }
+
+/* S1 — the input + takes module class hooks (av_input.js · av_takes.js — declared inventories;
+   the Studio card renders through its own av-studio-* surface; these skin the module surfaces) */
+.av-input-row, .av-takes-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-input-btn { }
+.av-takes-btn { }
+.av-input-device { min-width: 150px; max-width: 260px; }
+.av-input-gain { accent-color: var(--teal); }
+.av-input-level { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-input-mon { }
+.av-input-mon.on { color: var(--mod-orange); border-color: #5c4520; }
+.av-input-on { color: var(--teal); }
+.av-input-err { color: #ff8a7a; font-size: 11px; }
+.av-takes-list { display: flex; flex-direction: column; gap: 5px; }
+.av-takes-item { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 8px; min-width: 0; }
+.av-takes-name { font-family: var(--mono); font-size: 11px; color: var(--text); }
+.av-takes-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-takes-lap { font-family: var(--mono); font-size: 10px; color: var(--mod-sky); }
+.av-takes-partial { color: var(--mod-orange); }
+.av-takes-export { }
+.av-takes-del { }
+.av-takes-del:hover { color: #ff8a7a; border-color: #ff8a7a; }
+.av-takes-status { font-family: var(--mono); font-size: 10.5px; color: var(--text-2); }
+.av-takes-arm { }
+.av-takes-arm.on { color: var(--teal); border-color: var(--teal-deep); }
+.av-takes-on { color: #ff8a7a; }
+.av-takes-err { color: #ff8a7a; font-size: 11px; }
+
 </style>
 </head>
 
@@ -550,9 +634,9 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 
 <main class="av-main">
   <section class="av-card">
-    <h1>Phase 6 &mdash; deliver: one-press STEM export</h1>
+    <h1>Phase S1 &mdash; studio: record core (input &middot; count-in &middot; lap takes)</h1>
     <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip).</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries).</p>
   </section>
 
   <section class="av-card" id="av-levels">
@@ -613,6 +697,11 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
     <div id="av-deliver-host"><p class="av-note av-dim">The Deliver card lands here &mdash; one press renders the pattern offline (stems &middot; master &middot; MIDI &middot; README) into a DAW-ready zip. Nothing plays live, nothing is uploaded.</p></div>
   </section>
 
+  <section class="av-card" id="av-studio">
+    <h2>Studio</h2>
+    <div id="av-studio-host"><p class="av-note av-dim">The studio record core lands here &mdash; mic/line input riding the engine's own context, a count-in metronome, and lap takes that split at sequencer cycle boundaries. Nothing is uploaded.</p></div>
+  </section>
+
   <section class="av-card">
     <h2>Roadmap &mdash; from the plan</h2>
     <ul class="av-list">
@@ -627,7 +716,7 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 </main>
 
 <footer class="av-foot">
-  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Phase 6 &middot; deliver &middot; AGPL-3.0-or-later</span>
+  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Studio &middot; record core &middot; AGPL-3.0-or-later</span>
 </footer>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">
@@ -22369,6 +22458,3657 @@ if (typeof window !== "undefined" && window) {
 }
 
 
+/* Anvil — S1 audio input (sa-A): getUserMedia → MediaStreamSource → inputGain → (monitor: master).
+   Contract: verify/_s1_wave.md §2.1 (pinned surface) + §3 laws. Pinned surface:
+     avInputInit() -> boolean                 · idempotent; page module; nothing mounted
+     avInputEnable() -> Promise<{ ok, deviceId, label, channels, sampleRate } | { ok:false, error }>
+     avInputDisable()                         · idempotent; full teardown
+     avInputGain(v) 0..1.2                    · setter/getter; returns the applied value
+     avInputMonitor(on) -> boolean            · inputGain → avMasterFor(ctx); OFF by default
+     avInputOffset(ms) -200..200 (default 0)  · setter/getter; returns the applied value
+     avInputLatency() -> { baseMs, offsetMs, totalFrames, sr }
+     avInputLevels() -> { peak, rms }         · own AnalyserNode on the input gain, read on call
+     avInputDevices() -> Promise<[{ deviceId, label }]>
+     avInputState() · avInputClasses() -> string[] · avInputNode() -> the live input gain node | null
+
+   LAWS:
+   - ctx law (§2.1): the SAME AudioContext as the engine — window.__avEngine.handle.ctx (guarded),
+     falling back to avTap.ctx; none found → honest refusal in avInputEnable().
+   - getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}})
+     → MediaStreamAudioSourceNode → inputGain (GainNode, default 1.0). Monitor OFF by default;
+     monitor ON connects inputGain → avMasterFor(ctx) ONLY.
+   - Recording tap point = inputGain output (avInputNode()): post-gain, pre-master, DRY — the
+     takes module (sa-C) records from this node.
+   - Sink law (§3.3): the internal pull sink is gain-0 and goes to avTap.real (guarded) else the
+     REAL destination — never back into the bus chain. When the tap wraps ctx.destination but does
+     not know this ctx, the wrapped bus is refused (sinkless enable, honest state).
+   - Track-before-wire (av_rec craft): nodes are stored in module state BEFORE any connect, so a
+     throw can never strand a live node; avInputTeardown() is idempotent and full.
+   - Node-loadable: no DOM/browser reach at load; every reach typeof-guarded; never throws.
+     Allocations: block/call rate only — the analyser read buffer reallocates on size change only.
+*/
+"use strict";
+
+const AV_INPUT_VERSION = "s1.0";
+const AV_INPUT_GAIN_MIN = 0;
+const AV_INPUT_GAIN_MAX = 1.2;          /* pinned ceiling (§2.1) */
+const AV_INPUT_OFFSET_MIN = -200;       /* ms — the latency-offset knob range */
+const AV_INPUT_OFFSET_MAX = 200;
+const AV_INPUT_SINK_GAIN = 0;           /* the pull sink is gain-0 — silent twice over */
+const AV_INPUT_FFT = 2048;              /* analyser window (~43 ms @ 48 k) */
+const AV_INPUT_CLASSES = Object.freeze(["av-input-row", "av-input-btn", "av-input-device", "av-input-gain", "av-input-level", "av-input-mon", "av-input-on", "av-input-err"]);
+
+/* ---------- module state (holds live nodes while enabled; snapshots never leak them) ---------- */
+const avInput = {
+  inited: false,
+  enablePromise: null,   /* the in-flight enable (idempotent enable) */
+  pendingDisable: false, /* disable() arrived while enable was still opening the device */
+  enabled: false,
+  enabling: false,
+  monitor: false,
+  gain: 1,               /* inputGain default 1.0 */
+  offsetMs: 0,           /* latency-offset knob, default 0 */
+  ctx: null,             /* the engine context under the live path */
+  stream: null,          /* MediaStream */
+  source: null,          /* MediaStreamAudioSourceNode */
+  gainNode: null,        /* inputGain — THE recording tap point */
+  analyser: null,        /* own levels analyser, tapped post-gain */
+  levelBuf: null,        /* Float32 read buffer (allocated on call, reused) */
+  levelBytes: null,      /* byte fallback buffer */
+  sink: null,            /* gain-0 pull sink */
+  sinkOn: false,
+  deviceId: null,
+  label: null,
+  channels: 0,
+  error: null,
+};
+
+/* ---------- guarded helpers (no reach at load; nothing ever throws out) ---------- */
+function avInputErr(e) {
+  try { return String((e && (e.message || e.name)) || e) || "unknown error"; } catch (e2) { return "unknown error"; }
+}
+function avInputWarn(msg) {
+  try { if (typeof console !== "undefined" && console.warn) console.warn("[anvil] " + msg); } catch (e) { /* console gone */ }
+}
+function avInputClamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+function avInputNum(v) { const n = Number(v); return isFinite(n) ? n : null; }
+
+/* avTap probes: the page global first, then the guarded window/globalThis handles */
+function avInputTap() {
+  try { if (typeof avTap !== "undefined" && avTap) return avTap; } catch (e) { /* not loaded */ }
+  try { if (typeof window !== "undefined" && window && window.__avTap) return window.__avTap; } catch (e) { /* no window */ }
+  try { if (typeof globalThis !== "undefined" && globalThis && globalThis.__avTap) return globalThis.__avTap; } catch (e) { /* no global */ }
+  return null;
+}
+
+/* ctx law: engine handle ctx (guarded) → avTap.ctx (guarded) → null */
+function avInputUsableCtx(ctx) {
+  try { return !!(ctx && typeof ctx === "object" && typeof ctx.createGain === "function" && ctx.state !== "closed"); } catch (e) { return false; }
+}
+function avInputEngineCtx() {
+  const probes = [];
+  try { if (typeof window !== "undefined" && window) probes.push(window); } catch (e) { /* no window */ }
+  try { if (typeof globalThis !== "undefined" && globalThis && probes.indexOf(globalThis) < 0) probes.push(globalThis); } catch (e) { /* no global */ }
+  for (let i = 0; i < probes.length; i++) {
+    try {
+      const h = probes[i].__avEngine;
+      const ctx = h && h.handle && h.handle.ctx;
+      if (avInputUsableCtx(ctx)) return ctx;
+    } catch (e) { /* keep probing */ }
+  }
+  return null;
+}
+function avInputPickCtx() {
+  let ctx = null;
+  try { ctx = avInputEngineCtx(); } catch (e) { ctx = null; }
+  if (ctx) return ctx;
+  try {
+    const t = avInputTap();
+    if (t && avInputUsableCtx(t.ctx)) return t.ctx;
+  } catch (e) { /* no tap ctx */ }
+  return null;
+}
+
+/* media input probes — every deref guarded, absence is honest */
+function avInputMediaDevices() {
+  try {
+    if (typeof navigator === "undefined" || !navigator) return null;
+    const md = navigator.mediaDevices;
+    return (md && typeof md === "object") ? md : null;
+  } catch (e) { return null; }
+}
+function avInputTrackInfo(stream) {
+  const out = { deviceId: null, label: null, channels: 1 };
+  try {
+    const tracks = (stream && typeof stream.getAudioTracks === "function") ? stream.getAudioTracks() : null;
+    const tr = (tracks && tracks.length) ? tracks[0] : null;
+    if (!tr) return out;
+    if (typeof tr.label === "string" && tr.label) out.label = tr.label;
+    let st = null;
+    try { st = (typeof tr.getSettings === "function") ? tr.getSettings() : null; } catch (e) { st = null; }
+    if (st) {
+      if (st.deviceId) out.deviceId = String(st.deviceId);
+      const cc = Number(st.channelCount);
+      if (isFinite(cc) && cc >= 1) out.channels = Math.floor(cc);
+    }
+  } catch (e) { /* honest defaults stand */ }
+  return out;
+}
+function avInputStopTracks(stream) {
+  try {
+    if (!stream || typeof stream.getTracks !== "function") return;
+    const tr = stream.getTracks() || [];
+    for (let i = 0; i < tr.length; i++) {
+      try { if (tr[i] && typeof tr[i].stop === "function") tr[i].stop(); } catch (e) { /* track gone */ }
+    }
+  } catch (e) { /* nothing to stop */ }
+}
+
+/* Sink law: avTap.real (matching ctx) → the REAL destination; a wrapped bus is never sunk into.
+   Reading ctx.destination when the tap wraps it registers the chain for this ctx (the same read
+   avEngineDestFor performs as last resort) — after it, the tap's real answer is re-probed. */
+function avInputRealDest(ctx) {
+  const t = avInputTap();
+  try { if (t && t.real && t.real.context === ctx) return t.real; } catch (e) { /* probe next */ }
+  let dest = null;
+  try { dest = ctx.destination || null; } catch (e) { dest = null; }
+  if (!dest) return null;
+  try {
+    if (dest.__avKeys || dest.__avMaster || dest.__avTap) {
+      try { if (t && t.real && t.real.context === ctx) return t.real; } catch (e2) { /* none */ }
+      return null;                       /* never sink into the bus chain */
+    }
+  } catch (e2) { /* marker probe moot — treat as a native destination */ }
+  return dest;
+}
+
+function avInputApplyGain(v) {
+  const g = avInput.gainNode;
+  if (!g || !g.gain) return;
+  const at = (avInput.ctx && isFinite(avInput.ctx.currentTime)) ? avInput.ctx.currentTime : 0;
+  try { g.gain.setTargetAtTime(v, at, 0.015); }
+  catch (e) { try { g.gain.value = v; } catch (e2) { /* node gone */ } }
+}
+
+/* full idempotent teardown — safe at any point of the life cycle */
+function avInputTeardown() {
+  try { const n = avInput.source; if (n && typeof n.disconnect === "function") n.disconnect(); } catch (e) { /* never wired */ }
+  try { const n = avInput.gainNode; if (n && typeof n.disconnect === "function") n.disconnect(); } catch (e) { /* gone */ }
+  try { const n = avInput.analyser; if (n && typeof n.disconnect === "function") n.disconnect(); } catch (e) { /* gone */ }
+  try { const n = avInput.sink; if (n && typeof n.disconnect === "function") n.disconnect(); } catch (e) { /* gone */ }
+  avInputStopTracks(avInput.stream);
+  avInput.source = null;
+  avInput.gainNode = null;
+  avInput.analyser = null;
+  avInput.levelBuf = null;
+  avInput.levelBytes = null;
+  avInput.sink = null;
+  avInput.stream = null;
+  avInput.sinkOn = false;
+  avInput.monitor = false;               /* monitor never survives a teardown (feedback safety) */
+  avInput.enabled = false;
+  avInput.ctx = null;
+  avInput.deviceId = null;
+  avInput.label = null;
+  avInput.channels = 0;
+}
+
+/* ---------- enable / disable ---------- */
+function avInputInfo() {
+  let sr = null;
+  try {
+    const s = Number(avInput.ctx && avInput.ctx.sampleRate);
+    if (isFinite(s) && s > 0) sr = s;
+  } catch (e) { /* stays null */ }
+  return { ok: true, deviceId: avInput.deviceId, label: avInput.label, channels: avInput.channels, sampleRate: sr };
+}
+
+async function avInputEnableRun() {
+  avInput.pendingDisable = false;
+  avInput.enabling = true;
+  try {
+    if (avInput.enabled) return avInputInfo();
+    const ctx = avInputPickCtx();
+    if (!ctx) return { ok: false, error: "no audio context — the input rides the engine's AudioContext; boot the engine first" };
+    const md = avInputMediaDevices();
+    if (!md || typeof md.getUserMedia !== "function") return { ok: false, error: "media input unavailable — navigator.mediaDevices is missing (secure context required)" };
+    avInput.error = null;
+    let stream = null;
+    try {
+      stream = await md.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    } catch (e) {
+      avInput.error = "input refused — " + avInputErr(e);
+      avInputWarn(avInput.error);
+      return { ok: false, error: avInput.error };
+    }
+    if (avInput.pendingDisable) {                      /* disable() arrived while opening */
+      avInputStopTracks(stream);
+      return { ok: false, error: "input disabled while enabling" };
+    }
+    if (!stream || typeof stream.getAudioTracks !== "function") {
+      avInput.error = "media input returned no stream";
+      return { ok: false, error: avInput.error };
+    }
+    return avInputBuild(ctx, stream);
+  } catch (e) {
+    avInput.error = "enable failed — " + avInputErr(e);
+    avInputWarn(avInput.error);
+    return { ok: false, error: avInput.error };
+  } finally {
+    avInput.enabling = false;
+    avInput.pendingDisable = false;
+  }
+}
+
+function avInputBuild(ctx, stream) {
+  let source = null, gainNode = null, analyser = null, sink = null;
+  try {
+    source = ctx.createMediaStreamSource(stream);
+    gainNode = ctx.createGain();
+    gainNode.gain.value = avInput.gain;                /* default 1.0, or the stored knob */
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = AV_INPUT_FFT;
+  } catch (e) {
+    avInputStopTracks(stream);
+    avInput.error = "input path build failed — " + avInputErr(e);
+    avInputWarn(avInput.error);
+    return { ok: false, error: avInput.error };
+  }
+  /* track BEFORE wiring (av_rec craft) — a throw below can never strand a live node */
+  const info = avInputTrackInfo(stream);
+  avInput.ctx = ctx;
+  avInput.stream = stream;
+  avInput.source = source;
+  avInput.gainNode = gainNode;
+  avInput.analyser = analyser;
+  avInput.deviceId = info.deviceId;
+  avInput.label = info.label;
+  avInput.channels = info.channels;
+  avInput.sinkOn = false;
+  avInput.monitor = false;                             /* monitor OFF by default, every enable */
+  try {
+    source.connect(gainNode);
+    gainNode.connect(analyser);
+    const real = avInputRealDest(ctx);
+    if (real) {
+      sink = ctx.createGain();
+      sink.gain.value = AV_INPUT_SINK_GAIN;            /* silent pull keeps levels live with monitor off */
+      avInput.sink = sink;
+      gainNode.connect(sink);
+      sink.connect(real);
+      avInput.sinkOn = true;
+    }
+  } catch (e) {
+    avInput.error = "input path wiring failed — " + avInputErr(e);
+    avInputWarn(avInput.error);
+    avInputTeardown();
+    return { ok: false, error: avInput.error };
+  }
+  /* a suspended context is not a refusal: the path is built and will run on the next resume */
+  try {
+    if (ctx.state === "suspended" && typeof ctx.resume === "function") {
+      const rp = ctx.resume();
+      if (rp && typeof rp.catch === "function") rp.catch(() => { /* gesture-gated — never fatal */ });
+    }
+  } catch (e) { /* resume refused — gestures will retry */ }
+  avInput.enabled = true;
+  avInput.error = null;
+  return avInputInfo();
+}
+
+function avInputEnable() {
+  try {
+    if (avInput.enabled) return Promise.resolve(avInputInfo());
+    if (avInput.enablePromise) return avInput.enablePromise;
+    const p = avInputEnableRun();
+    avInput.enablePromise = p;
+    const clear = () => { try { if (avInput.enablePromise === p) avInput.enablePromise = null; } catch (e) { /* ok */ } };
+    p.then(clear, clear);
+    return p;
+  } catch (e) {
+    return Promise.resolve({ ok: false, error: "enable failed — " + avInputErr(e) });
+  }
+}
+
+function avInputDisable() {
+  try {
+    if (avInput.enabling) avInput.pendingDisable = true;   /* consumed at the next checkpoint */
+    avInputTeardown();
+    return true;
+  } catch (e) {
+    try { avInputTeardown(); } catch (e2) { /* give up cleanly */ }
+    return false;
+  }
+}
+
+/* ---------- knobs ---------- */
+function avInputGain(v) {
+  try {
+    if (v === undefined || v === null) return avInput.gain;
+    const n = avInputNum(v);
+    if (n == null) return avInput.gain;
+    avInput.gain = avInputClamp(n, AV_INPUT_GAIN_MIN, AV_INPUT_GAIN_MAX);
+    avInputApplyGain(avInput.gain);
+    return avInput.gain;
+  } catch (e) { return avInput.gain; }
+}
+function avInputOffset(ms) {
+  try {
+    if (ms === undefined || ms === null) return avInput.offsetMs;
+    const n = avInputNum(ms);
+    if (n == null) return avInput.offsetMs;
+    avInput.offsetMs = avInputClamp(n, AV_INPUT_OFFSET_MIN, AV_INPUT_OFFSET_MAX);
+    return avInput.offsetMs;
+  } catch (e) { return avInput.offsetMs; }
+}
+function avInputMonitor(on) {
+  try {
+    const want = !!on;
+    if (!avInput.enabled || !avInput.gainNode || !avInput.ctx) return false;
+    if (want === avInput.monitor) return true;         /* idempotent toggle */
+    let master = null;
+    try { if (typeof avMasterFor === "function") master = avMasterFor(avInput.ctx); } catch (e) { master = null; }
+    if (want) {
+      if (!master || typeof master.connect !== "function") return false;   /* honest: no master tap */
+      avInput.monitor = true;                          /* track before wire */
+      try { avInput.gainNode.connect(master); }
+      catch (e2) { avInput.monitor = false; return false; }
+      return true;
+    }
+    avInput.monitor = false;                           /* track before unwire */
+    if (master && typeof avInput.gainNode.disconnect === "function") {
+      try { avInput.gainNode.disconnect(master); } catch (e3) { /* not connected — already off */ }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- latency / levels / devices ---------- */
+function avInputLatency() {
+  let baseMs = 0, sr = 48000;
+  try {
+    let ctx = avInput.ctx;
+    if (!ctx) ctx = avInputPickCtx();
+    if (ctx) {
+      const bl = Number(ctx.baseLatency);
+      if (isFinite(bl) && bl >= 0) baseMs = Math.round(bl * 1000000) / 1000;   /* s → ms, 0.001 ms grid */
+      const s = Number(ctx.sampleRate);
+      if (isFinite(s) && s > 0) sr = s;
+    }
+  } catch (e) { /* defaults: baseMs 0 (browsers that expose baseLatency report it), sr 48000 */ }
+  const offsetMs = avInput.offsetMs;
+  const totalMs = Math.max(0, baseMs + offsetMs);
+  return { baseMs: baseMs, offsetMs: offsetMs, totalFrames: Math.round(totalMs * sr / 1000), sr: sr };
+}
+
+/* own analyser read — refreshed on every call; buffer allocates on size change only */
+function avInputLevels() {
+  try {
+    const an = avInput.analyser;
+    if (!an) return { peak: 0, rms: 0 };
+    const n = (isFinite(an.fftSize) && an.fftSize > 0) ? an.fftSize : AV_INPUT_FFT;
+    let buf = avInput.levelBuf;
+    if (!buf || buf.length !== n) { buf = new Float32Array(n); avInput.levelBuf = buf; }
+    let filled = false;
+    try {
+      if (typeof an.getFloatTimeDomainData === "function") { an.getFloatTimeDomainData(buf); filled = true; }
+      else if (typeof an.getByteTimeDomainData === "function") {
+        let bb = avInput.levelBytes;
+        if (!bb || bb.length !== n) { bb = new Uint8Array(n); avInput.levelBytes = bb; }
+        an.getByteTimeDomainData(bb);
+        for (let i = 0; i < n; i++) buf[i] = (bb[i] - 128) / 128;
+        filled = true;
+      }
+    } catch (e) { filled = false; }
+    if (!filled) return { peak: 0, rms: 0 };
+    let peak = 0, sum = 0;
+    for (let i = 0; i < n; i++) {
+      const v = buf[i];
+      const a = v < 0 ? -v : v;
+      if (a > peak) peak = a;
+      sum += v * v;
+    }
+    return { peak: peak, rms: Math.sqrt(sum / n) };
+  } catch (e) { return { peak: 0, rms: 0 }; }
+}
+
+function avInputDevices() {
+  return new Promise((resolve) => {
+    try {
+      const md = avInputMediaDevices();
+      if (!md || typeof md.enumerateDevices !== "function") { resolve([]); return; }
+      let p = null;
+      try { p = md.enumerateDevices(); } catch (e) { resolve([]); return; }
+      if (!p || typeof p.then !== "function") { resolve([]); return; }
+      p.then((list) => {
+        const out = [];
+        try {
+          const arr = (list && typeof list.length === "number") ? list : [];
+          for (let i = 0; i < arr.length; i++) {
+            const d = arr[i];
+            if (!d || d.kind !== "audioinput") continue;
+            out.push({
+              deviceId: d.deviceId == null ? "" : String(d.deviceId),
+              label: typeof d.label === "string" ? d.label : "",
+            });
+          }
+        } catch (e) { /* a partial list beats a rejection */ }
+        resolve(out);
+      }).catch(() => resolve([]));
+    } catch (e) { resolve([]); }
+  });
+}
+
+/* ---------- snapshots / misc ---------- */
+function avInputState() {
+  let sr = null, ctxState = null;
+  try {
+    if (avInput.ctx) {
+      const s = Number(avInput.ctx.sampleRate);
+      if (isFinite(s) && s > 0) sr = s;
+      ctxState = avInput.ctx.state || null;
+    }
+  } catch (e) { /* stays null */ }
+  return {
+    version: AV_INPUT_VERSION,
+    inited: avInput.inited === true,
+    enabled: avInput.enabled === true,
+    enabling: avInput.enabling === true,
+    monitor: avInput.monitor === true,
+    gain: avInput.gain,
+    offsetMs: avInput.offsetMs,
+    deviceId: avInput.deviceId,
+    label: avInput.label,
+    channels: avInput.channels,
+    sr: sr,
+    ctxState: ctxState,
+    wired: !!(avInput.source && avInput.gainNode),
+    sink: avInput.sinkOn === true,
+    error: avInput.error,
+  };
+}
+function avInputClasses() { return AV_INPUT_CLASSES.slice(); }
+function avInputInit() {
+  try {
+    avInput.inited = true;                 /* page module: nothing mounted, nothing wired here */
+    return true;
+  } catch (e) { return false; }
+}
+function avInputNode() {
+  try {
+    if (avInput.enabled && avInput.gainNode && typeof avInput.gainNode.connect === "function") return avInput.gainNode;
+  } catch (e) { /* no node */ }
+  return null;
+}
+
+/* ---------- debug handle (guarded; functions + snapshots only — no live nodes leak) ---------- */
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avInput = {
+      version: AV_INPUT_VERSION,
+      init: avInputInit,
+      enable: avInputEnable,
+      disable: avInputDisable,
+      gain: avInputGain,
+      monitor: avInputMonitor,
+      offset: avInputOffset,
+      latency: avInputLatency,
+      levels: avInputLevels,
+      devices: avInputDevices,
+      state: avInputState,
+      classes: avInputClasses,
+      node: avInputNode,
+    };
+  } catch (e) { /* no window — nothing to publish */ }
+}
+
+
+/* av_metro.js — Anvil S1 metronome + count-in (wave sa-B; verify/_s1_wave.md §2.2).
+
+   WHAT THIS IS — the studio click: a lookahead click scheduler riding the live audio clock,
+   phase-aligned to the sequencer transport when it plays and standalone otherwise, plus the
+   count-in (1..4 bars) that resolves when it completes. Nothing is mounted; no DOM at load.
+
+   CLOCK LAW (mirrors src/av_seq_sched.js — read it first):
+   - Own lookahead ticker: 0.12 s plan-ahead / 25 ms wake against the live ctx
+     (window.__avEngine.handle.ctx first, avTap.ctx fallback — the same-context law).
+   - Beat = 60/bpm; bpm = avState.bpm (guarded; 120 default; 20..300 clamp).
+   - When avSeqIsPlaying(): PHASE-ALIGN. The transport grid is reconstructed from
+     avSeqPosition() (guarded): after observing a step INCREMENT, origin = pos.t − step·sd
+     where sd is the grid step (60/bpm/4 for "16", /3 for "8t" — the wave's pure formula,
+     grid read from avSeqSnap() behind a 0.5 s cache; pos.t is the first sighting of the new
+     step, so it is ≤ one wake late), minus wake/2 (the seq's half-wake midpoint law). Click k
+     then sits at origin + k·beatDur — ON the transport grid within ±half a wake. Drift past
+     half a grid step (the seq's stall re-anchor) re-locks; a bpm change re-locks; a step
+     count that goes backwards (transport restart) re-locks. While the transport plays with no
+     lock yet the click train PAUSES (≤ one grid step) — clicks never land off the grid; a
+     transport start re-snaps the standalone train onto the grid, the resume beat being the
+     first grid beat after (last planned click + ¾ beat) — a bounded re-sync gap in
+     (0.75, 1.75] beats whenever the pointer is fresh; a stale pointer resumes at the next
+     beat without a burst (the drop law). When the transport stops the current grid is KEPT
+     (frozen, no jump).
+   - Standalone: own origin = now + 0.05 s runway (the seq play offset), beats on it.
+   - DELIVERY: a click is scheduled when its time is inside (now, now + 0.12 s); a click more
+     than 0.05 s late (stall) is dropped and counted, never fired in a burst.
+
+   CLICK LAW: synthesized ping — oscillator (sine), accent 1320 Hz / plain 880 Hz, ~25 ms
+   exponential decay, gain = level (0..1) — connected to avMasterFor(ctx) ONLY. No master node
+   (tap absent) or level 0 ⇒ the click is planned but not sounded (the ring is the planner's
+   honest record). Clicks never touch the takes path (takes record the input node, not this).
+
+   COUNT-IN: avMetroCountIn(bars) schedules bars×beatsPerBar clicks on its own origin
+   (now + 0.05 s — it must resolve ≈ bars·bar-seconds from the CALL, so it does NOT wait for
+   grid alignment; only bars 1..4, clamped), and resolves { ok, bars, seconds } at completion
+   (checked on the ticker). Frozen at call time: beat duration, beatsPerBar and accent — a
+   count-in bpm change leaves the count-in on its own steady tempo. During a count-in the
+   regular train pauses; when it ends and the metronome is on, the train resumes on the
+   current grid — the first grid beat after (last planned click + ¾ beat), deterministic
+   and continuous when the click grids coincide. The count-in clicks regardless of the
+   metronome on/off toggle (that gates only the recurring click) and never rejects: no ctx /
+   ctx lost / superseded resolve { ok:false, ... } immediately — the promise can not hang on
+   a dead clock.
+
+   OBSERVABLES: avMetroInit() -> true · avMetroSet({ on, level, beatsPerBar, accent }) ->
+   state · avMetroState() -> { on, level, bpm, beatsPerBar, originT, nextClickAt,
+   clicks:[{t,accent}] } (the pinned shape; + mode, countIn, planned, dropped, reason,
+   ctxBound, version) · avMetroCountIn(bars) -> Promise · avMetroClasses() -> [] (this
+   module mounts nothing — the Studio card owns all markup) · window.__avMetro debug handle.
+
+   LAWS: 'use strict'; ONE namespace (avMetro*, AV_METRO_*); node-loadable (no DOM/browser
+   reach at load; every reach typeof-guarded inside a function); NEVER throws (a pump, a
+   click, a state read and every setter fail soft; refusals are honest).
+
+   ONE writer (child sa-B). The browser rig (verify/cdp_studio.mjs, sa-C) is the parent gate;
+   this file is proven by a node harness (cache/scratch/s1/metro/). */
+
+"use strict";
+
+const AV_METRO_VERSION = "s1.0";
+const AV_METRO_LOOKAHEAD_S = 0.12;          /* the seq law: plan-ahead window (s)          */
+const AV_METRO_WAKE_MS = 25;                /* the seq law: timer cadence (ms)             */
+const AV_METRO_LOCK_BIAS_S = AV_METRO_WAKE_MS / 2000;  /* 0.0125 — half-wake midpoint (seq) */
+const AV_METRO_START_OFFSET_S = 0.05;       /* standalone/count-in origin runway (seq play) */
+const AV_METRO_LATE_DROP_S = 0.05;          /* a click later than this (stall) is dropped  */
+const AV_METRO_RESYNC_GAP_FRAC = 0.75;      /* min gap to the resumed grid beat (× beat)   */
+const AV_METRO_ACCENT_HZ = 1320;            /* accent ping                                 */
+const AV_METRO_PLAIN_HZ = 880;              /* plain ping                                  */
+const AV_METRO_DECAY_S = 0.025;             /* ~25 ms exponential decay                    */
+const AV_METRO_STOP_PAD_S = 0.005;          /* osc.stop = start + decay + pad              */
+const AV_METRO_CLICKS_CAP = 64;             /* §2.2: bounded ring (last 64)                */
+const AV_METRO_PLAN_GUARD = 2048;           /* per-train per-pump scheduling cap           */
+const AV_METRO_BPM_MIN = 20;
+const AV_METRO_BPM_MAX = 300;
+const AV_METRO_BPM_DEF = 120;
+const AV_METRO_BEATS_MIN = 1;               /* beatsPerBar clamp                           */
+const AV_METRO_BEATS_MAX = 16;
+const AV_METRO_BEATS_DEF = 4;
+const AV_METRO_LEVEL_MIN = 0;               /* §2.2 clamp: level 0..1                      */
+const AV_METRO_LEVEL_MAX = 1;
+const AV_METRO_LEVEL_DEF = 0.5;
+const AV_METRO_BARS_MIN = 1;                /* count-in clamp: 1..4 bars                   */
+const AV_METRO_BARS_MAX = 4;
+const AV_METRO_BARS_DEF = 1;
+const AV_METRO_GRID_CACHE_S = 0.5;          /* avSeqSnap() grid-string cache (deep copy!)  */
+const AV_METRO_CLASSES = Object.freeze([]); /* no DOM of our own (the Studio card is sa-D) */
+
+/* ---------- module state ---------- */
+
+const avMetro = {
+  inited: false,
+  on: false,
+  level: AV_METRO_LEVEL_DEF,
+  beatsPerBar: AV_METRO_BEATS_DEF,
+  accent: true,
+  mode: "none",            /* "none" | "own" | "seq" — the kind of the ACTIVE regular grid  */
+  originT: null,           /* active regular-grid origin (audio-clock s) | null             */
+  nextT: null,             /* next regular click time to plan | null (paused / not streaming)*/
+  lastT: null,             /* last planned click time (resync floor)                        */
+  clicks: new Array(AV_METRO_CLICKS_CAP).fill(null),  /* bounded ring                        */
+  clicksN: 0,              /* total planned (ring holds min(n, cap))                        */
+  dropped: 0,              /* clicks dropped by the stall law                               */
+  ctx: null,
+  handle: null,
+  ensureTried: false,
+  ensurePending: false,
+  timer: null,
+  seqLock: null,           /* transport-grid origin lock (s) | null                         */
+  seqLastStep: null,       /* last avSeqPosition().step seen (increment discipline)         */
+  seqBeatDur: 0,           /* beat duration the lock was solved with (bpm-change detector)  */
+  gridStr: null,           /* cached grid string ("16" | "8t") from avSeqSnap()             */
+  gridAt: -1,
+  cin: null,               /* active count-in | null                                        */
+};
+
+let avMetroDebug = null;   /* window.__avMetro handle (null in plain node)                  */
+
+/* ---------- small primitives (never throw) ---------- */
+
+function avMetroNum(v, dflt) {
+  const n = Number(v);
+  return isFinite(n) ? n : dflt;
+}
+function avMetroClampNum(v, dflt, lo, hi) {
+  const n = Number(v);
+  if (v == null || v === "" || !isFinite(n)) return dflt;
+  return n < lo ? lo : (n > hi ? hi : n);
+}
+function avMetroClampInt(v, dflt, lo, hi) {
+  const n = Number(v);
+  if (v == null || v === "" || !isFinite(n)) return dflt;
+  const r = Math.round(n);
+  return r < lo ? lo : (r > hi ? hi : r);
+}
+function avMetroBoolish(v) {
+  if (v === true || v === 1 || v === "1" || v === "true" || v === "on") return true;
+  if (v === false || v === 0 || v === "0" || v === "false" || v === "off") return false;
+  return null;
+}
+
+/* ---------- pure beat-grid math (the harness tests this in plain node) ---------- */
+
+/* beat duration from bpm (guarded; 120 default; 20..300 clamp) */
+function avMetroBeatDur(bpm) {
+  const b = avMetroClampNum(bpm, AV_METRO_BPM_DEF, AV_METRO_BPM_MIN, AV_METRO_BPM_MAX);
+  return 60 / b;
+}
+
+/* click times = origin + k·beatDur for k with t ∈ [fromT, toT); accent on beat 1 of the bar.
+   PURE, analytic, allocation-light; guard-capped so a degenerate beat can never hang. */
+function avMetroClicksInWindow(originT, beatDur, beatsPerBar, accentOn, fromT, toT) {
+  const out = [];
+  try {
+    const o = Number(originT), bd = Number(beatDur), f = Number(fromT), to = Number(toT);
+    if (!isFinite(o) || !(bd > 0) || !isFinite(bd) || !isFinite(f) || !isFinite(to) || !(to > f)) return out;
+    const bpb = avMetroClampInt(beatsPerBar, AV_METRO_BEATS_DEF, AV_METRO_BEATS_MIN, AV_METRO_BEATS_MAX);
+    let k = Math.ceil((f - o) / bd - 1e-9);
+    if (!isFinite(k) || k < 0) k = 0;
+    let guard = 0;
+    while (guard++ < AV_METRO_PLAN_GUARD) {
+      const t = o + k * bd;
+      if (!(t < to)) break;
+      out.push({ t: t, accent: !!(accentOn && (k % bpb) === 0) });
+      k++;
+    }
+  } catch (e) { /* pure math never throws — an empty plan is the honest fallback */ }
+  return out;
+}
+
+/* count-in plan: bars×beatsPerBar beats from origin, accent on beat 1 of each bar. PURE. */
+function avMetroCountInPlan(bars, bpm, beatsPerBar, originT, accentOn) {
+  const b = avMetroClampInt(bars, AV_METRO_BARS_DEF, AV_METRO_BARS_MIN, AV_METRO_BARS_MAX);
+  const bpb = avMetroClampInt(beatsPerBar, AV_METRO_BEATS_DEF, AV_METRO_BEATS_MIN, AV_METRO_BEATS_MAX);
+  const bd = avMetroBeatDur(bpm);
+  const o = avMetroNum(originT, 0);
+  const total = b * bpb;
+  const seconds = total * bd;
+  const clicks = [];
+  for (let k = 0; k < total; k++) clicks.push({ t: o + k * bd, accent: !!(accentOn && (k % bpb) === 0) });
+  return { bars: b, beatsPerBar: bpb, total: total, seconds: seconds, originT: o, endT: o + seconds, clicks: clicks };
+}
+
+/* first grid beat strictly after `afterT` on origin + k·beatDur (null when degenerate).
+   The +1e-9 guard keeps "strictly after" true under float noise: a boundary that lands
+   within an ulp of `afterT` is skipped, never re-fired (no same-time/double click). */
+function avMetroNextGridT(originT, beatDur, afterT) {
+  const o = Number(originT), bd = Number(beatDur), a = Number(afterT);
+  if (!isFinite(o) || !(bd > 0) || !isFinite(bd) || !isFinite(a)) return null;
+  const k = Math.floor((a - o) / bd + 1e-9) + 1;
+  const t = o + k * bd;
+  return isFinite(t) ? t : null;
+}
+
+/* ---------- live tempo + grid (guarded sibling reads) ---------- */
+
+function avMetroLiveBpm() {
+  try {
+    if (typeof avState !== "undefined" && avState && typeof avState.bpm === "number" && isFinite(avState.bpm)) {
+      return avMetroClampNum(avState.bpm, AV_METRO_BPM_DEF, AV_METRO_BPM_MIN, AV_METRO_BPM_MAX);
+    }
+  } catch (e) { /* no store */ }
+  return AV_METRO_BPM_DEF;
+}
+
+/* the seq's grid string — avSeqSnap() is a DEEP COPY (av_seq_core), so cache it ~0.5 s */
+function avMetroGridCached(now) {
+  try {
+    const t = isFinite(now) ? now : 0;
+    if (avMetro.gridStr !== null && (t - avMetro.gridAt) < AV_METRO_GRID_CACHE_S) return avMetro.gridStr;
+    let grid = "16";
+    if (typeof avSeqSnap === "function") {
+      const s = avSeqSnap();
+      if (s && s.grid === "8t") grid = "8t";
+    }
+    avMetro.gridStr = grid;
+    avMetro.gridAt = t;
+    return grid;
+  } catch (e) { return avMetro.gridStr || "16"; }
+}
+
+/* the seq's live base step duration (the wave's pure formula; grid "16" → 60/bpm/4, "8t" → /3) */
+function avMetroSeqStepDur(bpm, now) {
+  const b = avMetroClampNum(bpm, AV_METRO_BPM_DEF, AV_METRO_BPM_MIN, AV_METRO_BPM_MAX);
+  return avMetroGridCached(now) === "8t" ? (60 / b / 3) : (60 / b / 4);
+}
+
+function avMetroSeqIsPlaying() {
+  try { if (typeof avSeqIsPlaying === "function") return avSeqIsPlaying() === true; } catch (e) { /* sibling gone */ }
+  return false;
+}
+function avMetroSeqPosition() {
+  try {
+    if (typeof avSeqPosition === "function") {
+      const p = avSeqPosition();
+      if (p && typeof p === "object") return p;
+    }
+  } catch (e) { /* sibling gone */ }
+  return null;
+}
+
+/* a suspended engine ctx cannot advance the click train until it resumes: ask, never insist */
+function avMetroKickResume() {
+  try {
+    const ctx = avMetro.ctx;
+    if (!ctx || ctx.state !== "suspended" || typeof ctx.resume !== "function") return false;
+    const p = ctx.resume();
+    if (p && typeof p.catch === "function") p.catch(function () { /* gesture-gated: stays suspended */ });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the clicks ring (bounded, last 64, chronological dump) ---------- */
+
+function avMetroRingPush(t, accent) {
+  try {
+    avMetro.clicks[avMetro.clicksN % AV_METRO_CLICKS_CAP] = { t: t, accent: accent === true };
+    avMetro.clicksN++;
+  } catch (e) { /* a ring push never breaks a click */ }
+}
+function avMetroRingDump() {
+  const out = [];
+  try {
+    const n = avMetro.clicksN;
+    const start = n > AV_METRO_CLICKS_CAP ? n - AV_METRO_CLICKS_CAP : 0;
+    for (let i = start; i < n; i++) {
+      const e = avMetro.clicks[i % AV_METRO_CLICKS_CAP];
+      if (e && typeof e.t === "number") out.push({ t: e.t, accent: e.accent === true });
+    }
+  } catch (e) { /* dump is read-only */ }
+  return out;
+}
+function avMetroRingClear() {
+  try {
+    for (let i = 0; i < AV_METRO_CLICKS_CAP; i++) avMetro.clicks[i] = null;
+    avMetro.clicksN = 0;
+    avMetro.dropped = 0;
+  } catch (e) { /* clearing is best effort */ }
+}
+
+/* ---------- the click (synthesized ping → master bus ONLY) ---------- */
+
+function avMetroPing(t, accent) {
+  let osc = null, g = null;
+  try {
+    const ctx = avMetro.ctx;
+    if (!ctx || typeof ctx.createOscillator !== "function" || typeof ctx.createGain !== "function") return false;
+    const level = avMetro.level;
+    if (!(level > 0)) return false;                        /* level 0: planned, silent      */
+    let master = null;
+    try { if (typeof avMasterFor === "function") master = avMasterFor(ctx); } catch (e) { master = null; }
+    if (!master) return false;                             /* click law: master ONLY, no fallback */
+    osc = ctx.createOscillator();
+    g = ctx.createGain();
+    osc.type = "sine";
+    if (osc.frequency && typeof osc.frequency.setValueAtTime === "function") {
+      osc.frequency.setValueAtTime(accent ? AV_METRO_ACCENT_HZ : AV_METRO_PLAIN_HZ, t);
+    } else if (osc.frequency) {
+      osc.frequency.value = accent ? AV_METRO_ACCENT_HZ : AV_METRO_PLAIN_HZ;
+    }
+    if (g.gain && typeof g.gain.setValueAtTime === "function") {
+      g.gain.setValueAtTime(level, t);
+      if (typeof g.gain.exponentialRampToValueAtTime === "function") {
+        g.gain.exponentialRampToValueAtTime(0.0001, t + AV_METRO_DECAY_S);   /* ~25 ms decay */
+      }
+    } else if (g.gain) {
+      try { g.gain.value = level; } catch (e) { /* stub node */ }
+    }
+    osc.connect(g);
+    g.connect(master);                                     /* ← avMasterFor(ctx) ONLY       */
+    osc.start(t);
+    osc.stop(t + AV_METRO_DECAY_S + AV_METRO_STOP_PAD_S);
+    try {
+      osc.onended = function () {
+        try { osc.disconnect(); g.disconnect(); } catch (e) { /* ctx closed */ }
+      };
+    } catch (e) { /* stub node refuses onended */ }
+    return true;
+  } catch (e) {
+    try { if (osc && typeof osc.disconnect === "function") osc.disconnect(); } catch (e2) { /* gone */ }
+    try { if (g && typeof g.disconnect === "function") g.disconnect(); } catch (e3) { /* gone */ }
+    return false;
+  }
+}
+
+/* one planned click: ring (evidence) first, then the audible ping — never throws */
+function avMetroEmitClick(t, accent) {
+  try {
+    avMetro.lastT = t;
+    avMetroRingPush(t, accent === true);
+    avMetroPing(t, accent === true);
+  } catch (e) { /* a click never throws the caller */ }
+}
+
+/* ---------- context binding (lazy; never throws) ---------- */
+
+function avMetroCtxAlive(ctx) {
+  try {
+    return !!ctx && typeof ctx.currentTime === "number" && isFinite(ctx.currentTime) && ctx.state !== "closed";
+  } catch (e) { return false; }
+}
+
+function avMetroBindResolve(h) {
+  try {
+    avMetro.ensurePending = false;
+    if (h && avMetroCtxAlive(h.ctx)) {
+      avMetro.ctx = h.ctx;
+      avMetro.handle = h;
+      if (avMetro.on || avMetro.cin) avMetroPump();
+    }
+  } catch (e) { /* a late bind is best effort */ }
+}
+
+function avMetroBindCtx() {
+  try {
+    if (avMetroCtxAlive(avMetro.ctx)) return "bound";
+    avMetro.ctx = null;
+    avMetro.handle = null;
+    if (typeof window !== "undefined" && window.__avEngine && window.__avEngine.ready === true) {
+      const h = window.__avEngine.handle;
+      if (h && avMetroCtxAlive(h.ctx)) { avMetro.ctx = h.ctx; avMetro.handle = h; return "bound"; }
+    }
+    if (typeof avTap !== "undefined" && avTap && avMetroCtxAlive(avTap.ctx)) { avMetro.ctx = avTap.ctx; return "bound"; }
+    if (!avMetro.ensureTried && typeof avEngineEnsure === "function") {
+      avMetro.ensureTried = true;
+      let p = null;
+      try { p = avEngineEnsure(); } catch (e) { p = null; }
+      if (p && typeof p.then === "function") {
+        avMetro.ensurePending = true;
+        try { p.then(avMetroBindResolve, function () { avMetro.ensurePending = false; }); } catch (e) { avMetro.ensurePending = false; }
+        return "pending";
+      }
+      if (p && avMetroCtxAlive(p.ctx)) { avMetro.ctx = p.ctx; avMetro.handle = p; return "bound"; }
+    }
+    return avMetro.ensurePending ? "pending" : "none";
+  } catch (e) { return "none"; }
+}
+
+/* ---------- timers (stubbed freely in node harnesses) ---------- */
+
+function avMetroStartTimer() {
+  if (avMetro.timer != null) return true;
+  try {
+    if (typeof setInterval === "function") {
+      avMetro.timer = setInterval(avMetroPump, AV_METRO_WAKE_MS);
+      return true;
+    }
+  } catch (e) { avMetro.timer = null; }
+  return false;
+}
+function avMetroStopTimer() {
+  if (avMetro.timer == null) return false;
+  try { if (typeof clearInterval === "function") clearInterval(avMetro.timer); } catch (e) { /* gone */ }
+  avMetro.timer = null;
+  return true;
+}
+
+/* ---------- transport lock (phase alignment; the increment discipline) ---------- */
+
+function avMetroSeqLockUpdate(now, bd) {
+  try {
+    const playing = avMetroSeqIsPlaying();
+    if (!playing) {
+      if (avMetro.mode === "seq") avMetro.mode = "own";     /* keep the frozen grid          */
+      if (avMetro.seqLock !== null || avMetro.seqLastStep !== null || avMetro.seqBeatDur !== 0) {
+        avMetro.seqLock = null;
+        avMetro.seqLastStep = null;
+        avMetro.seqBeatDur = 0;
+      }
+      return;
+    }
+    if (!(avMetro.seqBeatDur > 0) || Math.abs(avMetro.seqBeatDur - bd) > bd * 1e-3) {
+      /* bpm changed (the seq re-anchored its origin): the old lock no longer fits the grid */
+      avMetro.seqLock = null;
+      avMetro.seqLastStep = null;
+      avMetro.seqBeatDur = bd;
+      avMetro.gridAt = -1;                                  /* refresh the grid cache        */
+    }
+    const pos = avMetroSeqPosition();
+    if (!pos || !isFinite(pos.t) || !(pos.step >= 0)) return;
+    const step = Math.floor(pos.step);
+    if (avMetro.seqLastStep === null) { avMetro.seqLastStep = step; return; }   /* need an increment to anchor */
+    if (step === avMetro.seqLastStep) return;
+    if (step < avMetro.seqLastStep) {                       /* transport restarted / re-anchored backwards */
+      avMetro.seqLastStep = step;
+      avMetro.seqLock = null;
+      return;
+    }
+    const jump = step - avMetro.seqLastStep;
+    avMetro.seqLastStep = step;
+    const sd = avMetroSeqStepDur(avMetroLiveBpm(), now);
+    if (!(sd > 0)) return;
+    /* first sighting of the new step: the boundary happened ≤ one wake ago — solve the origin */
+    const cand = pos.t - step * sd - AV_METRO_LOCK_BIAS_S;
+    if (!isFinite(cand)) return;
+    let adopted = false;
+    if (avMetro.seqLock === null) {
+      avMetro.seqLock = cand;                               /* first lock (best effort on a jump > 1) */
+      adopted = true;
+    } else if (jump === 1 && Math.abs(cand - avMetro.seqLock) > sd / 2) {
+      avMetro.seqLock = cand;                               /* desync-scale drift: re-lock   */
+      adopted = true;
+    }
+    if (adopted && avMetro.nextT !== null && avMetro.originT !== null) {
+      /* streaming on a grid: snap the pointer onto the (re-)locked transport grid */
+      avMetro.originT = avMetro.seqLock;
+      avMetro.mode = "seq";
+      const floorT = (typeof avMetro.lastT === "number")
+        ? (avMetro.lastT + AV_METRO_RESYNC_GAP_FRAC * bd)
+        : (now - 1e-9);
+      avMetro.nextT = avMetroNextGridT(avMetro.originT, bd, floorT);
+    }
+  } catch (e) { /* the lock discipline is best effort — never breaks the pump */ }
+}
+
+/* ---------- stream continuity (start / pause / snap decisions) ---------- */
+
+function avMetroStreamKeep(now, bd) {
+  try {
+    const playing = avMetroSeqIsPlaying();
+    const streaming = (avMetro.nextT !== null && avMetro.originT !== null);
+    if (streaming) {
+      /* transport started under an own/frozen grid: pause; the lock (≤ 1 step) restarts us
+         ON the grid — clicks never land between grids */
+      if (playing && avMetro.mode !== "seq") {
+        avMetro.nextT = null;
+        avMetro.originT = null;
+        avMetro.mode = "none";
+      }
+      return;
+    }
+    if (playing) {
+      if (avMetro.seqLock === null) return;                 /* wait for the transport lock   */
+      avMetro.originT = avMetro.seqLock;
+      avMetro.mode = "seq";
+    } else {
+      if (avMetro.originT === null) avMetro.originT = now + AV_METRO_START_OFFSET_S;
+      avMetro.mode = "own";
+    }
+    /* resume floor = the last planned click + ¾ beat — a pure pointer, not a wall-clock
+       read, so the resume point is deterministic; a stale pointer catches up through the
+       drop law (never a burst of late clicks) */
+    const floorT = (typeof avMetro.lastT === "number")
+      ? (avMetro.lastT + AV_METRO_RESYNC_GAP_FRAC * bd)
+      : (now - 1e-9);
+    avMetro.nextT = avMetroNextGridT(avMetro.originT, bd, floorT);
+  } catch (e) { /* stream keeping is best effort */ }
+}
+
+/* ---------- scheduling (the lookahead window; the stall drop) ---------- */
+
+function avMetroScheduleDue(now, bd) {
+  try {
+    if (!avMetro.ctx) return;
+    const horizon = now + AV_METRO_LOOKAHEAD_S;
+    /* count-in train first (its own origin + frozen beat; preempts the regular grid) */
+    const cin = avMetro.cin;
+    if (cin) {
+      let guard = 0;
+      while (cin.k < cin.total && guard++ < AV_METRO_PLAN_GUARD) {
+        const t = cin.origin + cin.k * cin.bd;
+        if (!(t < horizon)) break;
+        if (t < now - AV_METRO_LATE_DROP_S) {               /* stall: never fire a stale cue */
+          avMetro.dropped++;
+          cin.k++;
+          continue;
+        }
+        avMetroEmitClick(t, cin.accentOn && (cin.k % cin.bpb) === 0);
+        cin.k++;
+      }
+    }
+    /* regular train */
+    if (!avMetro.on || cin) return;
+    if (avMetro.nextT === null || avMetro.originT === null) return;
+    if (avMetroSeqIsPlaying() && avMetro.seqLock === null) return;   /* aligning: hold       */
+    if (!(bd > 0) || !isFinite(bd)) return;
+    let guard = 0;
+    while (avMetro.nextT < horizon && guard++ < AV_METRO_PLAN_GUARD) {
+      const t = avMetro.nextT;
+      const k = Math.round((t - avMetro.originT) / bd);
+      if (t < now - AV_METRO_LATE_DROP_S) {
+        avMetro.dropped++;
+        avMetro.nextT = avMetro.originT + (k + 1) * bd;
+        continue;
+      }
+      avMetroEmitClick(t, avMetro.accent && (k % avMetro.beatsPerBar) === 0);
+      avMetro.nextT = avMetro.originT + (k + 1) * bd;
+    }
+  } catch (e) { /* scheduling is best effort; the pump survives */ }
+}
+
+/* ---------- count-in completion / refusal ---------- */
+
+function avMetroCinFinish(result) {
+  const cin = avMetro.cin;
+  if (!cin) return false;
+  avMetro.cin = null;
+  try { if (typeof cin.finish === "function") cin.finish(result); } catch (e) { /* resolve never throws */ }
+  try {
+    if (avMetro.on && avMetroCtxAlive(avMetro.ctx)) {
+      const now = avMetro.ctx.currentTime;
+      avMetroStreamKeep(now, avMetroBeatDur(avMetroLiveBpm()));
+    }
+  } catch (e) { /* resume is best effort */ }
+  if (!avMetro.on) avMetroStopTimer();
+  avMetroPublish();
+  return true;
+}
+
+/* ---------- the pump (lock → stream → schedule → count-in resolve) ---------- */
+
+function avMetroPump() {
+  try {
+    if (!avMetro.on && !avMetro.cin) return;                /* idle: the timer should be off */
+    if (avMetro.ctx && !avMetroCtxAlive(avMetro.ctx)) {
+      /* the clock died: refuse a waiting count-in honestly before looking for a new ctx */
+      avMetro.ctx = null;
+      avMetro.handle = null;
+      if (avMetro.cin) {
+        const cin = avMetro.cin;
+        avMetroCinFinish({ ok: false, bars: cin.bars, seconds: null, error: "audio context lost" });
+      }
+    }
+    if (!avMetro.ctx) {
+      if (avMetroBindCtx() !== "bound") {
+        if (avMetro.cin) {
+          const cin = avMetro.cin;
+          avMetroCinFinish({ ok: false, bars: cin.bars, seconds: null, error: "no audio context" });
+        }
+        avMetroPublish();
+        return;
+      }
+    }
+    const ctx = avMetro.ctx;
+    const now = (ctx && typeof ctx.currentTime === "number" && isFinite(ctx.currentTime)) ? ctx.currentTime : null;
+    if (now === null) return;
+
+    const bd = avMetroBeatDur(avMetroLiveBpm());
+
+    if (avMetro.on) avMetroSeqLockUpdate(now, bd);           /* (1) transport grid lock      */
+    if (avMetro.on && !avMetro.cin) avMetroStreamKeep(now, bd);   /* (2) stream continuity   */
+    avMetroScheduleDue(now, bd);                             /* (3) lookahead scheduling     */
+
+    if (avMetro.cin) {                                       /* (4) count-in completion      */
+      const cin = avMetro.cin;
+      if (now >= cin.endT - 1e-9) avMetroCinFinish({ ok: true, bars: cin.bars, seconds: cin.seconds });
+    }
+    avMetroPublish();
+  } catch (e) { /* a pump never throws */ }
+}
+
+/* ---------- state / diagnostics ---------- */
+
+function avMetroReasonNow() {
+  try {
+    if (!avMetro.on && !avMetro.cin) return "";
+    if (!avMetroCtxAlive(avMetro.ctx)) return "no ctx";
+    if (avMetro.ctx && avMetro.ctx.state === "suspended") return "ctx suspended";
+    if (avMetro.on && !avMetro.cin && avMetroSeqIsPlaying() && avMetro.seqLock === null) return "aligning to transport";
+    return "";
+  } catch (e) { return ""; }
+}
+
+function avMetroState() {
+  try {
+    const cin = avMetro.cin;
+    let originT = null, nextClickAt = null;
+    if (cin) {
+      originT = cin.origin;
+      nextClickAt = (cin.k < cin.total) ? (cin.origin + cin.k * cin.bd) : avMetro.nextT;
+    } else {
+      originT = avMetro.originT;
+      nextClickAt = avMetro.nextT;
+    }
+    return {
+      on: avMetro.on === true,
+      level: avMetro.level,
+      bpm: avMetroLiveBpm(),
+      beatsPerBar: avMetro.beatsPerBar,
+      originT: (typeof originT === "number" && isFinite(originT)) ? originT : null,
+      nextClickAt: (typeof nextClickAt === "number" && isFinite(nextClickAt)) ? nextClickAt : null,
+      clicks: avMetroRingDump(),
+      accent: avMetro.accent === true,
+      mode: cin ? "countin" : (avMetro.mode || "none"),
+      countIn: cin ? { active: true, bars: cin.bars, beatsPerBar: cin.bpb, endT: cin.endT, done: cin.k, total: cin.total } : null,
+      planned: avMetro.clicksN,
+      dropped: avMetro.dropped,
+      reason: avMetroReasonNow(),
+      ctxBound: avMetroCtxAlive(avMetro.ctx),
+      version: AV_METRO_VERSION,
+    };
+  } catch (e) {
+    return {
+      on: false, level: AV_METRO_LEVEL_DEF, bpm: AV_METRO_BPM_DEF, beatsPerBar: AV_METRO_BEATS_DEF,
+      originT: null, nextClickAt: null, clicks: [],
+    };
+  }
+}
+
+function avMetroPublish() {
+  try {
+    if (avMetroDebug) {
+      avMetroDebug.planned = avMetro.clicksN;
+      avMetroDebug.on = avMetro.on;
+    }
+  } catch (e) { /* debug publishing is best effort */ }
+}
+
+/* ============================================================================================
+   PUBLIC SURFACE (the pinned §2.2 API)
+   ============================================================================================ */
+
+function avMetroInit() {
+  if (avMetro.inited) return true;
+  avMetro.inited = true;
+  try { avMetroBindCtx(); } catch (e) { /* warm the bind; absence is fine */ }
+  avMetroPublish();
+  return true;
+}
+
+function avMetroSet(patch) {
+  try {
+    const p = (patch && typeof patch === "object") ? patch : null;
+    if (p) {
+      if ("level" in p) {
+        const n = Number(p.level);
+        if (p.level != null && p.level !== "" && isFinite(n)) {
+          avMetro.level = n < AV_METRO_LEVEL_MIN ? AV_METRO_LEVEL_MIN : (n > AV_METRO_LEVEL_MAX ? AV_METRO_LEVEL_MAX : n);
+        }
+      }
+      if ("beatsPerBar" in p) {
+        const n = Number(p.beatsPerBar);
+        if (p.beatsPerBar != null && p.beatsPerBar !== "" && isFinite(n)) {
+          const r = Math.round(n);
+          avMetro.beatsPerBar = r < AV_METRO_BEATS_MIN ? AV_METRO_BEATS_MIN : (r > AV_METRO_BEATS_MAX ? AV_METRO_BEATS_MAX : r);
+        }
+      }
+      if ("accent" in p) {
+        const b = avMetroBoolish(p.accent);
+        if (b !== null) avMetro.accent = b;
+      }
+      if ("on" in p) {
+        const b = avMetroBoolish(p.on);
+        if (b === true && !avMetro.on) {
+          /* OFF→ON: a fresh train — the old grid and lock are dropped, the ring starts clean */
+          avMetro.on = true;
+          avMetro.nextT = null; avMetro.originT = null; avMetro.mode = "none"; avMetro.lastT = null;
+          avMetro.seqLock = null; avMetro.seqLastStep = null; avMetro.seqBeatDur = 0;
+          avMetroRingClear();
+          avMetroKickResume();
+          avMetroStartTimer();
+          avMetroPump();
+        } else if (b === false && avMetro.on) {
+          avMetro.on = false;
+          avMetro.nextT = null; avMetro.originT = null; avMetro.mode = "none"; avMetro.lastT = null;
+          avMetro.seqLock = null; avMetro.seqLastStep = null; avMetro.seqBeatDur = 0;
+          avMetroRingClear();                              /* OFF ⇒ nothing planned ("none") */
+          if (!avMetro.cin) avMetroStopTimer();            /* a live count-in keeps ticking  */
+        }
+      }
+    }
+    avMetroPublish();
+    return avMetroState();
+  } catch (e) {
+    try { return avMetroState(); } catch (e2) {
+      return {
+        on: false, level: AV_METRO_LEVEL_DEF, bpm: AV_METRO_BPM_DEF, beatsPerBar: AV_METRO_BEATS_DEF,
+        originT: null, nextClickAt: null, clicks: [],
+      };
+    }
+  }
+}
+
+function avMetroCountIn(bars) {
+  return new Promise(function (resolve) {
+    let settled = false;
+    const finish = function (r) {
+      if (settled) return;
+      settled = true;
+      try { resolve(r); } catch (e) { /* resolve never throws */ }
+    };
+    try {
+      const b = avMetroClampInt(bars, AV_METRO_BARS_DEF, AV_METRO_BARS_MIN, AV_METRO_BARS_MAX);
+      if (!avMetroCtxAlive(avMetro.ctx)) avMetroBindCtx();
+      avMetroKickResume();
+      const ctx = avMetro.ctx;
+      if (!avMetroCtxAlive(ctx)) {                         /* honest refusal — never hangs  */
+        finish({ ok: false, bars: b, seconds: null, error: "no audio context" });
+        return;
+      }
+      if (avMetro.cin) {
+        avMetroCinFinish({ ok: false, bars: avMetro.cin.bars, seconds: null, error: "superseded" });
+      }
+      const now = ctx.currentTime;
+      const bpb = avMetro.beatsPerBar;
+      const bd = avMetroBeatDur(avMetroLiveBpm());
+      const origin = now + AV_METRO_START_OFFSET_S;
+      const total = b * bpb;
+      const seconds = total * bd;
+      avMetro.cin = {
+        bars: b, bpb: bpb, bd: bd, accentOn: avMetro.accent === true,
+        origin: origin, endT: origin + seconds, total: total, seconds: seconds,
+        k: 0, finish: finish,
+      };
+      avMetro.nextT = null;                                /* the count-in preempts the train */
+      avMetroStartTimer();
+      avMetroPump();
+    } catch (e) {
+      finish({ ok: false, bars: AV_METRO_BARS_DEF, seconds: null, error: "count-in failed" });
+    }
+  });
+}
+
+function avMetroClasses() { return AV_METRO_CLASSES.slice(); }
+
+/* ---------- debug handle (rigs read this; no live nodes leak) ---------- */
+
+if (typeof window !== "undefined") {
+  try {
+    avMetroDebug = {
+      version: AV_METRO_VERSION,
+      init: avMetroInit,
+      set: avMetroSet,
+      state: avMetroState,
+      countIn: avMetroCountIn,
+      classes: avMetroClasses,
+      pump: avMetroPump,
+    };
+    window.__avMetro = avMetroDebug;
+  } catch (e) { avMetroDebug = null; }
+}
+
+
+/* av_takes.js — Anvil S1 record core (child C, verify/_s1_wave.md §2.3): the armed take recorder
+   — records the DRY input (avInputNode() output: post input-gain, pre-master; av_input.js owns
+   that node) through a parallel capture branch, splits lap takes on the transport cycle and keeps
+   takes in memory as per-take Float32 arrays; avTakesExport() encodes one take via avWavEncode.
+
+   CRAFT (mirrors src/av_rec.js — read it first):
+   - Track-before-wire (PF audit LIFE-10): every node is stored on the module state BEFORE any
+     connect, so a throw halfway can never strand a live node on the input gain. avTakesRelease()
+     is idempotent and full (start failure, stop, abort and re-start all call it).
+   - Parallel branch: inputGain → sp → gain-0 sink → avTap.real (guarded; the REAL destination is
+     the terminal fallback — never back into the bus chain: a loop through master would be a
+     Web-Audio cycle and Chrome mutes cycles). sp's outputBuffer is never written: the branch is
+     silent twice over. ScriptProcessorNode(4096, ch, ch) — the input node's channel count (1..2).
+   - Block-rate chunk copies only (SPN's recycled inputBuffer mandates a copy — one 4096-frame
+     copy per ~85 ms, main-thread callback; av_rec discipline). No per-sample allocation, no DOM
+     and no throw inside the capture path; a dropped block beats a broken page.
+   - Stop keeps capturing through a short settle window (AV_TAKES_SETTLE_MS) so the final
+     partial block lands; the take's own frames/seconds describe exactly what was captured.
+     avTakesStop() returns a receipt that is ALSO thenable — `await avTakesStop()` yields the
+     settled final receipt (the sync fields describe the moment of the stop request).
+
+   LAP LAW (§2.3): avTakesStart({lapSync:true}) splits the recording into one take per transport
+   cycle when avSeqIsPlaying() is live (guarded) and avSeqSnap() answers:
+     cycleSteps = longest track len, floor 16, clamped 1..64   (the avSeqSchedCycleLen law)
+     stepDur    = 60/bpm/4 (grid "16") | 60/bpm/3 (grid "8t")  (the avSeqSchedGridDur law)
+     cycleDur   = cycleSteps · stepDur                          (PURE — computed once at start)
+   bpm prefers the live avState.bpm overlay (guarded) over the snapshot's — identical to the
+   scheduler's pattern-view law, so the grid the transport actually runs is the grid we split on.
+   Boundaries are laid out analytically in the SAMPLE domain from the first captured block:
+   boundaryFrame(k) = k · round(cycleDur · sampleRate); when a captured block crosses a boundary
+   it is split EXACTLY there (sub-copies at block rate), the finished lap closes and the next
+   opens. The live avSeqSchedNow() clock (guarded; the capture ctx's currentTime as fallback) is
+   the second trigger: if it reports the boundary time has passed while frames lag (a stall), the
+   lap closes honestly at the block start — the sample count and the clock can never disagree
+   silently. Every completed cycle becomes a take (lap n); the final partial lap is kept and
+   marked partial:true. No transport → one continuous take (cycleDur 0, partial false). Take
+   content is delayed vs the transport by the input latency δ; each take carries
+   offsetFrames = avInputLatency().totalFrames (honest) so playback can compensate.
+
+   MEMORY CAP (§5): a single take is capped at 300 s — when the cap is reached the recorder
+   ends itself (release + finalize, no settle) and marks the session capped:true /
+   stopReason:'cap' (read avTakesState().lastReceipt). Per-take Float32 arrays only; WAV bytes
+   exist only inside an export call.
+
+   TAKE MODEL: { id:'t1'…, name:'Take 1', frames, rate, channels (1|2), lap, partial,
+   offsetFrames, startedCtxT, seconds, data:[Float32Array,…] }. Mono sources keep one data
+   channel and export duplicated to stereo (avWavEncode wants l+r; 16-bit default), file name
+   `anvil_take<N>_lap<n>.wav` (N = the id's number, n = the lap).
+
+   ARMING: avTakesArm(true) pre-arms when the input node is live (false = refuse). A start with
+   live input is allowed even when not pre-armed — it arms implicitly (the REC button's flow per
+   §2.4 never mentions a separate arm step). Refusal 'input not enabled' fires exactly when no
+   live input node / no armed input exists. avTakesArm(false) while recording runs a normal stop
+   (takes are kept); avTakesAbort() discards instead.
+
+   API (§2.3 pin): avTakesInit() -> boolean · avTakesArm(on) -> armed boolean ·
+   avTakesStart({lapSync}) -> Promise<receipt> · avTakesStop() -> receipt (thenable) ·
+   avTakesAbort() · avTakesList() -> [take-meta] · avTakesExport(id) -> Promise<{ok,id,name,
+   bytes,blob,url,wavInfo,seconds}> · avTakesDelete(id) · avTakesKeepLast(n) 0..32 (default 8,
+   enforced on stop) · avTakesState() · avTakesClasses() -> string[] · window.__avTakes (debug
+   handle — snapshots only, no live nodes leak).
+
+   LAWS: "use strict"; classic script (no modules); node-loadable (no DOM at load; the only
+   top-level browser touch is the guarded typeof window probe at the end); one namespace
+   (avTakes* / AV_TAKES_*); never throws; honest refusals everywhere. Export `bytes` is the WAV
+   byte COUNT (the av_rec receipt convention); the raw bytes ride `blob` (blob.arrayBuffer()). */
+
+"use strict";
+
+const AV_TAKES_VERSION = "s1.0";
+const AV_TAKES_BLOCK = 4096;                 /* ScriptProcessor quantum (§2.3 pin) */
+const AV_TAKES_SETTLE_MS = 180;              /* stop: keep capturing ~2 blocks so the tail lands */
+const AV_TAKES_MAX_SECONDS = 300;            /* §5: single-take memory cap (auto-end, honest) */
+const AV_TAKES_KEEP_DEF = 8;                 /* §2.3: keepLast default */
+const AV_TAKES_KEEP_MAX = 32;
+const AV_TAKES_LEN_DEF = 16;                 /* avSeqSchedCycleLen/avBounceCycleLen floor */
+const AV_TAKES_STEPS_MAX = 64;
+const AV_TAKES_TRACKS = 4;
+const AV_TAKES_BPM_DEF = 120;
+const AV_TAKES_BPM_MIN = 20;
+const AV_TAKES_BPM_MAX = 300;
+const AV_TAKES_WAV_BITS = 16;                /* §2.3: takes export 16-bit by default */
+const AV_TAKES_CLASSES = Object.freeze([
+  "av-takes-row", "av-takes-btn", "av-takes-list", "av-takes-item", "av-takes-name",
+  "av-takes-meta", "av-takes-lap", "av-takes-partial", "av-takes-export", "av-takes-del",
+  "av-takes-status", "av-takes-arm", "av-takes-on", "av-takes-err",
+]);
+
+/* ---------- module state (never holds DOM nodes; nodes only while capturing) ---------- */
+
+const avTakes = {
+  inited: false,
+  armed: false,
+  recording: false,
+  stopping: false,
+  capturing: false,
+  ctx: null,              /* capture context (live only) */
+  input: null,            /* avInputNode() the branch hangs off */
+  sp: null,               /* pass-through capture node */
+  sink: null,             /* gain-0 pull-down sink */
+  sr: 48000,
+  startedCtxT: null,      /* avSeqSchedNow seconds at start (null = unavailable) */
+  startedWall: 0,
+  stoppedWall: 0,
+  finalWall: 0,
+  captureWall: 0,         /* first captured block (honest capture span) */
+  offsetFrames: 0,
+  lapSyncActive: false,
+  cycleSteps: 0,
+  stepDur: 0,
+  cycleDur: 0,
+  cycleFrames: 0,
+  laps: [],               /* session laps: [{ lap, frames, chunks, mono, startedCtxT, closed }] */
+  lapSeq: 1,
+  totalFrames: 0,
+  takes: [],              /* finalized takes (newest last; keepLast trims from the front) */
+  nextId: 1,
+  keepLast: AV_TAKES_KEEP_DEF,
+  peak: 0,
+  capped: false,
+  capFrames: 0,
+  capKicked: false,
+  stopReason: null,
+  error: null,
+  lastExport: null,
+  lastUrlKeep: null,      /* the settled export's object URL (revoked on the next export) */
+  lastReceipt: null,
+  stopResolve: null,
+};
+
+const avTakesNowMs = (typeof performance !== "undefined" && typeof performance.now === "function")
+  ? () => performance.now()
+  : () => Date.now();
+
+function avTakesErr(e) {
+  try { return String((e && (e.message || e.name)) || e) || "unknown error"; } catch (e2) { return "unknown error"; }
+}
+
+/* ---------- pure helpers (the lap law) ---------- */
+
+function avTakesClampNum(v, dflt, lo, hi) {
+  const n = Number(v);
+  if (v == null || v === "" || !isFinite(n)) return dflt;
+  return n < lo ? lo : (n > hi ? hi : n);
+}
+function avTakesClampInt(v, dflt, lo, hi) {
+  const n = Number(v);
+  if (v == null || v === "" || !isFinite(n)) return dflt;
+  const r = Math.round(n);
+  return r < lo ? lo : (r > hi ? hi : r);
+}
+
+/* cycleSteps: longest track len with the avSeqSchedCycleLen floor of 16 (1..64) */
+function avTakesCycleSteps(snap) {
+  let len = AV_TAKES_LEN_DEF;
+  try {
+    const tracks = (snap && snap.tracks && typeof snap.tracks.length === "number") ? snap.tracks : [];
+    for (let i = 0; i < tracks.length && i < AV_TAKES_TRACKS; i++) {
+      const n = avTakesClampInt(tracks[i] ? tracks[i].len : AV_TAKES_LEN_DEF, AV_TAKES_LEN_DEF, 1, AV_TAKES_STEPS_MAX);
+      if (n > len) len = n;
+    }
+  } catch (e) { /* default stands */ }
+  return len;
+}
+
+/* bpm: the live avState.bpm overlay first (the scheduler's pattern-view law), snapshot else */
+function avTakesBpmOf(snap) {
+  try {
+    if (typeof avState !== "undefined" && avState && typeof avState.bpm === "number" && isFinite(avState.bpm)) {
+      return avTakesClampNum(avState.bpm, AV_TAKES_BPM_DEF, AV_TAKES_BPM_MIN, AV_TAKES_BPM_MAX);
+    }
+  } catch (e) { /* no store */ }
+  return avTakesClampNum(snap ? snap.bpm : AV_TAKES_BPM_DEF, AV_TAKES_BPM_DEF, AV_TAKES_BPM_MIN, AV_TAKES_BPM_MAX);
+}
+
+/* stepDur: the avSeqSchedGridDur law, mirrored purely (never reads another module) */
+function avTakesStepDurOf(bpm, grid) {
+  return (grid === "8t") ? (60 / bpm / 3) : (60 / bpm / 4);
+}
+
+/* ---------- guarded reach-ins (the capture siblings; all typeof-guarded) ---------- */
+
+function avTakesPickInput() {
+  try {
+    if (typeof avInputNode === "function") {
+      const n = avInputNode();
+      if (n && typeof n.connect === "function" && n.context) return n;
+    }
+  } catch (e) { /* not loaded / not enabled */ }
+  return null;
+}
+
+function avTakesPickReal(ctx) {
+  try { if (typeof avTap !== "undefined" && avTap && avTap.real && avTap.real.context === ctx) return avTap.real; } catch (e) { /* no tap */ }
+  try { if (typeof window !== "undefined" && window.__avTap && window.__avTap.real && window.__avTap.real.context === ctx) return window.__avTap.real; } catch (e2) { /* no window */ }
+  try { return ctx.destination || null; } catch (e3) { return null; }
+}
+
+function avTakesOffsetFrames() {
+  try {
+    if (typeof avInputLatency === "function") {
+      const l = avInputLatency();
+      if (l && typeof l.totalFrames !== "undefined") {
+        const f = Number(l.totalFrames);
+        if (isFinite(f) && f >= 0) return Math.round(f);
+      }
+    }
+  } catch (e) { /* latency is a nicety */ }
+  return 0;
+}
+
+function avTakesCtxNow(ctx) {
+  try {
+    if (typeof avSeqSchedNow === "function") {
+      const t = avSeqSchedNow();
+      if (typeof t === "number" && isFinite(t)) return t;
+    }
+  } catch (e) { /* no scheduler */ }
+  try {
+    if (ctx && typeof ctx.currentTime === "number" && isFinite(ctx.currentTime)) return ctx.currentTime;
+  } catch (e2) { /* gone */ }
+  return null;
+}
+
+/* ---------- capture path (block rate only; never throws) ---------- */
+
+function avTakesPushPart(lap, l, r, from, len, monoBlock) {
+  if (!lap || !(len > 0)) return;
+  const pl = new Float32Array(len);
+  if (typeof l.subarray === "function") pl.set(l.subarray(from, from + len));
+  else for (let i = 0; i < len; i++) pl[i] = l[from + i];
+  let pr = pl;
+  if (!monoBlock && r !== l) {
+    pr = new Float32Array(len);
+    if (typeof r.subarray === "function") pr.set(r.subarray(from, from + len));
+    else for (let i = 0; i < len; i++) pr[i] = r[from + i];
+  }
+  lap.chunks.push({ l: pl, r: pr });
+  lap.frames += len;
+  lap.mono = lap.mono && (pr === pl);
+  avTakes.totalFrames += len;
+}
+
+function avTakesCloseLap() {
+  const laps = avTakes.laps;
+  const k = laps.length - 1;
+  const lap = laps[k];
+  if (lap) {
+    lap.closed = true;
+    lap.endedCtxT = (avTakes.startedCtxT != null && avTakes.startedCtxT !== undefined && avTakes.cycleDur > 0)
+      ? (avTakes.startedCtxT + (k + 1) * avTakes.cycleDur) : null;
+  }
+  avTakes.lapSeq++;
+  const started = (avTakes.startedCtxT != null && avTakes.startedCtxT !== undefined && avTakes.cycleDur > 0)
+    ? (avTakes.startedCtxT + (k + 1) * avTakes.cycleDur) : null;
+  laps.push({ lap: avTakes.lapSeq, frames: 0, chunks: [], mono: true, startedCtxT: started, closed: false, endedCtxT: null });
+}
+
+/* Feed one copied block through the lap splitter. Boundaries are analytic in the sample domain;
+   the guarded live clock is the second (stall) trigger — lap content is exact whenever the
+   frames arrive, and honestly short when the clock says a boundary passed first. */
+function avTakesFeedBlock(l, r, n, monoBlock, nowCtx) {
+  let off = 0, guard = 0;
+  while (off < n && guard++ < 64) {
+    const laps = avTakes.laps;
+    if (!laps.length) { avTakesCloseLap(); continue; }        /* defensive: never lose a block */
+    const k = laps.length - 1;                                /* 0-based active lap index */
+    const C = avTakes.cycleFrames;
+    if (!(C > 0)) { avTakesPushPart(laps[k], l, r, off, n - off, monoBlock); off = n; break; }
+    const boundaryTotal = (k + 1) * C;
+    const frameHit = (avTakes.totalFrames + (n - off)) >= boundaryTotal;
+    if (frameHit) {
+      const bOff = boundaryTotal - avTakes.totalFrames;       /* frames-from-cursor where the boundary lands */
+      if (bOff <= off) { avTakesCloseLap(); continue; }       /* behind the cursor: close here (stall) */
+      if (bOff < n) {
+        avTakesPushPart(laps[k], l, r, off, bOff - off, monoBlock);
+        avTakesCloseLap();
+        off = bOff;
+        continue;
+      }
+      avTakesPushPart(laps[k], l, r, off, n - off, monoBlock); /* boundary at/after the block end */
+      avTakesCloseLap();
+      off = n;
+      break;
+    }
+    const ctxHit = (avTakes.startedCtxT != null && avTakes.startedCtxT !== undefined && nowCtx != null)
+      && ((nowCtx - avTakes.startedCtxT) >= (k + 1) * avTakes.cycleDur);
+    if (ctxHit) { avTakesCloseLap(); continue; }               /* clock passed the boundary, frames lag */
+    avTakesPushPart(laps[k], l, r, off, n - off, monoBlock);
+    off = n;
+  }
+}
+
+function avTakesProcess(ev) {
+  try {
+    if (!avTakes.capturing) return;
+    const inp = ev && ev.inputBuffer;
+    if (!inp || typeof inp.getChannelData !== "function" || !inp.numberOfChannels) return;
+    const c0 = inp.getChannelData(0);
+    if (!c0 || !c0.length) return;
+    const n0 = c0.length;
+    let n = n0;
+    const capFrames = avTakes.capFrames;
+    if (capFrames > 0 && avTakes.totalFrames + n > capFrames) n = capFrames - avTakes.totalFrames;
+    if (!(n > 0)) { avTakesCapKick(); return; }
+    const l = new Float32Array(n);
+    if (typeof c0.subarray === "function") l.set(c0.subarray(0, n));
+    else for (let i = 0; i < n; i++) l[i] = c0[i];
+    let r = l, mono = true;
+    if (inp.numberOfChannels > 1) {
+      const c1 = inp.getChannelData(1);
+      if (c1 !== c0) {
+        r = new Float32Array(n);
+        if (typeof c1.subarray === "function") r.set(c1.subarray(0, n));
+        else for (let i = 0; i < n; i++) r[i] = c1[i];
+        mono = false;
+      }
+    }
+    let pk = avTakes.peak;
+    for (let i = 0; i < n; i++) { const a = l[i] < 0 ? -l[i] : l[i]; if (a > pk) pk = a; }
+    if (r !== l) for (let i = 0; i < n; i++) { const a = r[i] < 0 ? -r[i] : r[i]; if (a > pk) pk = a; }
+    avTakes.peak = pk > 1.2 ? 1.2 : pk;
+    if (!avTakes.totalFrames) avTakes.captureWall = avTakesNowMs();
+    avTakesFeedBlock(l, r, n, mono, avTakesCtxNow(avTakes.ctx));
+    if (n < n0 || (capFrames > 0 && avTakes.totalFrames >= capFrames)) avTakesCapKick();
+  } catch (e) { /* capture must never throw; a lost block beats a broken page */ }
+}
+
+/* §5 cap: end the session honestly at 300 s (deferred out of the callback) */
+function avTakesCapKick() {
+  if (avTakes.capKicked) return;
+  avTakes.capKicked = true;
+  avTakes.capped = true;
+  if (!avTakes.stopping) {
+    avTakes.recording = false;
+    avTakes.stopping = true;
+    avTakes.stoppedWall = avTakesNowMs();
+  }
+  if (typeof setTimeout === "function") setTimeout(function () { avTakesFinish("cap"); }, 0);
+  else avTakesFinish("cap");
+}
+
+/* ---------- teardown (idempotent — start failure, stop, abort and re-start all call it) ---------- */
+
+function avTakesRelease() {
+  try { const inp = avTakes.input, sp = avTakes.sp; if (inp && sp && typeof inp.disconnect === "function") inp.disconnect(sp); } catch (e) { /* never wired */ }
+  try { const sp = avTakes.sp; if (sp) { sp.onaudioprocess = null; sp.disconnect(); } } catch (e2) { /* gone */ }
+  try { const sk = avTakes.sink; if (sk) sk.disconnect(); } catch (e3) { /* gone */ }
+  avTakes.sp = null;
+  avTakes.sink = null;
+  avTakes.input = null;
+  avTakes.ctx = null;
+  avTakes.capturing = false;
+}
+
+/* ---------- finalize (per-take Float32 arrays; keepLast enforcement) ---------- */
+
+function avTakesConcatLap(lap) {
+  const chunks = lap.chunks;
+  let total = 0;
+  for (let i = 0; i < chunks.length; i++) total += chunks[i].l.length;
+  const stereo = !lap.mono;
+  const L = new Float32Array(total);
+  const R = stereo ? new Float32Array(total) : null;
+  let o = 0;
+  for (let i = 0; i < chunks.length; i++) {
+    const c = chunks[i];
+    L.set(c.l, o);
+    if (R) R.set(c.r, o);
+    o += c.l.length;
+  }
+  lap.chunks = [];
+  return stereo ? [L, R] : [L];
+}
+
+function avTakesMeta(t) {
+  return {
+    id: t.id, name: t.name, frames: t.frames, rate: t.rate, channels: t.channels,
+    lap: t.lap, partial: t.partial === true, offsetFrames: t.offsetFrames,
+    startedCtxT: t.startedCtxT, seconds: t.seconds,
+  };
+}
+
+function avTakesFinalizeSession() {
+  const metas = [];
+  const laps = avTakes.laps;
+  for (let i = 0; i < laps.length; i++) {
+    const lap = laps[i];
+    if (!(lap.frames > 0)) continue;                         /* empty boundary laps are dropped */
+    const data = avTakesConcatLap(lap);
+    const sr = avTakes.sr || 48000;
+    const seq = avTakes.nextId++;
+    const take = {
+      id: "t" + seq,
+      name: "Take " + seq,
+      frames: lap.frames,
+      rate: sr,
+      channels: data.length,
+      lap: lap.lap,
+      partial: avTakes.lapSyncActive ? (lap.frames < avTakes.cycleFrames) : false,
+      offsetFrames: avTakes.offsetFrames,
+      startedCtxT: lap.startedCtxT,
+      seconds: lap.frames / sr,
+      data: data,
+    };
+    avTakes.takes.push(take);
+    metas.push(avTakesMeta(take));
+  }
+  avTakes.laps = [];
+  avTakes.totalFrames = 0;
+  while (avTakes.takes.length > avTakes.keepLast) avTakes.takes.shift();   /* §2.3: on stop */
+  return metas;
+}
+
+/* ---------- finish (shared by stop / arm-off / cap) ---------- */
+
+function avTakesFinish(reason) {
+  if (!avTakes.stopping) return;
+  avTakes.stopReason = reason || avTakes.stopReason || "stop";
+  avTakes.capturing = false;
+  avTakes.finalWall = avTakesNowMs();
+  avTakesRelease();
+  let final;
+  try {
+    const sessionFrames = avTakes.totalFrames;
+    const sr = avTakes.sr || 48000;
+    const metas = avTakesFinalizeSession();
+    const wallFrom = avTakes.startedWall > 0 ? avTakes.startedWall : avTakes.stoppedWall;
+    const wallTo = avTakes.stoppedWall > 0 ? avTakes.stoppedWall : avTakes.finalWall;
+    final = {
+      ok: true,
+      receipt: true,
+      settling: false,
+      stopReason: avTakes.stopReason,
+      capped: avTakes.capped === true,
+      sr: sr,
+      frames: sessionFrames,
+      seconds: sessionFrames / sr,
+      wallSeconds: (wallTo > wallFrom) ? (wallTo - wallFrom) / 1000 : 0,
+      takes: metas,
+      laps: metas.length,
+      kept: avTakes.takes.length,
+      keepLast: avTakes.keepLast,
+      config: {
+        lapSync: avTakes.lapSyncActive === true,
+        cycleSteps: avTakes.cycleSteps,
+        stepDur: avTakes.stepDur,
+        cycleDur: avTakes.cycleDur,
+        cycleFrames: avTakes.cycleFrames,
+        offsetFrames: avTakes.offsetFrames,
+      },
+      startedCtxT: avTakes.startedCtxT,
+    };
+  } catch (e) {
+    final = { ok: false, receipt: true, settling: false, error: avTakesErr(e), stopReason: avTakes.stopReason };
+  }
+  avTakes.stopping = false;
+  avTakes.recording = false;
+  avTakes.lastReceipt = final;
+  if (avTakes.stopResolve) {
+    const done = avTakes.stopResolve;
+    avTakes.stopResolve = null;
+    try { done(final); } catch (e) { /* the settle promise is fire-and-forget */ }
+  }
+}
+
+/* ---------- start / stop / abort ---------- */
+
+async function avTakesStart(opts) {
+  try {
+    if (avTakes.recording) return { ok: false, error: "already recording" };
+    if (avTakes.stopping) return { ok: false, error: "stop still settling — one moment" };
+    const o = (opts && typeof opts === "object") ? opts : {};
+    const input = avTakesPickInput();
+    if (!input) { avTakes.armed = false; return { ok: false, error: "input not enabled" }; }
+    const ctx = input.context;
+    if (!ctx) return { ok: false, error: "input node has no audio context" };
+    if (ctx.state === "closed") return { ok: false, error: "audio context is closed" };
+    if (ctx.state === "suspended") {
+      try { const p = ctx.resume(); if (p && typeof p.catch === "function") p.catch(function () { /* gesture-gated */ }); } catch (e) { /* retry on click */ }
+      return { ok: false, error: "audio context is suspended — resuming; press REC again in a moment" };
+    }
+    if (typeof ctx.createScriptProcessor !== "function") return { ok: false, error: "ScriptProcessorNode unavailable in this browser" };
+    const real = avTakesPickReal(ctx);
+    if (!real) return { ok: false, error: "tap real output unavailable — cannot pull the capture branch" };
+
+    const srNum = Number(ctx.sampleRate);
+    const sr = (isFinite(srNum) && srNum > 0) ? srNum : 48000;
+
+    /* lap plan (§2.3) — pure math off the guarded transport + snapshot */
+    const lapWant = o.lapSync === true;
+    let lapActive = false, lapReason = "lapSync off";
+    let cycleSteps = 0, stepDur = 0, cycleDur = 0, cycleFrames = 0;
+    if (lapWant) {
+      let playing = false, snap = null;
+      try { if (typeof avSeqIsPlaying === "function") playing = avSeqIsPlaying() === true; } catch (e) { playing = false; }
+      try { if (typeof avSeqSnap === "function") { const s = avSeqSnap(); if (s && typeof s === "object") snap = s; } } catch (e2) { snap = null; }
+      if (!playing) lapReason = "transport not playing";
+      else if (!snap) lapReason = "no pattern snapshot (avSeqSnap)";
+      else {
+        cycleSteps = avTakesCycleSteps(snap);
+        stepDur = avTakesStepDurOf(avTakesBpmOf(snap), (snap.grid === "8t") ? "8t" : "16");
+        cycleDur = cycleSteps * stepDur;
+        cycleFrames = Math.round(cycleDur * sr);
+        lapActive = (cycleDur > 0 && cycleFrames > 0);
+        lapReason = lapActive ? "transport playing" : "degenerate cycle";
+      }
+    }
+
+    let ch = 2;
+    try { const c = Number(input.channelCount); if (c === 1 || c === 2) ch = c; } catch (e3) { ch = 2; }
+
+    const startedCtxT = avTakesCtxNow(ctx);
+    const offsetFrames = avTakesOffsetFrames();
+
+    /* session state BEFORE any wire (track-before-wire covers the nodes below too) */
+    avTakes.sr = sr;
+    avTakes.offsetFrames = offsetFrames;
+    avTakes.startedCtxT = startedCtxT;
+    avTakes.startedWall = avTakesNowMs();
+    avTakes.stoppedWall = 0;
+    avTakes.finalWall = 0;
+    avTakes.captureWall = 0;
+    avTakes.peak = 0;
+    avTakes.totalFrames = 0;
+    avTakes.lapSeq = 1;
+    avTakes.laps = [{ lap: 1, frames: 0, chunks: [], mono: true, startedCtxT: startedCtxT, closed: false, endedCtxT: null }];
+    avTakes.lapSyncActive = lapActive;
+    avTakes.cycleSteps = cycleSteps;
+    avTakes.stepDur = stepDur;
+    avTakes.cycleDur = cycleDur;
+    avTakes.cycleFrames = cycleFrames;
+    avTakes.capped = false;
+    avTakes.capKicked = false;
+    avTakes.capFrames = Math.round(AV_TAKES_MAX_SECONDS * sr);
+    avTakes.stopReason = null;
+    avTakes.error = null;
+    avTakes.lastReceipt = null;
+
+    let sp = null, sink = null;
+    try {
+      sp = ctx.createScriptProcessor(AV_TAKES_BLOCK, ch, ch);
+      sp.onaudioprocess = avTakesProcess;
+      sink = ctx.createGain();
+      sink.gain.value = 0;                                   /* belt-and-braces: silent twice over */
+      avTakes.ctx = ctx;
+      avTakes.input = input;
+      avTakes.sp = sp;
+      avTakes.sink = sink;
+      input.connect(sp);
+      sp.connect(sink);
+      sink.connect(real);                                    /* the REAL destination — never the bus */
+    } catch (e) {
+      avTakesRelease();
+      avTakes.error = avTakesErr(e);
+      return { ok: false, error: "capture start failed — " + avTakes.error };
+    }
+
+    avTakes.armed = true;                                    /* live input ⇒ armed (see ARMING note) */
+    avTakes.recording = true;
+    avTakes.stopping = false;
+    avTakes.capturing = true;
+    return {
+      ok: true, started: true, sr: sr, block: AV_TAKES_BLOCK, channels: ch,
+      lapSync: lapActive, lapReason: lapReason, cycleSteps: cycleSteps, stepDur: stepDur,
+      cycleDur: cycleDur, cycleFrames: cycleFrames, offsetFrames: offsetFrames,
+      startedCtxT: startedCtxT, capSeconds: AV_TAKES_MAX_SECONDS, armed: true,
+    };
+  } catch (e) {
+    try { avTakesRelease(); } catch (e2) { /* already gone */ }
+    return { ok: false, error: avTakesErr(e) };
+  }
+}
+
+function avTakesStop() {
+  try {
+    if (avTakes.stopping) return { ok: false, error: "already stopping" };
+    if (!avTakes.recording) return { ok: false, error: "not recording" };
+    avTakes.recording = false;
+    avTakes.stopping = true;
+    avTakes.stoppedWall = avTakesNowMs();
+    const sr = avTakes.sr || 48000;
+    let resolveFinal = null;
+    const p = new Promise(function (res) { resolveFinal = res; });
+    avTakes.stopResolve = resolveFinal;
+    const receipt = {
+      ok: true, settling: true, settleMs: AV_TAKES_SETTLE_MS, sr: sr,
+      frames: avTakes.totalFrames, seconds: avTakes.totalFrames / sr,
+      stopRequestedWall: avTakes.stoppedWall, stopReason: "stop",
+    };
+    /* thenable receipt: sync fields above; `await` it for the settled final receipt */
+    receipt.then = function (onFulfilled, onRejected) { return p.then(onFulfilled, onRejected); };
+    receipt.catch = function (onRejected) { return p.catch(onRejected); };
+    receipt.finally = function (onFinally) { return p.finally(onFinally); };
+    if (typeof setTimeout === "function") setTimeout(function () { avTakesFinish("stop"); }, AV_TAKES_SETTLE_MS);
+    else avTakesFinish("stop");
+    return receipt;
+  } catch (e) {
+    return { ok: false, error: avTakesErr(e) };
+  }
+}
+
+function avTakesAbort() {
+  try {
+    if (!avTakes.recording && !avTakes.stopping) return { ok: false, error: "not recording" };
+    avTakes.recording = false;
+    avTakes.stopping = false;
+    avTakes.capturing = false;
+    avTakes.stopReason = "abort";
+    avTakes.capped = false;
+    avTakesRelease();
+    avTakes.laps = [];
+    avTakes.totalFrames = 0;
+    if (avTakes.stopResolve) {
+      const done = avTakes.stopResolve;
+      avTakes.stopResolve = null;
+      try { done({ ok: false, aborted: true, error: "stop was aborted" }); } catch (e) { /* fire-and-forget */ }
+    }
+    return { ok: true, aborted: true, stopReason: "abort" };
+  } catch (e) { return { ok: false, error: avTakesErr(e) }; }
+}
+
+/* ---------- arm ---------- */
+
+function avTakesArm(on) {
+  try {
+    const want = (on === undefined) ? true : !!on;
+    if (!want) {
+      avTakes.armed = false;
+      if (avTakes.recording && !avTakes.stopping) { try { avTakesStop(); } catch (e) { /* already gone */ } }
+      return false;
+    }
+    if (!avTakesPickInput()) return false;
+    avTakes.armed = true;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- list / keepLast / delete ---------- */
+
+function avTakesFind(id) {
+  try {
+    for (let i = 0; i < avTakes.takes.length; i++) {
+      if (String(avTakes.takes[i].id) === String(id)) return avTakes.takes[i];
+    }
+  } catch (e) { /* never throws */ }
+  return null;
+}
+
+function avTakesList() {
+  const out = [];
+  try { for (let i = 0; i < avTakes.takes.length; i++) out.push(avTakesMeta(avTakes.takes[i])); } catch (e) { /* empty */ }
+  return out;
+}
+
+function avTakesKeepLast(n) {
+  try {
+    if (n === undefined || n === null) return avTakes.keepLast;
+    avTakes.keepLast = avTakesClampInt(n, AV_TAKES_KEEP_DEF, 0, AV_TAKES_KEEP_MAX);
+    return avTakes.keepLast;
+  } catch (e) { return avTakes.keepLast; }
+}
+
+function avTakesDelete(id) {
+  try {
+    for (let i = 0; i < avTakes.takes.length; i++) {
+      if (String(avTakes.takes[i].id) === String(id)) { avTakes.takes.splice(i, 1); return true; }
+    }
+  } catch (e) { /* never throws */ }
+  return false;
+}
+
+/* ---------- export (16-bit stereo WAV via avWavEncode; mono duplicated) ---------- */
+
+function avTakesNumOf(id) {
+  try {
+    const m = /(\d+)/.exec(String(id == null ? "" : id));
+    const n = m ? parseInt(m[1], 10) : 0;
+    return isFinite(n) && n > 0 ? n : 0;
+  } catch (e) { return 0; }
+}
+
+function avTakesExport(id) {
+  return new Promise(function (resolve) {
+    try {
+      const take = avTakesFind(id);
+      if (!take) { resolve({ ok: false, error: "take not found: " + String(id) }); return; }
+      if (typeof avWavEncode !== "function") { resolve({ ok: false, error: "wav encoder unavailable (avWavEncode missing)" }); return; }
+      const d = (take.data && take.data.length) ? take.data : null;
+      if (!d || !d[0] || !d[0].length) { resolve({ ok: false, error: "take is empty" }); return; }
+      const lCh = d[0];
+      const rCh = (d.length > 1 && d[1] && d[1].length) ? d[1] : d[0];      /* mono → duplicated stereo */
+      let buf = null;
+      try { buf = avWavEncode({ l: lCh, r: rCh, sr: take.rate || avTakes.sr || 48000, bits: AV_TAKES_WAV_BITS, dither: "auto" }); } catch (e) { buf = null; }
+      if (!buf) { resolve({ ok: false, error: "wav encode refused (bad take data)" }); return; }
+      let bytes = 0;
+      try { bytes = (typeof buf.byteLength === "number") ? buf.byteLength : 0; } catch (e) { bytes = 0; }
+      let wavInfo = null;
+      try { if (typeof avWavInfo === "function") wavInfo = avWavInfo(buf); } catch (e) { wavInfo = null; }
+      let blob = null;
+      try { blob = new Blob([buf], { type: "audio/wav" }); } catch (e) { blob = null; }
+      if (avTakes.lastUrlKeep) { try { URL.revokeObjectURL(avTakes.lastUrlKeep); } catch (e) { /* already revoked */ } }
+      let url = null;
+      try { url = (blob && typeof URL !== "undefined" && typeof URL.createObjectURL === "function") ? URL.createObjectURL(blob) : null; } catch (e) { url = null; }
+      avTakes.lastUrlKeep = url;
+      const name = "anvil_take" + avTakesNumOf(take.id) + "_lap" + take.lap + ".wav";
+      avTakes.lastExport = { id: take.id, name: name, bytes: bytes, at: avTakesNowMs() };
+      resolve({
+        ok: true, id: take.id, name: name, bytes: bytes, blob: blob, url: url,
+        wavInfo: wavInfo, seconds: take.seconds,
+      });
+    } catch (e) {
+      resolve({ ok: false, error: avTakesErr(e) });
+    }
+  });
+}
+
+/* ---------- state / snapshot / classes (snapshots only — no live nodes leak) ---------- */
+
+function avTakesState() {
+  let liveSeconds = 0;
+  try { liveSeconds = avTakes.totalFrames / (avTakes.sr || 48000); } catch (e) { liveSeconds = 0; }
+  return {
+    version: AV_TAKES_VERSION,
+    inited: avTakes.inited === true,
+    armed: avTakes.armed === true,
+    recording: avTakes.recording === true,
+    stopping: avTakes.stopping === true,
+    capturing: avTakes.capturing === true,
+    wired: !!(avTakes.input && avTakes.sp && avTakes.sink),
+    sr: avTakes.sr,
+    block: AV_TAKES_BLOCK,
+    seconds: liveSeconds,
+    frames: avTakes.totalFrames,
+    laps: avTakes.laps.length,
+    lapNow: avTakes.laps.length ? avTakes.laps[avTakes.laps.length - 1].lap : 0,
+    lapSync: avTakes.lapSyncActive === true,
+    cycleSteps: avTakes.cycleSteps,
+    stepDur: avTakes.stepDur,
+    cycleDur: avTakes.cycleDur,
+    cycleFrames: avTakes.cycleFrames,
+    offsetFrames: avTakes.offsetFrames,
+    keeps: avTakes.takes.length,
+    keepLast: avTakes.keepLast,
+    peak: avTakes.peak,
+    capped: avTakes.capped === true,
+    stopReason: avTakes.stopReason,
+    error: avTakes.error,
+    lastExport: avTakes.lastExport ? { id: avTakes.lastExport.id, name: avTakes.lastExport.name, bytes: avTakes.lastExport.bytes } : null,
+    lastReceipt: avTakes.lastReceipt,
+  };
+}
+
+function avTakesClasses() { return AV_TAKES_CLASSES.slice(); }
+
+/* ---------- init ---------- */
+
+function avTakesInit() {
+  avTakes.inited = true;
+  return true;
+}
+
+if (typeof window !== "undefined") {
+  try {
+    window.__avTakes = {
+      version: AV_TAKES_VERSION,
+      init: avTakesInit,
+      arm: avTakesArm,
+      start: avTakesStart,
+      stop: avTakesStop,
+      abort: avTakesAbort,
+      list: avTakesList,
+      export: avTakesExport,
+      del: avTakesDelete,
+      keepLast: avTakesKeepLast,
+      state: avTakesState,
+      classes: avTakesClasses,
+    };
+  } catch (e) { /* no window — node harness only */ }
+}
+
+
+/* Anvil — S1 STUDIO card (child sa-D): the record-core UI mounted into the parent-owned host
+   `#av-studio-host` (the parent adds the `#av-studio` card at integration and calls
+   avStudioUiInit(); this module only fills the host). Per verify/_s1_wave.md §2.4.
+
+   WHAT THIS CARD IS
+   - INPUT section: ENABLE toggle (avInputEnable / avInputDisable), device select refreshed on
+     enable (avInputDevices), GAIN range 0..1.2 + readout (avInputGain), MONITOR toggle
+     (avInputMonitor, OFF by default - feedback safety), OFFSET ms number (avInputOffset,
+     -200..200), a latency note (avInputLatency) and a level meter driven by the rAF loop
+     reading avInputLevels() (peak bar + rms bar + numeric readout).
+   - TRANSPORT section: count-in select 0 / 1 / 2 bars, METRONOME toggle + LEVEL range
+     (avMetroSet / avMetroState merged as { on, level, beatsPerBar, accent }).
+   - TAKES section: REC/STOP button orchestrating the pinned record path -
+     count-in > 0 -> await avMetroCountIn(bars) -> avTakesStart({ lapSync: true });
+     STOP -> avTakesStop(). Rows: name · seconds · lap · EXPORT · X. KEEP LAST select
+     (avTakesKeepLast). Status line + warnings area.
+
+   LAW: every sibling control is consumed through the pinned API names with typeof guards ONLY -
+   avInputEnable/Disable/Devices/Levels/Gain/Monitor/Offset/Latency/State ·
+   avMetroSet/State/CountIn · avTakesStart/Stop/Arm/List/Export/Delete/KeepLast/State.
+   This file never reaches into another module's internals and never calls the siblings' Init
+   functions (app_core owns those boots). It never throws. No console noise at all (degradation
+   is reported in the warnings area, never console.warn). No DOM at top level - the file loads
+   in plain node (harness).
+
+   ORCHESTRATION DECISIONS (documented seams for the parent):
+   - REC passes { lapSync: true }: lap takes auto-split at cycle boundaries while the sequencer
+     plays; with no transport the recorder keeps one continuous take (sa-C's own law). The UI
+     does not expose a lap toggle (not in §2.4).
+   - count-in is a nicety, never a blocker: if avMetroCountIn is missing, refuses
+     ({ok:false}) or throws, the recording still starts and the warnings area carries the
+     honest note. A count-in already running can be cancelled by pressing REC/STOP again
+     (generation-guarded: the late count-in resolution is ignored).
+   - REC is ignored while the start receipt is in flight and while a take is being finished
+     (fractions of a second); it also refuses honestly when the input is known-disabled.
+   - the device select lists the devices (refreshed on enable). The pinned avInputEnable()
+     takes NO device argument, so live switching cannot be applied by this pin - picking a
+     device shows an honest note instead of a disruptive re-acquire dance. When a future pin
+     accepts a device argument, avStudioUiDeviceChange() is the one seam to extend.
+   - KEEP LAST offers 1/2/4/8/16/32 (default 8). The pin's 0..32 range is not fully exposed:
+     0's semantics ("keep all"? "keep none"?) are unpinned, so the UI never sends 0.
+   - avInputState() / avTakesState() field names are unpinned; this card reads them through
+     candidate lists (enabled/on/active... monitor/monitoring... recording/rec/active...,
+     keepLast/keep...) and only overrides its mirror on an explicit boolean/0/1/on/off read.
+     Unknown shapes change nothing.
+   - the recording flag is adopted from avTakesState() by the rAF poll (external start/stop
+     stays honest); the poll never fights a transient phase (count-in / starting / stopping).
+   - if no take handle can be opened (no receipt.url and no blob->objectURL), the status line
+     says so honestly instead of pretending a download happened.
+
+   FAILURE COPY: honest refusals surface the module's own error text (normalized) in the status
+   line + warnings area - e.g. takes' "input not enabled" reads as "the input is not enabled -
+   press ENABLE first".
+
+   OBSERVABLES: avStudioUiInit() -> bool (false without host, never throws, idempotent,
+   dataset marker avStudioUiWired='1') · avStudioUiSync() -> bool (repaint) ·
+   avStudioUiClasses() -> string[] (the NEW css classes; the parent styles them) ·
+   avStudioUiSnap() -> the honest card state ·
+   window.__avStudioUi = { version, init, sync, classes, state, rec, stop, export, del,
+   devices, arm } · window.__avStudioUiLastExport = { id, name, bytes, downloaded, at } stamp.
+
+   ID INVENTORY (rig + parent rely on these):
+     #av-studio-status
+     #av-studio-enable · #av-studio-input-state · #av-studio-device
+     #av-studio-gain · #av-studio-gain-val · #av-studio-monitor · #av-studio-offset
+     #av-studio-meter · #av-studio-meter-bar · #av-studio-meter-rms · #av-studio-meter-val
+     #av-studio-latency
+     #av-studio-countin · #av-studio-metro · #av-studio-metro-level · #av-studio-metro-val
+     #av-studio-metro-bpm
+     #av-studio-rec · #av-studio-keep · #av-studio-take-n · #av-studio-takes
+     #av-studio-takes-none · #av-studio-warnings · #av-studio-foot
+   CARD HOOKS: `.av-studio[data-av-studio="1"]` · `.av-studio-take[data-take]` (state class
+   `partial`) · `[data-act=export]` · `[data-act=del]` · `.av-studio-rec` (state class `on`).
+
+   ONE namespace avStudioUi* / AV_STUDIO_UI_*. ONE writer (child sa-D). Never throws. */
+
+"use strict";
+
+const AV_STUDIO_UI_VERSION = "s1.0";
+const AV_STUDIO_UI_WARN_MAX = 8;
+const AV_STUDIO_UI_KEEP_OPTS = [1, 2, 4, 8, 16, 32];
+const AV_STUDIO_UI_KEEP_DEFAULT = 8;
+const AV_STUDIO_UI_METER_REF = 1.2;   /* meter full scale = the pinned input gain ceiling */
+
+/* UI-local state only - every module fact is read through the pinned av* APIs per paint */
+const avStudioUiState = {
+  inited: false, mounts: 0, rafOn: false,
+  /* input mirror */
+  inputKnown: false, inputEnabled: false, enableBusy: false,
+  monitorOn: false, gain: 1, offsetMs: 0,
+  deviceLabel: "", inputDeviceId: "", deviceWanted: "", devices: [], devicesKey: "",
+  /* transport mirror */
+  countIn: 0, metroOn: false, metroLevel: 0.5, metroBeats: 4, metroAccent: true, metroBpm: 0,
+  /* takes mirror */
+  keepLast: AV_STUDIO_UI_KEEP_DEFAULT, exportingId: "",
+  /* record orchestration */
+  recPhase: "idle",           /* idle | countin | starting | recording | stopping */
+  recSeq: 0, recStartedAt: 0,
+  /* status + warnings */
+  lastMsg: "", lastMsgKind: "msg",
+  warnings: [], warnKey: "",
+  /* paint memos */
+  takesKey: "",
+  meterPPct: 0, meterAt: 0, meterZero: true, meterLastTxt: "",
+  /* poll throttle */
+  pollAt: 0, lastObjectUrl: "",
+};
+
+/* ---------- small pure helpers (no DOM; harness-covered) ---------- */
+
+const avStudioUiEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const avStudioUiNum = (v, d) => { const n = Number(v); return isFinite(n) ? n : d; };
+
+function avStudioUiClean(s, max) {
+  let t = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  if (max && t.length > max) t = t.slice(0, max - 1) + "\u2026";
+  return t;
+}
+
+function avStudioUiClamp(n, lo, hi, d) {
+  const v = Number(n);
+  if (!isFinite(v)) return (d === undefined ? null : d);
+  return Math.max(lo, Math.min(hi, v));
+}
+
+/* count-in bars: 0..2 int (the §2.4 select), anything unreadable -> 0 (off) */
+function avStudioUiBars(v) {
+  const n = Number(v);
+  if (!isFinite(n)) return 0;
+  return Math.max(0, Math.min(2, Math.floor(n)));
+}
+
+/* keep-last: 1..32 int, default 8 (0 is intentionally never sent - see the header seam) */
+function avStudioUiKeepN(v) {
+  const n = Number(v);
+  if (!isFinite(n)) return AV_STUDIO_UI_KEEP_DEFAULT;
+  return Math.max(1, Math.min(32, Math.round(n)));
+}
+
+function avStudioUiSecs(frames, rate) {
+  const f = Number(frames);
+  const r = Number(rate);
+  const fr = (isFinite(f) && f > 0) ? f : 0;
+  const rr = (isFinite(r) && r > 0) ? r : 48000;
+  return fr / rr;
+}
+
+function avStudioUiSecsTextFromSecs(secs) {
+  const s = avStudioUiClamp(secs, 0, 1e9, 0);
+  if (s >= 100) return s.toFixed(1) + " s";
+  return s.toFixed(2) + " s";
+}
+
+function avStudioUiSecsText(frames, rate) {
+  return avStudioUiSecsTextFromSecs(avStudioUiSecs(frames, rate));
+}
+
+function avStudioUiLapText(meta) {
+  const m = (meta && typeof meta === "object") ? meta : {};
+  const lap = Number(m.lap);
+  let out = (isFinite(lap) && lap >= 1) ? ("lap " + Math.round(lap)) : "\u2014";
+  if (m.partial === true) out = (out === "\u2014" ? "" : out + " \u00b7 ") + "partial";
+  return out;
+}
+
+/* one take-meta -> the row view (name · seconds · lap; pure) */
+function avStudioUiTakeView(meta, i) {
+  const m = (meta && typeof meta === "object") ? meta : {};
+  const idx = Math.max(0, Math.floor(Number(i) || 0));
+  const id = (typeof m.id === "string" && m.id) ? m.id : ("t" + (idx + 1));
+  const name = (typeof m.name === "string" && m.name) ? m.name : ("Take " + (idx + 1));
+  const frames = avStudioUiNum(m.frames, 0);
+  const rate = avStudioUiNum(m.rate, 48000);
+  const lap = avStudioUiNum(m.lap, null);
+  const partial = m.partial === true;
+  return {
+    id: id,
+    name: avStudioUiClean(name, 48) || ("Take " + (idx + 1)),
+    frames: frames,
+    rate: rate,
+    lap: lap,
+    partial: partial,
+    secsText: avStudioUiSecsText(frames, rate),
+    lapText: avStudioUiLapText({ lap: lap, partial: partial }),
+  };
+}
+
+function avStudioUiTakeRowHTML(v) {
+  const t = (v && typeof v === "object") ? v : {};
+  const id = avStudioUiEsc(t.id);
+  return '<div class="av-studio-take' + (t.partial ? " partial" : "") + '" data-take="' + id + '">' +
+    '<span class="av-studio-take-name" title="' + id + '">' + avStudioUiEsc(t.name) + "</span>" +
+    '<span class="av-studio-take-secs">' + avStudioUiEsc(t.secsText) + "</span>" +
+    '<span class="av-studio-take-lap">' + avStudioUiEsc(t.lapText) + "</span>" +
+    '<button type="button" class="av-btn mini av-studio-btn av-studio-take-export" data-act="export" title="Encode this take to a WAV and download it">EXPORT</button>' +
+    '<button type="button" class="av-btn mini av-studio-btn av-studio-take-del" data-act="del" title="Delete this take">\u2715</button>' +
+    "</div>";
+}
+
+/* the memo key for the takes list (repaint only on real change) */
+function avStudioUiTakesKey(views) {
+  try {
+    if (!Array.isArray(views)) return "";
+    let out = "";
+    for (let i = 0; i < views.length && i < 64; i++) {
+      const v = views[i] || {};
+      out += String(v.id || "") + ":" + String(v.frames || 0) + ":" + (v.partial ? 1 : 0) + ":" + (v.lap == null ? 0 : v.lap) + "|";
+    }
+    return out;
+  } catch (e) { return ""; }
+}
+
+/* avInputDevices() list -> [{ value, label }] select options (pure) */
+function avStudioUiDeviceOptions(list) {
+  const out = [];
+  try {
+    if (!Array.isArray(list)) return out;
+    let n = 0;
+    for (let i = 0; i < list.length && out.length < 32; i++) {
+      const d = list[i];
+      if (!d || typeof d !== "object") continue;
+      const value = (typeof d.deviceId === "string" && d.deviceId) ? d.deviceId
+        : ((typeof d.id === "string" && d.id) ? d.id : "");
+      if (!value) continue;
+      n += 1;
+      const label = (typeof d.label === "string" && d.label) ? d.label : ("input " + n);
+      out.push({ value: value, label: avStudioUiClean(label, 48) });
+    }
+  } catch (e) { /* none */ }
+  return out;
+}
+
+/* meter width percent over the pinned 1.2 full scale (pure) */
+function avStudioUiMeterPct(v) {
+  const n = avStudioUiNum(v, 0);
+  const x = Math.max(0, Math.min(1, n / AV_STUDIO_UI_METER_REF));
+  return Math.round(x * 1000) / 10;
+}
+
+/* module errors -> honest one-liners (the raw text is kept when nothing matches) */
+function avStudioUiErrText(err) {
+  let raw = "";
+  try { raw = String((err && err.message) ? err.message : (err == null ? "" : err)); } catch (e) { raw = ""; }
+  raw = raw.replace(/\s+/g, " ").trim().slice(0, 140);
+  const e = raw.toLowerCase();
+  if (/input not enabled|no input|input disabled/.test(e)) return "the input is not enabled \u2014 press ENABLE first";
+  if (/notallowed|permission|denied/.test(e)) return "the browser refused the microphone \u2014 grant permission and retry";
+  if (/no ctx|no audio ?context|no context|context (is )?(closed|missing)|not initialized/.test(e)) return "no live audio context \u2014 start the engine first, then record";
+  if (/notfound|no device|no microphone|overconstrained/.test(e)) return "no audio input device was found";
+  if (/busy|in use/.test(e)) return "the audio device is busy in another tab";
+  return raw || "refused";
+}
+
+function avStudioUiFmtBytes(n) {
+  const v = Number(n);
+  if (!isFinite(v) || v < 0) return "";
+  if (v < 1024) return Math.round(v) + " B";
+  if (v < 1048576) return (v / 1024).toFixed(1) + " KB";
+  return (v / 1048576).toFixed(2) + " MB";
+}
+
+/* receipt verdict: explicit false / {ok:false} refuse; everything else (incl. undefined)
+   counts as success - the pinned receipts only refuse explicitly (§2.1/§2.3) */
+function avStudioUiOK(r) {
+  try {
+    if (r === false || r === null) return false;
+    if (r && typeof r === "object" && r.ok === false) return false;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* warnings list helpers (pure) - dedupe by key, newest last, bounded */
+function avStudioUiWarnMerge(list, key, text, max) {
+  const out = [];
+  try {
+    const src = Array.isArray(list) ? list : [];
+    for (let i = 0; i < src.length; i++) {
+      const w = src[i];
+      if (!w || w.key === key) continue;
+      out.push(w);
+    }
+    out.push({ key: key, text: text });
+    while (out.length > (max || AV_STUDIO_UI_WARN_MAX)) out.shift();
+  } catch (e) { /* keep what we have */ }
+  return out;
+}
+
+function avStudioUiWarnDrop(list, key) {
+  const out = [];
+  try {
+    const src = Array.isArray(list) ? list : [];
+    for (let i = 0; i < src.length; i++) {
+      const w = src[i];
+      if (!w || w.key === key) continue;
+      out.push(w);
+    }
+  } catch (e) { /* empty */ }
+  return out;
+}
+
+/* boolean flag read from a state object: explicit true/false/1/0/on/off only */
+function avStudioUiFlagFrom(obj, keys) {
+  try {
+    if (!obj || typeof obj !== "object" || !Array.isArray(keys)) return null;
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+      const v = obj[k];
+      if (v === true || v === 1 || v === "on" || v === "true") return true;
+      if (v === false || v === 0 || v === "off" || v === "false") return false;
+    }
+  } catch (e) { /* unknown */ }
+  return null;
+}
+
+function avStudioUiNumField(obj, keys) {
+  try {
+    if (!obj || typeof obj !== "object" || !Array.isArray(keys)) return null;
+    for (let i = 0; i < keys.length; i++) {
+      const v = obj[keys[i]];
+      if (typeof v === "number" && isFinite(v)) return v;
+      if (typeof v === "string" && v !== "" && isFinite(Number(v))) return Number(v);
+    }
+  } catch (e) { /* none */ }
+  return null;
+}
+
+function avStudioUiStrField(obj, keys) {
+  try {
+    if (!obj || typeof obj !== "object" || !Array.isArray(keys)) return "";
+    for (let i = 0; i < keys.length; i++) {
+      const v = obj[keys[i]];
+      if (typeof v === "string" && v) return v;
+    }
+  } catch (e) { /* none */ }
+  return "";
+}
+
+/* ---------- guarded DOM access (no throw, no noise) ---------- */
+
+function avStudioUiHost() {
+  try {
+    if (typeof document !== "undefined" && document && typeof document.getElementById === "function") {
+      return document.getElementById("av-studio-host");
+    }
+  } catch (e) { /* no document */ }
+  return null;
+}
+
+function avStudioUiSetValue(el, v) {
+  try {
+    if (!el) return false;
+    const str = String(v == null ? "" : v);
+    let focused = false;
+    try { if (typeof document !== "undefined" && document && document.activeElement === el) focused = true; } catch (e) { focused = false; }
+    if (focused) return false;   /* never clobber the control being dragged */
+    if (String(el.value) !== str) el.value = str;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiSetText(host, sel, txt) {
+  try { const el = host.querySelector(sel); if (el && el.textContent !== txt) el.textContent = txt; } catch (e) { /* no DOM */ }
+}
+
+/* ---------- mirror reads (pinned APIs, typeof-guarded, explicit reads only) ---------- */
+
+function avStudioUiInputFields(st) {
+  const s = avStudioUiState;
+  if (!st || typeof st !== "object") return false;
+  const en = avStudioUiFlagFrom(st, ["enabled", "on", "active", "live", "running"]);
+  if (en !== null) { s.inputKnown = true; s.inputEnabled = en; }
+  const mo = avStudioUiFlagFrom(st, ["monitor", "monitoring", "monitorOn"]);
+  if (mo !== null) s.monitorOn = mo;
+  const g = avStudioUiNumField(st, ["gain", "inputGain"]);
+  if (g != null) s.gain = avStudioUiClamp(g, 0, 1.2, s.gain);
+  const off = avStudioUiNumField(st, ["offsetMs", "latencyOffsetMs", "offset"]);
+  if (off != null) s.offsetMs = avStudioUiClamp(off, -200, 200, s.offsetMs);
+  const lbl = avStudioUiStrField(st, ["label", "deviceLabel"]);
+  if (lbl) s.deviceLabel = lbl;
+  const did = avStudioUiStrField(st, ["deviceId", "id"]);
+  if (did) s.inputDeviceId = did;
+  return true;
+}
+
+function avStudioUiMirrorInput() {
+  if (typeof avInputState !== "function") return false;
+  let st = null;
+  try { st = avInputState(); } catch (e) { st = null; }
+  return avStudioUiInputFields(st);
+}
+
+function avStudioUiMetroFields(st) {
+  const s = avStudioUiState;
+  if (!st || typeof st !== "object") return false;
+  const on = avStudioUiFlagFrom(st, ["on", "enabled"]);
+  if (on !== null) s.metroOn = on;
+  const lv = avStudioUiNumField(st, ["level"]);
+  if (lv != null) s.metroLevel = avStudioUiClamp(lv, 0, 1, s.metroLevel);
+  const bb = avStudioUiNumField(st, ["beatsPerBar"]);
+  if (bb != null) s.metroBeats = Math.max(1, Math.min(12, Math.round(bb)));
+  const bpm = avStudioUiNumField(st, ["bpm"]);
+  if (bpm != null) s.metroBpm = bpm;
+  const ac = avStudioUiFlagFrom(st, ["accent"]);
+  if (ac !== null) s.metroAccent = ac;
+  return true;
+}
+
+function avStudioUiMirrorMetro() {
+  if (typeof avMetroState !== "function") return false;
+  let st = null;
+  try { st = avMetroState(); } catch (e) { st = null; }
+  return avStudioUiMetroFields(st);
+}
+
+/* keep-last mirror only (safe inside sync); the recording flag is adopted by the poll,
+   which never fights a transient phase (see the header seam) */
+function avStudioUiMirrorTakes() {
+  if (typeof avTakesState !== "function") return false;
+  let st = null;
+  try { st = avTakesState(); } catch (e) { st = null; }
+  if (!st || typeof st !== "object") return false;
+  const kl = avStudioUiNumField(st, ["keepLast", "keep"]);
+  if (kl != null) avStudioUiState.keepLast = avStudioUiKeepN(kl);
+  return true;
+}
+
+/* recording flag candidates for the poll's phase adoption: true | false | null(unknown) */
+function avStudioUiTakesRecFlag() {
+  if (typeof avTakesState !== "function") return null;
+  let st = null;
+  try { st = avTakesState(); } catch (e) { st = null; }
+  if (!st || typeof st !== "object") return null;
+  const rec = avStudioUiFlagFrom(st, ["recording", "rec", "active"]);
+  const phase = (typeof st.state === "string") ? st.state : (typeof st.phase === "string" ? st.phase : "");
+  if (rec !== null) return rec;
+  if (phase === "recording") return true;
+  if (phase === "idle") return false;
+  return null;
+}
+
+/* ---------- warnings (stateful wrappers over the pure list helpers) ---------- */
+
+function avStudioUiWarn(key, text) {
+  try {
+    avStudioUiState.warnings = avStudioUiWarnMerge(avStudioUiState.warnings, String(key || "general"), avStudioUiClean(text, 170), AV_STUDIO_UI_WARN_MAX);
+  } catch (e) { /* never throws */ }
+}
+
+function avStudioUiWarnDropKey(key) {
+  try { avStudioUiState.warnings = avStudioUiWarnDrop(avStudioUiState.warnings, String(key || "")); } catch (e) { /* ok */ }
+}
+
+/* degraded-module notes: set when missing, dropped when present (honest every init) */
+function avStudioUiModulesNote() {
+  if (typeof avInputEnable === "function" && typeof avInputDisable === "function") avStudioUiWarnDropKey("modules.input");
+  else avStudioUiWarn("modules.input", "the input module (av_input.js) is not loaded \u2014 ENABLE is unavailable");
+  if (typeof avMetroSet === "function" && typeof avMetroState === "function") avStudioUiWarnDropKey("modules.metro");
+  else avStudioUiWarn("modules.metro", "the metronome module (av_metro.js) is not loaded \u2014 clicks and count-in are unavailable");
+  if (typeof avTakesStart === "function" && typeof avTakesList === "function") avStudioUiWarnDropKey("modules.takes");
+  else avStudioUiWarn("modules.takes", "the takes module (av_takes.js) is not loaded \u2014 REC is unavailable");
+}
+
+/* ---------- markup (pure string builders) ---------- */
+
+function avStudioUiCountInOptionsHTML() {
+  const defs = [[0, "off"], [1, "1 bar"], [2, "2 bars"]];
+  let out = "";
+  for (let i = 0; i < defs.length; i++) {
+    out += '<option value="' + defs[i][0] + '"' + (defs[i][0] === 0 ? " selected" : "") + ">" + defs[i][1] + "</option>";
+  }
+  return out;
+}
+
+function avStudioUiKeepOptionsHTML() {
+  let out = "";
+  for (let i = 0; i < AV_STUDIO_UI_KEEP_OPTS.length; i++) {
+    const n = AV_STUDIO_UI_KEEP_OPTS[i];
+    out += '<option value="' + n + '"' + (n === AV_STUDIO_UI_KEEP_DEFAULT ? " selected" : "") + ">" + n + "</option>";
+  }
+  return out;
+}
+
+function avStudioUiBodyHTML() {
+  return '<div class="av-studio" data-av-studio="1">' +
+    '<div class="av-studio-head"><span class="av-studio-title">STUDIO</span>' +
+    '<span class="av-studio-cap">mic / line in \u00b7 count-in + metronome \u00b7 lap takes \u2014 the input rides the engine ctx; monitor stays off by default; takes capture the dry input (post-gain).</span></div>' +
+    '<div class="av-studio-status-line"><span class="av-studio-status av-studio-msg" id="av-studio-status" role="status">studio is idle</span></div>' +
+
+    '<section class="av-studio-sect" data-sect="input">' +
+    '<div class="av-studio-sect-head"><span class="av-studio-sect-lbl">INPUT</span>' +
+    '<span class="av-studio-input-state" id="av-studio-input-state">not enabled</span></div>' +
+    '<div class="av-studio-row">' +
+    '<button type="button" class="av-btn mini av-studio-btn av-studio-enable" id="av-studio-enable" aria-pressed="false" title="Ask for the audio input (getUserMedia) through the live engine context">ENABLE</button>' +
+    '<select class="av-select av-studio-device" id="av-studio-device" aria-label="Audio input device"><option value="">\u2014 device \u2014</option></select>' +
+    '</div>' +
+    '<div class="av-studio-row">' +
+    '<label class="av-studio-lab" for="av-studio-gain">GAIN</label>' +
+    '<input type="range" class="av-studio-range" id="av-studio-gain" min="0" max="1.2" step="0.01" value="1" aria-label="Input gain"><span class="av-studio-val" id="av-studio-gain-val">1.00</span>' +
+    '<button type="button" class="av-btn mini av-studio-btn av-studio-monitor" id="av-studio-monitor" aria-pressed="false" title="Monitor the input through the master \u2014 feedback risk, keep headphones on (off by default)">MONITOR</button>' +
+    '<label class="av-studio-lab" for="av-studio-offset">OFFSET</label>' +
+    '<input type="number" class="av-studio-offset" id="av-studio-offset" min="-200" max="200" step="1" value="0" aria-label="Latency offset in milliseconds"><span class="av-studio-unit">ms</span>' +
+    '</div>' +
+    '<div class="av-studio-row av-studio-meter-row">' +
+    '<span class="av-studio-lab">LEVEL</span>' +
+    '<div class="av-studio-meter" id="av-studio-meter" role="meter" aria-label="Input level" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">' +
+    '<div class="av-studio-meter-bar" id="av-studio-meter-bar"></div><div class="av-studio-meter-rms" id="av-studio-meter-rms"></div>' +
+    '</div>' +
+    '<span class="av-studio-val av-studio-meter-val" id="av-studio-meter-val">peak \u2014 \u00b7 rms \u2014</span>' +
+    '</div>' +
+    '<p class="av-note av-dim av-studio-latency" id="av-studio-latency"></p>' +
+    '</section>' +
+
+    '<section class="av-studio-sect" data-sect="transport">' +
+    '<div class="av-studio-sect-head"><span class="av-studio-sect-lbl">TRANSPORT</span>' +
+    '<span class="av-studio-metro-bpm" id="av-studio-metro-bpm"></span></div>' +
+    '<div class="av-studio-row">' +
+    '<label class="av-studio-lab" for="av-studio-countin">COUNT-IN</label>' +
+    '<select class="av-select" id="av-studio-countin" aria-label="Count-in bars before recording">' + avStudioUiCountInOptionsHTML() + '</select>' +
+    '<button type="button" class="av-btn mini av-studio-btn av-studio-metro" id="av-studio-metro" aria-pressed="false" title="Metronome \u2014 clicks go to the master only (never into a take)">METRONOME</button>' +
+    '<label class="av-studio-lab" for="av-studio-metro-level">LEVEL</label>' +
+    '<input type="range" class="av-studio-range" id="av-studio-metro-level" min="0" max="1" step="0.01" value="0.5" aria-label="Metronome level"><span class="av-studio-val" id="av-studio-metro-val">0.50</span>' +
+    '</div>' +
+    '</section>' +
+
+    '<section class="av-studio-sect" data-sect="takes">' +
+    '<div class="av-studio-sect-head"><span class="av-studio-sect-lbl">TAKES</span>' +
+    '<button type="button" class="av-btn mini av-studio-btn av-studio-rec" id="av-studio-rec" aria-pressed="false" title="REC \u2014 count-in (per the select) then record; STOP finishes the take">REC</button>' +
+    '<label class="av-studio-lab" for="av-studio-keep">KEEP LAST</label>' +
+    '<select class="av-select" id="av-studio-keep" aria-label="Keep last takes">' + avStudioUiKeepOptionsHTML() + '</select>' +
+    '<span class="av-studio-take-n" id="av-studio-take-n">0 takes</span>' +
+    '</div>' +
+    '<div class="av-studio-takes" id="av-studio-takes"></div>' +
+    '<p class="av-studio-none av-note av-dim" id="av-studio-takes-none">No takes yet \u2014 enable the input and press REC.</p>' +
+    '</section>' +
+
+    '<div class="av-studio-warnings" id="av-studio-warnings" hidden><div class="av-studio-warn-head">WARNINGS</div></div>' +
+    '<p class="av-note av-dim av-studio-foot" id="av-studio-foot">REC runs the selected count-in, then records \u2014 lap takes split at cycle boundaries while the sequencer plays (no transport \u2192 one continuous take). EXPORT encodes a WAV in the browser; nothing is uploaded.</p>' +
+    '</div>';
+}
+
+/* ---------- status text ---------- */
+
+function avStudioUiRecText() {
+  let mid = "";
+  try {
+    if (typeof avTakesState === "function") {
+      const st = avTakesState();
+      if (st && typeof st === "object") {
+        const bits = [];
+        let secs = null;
+        if (isFinite(st.seconds)) secs = Number(st.seconds);
+        else if (isFinite(st.frames) && isFinite(st.rate) && st.rate > 0) secs = st.frames / st.rate;
+        else if (isFinite(st.frames)) secs = st.frames / 48000;
+        if (secs != null && secs >= 0) bits.push(avStudioUiSecsTextFromSecs(secs));
+        const lap = Number(st.lap);
+        if (isFinite(lap) && lap >= 1) bits.push("lap " + Math.round(lap));
+        if (st.partial === true) bits.push("partial");
+        if (bits.length) mid = " (" + bits.join(" \u00b7 ") + ")";
+      }
+    }
+  } catch (e) { mid = ""; }
+  return "recording" + mid + " \u2014 press STOP to finish";
+}
+
+function avStudioUiIdleText() {
+  const s = avStudioUiState;
+  if (typeof avTakesStart !== "function") return "the record modules are not loaded \u2014 nothing to record here yet";
+  if (s.inputKnown && !s.inputEnabled) return "input is off \u2014 press ENABLE, then REC";
+  return "ready \u2014 press REC to record the input";
+}
+
+function avStudioUiStatusText() {
+  const s = avStudioUiState;
+  if (s.recPhase === "countin") {
+    const bars = avStudioUiBars(s.countIn);
+    return { text: "count-in \u2014 " + bars + " bar" + (bars === 1 ? "" : "s") + "\u2026 press REC to cancel", kind: "msg" };
+  }
+  if (s.recPhase === "starting") return { text: "arming the recorder\u2026", kind: "msg" };
+  if (s.recPhase === "recording") return { text: avStudioUiRecText(), kind: "msg" };
+  if (s.recPhase === "stopping") return { text: "finishing the take\u2026", kind: "msg" };
+  if (s.enableBusy) return { text: "enabling the input\u2026", kind: "msg" };
+  if (s.lastMsg) return { text: s.lastMsg, kind: (s.lastMsgKind === "err") ? "err" : "msg" };
+  return { text: avStudioUiIdleText(), kind: "msg" };
+}
+
+/* ---------- INPUT actions ---------- */
+
+function avStudioUiDevicesRefresh() {
+  if (typeof avInputDevices !== "function") return false;
+  let p = null;
+  try { p = avInputDevices(); } catch (e) { p = null; }
+  avStudioUiSettle(p, function (list) {
+    try {
+      const opts = avStudioUiDeviceOptions(list);
+      avStudioUiState.devices = opts;
+      if (!opts.length) avStudioUiWarn("input.devices", "no audio input devices were found");
+      else avStudioUiWarnDropKey("input.devices");
+      avStudioUiSync();
+    } catch (e) { /* quiet */ }
+  });
+  return true;
+}
+
+function avStudioUiEnableApply(r) {
+  const s = avStudioUiState;
+  s.enableBusy = false;
+  if (avStudioUiOK(r) === false) {
+    s.inputKnown = true; s.inputEnabled = false;
+    const why = (r && typeof r === "object" && r.error) ? avStudioUiErrText(r.error) : "refused";
+    s.lastMsg = "input refused \u2014 " + why;
+    s.lastMsgKind = "err";
+    avStudioUiWarn("input.enable", s.lastMsg);
+  } else {
+    s.inputKnown = true; s.inputEnabled = true;
+    const label = (r && typeof r === "object") ? avStudioUiStrField(r, ["label", "deviceLabel"]) : "";
+    const did = (r && typeof r === "object") ? avStudioUiStrField(r, ["deviceId", "id"]) : "";
+    const ch = (r && typeof r === "object") ? avStudioUiNumField(r, ["channels", "channelCount"]) : null;
+    const sr = (r && typeof r === "object") ? avStudioUiNumField(r, ["sampleRate", "sr"]) : null;
+    if (label) s.deviceLabel = label;
+    if (did) s.inputDeviceId = did;
+    s.lastMsg = "input on" + (label ? " \u2014 " + label : "") + (ch != null ? " \u00b7 " + Math.round(ch) + " ch" : "") + (sr != null ? " \u00b7 " + (Math.round(sr / 100) / 10) + " kHz" : "");
+    s.lastMsgKind = "msg";
+    avStudioUiWarnDropKey("input.enable");
+    avStudioUiDevicesRefresh();   /* §2.4: the device select refreshes on enable */
+  }
+  avStudioUiSync();
+}
+
+function avStudioUiEnableToggle() {
+  const s = avStudioUiState;
+  try {
+    if (s.enableBusy) return false;
+    if (typeof avInputEnable !== "function" && typeof avInputDisable !== "function") {
+      avStudioUiWarn("modules.input", "the input module (av_input.js) is not loaded \u2014 ENABLE is unavailable");
+      s.lastMsg = "the input module is not loaded \u2014 nothing to enable";
+      s.lastMsgKind = "err";
+      avStudioUiSync();
+      return false;
+    }
+    if (s.inputEnabled) {
+      if (typeof avInputDisable !== "function") {
+        s.lastMsg = "the input module cannot disable (avInputDisable is missing)";
+        s.lastMsgKind = "err";
+        avStudioUiSync();
+        return false;
+      }
+      try { avInputDisable(); } catch (e) { /* fall through to the mirror */ }
+      s.inputEnabled = false; s.monitorOn = false; s.inputKnown = true;
+      s.lastMsg = "input disabled";
+      s.lastMsgKind = "msg";
+      avStudioUiSync();
+      return true;
+    }
+    s.enableBusy = true;
+    s.lastMsg = "enabling the input\u2026";
+    s.lastMsgKind = "msg";
+    avStudioUiSync();
+    let p = null;
+    try { p = avInputEnable(); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "enable failed") }; }
+    avStudioUiSettle(p, avStudioUiEnableApply);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiMonitorToggle() {
+  const s = avStudioUiState;
+  try {
+    if (typeof avInputMonitor !== "function") {
+      avStudioUiWarn("modules.input", "the input module (av_input.js) is not loaded \u2014 ENABLE is unavailable");
+      s.lastMsg = "the input module is not loaded \u2014 monitoring is unavailable";
+      s.lastMsgKind = "err";
+      avStudioUiSync();
+      return false;
+    }
+    if (s.inputKnown && !s.inputEnabled) {
+      s.lastMsg = "enable the input first \u2014 there is nothing to monitor";
+      s.lastMsgKind = "err";
+      avStudioUiSync();
+      return false;
+    }
+    const target = !s.monitorOn;
+    let ok = true;
+    try { ok = avInputMonitor(target) !== false; } catch (e) { ok = false; }
+    if (!ok) {
+      s.lastMsg = "the monitor refused the change";
+      s.lastMsgKind = "err";
+      avStudioUiWarn("input.monitor", s.lastMsg);
+    } else {
+      s.monitorOn = target;
+      s.lastMsg = target ? "monitor on \u2014 feedback risk: keep headphones on" : "monitor off";
+      s.lastMsgKind = "msg";
+      avStudioUiWarnDropKey("input.monitor");
+    }
+    avStudioUiSync();
+    return ok;
+  } catch (e) { return false; }
+}
+
+function avStudioUiGainInput(el) {
+  try {
+    const v = avStudioUiClamp(el ? el.value : null, 0, 1.2, null);
+    if (v == null) return false;
+    avStudioUiState.gain = v;
+    if (typeof avInputGain === "function") { try { avInputGain(v); } catch (e) { /* mirror stands */ } }
+    avStudioUiSync();
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiOffsetChange(el) {
+  try {
+    const v = avStudioUiClamp(el ? el.value : null, -200, 200, null);
+    if (v == null) return false;
+    const n = Math.round(v);
+    avStudioUiState.offsetMs = n;
+    if (typeof avInputOffset === "function") { try { avInputOffset(n); } catch (e) { /* mirror stands */ } }
+    avStudioUiSync();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the device select is an OBSERVATORY under the current pin (avInputEnable takes no device
+   argument): picking a device is remembered and noted honestly, never a re-acquire dance. */
+function avStudioUiDeviceChange(el) {
+  const s = avStudioUiState;
+  try {
+    const id = (el && typeof el.value === "string") ? el.value : "";
+    s.deviceWanted = id;
+    if (id) {
+      let label = id;
+      for (let i = 0; i < s.devices.length; i++) if (s.devices[i].value === id) label = s.devices[i].label;
+      s.lastMsg = "device \u201c" + avStudioUiClean(label, 40) + "\u201d remembered \u2014 switching needs a pinned device argument in avInputEnable() (not available yet), so the running input keeps its device";
+      s.lastMsgKind = "msg";
+      avStudioUiWarn("input.switch", "device switching is not available under the current pin \u2014 avInputEnable() takes no device argument; the running input keeps its device");
+    }
+    avStudioUiSync();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- TRANSPORT actions ---------- */
+
+function avStudioUiMetroApply(patch) {
+  if (typeof avMetroSet !== "function") return false;
+  try {
+    const s = avStudioUiState;
+    const body = { on: !!s.metroOn, level: s.metroLevel, beatsPerBar: s.metroBeats, accent: !!s.metroAccent };
+    for (const k in patch) if (Object.prototype.hasOwnProperty.call(patch, k)) body[k] = patch[k];
+    let st = null;
+    try { st = avMetroSet(body); } catch (e) { return false; }
+    if (st && typeof st === "object") avStudioUiMetroFields(st);
+    else avStudioUiMirrorMetro();
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiMetroToggle() {
+  const s = avStudioUiState;
+  try {
+    if (typeof avMetroSet !== "function") {
+      avStudioUiWarn("modules.metro", "the metronome module (av_metro.js) is not loaded \u2014 clicks and count-in are unavailable");
+      s.lastMsg = "the metronome module is not loaded";
+      s.lastMsgKind = "err";
+      avStudioUiSync();
+      return false;
+    }
+    const ok = avStudioUiMetroApply({ on: !s.metroOn });
+    if (!ok) {
+      s.lastMsg = "the metronome refused the change";
+      s.lastMsgKind = "err";
+      avStudioUiWarn("metro.toggle", s.lastMsg);
+    } else {
+      s.lastMsg = s.metroOn ? "metronome on" : "metronome off";
+      s.lastMsgKind = "msg";
+      avStudioUiWarnDropKey("metro.toggle");
+    }
+    avStudioUiSync();
+    return ok;
+  } catch (e) { return false; }
+}
+
+function avStudioUiMetroLevelInput(el) {
+  try {
+    const v = avStudioUiClamp(el ? el.value : null, 0, 1, null);
+    if (v == null) return false;
+    avStudioUiState.metroLevel = v;
+    const ok = avStudioUiMetroApply({ level: v });
+    avStudioUiSync();
+    return ok;
+  } catch (e) { return false; }
+}
+
+function avStudioUiCountInChange(el) {
+  try {
+    const bars = avStudioUiBars(el ? el.value : null);
+    avStudioUiState.countIn = bars;
+    avStudioUiState.lastMsg = (bars > 0)
+      ? ("count-in set \u2014 " + bars + " bar" + (bars === 1 ? "" : "s") + " before REC")
+      : "count-in off \u2014 REC starts instantly";
+    avStudioUiState.lastMsgKind = "msg";
+    avStudioUiSync();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- TAKES actions ---------- */
+
+function avStudioUiKeepChange(el) {
+  try {
+    const n = avStudioUiKeepN(el ? el.value : null);
+    avStudioUiState.keepLast = n;
+    let ok = false;
+    if (typeof avTakesKeepLast === "function") { try { avTakesKeepLast(n); ok = true; } catch (e) { ok = false; } }
+    if (!ok) avStudioUiWarn("takes.keep", "the takes module (av_takes.js) is not loaded \u2014 KEEP LAST has no effect yet");
+    else {
+      avStudioUiWarnDropKey("takes.keep");
+      avStudioUiState.lastMsg = "keep last " + n + " take" + (n === 1 ? "" : "s") + " \u2014 pruned when a recording stops";
+      avStudioUiState.lastMsgKind = "msg";
+    }
+    avStudioUiSync();
+    return ok;
+  } catch (e) { return false; }
+}
+
+/* start: count-in (when > 0) then avTakesStart({ lapSync: true }); generation-guarded so a
+   cancelled count-in's late resolution can never start a recording (see header) */
+function avStudioUiStart() {
+  const s = avStudioUiState;
+  try {
+    if (typeof avTakesStart !== "function") {
+      avStudioUiWarn("modules.takes", "the takes module (av_takes.js) is not loaded \u2014 REC is unavailable");
+      s.lastMsg = "the takes module is not loaded \u2014 nothing can be recorded";
+      s.lastMsgKind = "err";
+      avStudioUiSync();
+      return false;
+    }
+    if (s.inputKnown && !s.inputEnabled) {
+      s.lastMsg = "the input is not enabled \u2014 press ENABLE first";
+      s.lastMsgKind = "err";
+      avStudioUiSync();
+      return false;
+    }
+    s.recSeq = (s.recSeq | 0) + 1;
+    const seq = s.recSeq;
+    const begin = function () {
+      if (seq !== s.recSeq) return;   /* cancelled / superseded */
+      s.recPhase = "starting";
+      s.lastMsg = "arming the recorder\u2026";
+      s.lastMsgKind = "msg";
+      avStudioUiSync();
+      let p = null;
+      try { p = avTakesStart({ lapSync: true }); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "start failed") }; }
+      avStudioUiSettle(p, avStudioUiRecSettleStart);
+    };
+    const bars = avStudioUiBars(s.countIn);
+    if (bars > 0 && typeof avMetroCountIn === "function") {
+      s.recPhase = "countin";
+      s.lastMsg = "count-in \u2014 " + bars + " bar" + (bars === 1 ? "" : "s") + "\u2026";
+      s.lastMsgKind = "msg";
+      avStudioUiSync();
+      let cp = null;
+      try { cp = avMetroCountIn(bars); } catch (e) { cp = null; }
+      if (cp && typeof cp.then === "function") {
+        cp.then(function (r) {
+          if (seq !== s.recSeq) return;   /* cancelled while the count-in ran */
+          if (!(r && r.ok === true)) {
+            avStudioUiWarn("countin", "the count-in did not run" + (r && r.error ? " (" + avStudioUiErrText(r.error) + ")" : "") + " \u2014 recording starts anyway");
+          } else {
+            avStudioUiWarnDropKey("countin");
+          }
+          begin();
+        }).catch(function (e) {
+          if (seq !== s.recSeq) return;
+          avStudioUiWarn("countin", "the count-in failed \u2014 recording starts anyway");
+          begin();
+        });
+        return true;
+      }
+      if (cp && typeof cp === "object" && cp.ok === false) {
+        avStudioUiWarn("countin", "the count-in did not run (" + avStudioUiErrText(cp.error) + ") \u2014 recording starts anyway");
+      } else {
+        avStudioUiWarn("countin", "the count-in did not run (no promise) \u2014 recording starts anyway");
+      }
+      begin();
+      return true;
+    }
+    if (bars > 0) {
+      avStudioUiWarn("modules.metro", "the metronome module (av_metro.js) is not loaded \u2014 clicks and count-in are unavailable");
+    }
+    begin();
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiRec() {
+  const s = avStudioUiState;
+  try {
+    if (s.recPhase === "recording" || s.recPhase === "countin") return avStudioUiStop();
+    if (s.recPhase !== "idle") return false;   /* starting / stopping: ignored (fractions of a second) */
+    return avStudioUiStart();
+  } catch (e) { return false; }
+}
+
+/* stop: cancels a running count-in (generation bump), finishes a live take via avTakesStop */
+function avStudioUiStop() {
+  const s = avStudioUiState;
+  try {
+    if (s.recPhase === "countin") {
+      s.recSeq = (s.recSeq | 0) + 1;
+      s.recPhase = "idle";
+      s.lastMsg = "count-in cancelled \u2014 nothing was recorded";
+      s.lastMsgKind = "msg";
+      avStudioUiSync();
+      return true;
+    }
+    if (s.recPhase !== "recording") return false;
+    if (typeof avTakesStop !== "function") {
+      s.recPhase = "idle";
+      s.lastMsg = "the takes module is not loaded \u2014 the take cannot be finished";
+      s.lastMsgKind = "err";
+      avStudioUiWarn("modules.takes", "the takes module (av_takes.js) is not loaded \u2014 REC is unavailable");
+      avStudioUiSync();
+      return false;
+    }
+    s.recPhase = "stopping";
+    s.lastMsg = "finishing the take\u2026";
+    s.lastMsgKind = "msg";
+    avStudioUiSync();
+    let r = null;
+    try { r = avTakesStop(); } catch (e) { r = { ok: false, error: String((e && e.message) || e || "stop failed") }; }
+    avStudioUiSettle(r, avStudioUiRecSettleStop);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiRecSettleStart(r) {
+  const s = avStudioUiState;
+  if (avStudioUiOK(r) === false) {
+    s.recPhase = "idle";
+    const why = (r && typeof r === "object" && r.error) ? avStudioUiErrText(r.error) : "refused";
+    s.lastMsg = "recording could not start \u2014 " + why;
+    s.lastMsgKind = "err";
+    avStudioUiWarn("rec.fail", s.lastMsg);
+  } else {
+    s.recPhase = "recording";
+    s.recStartedAt = Date.now();
+    s.lastMsg = "recording";
+    s.lastMsgKind = "msg";
+    avStudioUiWarnDropKey("rec.fail");
+    avStudioUiWarnDropKey("countin");
+  }
+  avStudioUiSync();
+}
+
+function avStudioUiRecSettleStop(r) {
+  const s = avStudioUiState;
+  s.recPhase = "idle";
+  if (avStudioUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avStudioUiErrText(r.error) : "refused";
+    s.lastMsg = "the take could not be finished \u2014 " + why;
+    s.lastMsgKind = "err";
+    avStudioUiWarn("rec.fail", s.lastMsg);
+  } else {
+    let extra = "";
+    try {
+      let secs = null;
+      if (r && typeof r === "object") {
+        if (isFinite(r.seconds)) secs = Number(r.seconds);
+        else if (isFinite(r.frames) && isFinite(r.rate) && r.rate > 0) secs = r.frames / r.rate;
+        else if (isFinite(r.frames)) secs = r.frames / 48000;
+      }
+      if (secs != null && secs >= 0) extra = " \u2014 " + avStudioUiSecsTextFromSecs(secs);
+    } catch (e) { extra = ""; }
+    s.lastMsg = "take saved" + extra + " \u2014 export it below";
+    s.lastMsgKind = "msg";
+    avStudioUiWarnDropKey("rec.fail");
+  }
+  avStudioUiSync();
+}
+
+function avStudioUiExportURL(r) {
+  try {
+    if (r && typeof r.url === "string" && r.url) return r.url;
+    if (r && r.blob && typeof URL !== "undefined" && URL && typeof URL.createObjectURL === "function") {
+      if (avStudioUiState.lastObjectUrl) { try { URL.revokeObjectURL(avStudioUiState.lastObjectUrl); } catch (e) { /* ok */ } }
+      const u = URL.createObjectURL(r.blob);
+      if (typeof u === "string" && u) { avStudioUiState.lastObjectUrl = u; return u; }
+    }
+  } catch (e) { /* no handle */ }
+  return null;
+}
+
+function avStudioUiDownloadURL(url, name) {
+  try {
+    if (!url || typeof document === "undefined" || !document || typeof document.createElement !== "function") return false;
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name || "take.wav";
+    if (document.body && typeof document.body.appendChild === "function") document.body.appendChild(a);
+    a.click();
+    if (document.body && typeof document.body.removeChild === "function") { try { document.body.removeChild(a); } catch (e) { /* ok */ } }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiExport(id) {
+  const s = avStudioUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    if (typeof avTakesExport !== "function") {
+      avStudioUiWarn("modules.takes", "the takes module (av_takes.js) is not loaded \u2014 REC is unavailable");
+      s.lastMsg = "the takes module is not loaded \u2014 export is unavailable";
+      s.lastMsgKind = "err";
+      avStudioUiSync();
+      return false;
+    }
+    if (s.exportingId) return false;
+    s.exportingId = id;
+    s.lastMsg = "exporting " + id + "\u2026";
+    s.lastMsgKind = "msg";
+    avStudioUiSync();
+    let p = null;
+    try { p = avTakesExport(id); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "export failed") }; }
+    avStudioUiSettle(p, function (r) {
+      s.exportingId = "";
+      try {
+        if (!r || typeof r !== "object" || r.ok !== true) {
+          const why = (r && r.error) ? avStudioUiErrText(r.error) : "refused";
+          s.lastMsg = "export refused \u2014 " + why;
+          s.lastMsgKind = "err";
+          avStudioUiWarn("export.fail", s.lastMsg);
+          avStudioUiSync();
+          return;
+        }
+        const name = (typeof r.name === "string" && r.name) ? avStudioUiClean(r.name, 80) : (id + ".wav");
+        const url = avStudioUiExportURL(r);
+        const clicked = url ? avStudioUiDownloadURL(url, name) : false;
+        const bytes = avStudioUiNumField(r, ["bytes"]);
+        const wi = (r.wavInfo && typeof r.wavInfo === "object") ? r.wavInfo : null;
+        let extra = "";
+        if (bytes != null) extra += " \u00b7 " + avStudioUiFmtBytes(bytes);
+        if (wi) {
+          const bits = avStudioUiNumField(wi, ["bits"]);
+          const sr = avStudioUiNumField(wi, ["sr", "sampleRate"]);
+          if (bits != null) extra += " \u00b7 " + Math.round(bits) + "-bit";
+          if (sr != null && sr > 0) extra += " \u00b7 " + (Math.round(sr / 100) / 10) + " kHz";
+        }
+        s.lastMsg = "exported " + name + extra + (clicked ? " \u2014 check your downloads" : " \u2014 no download handle could be opened");
+        s.lastMsgKind = "msg";
+        avStudioUiWarnDropKey("export.fail");
+        try {
+          if (typeof window !== "undefined") {
+            window.__avStudioUiLastExport = { id: id, name: name, bytes: (bytes == null ? null : Math.round(bytes)), downloaded: clicked, at: Date.now() };
+          }
+        } catch (e) { /* stamp is a nicety */ }
+        avStudioUiSync();
+      } catch (e) { /* settle never throws */ }
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiDelete(id) {
+  const s = avStudioUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    if (typeof avTakesDelete !== "function") {
+      avStudioUiWarn("modules.takes", "the takes module (av_takes.js) is not loaded \u2014 REC is unavailable");
+      s.lastMsg = "the takes module is not loaded \u2014 delete is unavailable";
+      s.lastMsgKind = "err";
+      avStudioUiSync();
+      return false;
+    }
+    let ok = true;
+    try { if (avTakesDelete(id) === false) ok = false; } catch (e) { ok = false; }
+    if (ok) {
+      s.lastMsg = "take deleted";
+      s.lastMsgKind = "msg";
+      avStudioUiWarnDropKey("take.del");
+    } else {
+      s.lastMsg = "the take could not be deleted";
+      s.lastMsgKind = "err";
+      avStudioUiWarn("take.del", s.lastMsg);
+    }
+    avStudioUiSync();
+    return ok;
+  } catch (e) { return false; }
+}
+
+/* debug-only arm hook (window.__avStudioUi.arm); the card itself never arms */
+function avStudioUiArm(on) {
+  try {
+    if (typeof avTakesArm !== "function") return false;
+    return avTakesArm(!!on) !== false;
+  } catch (e) { return false; }
+}
+
+/* ---------- async settle (receipts may be promises or sync values; never throws) ---------- */
+
+function avStudioUiSettle(p, cb) {
+  const done = { v: false };
+  const once = function (r) {
+    if (done.v) return;
+    done.v = true;
+    try { cb(r); } catch (e) { /* settle never throws */ }
+  };
+  try {
+    if (p && typeof p.then === "function") {
+      p.then(once).catch(function (e) { once({ ok: false, error: String((e && e.message) || e || "failed") }); });
+      return true;
+    }
+    once(p);
+    return true;
+  } catch (e) {
+    once({ ok: false, error: String((e && e.message) || e || "failed") });
+    return false;
+  }
+}
+
+/* ---------- paint ---------- */
+
+function avStudioUiLatencyText() {
+  const s = avStudioUiState;
+  if (!s.inputEnabled || typeof avInputLatency !== "function") return "";
+  let l = null;
+  try { l = avInputLatency(); } catch (e) { l = null; }
+  if (!l || typeof l !== "object") return "";
+  const parts = [];
+  const total = avStudioUiNumField(l, ["totalMs"]);
+  const base = avStudioUiNumField(l, ["baseMs"]);
+  const off = avStudioUiNumField(l, ["offsetMs"]);
+  const ms = (total != null) ? total : ((base != null || off != null) ? ((base || 0) + (off || 0)) : null);
+  if (ms != null) parts.push("latency " + Math.round(ms) + " ms");
+  const fr = avStudioUiNumField(l, ["totalFrames"]);
+  if (fr != null) parts.push(Math.round(fr) + " frames");
+  const sr = avStudioUiNumField(l, ["sr", "sampleRate"]);
+  if (sr != null && sr > 0) parts.push(Math.round(sr) + " Hz");
+  return parts.join(" \u00b7 ");
+}
+
+function avStudioUiMetaNote() {
+  const s = avStudioUiState;
+  const parts = [];
+  if (s.metroBpm > 0) parts.push(String(Math.round(s.metroBpm)) + " bpm");
+  if (s.metroBeats >= 1) parts.push(s.metroBeats + "/4");
+  return parts.join(" \u00b7 ");
+}
+
+function avStudioUiMeterPaint(host, peak, rms, on) {
+  try {
+    const s = avStudioUiState;
+    const now = Date.now();
+    const pPct = on ? avStudioUiMeterPct(peak) : 0;
+    const rPct = on ? avStudioUiMeterPct(rms) : 0;
+    const txt = on ? ("peak " + Number(peak).toFixed(2) + " \u00b7 rms " + Number(rms).toFixed(2)) : "peak \u2014 \u00b7 rms \u2014";
+    const stateChanged = (s.meterZero !== !on);
+    const pctChanged = Math.abs(pPct - (s.meterPPct || 0)) >= 0.4;
+    if (!stateChanged && !pctChanged) return false;
+    if (!stateChanged && (now - (s.meterAt | 0)) < 60) return false;
+    s.meterAt = now;
+    s.meterPPct = pPct;
+    s.meterZero = !on;
+    const bar = host.querySelector("#av-studio-meter-bar");
+    if (bar) {
+      if (bar.style && bar.style.width !== pPct + "%") bar.style.width = pPct + "%";
+      if (bar.classList) bar.classList.toggle("hot", !!(on && Number(peak) >= 1.0));
+    }
+    const rmsEl = host.querySelector("#av-studio-meter-rms");
+    if (rmsEl && rmsEl.style && rmsEl.style.width !== rPct + "%") rmsEl.style.width = rPct + "%";
+    const val = host.querySelector("#av-studio-meter-val");
+    if (val && val.textContent !== txt) val.textContent = txt;
+    const meter = host.querySelector("#av-studio-meter");
+    if (meter && meter.setAttribute) meter.setAttribute("aria-valuenow", String(Math.round(pPct)));
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the meter tick: live only while the input is enabled; one zero-paint when it goes off */
+function avStudioUiMeterTick(host) {
+  const s = avStudioUiState;
+  try {
+    if (!host) return false;
+    if (s.inputEnabled && typeof avInputLevels === "function") {
+      let lv = null;
+      try { lv = avInputLevels(); } catch (e) { lv = null; }
+      const peak = avStudioUiClamp(lv ? lv.peak : null, 0, 4, 0);
+      const rms = avStudioUiClamp(lv ? lv.rms : null, 0, 4, 0);
+      avStudioUiMeterPaint(host, peak, rms, true);
+      return true;
+    }
+    if (!s.meterZero) avStudioUiMeterPaint(host, 0, 0, false);
+    return false;
+  } catch (e) { return false; }
+}
+
+function avStudioUiPaintDevices(host) {
+  try {
+    const s = avStudioUiState;
+    const sel = host.querySelector("#av-studio-device");
+    if (!sel) return false;
+    const opts = s.devices || [];
+    let key = "";
+    for (let i = 0; i < opts.length; i++) key += opts[i].value + "\u0001" + opts[i].label + "\u0000";
+    if (key !== s.devicesKey) {
+      s.devicesKey = key;
+      let html = '<option value="">\u2014 device \u2014</option>';
+      for (let i = 0; i < opts.length; i++) {
+        html += '<option value="' + avStudioUiEsc(opts[i].value) + '">' + avStudioUiEsc(opts[i].label) + "</option>";
+      }
+      sel.innerHTML = html;
+    }
+    let want = "";
+    let present = false;
+    for (let i = 0; i < opts.length; i++) if (opts[i].value === s.deviceWanted) present = true;
+    if (s.deviceWanted && present) want = s.deviceWanted;
+    else {
+      let cur = "";
+      try { cur = String(sel.value || ""); } catch (e) { cur = ""; }
+      present = false;
+      for (let i = 0; i < opts.length; i++) if (opts[i].value === cur) present = true;
+      if (cur && present) want = cur;
+      else if (s.inputDeviceId) {
+        for (let i = 0; i < opts.length; i++) if (opts[i].value === s.inputDeviceId) want = s.inputDeviceId;
+      }
+    }
+    if (String(sel.value || "") !== want) sel.value = want;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiPaintTakes(host) {
+  try {
+    const box = host.querySelector("#av-studio-takes");
+    const none = host.querySelector("#av-studio-takes-none");
+    const nEl = host.querySelector("#av-studio-take-n");
+    let list = [];
+    try { if (typeof avTakesList === "function") { const v = avTakesList(); if (Array.isArray(v)) list = v; } } catch (e) { list = []; }
+    const views = [];
+    for (let i = 0; i < list.length && i < 64; i++) views.push(avStudioUiTakeView(list[i], i));
+    const key = avStudioUiTakesKey(views);
+    if (box && key !== avStudioUiState.takesKey) {
+      avStudioUiState.takesKey = key;
+      let html = "";
+      for (let i = 0; i < views.length; i++) html += avStudioUiTakeRowHTML(views[i]);
+      box.innerHTML = html;
+    }
+    if (none) none.hidden = views.length > 0;
+    if (nEl) {
+      const txt = views.length + " take" + (views.length === 1 ? "" : "s");
+      if (nEl.textContent !== txt) nEl.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avStudioUiPaintWarnings(host) {
+  try {
+    const box = host.querySelector("#av-studio-warnings");
+    if (!box) return false;
+    const list = avStudioUiState.warnings || [];
+    box.hidden = list.length === 0;
+    let key = "";
+    for (let i = 0; i < list.length; i++) key += list[i].key + ":" + list[i].text + "|";
+    if (key !== avStudioUiState.warnKey) {
+      avStudioUiState.warnKey = key;
+      let html = '<div class="av-studio-warn-head">WARNINGS</div>';
+      for (let i = 0; i < list.length; i++) html += '<div class="av-studio-warn-item">' + avStudioUiEsc(list[i].text) + "</div>";
+      box.innerHTML = html;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* full repaint: mirrors first (guarded), then every control (write-on-change only) */
+function avStudioUiSync() {
+  const host = avStudioUiHost();
+  if (!host) return false;
+  try {
+    let card = null;
+    try { card = host.querySelector(".av-studio"); } catch (e) { card = null; }
+    if (!card) {
+      host.innerHTML = avStudioUiBodyHTML();
+      avStudioUiState.takesKey = "";
+      avStudioUiState.warnKey = "";
+      avStudioUiState.devicesKey = "";
+      avStudioUiWire(host);
+    }
+    const s = avStudioUiState;
+
+    /* mirrors (typeof-guarded; explicit reads only) */
+    avStudioUiMirrorInput();
+    avStudioUiMirrorMetro();
+    avStudioUiMirrorTakes();
+
+    /* status line */
+    const st = avStudioUiStatusText();
+    try {
+      const el = host.querySelector("#av-studio-status");
+      if (el) {
+        const cls = "av-studio-status " + (st.kind === "err" ? "av-studio-err" : "av-studio-msg");
+        if (el.className !== cls) el.className = cls;
+        if (el.textContent !== st.text) el.textContent = st.text;
+      }
+    } catch (e) { /* no DOM */ }
+
+    /* INPUT */
+    try {
+      const btn = host.querySelector("#av-studio-enable");
+      if (btn) {
+        const txt = s.inputEnabled ? "DISABLE" : (s.enableBusy ? "ENABLING\u2026" : "ENABLE");
+        if (btn.textContent !== txt) btn.textContent = txt;
+        if (btn.classList) btn.classList.toggle("on", !!s.inputEnabled);
+        const pressed = s.inputEnabled ? "true" : "false";
+        if (btn.getAttribute("aria-pressed") !== pressed) btn.setAttribute("aria-pressed", pressed);
+      }
+      const ist = host.querySelector("#av-studio-input-state");
+      if (ist) {
+        const txt = s.inputEnabled ? ("on" + (s.deviceLabel ? " \u2014 " + s.deviceLabel : "")) : "not enabled";
+        if (ist.textContent !== txt) ist.textContent = txt;
+      }
+      avStudioUiSetValue(host.querySelector("#av-studio-gain"), s.gain.toFixed(2));
+      avStudioUiSetText(host, "#av-studio-gain-val", s.gain.toFixed(2));
+      const mon = host.querySelector("#av-studio-monitor");
+      if (mon) {
+        if (mon.classList) mon.classList.toggle("on", !!s.monitorOn);
+        const pressed = s.monitorOn ? "true" : "false";
+        if (mon.getAttribute("aria-pressed") !== pressed) mon.setAttribute("aria-pressed", pressed);
+      }
+      avStudioUiSetValue(host.querySelector("#av-studio-offset"), String(Math.round(s.offsetMs)));
+      avStudioUiSetText(host, "#av-studio-latency", avStudioUiLatencyText());
+    } catch (e) { /* no DOM */ }
+
+    avStudioUiPaintDevices(host);
+
+    /* TRANSPORT */
+    try {
+      avStudioUiSetValue(host.querySelector("#av-studio-countin"), String(avStudioUiBars(s.countIn)));
+      const met = host.querySelector("#av-studio-metro");
+      if (met) {
+        if (met.classList) met.classList.toggle("on", !!s.metroOn);
+        const pressed = s.metroOn ? "true" : "false";
+        if (met.getAttribute("aria-pressed") !== pressed) met.setAttribute("aria-pressed", pressed);
+      }
+      avStudioUiSetValue(host.querySelector("#av-studio-metro-level"), s.metroLevel.toFixed(2));
+      avStudioUiSetText(host, "#av-studio-metro-val", s.metroLevel.toFixed(2));
+      avStudioUiSetText(host, "#av-studio-metro-bpm", avStudioUiMetaNote());
+    } catch (e) { /* no DOM */ }
+
+    /* TAKES */
+    try {
+      const rec = host.querySelector("#av-studio-rec");
+      if (rec) {
+        const phase = s.recPhase;
+        const txt = (phase === "recording") ? "STOP"
+          : (phase === "countin") ? "COUNT-IN\u2026"
+            : (phase === "starting" || phase === "stopping") ? "\u2026"
+              : "REC";
+        if (rec.textContent !== txt) rec.textContent = txt;
+        if (rec.classList) rec.classList.toggle("on", phase !== "idle");
+        const pressed = (phase === "recording" || phase === "countin" || phase === "starting") ? "true" : "false";
+        if (rec.getAttribute("aria-pressed") !== pressed) rec.setAttribute("aria-pressed", pressed);
+      }
+      avStudioUiSetValue(host.querySelector("#av-studio-keep"), String(avStudioUiKeepN(s.keepLast)));
+    } catch (e) { /* no DOM */ }
+    avStudioUiPaintTakes(host);
+    avStudioUiPaintWarnings(host);
+
+    /* the meter falls back to zero when the input is off (the rAF loop keeps it live when on) */
+    if (!s.inputEnabled) avStudioUiMeterPaint(host, 0, 0, false);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* ---------- poll (recording adoption + slow mirror refresh; ~400 ms, no rAF needed) ---------- */
+
+function avStudioUiPoll() {
+  const s = avStudioUiState;
+  try {
+    if (!s.inited) return false;
+    const now = Date.now();
+    if (now - (s.pollAt | 0) < 400) return false;
+    s.pollAt = now;
+    let changed = false;
+    avStudioUiMirrorInput();
+    avStudioUiMirrorMetro();
+    avStudioUiMirrorTakes();
+    const rec = avStudioUiTakesRecFlag();
+    if (rec === true && s.recPhase === "idle") {
+      s.recPhase = "recording";
+      s.recStartedAt = now;
+      s.lastMsg = "recording";
+      s.lastMsgKind = "msg";
+      changed = true;
+    } else if (rec === false && s.recPhase === "recording") {
+      s.recPhase = "idle";
+      s.lastMsg = "recording stopped";
+      s.lastMsgKind = "msg";
+      changed = true;
+    }
+    if (s.recPhase === "recording") changed = true;   /* keep the elapsed text fresh */
+    if (changed) avStudioUiSync();
+    return changed;
+  } catch (e) { return false; }
+}
+
+/* ---------- the rAF loop (meter + poll; never breaks the frame) ---------- */
+
+function avStudioUiLoopBody() {
+  const s = avStudioUiState;
+  if (!s.inited) return false;
+  const host = avStudioUiHost();
+  if (!host) return false;
+  avStudioUiMeterTick(host);
+  avStudioUiPoll();
+  return true;
+}
+
+function avStudioUiLoop() {
+  try { avStudioUiLoopBody(); } catch (e) { /* never break the frame */ }
+  try {
+    if (typeof requestAnimationFrame === "function") requestAnimationFrame(avStudioUiLoop);
+    else avStudioUiState.rafOn = false;
+  } catch (e) { avStudioUiState.rafOn = false; }
+}
+
+function avStudioUiStartLoop() {
+  const s = avStudioUiState;
+  if (s.rafOn) return false;
+  if (typeof requestAnimationFrame !== "function") return false;
+  s.rafOn = true;
+  try { requestAnimationFrame(avStudioUiLoop); } catch (e) { s.rafOn = false; return false; }
+  return true;
+}
+
+/* ---------- wiring (delegated, bound ONCE per host element; the dataset marker) ---------- */
+
+function avStudioUiClick(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest("#av-studio-enable")) { avStudioUiEnableToggle(); return; }
+    if (t.closest("#av-studio-monitor")) { avStudioUiMonitorToggle(); return; }
+    if (t.closest("#av-studio-metro")) { avStudioUiMetroToggle(); return; }
+    if (t.closest("#av-studio-rec")) { avStudioUiRec(); return; }
+    const act = t.closest("[data-act]");
+    if (act) {
+      const row = act.closest("[data-take]");
+      const id = row ? String(row.getAttribute("data-take") || "") : "";
+      if (!id) return;
+      const what = String(act.getAttribute("data-act") || "");
+      if (what === "export") { avStudioUiExport(id); return; }
+      if (what === "del") { avStudioUiDelete(id); return; }
+    }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+function avStudioUiChange(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest("#av-studio-device")) { avStudioUiDeviceChange(t); return; }
+    if (t.closest("#av-studio-countin")) { avStudioUiCountInChange(t); return; }
+    if (t.closest("#av-studio-keep")) { avStudioUiKeepChange(t); return; }
+    if (t.closest("#av-studio-offset")) { avStudioUiOffsetChange(t); return; }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+function avStudioUiInput(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest("#av-studio-gain")) { avStudioUiGainInput(t); return; }
+    if (t.closest("#av-studio-metro-level")) { avStudioUiMetroLevelInput(t); return; }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+function avStudioUiWire(host) {
+  if (!host || typeof host.addEventListener !== "function") return false;
+  try {
+    if (host.dataset && host.dataset.avStudioUiWired === "1") return true;   /* one delegation per host element */
+    if (host.dataset) host.dataset.avStudioUiWired = "1";
+    host.addEventListener("click", avStudioUiClick);
+    host.addEventListener("change", avStudioUiChange);
+    host.addEventListener("input", avStudioUiInput);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- init (mount, idempotent, re-mountable) ---------- */
+
+function avStudioUiInit() {
+  const host = avStudioUiHost();
+  if (!host) return false;
+  try {
+    let card = null;
+    try { card = (typeof host.querySelector === "function") ? host.querySelector(".av-studio") : null; } catch (e) { card = null; }
+    if (!card) {
+      host.innerHTML = avStudioUiBodyHTML();
+      avStudioUiState.takesKey = "";
+      avStudioUiState.warnKey = "";
+      avStudioUiState.devicesKey = "";
+    }
+    avStudioUiWire(host);
+    const s = avStudioUiState;
+    s.inited = true;
+    s.mounts += 1;
+    avStudioUiModulesNote();
+    avStudioUiSync();
+    avStudioUiStartLoop();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- observables ---------- */
+
+function avStudioUiSnap() {
+  const host = avStudioUiHost();
+  const s = avStudioUiState;
+  const snap = {
+    version: AV_STUDIO_UI_VERSION,
+    inited: !!s.inited,
+    mounts: s.mounts,
+    host: !!host,
+    wired: !!(host && host.dataset && host.dataset.avStudioUiWired === "1"),
+    card: false,
+    recPhase: s.recPhase,
+    input: {
+      known: !!s.inputKnown, enabled: !!s.inputEnabled, busy: !!s.enableBusy,
+      monitor: !!s.monitorOn, gain: s.gain, offsetMs: s.offsetMs,
+      device: s.deviceLabel || "", module: (typeof avInputEnable === "function"),
+    },
+    metro: {
+      on: !!s.metroOn, level: s.metroLevel, beatsPerBar: s.metroBeats,
+      bpm: s.metroBpm, module: (typeof avMetroSet === "function"),
+    },
+    takes: {
+      module: (typeof avTakesStart === "function"), count: 0,
+      keepLast: avStudioUiKeepN(s.keepLast), exporting: s.exportingId || "",
+    },
+    countIn: avStudioUiBars(s.countIn),
+    status: s.lastMsg, statusKind: s.lastMsgKind,
+    warnings: s.warnings.map(function (w) { return w.text; }),
+    classes: avStudioUiClasses(),
+  };
+  try { if (host && host.querySelector) snap.card = !!host.querySelector(".av-studio"); } catch (e) { snap.card = false; }
+  try { if (host && host.querySelectorAll) snap.takes.count = host.querySelectorAll(".av-studio-take").length; } catch (e) { /* no DOM */ }
+  return snap;
+}
+
+function avStudioUiClasses() {
+  return [
+    "av-studio", "av-studio-head", "av-studio-title", "av-studio-cap",
+    "av-studio-status-line", "av-studio-status", "av-studio-msg", "av-studio-err",
+    "av-studio-sect", "av-studio-sect-head", "av-studio-sect-lbl", "av-studio-input-state",
+    "av-studio-row", "av-studio-lab", "av-studio-btn", "av-studio-enable", "av-studio-device",
+    "av-studio-range", "av-studio-val", "av-studio-unit", "av-studio-monitor", "av-studio-offset",
+    "av-studio-meter-row", "av-studio-meter", "av-studio-meter-bar", "av-studio-meter-rms",
+    "av-studio-meter-val", "hot",
+    "av-studio-latency",
+    "av-studio-metro", "av-studio-metro-bpm",
+    "av-studio-rec", "on",
+    "av-studio-take-n", "av-studio-takes", "av-studio-none",
+    "av-studio-take", "partial", "av-studio-take-name", "av-studio-take-secs", "av-studio-take-lap",
+    "av-studio-take-export", "av-studio-take-del",
+    "av-studio-warnings", "av-studio-warn-head", "av-studio-warn-item",
+    "av-studio-foot",
+  ];
+}
+
+/* ---------- debug/verify handle ---------- */
+
+if (typeof window !== "undefined") {
+  window.__avStudioUi = {
+    version: AV_STUDIO_UI_VERSION,
+    init: () => avStudioUiInit(),
+    sync: () => avStudioUiSync(),
+    classes: () => avStudioUiClasses(),
+    state: () => avStudioUiSnap(),
+    rec: () => avStudioUiRec(),
+    stop: () => avStudioUiStop(),
+    export: (id) => avStudioUiExport(id),
+    del: (id) => avStudioUiDelete(id),
+    devices: () => avStudioUiDevicesRefresh(),
+    arm: (on) => avStudioUiArm(on),
+  };
+}
+
+
 /* Anvil — SYNTH card (P1 voice engine, P2 ENGINE layer, P3 grain + sampler panels). avSynthInit() mounts the engine
    controls into the parent-owned host #av-synth-knobs:
    - one ENGINE select (#av-synth-engine — va · acid · string · drum · grain · sampler) at the
@@ -22791,7 +26531,7 @@ function avSynthInit() {
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.6.0", phase: "P6 · deliver", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.7.0", phase: "S1 · record core", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -22882,6 +26622,11 @@ function avMountLevels() {
   } catch (e) { console.warn("[anvil] store→bank wire failed", e); }
   let deliverOk = false;
   try { deliverOk = (typeof avDeliverUiInit === "function") ? (avDeliverUiInit() !== false) : false; } catch (e) { console.warn("[anvil] deliver ui init failed", e); }
+  let inputOk = false, metroOk = false, takesOk = false, studioUiOk = false;
+  try { inputOk = (typeof avInputInit === "function") ? (avInputInit() !== false) : false; } catch (e) { console.warn("[anvil] input init failed", e); }
+  try { metroOk = (typeof avMetroInit === "function") ? (avMetroInit() !== false) : false; } catch (e) { console.warn("[anvil] metro init failed", e); }
+  try { takesOk = (typeof avTakesInit === "function") ? (avTakesInit() !== false) : false; } catch (e) { console.warn("[anvil] takes init failed", e); }
+  try { studioUiOk = (typeof avStudioUiInit === "function") ? (avStudioUiInit() !== false) : false; } catch (e) { console.warn("[anvil] studio ui init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -22897,7 +26642,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

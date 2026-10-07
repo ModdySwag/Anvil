@@ -1,0 +1,35 @@
+METRO COUNT-IN PROBE — parent triage for the cdp_studio step-4 failure (2026-10-07)
+Probe: cache/scratch/s1/integrate/metro_probe.mjs (replays the rig's step-4 sequence + a clean count-in)
+Build under test: index.html sha256 75c9c2eb63b70ce22c88610d1bb1944a7c06c67699f88c1773b66dffbf6b37ee
+
+Failing rig check: "4 count-in scheduled >= 8 clicks (ring delta across the count-in) -> new clicks=7"
+
+=== scenario 1 (rig-exact): metro ON -> count-in ===
+before: planned=1 dropped=0 clicks=[0.5113]
+count-in result: {"ms":4048.5,"r":{"ok":true,"bars":2,"seconds":4},"err":null}
+after: planned=15 dropped=0 clicks=[0.5113,0.5113,1.0113,1.5113,2.0113,2.5113,3.0113,3.5113,4.0113,4.5113,5.0113,5.5113,6.0113,6.5113,7.0113]
+planned delta=14
+set-diff new=13 -> [1.0113,1.5113,2.0113,2.5113,3.0113,3.5113,4.0113,4.5113,5.0113,5.5113,6.0113,6.5113,7.0113]
+new-click spacing=[0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]
+
+  Reading: the count-in's first click (k=0) landed on the SAME audio-clock value as the regular
+  train's just-planned click (t=0.5113 twice — one render quantum). The ring honestly records
+  both; a set-difference of distinct timestamps undercounts by one for a full 8-click count-in.
+  The count-in emitted its full train (8 pushes, 0.5 s spacing exact), the train resumed
+  continuous on the same grid at +4.0113 (resume clicks 4.5113..), resolution 4048.5 ms.
+
+=== scenario 2 (clean): metro OFF -> count-in ===
+before: planned=0 clicks=0
+count-in result: {"ms":4050.7,"r":{"ok":true,"bars":2,"seconds":4},"err":null}
+after: planned=8 dropped=0 clicks=[7.5407,8.0407,8.5407,9.0407,9.5407,10.0407,10.5407,11.0407]
+planned delta=8 · set-diff new=8
+new-click spacing=[0.5,0.5,0.5,0.5,0.5,0.5,0.5]
+
+  Reading: on a clean ring the count-in pushes exactly 8 clicks at exact beat spacing and
+  resolves {ok:true, bars:2, seconds:4} at 4050.7 ms. The app is honest in both flows.
+
+VERDICT: rig SPEC fix (the check's stated intent is "count-in scheduled >= 8 clicks"; the
+set-difference method undercounts on a duplicate-timestamp collision with a running train).
+Fix: run the count-in with the metronome OFF (it clicks regardless of the toggle — §2.2 CLICK
+LAW), keep the >= 8 ring-delta assertion and ADD the planner push count (state.planned) >= 8.
+No app change (av_metro.js untouched; its 243/243 harness stands).

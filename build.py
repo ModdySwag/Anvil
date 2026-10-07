@@ -106,6 +106,10 @@ js_parts = [
     (SRC / "av_mid.js").read_text(encoding="utf-8"),           # P6 deliver: SMF writer + parser (page module)
     (SRC / "av_bounce.js").read_text(encoding="utf-8"),        # P6 deliver: offline song bounce (page module)
     (SRC / "av_deliver_ui.js").read_text(encoding="utf-8"),    # P6 deliver: the Deliver card (page module)
+    (SRC / "av_input.js").read_text(encoding="utf-8"),        # S1 studio: audio input (page module)
+    (SRC / "av_metro.js").read_text(encoding="utf-8"),        # S1 studio: metronome + count-in (page module)
+    (SRC / "av_takes.js").read_text(encoding="utf-8"),        # S1 studio: lap takes recorder (page module)
+    (SRC / "av_studio_ui.js").read_text(encoding="utf-8"),    # S1 studio: the Studio card (page module)
     (SRC / "av_synth.js").read_text(encoding="utf-8"),  # the SYNTH card (P3 engine layer)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]

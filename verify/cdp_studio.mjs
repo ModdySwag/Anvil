@@ -65,7 +65,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    S1: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = null;
+const EXPECT_SHA = '75c9c2eb63b70ce22c88610d1bb1944a7c06c67699f88c1773b66dffbf6b37ee';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -470,10 +470,17 @@ async function main() {
     metroOff !== null && offScan.ok === true && offDet.onsets.length === 0 && offDet.max < 0.006,
     JSON.stringify({ onsets: offDet.onsets.length, max: fx3(offDet.max) }));
 
-  /* ── 4. count-in: 2 bars @ 120 bpm = 4000 ms ± 150 ms, ≥ 8 clicks scheduled ── */
-  await ev(`(() => { try { avMetroSet({ on: true, level: 0.9, beatsPerBar: 4 }); } catch (e) { } return true; })()`);
-  const beforeR = await ev(`(() => { try { const s = avMetroState(); return (s && Array.isArray(s.clicks)) ? s.clicks.map((c) => (c && typeof c === 'object') ? c.t : c) : []; } catch (e) { return []; } })()`);
-  const before = val(beforeR) || [];
+  /* ── 4. count-in: 2 bars @ 120 bpm = 4000 ms ± 150 ms, ≥ 8 clicks scheduled ──
+     RIG SPEC (parent fix, probe-verified 2026-10-07; evidence verify/s1-metro-countin-probe-out.log):
+     the count-in runs with the metronome OFF. The count-in clicks regardless of the toggle (§2.2
+     CLICK LAW); with the toggle ON, its first click can land on the SAME 128-frame audio quantum
+     as the regular train's just-planned click — a duplicate timestamp the set-difference undercounts
+     (observed 7 "new" for a full 8). The check asserts the ring delta AND the planner push count. */
+  await ev(`(() => { try { avMetroSet({ on: false }); } catch (e) { } return true; })()`);
+  await sleep(200);   /* the train drains; the ring stays clean */
+  const beforeR = await ev(`(() => { try { const s = avMetroState(); return { clicks: (s && Array.isArray(s.clicks)) ? s.clicks.map((c) => (c && typeof c === 'object') ? c.t : c) : [], planned: (s && typeof s.planned === 'number') ? s.planned : null }; } catch (e) { return { clicks: [], planned: null }; } })()`);
+  const before = val(beforeR) || {};
+  const beforeClicks = Array.isArray(before.clicks) ? before.clicks : [];
   const ciR = await ev(`(async () => {
     const t0 = performance.now();
     let r = null, err = null;
@@ -486,11 +493,13 @@ async function main() {
   check('4 avMetroCountIn(2) resolves in ~2 bars (4000 ms ± 150 ms page-measured) with ok true',
     ci.err === null && ciR_.ok === true && isFinite(ciMs) && Math.abs(ciMs - 4000) <= 150,
     JSON.stringify({ ms: fx3(ciMs), r: { ok: ciR_.ok, bars: ciR_.bars, seconds: ciR_.seconds }, err: ci.err }));
-  const afterR = await ev(`(() => { try { const s = avMetroState(); return (s && Array.isArray(s.clicks)) ? s.clicks.map((c) => (c && typeof c === 'object') ? c.t : c) : []; } catch (e) { return []; } })()`);
-  const after = val(afterR) || [];
-  const beforeSet = new Set(before.filter((t) => typeof t === 'number'));
-  const newClicks = after.filter((t) => typeof t === 'number' && !beforeSet.has(t));
-  check('4 count-in scheduled ≥ 8 clicks (ring delta across the count-in)', newClicks.length >= 8, 'new clicks=' + newClicks.length);
+  const afterR = await ev(`(() => { try { const s = avMetroState(); return { clicks: (s && Array.isArray(s.clicks)) ? s.clicks.map((c) => (c && typeof c === 'object') ? c.t : c) : [], planned: (s && typeof s.planned === 'number') ? s.planned : null }; } catch (e) { return { clicks: [], planned: null }; } })()`);
+  const after = val(afterR) || {};
+  const afterClicks = Array.isArray(after.clicks) ? after.clicks : [];
+  const beforeSet = new Set(beforeClicks.filter((t) => typeof t === 'number'));
+  const newClicks = afterClicks.filter((t) => typeof t === 'number' && !beforeSet.has(t));
+  const plannedDelta = Number(after.planned) - Number(before.planned);
+  check('4 count-in scheduled ≥ 8 clicks (ring delta ≥ 8 AND planner pushes ≥ 8)', newClicks.length >= 8 && plannedDelta >= 8, 'ring delta=' + newClicks.length + ' · planned delta=' + plannedDelta);
   await ev(`(() => { try { avMetroSet({ on: false }); } catch (e) { } return true; })()`);
 
   /* ── 5. takes (lapSync false): start → ~1.5 s → stop → frames ≈ 1.5·sr ── */
