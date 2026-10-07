@@ -700,3 +700,34 @@ Resume phrase: **"continue anvil"**.
 - **If resuming cold mid-P5:** read `verify/_p5_wave.md` first; check `ls packs/ research/reuse/` for
   what landed; transcripts as above; then continue from "on return". Resume phrase: **"continue anvil"**.
 
+
+### P5 stage-1 DISPATCHED — 2026-10-07 (4 children; `deleg_998b1a99`; pins in `_p5_wave.md` §4b)
+
+- **Stage-0 landed first** (commit `7c07d58`): digests `research/reuse/store-port-digest.md` (ADAPT
+  store core/UI/install/index.json/bank-select; SKIP compat.json v1/wt-carry/pull-in chrome;
+  13 Undetermined) + `research/reuse/pack-pipeline-port-digest.md` (PORT schema architecture +
+  verifier skeleton; ADAPT to node-only strict-exit witness; preview recommendation = client-side
+  OfflineAudioContext; **schema must carry range tables — AVDSP setParam silently clamps**) + packs
+  `starter-100` (100) · `acid-vault` (64, 16 seq) · `techno-foundry` (64 = 32 kits + 32 patterns)
+  witnessed **228/228** (determinism pairs; evidence `verify/p5-*-witness-out.*`).
+- **Stage-1 pins** (`4eb3783`, `_p5_wave.md` §4b): store law (avStore* API + `avStoreSetFetch` test
+  seam, IDB `av-packs-store`, LS `av-packs-ls`, idb|ls|mem, sha256-before-commit) · `packs/index.json`
+  shape · apply law (avBankApplyPreset via the avApplyParam funnel; mod.macroN rides av_mod's wrap;
+  seq via avSeqLoad/SetPattern/UiSync) · preview = OfflineAudioContext + avEngineBoot (audition =
+  witness) · store UI mounts `#av-store-host` · verifier = node-only, strict exit,
+  `verify/last-av_packs_verify.*`, `--index` regenerates index.json, must pass 228/228.
+- **Children — `deleg_998b1a99`:** sa-0 `src/av_store.js` (core) · sa-1 `src/av_store_ui.js` +
+  `verify/cdp_store.mjs` (rig write-only) · sa-2 `verify/av_bank_schema.mjs` +
+  `verify/verify_avpacks.mjs` + `packs/index.json` · sa-3 `src/av_bank.js` (apply + BANK row +
+  preview). Transcripts: `cache\delegation\live\deleg_998b1a99	ask-{0..3}.log`; scratch
+  `cache/scratch/p5/<name>/`.
+- **On return (integration — likely NEXT SESSION):** read the child reports → parent integration per
+  the standard discipline: build.py js_parts (store_core → bank → store_ui, before app_core) ·
+  app_core boot (avStoreInit/avStoreUiInit/avBankInit guarded) · body `#av-store` card +
+  `#av-store-host` + `#av-synth-bank-host` · styles (returned class lists) · smoke additions ·
+  rebuild → re-run child harnesses + `verify_avpacks.mjs` (228/228) + `cdp_store` (pin EXPECT_SHA) →
+  FULL battery on frozen bytes → PERF GATE → commits + addenda 20+.
+- **If resuming cold mid-P5:** read `verify/_p5_wave.md` + this section; `ls src/av_store*.js
+  src/av_bank.js verify/av_bank_schema.mjs verify/verify_avpacks.mjs packs/` for what landed; child
+  transcripts as above. Resume phrase: **"continue anvil"**.
+
