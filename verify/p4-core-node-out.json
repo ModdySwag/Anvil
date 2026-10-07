@@ -1,0 +1,739 @@
+{
+  "harness": "av_seq_core_node.mjs",
+  "target": "src/av_seq_core.js",
+  "version": "p4.0",
+  "pass": 146,
+  "fail": 0,
+  "rows": [
+    {
+      "id": "a.node-check",
+      "ok": true,
+      "detail": "exit 0"
+    },
+    {
+      "id": "a.concat-check",
+      "ok": true,
+      "detail": "av_note.js + av_seq_core.js exit 0"
+    },
+    {
+      "id": "b.namespace.top-level",
+      "ok": true,
+      "detail": "108 top-level decls, all avSeq*/AV_SEQ_*"
+    },
+    {
+      "id": "b.namespace.unique",
+      "ok": true,
+      "detail": "no duplicate top-level names"
+    },
+    {
+      "id": "b.law.no-document",
+      "ok": true,
+      "detail": "document never referenced"
+    },
+    {
+      "id": "b.law.window-guarded",
+      "ok": true,
+      "detail": "window on 1 line: \"if (typeof window !== \\\"undefined\\\") {\""
+    },
+    {
+      "id": "b.law.localStorage-indented",
+      "ok": true,
+      "detail": "2 localStorage lines, all inside functions"
+    },
+    {
+      "id": "b.law.no-explicit-throw",
+      "ok": true,
+      "detail": "no throw statements"
+    },
+    {
+      "id": "b.law.use-strict",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "b.law.version",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "b.law.ls-keys-literals",
+      "ok": true,
+      "detail": "4 key literals present"
+    },
+    {
+      "id": "c.api.contractual",
+      "ok": true,
+      "detail": "16/16 present"
+    },
+    {
+      "id": "c.api.extras",
+      "ok": true,
+      "detail": "7/7 present (documented extras)"
+    },
+    {
+      "id": "d.pins.version",
+      "ok": true,
+      "detail": "p4.0"
+    },
+    {
+      "id": "d.pins.ls",
+      "ok": true,
+      "detail": "av-seq-pattern,av-seq-chains,av-seq-song,av-seq-scenes"
+    },
+    {
+      "id": "d.pins.speeds",
+      "ok": true,
+      "detail": "0.25,0.5,1,2,4"
+    },
+    {
+      "id": "d.pins.grids",
+      "ok": true,
+      "detail": "16,8t"
+    },
+    {
+      "id": "d.pins.conditions",
+      "ok": true,
+      "detail": "[\"\",\"fill\",\"first\",\"!first\"]"
+    },
+    {
+      "id": "d.pins.fillIds",
+      "ok": true,
+      "detail": "kick,snare,hat,beat,techno,break,euclid,random,clear"
+    },
+    {
+      "id": "d.pins.counts",
+      "ok": true,
+      "detail": "tracks=4 steps=64 defRng=0x12345678"
+    },
+    {
+      "id": "e.defaults.pattern",
+      "ok": true,
+      "detail": "{\"v\":1,\"name\":\"PAT 1\",\"bpm\":120,\"grid\":\"16\",\"swing\":66,\"plocks\":0,\"rng\":305419896}"
+    },
+    {
+      "id": "e.defaults.tracks",
+      "ok": true,
+      "detail": "4 tracks × len16 speed1 mute0 steps64"
+    },
+    {
+      "id": "e.defaults.step",
+      "ok": true,
+      "detail": "{\"on\":0,\"note\":\"c4\",\"vel\":0.8,\"gate\":0.95,\"slide\":0,\"accent\":0,\"oct\":0,\"prob\":100,\"cond\":\"\",\"ratchet\":1,\"micro\":0}"
+    },
+    {
+      "id": "e.defaults.fresh",
+      "ok": true,
+      "detail": "no shared references between calls"
+    },
+    {
+      "id": "e.snap.eq-defaults",
+      "ok": true,
+      "detail": "snap of untouched state == defaults"
+    },
+    {
+      "id": "e.load.empty",
+      "ok": true,
+      "detail": "load({}) == defaults"
+    },
+    {
+      "id": "e.snap.identity",
+      "ok": true,
+      "detail": "every snap is a fresh deep copy"
+    },
+    {
+      "id": "f.snap.detached",
+      "ok": true,
+      "detail": "snapshot edits never reach the model"
+    },
+    {
+      "id": "f.load.detached",
+      "ok": true,
+      "detail": "mutating the loaded input never reaches the model"
+    },
+    {
+      "id": "f.load.plock-deep",
+      "ok": true,
+      "detail": "plock steps object is deep-copied both ways"
+    },
+    {
+      "id": "f.chains.detached",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "f.song.detached",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "f.scenes.detached",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "g.load.true",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "g.name.cap-strip",
+      "ok": true,
+      "detail": "\"WeirdName\""
+    },
+    {
+      "id": "g.clamps.scalar",
+      "ok": true,
+      "detail": "bpm 5->20 swing 99->80 grid 8t"
+    },
+    {
+      "id": "g.drop.unknown-top",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "g.tracks.count",
+      "ok": true,
+      "detail": "4"
+    },
+    {
+      "id": "g.t0.scalars",
+      "ok": true,
+      "detail": "len 0->1 speed 3->1 mute 5->1 steps padded 64"
+    },
+    {
+      "id": "g.t0.step0",
+      "ok": true,
+      "detail": "{\"on\":1,\"note\":\"c#4\",\"vel\":1,\"gate\":0.05,\"slide\":1,\"accent\":1,\"oct\":2,\"prob\":100,\"cond\":\"\",\"ratchet\":4,\"micro\":12}"
+    },
+    {
+      "id": "g.t0.step0.drop-unknown",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "g.t0.step1",
+      "ok": true,
+      "detail": "on:'1'->1, note zzz->c4, rest default"
+    },
+    {
+      "id": "g.t0.step2.default",
+      "ok": true,
+      "detail": "padded slot is the default step"
+    },
+    {
+      "id": "g.t1.clamps",
+      "ok": true,
+      "detail": "len 999->64"
+    },
+    {
+      "id": "g.t2.garbage-track",
+      "ok": true,
+      "detail": "string track -> default"
+    },
+    {
+      "id": "g.t3.missing-track",
+      "ok": true,
+      "detail": "missing track -> default"
+    },
+    {
+      "id": "g.plocks.sanitised",
+      "ok": true,
+      "detail": "path-64 key / non-numeric keys / bad value / empty-path / string entry all handled"
+    },
+    {
+      "id": "g.rng.zero-remap",
+      "ok": true,
+      "detail": "rng 0 -> 0x12345678"
+    },
+    {
+      "id": "g.idempotent",
+      "ok": true,
+      "detail": "sanitise(sanitise(x)) byte-stable"
+    },
+    {
+      "id": "h.load.refuse",
+      "ok": true,
+      "detail": "16/16 refused"
+    },
+    {
+      "id": "h.load.state-preserved",
+      "ok": true,
+      "detail": "refusals never touch the model"
+    },
+    {
+      "id": "h.import.refuse",
+      "ok": true,
+      "detail": "8/8 refused"
+    },
+    {
+      "id": "h.import.partial",
+      "ok": true,
+      "detail": "partial object loads with defaults"
+    },
+    {
+      "id": "h.hostile.proxy",
+      "ok": true,
+      "detail": "throwing get-traps -> false, no throw"
+    },
+    {
+      "id": "h.hostile.getter",
+      "ok": true,
+      "detail": "throwing getter -> false"
+    },
+    {
+      "id": "h.hostile.toString",
+      "ok": true,
+      "detail": "non-string name is dropped without calling toString"
+    },
+    {
+      "id": "i.load.rich",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "i.export.string",
+      "ok": true,
+      "detail": "29830 bytes"
+    },
+    {
+      "id": "i.keyorder.pattern",
+      "ok": true,
+      "detail": "v,name,bpm,grid,swing,tracks,plocks,rng"
+    },
+    {
+      "id": "i.keyorder.track",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "i.keyorder.step",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "i.keyorder.plock",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "i.keyorder.plock-steps",
+      "ok": true,
+      "detail": "numeric keys ascend"
+    },
+    {
+      "id": "i.shape.valid",
+      "ok": true,
+      "detail": "every field in pinned range, no unknown keys"
+    },
+    {
+      "id": "i.rich.fields",
+      "ok": true,
+      "detail": "rich fields survive load->export"
+    },
+    {
+      "id": "i.import.true",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "i.rt.deep-equal",
+      "ok": true,
+      "detail": "export -> import -> snap is deep-equal"
+    },
+    {
+      "id": "i.rt.byte-stable",
+      "ok": true,
+      "detail": "export is byte-stable across the round trip"
+    },
+    {
+      "id": "i.rt.via-load",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "j.16-4",
+      "ok": true,
+      "detail": "0,4,8,12"
+    },
+    {
+      "id": "j.16-5",
+      "ok": true,
+      "detail": "0,4,7,10,13"
+    },
+    {
+      "id": "j.rotate",
+      "ok": true,
+      "detail": "rotate shifts hits forward"
+    },
+    {
+      "id": "j.clamps",
+      "ok": true,
+      "detail": "len/pulses/rotate clamped"
+    },
+    {
+      "id": "j.defaults",
+      "ok": true,
+      "detail": "{} -> 16 steps, 4 pulses"
+    },
+    {
+      "id": "j.refuse",
+      "ok": true,
+      "detail": "non-object -> []"
+    },
+    {
+      "id": "j.property.count+evenness",
+      "ok": true,
+      "detail": "len 1..64 × pulses 0..len sweep: count == pulses, gaps <= 1 apart"
+    },
+    {
+      "id": "j.determinism",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "k.run.true",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "k.determinism.same-seed",
+      "ok": true,
+      "detail": "same seed + same input -> identical result"
+    },
+    {
+      "id": "k.count.preserved",
+      "ok": true,
+      "detail": "hit count per track preserved"
+    },
+    {
+      "id": "k.range",
+      "ok": true,
+      "detail": "landings inside 0..len-1, distinct"
+    },
+    {
+      "id": "k.payloads.travel",
+      "ok": true,
+      "detail": "payload multiset (notes+all fields) preserved per track"
+    },
+    {
+      "id": "k.amount.zero",
+      "ok": true,
+      "detail": "amount 0 -> no-op"
+    },
+    {
+      "id": "k.amount.clamp-high",
+      "ok": true,
+      "detail": "amount 5 clamps to 1"
+    },
+    {
+      "id": "k.amount.clamp-low",
+      "ok": true,
+      "detail": "amount -3 clamps to 0"
+    },
+    {
+      "id": "k.seed.changes-output",
+      "ok": true,
+      "detail": "seed 1 vs seed 2 differ"
+    },
+    {
+      "id": "k.refuse",
+      "ok": true,
+      "detail": "6/6 refused, state untouched"
+    },
+    {
+      "id": "l.run.true",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "l.determinism.same-seed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "l.differs",
+      "ok": true,
+      "detail": "humanize changed micro/gate/vel somewhere"
+    },
+    {
+      "id": "l.ranges",
+      "ok": true,
+      "detail": "micro int ±12, gate/vel in 0.05..1 (all steps)"
+    },
+    {
+      "id": "l.touch.only-micro-gate-vel",
+      "ok": true,
+      "detail": "on/note/cond/prob/ratchet/slide/accent/oct untouched"
+    },
+    {
+      "id": "l.off-steps.untouched",
+      "ok": true,
+      "detail": "off steps byte-identical"
+    },
+    {
+      "id": "l.amount.zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "l.refuse",
+      "ok": true,
+      "detail": "4/4 refused, state untouched"
+    },
+    {
+      "id": "m.default",
+      "ok": true,
+      "detail": "empty 4-track chains (fresh sandbox)"
+    },
+    {
+      "id": "m.load.base",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "m.load.bare-array",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "m.sanitise.caps+refs",
+      "ok": true,
+      "detail": "70->64 cap, empty/null dropped, 7->\"7\", non-array->[]"
+    },
+    {
+      "id": "m.load.5th-chain-dropped",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "m.load.empty-alias",
+      "ok": true,
+      "detail": "{} -> empty chains"
+    },
+    {
+      "id": "m.garbage",
+      "ok": true,
+      "detail": "6/6 refused, state preserved"
+    },
+    {
+      "id": "m.snap-load.rt",
+      "ok": true,
+      "detail": "snap->load round-trip (detached)"
+    },
+    {
+      "id": "n.default",
+      "ok": true,
+      "detail": "(fresh sandbox)"
+    },
+    {
+      "id": "n.load.sanitised",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "n.rows",
+      "ok": true,
+      "detail": "[{\"ref\":\"PAT 1\",\"repeats\":1,\"mutes\":[1,1,0,0],\"len\":2,\"tempo\":20,\"label\":\"Intro\"},{\"ref\":\"PAT 2\",\"repeats\":256,\"mutes\":[0,1,0,0],\"len\":1024,\"tempo\":0,\"label\":\"LLLLLLLLLLLLLLLL\"}]"
+    },
+    {
+      "id": "n.rowkeys",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "n.cap99",
+      "ok": true,
+      "detail": "120 -> 99 rows"
+    },
+    {
+      "id": "n.garbage",
+      "ok": true,
+      "detail": "5/5 refused, state preserved"
+    },
+    {
+      "id": "n.snap-load.rt",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "n.load.bare-array",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "o.capture",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "o.shape",
+      "ok": true,
+      "detail": "{\"name\":\"A\",\"tracks\":[{\"ref\":\"SCN\",\"mute\":1},{\"ref\":\"SCN\",\"mute\":0},{\"ref\":\"SCN\",\"mute\":0},{\"ref\":\"SCN\",\"mute\":0}]}"
+    },
+    {
+      "id": "o.recall",
+      "ok": true,
+      "detail": "recall applies the mute snapshot"
+    },
+    {
+      "id": "o.recall.miss",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "o.capture.refuse",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "o.recapture.overwrite",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "o.cap16",
+      "ok": true,
+      "detail": "17th new name refuses, cap holds at 16"
+    },
+    {
+      "id": "o.load.dup-last-wins+drop",
+      "ok": true,
+      "detail": "dup name replaces in place; empty-name dropped; junk tracks -> default 4"
+    },
+    {
+      "id": "o.garbage",
+      "ok": true,
+      "detail": "5/5 refused"
+    },
+    {
+      "id": "o.rt",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "p.keys",
+      "ok": true,
+      "detail": "av-seq-pattern,av-seq-chains,av-seq-song,av-seq-scenes"
+    },
+    {
+      "id": "p.save",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "p.store.keys",
+      "ok": true,
+      "detail": "av-seq-chains,av-seq-pattern,av-seq-scenes,av-seq-song"
+    },
+    {
+      "id": "p.store.pattern-json",
+      "ok": true,
+      "detail": "stored pattern == export()"
+    },
+    {
+      "id": "p.store.json",
+      "ok": true,
+      "detail": "all four values parse as JSON"
+    },
+    {
+      "id": "p.load.restore",
+      "ok": true,
+      "detail": "all four domains restored"
+    },
+    {
+      "id": "p.load.corrupt-key",
+      "ok": true,
+      "detail": "corrupt key ignored, others still loaded, no throw"
+    },
+    {
+      "id": "p.load.empty-store",
+      "ok": true,
+      "detail": "empty store load is a no-op success"
+    },
+    {
+      "id": "p.save.quota-refuse",
+      "ok": true,
+      "detail": "setItem throws -> false, no throw"
+    },
+    {
+      "id": "p.load.throwing-get",
+      "ok": true,
+      "detail": "getItem throws -> false, no throw"
+    },
+    {
+      "id": "p.no-storage",
+      "ok": true,
+      "detail": "no localStorage -> false/false"
+    },
+    {
+      "id": "q.boot.restore",
+      "ok": true,
+      "detail": "{\"name\":\"BOOT PAT\",\"bpm\":97,\"chain\":\"BOOT PAT\",\"rows\":1,\"scenes\":1,\"fnType\":\"function\"}"
+    },
+    {
+      "id": "q.boot.broken-storage",
+      "ok": true,
+      "detail": "throwing storage: boots to defaults, no throw"
+    },
+    {
+      "id": "q.boot.no-window",
+      "ok": true,
+      "detail": "no window -> LS never touched: PAT 1"
+    },
+    {
+      "id": "r.get.copy",
+      "ok": true,
+      "detail": "returned step is a detached copy"
+    },
+    {
+      "id": "r.get.bounds",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "r.set.patch",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "r.set.sanitised",
+      "ok": true,
+      "detail": "{\"on\":1,\"note\":\"e5\",\"vel\":1,\"gate\":0.5,\"slide\":1,\"accent\":1,\"oct\":-1,\"prob\":75,\"cond\":\"first\",\"ratchet\":4,\"micro\":-5}"
+    },
+    {
+      "id": "r.set.keeps-others",
+      "ok": true,
+      "detail": "unpatched fields keep values"
+    },
+    {
+      "id": "r.set.refuse",
+      "ok": true,
+      "detail": "4/4 refused, {} is a no-op true"
+    },
+    {
+      "id": "s.plain-node.load",
+      "ok": true,
+      "detail": "{\"name\":\"PAT 1\",\"rt\":true,\"n\":4,\"bytes\":29694}"
+    },
+    {
+      "id": "t.determinism.cross-sandbox",
+      "ok": true,
+      "detail": "two fresh sandboxes + same ops -> identical export bytes"
+    },
+    {
+      "id": "t.default-export.head",
+      "ok": true,
+      "detail": "{\"v\":1,\"name\":\"PAT 1\",\"bpm\":120,\"grid\":\"16\",\"swing\":66,\"tracks\":[{\"len\":16,\"speed\":1,\"mute\":0,\"steps\":[{\"on\":0,\"note\":\"c"
+    },
+    {
+      "id": "t.default-export.stable",
+      "ok": true,
+      "detail": "default export identical across sandboxes"
+    },
+    {
+      "id": "t.default-export.sha",
+      "ok": true,
+      "detail": "sha256=8222b87a472c7ca94ab5953b98ecd5acda9dd0a9c0fe8c0738c7d73634c3764c bytes=29694"
+    }
+  ]
+}

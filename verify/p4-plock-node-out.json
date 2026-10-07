@@ -1,0 +1,797 @@
+{
+  "pass": 158,
+  "fail": 0,
+  "rows": [
+    {
+      "id": "syntax.node-check",
+      "ok": true,
+      "detail": "exit 0"
+    },
+    {
+      "id": "bare.loads",
+      "ok": true,
+      "detail": "module evaluated with no DOM and no app globals"
+    },
+    {
+      "id": "bare.snapEmpty",
+      "ok": true,
+      "detail": "[]"
+    },
+    {
+      "id": "bare.applyRefusesNoLanes",
+      "ok": true,
+      "detail": "false, no hidden run state"
+    },
+    {
+      "id": "bare.tickStopFalse",
+      "ok": true,
+      "detail": "false"
+    },
+    {
+      "id": "bare.ensureHooks",
+      "ok": true,
+      "detail": "nothing to hook, no throw"
+    },
+    {
+      "id": "bare.loadRefusals",
+      "ok": true,
+      "detail": "false"
+    },
+    {
+      "id": "bare.loadEmptyArray",
+      "ok": true,
+      "detail": "empty lane list accepted"
+    },
+    {
+      "id": "bare.stepDurDefault",
+      "ok": true,
+      "detail": "0.125"
+    },
+    {
+      "id": "bare.grid8t",
+      "ok": true,
+      "detail": "0.16666666666666666"
+    },
+    {
+      "id": "bare.gridRefuse",
+      "ok": true,
+      "detail": "bad grid refused, 16 restored"
+    },
+    {
+      "id": "bare.stateShape",
+      "ok": true,
+      "detail": "\"p4.0\""
+    },
+    {
+      "id": "bare.uiInitNoDoc",
+      "ok": true,
+      "detail": "false without a document"
+    },
+    {
+      "id": "bare.uiPaintRefuse",
+      "ok": true,
+      "detail": "no lane -> false"
+    },
+    {
+      "id": "pins.version",
+      "ok": true,
+      "detail": "p4.0"
+    },
+    {
+      "id": "pins.v1Paths",
+      "ok": true,
+      "detail": "filter.cutoff,filter.reso,fx.verb.mix,fx.delay.mix,fx.delay.feedback,fx.mod.rate,engine.outScale"
+    },
+    {
+      "id": "pins.tickHz",
+      "ok": true,
+      "detail": "64"
+    },
+    {
+      "id": "pins.caps",
+      "ok": true,
+      "detail": "64/64 (core carrier alignment)"
+    },
+    {
+      "id": "sample.stepBeforeNull",
+      "ok": true,
+      "detail": "null before the first lock"
+    },
+    {
+      "id": "sample.stepLock",
+      "ok": true,
+      "detail": "{\"value\":900,\"kind\":\"lock\",\"from\":2}"
+    },
+    {
+      "id": "sample.linEndpoints",
+      "ok": true,
+      "detail": "0 @2, 100 @6 (hold)"
+    },
+    {
+      "id": "sample.linMid",
+      "ok": true,
+      "detail": "25/50/75"
+    },
+    {
+      "id": "sample.linFraction",
+      "ok": true,
+      "detail": "62.5 @4.5, 6.25 @2.25"
+    },
+    {
+      "id": "sample.linAfterLast",
+      "ok": true,
+      "detail": "held past last, no extrapolation"
+    },
+    {
+      "id": "sample.badInputs",
+      "ok": true,
+      "detail": "null for garbage, numeric strings fine"
+    },
+    {
+      "id": "sample.badInterpCoerced",
+      "ok": true,
+      "detail": "unknown interp behaves as step"
+    },
+    {
+      "id": "sample.badKeysIgnored",
+      "ok": true,
+      "detail": "garbage keys ignored"
+    },
+    {
+      "id": "model.add",
+      "ok": true,
+      "detail": "default interp step"
+    },
+    {
+      "id": "model.addDup",
+      "ok": true,
+      "detail": "one lane per path"
+    },
+    {
+      "id": "model.addBadPath",
+      "ok": true,
+      "detail": "refused"
+    },
+    {
+      "id": "model.pathStripped",
+      "ok": true,
+      "detail": "control chars stripped"
+    },
+    {
+      "id": "model.addLin",
+      "ok": true,
+      "detail": "free-text path + lin"
+    },
+    {
+      "id": "model.setStep",
+      "ok": true,
+      "detail": "number + numeric-string step/value"
+    },
+    {
+      "id": "model.setStepRefusals",
+      "ok": true,
+      "detail": "all false, never throws"
+    },
+    {
+      "id": "model.stepValue",
+      "ok": true,
+      "detail": "readback"
+    },
+    {
+      "id": "model.clearStep",
+      "ok": true,
+      "detail": "clear + refuse"
+    },
+    {
+      "id": "model.togglePaint",
+      "ok": true,
+      "detail": "paint uses the live mirror value, click again clears"
+    },
+    {
+      "id": "model.interpNorm",
+      "ok": true,
+      "detail": "coerced to step"
+    },
+    {
+      "id": "model.setPathDup",
+      "ok": true,
+      "detail": "duplicate path refused"
+    },
+    {
+      "id": "model.setPathOk",
+      "ok": true,
+      "detail": "no-op true (same path)"
+    },
+    {
+      "id": "model.setPathRefuseBad",
+      "ok": true,
+      "detail": "false"
+    },
+    {
+      "id": "model.index",
+      "ok": true,
+      "detail": "lookup"
+    },
+    {
+      "id": "model.pathCap64",
+      "ok": true,
+      "detail": "path sliced to the 64-char core cap"
+    },
+    {
+      "id": "model.snapDeepCopy",
+      "ok": true,
+      "detail": "external snapshot mutation ignored"
+    },
+    {
+      "id": "model.loadRefusals",
+      "ok": true,
+      "detail": "non-containers refused"
+    },
+    {
+      "id": "model.loadRefusalUntouched",
+      "ok": true,
+      "detail": "model unchanged after refusals"
+    },
+    {
+      "id": "model.loadSanitise",
+      "ok": true,
+      "detail": "accepted with drops"
+    },
+    {
+      "id": "model.loadSanitiseShape",
+      "ok": true,
+      "detail": "[{\"path\":\"ok.path\",\"interp\":\"step\",\"steps\":{\"1\":2}}] (dup path dropped, garbage keys/values dropped)"
+    },
+    {
+      "id": "model.roundTrip",
+      "ok": true,
+      "detail": "snap -> json -> load -> snap identical"
+    },
+    {
+      "id": "model.loadPlocksKey",
+      "ok": true,
+      "detail": "§4 container key accepted"
+    },
+    {
+      "id": "model.loadCap64",
+      "ok": true,
+      "detail": "80 lanes -> 64 (core cap)"
+    },
+    {
+      "id": "model.addCap",
+      "ok": true,
+      "detail": "cap holds, further adds false"
+    },
+    {
+      "id": "model.remove",
+      "ok": true,
+      "detail": "remove + refuse"
+    },
+    {
+      "id": "apply.startCapturesBase",
+      "ok": true,
+      "detail": "{\"filter.cutoff\":500}"
+    },
+    {
+      "id": "apply.hookInstalled",
+      "ok": true,
+      "detail": "wrap landed at transport start"
+    },
+    {
+      "id": "apply.lockedStep",
+      "ok": true,
+      "detail": "900"
+    },
+    {
+      "id": "apply.metaMarkers",
+      "ok": true,
+      "detail": "flat markers G's capture tap keys on"
+    },
+    {
+      "id": "apply.lastApplyKind",
+      "ok": true,
+      "detail": "{\"path\":\"filter.cutoff\",\"value\":900,\"kind\":\"lock\",\"step\":2}"
+    },
+    {
+      "id": "apply.ownApplyNoRecapture",
+      "ok": true,
+      "detail": "base untouched by our own funnel write"
+    },
+    {
+      "id": "apply.heldPathListed",
+      "ok": true,
+      "detail": "[\"filter.cutoff\"]"
+    },
+    {
+      "id": "restore.noLockNext",
+      "ok": true,
+      "detail": "k locked, k+1 not -> base restored"
+    },
+    {
+      "id": "restore.lastApplyKind",
+      "ok": true,
+      "detail": "{\"path\":\"filter.cutoff\",\"value\":500,\"kind\":\"restore\",\"step\":3}"
+    },
+    {
+      "id": "restore.idleStepNoop",
+      "ok": true,
+      "detail": "nothing held -> false"
+    },
+    {
+      "id": "apply.secondLock",
+      "ok": true,
+      "detail": "300"
+    },
+    {
+      "id": "apply.secondRestore",
+      "ok": true,
+      "detail": "back to base"
+    },
+    {
+      "id": "apply.lastStepTracked",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "id": "recapture.userCommit",
+      "ok": true,
+      "detail": "base -> 700"
+    },
+    {
+      "id": "recapture.forwarded",
+      "ok": true,
+      "detail": "original funnel called exactly once"
+    },
+    {
+      "id": "recapture.otherPathIgnored",
+      "ok": true,
+      "detail": "non-lane path never recaptured"
+    },
+    {
+      "id": "recapture.newRestoreTarget",
+      "ok": true,
+      "detail": "restored to the NEW base"
+    },
+    {
+      "id": "stop.restoresHeld",
+      "ok": true,
+      "detail": "stop -> base"
+    },
+    {
+      "id": "stop.secondFalse",
+      "ok": true,
+      "detail": "false when idle"
+    },
+    {
+      "id": "autostart.afterStop",
+      "ok": true,
+      "detail": "fresh capture from the live mirror"
+    },
+    {
+      "id": "autostart.continues",
+      "ok": true,
+      "detail": "gap within idle: same run"
+    },
+    {
+      "id": "stalecapture.tap",
+      "ok": true,
+      "detail": "stale run still re-captures"
+    },
+    {
+      "id": "idleRestart.detected",
+      "ok": true,
+      "detail": "gap > idle: stop-restore + fresh capture (act itself false: step 0 has no lock)"
+    },
+    {
+      "id": "idleRestart.restoreWitnessed",
+      "ok": true,
+      "detail": "{\"path\":\"filter.cutoff\",\"value\":999,\"kind\":\"restore\",\"step\":-1}"
+    },
+    {
+      "id": "idleRestart.stop",
+      "ok": true,
+      "detail": "clean stop"
+    },
+    {
+      "id": "lin.startTickNoSeg",
+      "ok": true,
+      "detail": "no segment yet"
+    },
+    {
+      "id": "lin.lockAt2",
+      "ok": true,
+      "detail": "starts at 0"
+    },
+    {
+      "id": "lin.tickQuarter",
+      "ok": true,
+      "detail": "pos 2.25 -> 6.25"
+    },
+    {
+      "id": "lin.tickVsSample",
+      "ok": true,
+      "detail": "ticker math == pure sampler"
+    },
+    {
+      "id": "lin.tickHalf",
+      "ok": true,
+      "detail": "pos 2.5 -> 12.5"
+    },
+    {
+      "id": "lin.tickEpsSkip",
+      "ok": true,
+      "detail": "engine already at value: no write"
+    },
+    {
+      "id": "lin.tickRewritesOverride",
+      "ok": true,
+      "detail": "user override on a lin lane is re-overwritten"
+    },
+    {
+      "id": "lin.tickMid",
+      "ok": true,
+      "detail": "pos 4 -> 50"
+    },
+    {
+      "id": "lin.boundaryExact",
+      "ok": true,
+      "detail": "lin grid point + second lane lock at 4"
+    },
+    {
+      "id": "lin.boundaryKind",
+      "ok": true,
+      "detail": "{\"path\":\"filter.cutoff\",\"value\":900,\"kind\":\"lock\",\"step\":4}"
+    },
+    {
+      "id": "lin.lockAt6ThenHold",
+      "ok": true,
+      "detail": "lane0 reaches 100; lane1 (single lock at 4) restored at 6"
+    },
+    {
+      "id": "lin.restoreAfterLast",
+      "ok": true,
+      "detail": "no next lock -> base"
+    },
+    {
+      "id": "lin.singleLockHold",
+      "ok": true,
+      "detail": "lock at 4, restore at 5"
+    },
+    {
+      "id": "lin.tickNotRunning",
+      "ok": true,
+      "detail": "false when stopped"
+    },
+    {
+      "id": "wrap.absentBefore",
+      "ok": true,
+      "detail": "not installed at load"
+    },
+    {
+      "id": "wrap.ensure",
+      "ok": true,
+      "detail": "marker __avPlockWrap"
+    },
+    {
+      "id": "wrap.idempotent",
+      "ok": true,
+      "detail": "same wrapper identity after 3 calls"
+    },
+    {
+      "id": "wrap.singleForward",
+      "ok": true,
+      "detail": "one original call per commit"
+    },
+    {
+      "id": "wrap.userMetaPlain",
+      "ok": true,
+      "detail": "user commits carry no plock markers"
+    },
+    {
+      "id": "wrap.baseAtStart",
+      "ok": true,
+      "detail": "base captured from committed value"
+    },
+    {
+      "id": "wrap.lockApplied",
+      "ok": true,
+      "detail": "own write never recaptures"
+    },
+    {
+      "id": "wrap.userRecapture",
+      "ok": true,
+      "detail": "base -> 42 while running"
+    },
+    {
+      "id": "wrap.restoreToNewBase",
+      "ok": true,
+      "detail": "42"
+    },
+    {
+      "id": "belt.bound",
+      "ok": true,
+      "detail": "one 'av-param' listener"
+    },
+    {
+      "id": "belt.lockDispatch",
+      "ok": true,
+      "detail": "lock went out as the 'av-param' event (mirror untouched)"
+    },
+    {
+      "id": "belt.eventMeta",
+      "ok": true,
+      "detail": "detail.meta carries the capture markers (G's event belt)"
+    },
+    {
+      "id": "belt.recapture",
+      "ok": true,
+      "detail": "event commit re-captured the base"
+    },
+    {
+      "id": "belt.restoreDispatch",
+      "ok": true,
+      "detail": "restore dispatched, no rebinding"
+    },
+    {
+      "id": "belt.otherPath",
+      "ok": true,
+      "detail": "non-lane path ignored"
+    },
+    {
+      "id": "belt.nullEvent",
+      "ok": true,
+      "detail": "no throw on a null event"
+    },
+    {
+      "id": "refuse.applyBadSteps",
+      "ok": true,
+      "detail": "all false"
+    },
+    {
+      "id": "refuse.applyNoSideEffects",
+      "ok": true,
+      "detail": "no start, no writes"
+    },
+    {
+      "id": "refuse.applyNoLanes",
+      "ok": true,
+      "detail": "no lanes -> no hidden run"
+    },
+    {
+      "id": "refuse.stringStepAccepted",
+      "ok": true,
+      "detail": "\"2\" -> 2 (pinned leniency)"
+    },
+    {
+      "id": "refuse.applyEmptyLane",
+      "ok": true,
+      "detail": "no-lock step is a clean no-op"
+    },
+    {
+      "id": "refuse.lanesLoad",
+      "ok": true,
+      "detail": "false"
+    },
+    {
+      "id": "refuse.lanesLoadUntouched",
+      "ok": true,
+      "detail": "model unchanged"
+    },
+    {
+      "id": "refuse.uiInitBare",
+      "ok": true,
+      "detail": "no doc / bad width"
+    },
+    {
+      "id": "refuse.noFunnel",
+      "ok": true,
+      "detail": "no carrier -> act false, run still cleanly stoppable"
+    },
+    {
+      "id": "ui.init",
+      "ok": true,
+      "detail": "mount into #av-seq-plock"
+    },
+    {
+      "id": "ui.emptyState",
+      "ok": true,
+      "detail": "head + empty state"
+    },
+    {
+      "id": "ui.addLane",
+      "ok": true,
+      "detail": "add button seeded the first pinned path"
+    },
+    {
+      "id": "ui.cells16",
+      "ok": true,
+      "detail": "16 cells"
+    },
+    {
+      "id": "ui.v1Options",
+      "ok": true,
+      "detail": "all pinned paths in the select"
+    },
+    {
+      "id": "ui.interpOptions",
+      "ok": true,
+      "detail": "STEP/LIN"
+    },
+    {
+      "id": "ui.customHidden",
+      "ok": true,
+      "detail": "free-text input present, hidden for a pinned path"
+    },
+    {
+      "id": "ui.paintCell",
+      "ok": true,
+      "detail": "cell painted from the live mirror value"
+    },
+    {
+      "id": "ui.paintToggleOff",
+      "ok": true,
+      "detail": "click again clears"
+    },
+    {
+      "id": "ui.changeInterp",
+      "ok": true,
+      "detail": "select -> lin"
+    },
+    {
+      "id": "ui.changePath",
+      "ok": true,
+      "detail": "select -> fx.verb.mix"
+    },
+    {
+      "id": "ui.revealCustom",
+      "ok": true,
+      "detail": "free-text input revealed + focused"
+    },
+    {
+      "id": "ui.customPath",
+      "ok": true,
+      "detail": "typed path accepted"
+    },
+    {
+      "id": "ui.removeLane",
+      "ok": true,
+      "detail": "delete button empty again"
+    },
+    {
+      "id": "ui.setWidth",
+      "ok": true,
+      "detail": "32 cells"
+    },
+    {
+      "id": "ui.width32",
+      "ok": true,
+      "detail": "re-rendered at 32"
+    },
+    {
+      "id": "ui.sync",
+      "ok": true,
+      "detail": "sync true with a host"
+    },
+    {
+      "id": "ui.initIdempotent",
+      "ok": true,
+      "detail": "re-init safe"
+    },
+    {
+      "id": "ui.classes",
+      "ok": true,
+      "detail": "includes the pinned .av-seq-plock-cell, unique"
+    },
+    {
+      "id": "ui.initFn",
+      "ok": true,
+      "detail": "avPlockInit = hooks + mount"
+    },
+    {
+      "id": "ui.fallbackMount",
+      "ok": true,
+      "detail": "shell appended into .av-seq-insp"
+    },
+    {
+      "id": "ui.fallbackSync",
+      "ok": true,
+      "detail": "lanes box painted"
+    },
+    {
+      "id": "ui.throwingDoc",
+      "ok": true,
+      "detail": "false, no throw"
+    },
+    {
+      "id": "ticker.start",
+      "ok": true,
+      "detail": "interval armed at 15.625 ms"
+    },
+    {
+      "id": "observable.published",
+      "ok": true,
+      "detail": "window.__avPlock live"
+    },
+    {
+      "id": "ticker.lock",
+      "ok": true,
+      "detail": "clock-driven boundary"
+    },
+    {
+      "id": "ticker.fire",
+      "ok": true,
+      "detail": "interval callback applied 12.5 @pos 2.5"
+    },
+    {
+      "id": "ticker.fire2",
+      "ok": true,
+      "detail": "25 @pos 3"
+    },
+    {
+      "id": "ticker.fireSkip",
+      "ok": true,
+      "detail": "same position: skipped"
+    },
+    {
+      "id": "ticker.boundary",
+      "ok": true,
+      "detail": "boundary applied at the exact grid point"
+    },
+    {
+      "id": "ticker.reachesTo",
+      "ok": true,
+      "detail": "clamped to the next lock value"
+    },
+    {
+      "id": "ticker.stop",
+      "ok": true,
+      "detail": "interval cleared, restore ran"
+    },
+    {
+      "id": "ticker.restored",
+      "ok": true,
+      "detail": "base back after stop"
+    },
+    {
+      "id": "observable.afterStop",
+      "ok": true,
+      "detail": "6"
+    },
+    {
+      "id": "observable.stateShape",
+      "ok": true,
+      "detail": "state carries version/grid/tickHz/stepDur/hooks/lanes/lastApply"
+    },
+    {
+      "id": "interop.snapObject",
+      "ok": true,
+      "detail": "avPlockSnap == avPlockLanesSnap (array = object for F's check)"
+    },
+    {
+      "id": "interop.roundTrip",
+      "ok": true,
+      "detail": "JSON round-trip"
+    },
+    {
+      "id": "interop.plocksForm",
+      "ok": true,
+      "detail": "container form"
+    },
+    {
+      "id": "interop.lanesForm",
+      "ok": true,
+      "detail": "{lanes:[…]} form"
+    },
+    {
+      "id": "concat.baselineNoPlock",
+      "ok": true,
+      "detail": "P4 siblings without plock: strict-check green [av_seq_core.js,av_seq_sched.js,av_plock.js,av_seq_capture.js,av_undo.js,av_seq_acid.js,av_seq_ui.js]"
+    },
+    {
+      "id": "concat.withPlock",
+      "ok": true,
+      "detail": "no duplicate top-level names across the §6 bundle"
+    }
+  ],
+  "when": "2026-10-07T03:52:02.829Z"
+}

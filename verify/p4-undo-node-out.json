@@ -1,0 +1,581 @@
+{
+  "summary": {
+    "harness": "undo_node.mjs",
+    "file": "src/av_undo.js",
+    "pass": 114,
+    "fail": 0,
+    "total": 114
+  },
+  "rows": [
+    {
+      "id": "syntax.node-check",
+      "ok": true,
+      "detail": "exit 0"
+    },
+    {
+      "id": "noapp.init_false",
+      "ok": true,
+      "detail": "false without window"
+    },
+    {
+      "id": "noapp.ensurewrap_false",
+      "ok": true,
+      "detail": "no funnel to wrap"
+    },
+    {
+      "id": "noapp.push_false",
+      "ok": true,
+      "detail": "all domains refuse"
+    },
+    {
+      "id": "noapp.push_garbage",
+      "ok": true,
+      "detail": "never throws"
+    },
+    {
+      "id": "noapp.undo_redo_false",
+      "ok": true,
+      "detail": "empty stacks"
+    },
+    {
+      "id": "noapp.flush_false",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "noapp.astore_false",
+      "ok": true,
+      "detail": "no domains online"
+    },
+    {
+      "id": "noapp.status",
+      "ok": true,
+      "detail": "{\"depth\":0,\"redo\":0,\"label\":\"\"}"
+    },
+    {
+      "id": "noapp.status_keys",
+      "ok": true,
+      "detail": "exactly {depth,redo,label}"
+    },
+    {
+      "id": "noapp.consts",
+      "ok": true,
+      "detail": "version/cap/quiet/domains pins"
+    },
+    {
+      "id": "wrap.init_false_noWindow",
+      "ok": true,
+      "detail": "false without window"
+    },
+    {
+      "id": "wrap.installed_anyway",
+      "ok": true,
+      "detail": "funnel wrap still installed (belt)"
+    },
+    {
+      "id": "wrap.idempotent_forward_once",
+      "ok": true,
+      "detail": "2 commits -> exactly 2 forward calls after 3 inits: 2"
+    },
+    {
+      "id": "wrap.marker_kept",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "init.true_withWindow",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "init.reinit_true",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "init.binds_once",
+      "ok": true,
+      "detail": "1 keydown + 1 av-param binding"
+    },
+    {
+      "id": "init.status_zero",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "init.published",
+      "ok": true,
+      "detail": "window.__avUndo published"
+    },
+    {
+      "id": "burst.armed",
+      "ok": true,
+      "detail": "quiet timer armed @300ms"
+    },
+    {
+      "id": "burst.flush_true",
+      "ok": true,
+      "detail": "manual flush records the burst"
+    },
+    {
+      "id": "burst.timer_cleared",
+      "ok": true,
+      "detail": "flush cancels the quiet timer"
+    },
+    {
+      "id": "burst.entry",
+      "ok": true,
+      "detail": "{\"depth\":1,\"redo\":0,\"label\":\"filter.cutoff\"}"
+    },
+    {
+      "id": "burst.entry_is_json_strings",
+      "ok": true,
+      "detail": "bounded memory = JSON strings"
+    },
+    {
+      "id": "burst.mirror_now",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "burst.engine_heard",
+      "ok": true,
+      "detail": "[[\"filter.cutoff\",400]]"
+    },
+    {
+      "id": "undo.true",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "undo.exact_value",
+      "ok": true,
+      "detail": "exact restore: 900"
+    },
+    {
+      "id": "undo.engine_heard",
+      "ok": true,
+      "detail": "restore rides the funnel"
+    },
+    {
+      "id": "undo.no_self_tap",
+      "ok": true,
+      "detail": "restore arms no new burst"
+    },
+    {
+      "id": "undo.status",
+      "ok": true,
+      "detail": "{\"depth\":0,\"redo\":1,\"label\":\"\"}"
+    },
+    {
+      "id": "redo.true",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "redo.exact_value",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "redo.status",
+      "ok": true,
+      "detail": "{\"depth\":1,\"redo\":0,\"label\":\"filter.cutoff\"}"
+    },
+    {
+      "id": "redo.no_self_tap",
+      "ok": true,
+      "detail": "no zombie timer"
+    },
+    {
+      "id": "undo_empty_false",
+      "ok": true,
+      "detail": "second undo on empty stack false"
+    },
+    {
+      "id": "redo_empty_false",
+      "ok": true,
+      "detail": "redo works then empties"
+    },
+    {
+      "id": "coalesce.one_pending",
+      "ok": true,
+      "detail": "re-armed, still one burst"
+    },
+    {
+      "id": "coalesce.flush",
+      "ok": true,
+      "detail": "2 commits -> 1 entry"
+    },
+    {
+      "id": "coalesce.label",
+      "ok": true,
+      "detail": "filter.cutoff +1"
+    },
+    {
+      "id": "coalesce.undo_both",
+      "ok": true,
+      "detail": "both restored exact"
+    },
+    {
+      "id": "coalesce.redo_both",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "coalesce.same_path_label",
+      "ok": true,
+      "detail": "filter.reso"
+    },
+    {
+      "id": "coalesce.same_path_values",
+      "ok": true,
+      "detail": "back to pre-burst 0.9"
+    },
+    {
+      "id": "coalesce.same_path_redo",
+      "ok": true,
+      "detail": "forward to newest 0.6"
+    },
+    {
+      "id": "redo_cleared.premise",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "redo_cleared.on_push",
+      "ok": true,
+      "detail": "{\"depth\":3,\"redo\":0,\"label\":\"filter.cutoff\"}"
+    },
+    {
+      "id": "redo_cleared.premise2",
+      "ok": true,
+      "detail": "{\"depth\":2,\"redo\":1,\"label\":\"filter.cutoff +1\"}"
+    },
+    {
+      "id": "redo_cleared.unflushed_false",
+      "ok": true,
+      "detail": "pending new change flushed -> redo refused"
+    },
+    {
+      "id": "redo_cleared.unflushed_state",
+      "ok": true,
+      "detail": "{\"depth\":3,\"redo\":0,\"label\":\"filter.cutoff\"}"
+    },
+    {
+      "id": "cap.depth64",
+      "ok": true,
+      "detail": "70 pushes -> depth 64"
+    },
+    {
+      "id": "cap.bytes_positive",
+      "ok": true,
+      "detail": "bytes tracked: 1081"
+    },
+    {
+      "id": "cap.undo_count64",
+      "ok": true,
+      "detail": "64 undos drained"
+    },
+    {
+      "id": "cap.oldest_evicted",
+      "ok": true,
+      "detail": "back to the kept-oldest `before` (6), not 0: v=6"
+    },
+    {
+      "id": "cap.beyond_false",
+      "ok": true,
+      "detail": "no further undo"
+    },
+    {
+      "id": "cap.redo_full",
+      "ok": true,
+      "detail": "redo holds 64"
+    },
+    {
+      "id": "cap.redo_once",
+      "ok": true,
+      "detail": "redo lands on 7"
+    },
+    {
+      "id": "budget.bytes_bounded",
+      "ok": true,
+      "detail": "bytes 3000025 <= 4194304"
+    },
+    {
+      "id": "budget.depth_capped",
+      "ok": true,
+      "detail": "depth 1 (old big entries evicted)"
+    },
+    {
+      "id": "budget.undo_still_works",
+      "ok": true,
+      "detail": "kept entries stay usable"
+    },
+    {
+      "id": "timer.rearm_single",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "timer.fire_flushes",
+      "ok": true,
+      "detail": "{\"depth\":1,\"redo\":0,\"label\":\"a\"}"
+    },
+    {
+      "id": "timer.no_zombie",
+      "ok": true,
+      "detail": "cancel survives"
+    },
+    {
+      "id": "realtimer.auto_flush",
+      "ok": true,
+      "detail": "quiet fired for real (~380ms wait)"
+    },
+    {
+      "id": "realtimer.no_double",
+      "ok": true,
+      "detail": "no zombie double-push after manual flush"
+    },
+    {
+      "id": "ab.store",
+      "ok": true,
+      "detail": "A stored"
+    },
+    {
+      "id": "ab.premise",
+      "ok": true,
+      "detail": "{\"depth\":2,\"redo\":0,\"label\":\"pat\"}"
+    },
+    {
+      "id": "ab.recall",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "ab.params_back",
+      "ok": true,
+      "detail": "params recalled exact"
+    },
+    {
+      "id": "ab.seq_back",
+      "ok": true,
+      "detail": "seq recalled"
+    },
+    {
+      "id": "ab.depth_unchanged",
+      "ok": true,
+      "detail": "recall is not an entry"
+    },
+    {
+      "id": "ab.baseline_resync",
+      "ok": true,
+      "detail": "next push diffs from the recalled state"
+    },
+    {
+      "id": "ab.recall_cancels_pending",
+      "ok": true,
+      "detail": "open burst cancelled by recall"
+    },
+    {
+      "id": "seq.push",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "seq.undo_exact",
+      "ok": true,
+      "detail": "restores P1, no aliasing"
+    },
+    {
+      "id": "seq.entry_strings",
+      "ok": true,
+      "detail": "entry snapshots are JSON strings"
+    },
+    {
+      "id": "seq.redo_exact",
+      "ok": true,
+      "detail": "redo P2, never P3"
+    },
+    {
+      "id": "seq.refused_restore",
+      "ok": true,
+      "detail": "load false -> undo false, entry kept"
+    },
+    {
+      "id": "seq.throwing_restore",
+      "ok": true,
+      "detail": "load throw -> false, no throw"
+    },
+    {
+      "id": "seq.recover",
+      "ok": true,
+      "detail": "restore path recovering"
+    },
+    {
+      "id": "seq.push_nochange_false",
+      "ok": true,
+      "detail": "no change -> no entry"
+    },
+    {
+      "id": "plock.push",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "plock.undo_merges",
+      "ok": true,
+      "detail": "plocks restored, other fields untouched"
+    },
+    {
+      "id": "plock.redo",
+      "ok": true,
+      "detail": "plocks forward again"
+    },
+    {
+      "id": "plockfn.push",
+      "ok": true,
+      "detail": "avPlockSnap preferred"
+    },
+    {
+      "id": "plockfn.undo",
+      "ok": true,
+      "detail": "avPlockLoad used with stored container"
+    },
+    {
+      "id": "keys.bound_once",
+      "ok": true,
+      "detail": "exactly one capture-phase keydown binding"
+    },
+    {
+      "id": "keys.premise",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "keys.text_input_ignored",
+      "ok": true,
+      "detail": "text field focused -> undo did NOT run"
+    },
+    {
+      "id": "keys.range_allowed",
+      "ok": true,
+      "detail": "range input is not a text field -> Ctrl+Z ran"
+    },
+    {
+      "id": "keys.redo",
+      "ok": true,
+      "detail": "Ctrl+Shift+Z redid"
+    },
+    {
+      "id": "keys.meta_superset",
+      "ok": true,
+      "detail": "Cmd+Z works (documented superset)"
+    },
+    {
+      "id": "keys.no_ctrl_ignored",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "keys.other_key_ignored",
+      "ok": true,
+      "detail": "Ctrl+Y not bound (pinned: Ctrl+Z / Ctrl+Shift+Z only)"
+    },
+    {
+      "id": "keys.redo2",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "keys.alt_ignored",
+      "ok": true,
+      "detail": "Ctrl+Alt+Z left to the browser"
+    },
+    {
+      "id": "keys.target_textarea_ignored",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "keys.contenteditable_ignored",
+      "ok": true,
+      "detail": "closest() belt: ancestor text surface"
+    },
+    {
+      "id": "keys.defaultPrevented_ignored",
+      "ok": true,
+      "detail": "someone else handled it"
+    },
+    {
+      "id": "keys.pd_on_run",
+      "ok": true,
+      "detail": "ran -> preventDefault"
+    },
+    {
+      "id": "keys.empty_stack_no_pd",
+      "ok": true,
+      "detail": "nothing to undo -> default left alone"
+    },
+    {
+      "id": "belt.init",
+      "ok": true,
+      "detail": "init true (no funnel needed)"
+    },
+    {
+      "id": "belt.tap",
+      "ok": true,
+      "detail": "event tap opens the burst"
+    },
+    {
+      "id": "belt.undo_direct_mirror",
+      "ok": true,
+      "detail": "restore without funnel writes the mirror"
+    },
+    {
+      "id": "observable.shape",
+      "ok": true,
+      "detail": "{\"version\":\"p4.0\",\"depth\":1,\"redo\":0,\"label\":\"a\",\"last\":\"push:params\",\"ab\":false,\"cap\":64,\"bytes\":15,\"domains\":[\"params\",\"seq\",\"plock\"]}"
+    },
+    {
+      "id": "observable.after_undo",
+      "ok": true,
+      "detail": "\"undo:params\""
+    },
+    {
+      "id": "observable.after_astore",
+      "ok": true,
+      "detail": "ab flag"
+    },
+    {
+      "id": "plainload.no_throw",
+      "ok": true,
+      "detail": "loaded in a bare node realm"
+    },
+    {
+      "id": "plainload.api_global",
+      "ok": true,
+      "detail": "classic-script globals + lexical const"
+    },
+    {
+      "id": "plainload.guarded_noop",
+      "ok": true,
+      "detail": "no window, no funnel: guarded no-op"
+    },
+    {
+      "id": "plainload.no_dom_reach",
+      "ok": true,
+      "detail": "nothing needed a DOM to load"
+    },
+    {
+      "id": "plainload.namespace_pure",
+      "ok": true,
+      "detail": "47 top-level declarations (avRedo = pinned name), stray: []"
+    },
+    {
+      "id": "collision.none",
+      "ok": true,
+      "detail": "47 top-level names vs 31 src files"
+    }
+  ]
+}

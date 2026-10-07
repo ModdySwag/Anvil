@@ -1,0 +1,167 @@
+AV SEQ SCHED NODE HARNESS — av_seq_sched.js (P4 wave §3.2, child B)
+plain-node load probe: PASS {"loaded":true,"planOk":true,"initTrue":true,"playNoEngine":true,"notPlaying":true,"nowNull":true,"posStopped":true,"stopRefused":true,"toggleRefused":true,"rngSetGet":true,"setPatternOk":true,"setPatternGarbage":true,"windowAbsent":true}
+
+checks (79/79 pass):
+PASS  P01.baseline16.swing66.exactTimes  — n=32
+PASS  P02.baseline16.swing50.straight
+PASS  P03.swingShift.S66  — shift=0.145000000
+PASS  P03.swingShift.S75  — shift=0.156250000
+PASS  P03.swingShift.S50
+PASS  P04.micro.neg12.step0BeforeOrigin  — on0=99.937500000
+PASS  P04.micro.pos12.afterSwing  — on1=100.207500000
+PASS  P04.micro.neg12.afterSwing  — on1=100.082500000
+PASS  P05.ratchet4.gate1.spacing  — n=8
+PASS  P06.gateClamp.offNotPastNextOn  — off0=100.082500000 on1=100.082500000
+PASS  P06b.gateFloor.0p05  — 100.006250000
+PASS  P07.slide.downBeforeOff  — 100.000000 on c4 t0 s0 | 100.145000 on e4 t0 s1 | 100.145000 off c4 t0 s0 | 100.207500 off e4 t0 s1
+PASS  P08.slide.intoSilentBoundary  — 100.000000 on c4 t0 s0 | 100.145000 off c4 t0 s0
+PASS  P09.slideRatchet.lastSubTies  — 100.000000 on c4 t0 s0 | 100.062500 off c4 t0 s0 | 100.062500 on c4 t0 s0 | 100.145000 on e4 t0 s1 | 100.145000 off c4 t0 s0 | 100.207500 off e4 t0 s1
+PASS  P10.speed2.32ndGrid  — ons=16
+PASS  P10b.speed0p5.halfTime  — ons=4 last=100.790000
+PASS  P11.lenWrap.notes  — c4@0,d4@1,e4@2,f4@3,c4@0,d4@1,e4@2,f4@3,c4@0,d4@1,e4@2,f4@3
+PASS  P12.oct.semitones  — c5,e3,g6,a6
+PASS  P13.vel.accentAndClamp  — on:1,off:0,on:0.05,off:0
+PASS  P14.cond.empty  — n=112
+PASS  P14.cond.first  — n=16
+PASS  P14.cond.notFirst  — n=96 first=102.000000
+PASS  P14.cond.2of4  — n=32 k16=102.000000 k80=110.000000
+PASS  P14.cond.fill.off
+PASS  P14.cond.fill.on  — n=48
+PASS  P14.cond.garbageTrue
+PASS  P15.prob.seededReproducible  — hits=0,4,5,6,7,9,10,11,12,13,14 predicted=0,4,5,6,7,9,10,11,12,13,14
+PASS  P15.prob.rngNextMatchesPrediction  — got=4141526377 predicted=4141526377
+PASS  P15.prob.zeroSilent  — n=0
+PASS  P15.prob.hundredLoud  — n=32
+PASS  P15.prob.drawsOnlyAfterCond  — got=4141526377 predicted=4141526377
+PASS  P15.prob.seedVariation  — distinct patterns=8
+PASS  P16.pure.noMutation
+PASS  P16.pure.repeatEqual
+PASS  P16.pure.rngPassthrough  — rngNext=305419896
+PASS  P17.guards.noThrow  — {"empty1":true,"cap":true,"negClamp":true}
+PASS  P18.tiling.sameStream  — merged=32 whole=32
+PASS  P18.crossChunk.slideOrder  — merged events=32
+PASS  P19.bpm140.stepDur  — on1=100.124285714
+PASS  P19.grid8t.stepDur  — on1=100.193333333
+PASS  P20.seal.pinnedShape  — keys=t,type,note,vel,track,step,flags
+PASS  L00.pins.version  — p4.0
+PASS  L00.pins.lookaheadWake
+PASS  L00.debugHandle.published
+PASS  L01.init.idempotent
+PASS  L01.playRefusedNoEngine  — play=false
+PASS  L01.nowNullWithoutEngine
+PASS  L02.setPattern.ok
+PASS  L02.play.ok
+PASS  L02.play.timerWake25  — ms=25 sets=1
+PASS  L02.play.replayRefused
+PASS  L02.stop.ok
+PASS  L02.stop.replayRefused
+PASS  L02.toggle.roundTrip
+PASS  L03.delivery.withinHalfWake  — Δ=0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050
+PASS  L03.delivery.meanAbsUnder8ms  — mean=2.500ms
+PASS  L03.delivery.noDriftBar8  — Δk0=0.000000 Δk16=0.000000
+PASS  L04.slide.busOrder  — on0,on4,off0,off4
+PASS  L04.slide.glideWindow  — [{"what":"begin","n":1},{"what":"end","n":3}]
+PASS  L05.dedupe.userHeldNeverReleased  — offs=0 extraOns=0 stillHeld=true
+PASS  L06.plock.loadAndStart  — {"loads":[{"what":"load","n":0}],"starts":[{"what":"start","t":100.05}]}
+PASS  L06.plock.boundaryOrderCycleMod  — n=19 head=0@100.050 1@100.175 2@100.300
+PASS  L06.plock.stopRestores
+PASS  L06.plock.beforeNotes  — plockAt=100.0000 noteAt=100.0500
+PASS  L07.fill.runtimeToggle  — before=0 after=3
+PASS  L08.trace.countMatchesBus  — traceΔ=293 busΔ=293
+PASS  L08.trace.bounded256Wraps  — filled=256 slot0=104.0500 slot200=103.1950
+PASS  L08.trace.entryShape  — {"t":100.83125,"type":"on","note":"c4","step":6,"track":0}
+PASS  L09.stall.noFlood  — delta=2
+PASS  L09.stall.resumes  — resumed=10
+PASS  L09.stall.positionSane  — step=12
+PASS  L10.position.stepAndT  — step=3 want=3
+PASS  L11.bpm.monotonicNoBackstep  — ons=17
+PASS  L11.bpm.newGridSpacing  — tails=0.1250,0.0750,0.1250,0.1000,0.1250,0.0750
+PASS  L12.stop.releasesHeld  — heldNow=c4 heldAfter= offs=3
+PASS  L13.off.zeroEvents  — delta=0
+PASS  L14.lazyBind.ensurePromise  — play=true now=500 ons=3
+PASS  L15.setPattern.liveSafe
+PASS  L15.setPattern.continues  — events=5
+
+SUMMARY: 79/79 checks passed
+
+KNOWN-PATTERN STREAM — 16 steps @120 bpm, swing 66, gate 0.5, originT 100 (exact times):
+  100.000000 on c4 t0 s0
+  100.062500 off c4 t0 s0
+  100.145000 on c4 t0 s1
+  100.207500 off c4 t0 s1
+  100.250000 on c4 t0 s2
+  100.312500 off c4 t0 s2
+  100.395000 on c4 t0 s3
+  100.457500 off c4 t0 s3
+  100.500000 on c4 t0 s4
+  100.562500 off c4 t0 s4
+  100.645000 on c4 t0 s5
+  100.707500 off c4 t0 s5
+  100.750000 on c4 t0 s6
+  100.812500 off c4 t0 s6
+  100.895000 on c4 t0 s7
+  100.957500 off c4 t0 s7
+  101.000000 on c4 t0 s8
+  101.062500 off c4 t0 s8
+  101.145000 on c4 t0 s9
+  101.207500 off c4 t0 s9
+  101.250000 on c4 t0 s10
+  101.312500 off c4 t0 s10
+  101.395000 on c4 t0 s11
+  101.457500 off c4 t0 s11
+  101.500000 on c4 t0 s12
+  101.562500 off c4 t0 s12
+  101.645000 on c4 t0 s13
+  101.707500 off c4 t0 s13
+  101.750000 on c4 t0 s14
+  101.812500 off c4 t0 s14
+  101.895000 on c4 t0 s15
+  101.957500 off c4 t0 s15
+
+KNOWN-PATTERN STREAM — same, straight (swing 50):
+  100.000000 on c4 t0 s0
+  100.062500 off c4 t0 s0
+  100.125000 on c4 t0 s1
+  100.187500 off c4 t0 s1
+  100.250000 on c4 t0 s2
+  100.312500 off c4 t0 s2
+  100.375000 on c4 t0 s3
+  100.437500 off c4 t0 s3
+  100.500000 on c4 t0 s4
+  100.562500 off c4 t0 s4
+  100.625000 on c4 t0 s5
+  100.687500 off c4 t0 s5
+  100.750000 on c4 t0 s6
+  100.812500 off c4 t0 s6
+  100.875000 on c4 t0 s7
+  100.937500 off c4 t0 s7
+  101.000000 on c4 t0 s8
+  101.062500 off c4 t0 s8
+  101.125000 on c4 t0 s9
+  101.187500 off c4 t0 s9
+  101.250000 on c4 t0 s10
+  101.312500 off c4 t0 s10
+  101.375000 on c4 t0 s11
+  101.437500 off c4 t0 s11
+  101.500000 on c4 t0 s12
+  101.562500 off c4 t0 s12
+  101.625000 on c4 t0 s13
+  101.687500 off c4 t0 s13
+  101.750000 on c4 t0 s14
+  101.812500 off c4 t0 s14
+  101.875000 on c4 t0 s15
+  101.937500 off c4 t0 s15
+
+RATCHET STREAM — step 0 only, ratchet 4, gate 1:
+  100.000000 on c4 t0 s0
+  100.031250 off c4 t0 s0
+  100.031250 on c4 t0 s0
+  100.062500 off c4 t0 s0
+  100.062500 on c4 t0 s0
+  100.093750 off c4 t0 s0
+  100.093750 on c4 t0 s0
+  100.125000 off c4 t0 s0
+
+PROBABILITY — seed 305419896 prob 50: hits [0,4,5,6,7,9,10,11,12,13,14] predicted [0,4,5,6,7,9,10,11,12,13,14] rngNext 4141526377
+
+LIVE DELIVERY Δ (ms vs analytic grid): 0.000 5.000 0.000 5.000 0.000 5.000 0.000 5.000 0.000 5.000 0.000 5.000 0.000 5.000 0.000 5.000 · mean 2.500 ms

@@ -1,0 +1,61 @@
+=== acid_node.mjs — Anvil P4 ACID lane (av_seq_acid.js) node harness ===
+module: C:/Users/Moddy/anvil/src/av_seq_acid.js version=p4.0
+driver: av_seq_acid.js text-loaded in guarded sandboxes (bare / acid / va / fallback / refuse / throw) +
+        src/av_acid.js text-loaded and driven via initEngineK/initVoiceK/initVoice for the accent mapping.
+  PASS  S0. node --check src/av_seq_acid.js  ::  exit 0
+  PASS  S1. "use strict" directive present
+  PASS  S2. ONE namespace: every top-level name is avSeqAcid* / AV_SEQ_ACID_*  ::  36 top-level names; offenders=none
+  PASS  S3. no DOM at load: zero `document` reach-ins  ::  document refs=0
+  PASS  S4. every `window.` reach is preceded by a typeof-window guard (lookbehind)  ::  4 window. reaches, unguarded=0
+  PASS  S5. loads bare in plain node (no DOM/globals at load)  ::  exports=13
+  PASS  L1. acid kind -> truthy descriptor (active, cols accent/slide/oct)  ::  active=true cols=accent,slide,oct
+  PASS  L2. pinned UI hook classes exposed  ::  av-seq-acid-cols / av-seq-acid-cell
+  PASS  L3. probe false for kind va / bogus / default(no params)  ::  va=false bogus=false bare=false
+  PASS  L4. override arg: "ACID" case-insensitive truthy  ::  upper-case accepted
+  PASS  L5. column inventory: accent ACC toggle / slide SLD toggle / oct OCT cycle -2..2  ::  [{"key":"accent","label":"ACC","kind":"toggle","def":0},{"key":"slide","label":"SLD","kind":"toggle","def":0},{"key":"oct","label":"OCT","kind":"cycle","def":0,"min":-2,"max":2}]
+  PASS  L6. inventory is a fresh copy per call  ::  mutation isolated
+  PASS  L7. classes list = [cols, cell]  ::  av-seq-acid-cols,av-seq-acid-cell
+  PASS  L8. version p4.0 + glide window value 0.06 (303 stock) + acc entry vel 0.8  ::  p4.0 / 0.06 / 0.8
+  PASS  M1. accent=1 + low vel -> gain 1.0 (accent pin) -> acc=1  ::  {"gain":1,"acc":1,"slide":0,"oct":0,"octShift":0}
+  PASS  M2. accent=true + vel 1.0 -> gain 1.0 -> acc=1  ::  {"gain":1,"acc":1,"slide":0,"oct":0,"octShift":0}
+  PASS  M3. accent=0 + vel 0.80 -> gain 0.80 -> acc=1 (threshold is >= 0.8; default vel sits ON it)  ::  {"gain":0.8,"acc":1,"slide":0,"oct":0,"octShift":0}
+  PASS  M4. accent=0 + vel 0.79 -> gain 0.79 -> acc=0 (plain path)  ::  {"gain":0.79,"acc":0,"slide":0,"oct":0,"octShift":0}
+  PASS  M5. empty step -> gain 0.80 (core default) -> acc=1 (flagged nuance)  ::  {"gain":0.8,"acc":1,"slide":0,"oct":0,"octShift":0}
+  PASS  M6. accent=1 slide=1 oct=-1 -> gain 1.0, slide 1, octShift -12  ::  {"gain":1,"acc":1,"slide":1,"oct":-1,"octShift":-12}
+  PASS  M7. oct=1 -> octShift +12 (planner applies)  ::  {"gain":0.8,"acc":1,"slide":0,"oct":1,"octShift":12}
+  PASS  M8. oct=2 -> octShift +24  ::  {"gain":0.8,"acc":1,"slide":0,"oct":2,"octShift":24}
+  PASS  M9. oct=-2 -> octShift -24  ::  {"gain":0.8,"acc":1,"slide":0,"oct":-2,"octShift":-24}
+  PASS  M10. validation refusals: resolve/validate reject every malformed step  ::  20 cases refused
+  PASS  M11. validate accepts conforming steps (0/1, booleans, oct -2..2, vel .05..1)  ::  3 accepted
+  PASS  M12. colValue: accent/slide 0|1|true|false; oct integer -2..2; unknown + strings refused  ::  checked
+  PASS  M13. cycleCol: accent 0->1->0; slide true->0; oct clamps at +-2; dir -1 steps down  ::  checked
+  PASS  M14. octShift: 0->0, +-1 -> +-12, +-2 -> +-24; fractional/out-of-range refused  ::  checked
+  PASS  M15. accEnters mirrors av_acid.js L187: 1.0->1, 0.8->1, 0.7999->0; garbage + strings -> false  ::  checked
+  PASS  D1. emitted gain 1.0 -> AVACID acc entered: cap 0->0.5, accAmt 0.600, ampBoost 1.900  ::  cap=0.500 accAmt=0.600 ampBoost=1.900
+  PASS  D2. accent fast attack (0.0004 s) + forced accentDecay MEG (0.2 s)  ::  vegAstep=0.052083 megDc=0.99952095
+  PASS  D3. vel 0.79 -> plain: accAmt 0, ampBoost 1, cap stays 0, slow soft attack  ::  accAmt=0 cap=0.000 vegAstep=0.006944
+  PASS  D4. boundary vel 0.80 -> acc==1 (inclusive >= 0.8; lane predicate matches engine)  ::  accAmt=0.600
+  PASS  D5. cap charge law reproduces the P2 T3 log sequence 0.500 · 0.705 · 0.788 · 0.823  ::  0.500 · 0.705 · 0.788 · 0.823  (matches verify/p2-acid-node-out.log)
+  PASS  D6. 4 accents rise STRICTLY (accAmt + ampBoost) — same direction as the P2 measured depth 0.273<0.310<0.316<0.342  ::  accAmt 0.600 · 0.747 · 0.808 · 0.832  ·  ampBoost 1.900 · 2.121 · 2.212 · 2.249
+  PASS  D7. MEG decay forced on accents regardless of the decay knob (acc 0.2 s vs plain 2.0 s)  ::  acc megDc=0.99952095 plain megDc=0.99995208
+  PASS  D8. acid.accent knob scales accAmt (0.3 -> 0.300 at first accent)  ::  accAmt=0.300
+  PASS  W1. begin refused when lane inactive (kind va)  ::  va: no calls
+  PASS  W2. begin refused with no sink at all (bare sandbox)  ::  bare refused
+  PASS  W3. state before any pair: armed=false depth=0  ::  {"armed":false,"depth":0}
+  PASS  W4. begin: voice.glide := 0.06 via avApplyParam (meta from=seq-acid, slide=true)  ::  ["voice.glide",0.06,{"from":"seq-acid","slide":true,"label":"pair@step5"}]
+  PASS  W5. mirror holds the window value; state tracks prior 0.3  ::  glide=0.06 prior=0.3
+  PASS  W6. refcount: second begin does NOT re-set glide (1 funnel call so far)  ::  depth=2 calls=1
+  PASS  W7. first end: still armed for the other pair (no restore yet)  ::  depth=1
+  PASS  W8. last end: restore the captured prior 0.3 via the funnel (meta restore=true)  ::  ["voice.glide",0.3,{"from":"seq-acid","slide":false,"restore":true}]
+  PASS  W9. end with depth 0 refuses (false)  ::  refused
+  PASS  W10. abort mid-pair: restores prior immediately, resets depth  ::  restored + reset
+  PASS  W11. abort with nothing armed refuses (false)  ::  refused
+  PASS  W12. prior default = 0 when the mirror never held voice.glide (documented)  ::  set 0.06 -> restored 0
+  PASS  W13. kind flips mid-pair: end() still restores (a set glide is never stranded)  ::  restored=0.4
+  PASS  W14. funnel that returns false: mirror write still arms/restores consistently  ::  calls=2 mirror=0.25
+  PASS  W15. throwing funnel: caught (never throws out), mirror stays consistent  ::  begin=true end=true
+  PASS  W16. no-funnel fallback: 'av-param' CustomEvent fired on set and restore (avKnobCommit shape)  ::  events=1->2
+  PASS  X1. 832 garbage calls across 13 exports: zero throws  ::  thrown=0
+  PASS  X2. slide state observable shape (bare): armed/depth/value/path  ::  {"armed":false,"value":0.06,"path":"voice.glide"}
+
+=== SUMMARY: 55 passed, 0 failed (55 checks) ===

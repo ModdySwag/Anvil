@@ -1,0 +1,353 @@
+{
+  "harness": "capture_harness",
+  "file": "C:/Users/Moddy/anvil/src/av_seq_capture.js",
+  "fileSha256": "e75faa06247dd11835e9ed596ba3a78af5558eb3799e37747aa87234aa34fa73",
+  "node": "v26.7.0",
+  "total": 57,
+  "passed": 57,
+  "failed": 0,
+  "tests": [
+    {
+      "n": 1,
+      "name": "node --check passes on src/av_seq_capture.js",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 2,
+      "name": "static laws: strict mode, no throw/document/localStorage/require, one namespace",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 3,
+      "name": "bare: loads in a plain node vm context (no window, no stubs) with no throw",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 4,
+      "name": "bare: state defaults — off, q100, track0, hooks off, zero counters, v p4.0",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 5,
+      "name": "bare: arm modes accept/refuse; refusals leave state unchanged",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 6,
+      "name": "bare: setQuantize / setTrack / hold — clamps, refuses, observable",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 7,
+      "name": "bare: init/EnsureHooks refuse cleanly; direct hits no-throw and count misses",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 8,
+      "name": "bare: contract API present (arity-safe calls)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 9,
+      "name": "bare: quantize kernel is pure (runs with no stubs at all)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 10,
+      "name": "kernel: exact grid hits — g(5)@S66, 2.0s",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 11,
+      "name": "kernel: strength ladder at step 4 +8 ticks → micro 0/4/6/8",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 12,
+      "name": "kernel: negative residual at step 7 −8 ticks → micro −8 / −2",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 13,
+      "name": "kernel: 8t grid @90bpm swing50 — +6 ticks q60 → step 4 micro 2",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 14,
+      "name": "kernel: swing-aware mapping flip — t=0.565 → step 4 @S66, step 5 @S50",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 15,
+      "name": "kernel: tie resolves to the earlier step (t=0.4375 → step 3)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 16,
+      "name": "kernel: clamps + fallbacks — q250≡100, q−20≡0, garbage bpm/grid/values",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 17,
+      "name": "kernel: negative t → step 0; determinism; integer micro",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 18,
+      "name": "kernel: 64-step sweep — g(k) maps to k; +7 ticks @q0 → micro 7",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 19,
+      "name": "hooks: EnsureHooks wraps funnel + both note directions; markers set; no window → event off",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 20,
+      "name": "hooks: idempotent triple-ensure — exactly one capture layer (1 write per commit)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 21,
+      "name": "hooks: pre-marked stubs are trusted, not re-wrapped (identity preserved)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 22,
+      "name": "hooks: alien outer wrapper after install does not add a second capture layer",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 23,
+      "name": "hooks: partial availability — funnel missing wraps later when it appears",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 24,
+      "name": "window: event belt binds once; captures without avApplyParam; handle published",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 25,
+      "name": "off: everything forwarded verbatim; zero writes; zero snap reads",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 26,
+      "name": "off: arm→disarm cycle stays fully passthrough",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 27,
+      "name": "step: fresh down writes the playhead step via avSeqSnap/avSeqLoad (fields pinned)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 28,
+      "name": "step: held repeat is not re-captured; forward still happens",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 29,
+      "name": "step: re-record after note-up writes again",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 30,
+      "name": "step: playhead advance writes the new step; old step intact",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 31,
+      "name": "step: capture track selector (+clamp 63 → last track), len modulo 21→5",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 32,
+      "name": "step: existing step fields preserved; micro resets to 0 on record",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 33,
+      "name": "step: invalid note refused but forwarded; vel clamps 1.5→1, 0→0.05, none→0.9",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 34,
+      "name": "step: core absent → forwarded, miss counted, never throws",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 35,
+      "name": "step: avSeqLoad missing → no visible write (writes go through the core calls only)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 36,
+      "name": "live: q100 lands exactly on the grid",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 37,
+      "name": "live: strength ladder through the full path — q100/50/25/0 → micro 0/4/6/8",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 38,
+      "name": "live: swing-aware flip through the path — S66 → step 4, S50 → step 5",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 39,
+      "name": "live: loop map — k=19 with track len 8 → step 3",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 40,
+      "name": "live: 8t pattern drives the grid (90bpm, +6 ticks q60 → step 4 micro 2)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 41,
+      "name": "live: no clock (schedNow NaN, pos.t NaN) → refused, forwarded",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 42,
+      "name": "param: armed commit writes the p-lock at the playhead; forwarded with ret",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 43,
+      "name": "param: echo elision — same value at same step writes nothing, still forwarded",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 44,
+      "name": "param: value change + step advance write into the lane map (string keys)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 45,
+      "name": "param: lane values follow the shipped numeric law (bool→1|0, '0.25'→0.25, 'sat' refused)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 46,
+      "name": "param: refusals — NaN, empty and non-string paths: no writes, forwarded",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 47,
+      "name": "param: meta noCapture / plock / src=plock / capture skipped; still forwarded",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 48,
+      "name": "param: hold gates capture; released resumes",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 49,
+      "name": "param: playhead unavailable → last known step used",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 50,
+      "name": "param: existing 'lin' lane reused, not duplicated or interp-clobbered",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 51,
+      "name": "param: live arm captures too (param capture is mode-independent)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 52,
+      "name": "index map: playhead 80 → note into track loop (80%16=0), lane key 80%64='16'",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 53,
+      "name": "forward: arity, receiver, return verbatim (notes + funnel)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 54,
+      "name": "forward: original exception propagates untouched (transparency)",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 55,
+      "name": "forward: capture-side failures (snap/load throw) never affect the forwarded call",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 56,
+      "name": "forward: no parallel note delivery — capture writes emit no notes/params",
+      "ok": true,
+      "note": ""
+    },
+    {
+      "n": 57,
+      "name": "state: fresh copies each call; playhead tracks writes; counters coherent",
+      "ok": true,
+      "note": ""
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+PASS  syntax.node-check  — exit 0
+PASS  bare.loads  — module evaluated with no DOM and no app globals
+PASS  bare.snapEmpty  — []
+PASS  bare.applyRefusesNoLanes  — false, no hidden run state
+PASS  bare.tickStopFalse  — false
+PASS  bare.ensureHooks  — nothing to hook, no throw
+PASS  bare.loadRefusals  — false
+PASS  bare.loadEmptyArray  — empty lane list accepted
+PASS  bare.stepDurDefault  — 0.125
+PASS  bare.grid8t  — 0.16666666666666666
+PASS  bare.gridRefuse  — bad grid refused, 16 restored
+PASS  bare.stateShape  — "p4.0"
+PASS  bare.uiInitNoDoc  — false without a document
+PASS  bare.uiPaintRefuse  — no lane -> false
+PASS  pins.version  — p4.0
+PASS  pins.v1Paths  — filter.cutoff,filter.reso,fx.verb.mix,fx.delay.mix,fx.delay.feedback,fx.mod.rate,engine.outScale
+PASS  pins.tickHz  — 64
+PASS  pins.caps  — 64/64 (core carrier alignment)
+PASS  sample.stepBeforeNull  — null before the first lock
+PASS  sample.stepLock  — {"value":900,"kind":"lock","from":2}
+PASS  sample.linEndpoints  — 0 @2, 100 @6 (hold)
+PASS  sample.linMid  — 25/50/75
+PASS  sample.linFraction  — 62.5 @4.5, 6.25 @2.25
+PASS  sample.linAfterLast  — held past last, no extrapolation
+PASS  sample.badInputs  — null for garbage, numeric strings fine
+PASS  sample.badInterpCoerced  — unknown interp behaves as step
+PASS  sample.badKeysIgnored  — garbage keys ignored
+PASS  model.add  — default interp step
+PASS  model.addDup  — one lane per path
+PASS  model.addBadPath  — refused
+PASS  model.pathStripped  — control chars stripped
+PASS  model.addLin  — free-text path + lin
+PASS  model.setStep  — number + numeric-string step/value
+PASS  model.setStepRefusals  — all false, never throws
+PASS  model.stepValue  — readback
+PASS  model.clearStep  — clear + refuse
+PASS  model.togglePaint  — paint uses the live mirror value, click again clears
+PASS  model.interpNorm  — coerced to step
+PASS  model.setPathDup  — duplicate path refused
+PASS  model.setPathOk  — no-op true (same path)
+PASS  model.setPathRefuseBad  — false
+PASS  model.index  — lookup
+PASS  model.pathCap64  — path sliced to the 64-char core cap
+PASS  model.snapDeepCopy  — external snapshot mutation ignored
+PASS  model.loadRefusals  — non-containers refused
+PASS  model.loadRefusalUntouched  — model unchanged after refusals
+PASS  model.loadSanitise  — accepted with drops
+PASS  model.loadSanitiseShape  — [{"path":"ok.path","interp":"step","steps":{"1":2}}] (dup path dropped, garbage keys/values dropped)
+PASS  model.roundTrip  — snap -> json -> load -> snap identical
+PASS  model.loadPlocksKey  — §4 container key accepted
+PASS  model.loadCap64  — 80 lanes -> 64 (core cap)
+PASS  model.addCap  — cap holds, further adds false
+PASS  model.remove  — remove + refuse
+PASS  apply.startCapturesBase  — {"filter.cutoff":500}
+PASS  apply.hookInstalled  — wrap landed at transport start
+PASS  apply.lockedStep  — 900
+PASS  apply.metaMarkers  — flat markers G's capture tap keys on
+PASS  apply.lastApplyKind  — {"path":"filter.cutoff","value":900,"kind":"lock","step":2}
+PASS  apply.ownApplyNoRecapture  — base untouched by our own funnel write
+PASS  apply.heldPathListed  — ["filter.cutoff"]
+PASS  restore.noLockNext  — k locked, k+1 not -> base restored
+PASS  restore.lastApplyKind  — {"path":"filter.cutoff","value":500,"kind":"restore","step":3}
+PASS  restore.idleStepNoop  — nothing held -> false
+PASS  apply.secondLock  — 300
+PASS  apply.secondRestore  — back to base
+PASS  apply.lastStepTracked  — 6
+PASS  recapture.userCommit  — base -> 700
+PASS  recapture.forwarded  — original funnel called exactly once
+PASS  recapture.otherPathIgnored  — non-lane path never recaptured
+PASS  recapture.newRestoreTarget  — restored to the NEW base
+PASS  stop.restoresHeld  — stop -> base
+PASS  stop.secondFalse  — false when idle
+PASS  autostart.afterStop  — fresh capture from the live mirror
+PASS  autostart.continues  — gap within idle: same run
+PASS  stalecapture.tap  — stale run still re-captures
+PASS  idleRestart.detected  — gap > idle: stop-restore + fresh capture (act itself false: step 0 has no lock)
+PASS  idleRestart.restoreWitnessed  — {"path":"filter.cutoff","value":999,"kind":"restore","step":-1}
+PASS  idleRestart.stop  — clean stop
+PASS  lin.startTickNoSeg  — no segment yet
+PASS  lin.lockAt2  — starts at 0
+PASS  lin.tickQuarter  — pos 2.25 -> 6.25
+PASS  lin.tickVsSample  — ticker math == pure sampler
+PASS  lin.tickHalf  — pos 2.5 -> 12.5
+PASS  lin.tickEpsSkip  — engine already at value: no write
+PASS  lin.tickRewritesOverride  — user override on a lin lane is re-overwritten
+PASS  lin.tickMid  — pos 4 -> 50
+PASS  lin.boundaryExact  — lin grid point + second lane lock at 4
+PASS  lin.boundaryKind  — {"path":"filter.cutoff","value":900,"kind":"lock","step":4}
+PASS  lin.lockAt6ThenHold  — lane0 reaches 100; lane1 (single lock at 4) restored at 6
+PASS  lin.restoreAfterLast  — no next lock -> base
+PASS  lin.singleLockHold  — lock at 4, restore at 5
+PASS  lin.tickNotRunning  — false when stopped
+PASS  wrap.absentBefore  — not installed at load
+PASS  wrap.ensure  — marker __avPlockWrap
+PASS  wrap.idempotent  — same wrapper identity after 3 calls
+PASS  wrap.singleForward  — one original call per commit
+PASS  wrap.userMetaPlain  — user commits carry no plock markers
+PASS  wrap.baseAtStart  — base captured from committed value
+PASS  wrap.lockApplied  — own write never recaptures
+PASS  wrap.userRecapture  — base -> 42 while running
+PASS  wrap.restoreToNewBase  — 42
+PASS  belt.bound  — one 'av-param' listener
+PASS  belt.lockDispatch  — lock went out as the 'av-param' event (mirror untouched)
+PASS  belt.eventMeta  — detail.meta carries the capture markers (G's event belt)
+PASS  belt.recapture  — event commit re-captured the base
+PASS  belt.restoreDispatch  — restore dispatched, no rebinding
+PASS  belt.otherPath  — non-lane path ignored
+PASS  belt.nullEvent  — no throw on a null event
+PASS  refuse.applyBadSteps  — all false
+PASS  refuse.applyNoSideEffects  — no start, no writes
+PASS  refuse.applyNoLanes  — no lanes -> no hidden run
+PASS  refuse.stringStepAccepted  — "2" -> 2 (pinned leniency)
+PASS  refuse.applyEmptyLane  — no-lock step is a clean no-op
+PASS  refuse.lanesLoad  — false
+PASS  refuse.lanesLoadUntouched  — model unchanged
+PASS  refuse.uiInitBare  — no doc / bad width
+PASS  refuse.noFunnel  — no carrier -> act false, run still cleanly stoppable
+PASS  ui.init  — mount into #av-seq-plock
+PASS  ui.emptyState  — head + empty state
+PASS  ui.addLane  — add button seeded the first pinned path
+PASS  ui.cells16  — 16 cells
+PASS  ui.v1Options  — all pinned paths in the select
+PASS  ui.interpOptions  — STEP/LIN
+PASS  ui.customHidden  — free-text input present, hidden for a pinned path
+PASS  ui.paintCell  — cell painted from the live mirror value
+PASS  ui.paintToggleOff  — click again clears
+PASS  ui.changeInterp  — select -> lin
+PASS  ui.changePath  — select -> fx.verb.mix
+PASS  ui.revealCustom  — free-text input revealed + focused
+PASS  ui.customPath  — typed path accepted
+PASS  ui.removeLane  — delete button empty again
+PASS  ui.setWidth  — 32 cells
+PASS  ui.width32  — re-rendered at 32
+PASS  ui.sync  — sync true with a host
+PASS  ui.initIdempotent  — re-init safe
+PASS  ui.classes  — includes the pinned .av-seq-plock-cell, unique
+PASS  ui.initFn  — avPlockInit = hooks + mount
+PASS  ui.fallbackMount  — shell appended into .av-seq-insp
+PASS  ui.fallbackSync  — lanes box painted
+PASS  ui.throwingDoc  — false, no throw
+PASS  ticker.start  — interval armed at 15.625 ms
+PASS  observable.published  — window.__avPlock live
+PASS  ticker.lock  — clock-driven boundary
+PASS  ticker.fire  — interval callback applied 12.5 @pos 2.5
+PASS  ticker.fire2  — 25 @pos 3
+PASS  ticker.fireSkip  — same position: skipped
+PASS  ticker.boundary  — boundary applied at the exact grid point
+PASS  ticker.reachesTo  — clamped to the next lock value
+PASS  ticker.stop  — interval cleared, restore ran
+PASS  ticker.restored  — base back after stop
+PASS  observable.afterStop  — 6
+PASS  observable.stateShape  — state carries version/grid/tickHz/stepDur/hooks/lanes/lastApply
+PASS  interop.snapObject  — avPlockSnap == avPlockLanesSnap (array = object for F's check)
+PASS  interop.roundTrip  — JSON round-trip
+PASS  interop.plocksForm  — container form
+PASS  interop.lanesForm  — {lanes:[…]} form
+PASS  concat.baselineNoPlock  — P4 siblings without plock: strict-check green [av_seq_core.js,av_seq_sched.js,av_plock.js,av_seq_capture.js,av_undo.js,av_seq_acid.js,av_seq_ui.js]
+PASS  concat.withPlock  — no duplicate top-level names across the §6 bundle
+
+158 pass · 0 fail

@@ -1,0 +1,146 @@
+PASS a.node-check  — exit 0
+PASS a.concat-check  — av_note.js + av_seq_core.js exit 0
+PASS b.namespace.top-level  — 108 top-level decls, all avSeq*/AV_SEQ_*
+PASS b.namespace.unique  — no duplicate top-level names
+PASS b.law.no-document  — document never referenced
+PASS b.law.window-guarded  — window on 1 line: "if (typeof window !== \"undefined\") {"
+PASS b.law.localStorage-indented  — 2 localStorage lines, all inside functions
+PASS b.law.no-explicit-throw  — no throw statements
+PASS b.law.use-strict
+PASS b.law.version
+PASS b.law.ls-keys-literals  — 4 key literals present
+PASS c.api.contractual  — 16/16 present
+PASS c.api.extras  — 7/7 present (documented extras)
+PASS d.pins.version  — p4.0
+PASS d.pins.ls  — av-seq-pattern,av-seq-chains,av-seq-song,av-seq-scenes
+PASS d.pins.speeds  — 0.25,0.5,1,2,4
+PASS d.pins.grids  — 16,8t
+PASS d.pins.conditions  — ["","fill","first","!first"]
+PASS d.pins.fillIds  — kick,snare,hat,beat,techno,break,euclid,random,clear
+PASS d.pins.counts  — tracks=4 steps=64 defRng=0x12345678
+PASS e.defaults.pattern  — {"v":1,"name":"PAT 1","bpm":120,"grid":"16","swing":66,"plocks":0,"rng":305419896}
+PASS e.defaults.tracks  — 4 tracks × len16 speed1 mute0 steps64
+PASS e.defaults.step  — {"on":0,"note":"c4","vel":0.8,"gate":0.95,"slide":0,"accent":0,"oct":0,"prob":100,"cond":"","ratchet":1,"micro":0}
+PASS e.defaults.fresh  — no shared references between calls
+PASS e.snap.eq-defaults  — snap of untouched state == defaults
+PASS e.load.empty  — load({}) == defaults
+PASS e.snap.identity  — every snap is a fresh deep copy
+PASS f.snap.detached  — snapshot edits never reach the model
+PASS f.load.detached  — mutating the loaded input never reaches the model
+PASS f.load.plock-deep  — plock steps object is deep-copied both ways
+PASS f.chains.detached
+PASS f.song.detached
+PASS f.scenes.detached
+PASS g.load.true
+PASS g.name.cap-strip  — "WeirdName"
+PASS g.clamps.scalar  — bpm 5->20 swing 99->80 grid 8t
+PASS g.drop.unknown-top
+PASS g.tracks.count  — 4
+PASS g.t0.scalars  — len 0->1 speed 3->1 mute 5->1 steps padded 64
+PASS g.t0.step0  — {"on":1,"note":"c#4","vel":1,"gate":0.05,"slide":1,"accent":1,"oct":2,"prob":100,"cond":"","ratchet":4,"micro":12}
+PASS g.t0.step0.drop-unknown
+PASS g.t0.step1  — on:'1'->1, note zzz->c4, rest default
+PASS g.t0.step2.default  — padded slot is the default step
+PASS g.t1.clamps  — len 999->64
+PASS g.t2.garbage-track  — string track -> default
+PASS g.t3.missing-track  — missing track -> default
+PASS g.plocks.sanitised  — path-64 key / non-numeric keys / bad value / empty-path / string entry all handled
+PASS g.rng.zero-remap  — rng 0 -> 0x12345678
+PASS g.idempotent  — sanitise(sanitise(x)) byte-stable
+PASS h.load.refuse  — 16/16 refused
+PASS h.load.state-preserved  — refusals never touch the model
+PASS h.import.refuse  — 8/8 refused
+PASS h.import.partial  — partial object loads with defaults
+PASS h.hostile.proxy  — throwing get-traps -> false, no throw
+PASS h.hostile.getter  — throwing getter -> false
+PASS h.hostile.toString  — non-string name is dropped without calling toString
+PASS i.load.rich
+PASS i.export.string  — 29830 bytes
+PASS i.keyorder.pattern  — v,name,bpm,grid,swing,tracks,plocks,rng
+PASS i.keyorder.track
+PASS i.keyorder.step
+PASS i.keyorder.plock
+PASS i.keyorder.plock-steps  — numeric keys ascend
+PASS i.shape.valid  — every field in pinned range, no unknown keys
+PASS i.rich.fields  — rich fields survive load->export
+PASS i.import.true
+PASS i.rt.deep-equal  — export -> import -> snap is deep-equal
+PASS i.rt.byte-stable  — export is byte-stable across the round trip
+PASS i.rt.via-load
+PASS j.16-4  — 0,4,8,12
+PASS j.16-5  — 0,4,7,10,13
+PASS j.rotate  — rotate shifts hits forward
+PASS j.clamps  — len/pulses/rotate clamped
+PASS j.defaults  — {} -> 16 steps, 4 pulses
+PASS j.refuse  — non-object -> []
+PASS j.property.count+evenness  — len 1..64 × pulses 0..len sweep: count == pulses, gaps <= 1 apart
+PASS j.determinism
+PASS k.run.true
+PASS k.determinism.same-seed  — same seed + same input -> identical result
+PASS k.count.preserved  — hit count per track preserved
+PASS k.range  — landings inside 0..len-1, distinct
+PASS k.payloads.travel  — payload multiset (notes+all fields) preserved per track
+PASS k.amount.zero  — amount 0 -> no-op
+PASS k.amount.clamp-high  — amount 5 clamps to 1
+PASS k.amount.clamp-low  — amount -3 clamps to 0
+PASS k.seed.changes-output  — seed 1 vs seed 2 differ
+PASS k.refuse  — 6/6 refused, state untouched
+PASS l.run.true
+PASS l.determinism.same-seed
+PASS l.differs  — humanize changed micro/gate/vel somewhere
+PASS l.ranges  — micro int ±12, gate/vel in 0.05..1 (all steps)
+PASS l.touch.only-micro-gate-vel  — on/note/cond/prob/ratchet/slide/accent/oct untouched
+PASS l.off-steps.untouched  — off steps byte-identical
+PASS l.amount.zero
+PASS l.refuse  — 4/4 refused, state untouched
+PASS m.default  — empty 4-track chains (fresh sandbox)
+PASS m.load.base
+PASS m.load.bare-array
+PASS m.sanitise.caps+refs  — 70->64 cap, empty/null dropped, 7->"7", non-array->[]
+PASS m.load.5th-chain-dropped
+PASS m.load.empty-alias  — {} -> empty chains
+PASS m.garbage  — 6/6 refused, state preserved
+PASS m.snap-load.rt  — snap->load round-trip (detached)
+PASS n.default  — (fresh sandbox)
+PASS n.load.sanitised
+PASS n.rows  — [{"ref":"PAT 1","repeats":1,"mutes":[1,1,0,0],"len":2,"tempo":20,"label":"Intro"},{"ref":"PAT 2","repeats":256,"mutes":[0,1,0,0],"len":1024,"tempo":0,"label":"LLLLLLLLLLLLLLLL"}]
+PASS n.rowkeys
+PASS n.cap99  — 120 -> 99 rows
+PASS n.garbage  — 5/5 refused, state preserved
+PASS n.snap-load.rt
+PASS n.load.bare-array
+PASS o.capture
+PASS o.shape  — {"name":"A","tracks":[{"ref":"SCN","mute":1},{"ref":"SCN","mute":0},{"ref":"SCN","mute":0},{"ref":"SCN","mute":0}]}
+PASS o.recall  — recall applies the mute snapshot
+PASS o.recall.miss
+PASS o.capture.refuse
+PASS o.recapture.overwrite
+PASS o.cap16  — 17th new name refuses, cap holds at 16
+PASS o.load.dup-last-wins+drop  — dup name replaces in place; empty-name dropped; junk tracks -> default 4
+PASS o.garbage  — 5/5 refused
+PASS o.rt
+PASS p.keys  — av-seq-pattern,av-seq-chains,av-seq-song,av-seq-scenes
+PASS p.save
+PASS p.store.keys  — av-seq-chains,av-seq-pattern,av-seq-scenes,av-seq-song
+PASS p.store.pattern-json  — stored pattern == export()
+PASS p.store.json  — all four values parse as JSON
+PASS p.load.restore  — all four domains restored
+PASS p.load.corrupt-key  — corrupt key ignored, others still loaded, no throw
+PASS p.load.empty-store  — empty store load is a no-op success
+PASS p.save.quota-refuse  — setItem throws -> false, no throw
+PASS p.load.throwing-get  — getItem throws -> false, no throw
+PASS p.no-storage  — no localStorage -> false/false
+PASS q.boot.restore  — {"name":"BOOT PAT","bpm":97,"chain":"BOOT PAT","rows":1,"scenes":1,"fnType":"function"}
+PASS q.boot.broken-storage  — throwing storage: boots to defaults, no throw
+PASS q.boot.no-window  — no window -> LS never touched: PAT 1
+PASS r.get.copy  — returned step is a detached copy
+PASS r.get.bounds
+PASS r.set.patch
+PASS r.set.sanitised  — {"on":1,"note":"e5","vel":1,"gate":0.5,"slide":1,"accent":1,"oct":-1,"prob":75,"cond":"first","ratchet":4,"micro":-5}
+PASS r.set.keeps-others  — unpatched fields keep values
+PASS r.set.refuse  — 4/4 refused, {} is a no-op true
+PASS s.plain-node.load  — {"name":"PAT 1","rt":true,"n":4,"bytes":29694}
+PASS t.determinism.cross-sandbox  — two fresh sandboxes + same ops -> identical export bytes
+PASS t.default-export.head  — {"v":1,"name":"PAT 1","bpm":120,"grid":"16","swing":66,"tracks":[{"len":16,"speed":1,"mute":0,"steps":[{"on":0,"note":"c
+PASS t.default-export.stable  — default export identical across sandboxes
+PASS t.default-export.sha  — sha256=8222b87a472c7ca94ab5953b98ecd5acda9dd0a9c0fe8c0738c7d73634c3764c bytes=29694

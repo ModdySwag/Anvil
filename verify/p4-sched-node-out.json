@@ -1,0 +1,531 @@
+{
+  "harness": "av_seq_sched node harness",
+  "module": "src/av_seq_sched.js",
+  "version": "p4.0",
+  "deterministic": "no wall clock, no Math.random; fixed seeds only",
+  "probe": {
+    "loaded": true,
+    "planOk": true,
+    "initTrue": true,
+    "playNoEngine": true,
+    "notPlaying": true,
+    "nowNull": true,
+    "posStopped": true,
+    "stopRefused": true,
+    "toggleRefused": true,
+    "rngSetGet": true,
+    "setPatternOk": true,
+    "setPatternGarbage": true,
+    "windowAbsent": true
+  },
+  "probeOk": true,
+  "counts": {
+    "pass": 79,
+    "total": 79,
+    "failed": 0
+  },
+  "checks": [
+    {
+      "id": "P01.baseline16.swing66.exactTimes",
+      "pass": true,
+      "detail": "n=32"
+    },
+    {
+      "id": "P02.baseline16.swing50.straight",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P03.swingShift.S66",
+      "pass": true,
+      "detail": "shift=0.145000000"
+    },
+    {
+      "id": "P03.swingShift.S75",
+      "pass": true,
+      "detail": "shift=0.156250000"
+    },
+    {
+      "id": "P03.swingShift.S50",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P04.micro.neg12.step0BeforeOrigin",
+      "pass": true,
+      "detail": "on0=99.937500000"
+    },
+    {
+      "id": "P04.micro.pos12.afterSwing",
+      "pass": true,
+      "detail": "on1=100.207500000"
+    },
+    {
+      "id": "P04.micro.neg12.afterSwing",
+      "pass": true,
+      "detail": "on1=100.082500000"
+    },
+    {
+      "id": "P05.ratchet4.gate1.spacing",
+      "pass": true,
+      "detail": "n=8"
+    },
+    {
+      "id": "P06.gateClamp.offNotPastNextOn",
+      "pass": true,
+      "detail": "off0=100.082500000 on1=100.082500000"
+    },
+    {
+      "id": "P06b.gateFloor.0p05",
+      "pass": true,
+      "detail": "100.006250000"
+    },
+    {
+      "id": "P07.slide.downBeforeOff",
+      "pass": true,
+      "detail": "100.000000 on c4 t0 s0 | 100.145000 on e4 t0 s1 | 100.145000 off c4 t0 s0 | 100.207500 off e4 t0 s1"
+    },
+    {
+      "id": "P08.slide.intoSilentBoundary",
+      "pass": true,
+      "detail": "100.000000 on c4 t0 s0 | 100.145000 off c4 t0 s0"
+    },
+    {
+      "id": "P09.slideRatchet.lastSubTies",
+      "pass": true,
+      "detail": "100.000000 on c4 t0 s0 | 100.062500 off c4 t0 s0 | 100.062500 on c4 t0 s0 | 100.145000 on e4 t0 s1 | 100.145000 off c4 t0 s0 | 100.207500 off e4 t0 s1"
+    },
+    {
+      "id": "P10.speed2.32ndGrid",
+      "pass": true,
+      "detail": "ons=16"
+    },
+    {
+      "id": "P10b.speed0p5.halfTime",
+      "pass": true,
+      "detail": "ons=4 last=100.790000"
+    },
+    {
+      "id": "P11.lenWrap.notes",
+      "pass": true,
+      "detail": "c4@0,d4@1,e4@2,f4@3,c4@0,d4@1,e4@2,f4@3,c4@0,d4@1,e4@2,f4@3"
+    },
+    {
+      "id": "P12.oct.semitones",
+      "pass": true,
+      "detail": "c5,e3,g6,a6"
+    },
+    {
+      "id": "P13.vel.accentAndClamp",
+      "pass": true,
+      "detail": "on:1,off:0,on:0.05,off:0"
+    },
+    {
+      "id": "P14.cond.empty",
+      "pass": true,
+      "detail": "n=112"
+    },
+    {
+      "id": "P14.cond.first",
+      "pass": true,
+      "detail": "n=16"
+    },
+    {
+      "id": "P14.cond.notFirst",
+      "pass": true,
+      "detail": "n=96 first=102.000000"
+    },
+    {
+      "id": "P14.cond.2of4",
+      "pass": true,
+      "detail": "n=32 k16=102.000000 k80=110.000000"
+    },
+    {
+      "id": "P14.cond.fill.off",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P14.cond.fill.on",
+      "pass": true,
+      "detail": "n=48"
+    },
+    {
+      "id": "P14.cond.garbageTrue",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P15.prob.seededReproducible",
+      "pass": true,
+      "detail": "hits=0,4,5,6,7,9,10,11,12,13,14 predicted=0,4,5,6,7,9,10,11,12,13,14"
+    },
+    {
+      "id": "P15.prob.rngNextMatchesPrediction",
+      "pass": true,
+      "detail": "got=4141526377 predicted=4141526377"
+    },
+    {
+      "id": "P15.prob.zeroSilent",
+      "pass": true,
+      "detail": "n=0"
+    },
+    {
+      "id": "P15.prob.hundredLoud",
+      "pass": true,
+      "detail": "n=32"
+    },
+    {
+      "id": "P15.prob.drawsOnlyAfterCond",
+      "pass": true,
+      "detail": "got=4141526377 predicted=4141526377"
+    },
+    {
+      "id": "P15.prob.seedVariation",
+      "pass": true,
+      "detail": "distinct patterns=8"
+    },
+    {
+      "id": "P16.pure.noMutation",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P16.pure.repeatEqual",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "P16.pure.rngPassthrough",
+      "pass": true,
+      "detail": "rngNext=305419896"
+    },
+    {
+      "id": "P17.guards.noThrow",
+      "pass": true,
+      "detail": "{\"empty1\":true,\"cap\":true,\"negClamp\":true}"
+    },
+    {
+      "id": "P18.tiling.sameStream",
+      "pass": true,
+      "detail": "merged=32 whole=32"
+    },
+    {
+      "id": "P18.crossChunk.slideOrder",
+      "pass": true,
+      "detail": "merged events=32"
+    },
+    {
+      "id": "P19.bpm140.stepDur",
+      "pass": true,
+      "detail": "on1=100.124285714"
+    },
+    {
+      "id": "P19.grid8t.stepDur",
+      "pass": true,
+      "detail": "on1=100.193333333"
+    },
+    {
+      "id": "P20.seal.pinnedShape",
+      "pass": true,
+      "detail": "keys=t,type,note,vel,track,step,flags"
+    },
+    {
+      "id": "L00.pins.version",
+      "pass": true,
+      "detail": "p4.0"
+    },
+    {
+      "id": "L00.pins.lookaheadWake",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L00.debugHandle.published",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L01.init.idempotent",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L01.playRefusedNoEngine",
+      "pass": true,
+      "detail": "play=false"
+    },
+    {
+      "id": "L01.nowNullWithoutEngine",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L02.setPattern.ok",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L02.play.ok",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L02.play.timerWake25",
+      "pass": true,
+      "detail": "ms=25 sets=1"
+    },
+    {
+      "id": "L02.play.replayRefused",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L02.stop.ok",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L02.stop.replayRefused",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L02.toggle.roundTrip",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L03.delivery.withinHalfWake",
+      "pass": true,
+      "detail": "Δ=0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050,0.0000,0.0050"
+    },
+    {
+      "id": "L03.delivery.meanAbsUnder8ms",
+      "pass": true,
+      "detail": "mean=2.500ms"
+    },
+    {
+      "id": "L03.delivery.noDriftBar8",
+      "pass": true,
+      "detail": "Δk0=0.000000 Δk16=0.000000"
+    },
+    {
+      "id": "L04.slide.busOrder",
+      "pass": true,
+      "detail": "on0,on4,off0,off4"
+    },
+    {
+      "id": "L04.slide.glideWindow",
+      "pass": true,
+      "detail": "[{\"what\":\"begin\",\"n\":1},{\"what\":\"end\",\"n\":3}]"
+    },
+    {
+      "id": "L05.dedupe.userHeldNeverReleased",
+      "pass": true,
+      "detail": "offs=0 extraOns=0 stillHeld=true"
+    },
+    {
+      "id": "L06.plock.loadAndStart",
+      "pass": true,
+      "detail": "{\"loads\":[{\"what\":\"load\",\"n\":0}],\"starts\":[{\"what\":\"start\",\"t\":100.05}]}"
+    },
+    {
+      "id": "L06.plock.boundaryOrderCycleMod",
+      "pass": true,
+      "detail": "n=19 head=0@100.050 1@100.175 2@100.300"
+    },
+    {
+      "id": "L06.plock.stopRestores",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L06.plock.beforeNotes",
+      "pass": true,
+      "detail": "plockAt=100.0000 noteAt=100.0500"
+    },
+    {
+      "id": "L07.fill.runtimeToggle",
+      "pass": true,
+      "detail": "before=0 after=3"
+    },
+    {
+      "id": "L08.trace.countMatchesBus",
+      "pass": true,
+      "detail": "traceΔ=293 busΔ=293"
+    },
+    {
+      "id": "L08.trace.bounded256Wraps",
+      "pass": true,
+      "detail": "filled=256 slot0=104.0500 slot200=103.1950"
+    },
+    {
+      "id": "L08.trace.entryShape",
+      "pass": true,
+      "detail": "{\"t\":100.83125,\"type\":\"on\",\"note\":\"c4\",\"step\":6,\"track\":0}"
+    },
+    {
+      "id": "L09.stall.noFlood",
+      "pass": true,
+      "detail": "delta=2"
+    },
+    {
+      "id": "L09.stall.resumes",
+      "pass": true,
+      "detail": "resumed=10"
+    },
+    {
+      "id": "L09.stall.positionSane",
+      "pass": true,
+      "detail": "step=12"
+    },
+    {
+      "id": "L10.position.stepAndT",
+      "pass": true,
+      "detail": "step=3 want=3"
+    },
+    {
+      "id": "L11.bpm.monotonicNoBackstep",
+      "pass": true,
+      "detail": "ons=17"
+    },
+    {
+      "id": "L11.bpm.newGridSpacing",
+      "pass": true,
+      "detail": "tails=0.1250,0.0750,0.1250,0.1000,0.1250,0.0750"
+    },
+    {
+      "id": "L12.stop.releasesHeld",
+      "pass": true,
+      "detail": "heldNow=c4 heldAfter= offs=3"
+    },
+    {
+      "id": "L13.off.zeroEvents",
+      "pass": true,
+      "detail": "delta=0"
+    },
+    {
+      "id": "L14.lazyBind.ensurePromise",
+      "pass": true,
+      "detail": "play=true now=500 ons=3"
+    },
+    {
+      "id": "L15.setPattern.liveSafe",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "id": "L15.setPattern.continues",
+      "pass": true,
+      "detail": "events=5"
+    }
+  ],
+  "evidence": {
+    "baselineSwing66": [
+      "100.000000 on c4 t0 s0",
+      "100.062500 off c4 t0 s0",
+      "100.145000 on c4 t0 s1",
+      "100.207500 off c4 t0 s1",
+      "100.250000 on c4 t0 s2",
+      "100.312500 off c4 t0 s2",
+      "100.395000 on c4 t0 s3",
+      "100.457500 off c4 t0 s3",
+      "100.500000 on c4 t0 s4",
+      "100.562500 off c4 t0 s4",
+      "100.645000 on c4 t0 s5",
+      "100.707500 off c4 t0 s5",
+      "100.750000 on c4 t0 s6",
+      "100.812500 off c4 t0 s6",
+      "100.895000 on c4 t0 s7",
+      "100.957500 off c4 t0 s7",
+      "101.000000 on c4 t0 s8",
+      "101.062500 off c4 t0 s8",
+      "101.145000 on c4 t0 s9",
+      "101.207500 off c4 t0 s9",
+      "101.250000 on c4 t0 s10",
+      "101.312500 off c4 t0 s10",
+      "101.395000 on c4 t0 s11",
+      "101.457500 off c4 t0 s11",
+      "101.500000 on c4 t0 s12",
+      "101.562500 off c4 t0 s12",
+      "101.645000 on c4 t0 s13",
+      "101.707500 off c4 t0 s13",
+      "101.750000 on c4 t0 s14",
+      "101.812500 off c4 t0 s14",
+      "101.895000 on c4 t0 s15",
+      "101.957500 off c4 t0 s15"
+    ],
+    "baselineStraight": [
+      "100.000000 on c4 t0 s0",
+      "100.062500 off c4 t0 s0",
+      "100.125000 on c4 t0 s1",
+      "100.187500 off c4 t0 s1",
+      "100.250000 on c4 t0 s2",
+      "100.312500 off c4 t0 s2",
+      "100.375000 on c4 t0 s3",
+      "100.437500 off c4 t0 s3",
+      "100.500000 on c4 t0 s4",
+      "100.562500 off c4 t0 s4",
+      "100.625000 on c4 t0 s5",
+      "100.687500 off c4 t0 s5",
+      "100.750000 on c4 t0 s6",
+      "100.812500 off c4 t0 s6",
+      "100.875000 on c4 t0 s7",
+      "100.937500 off c4 t0 s7",
+      "101.000000 on c4 t0 s8",
+      "101.062500 off c4 t0 s8",
+      "101.125000 on c4 t0 s9",
+      "101.187500 off c4 t0 s9",
+      "101.250000 on c4 t0 s10",
+      "101.312500 off c4 t0 s10",
+      "101.375000 on c4 t0 s11",
+      "101.437500 off c4 t0 s11",
+      "101.500000 on c4 t0 s12",
+      "101.562500 off c4 t0 s12",
+      "101.625000 on c4 t0 s13",
+      "101.687500 off c4 t0 s13",
+      "101.750000 on c4 t0 s14",
+      "101.812500 off c4 t0 s14",
+      "101.875000 on c4 t0 s15",
+      "101.937500 off c4 t0 s15"
+    ],
+    "ratchet": [
+      "100.000000 on c4 t0 s0",
+      "100.031250 off c4 t0 s0",
+      "100.031250 on c4 t0 s0",
+      "100.062500 off c4 t0 s0",
+      "100.062500 on c4 t0 s0",
+      "100.093750 off c4 t0 s0",
+      "100.093750 on c4 t0 s0",
+      "100.125000 off c4 t0 s0"
+    ],
+    "prob": {
+      "seed": 305419896,
+      "hits": "0,4,5,6,7,9,10,11,12,13,14",
+      "predicted": "0,4,5,6,7,9,10,11,12,13,14",
+      "rngNext": 4141526377
+    },
+    "liveDelivery": {
+      "deltasMs": [
+        "0.000",
+        "5.000",
+        "0.000",
+        "5.000",
+        "0.000",
+        "5.000",
+        "0.000",
+        "5.000",
+        "0.000",
+        "5.000",
+        "0.000",
+        "5.000",
+        "0.000",
+        "5.000",
+        "0.000",
+        "5.000"
+      ],
+      "meanMs": "2.500"
+    }
+  }
+}

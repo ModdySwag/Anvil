@@ -1,0 +1,63 @@
+[ok] 1. node --check passes on src/av_seq_capture.js
+[ok] 2. static laws: strict mode, no throw/document/localStorage/require, one namespace
+[ok] 3. bare: loads in a plain node vm context (no window, no stubs) with no throw
+[ok] 4. bare: state defaults — off, q100, track0, hooks off, zero counters, v p4.0
+[ok] 5. bare: arm modes accept/refuse; refusals leave state unchanged
+[ok] 6. bare: setQuantize / setTrack / hold — clamps, refuses, observable
+[ok] 7. bare: init/EnsureHooks refuse cleanly; direct hits no-throw and count misses
+[ok] 8. bare: contract API present (arity-safe calls)
+[ok] 9. bare: quantize kernel is pure (runs with no stubs at all)
+[ok] 10. kernel: exact grid hits — g(5)@S66, 2.0s
+[ok] 11. kernel: strength ladder at step 4 +8 ticks → micro 0/4/6/8
+[ok] 12. kernel: negative residual at step 7 −8 ticks → micro −8 / −2
+[ok] 13. kernel: 8t grid @90bpm swing50 — +6 ticks q60 → step 4 micro 2
+[ok] 14. kernel: swing-aware mapping flip — t=0.565 → step 4 @S66, step 5 @S50
+[ok] 15. kernel: tie resolves to the earlier step (t=0.4375 → step 3)
+[ok] 16. kernel: clamps + fallbacks — q250≡100, q−20≡0, garbage bpm/grid/values
+[ok] 17. kernel: negative t → step 0; determinism; integer micro
+[ok] 18. kernel: 64-step sweep — g(k) maps to k; +7 ticks @q0 → micro 7
+[ok] 19. hooks: EnsureHooks wraps funnel + both note directions; markers set; no window → event off
+[ok] 20. hooks: idempotent triple-ensure — exactly one capture layer (1 write per commit)
+[ok] 21. hooks: pre-marked stubs are trusted, not re-wrapped (identity preserved)
+[ok] 22. hooks: alien outer wrapper after install does not add a second capture layer
+[ok] 23. hooks: partial availability — funnel missing wraps later when it appears
+[ok] 24. window: event belt binds once; captures without avApplyParam; handle published
+[ok] 25. off: everything forwarded verbatim; zero writes; zero snap reads
+[ok] 26. off: arm→disarm cycle stays fully passthrough
+[ok] 27. step: fresh down writes the playhead step via avSeqSnap/avSeqLoad (fields pinned)
+[ok] 28. step: held repeat is not re-captured; forward still happens
+[ok] 29. step: re-record after note-up writes again
+[ok] 30. step: playhead advance writes the new step; old step intact
+[ok] 31. step: capture track selector (+clamp 63 → last track), len modulo 21→5
+[ok] 32. step: existing step fields preserved; micro resets to 0 on record
+[ok] 33. step: invalid note refused but forwarded; vel clamps 1.5→1, 0→0.05, none→0.9
+[ok] 34. step: core absent → forwarded, miss counted, never throws
+[ok] 35. step: avSeqLoad missing → no visible write (writes go through the core calls only)
+[ok] 36. live: q100 lands exactly on the grid
+[ok] 37. live: strength ladder through the full path — q100/50/25/0 → micro 0/4/6/8
+[ok] 38. live: swing-aware flip through the path — S66 → step 4, S50 → step 5
+[ok] 39. live: loop map — k=19 with track len 8 → step 3
+[ok] 40. live: 8t pattern drives the grid (90bpm, +6 ticks q60 → step 4 micro 2)
+[ok] 41. live: no clock (schedNow NaN, pos.t NaN) → refused, forwarded
+[ok] 42. param: armed commit writes the p-lock at the playhead; forwarded with ret
+[ok] 43. param: echo elision — same value at same step writes nothing, still forwarded
+[ok] 44. param: value change + step advance write into the lane map (string keys)
+[ok] 45. param: lane values follow the shipped numeric law (bool→1|0, '0.25'→0.25, 'sat' refused)
+[ok] 46. param: refusals — NaN, empty and non-string paths: no writes, forwarded
+[ok] 47. param: meta noCapture / plock / src=plock / capture skipped; still forwarded
+[ok] 48. param: hold gates capture; released resumes
+[ok] 49. param: playhead unavailable → last known step used
+[ok] 50. param: existing 'lin' lane reused, not duplicated or interp-clobbered
+[ok] 51. param: live arm captures too (param capture is mode-independent)
+[ok] 52. index map: playhead 80 → note into track loop (80%16=0), lane key 80%64='16'
+[ok] 53. forward: arity, receiver, return verbatim (notes + funnel)
+[ok] 54. forward: original exception propagates untouched (transparency)
+[ok] 55. forward: capture-side failures (snap/load throw) never affect the forwarded call
+[ok] 56. forward: no parallel note delivery — capture writes emit no notes/params
+[ok] 57. state: fresh copies each call; playhead tracks writes; counters coherent
+
+capture_harness — src/av_seq_capture.js
+  node:      v26.7.0
+  src sha256:e75faa06247dd11835e9ed596ba3a78af5558eb3799e37747aa87234aa34fa73
+  tests:     57  passed: 57  failed: 0
+  RESULT: ALL GREEN

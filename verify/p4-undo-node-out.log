@@ -1,0 +1,116 @@
+PASS syntax.node-check  — exit 0
+PASS noapp.init_false  — false without window
+PASS noapp.ensurewrap_false  — no funnel to wrap
+PASS noapp.push_false  — all domains refuse
+PASS noapp.push_garbage  — never throws
+PASS noapp.undo_redo_false  — empty stacks
+PASS noapp.flush_false
+PASS noapp.astore_false  — no domains online
+PASS noapp.status  — {"depth":0,"redo":0,"label":""}
+PASS noapp.status_keys  — exactly {depth,redo,label}
+PASS noapp.consts  — version/cap/quiet/domains pins
+PASS wrap.init_false_noWindow  — false without window
+PASS wrap.installed_anyway  — funnel wrap still installed (belt)
+PASS wrap.idempotent_forward_once  — 2 commits -> exactly 2 forward calls after 3 inits: 2
+PASS wrap.marker_kept
+PASS init.true_withWindow
+PASS init.reinit_true
+PASS init.binds_once  — 1 keydown + 1 av-param binding
+PASS init.status_zero
+PASS init.published  — window.__avUndo published
+PASS burst.armed  — quiet timer armed @300ms
+PASS burst.flush_true  — manual flush records the burst
+PASS burst.timer_cleared  — flush cancels the quiet timer
+PASS burst.entry  — {"depth":1,"redo":0,"label":"filter.cutoff"}
+PASS burst.entry_is_json_strings  — bounded memory = JSON strings
+PASS burst.mirror_now
+PASS burst.engine_heard  — [["filter.cutoff",400]]
+PASS undo.true
+PASS undo.exact_value  — exact restore: 900
+PASS undo.engine_heard  — restore rides the funnel
+PASS undo.no_self_tap  — restore arms no new burst
+PASS undo.status  — {"depth":0,"redo":1,"label":""}
+PASS redo.true
+PASS redo.exact_value
+PASS redo.status  — {"depth":1,"redo":0,"label":"filter.cutoff"}
+PASS redo.no_self_tap  — no zombie timer
+PASS undo_empty_false  — second undo on empty stack false
+PASS redo_empty_false  — redo works then empties
+PASS coalesce.one_pending  — re-armed, still one burst
+PASS coalesce.flush  — 2 commits -> 1 entry
+PASS coalesce.label  — filter.cutoff +1
+PASS coalesce.undo_both  — both restored exact
+PASS coalesce.redo_both
+PASS coalesce.same_path_label  — filter.reso
+PASS coalesce.same_path_values  — back to pre-burst 0.9
+PASS coalesce.same_path_redo  — forward to newest 0.6
+PASS redo_cleared.premise
+PASS redo_cleared.on_push  — {"depth":3,"redo":0,"label":"filter.cutoff"}
+PASS redo_cleared.premise2  — {"depth":2,"redo":1,"label":"filter.cutoff +1"}
+PASS redo_cleared.unflushed_false  — pending new change flushed -> redo refused
+PASS redo_cleared.unflushed_state  — {"depth":3,"redo":0,"label":"filter.cutoff"}
+PASS cap.depth64  — 70 pushes -> depth 64
+PASS cap.bytes_positive  — bytes tracked: 1081
+PASS cap.undo_count64  — 64 undos drained
+PASS cap.oldest_evicted  — back to the kept-oldest `before` (6), not 0: v=6
+PASS cap.beyond_false  — no further undo
+PASS cap.redo_full  — redo holds 64
+PASS cap.redo_once  — redo lands on 7
+PASS budget.bytes_bounded  — bytes 3000025 <= 4194304
+PASS budget.depth_capped  — depth 1 (old big entries evicted)
+PASS budget.undo_still_works  — kept entries stay usable
+PASS timer.rearm_single
+PASS timer.fire_flushes  — {"depth":1,"redo":0,"label":"a"}
+PASS timer.no_zombie  — cancel survives
+PASS realtimer.auto_flush  — quiet fired for real (~380ms wait)
+PASS realtimer.no_double  — no zombie double-push after manual flush
+PASS ab.store  — A stored
+PASS ab.premise  — {"depth":2,"redo":0,"label":"pat"}
+PASS ab.recall
+PASS ab.params_back  — params recalled exact
+PASS ab.seq_back  — seq recalled
+PASS ab.depth_unchanged  — recall is not an entry
+PASS ab.baseline_resync  — next push diffs from the recalled state
+PASS ab.recall_cancels_pending  — open burst cancelled by recall
+PASS seq.push
+PASS seq.undo_exact  — restores P1, no aliasing
+PASS seq.entry_strings  — entry snapshots are JSON strings
+PASS seq.redo_exact  — redo P2, never P3
+PASS seq.refused_restore  — load false -> undo false, entry kept
+PASS seq.throwing_restore  — load throw -> false, no throw
+PASS seq.recover  — restore path recovering
+PASS seq.push_nochange_false  — no change -> no entry
+PASS plock.push
+PASS plock.undo_merges  — plocks restored, other fields untouched
+PASS plock.redo  — plocks forward again
+PASS plockfn.push  — avPlockSnap preferred
+PASS plockfn.undo  — avPlockLoad used with stored container
+PASS keys.bound_once  — exactly one capture-phase keydown binding
+PASS keys.premise
+PASS keys.text_input_ignored  — text field focused -> undo did NOT run
+PASS keys.range_allowed  — range input is not a text field -> Ctrl+Z ran
+PASS keys.redo  — Ctrl+Shift+Z redid
+PASS keys.meta_superset  — Cmd+Z works (documented superset)
+PASS keys.no_ctrl_ignored
+PASS keys.other_key_ignored  — Ctrl+Y not bound (pinned: Ctrl+Z / Ctrl+Shift+Z only)
+PASS keys.redo2
+PASS keys.alt_ignored  — Ctrl+Alt+Z left to the browser
+PASS keys.target_textarea_ignored
+PASS keys.contenteditable_ignored  — closest() belt: ancestor text surface
+PASS keys.defaultPrevented_ignored  — someone else handled it
+PASS keys.pd_on_run  — ran -> preventDefault
+PASS keys.empty_stack_no_pd  — nothing to undo -> default left alone
+PASS belt.init  — init true (no funnel needed)
+PASS belt.tap  — event tap opens the burst
+PASS belt.undo_direct_mirror  — restore without funnel writes the mirror
+PASS observable.shape  — {"version":"p4.0","depth":1,"redo":0,"label":"a","last":"push:params","ab":false,"cap":64,"bytes":15,"domains":["params","seq","plock"]}
+PASS observable.after_undo  — "undo:params"
+PASS observable.after_astore  — ab flag
+PASS plainload.no_throw  — loaded in a bare node realm
+PASS plainload.api_global  — classic-script globals + lexical const
+PASS plainload.guarded_noop  — no window, no funnel: guarded no-op
+PASS plainload.no_dom_reach  — nothing needed a DOM to load
+PASS plainload.namespace_pure  — 47 top-level declarations (avRedo = pinned name), stray: []
+PASS collision.none  — 47 top-level names vs 31 src files
+
+114 pass · 0 fail

@@ -1,0 +1,60 @@
+PASS  load.bare  — evaluates in a bare context
+PASS  bare.initFalse  — false without a document, no throw
+PASS  bare.syncFalse  — false without a document, no throw
+PASS  bare.snapNoThrow  — snap is a plain object without DOM
+PASS  bare.classes  — n=39
+PASS  bare.exportFallback  — local snapshot JSON without the core
+PASS  bare.importRoundtrip  — export -> import -> export identical (local model, no host)
+PASS  bare.hostlessEdits  — edit rides the local snapshot copy without a host
+PASS  bare.guardsNoThrow  — hostile args refuse without throwing
+PASS  dom.load  — evaluates with the DOM stubs
+PASS  exports.handle  — window.__avSeqUi published (p4.0)
+PASS  exports.fns  — init/sync/classes are functions
+PASS  init.true  — mounts into the stub host
+PASS  init.knobSeeded  — avParams.bpm seeded from avState (120)
+PASS  mount.grid  — .av-seq-grid present
+PASS  mount.rows4  — 4 rows
+PASS  mount.cells64  — cells=64 (4×16)
+PASS  mount.cellPins  — every cell carries data-track/data-step
+PASS  mount.knobBound  — BPM knob via av-knob idiom, avKnobBind bound it
+PASS  mount.wired  — host wired marker
+PASS  mount.controls  — transport + pos + io present
+PASS  mount.inspector  — all inspector fields present
+PASS  mount.song  — song/scene block present
+PASS  click.play  — play click -> avSeqPlay x1 + button on
+PASS  playhead.cur  — cur=4 · pos="BAR 1 · 06/16"
+PASS  click.stop  — stop click -> avSeqStop x1, play button cleared
+PASS  cell.toggleOn  — clicked cell wrote via avSeqLoad + avSeqSetPattern
+PASS  cell.classes  — .on + .sel painted
+PASS  cell.undoPush  — avUndoPush('seq') called before the load
+PASS  insp.at  — inspector follows the selection
+PASS  cell.toggleOff  — second click toggles off
+PASS  insp.change  — note/vel/prob committed through the snapshot path
+PASS  insp.readouts  — selection kept through edits
+PASS  track.mute  — row mute toggled via the model path
+PASS  track.unmute  — mute toggles back
+PASS  rec.cycle  — off -> step -> live -> off through avSeqCaptureArm
+PASS  io.export  — export wrote the pinned JSON into #av-seq-io
+PASS  io.import  — import restored the exported pattern (deep-equal)
+PASS  absentHost.false  — init -> false without the host, no throw
+PASS  remount.true  — re-attached host re-mounts
+PASS  remount.grid  — grid rebuilt
+PASS  remount.singleBinding  — delegated listener not doubled (play x1)
+PASS  remount.wired  — wired marker survived the re-mount
+PASS  sync.lenRebuild  — cells=12 after len 16 -> 12
+PASS  sync.lenBack  — back to 16
+PASS  chains.add  — chain entry appended via avSeqChainsLoad
+PASS  chains.clear  — chain list cleared
+PASS  scene.capture  — scene captured + select repainted
+PASS  scene.recall  — recall rides avSeqSceneRecall
+PASS  snap.observable  — rows=4 cells=64 wired=true
+PASS  init.noKnobParts  — false without avKnobHTML/Bind
+PASS  init.noMirror  — false without the avParams mirror
+PASS  init.partsOk  — mounts once host + knob parts + mirror exist
+PASS  fallback.mount  — mounts without any avSeq* core functions
+PASS  fallback.grid  — grid still 4×16
+PASS  fallback.edit  — cell click edits the local snapshot copy
+PASS  fallback.importRefuses  — garbage import refuses, no throw
+PASS  fallback.import  — import replays JSON through the local model
+
+58 passed, 0 failed

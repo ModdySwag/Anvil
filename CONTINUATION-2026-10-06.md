@@ -571,3 +571,48 @@ Resume phrase: **"continue anvil"**.
   perf records (`stress-p3-run1/2.log`, `bench-v6-p3-full.*`) are its baseline. Resume phrase:
   **"continue anvil"**.
 
+
+### P4 children LANDED — 2026-10-07 (all 7 green; integration pending)
+
+- **`av_seq_core.js`** (A, 794 lines) — model/serialise/generators; harness **146/146**
+  (`verify/p4-core-node-out.*`); default export 29,694 B stable; LS keys pinned.
+- **`av_seq_sched.js`** (B, 811) — planner + live transport; harness **79/79**; exact stream for
+  16 steps @120/S66/gate .5 delivered (odd shift +0.020000 = stepDur×0.16 exact); live delivery
+  mean |Δ| 2.5 ms + ZERO drift; slide order holds; fill toggle on `__avSeq.setFill(on)`; stall
+  re-anchor; guarded hooks `avPlockApplyAt(step, tSec)` / `avPlockTransportStart/Stop/Load` and
+  `avSeqAcidSlideBegin/End/Abort` — all already wired to the siblings' names.
+- **`av_seq_ui.js` + `verify/cdp_seq.mjs`** (C, 925 + 810) — card + 28-check rig (write-only,
+  EXPECT_SHA null); static harness **58/58**; 39 classes + full ID inventory in its report;
+  timing witness switches engine.kind→drum (kick c2=36) + restores; BPM knob path `"bpm"`.
+- **`av_seq_acid.js`** (D, 379) — accent/slide/oct lane + mapping table vs av_acid.js; harness
+  **55/55**; cap sequence 0.500·0.705·0.788·0.823 reproduces the P2 log; slide window refcounted.
+- **`av_plock.js`** (E, 989) — momentary locks + restore + lin @64 Hz; harness **158/158**;
+  internal commits carry meta {from:"plock", noCapture, plock, src:"plock"}.
+- **`av_undo.js`** (F, 608) — bounded 64 + A/B; harness **114/114**; push-after-change (first push
+  per domain = baseline).
+- **`av_seq_capture.js`** (G, 525) — step/live capture; harness **57/57**; wraps forward untouched;
+  suppression keys noCapture/plock/src:"plock" + Hold bracket.
+- Evidence committed: `verify/p4-*-node-out.{log,json}` · transcripts
+  `cache\delegation\live\deleg_663f07ab	ask-{0..6}.log` · reports in `cache/scratch/p4/<name>/`.
+
+**Integration flags to resolve in the parent pass (§6):**
+1. **Undo call-order seam:** C's report documents "UI calls `avUndoPush("seq", label)` BEFORE the
+   load (restore-point semantics)"; F implements push-AFTER-change (first push = baseline) and its
+   report says C/G call AFTER commits. Read both call sites; align (fix whichever differs so undo
+   restores the pre-edit state); the cdp_seq undo check is the gate.
+2. **E↔G suppression cross-check:** verify G's keys (noCapture / plock / src:"plock") match E's
+   meta exactly on BOTH commit paths (funnel + 'av-param' event).
+3. **F params tap vs plock playback:** consider skipping params snapshots when meta.from==="plock"
+   (avoid params bursts during play); cheap guard if warranted.
+4. **Acid accent entry:** av_acid's accent entry is velocity-thresholded `>= 0.8` INCLUSIVE and core
+   default vel = 0.8 → default steps enter the accent path. D left the engine un-patched (P2 law).
+   Decide: keep + document, or map non-accent acid gains below 0.8 in `avSeqAcidResolve`.
+5. **Fill control:** B exposes `__avSeq.setFill(on)` + `snap.fill`; the UI has no fill control yet —
+   follow-up (not gate-blocking).
+6. Standard: build.py parts (core→sched→plock→capture→undo→acid→ui after av_mod, before av_synth) ·
+   app_core boot (avSeqInit / avSeqUiInit / avUndoInit AFTER cards mount / avSeqCaptureInit;
+   E's init per its report) + the `"bpm"` branch in avApplyParam (clamp 20..300 + fx.delay.bpm
+   mirror) · body `#av-seq` card + `#av-seq-host` · styles (C 39 classes + D 2 + E's returned list)
+   · smoke additions · rebuild → repin ALL suites (midi/sample/rec/fx + cdp_seq) → full battery →
+   cdp_seq rig → PERF GATE (quiet) → commits + addendum 17.
+

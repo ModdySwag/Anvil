@@ -1,0 +1,297 @@
+{
+  "pass": 58,
+  "fail": 0,
+  "total": 58,
+  "checks": [
+    {
+      "name": "load.bare",
+      "ok": true,
+      "info": "evaluates in a bare context"
+    },
+    {
+      "name": "bare.initFalse",
+      "ok": true,
+      "info": "false without a document, no throw"
+    },
+    {
+      "name": "bare.syncFalse",
+      "ok": true,
+      "info": "false without a document, no throw"
+    },
+    {
+      "name": "bare.snapNoThrow",
+      "ok": true,
+      "info": "snap is a plain object without DOM"
+    },
+    {
+      "name": "bare.classes",
+      "ok": true,
+      "info": "n=39"
+    },
+    {
+      "name": "bare.exportFallback",
+      "ok": true,
+      "info": "local snapshot JSON without the core"
+    },
+    {
+      "name": "bare.importRoundtrip",
+      "ok": true,
+      "info": "export -> import -> export identical (local model, no host)"
+    },
+    {
+      "name": "bare.hostlessEdits",
+      "ok": true,
+      "info": "edit rides the local snapshot copy without a host"
+    },
+    {
+      "name": "bare.guardsNoThrow",
+      "ok": true,
+      "info": "hostile args refuse without throwing"
+    },
+    {
+      "name": "dom.load",
+      "ok": true,
+      "info": "evaluates with the DOM stubs"
+    },
+    {
+      "name": "exports.handle",
+      "ok": true,
+      "info": "window.__avSeqUi published (p4.0)"
+    },
+    {
+      "name": "exports.fns",
+      "ok": true,
+      "info": "init/sync/classes are functions"
+    },
+    {
+      "name": "init.true",
+      "ok": true,
+      "info": "mounts into the stub host"
+    },
+    {
+      "name": "init.knobSeeded",
+      "ok": true,
+      "info": "avParams.bpm seeded from avState (120)"
+    },
+    {
+      "name": "mount.grid",
+      "ok": true,
+      "info": ".av-seq-grid present"
+    },
+    {
+      "name": "mount.rows4",
+      "ok": true,
+      "info": "4 rows"
+    },
+    {
+      "name": "mount.cells64",
+      "ok": true,
+      "info": "cells=64 (4×16)"
+    },
+    {
+      "name": "mount.cellPins",
+      "ok": true,
+      "info": "every cell carries data-track/data-step"
+    },
+    {
+      "name": "mount.knobBound",
+      "ok": true,
+      "info": "BPM knob via av-knob idiom, avKnobBind bound it"
+    },
+    {
+      "name": "mount.wired",
+      "ok": true,
+      "info": "host wired marker"
+    },
+    {
+      "name": "mount.controls",
+      "ok": true,
+      "info": "transport + pos + io present"
+    },
+    {
+      "name": "mount.inspector",
+      "ok": true,
+      "info": "all inspector fields present"
+    },
+    {
+      "name": "mount.song",
+      "ok": true,
+      "info": "song/scene block present"
+    },
+    {
+      "name": "click.play",
+      "ok": true,
+      "info": "play click -> avSeqPlay x1 + button on"
+    },
+    {
+      "name": "playhead.cur",
+      "ok": true,
+      "info": "cur=4 · pos=\"BAR 1 · 06/16\""
+    },
+    {
+      "name": "click.stop",
+      "ok": true,
+      "info": "stop click -> avSeqStop x1, play button cleared"
+    },
+    {
+      "name": "cell.toggleOn",
+      "ok": true,
+      "info": "clicked cell wrote via avSeqLoad + avSeqSetPattern"
+    },
+    {
+      "name": "cell.classes",
+      "ok": true,
+      "info": ".on + .sel painted"
+    },
+    {
+      "name": "cell.undoPush",
+      "ok": true,
+      "info": "avUndoPush('seq') called before the load"
+    },
+    {
+      "name": "insp.at",
+      "ok": true,
+      "info": "inspector follows the selection"
+    },
+    {
+      "name": "cell.toggleOff",
+      "ok": true,
+      "info": "second click toggles off"
+    },
+    {
+      "name": "insp.change",
+      "ok": true,
+      "info": "note/vel/prob committed through the snapshot path"
+    },
+    {
+      "name": "insp.readouts",
+      "ok": true,
+      "info": "selection kept through edits"
+    },
+    {
+      "name": "track.mute",
+      "ok": true,
+      "info": "row mute toggled via the model path"
+    },
+    {
+      "name": "track.unmute",
+      "ok": true,
+      "info": "mute toggles back"
+    },
+    {
+      "name": "rec.cycle",
+      "ok": true,
+      "info": "off -> step -> live -> off through avSeqCaptureArm"
+    },
+    {
+      "name": "io.export",
+      "ok": true,
+      "info": "export wrote the pinned JSON into #av-seq-io"
+    },
+    {
+      "name": "io.import",
+      "ok": true,
+      "info": "import restored the exported pattern (deep-equal)"
+    },
+    {
+      "name": "absentHost.false",
+      "ok": true,
+      "info": "init -> false without the host, no throw"
+    },
+    {
+      "name": "remount.true",
+      "ok": true,
+      "info": "re-attached host re-mounts"
+    },
+    {
+      "name": "remount.grid",
+      "ok": true,
+      "info": "grid rebuilt"
+    },
+    {
+      "name": "remount.singleBinding",
+      "ok": true,
+      "info": "delegated listener not doubled (play x1)"
+    },
+    {
+      "name": "remount.wired",
+      "ok": true,
+      "info": "wired marker survived the re-mount"
+    },
+    {
+      "name": "sync.lenRebuild",
+      "ok": true,
+      "info": "cells=12 after len 16 -> 12"
+    },
+    {
+      "name": "sync.lenBack",
+      "ok": true,
+      "info": "back to 16"
+    },
+    {
+      "name": "chains.add",
+      "ok": true,
+      "info": "chain entry appended via avSeqChainsLoad"
+    },
+    {
+      "name": "chains.clear",
+      "ok": true,
+      "info": "chain list cleared"
+    },
+    {
+      "name": "scene.capture",
+      "ok": true,
+      "info": "scene captured + select repainted"
+    },
+    {
+      "name": "scene.recall",
+      "ok": true,
+      "info": "recall rides avSeqSceneRecall"
+    },
+    {
+      "name": "snap.observable",
+      "ok": true,
+      "info": "rows=4 cells=64 wired=true"
+    },
+    {
+      "name": "init.noKnobParts",
+      "ok": true,
+      "info": "false without avKnobHTML/Bind"
+    },
+    {
+      "name": "init.noMirror",
+      "ok": true,
+      "info": "false without the avParams mirror"
+    },
+    {
+      "name": "init.partsOk",
+      "ok": true,
+      "info": "mounts once host + knob parts + mirror exist"
+    },
+    {
+      "name": "fallback.mount",
+      "ok": true,
+      "info": "mounts without any avSeq* core functions"
+    },
+    {
+      "name": "fallback.grid",
+      "ok": true,
+      "info": "grid still 4×16"
+    },
+    {
+      "name": "fallback.edit",
+      "ok": true,
+      "info": "cell click edits the local snapshot copy"
+    },
+    {
+      "name": "fallback.importRefuses",
+      "ok": true,
+      "info": "garbage import refuses, no throw"
+    },
+    {
+      "name": "fallback.import",
+      "ok": true,
+      "info": "import replays JSON through the local model"
+    }
+  ]
+}

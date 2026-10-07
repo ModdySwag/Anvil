@@ -1,0 +1,475 @@
+{
+  "file": "src/av_seq_acid.js",
+  "version": "p4.0",
+  "harness": "acid_node.mjs",
+  "checks": 55,
+  "pass": 55,
+  "fail": 0,
+  "rows": [
+    {
+      "id": "S0. node --check src/av_seq_acid.js",
+      "ok": true,
+      "detail": "exit 0"
+    },
+    {
+      "id": "S1. \"use strict\" directive present",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "id": "S2. ONE namespace: every top-level name is avSeqAcid* / AV_SEQ_ACID_*",
+      "ok": true,
+      "detail": "36 top-level names; offenders=none"
+    },
+    {
+      "id": "S3. no DOM at load: zero `document` reach-ins",
+      "ok": true,
+      "detail": "document refs=0"
+    },
+    {
+      "id": "S4. every `window.` reach is preceded by a typeof-window guard (lookbehind)",
+      "ok": true,
+      "detail": "4 window. reaches, unguarded=0"
+    },
+    {
+      "id": "S5. loads bare in plain node (no DOM/globals at load)",
+      "ok": true,
+      "detail": "exports=13"
+    },
+    {
+      "id": "L1. acid kind -> truthy descriptor (active, cols accent/slide/oct)",
+      "ok": true,
+      "detail": "active=true cols=accent,slide,oct"
+    },
+    {
+      "id": "L2. pinned UI hook classes exposed",
+      "ok": true,
+      "detail": "av-seq-acid-cols / av-seq-acid-cell"
+    },
+    {
+      "id": "L3. probe false for kind va / bogus / default(no params)",
+      "ok": true,
+      "detail": "va=false bogus=false bare=false"
+    },
+    {
+      "id": "L4. override arg: \"ACID\" case-insensitive truthy",
+      "ok": true,
+      "detail": "upper-case accepted"
+    },
+    {
+      "id": "L5. column inventory: accent ACC toggle / slide SLD toggle / oct OCT cycle -2..2",
+      "ok": true,
+      "detail": "[{\"key\":\"accent\",\"label\":\"ACC\",\"kind\":\"toggle\",\"def\":0},{\"key\":\"slide\",\"label\":\"SLD\",\"kind\":\"toggle\",\"def\":0},{\"key\":\"oct\",\"label\":\"OCT\",\"kind\":\"cycle\",\"def\":0,\"min\":-2,\"max\":2}]"
+    },
+    {
+      "id": "L6. inventory is a fresh copy per call",
+      "ok": true,
+      "detail": "mutation isolated"
+    },
+    {
+      "id": "L7. classes list = [cols, cell]",
+      "ok": true,
+      "detail": "av-seq-acid-cols,av-seq-acid-cell"
+    },
+    {
+      "id": "L8. version p4.0 + glide window value 0.06 (303 stock) + acc entry vel 0.8",
+      "ok": true,
+      "detail": "p4.0 / 0.06 / 0.8"
+    },
+    {
+      "id": "M1. accent=1 + low vel -> gain 1.0 (accent pin) -> acc=1",
+      "ok": true,
+      "detail": "{\"gain\":1,\"acc\":1,\"slide\":0,\"oct\":0,\"octShift\":0}"
+    },
+    {
+      "id": "M2. accent=true + vel 1.0 -> gain 1.0 -> acc=1",
+      "ok": true,
+      "detail": "{\"gain\":1,\"acc\":1,\"slide\":0,\"oct\":0,\"octShift\":0}"
+    },
+    {
+      "id": "M3. accent=0 + vel 0.80 -> gain 0.80 -> acc=1 (threshold is >= 0.8; default vel sits ON it)",
+      "ok": true,
+      "detail": "{\"gain\":0.8,\"acc\":1,\"slide\":0,\"oct\":0,\"octShift\":0}"
+    },
+    {
+      "id": "M4. accent=0 + vel 0.79 -> gain 0.79 -> acc=0 (plain path)",
+      "ok": true,
+      "detail": "{\"gain\":0.79,\"acc\":0,\"slide\":0,\"oct\":0,\"octShift\":0}"
+    },
+    {
+      "id": "M5. empty step -> gain 0.80 (core default) -> acc=1 (flagged nuance)",
+      "ok": true,
+      "detail": "{\"gain\":0.8,\"acc\":1,\"slide\":0,\"oct\":0,\"octShift\":0}"
+    },
+    {
+      "id": "M6. accent=1 slide=1 oct=-1 -> gain 1.0, slide 1, octShift -12",
+      "ok": true,
+      "detail": "{\"gain\":1,\"acc\":1,\"slide\":1,\"oct\":-1,\"octShift\":-12}"
+    },
+    {
+      "id": "M7. oct=1 -> octShift +12 (planner applies)",
+      "ok": true,
+      "detail": "{\"gain\":0.8,\"acc\":1,\"slide\":0,\"oct\":1,\"octShift\":12}"
+    },
+    {
+      "id": "M8. oct=2 -> octShift +24",
+      "ok": true,
+      "detail": "{\"gain\":0.8,\"acc\":1,\"slide\":0,\"oct\":2,\"octShift\":24}"
+    },
+    {
+      "id": "M9. oct=-2 -> octShift -24",
+      "ok": true,
+      "detail": "{\"gain\":0.8,\"acc\":1,\"slide\":0,\"oct\":-2,\"octShift\":-24}"
+    },
+    {
+      "id": "M10. validation refusals: resolve/validate reject every malformed step",
+      "ok": true,
+      "detail": "20 cases refused"
+    },
+    {
+      "id": "M11. validate accepts conforming steps (0/1, booleans, oct -2..2, vel .05..1)",
+      "ok": true,
+      "detail": "3 accepted"
+    },
+    {
+      "id": "M12. colValue: accent/slide 0|1|true|false; oct integer -2..2; unknown + strings refused",
+      "ok": true,
+      "detail": "checked"
+    },
+    {
+      "id": "M13. cycleCol: accent 0->1->0; slide true->0; oct clamps at +-2; dir -1 steps down",
+      "ok": true,
+      "detail": "checked"
+    },
+    {
+      "id": "M14. octShift: 0->0, +-1 -> +-12, +-2 -> +-24; fractional/out-of-range refused",
+      "ok": true,
+      "detail": "checked"
+    },
+    {
+      "id": "M15. accEnters mirrors av_acid.js L187: 1.0->1, 0.8->1, 0.7999->0; garbage + strings -> false",
+      "ok": true,
+      "detail": "checked"
+    },
+    {
+      "id": "D1. emitted gain 1.0 -> AVACID acc entered: cap 0->0.5, accAmt 0.600, ampBoost 1.900",
+      "ok": true,
+      "detail": "cap=0.500 accAmt=0.600 ampBoost=1.900"
+    },
+    {
+      "id": "D2. accent fast attack (0.0004 s) + forced accentDecay MEG (0.2 s)",
+      "ok": true,
+      "detail": "vegAstep=0.052083 megDc=0.99952095"
+    },
+    {
+      "id": "D3. vel 0.79 -> plain: accAmt 0, ampBoost 1, cap stays 0, slow soft attack",
+      "ok": true,
+      "detail": "accAmt=0 cap=0.000 vegAstep=0.006944"
+    },
+    {
+      "id": "D4. boundary vel 0.80 -> acc==1 (inclusive >= 0.8; lane predicate matches engine)",
+      "ok": true,
+      "detail": "accAmt=0.600"
+    },
+    {
+      "id": "D5. cap charge law reproduces the P2 T3 log sequence 0.500 · 0.705 · 0.788 · 0.823",
+      "ok": true,
+      "detail": "0.500 · 0.705 · 0.788 · 0.823  (matches verify/p2-acid-node-out.log)"
+    },
+    {
+      "id": "D6. 4 accents rise STRICTLY (accAmt + ampBoost) — same direction as the P2 measured depth 0.273<0.310<0.316<0.342",
+      "ok": true,
+      "detail": "accAmt 0.600 · 0.747 · 0.808 · 0.832  ·  ampBoost 1.900 · 2.121 · 2.212 · 2.249"
+    },
+    {
+      "id": "D7. MEG decay forced on accents regardless of the decay knob (acc 0.2 s vs plain 2.0 s)",
+      "ok": true,
+      "detail": "acc megDc=0.99952095 plain megDc=0.99995208"
+    },
+    {
+      "id": "D8. acid.accent knob scales accAmt (0.3 -> 0.300 at first accent)",
+      "ok": true,
+      "detail": "accAmt=0.300"
+    },
+    {
+      "id": "W1. begin refused when lane inactive (kind va)",
+      "ok": true,
+      "detail": "va: no calls"
+    },
+    {
+      "id": "W2. begin refused with no sink at all (bare sandbox)",
+      "ok": true,
+      "detail": "bare refused"
+    },
+    {
+      "id": "W3. state before any pair: armed=false depth=0",
+      "ok": true,
+      "detail": "{\"armed\":false,\"depth\":0}"
+    },
+    {
+      "id": "W4. begin: voice.glide := 0.06 via avApplyParam (meta from=seq-acid, slide=true)",
+      "ok": true,
+      "detail": "[\"voice.glide\",0.06,{\"from\":\"seq-acid\",\"slide\":true,\"label\":\"pair@step5\"}]"
+    },
+    {
+      "id": "W5. mirror holds the window value; state tracks prior 0.3",
+      "ok": true,
+      "detail": "glide=0.06 prior=0.3"
+    },
+    {
+      "id": "W6. refcount: second begin does NOT re-set glide (1 funnel call so far)",
+      "ok": true,
+      "detail": "depth=2 calls=1"
+    },
+    {
+      "id": "W7. first end: still armed for the other pair (no restore yet)",
+      "ok": true,
+      "detail": "depth=1"
+    },
+    {
+      "id": "W8. last end: restore the captured prior 0.3 via the funnel (meta restore=true)",
+      "ok": true,
+      "detail": "[\"voice.glide\",0.3,{\"from\":\"seq-acid\",\"slide\":false,\"restore\":true}]"
+    },
+    {
+      "id": "W9. end with depth 0 refuses (false)",
+      "ok": true,
+      "detail": "refused"
+    },
+    {
+      "id": "W10. abort mid-pair: restores prior immediately, resets depth",
+      "ok": true,
+      "detail": "restored + reset"
+    },
+    {
+      "id": "W11. abort with nothing armed refuses (false)",
+      "ok": true,
+      "detail": "refused"
+    },
+    {
+      "id": "W12. prior default = 0 when the mirror never held voice.glide (documented)",
+      "ok": true,
+      "detail": "set 0.06 -> restored 0"
+    },
+    {
+      "id": "W13. kind flips mid-pair: end() still restores (a set glide is never stranded)",
+      "ok": true,
+      "detail": "restored=0.4"
+    },
+    {
+      "id": "W14. funnel that returns false: mirror write still arms/restores consistently",
+      "ok": true,
+      "detail": "calls=2 mirror=0.25"
+    },
+    {
+      "id": "W15. throwing funnel: caught (never throws out), mirror stays consistent",
+      "ok": true,
+      "detail": "begin=true end=true"
+    },
+    {
+      "id": "W16. no-funnel fallback: 'av-param' CustomEvent fired on set and restore (avKnobCommit shape)",
+      "ok": true,
+      "detail": "events=1->2"
+    },
+    {
+      "id": "X1. 832 garbage calls across 13 exports: zero throws",
+      "ok": true,
+      "detail": "thrown=0"
+    },
+    {
+      "id": "X2. slide state observable shape (bare): armed/depth/value/path",
+      "ok": true,
+      "detail": "{\"armed\":false,\"value\":0.06,\"path\":\"voice.glide\"}"
+    }
+  ],
+  "mapping": {
+    "resolveRows": [
+      {
+        "step": "{\"accent\":1,\"vel\":0.2}",
+        "resolved": {
+          "gain": 1,
+          "acc": 1,
+          "slide": 0,
+          "oct": 0,
+          "octShift": 0
+        },
+        "expect": {
+          "gain": 1,
+          "acc": 1,
+          "slide": 0,
+          "octShift": 0
+        }
+      },
+      {
+        "step": "{\"accent\":true,\"vel\":1}",
+        "resolved": {
+          "gain": 1,
+          "acc": 1,
+          "slide": 0,
+          "oct": 0,
+          "octShift": 0
+        },
+        "expect": {
+          "gain": 1,
+          "acc": 1,
+          "slide": 0,
+          "octShift": 0
+        }
+      },
+      {
+        "step": "{\"accent\":0,\"vel\":0.8}",
+        "resolved": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "oct": 0,
+          "octShift": 0
+        },
+        "expect": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "octShift": 0
+        }
+      },
+      {
+        "step": "{\"accent\":0,\"vel\":0.79}",
+        "resolved": {
+          "gain": 0.79,
+          "acc": 0,
+          "slide": 0,
+          "oct": 0,
+          "octShift": 0
+        },
+        "expect": {
+          "gain": 0.79,
+          "acc": 0,
+          "slide": 0,
+          "octShift": 0
+        }
+      },
+      {
+        "step": "{}",
+        "resolved": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "oct": 0,
+          "octShift": 0
+        },
+        "expect": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "octShift": 0
+        }
+      },
+      {
+        "step": "{\"accent\":1,\"vel\":0.5,\"slide\":1,\"oct\":-1}",
+        "resolved": {
+          "gain": 1,
+          "acc": 1,
+          "slide": 1,
+          "oct": -1,
+          "octShift": -12
+        },
+        "expect": {
+          "gain": 1,
+          "acc": 1,
+          "slide": 1,
+          "octShift": -12
+        }
+      },
+      {
+        "step": "{\"oct\":1}",
+        "resolved": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "oct": 1,
+          "octShift": 12
+        },
+        "expect": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "octShift": 12
+        }
+      },
+      {
+        "step": "{\"oct\":2}",
+        "resolved": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "oct": 2,
+          "octShift": 24
+        },
+        "expect": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "octShift": 24
+        }
+      },
+      {
+        "step": "{\"oct\":-2}",
+        "resolved": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "oct": -2,
+          "octShift": -24
+        },
+        "expect": {
+          "gain": 0.8,
+          "acc": 1,
+          "slide": 0,
+          "octShift": -24
+        }
+      }
+    ],
+    "avacidRows": {
+      "accentGain1": {
+        "cap": 0.5,
+        "accAmt": 0.6,
+        "ampBoost": 1.9,
+        "vegAstep": 0.052083333333333336,
+        "megDc": 0.9995209481153465
+      },
+      "plain079": {
+        "cap": 0,
+        "accAmt": 0,
+        "ampBoost": 1,
+        "vegAstep": 0.006944444444444444,
+        "megDc": 0.9998083517002154,
+        "accAmtB": 0
+      },
+      "boundary080": {
+        "cap": 0.5,
+        "accAmt": 0.6
+      },
+      "fourAccents300ms": {
+        "caps": [
+          0.5,
+          0.7046826882694954,
+          0.7884726940239504,
+          0.822773421279827
+        ],
+        "accAmts": [
+          0.6,
+          0.7473715355540367,
+          0.8077003396972442,
+          0.8323968633214754
+        ],
+        "boosts": [
+          1.9,
+          2.121057303331055,
+          2.2115505095458663,
+          2.248595294982213
+        ]
+      },
+      "reference": "P2 T3 (verify/p2-acid-node-out.log): cap 0.500/0.705/0.788/0.823; depth 0.273<0.310<0.316<0.342"
+    }
+  }
+}
