@@ -410,11 +410,33 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
   `av_fx.js` + `verify/cdp_fx.mjs` · sa-4 mod matrix `av_mod.js` · sa-5 grain+sampler `av_grain.js`+
   `av_sampler.js` + av_sample.js append · sa-6 synth panels `av_synth.js` ext. Transcripts:
   `cache\delegation\live\deleg_126ca06f\task-{0..6}.log`.
-- On return: parent integrates per `_p3_wave.md` — registerFx chain section in av_dsp.render (post
-  mix), mod application, kinds 4/5 dispatch, facade avEngineMod/avEngineSample/avEngineZones +
-  processor branches, build.py concat (worklet source += the 5 FX modules + grain + sampler, after
-  the drum module, before voiceproc), hosts (`#av-fx-host`/`#av-mod-host`) + styles + boot calls,
-  rebuild, battery + cdp_fx (parent-run), perf gate, commits + addendum 14.
+- **CHILDREN LANDED (commit `2a1bc84`; all 7 green; evidence `verify/p3-*-node-out.*`).** Parent
+  integration flags (detail in the child report tails + file headers):
+  1. **Mix convention SPLIT (critical):** delay + mod write the FINAL mixed output (`l = st.oL`, copy
+     — no parent blend); verb + drive + dyn write WET (parent blends `dry*(1-mix)+wet*mix`; they also
+     pass dry through at mix<=0/off). Wire per module accordingly.
+  2. av_dsp: `registerFx(prefix, mod)` (+ FX_CHAIN, states via `createState()` at create + **call
+     `bindEngine(st,eng)` right after each** — else states run at the 48k default); post-mix chain
+     order drive→mod→delay→verb→dyn, skip when `!st.on`; registerKind ids widen to **1..5**
+     (kk<=3 loops → <=5 in create + setParam dispatch; KIND_MODS >=6); preallocate
+     `eng.samples=[null x4]` + `eng.zones=new Float64Array(40)` at create; processor branches
+     `{t:'sample'}` (allocate AT MESSAGE TIME) + `{t:'zones'}` + `{t:'mod'}` (copy into
+     `eng.modMacros[8]`/`eng.modSlots[128]`).
+  3. Facade: `avEngineMod({macros F64(8), slots F64(128)})` (encode [srcIdx,dstIdx,amt,curve]x32, 14
+     sources/6 targets per E), `avEngineSample(id,name,rate,ch1,ch2)` (transferables),
+     `avEngineZones(F64(40))`.
+  4. Mod application v1 (in recomputeFilter / computePitch cadence): cutoffLog2 += Sum(amt·curve(src))
+     (cutoff ±4 oct · reso ±0.5 · pitch ±12 st · osc levels ±1 · pan ±1 engine-level); `rand` =
+     per-note `v.randVal` from the engine PRNG.
+  5. build.py: worklet concat = av_ladder + av_dsp + av_acid + av_string + av_drum + **av_grain +
+     av_sampler + av_fx_verb + av_fx_delay + av_fx_mod + av_fx_drive + av_fx_dyn** + av_voiceproc;
+     page js_parts += the same, plus av_fx + av_mod before av_synth/app_core.
+  6. Hosts `#av-fx-host` + `#av-mod-host` cards, boot (`avFxInit`/`avModInit` guarded), styles (D: 14
+     classes · E: 19 · G: 2 optional); smoke counts move 70→85 knobs, engine options 6; cdp_fx rig =
+     parent-run + pin EXPECT_SHA. Docs/05 §3 option 7 (Freeverb constants) = RESOLVED per child A;
+     option 9 verified. Cleanup: stray `verify/verb_node_out.*` dupes.
+  7. Then: rebuild → battery (smoke/feel/keys/midi/sample/rec + cdp_fx) → PERF GATE on a QUIET
+     machine (incl. the deferred P2 stress attribution) → commits + addendum 14.
 - **P2 perf-gate tail — stress run2 INVALID (contaminated):** ran 13:00–13:10 concurrently with all 7
   P3 children hammering the CPU + desktop activity → 627 deltas (run1's 142 was mildly shared-load
   too; P1.x 35–45 was a quiet box). Decision: the delta metric is load-sensitive at the margin; the
