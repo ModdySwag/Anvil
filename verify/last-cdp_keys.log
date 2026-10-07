@@ -24,7 +24,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   persistence: av-input-mode=keys survives a real reload  -> {"mode":"keys","armed":true,"keys":61,"led":true}
  ok   persistence: the restored KEYS mode really plays (A -> c4 after the reload)  -> {"note":"c4","held":["c4"]}
  ok   persistence: a corrupt stored mode ("klingon") falls back to STUDIO at boot  -> {"mode":"studio","on":["studio"],"keys":61,"cls":""}
- ok   screenshot: dock closeup in KEYS mode -> renders/p0-keys-suite.png  -> C:\Users\Moddy\anvil\renders\p0-keys-suite.png (126668 bytes)
+ ok   screenshot: dock closeup in KEYS mode -> renders/p0-keys-suite.png  -> C:\Users\Moddy\anvil\renders\p0-keys-suite.png (156827 bytes)
  ok   zero console errors for the whole run
 
 27 passed, 0 failed

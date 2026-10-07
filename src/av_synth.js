@@ -170,7 +170,35 @@ function avSynthKindNorm(kind) {
     return (i >= 0 && i < AV_SYNTH_KINDS.length) ? AV_SYNTH_KINDS[i] : null;
   }
   const k = String(kind == null ? "" : kind);
-  return AV_SYNTH_KINDS.indexOf(k) >= 0 ? k : null;
+  if (AV_SYNTH_KINDS.indexOf(k) >= 0) return k;
+  return (avSynthUserKindNames().indexOf(k) >= 0) ? k : null;
+}
+
+/* S5: user kind modules (av_code/av_umod_wl) appear as ENGINE options; av_code calls the refresh
+   on kind add/remove. Names only live while the engine tier can host them. */
+function avSynthUserKindNames() {
+  try {
+    if (typeof avCodeKinds === "function") {
+      const ks = avCodeKinds();
+      if (ks && ks.length) return ks.map(k => String((k && k.name) || "")).filter(Boolean);
+    }
+  } catch (e) { /* code engine absent — no user kinds */ }
+  return [];
+}
+function avSynthKindOptionsRefresh() {
+  try {
+    const sel = document.getElementById("av-synth-engine");
+    if (!sel) return false;
+    [...sel.querySelectorAll("option")].forEach(o => { if (o.dataset.userKind === "1") o.remove(); });
+    for (const n of avSynthUserKindNames()) {
+      if (![...sel.options].some(o => o.value === n)) {
+        const o = document.createElement("option");
+        o.value = n; o.textContent = n; o.dataset.userKind = "1";
+        sel.appendChild(o);
+      }
+    }
+    return true;
+  } catch (e) { return false; }
 }
 
 /* the ENGINE pick — always at the top of the card, data-knob-free (§6) */
@@ -294,7 +322,7 @@ function avSynthBodyHTML() {
 
   const engineRow = '<div class="av-synth-engine-row">' + avSynthSelectHTML({
     path: AV_SYNTH_ENGINE.path, id: AV_SYNTH_ENGINE.id, label: AV_SYNTH_ENGINE.label,
-    aria: AV_SYNTH_ENGINE.aria, options: AV_SYNTH_KINDS,
+    aria: AV_SYNTH_ENGINE.aria, options: AV_SYNTH_KINDS.concat(avSynthUserKindNames()),
   }) + "</div>";
 
   /* va — the P1 body exactly as it shipped: selects row + one knob row per group */

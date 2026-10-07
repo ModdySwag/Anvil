@@ -1,6 +1,6 @@
-index.html sha256 (before): c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287
+index.html sha256 (before): 7accc9fd7953c9cf0f47aefc481d3cb6d21dc027c67cfbdd1b6035b1947671cc
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9600 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-comp-1791384501419
+cdp port 9600 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-comp-1791388693849
 ── 1. boot + card ──
  ok   1 boot: data-av-ready flips
  ok   1 engine ctx: found · running · ScriptProcessor-capable · sr 48 k  -> {"found":true,"state":"running","sampleRate":48000,"scp":true}
@@ -14,16 +14,16 @@ cdp port 9600 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-comp-1791384501
  ok   2 avInputNode() live (the capture tap point exists)
  ok   2 beep-train witness on the input node (fake device): >= 2.5 s window · peak > 0.05 · nonzero > 1000 (NEVER continuous-audio)  -> {"seconds":"2.560","peak":"1.130","nonzero":9670,"blocks":30}
    · avTakesKeepLast(8) -> 8 (both quick takes + the lap fixture survive every stop)
- ok   2 take A: start ok (sr 48000 · block 4096 · lapSync false · channels >= 1) · stop ok · stopReason "stop" · exactly 1 take · receipt.frames === take frames  -> {"start":{"ok":true,"started":true,"sr":48000,"block":4096,"channels":2,"lapSync":false,"lapReason":"lapSync off","cycleSteps":0,"stepDur":0,"cycleDur":0,"cycleFrames":0,"offsetFrames":480,"startedCtxT":2.7306666666666666,"capSeconds":300,"armed":true},"stop":{"ok":true,"stopReason":"stop","frames":65536,"takes":[65536]}}
- ok   2 take B: start ok (lapSync false) · stop ok · exactly 1 take  -> {"start":{"ok":true,"started":true,"sr":48000,"block":4096,"channels":2,"lapSync":false,"lapReason":"lapSync off","cycleSteps":0,"stepDur":0,"cycleDur":0,"cycleFrames":0,"offsetFrames":480,"startedCtxT":4.450666666666667,"capSeconds":300,"armed":true},"stop":{"ok":true,"stopReason":"stop","frames":102400,"takes":[102400]}}
+ ok   2 take A: start ok (sr 48000 · block 4096 · lapSync false · channels >= 1) · stop ok · stopReason "stop" · exactly 1 take · receipt.frames === take frames  -> {"start":{"ok":true,"started":true,"sr":48000,"block":4096,"channels":2,"lapSync":false,"lapReason":"lapSync off","cycleSteps":0,"stepDur":0,"cycleDur":0,"cycleFrames":0,"offsetFrames":480,"startedCtxT":2.76,"capSeconds":300,"armed":true},"stop":{"ok":true,"stopReason":"stop","frames":65536,"takes":[65536]}}
+ ok   2 take B: start ok (lapSync false) · stop ok · exactly 1 take  -> {"start":{"ok":true,"started":true,"sr":48000,"block":4096,"channels":2,"lapSync":false,"lapReason":"lapSync off","cycleSteps":0,"stepDur":0,"cycleDur":0,"cycleFrames":0,"offsetFrames":480,"startedCtxT":4.472,"capSeconds":300,"armed":true},"stop":{"ok":true,"stopReason":"stop","frames":102400,"takes":[102400]}}
  ok   2 takes present: 2 takes · DISTINCT rig-evidenced frames (65536 vs 102400) · rate 48 k · lap 1 · partial false · names "Take N"  -> [{"id":"t1","name":"Take 1","frames":65536,"rate":48000,"lap":1,"partial":false},{"id":"t2","name":"Take 2","frames":102400,"rate":48000,"lap":1,"partial":false}]
  ok   2 rig stash: take ids/frames pinned page-side for the comp legs (A · B)  -> {"takeA":{"id":"t1","frames":65536},"takeB":{"id":"t2","frames":102400}}
  ok   2b card repaint: >= 2 take lanes on screen within the poll window (takes -> lanes)  -> lanes=2
 ── 3. single-segment comp ──
  ok   3 comp create + add + set: fresh comp · segment index 0 · take A full range [0, N] · avCompSegments length 1  -> {"id":"c1","add":{"ok":true,"index":0},"set":{"ok":true,"seg":{"takeId":"t1","fromFrame":0,"toFrame":65536,"fadeIn":240,"fadeOut":240}},"segs":[{"takeId":"t1","fromFrame":0,"toFrame":65536,"fadeIn":240,"fadeOut":240}],"why":null}
- ok   3 render: frames === take A frames EXACTLY (delta 0) · comp list out mirrors the render  -> {"render":{"ok":true,"frames":65536,"peak":1.1298022270202637,"rms":0.12083993251420497,"clipped":936,"rate":48000,"channels":2,"skipped":0,"error":null},"metaOut":{"frames":65536,"rate":48000,"channels":2},"takeAFrames":65536}
+ ok   3 render: frames === take A frames EXACTLY (delta 0) · comp list out mirrors the render  -> {"render":{"ok":true,"frames":65536,"peak":1.1298022270202637,"rms":0.12083993259571624,"clipped":936,"rate":48000,"channels":2,"skipped":0,"error":null},"metaOut":{"frames":65536,"rate":48000,"channels":2},"takeAFrames":65536}
  ok   3 export: ok · avWavInfo 16-bit / 48 kHz stereo · frames === render · blob + blob: url · bytes > 44 · name anvil_comp*.wav  -> {"ok":true,"id":"c1","name":"anvil_comp1.wav","frames":65536,"rate":48000,"seconds":1.3653333333333333,"bytes":262188,"hasBlob":true,"url":true,"wavInfo":{"ok":true,"bits":16,"sampleRate":48000,"channels":2,"frames":65536},"error":null}
- ok   3 in-page WAV decode: NON-SILENT (fake-device beeps) — peak > 0.05 · nonzero > 0  -> {"ok":true,"peak":"1.000","nonzero":35729,"frames":65536}
+ ok   3 in-page WAV decode: NON-SILENT (fake-device beeps) — peak > 0.05 · nonzero > 0  -> {"ok":true,"peak":"1.000","nonzero":35669,"frames":65536}
 ── 4. multi-segment + trims ──
  ok   4 multi-segment: segments [A 0..N/2, B 0..N/2] -> render ~ N (2 halves minus the 240-frame seam)  -> {"frames":65296,"expected":65296,"N":65536,"segs":[{"takeId":"t1","fromFrame":0,"toFrame":32768,"fadeIn":240,"fadeOut":240},{"takeId":"t2","fromFrame":0,"toFrame":32768,"fadeIn":240,"fadeOut":240}],"why":null}
  ok   4 trim: shrinking segment 0 (fromFrame 0 -> 1000) shrinks the render by EXACTLY 1000 frames  -> {"ren0":65296,"ren1":64296,"delta":1000,"seg":{"takeId":"t1","fromFrame":1000,"toFrame":32768,"fadeIn":240,"fadeOut":240}}
@@ -40,17 +40,17 @@ cdp port 9600 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-comp-1791384501
  ok   6 tail lap kept as partial (the final unfinished cycle) · receipt frames === sum of laps  -> {"tail":{"lap":3,"frames":70144,"partial":true},"frames":262144}
  ok   6 avSeqStop(): transport stopped  -> {"playing":false}
  ok   6 auto-comp receipt: ok · segments >= regions · cycle/regions equal the rig-own median/owner recomputation (live store re-read)  -> {"receipt":{"ok":true,"regions":1,"cycleFrames":96000,"skipped":0,"error":null},"rig":{"cycle":96000,"regions":1,"skipped":0,"takes":3,"ownerFrames":96000}}
- ok   6 winners = the rig-own pick-best recomputation (own rms/peak reads of the SAME regions -> takeIds; ties -> earlier take)  -> {"expected":[{"r":0,"id":"t5","score":0.07152713350573914,"n":140288,"from":0,"to":70144}],"segs":[{"takeId":"t5","from":0,"to":70144}],"picked":["t5"]}
+ ok   6 winners = the rig-own pick-best recomputation (own rms/peak reads of the SAME regions -> takeIds; ties -> earlier take)  -> {"expected":[{"r":0,"id":"t5","score":0.07152713350874439,"n":140288,"from":0,"to":70144}],"segs":[{"takeId":"t5","from":0,"to":70144}],"picked":["t5"]}
  ok   6 segment ranges = the pinned region math (from = r*cycle · to = min((r+1)*cycle, winner frames))  -> {"expectedRanges":[[0,70144]],"segs":[[0,70144]]}
  ok   6 render: === the rig-own region picks minus the pinned default seams AND === the exact stitch math sum(L) - sum(seam)  -> {"frames":70144,"expFrames":70144,"expSeams":0,"exact":70144,"sumL":70144,"sumSeam":0,"regions":1,"cycle":96000}
 ── 7. seal ──
  ok   7a card repaint: the auto-comp segment rows are on screen at screenshot time (poll/pick sync <= 3 s)  -> seg rows=1
- ok   7 screenshot: renders/s2b-comp-suite.png (the comp card, scale 2 — taken while the card carries the run lanes/segments)  -> 111357 bytes · clip 1048×466 @2x
+ ok   7 screenshot: renders/s2b-comp-suite.png (the comp card, scale 2 — taken while the card carries the run lanes/segments)  -> 111347 bytes · clip 1048×466 @2x
  ok   7 page left clean: comps deleted (>= 3) · takes deleted · not recording/armed · transport stopped · input disabled (node empty)  -> {"compsKilled":["c1","c2","c3"],"takesKilled":["t3","t4","t5"],"before":{"comps":3,"takes":3,"recording":false},"after":{"comps":0,"takes":0,"recording":false,"armed":false,"wired":false,"playing":false,"inNode":false,"compCount":0}}
  ok   7 zero page errors (exceptions · Log errors · console.error)  -> page errors=0
-index.html sha256 (after): c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287
- ok   7 freeze: index.html sha256 before === after (unchanged by the run)  -> c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287
- ok   7 freeze: index.html sha256 = pinned  -> pinned c92a4445bae7...
+index.html sha256 (after): 7accc9fd7953c9cf0f47aefc481d3cb6d21dc027c67cfbdd1b6035b1947671cc
+ ok   7 freeze: index.html sha256 before === after (unchanged by the run)  -> 7accc9fd7953c9cf0f47aefc481d3cb6d21dc027c67cfbdd1b6035b1947671cc
+ ok   7 freeze: index.html sha256 = pinned  -> pinned 7accc9fd7953...
 
 41 passed, 0 failed
 COMP PASSED

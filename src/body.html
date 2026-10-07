@@ -6,14 +6,14 @@
   <span class="av-chip av-dim" id="av-tier">engine: pending</span>
   <span class="av-chip av-dim" id="av-voices">voices: &mdash;</span>
   <button class="av-btn" id="btn-piano" title="Piano dock — 61 keys at the bottom (Y)" aria-label="Piano dock">&#127929;</button>
-  <button class="av-btn" id="av-help" title="Help (arrives with the tour)">?</button>
+  <button class="av-btn" id="av-help" title="Help &mdash; shortcuts, the tour and the guides (?)" aria-label="Help">?</button>
 </header>
 
 <main class="av-main">
   <section class="av-card">
-    <h1>Phase S4 &mdash; deliver extras: .anvl projects &middot; patch cards &middot; video clips</h1>
+    <h1>Phase S5 &mdash; CODE: write your own modules &middot; popout keyboard &middot; help</h1>
     <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in).</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in), plus the S5 layer (the CODE section &mdash; a documented sandboxed DSP module API where your own code runs live in the engine &mdash; the popout keyboard, the Ctrl-K command palette, a 60-second tour, and the lesson ladder).</p>
   </section>
 
   <section class="av-card" id="av-levels">
@@ -104,6 +104,11 @@
     <div id="av-files-host"><p class="av-note av-dim">The project &amp; share card lands here &mdash; save and open .anvl projects straight to disk (File System Access, with a download fallback), import samples from your drive, build a shareable patch card (PNG + offline QR link), and render a video clip of the deck with the mix printed in. Nothing is uploaded.</p></div>
   </section>
 
+  <section class="av-card" id="av-code">
+    <h2>CODE &mdash; write your own modules</h2>
+    <div id="av-code-host"><p class="av-note av-dim">The CODE card lands here &mdash; write a sandboxed DSP module (an FX or a whole voice engine), run it live in the audio engine, and keep it in your own local library. Everything stays on this machine.</p></div>
+  </section>
+
   <section class="av-card">
     <h2>Roadmap &mdash; from the plan</h2>
     <ul class="av-list">
@@ -118,12 +123,14 @@
 </main>
 
 <footer class="av-foot">
-  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; S4 &middot; projects + cards + clips &middot; AGPL-3.0-or-later</span>
+  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; S5 &middot; code + keys + help &middot; AGPL-3.0-or-later</span>
 </footer>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">
     <div id="piano-rail">
       <button id="pk-close" class="av-btn mini" title="Hide the piano (Y)" aria-label="Hide the piano (Y)">✕</button>
+      <button id="pk-pop" class="av-btn mini" title="Pop the keys out into their own window (always-on-top where the browser allows)" aria-label="Pop the keyboard out">⧉</button>
+      <button id="pk-return" class="av-btn mini" title="Bring the keys home" aria-label="Bring the keys home">⧉ BACK</button>
       <div id="pk-modes" class="pk-modes" role="group" aria-label="Input mode — what the computer keyboard drives">
         <button class="pk-mode" data-mode="studio" title="STUDIO — single letters stay quiet; the KEYS chip or ` turns the typing keys into the dock">STUDIO</button>
         <button class="pk-mode" data-mode="keys" title="KEYS — typing keys play the dock: A-row white (A = C), W-row black (W = C♯), Z / X hop octaves, Esc hands back"><span class="pk-sw-led" id="pk-arm-led"></span>KEYS</button>

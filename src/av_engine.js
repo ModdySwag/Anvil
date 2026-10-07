@@ -183,6 +183,8 @@ function avEngineNodeHandshake(node, pend) {
       if (!d || typeof d !== "object") return;
       if (d.t === "ready") { node.__avReady = d; finish(d); return; }
       if (d.t === "bench" || d.t === "stats") avEngineRpcDeliver(pend, d);
+      /* S5: CODE module replies (umodok/umoderr/umodstat) route to av_code */
+      if (typeof d.t === "string" && d.t.indexOf("umod") === 0) { try { if (typeof avCodeOnMessage === "function") avCodeOnMessage(d); } catch (e) { } }
     };
     timer = setTimeout(() => finish(null), AV_ENGINE_HELLO_MS);
     try { node.port.postMessage({ t: "hello", id: ++avEngineMsgSeq }); } catch (e) { finish(null); }

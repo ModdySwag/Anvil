@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.2.0", phase: "S4 · deliver extras", built: "2026-10-08" });
+const ANVIL = Object.freeze({ version: "1.3.0", phase: "S5 · code · keys · help", built: "2026-10-08" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -119,6 +119,14 @@ function avMountLevels() {
   try { filesUiOk = (typeof avFilesUiInit === "function") ? (avFilesUiInit() !== false) : false; } catch (e) { console.warn("[anvil] files ui init failed", e); }
   /* S4: a #avp= patch fragment on the URL applies at boot (guarded; av_card owns the decode+law) */
   try { if (typeof avCardUrlApply === "function") avCardUrlApply(); } catch (e) { console.warn("[anvil] card url apply failed", e); }
+  /* S5: the popout keyboard · the CODE engine + card · help · palette · lessons */
+  let kbPopOk = false, codeOk = false, codeUiOk = false, helpOk = false, palOk = false, lessonsOk = false;
+  try { kbPopOk = (typeof avKbPopInit === "function") ? (avKbPopInit() !== false) : false; } catch (e) { console.warn("[anvil] kb popout init failed", e); }
+  try { codeOk = (typeof avCodeInit === "function") ? (avCodeInit() !== false) : false; } catch (e) { console.warn("[anvil] code engine init failed", e); }
+  try { codeUiOk = (typeof avCodeUiInit === "function") ? (avCodeUiInit() !== false) : false; } catch (e) { console.warn("[anvil] code card init failed", e); }
+  try { helpOk = (typeof avHelpInit === "function") ? (avHelpInit() !== false) : false; } catch (e) { console.warn("[anvil] help init failed", e); }
+  try { palOk = (typeof avPaletteInit === "function") ? (avPaletteInit() !== false) : false; } catch (e) { console.warn("[anvil] palette init failed", e); }
+  try { lessonsOk = (typeof avLessonsInit === "function") ? (avLessonsInit() !== false) : false; } catch (e) { console.warn("[anvil] lessons init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -134,7 +142,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

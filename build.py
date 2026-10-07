@@ -43,14 +43,16 @@ _fxm_src = (SRC / "av_fx_mod.js").read_text(encoding="utf-8")
 _fxdr_src = (SRC / "av_fx_drive.js").read_text(encoding="utf-8")
 _fxdy_src = (SRC / "av_fx_dyn.js").read_text(encoding="utf-8")
 _proc_src = (SRC / "av_voiceproc.js").read_text(encoding="utf-8")
+_umod_src = (SRC / "av_umod_wl.js").read_text(encoding="utf-8")
 _worklet_src = (_lad_src + "\n" + _dsp_src + "\n" + _acid_src + "\n" + _str_src + "\n" + _drum_src + "\n"
                 + _grain_src + "\n" + _samp_src + "\n" + _fxv_src + "\n" + _fxd_src + "\n" + _fxm_src + "\n"
-                + _fxdr_src + "\n" + _fxdy_src + "\n" + _proc_src)
+                + _fxdr_src + "\n" + _fxdy_src + "\n" + _umod_src + "\n" + _proc_src)
 assert "registerProcessor('av-voice'" in _worklet_src, "worklet source must register 'av-voice'"
 assert ("AVACID" in _worklet_src and "AVSTRING" in _worklet_src and "AVDRUM" in _worklet_src
         and "AVGRAIN" in _worklet_src and "AVSAMPLER" in _worklet_src
         and "AVFXVERB" in _worklet_src and "AVFXDELAY" in _worklet_src and "AVFXMOD" in _worklet_src
-        and "AVFXDRIVE" in _worklet_src and "AVFXDYN" in _worklet_src), "P3 kind/FX modules missing from the worklet source"
+        and "AVFXDRIVE" in _worklet_src and "AVFXDYN" in _worklet_src
+        and "AVUMOD" in _worklet_src), "P3 kind/FX modules missing from the worklet source"
 _wcheck = ROOT / "verify" / "_worklet_check.mjs"
 _wcheck.parent.mkdir(exist_ok=True)
 with open(_wcheck, "w", encoding="utf-8", newline="\n") as _f:
@@ -71,9 +73,11 @@ js_parts = [
     (SRC / "av_knob.js").read_text(encoding="utf-8"),   # the knob feel engine, before the shell that mounts it
     (SRC / "av_note.js").read_text(encoding="utf-8"),   # the ONE note bus (dock + typing keys + MIDI route here)
     (SRC / "av_kb.js").read_text(encoding="utf-8"),     # the 61-key piano dock + the ONE keydown dispatcher
+    (SRC / "av_kb_pop.js").read_text(encoding="utf-8"), # S5: the popout keyboard (bed adoption + key forwarding)
     (SRC / "av_midi.js").read_text(encoding="utf-8"),   # the Web MIDI deck
     (SRC / "av_ladder.js").read_text(encoding="utf-8"), # P2: Moog-ladder kernel (av_dsp ladder24 mode)
     (SRC / "av_dsp.js").read_text(encoding="utf-8"),    # P1 kernels + voice engine (the SPN tier runs this directly)
+    (SRC / "av_umod_wl.js").read_text(encoding="utf-8"), # S5: user-module runtime (also embedded in the worklet concat)
     (SRC / "av_acid.js").read_text(encoding="utf-8"),   # P2 kind 1: ACID engine (self-registers)
     (SRC / "av_string.js").read_text(encoding="utf-8"), # P2 kind 2: STRING engine (self-registers)
     (SRC / "av_drum.js").read_text(encoding="utf-8"),   # P2 kind 3: DRUM engine (self-registers)
@@ -89,6 +93,11 @@ js_parts = [
     (SRC / "av_sample.js").read_text(encoding="utf-8"), # P2 sample core (page module)
     (SRC / "av_pads.js").read_text(encoding="utf-8"),   # P2 drum pads (page module)
     (SRC / "av_engine.js").read_text(encoding="utf-8"), # the facade: blob→data→spn tier ladder + message protocol
+    (SRC / "av_code.js").read_text(encoding="utf-8"),    # S5: CODE engine — user-module facade + persistence
+    (SRC / "av_code_ui.js").read_text(encoding="utf-8"), # S5: the CODE card
+    (SRC / "av_help.js").read_text(encoding="utf-8"),    # S5: help overlay + tour + tooltips
+    (SRC / "av_palette.js").read_text(encoding="utf-8"), # S5: command palette (#80)
+    (SRC / "av_lessons.js").read_text(encoding="utf-8"), # S5: lessons + demo groove + wizards
     (SRC / "av_fx.js").read_text(encoding="utf-8"),     # P3 FX rack card (page module)
     (SRC / "av_mod.js").read_text(encoding="utf-8"),    # P3 mod matrix card (page module)
     (SRC / "av_seq_core.js").read_text(encoding="utf-8"),    # P4 sequencer: model (page module)

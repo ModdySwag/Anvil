@@ -91,6 +91,16 @@ const AVDSP = (function () {
     return k;
   }
 
+  /* S5: kind dispatch resolves user kind modules (av_umod_wl, ids >= 64) through AVUMOD;
+     core kinds 1..5 stay the array; unknown id -> null (the voice ends, honest). */
+  function kindModOf(id) {
+    if (id >= 1 && id <= 5) return KIND_MODS[id];
+    try {
+      if (typeof AVUMOD !== "undefined" && AVUMOD && typeof AVUMOD.kindById === "function") return AVUMOD.kindById(id);
+    } catch (e) { }
+    return null;
+  }
+
   /* ---- P3 FX chain (contract verify/_p3_wave.md section 2) ----
      FX modules (av_fx_*.js) self-register at load. Chain order is FIXED:
      drive -> mod -> delay -> verb -> dyn; states are created at AVDSP.create (one per engine)
@@ -529,7 +539,16 @@ const AVDSP = (function () {
       case "engine.outScale": { const n = Number(value); if (!isFinite(n)) return false; eng.tOutScale = cl(n, 0.05, 1); return true; }
       case "engine.kind": {
         const e = mapEnum(value, ["va", "acid", "string", "drum", "grain", "sampler"]);
-        if (e < 0) return false;
+        if (e < 0) {
+          /* S5: user kind modules accept their name (av_umod_wl registry; ids >= 64) */
+          let uk = null;
+          try {
+            if (typeof AVUMOD !== "undefined" && AVUMOD && typeof AVUMOD.kindIdByName === "function") uk = AVUMOD.kindIdByName(value);
+          } catch (e2) { uk = null; }
+          if (uk == null) return false;
+          eng.kind = uk;
+          return true;
+        }
         eng.kind = e;
         return true;
       }
@@ -559,6 +578,12 @@ const AVDSP = (function () {
               try { return m0.setParam(eng, path, value) === true; } catch (e) { return false; }
             }
           }
+          /* S5: user kind modules (av_umod_wl) claim their prefixes here */
+          try {
+            if (typeof AVUMOD !== "undefined" && AVUMOD && typeof AVUMOD.setKindParam === "function") {
+              if (AVUMOD.setKindParam(eng, path, value) === true) return true;
+            }
+          } catch (e) { }
         }
         return false;
       }
@@ -665,7 +690,7 @@ const AVDSP = (function () {
       try { AVLADDER.resetState(v.lad); } catch (e) { }
     }
     if (v.kindId > 0) {
-      const m0 = KIND_MODS[v.kindId];
+      const m0 = kindModOf(v.kindId);
       if (m0 && typeof m0.initVoice === "function") { try { m0.initVoice(eng, v); } catch (e) { } }
     }
   }
@@ -677,7 +702,7 @@ const AVDSP = (function () {
     v.e2Stage = 4;
     if (v.fadeStep < 0) v.fadeStep = 1 / eng.fadeInSamples;   /* cancel a steal fade-out */
     if (v.kindId > 0) {
-      const m0 = KIND_MODS[v.kindId];
+      const m0 = kindModOf(v.kindId);
       if (m0 && typeof m0.releaseVoice === "function") { try { m0.releaseVoice(eng, v); } catch (e) { } }
     }
   }
@@ -1006,7 +1031,7 @@ const AVDSP = (function () {
     /* P2 kind path: the module owns osc/filter/env/decimation; shared = vel + fade + steal;
        released kind voices end when the module says done (strings decay out, drums one-shot). */
     if (v.kindId > 0) {
-      const m0 = KIND_MODS[v.kindId];
+      const m0 = kindModOf(v.kindId);
       if (!m0) { v.state = 0; return 0; }
       const y0 = m0.stepVoice(eng, v);
       if (v.state === 3) {

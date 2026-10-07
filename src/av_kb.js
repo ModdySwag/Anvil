@@ -114,6 +114,15 @@ function avPianoNoteFor(key) {
   return avNoteName(midi);
 }
 
+/* S5 (popout): the bed can live in the popout window (document adoption). Whichever document
+   currently owns #piano-keys is the refresh root; falls back to the app document. */
+function avPianoBedRoot() {
+  try {
+    if (typeof avKbPopKeysRoot === "function") { const r = avKbPopKeysRoot(); if (r) return r; }
+  } catch (e) { /* popout module absent */ }
+  return (typeof document !== "undefined") ? document : null;
+}
+
 /* ---------- the 61-key dock (PF L314-340, L343-410, L649-678) ---------- */
 
 /* build the bed: 36 white keys share the width equally; the 25 black keys sit absolutely on the
@@ -151,7 +160,8 @@ function avPianoRefresh() {
   const scale = avKbScaleNotes(avKbScale);
   const rootPC = AV_KB_PC[scale.root] ?? 0;
   const base = AV_PIANO_LO + avPianoWin * 12;
-  document.querySelectorAll("#piano-keys .pk-key").forEach(k => {
+  const avBedRoot = avPianoBedRoot();
+  if (avBedRoot) avBedRoot.querySelectorAll(".pk-key").forEach(k => {
     const midi = parseInt(k.dataset.midi, 10);
     const pc = ((midi % 12) + 12) % 12;
     const rel = (pc - rootPC + 12) % 12;
@@ -185,7 +195,8 @@ function avPianoRefresh() {
     b.setAttribute("aria-pressed", on ? "true" : "false");
   });
   const hint = document.getElementById("pk-mode-hint");
-  if (hint) hint.textContent = AV_KB_HINTS[avInputMode] || AV_KB_HINTS.studio;
+  if (hint) hint.textContent = (document.body.classList.contains("piano-pop") && typeof avKbPopHint === "function") ? avKbPopHint() : (AV_KB_HINTS[avInputMode] || AV_KB_HINTS.studio);
+  if (typeof avKbPopMirror === "function") { try { avKbPopMirror(); } catch (e) { /* popout mirror is best-effort */ } }
 }
 
 /* The bed's pointer wiring lives HERE and is guarded so it can never bind twice. It used to be bound
@@ -245,6 +256,8 @@ function avSetInputMode(mode, opts) {
 function avSetArmed(v) { avSetInputMode(v ? "keys" : "studio"); }
 
 function avPianoSetOpen(open) {
+  /* S5: the popout brings the keys home first (PF law) — either direction */
+  if (typeof avKbPopHome === "function") { try { avKbPopHome(); } catch (e) { /* popout home is best-effort */ } }
   document.body.classList.toggle("piano-closed", !open);
   try { localStorage.setItem(AV_KB_PIANO_LS, open ? "1" : "0"); } catch (e) { /* private mode */ }
   if (open) avPianoRefresh();          /* repaint on the way back in (PF L584) */
@@ -282,6 +295,10 @@ function avKbHandle(e) {
   const tag = ((t && t.tagName) || "").toLowerCase();
   const typing = tag === "input" || tag === "textarea" || tag === "select" || !!(t && t.isContentEditable);
   const mod = e.ctrlKey || e.metaKey;
+
+  /* S5: the help overlay + command palette own their keys before any other dispatch
+     (avUiKeyHook lives in av_help.js; it consumes only what it owns and returns false otherwise) */
+  if (typeof avUiKeyHook === "function") { try { if (avUiKeyHook(e) === true) return; } catch (e2) { /* hook miss never blocks the dispatcher */ } }
 
   /* (1) the input-mode picks are modifier combos, so they must work from inside a text field too
      (PF L1097-1099) */

@@ -38,6 +38,16 @@ class AVVoiceProcessor extends AudioWorkletProcessor {
       if (m.t === 'sample') { AVDSP.setSample(eng, m.id, m.name, m.rate, m.ch1, m.ch2); return; }
       if (m.t === 'zones') { AVDSP.setZones(eng, m.zones); return; }
       if (m.t === 'mod') { AVDSP.setMod(eng, m.macros, m.slots); return; }
+      /* S5: user modules (av_umod_wl) — eval + registry + params run in this worklet scope */
+      if (m.t === 'umod') {
+        try {
+          if (typeof AVUMOD !== "undefined" && AVUMOD && typeof AVUMOD.handle === "function") AVUMOD.handle(eng, m, this.port);
+          else this.port.postMessage({ t: 'umoderr', id: (m && m.id) || null, error: 'module runtime missing' });
+        } catch (e) {
+          try { this.port.postMessage({ t: 'umoderr', id: (m && m.id) || null, error: String((e && e.message) || e) }); } catch (e2) { }
+        }
+        return;
+      }
       if (m.t === 'bench') {
         if (m.cmd === 'reset') AVDSP.benchReset(eng);
         else this.port.postMessage({ t: 'bench', id: m.id, data: AVDSP.benchRead(eng) });

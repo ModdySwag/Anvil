@@ -419,6 +419,28 @@ async function main() {
   check('S4: card mounted + wired (.anvl \u00b7 samples \u00b7 share card \u00b7 PNG \u00b7 video clip) + proj/card/video API live',
     filesS.card === true && filesS.host === true && filesS.root === true && filesS.wired === true && filesS.status === true && filesS.save === true && filesS.open === true && filesS.samples === true && filesS.cardmake === true && filesS.cardcopy === true && filesS.cardpng === true && filesS.preview === true && filesS.videorun === true && filesS.videoprev === true && filesS.ui === 'object' && filesS.projApi === 'function' && filesS.openApi === 'function' && filesS.cardApi === 'function' && filesS.qrApi === 'function' && filesS.videoApi === 'function' && filesS.handles === 'object|object|object', JSON.stringify(filesS));
 
+  /* 6n. the S5 layer: CODE card + popout keyboard + help/palette/lessons surfaces */
+  const s5R = await ev(`(() => {
+    const code = document.getElementById('av-code');
+    const codeHost = document.getElementById('av-code-host');
+    return { card: !!code, host: !!codeHost,
+             src: !!document.getElementById('av-code-src'),
+             lib: !!document.getElementById('av-code-list'),
+             run: !!document.getElementById('av-code-run'),
+             stop: !!document.getElementById('av-code-stop'),
+             params: !!document.getElementById('av-code-params'),
+             status: !!document.getElementById('av-code-status'),
+             pop: !!document.getElementById('pk-pop'),
+             ret: !!document.getElementById('pk-return'),
+             helpApi: typeof avHelpOpen, palApi: typeof avPaletteCommands,
+             lesApi: typeof avLessonsList, popApi: typeof avKbPopOpen,
+             codeApi: typeof avCodeAdd, kindsApi: typeof avCodeKinds,
+             codeUi: typeof window.__avCodeUi, codeHandle: typeof window.__avCode };
+  })()`);
+  const s5S = s5R.value || {};
+  check('S5: CODE card mounted + wired (editor \u00b7 library \u00b7 params \u00b7 status) + popout buttons + help/palette/lessons/popout APIs live',
+    s5S.card === true && s5S.host === true && s5S.src === true && s5S.lib === true && s5S.run === true && s5S.stop === true && s5S.params === true && s5S.status === true && s5S.pop === true && s5S.ret === true && s5S.helpApi === 'function' && s5S.palApi === 'function' && s5S.lesApi === 'function' && s5S.popApi === 'function' && s5S.codeApi === 'function' && s5S.kindsApi === 'function' && s5S.codeUi === 'object' && s5S.codeHandle === 'object', JSON.stringify(s5S));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

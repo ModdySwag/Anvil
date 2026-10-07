@@ -902,3 +902,166 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-files-foot { margin: 0; }
 .av-files-busy { opacity: .55; }
 
+/* ==================== S5 — CODE · keys popout · help · palette · lessons ==================== */
+
+/* ============================================================================
+   S5 — CODE card (av_code_ui.js): editor · library · params · examples · docs */
+.av-code { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-code-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-code-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-code-cap { font-size: 10.5px; color: var(--text-3); }
+.av-code-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-code-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-code-msg { color: var(--text-2); }
+.av-code-err { color: #ff8a7a; }
+.av-code-cols { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 1100px) { .av-code-cols { grid-template-columns: 1fr; } }
+.av-code-sec { display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--raised); border: 1px solid var(--hair); border-radius: 8px; padding: 10px 12px; }
+.av-code-sec-title { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin: 0; }
+.av-code-fields { display: flex; flex-wrap: wrap; gap: 10px; }
+.av-code-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.av-code-field-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--text-3); }
+.av-code-in, .av-code-kind { background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 11px; padding: 4px 6px; }
+.av-code-in { min-width: 140px; }
+.av-code-kind { min-width: 84px; }
+.av-code-src { width: 100%; min-height: 240px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 11.5px; line-height: 1.45; padding: 8px; resize: vertical; tab-size: 2; white-space: pre; }
+.av-code-src:focus-visible, .av-code-in:focus-visible, .av-code-kind:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
+.av-code-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-code-btn { }
+.av-code-file { display: inline-flex; align-items: center; gap: 6px; }
+.av-code-import { display: none; }
+.av-code-examples { display: flex; flex-wrap: wrap; gap: 6px; }
+.av-code-example { }
+.av-code-list { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow: auto; }
+.av-code-none { font-size: 10.5px; color: var(--text-3); margin: 0; }
+.av-code-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 5px 8px; min-width: 0; }
+.av-code-row.selected { border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.18); }
+.av-code-row.off { opacity: .55; }
+.av-code-row.bad { border-color: #5c2020; }
+.av-code-led { width: 7px; height: 7px; border-radius: 50%; background: #22303a; box-shadow: inset 0 0 3px #000; flex: 0 0 auto; }
+.av-code-led.on { background: var(--teal); box-shadow: 0 0 7px var(--teal); }
+.av-code-badge { font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); border: 1px solid var(--hair); border-radius: 4px; padding: 1px 5px; }
+.av-code-row-name { font-family: var(--mono); font-size: 11px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.av-code-row-sub { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+.av-code-row-acts { margin-left: auto; display: flex; gap: 4px; }
+.av-code-enable, .av-code-edit, .av-code-exp, .av-code-del { }
+.av-code-params { display: flex; flex-direction: column; gap: 6px; }
+.av-code-knobs { }
+.av-code-params-note { margin: 0; }
+.av-code-docs { display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow: auto; }
+.av-code-docs-h { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--teal); margin: 5px 0 0; }
+.av-code-docs-p { margin: 0; font-size: 10.5px; color: var(--text-2); }
+.av-code-docs-list { margin: 0; padding-left: 16px; }
+.av-code-docs-item { font-size: 10.5px; color: var(--text-2); }
+.av-code-note { margin: 0; }
+.av-code-degrade { color: var(--mod-orange); }
+.av-code-foot { margin: 0; }
+.av-code-busy { opacity: .55; }
+
+/* ============================================================================
+   S5 — piano popout (av_kb_pop.js): rail buttons + the popout window chrome */
+#pk-return { display: none; }
+body.piano-pop #pk-return { display: inline-flex; }
+body.piano-pop #pk-pop { display: none; }
+body.piano-pop { --dock-h: 40px; }
+body.piano-pop .pk-rail-note { display: none; }
+.av-pop-bar { display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: linear-gradient(180deg, #161f26, #10161b); border-bottom: 1px solid var(--hair); }
+.av-pop-btn { }
+.av-pop-btn.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: inset 0 0 7px rgba(46,216,201,.18); }
+.av-pop-hint { min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-pop-win { font-family: var(--mono); font-size: 11px; color: var(--teal); min-width: 64px; text-align: center; }
+
+/* ============================================================================
+   S5 — help overlay + tooltips + tour (av_help.js) */
+.av-help { z-index: 46; }
+.av-help[hidden] { display: none; }
+.av-help-open { }
+.av-help-head { display: flex; align-items: baseline; gap: 8px; padding: 10px 12px 6px; }
+.av-help-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-help-x { margin-left: auto; }
+.av-help-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; border-bottom: 1px solid var(--hair); }
+.av-help-tab { }
+.av-help-tab.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: inset 0 0 7px rgba(46,216,201,.18); }
+.av-help-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; overflow: auto; max-height: calc(100vh - 220px); }
+.av-help-pane:not([hidden]) { display: flex; flex-direction: column; gap: 8px; }
+.av-help-group { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin: 4px 0 0; }
+.av-help-rows { display: flex; flex-direction: column; gap: 3px; }
+.av-help-row { display: flex; align-items: baseline; gap: 10px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 8px; }
+.av-help-keys { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 92px; flex: 0 0 auto; }
+.av-help-desc { font-size: 10.5px; color: var(--text-2); min-width: 0; overflow-wrap: anywhere; }
+.av-help-lead { margin: 0; font-size: 10.5px; color: var(--text-2); }
+.av-help-list { margin: 0; padding-left: 16px; font-size: 10.5px; color: var(--text-2); }
+.av-help-recipes { display: flex; flex-direction: column; gap: 6px; }
+.av-help-recipe { display: flex; flex-direction: column; gap: 3px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 6px 8px; }
+.av-help-recipe-title { font-family: var(--mono); font-size: 10.5px; color: var(--teal); }
+.av-help-recipe-blurb { margin: 0; font-size: 10.5px; color: var(--text-2); }
+.av-help-recipe-go { align-self: flex-start; }
+.av-help-tour-go { align-self: flex-start; }
+.av-help-tiprow { display: flex; align-items: baseline; gap: 8px; font-size: 10.5px; color: var(--text-2); }
+.av-help-tipdot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal-deep); display: inline-block; flex: 0 0 auto; }
+.av-help-note { margin: 0; }
+.av-help-spot { position: fixed; z-index: 1503; border: 1px dashed var(--teal); border-radius: 6px; pointer-events: none; }
+#av-tip { position: fixed; z-index: 1600; max-width: 280px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 5px 8px; font-size: 10.5px; color: var(--text); box-shadow: 0 4px 14px rgba(0,0,0,.5); pointer-events: none; }
+#av-tip[hidden] { display: none; }
+.av-tour-shade { position: fixed; z-index: 1500; background: rgba(4, 8, 10, .62); pointer-events: none; }
+.av-tour-shade[hidden] { display: none; }
+.av-tour-ring { position: fixed; z-index: 1501; border: 1.5px solid var(--teal); border-radius: 8px; box-shadow: 0 0 0 1px rgba(46,216,201,.22), 0 0 18px rgba(46,216,201,.22); pointer-events: none; }
+.av-tour-ring[hidden] { display: none; }
+.av-tour-panel { position: fixed; z-index: 1502; max-width: 360px; display: flex; flex-direction: column; gap: 6px; background: var(--raised); border: 1px solid var(--teal-deep); border-radius: 8px; padding: 10px 12px; box-shadow: 0 10px 30px rgba(0,0,0,.55); }
+.av-tour-panel[hidden] { display: none; }
+.av-tour-step { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--text-3); }
+.av-tour-title { font-family: var(--mono); font-size: 11px; color: var(--teal); }
+.av-tour-text { margin: 0; font-size: 10.5px; color: var(--text-2); }
+.av-tour-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.av-tour-prev, .av-tour-next, .av-tour-skip { }
+body.av-tour-on { }
+
+/* ============================================================================
+   S5 — command palette (av_palette.js) */
+.av-palette { position: fixed; inset: 0; z-index: 1620; display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh; background: rgba(4, 8, 10, .45); }
+.av-palette[hidden] { display: none; }
+.av-palette.open { }
+.av-palette-box { width: min(560px, calc(100vw - 32px)); display: flex; flex-direction: column; background: var(--raised); border: 1px solid var(--hair); border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.6); overflow: hidden; }
+.av-palette-input { width: 100%; border: 0; border-bottom: 1px solid var(--hair); background: #0a0e11; color: var(--text); font-family: var(--mono); font-size: 12.5px; padding: 10px 12px; outline: none; }
+.av-palette-list { max-height: 320px; overflow: auto; padding: 4px 0; }
+.av-palette-group { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); padding: 6px 12px 2px; }
+.av-palette-row { display: flex; align-items: baseline; gap: 10px; padding: 5px 12px; cursor: pointer; }
+.av-palette-row.sel { background: rgba(46, 216, 201, .10); box-shadow: inset 2px 0 0 var(--teal); }
+.av-palette-lbl { font-size: 11.5px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.av-palette-hit { color: var(--teal); }
+.av-palette-keys { margin-left: auto; font-family: var(--mono); font-size: 9px; color: var(--text-3); flex: 0 0 auto; }
+.av-palette-empty { padding: 10px 12px; font-size: 10.5px; color: var(--text-3); }
+.av-palette-foot { border-top: 1px solid var(--hair); padding: 5px 12px; font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+body.av-palette-open { }
+.av-palette-flash { animation: av-palette-flash 1.6s ease-out 1; }
+@keyframes av-palette-flash { 0% { box-shadow: 0 0 0 2px rgba(46, 216, 201, .9); } 100% { box-shadow: 0 0 0 2px rgba(46, 216, 201, 0); } }
+
+/* ============================================================================
+   S5 — lessons + wizards + first-run (av_lessons.js) */
+.av-firstrun { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: linear-gradient(180deg, rgba(46,216,201,.08), rgba(46,216,201,.02)); border: 1px solid var(--teal-deep); border-radius: 10px; padding: 10px 12px; margin: 2px 0 4px; }
+.av-firstrun[hidden] { display: none; }
+.av-firstrun-cap { margin: 0; font-size: 11px; color: var(--text-2); }
+.av-firstrun-btn { }
+.av-firstrun-x { margin-left: auto; }
+.av-wiz { position: fixed; top: 14vh; left: 50%; transform: translateX(-50%); z-index: 1550; width: min(520px, calc(100vw - 32px)); display: flex; flex-direction: column; background: var(--raised); border: 1px solid var(--teal-deep); border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.6); }
+.av-wiz[hidden] { display: none; }
+.av-wiz-on { }
+.av-wiz-head { display: flex; align-items: baseline; gap: 8px; padding: 10px 12px 6px; }
+.av-wiz-title { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--teal); }
+.av-wiz-x { margin-left: auto; }
+.av-wiz-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 8px; border-bottom: 1px solid var(--hair); }
+.av-wiz-tab { }
+.av-wiz-tab-on { color: var(--teal); border-color: var(--teal-deep); box-shadow: inset 0 0 7px rgba(46,216,201,.18); }
+.av-wiz-rows { display: flex; flex-direction: column; gap: 10px; padding: 10px 12px; overflow: auto; max-height: 55vh; }
+.av-wiz-row { display: flex; flex-direction: column; gap: 4px; }
+.av-wiz-row-set { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.av-wiz-lbl { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-wiz-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.av-wiz-opt { }
+.av-wiz-opt.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: inset 0 0 7px rgba(46,216,201,.18); }
+.av-wiz-actions { display: flex; justify-content: flex-end; gap: 6px; padding: 8px 12px 10px; border-top: 1px solid var(--hair); }
+.av-wiz-btn { }
+.av-wiz-keep { }
+.av-wiz-note { margin: 0; padding: 0 12px 10px; }
+.av-lessons-flash { animation: av-palette-flash 1.6s ease-out 1; }
+/* S5 — s5-styles applied */
