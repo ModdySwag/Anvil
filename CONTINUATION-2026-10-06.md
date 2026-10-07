@@ -970,3 +970,24 @@ Resume phrase: **"continue anvil"**.
   reference · export dither) + dispatch children; then S4 deliver / deck / popout keyboard / CODE /
   walkthrough-help. **NOTHING RUNNING** — no background jobs, no live subagents. Resume phrase:
   **"continue anvil"**.
+
+## S3 wave DISPATCHED — 2026-10-07 (4 children; contract `3a80916`)
+
+- Contract: `verify/_s3_wave.md` (commit `3a80916`) — mix & master pins §2.1–2.4 (av_loud · av_mix ·
+  av_mix_ui · cdp_mix), laws §3, integration §4, watch §5.
+- Children — delegation **`deleg_8752c803`** (4 in parallel, background): sa-A `src/av_mix.js` · sa-B
+  `src/av_loud.js` · sa-C `src/av_mix_ui.js` · sa-D `verify/cdp_mix.mjs` (WRITE-ONLY rig). Transcripts:
+  `cache\delegation\live\deleg_8752c803\task-{0..3}.log`; scratch `cache/scratch/s3/<name>/`.
+- **Carried item actioned at dispatch:** quiet-window bench re-run LAUNCHED ~22:07 (hidden-detached;
+  runner `cache/scratch/s2b/integrate/quiet-bench.sh`; marker `QUIET-BENCH-DONE` in its chain log;
+  record lands at `verify/bench-v13-s2b-quiet.*`; runs on the frozen S2.1 bytes `0f79ebc2`).
+- **On return (parent integration per `_s3_wave.md` §4):** read child reports → ONE counted-assert
+  script (`cache/scratch/s3/integrate/_s3_integrate.py`): build.py js_parts (`av_loud` → `av_mix` →
+  `av_mix_ui` after `av_comp_ui`, before `av_synth`) · body `#av-mix` card + `#av-mix-host` after
+  `#av-comp` (+ hero/footer) · styles block (coverage-checked) · app_core **1.0.0 "S3 · mix & master"**
+  + guarded avMixInit/avMixUiInit boots · cdp_smoke mix-card check (→ 21). Then rebuild → node re-runs +
+  `cdp_mix` first run (pin EXPECT_SHA; re-run) → FULL battery (ALL 14 pinned suites; re-pin all) →
+  PERF GATE (bench + stress ×2; worklet sha must read `6e66274e…`) → commits + addendum 28 + README.
+- **If resuming cold mid-S3:** read `verify/_s3_wave.md` + this section; `ls src/av_mix.js src/av_loud.js
+  src/av_mix_ui.js verify/cdp_mix.mjs` for what landed; child transcripts as above. Resume phrase:
+  **"continue anvil"**.
