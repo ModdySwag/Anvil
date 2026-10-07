@@ -38550,7 +38550,7 @@ const avDeckUiState = {
   rafOn: false, visible: true, docHidden: false, io: null, docBound: false,
   /* frame readiness + waterfall state */
   scopeReady: false, spectrumReady: false, spectrumLinear: false,
-  wfReady: false, wfMode: "none", wfSrc: null, wfSrcN: 0, wfNewest: -1,
+  wfReady: false, wfMode: "none", wfSrc: null, wfSrcN: 0, wfNewest: -1, wfCols: 0,
   wfRing: null, wfHead: 0, wfCount: 0, wfLastSig: NaN, wfLastCount: null, wfDirty: true,
   wfOff: null, wfOctx: null, wfImg: null, wfW: 0, wfH: 0,
   /* write-on-change memos so idle ticks never touch the DOM */
@@ -39363,6 +39363,19 @@ function avDeckUiRowSig(row) {
   } catch (e) { return -1; }
 }
 
+/* content signature of ONE row inside the core's flat ring (av_deck fWaterfall: data + cols) */
+function avDeckUiWfFlatSig(data, rowIdx, cols) {
+  let sum = 0, cnt = 0;
+  try {
+    const base = rowIdx * cols;
+    for (let i = 0; i < cols; i++) {
+      const v = Number(data[base + i]);
+      if (isFinite(v)) { sum += v; cnt += 1; }
+    }
+    return sum + cnt * 1e-3;
+  } catch (e) { return -1; }
+}
+
 function avDeckUiWfEnsureRing() {
   const s = avDeckUiState;
   try {
@@ -39399,8 +39412,9 @@ function avDeckUiWfPush(f, row) {
 }
 
 /* resolve the waterfall frame into a paint plan; returns true when the paint content changed.
-   Tolerant to the plausible §2.1 shapes: rows = ring of rows (with an optional numeric
-   latestRow write index), rows = a single row, or latestRow = the newest row (push mode). */
+   Tolerant to the §2.1 shapes: the core's FLAT ring (rows = COUNT, latestRow = write INDEX,
+   cols + data), rows = a ring of rows, rows = a single row, or latestRow = the newest row
+   (push mode). */
 function avDeckUiWfResolve() {
   const s = avDeckUiState;
   const f = avDeckUiFrame("waterfall");
@@ -39409,6 +39423,7 @@ function avDeckUiWfResolve() {
   s.wfSrc = null;
   s.wfSrcN = 0;
   s.wfNewest = -1;
+  s.wfCols = 0;
   if (!s.wfReady) return false;
   const rows = f.rows;
   const latest = f.latestRow;
@@ -39420,6 +39435,29 @@ function avDeckUiWfResolve() {
     s.wfNewest = (isFinite(idx) && idx >= 0 && idx < s.wfSrcN) ? Math.floor(idx) : s.wfSrcN - 1;
     const sig = avDeckUiRowSig(rows[s.wfNewest]) + s.wfSrcN * 1e6;
     if (sig !== s.wfLastSig) { s.wfLastSig = sig; s.wfDirty = true; return true; }
+    return false;
+  }
+  /* the core's own shape (av_deck.js fWaterfall): rows = COUNT (number), latestRow = the ring
+     WRITE INDEX (number), cols = band count, data = the flat Float32 ring - paint a flat view */
+  const colsN = avDeckUiNum(f.cols, NaN);
+  const rowsN = avDeckUiNum(rows, NaN);
+  const data = f.data;
+  if (isFinite(colsN) && colsN >= 8 && rowsN !== null && rowsN >= 0 &&
+      data && typeof data.length === "number" &&
+      !avDeckUiRowLike(latest) && !avDeckUiRowLike(rows)) {
+    const cols = Math.floor(colsN);
+    const idx = avDeckUiNum(latest, NaN);
+    const newest = (isFinite(idx) && idx >= 0) ? (Math.floor(idx) % AV_DECK_UI_WF_ROWS) : -1;
+    if (newest >= 0 && (newest + 1) * cols <= data.length) {
+      s.wfMode = "flat";
+      s.wfSrc = data;
+      s.wfCols = cols;
+      s.wfSrcN = Math.min(AV_DECK_UI_WF_ROWS, Math.max(0, Math.floor(rowsN)));
+      s.wfNewest = newest;
+      const sig = avDeckUiWfFlatSig(data, newest, cols) + s.wfSrcN * 1e6 + newest;
+      if (sig !== s.wfLastSig) { s.wfLastSig = sig; s.wfDirty = true; return true; }
+      return false;
+    }
     return false;
   }
   if (avDeckUiRowLike(latest)) { s.wfMode = "push"; return avDeckUiWfPush(f, latest); }
@@ -39437,6 +39475,10 @@ function avDeckUiWfDisplayIndex(k, rowsN) {
       if (n <= 0) return -1;
       return ((s.wfNewest - k) % n + n) % n;
     }
+    if (s.wfMode === "flat") {
+      if (s.wfNewest < 0) return -1;
+      return ((s.wfNewest - k) % AV_DECK_UI_WF_ROWS + AV_DECK_UI_WF_ROWS) % AV_DECK_UI_WF_ROWS;
+    }
     if (s.wfMode === "push") {
       if (s.wfCount <= 0) return -1;
       return ((s.wfHead - 1 - k) % AV_DECK_UI_WF_ROWS + AV_DECK_UI_WF_ROWS) % AV_DECK_UI_WF_ROWS;
@@ -39452,6 +39494,12 @@ function avDeckUiWfCellValue(srcIdx, b) {
       const row = s.wfSrc ? s.wfSrc[srcIdx] : null;
       if (!row || b >= row.length) return NaN;
       return Number(row[b]);
+    }
+    if (s.wfMode === "flat") {
+      const cols = s.wfCols;
+      const i = srcIdx * cols + b;
+      if (!s.wfSrc || b >= cols || i < 0 || i >= s.wfSrc.length) return NaN;
+      return Number(s.wfSrc[i]);
     }
     const ring = s.wfRing;
     if (!ring) return NaN;
@@ -39552,7 +39600,7 @@ function avDeckUiDrawWaterfall(force) {
     g.fillStyle = "rgba(10,14,17,1)";                        /* the heat panel is opaque dark */
     g.fillRect(0, 0, W, H);
     if (!s.wfReady) return true;
-    const rowsN = (s.wfMode === "ring") ? s.wfSrcN : s.wfCount;
+    const rowsN = (s.wfMode === "ring" || s.wfMode === "flat") ? s.wfSrcN : s.wfCount;
     if (rowsN <= 0) return true;
     return avDeckUiWfPaint(fit, rowsN, s.view.dbFloor, s.spectrumLinear === true);
   } catch (e) { return false; }
