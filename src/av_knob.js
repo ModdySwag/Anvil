@@ -314,8 +314,11 @@ function avKnobBind(root) {
       const dir = e.deltaY < 0 ? 1 : -1;
       avKnobCommit(el, cur + dir * (e.shiftKey ? step / 4 : step));
     }, { passive: false });
+    /* avKnobKey - P7 keyboard + aria surface (verify/_p7_wave.md 2.2): arrow steps (Shift x10),
+       Home/End; step = numeric data-step else 1% of the range; commits ride avKnobCommit, the funnel. */
     el.addEventListener("keydown", (e) => {
-      const step = parseFloat(el.dataset.step) || 0.01;
+      const rawStep = parseFloat(el.dataset.step);
+      const step = isFinite(rawStep) && rawStep > 0 ? rawStep : (max - min) / 100;
       const cur = avKnobNormToVal(parseFloat(el.dataset.norm), min, max, curve, step);
       const big = e.shiftKey ? 10 : 1;
       let d = 0;

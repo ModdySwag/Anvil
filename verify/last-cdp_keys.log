@@ -3,11 +3,11 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   dock: #piano-dock on screen - exactly 61 keys (36 white / 25 black)  -> {"dock":true,"box":true,"visible":true,"total":61,"white":36,"black":25}
  ok   black-key geometry: sampled left % sits on the piano boundary (+/-0.3; first 7 + 7 picks)  -> n=25 sampled=14 worst=0.001 offLeft=0 offStyle=0 offCentre=0
  ok   black-key geometry: every black inside 0..100 of the bed  -> outside=0
- ok   fresh state: STUDIO - one lit chip (aria-pressed), hint mentions STUDIO, no kb-armed/kb-midi  -> mode=studio on=["studio"] hint="STUDIO — letters are qui..." cls=""
- ok   KEYS chip click (real mouse) - mode keys, armed, #pk-arm-led on, body.kb-armed  -> mode=keys armed=true led=true cls="kb-armed"
+ ok   fresh state: STUDIO - one lit chip (aria-pressed), hint mentions STUDIO, no kb-armed/kb-midi  -> mode=studio on=["studio"] hint="STUDIO — letters are qui..." cls="av-reduce-motion"
+ ok   KEYS chip click (real mouse) - mode keys, armed, #pk-arm-led on, body.kb-armed  -> mode=keys armed=true led=true cls="av-reduce-motion kb-armed"
  ok   typing: real A in KEYS - __lastNotePreview c4 + bus held [c4]  -> {"note":"c4","held":["c4"]}
  ok   typing: keyup releases - bus held empty (no drone)  -> {"held":[]}
- ok   ` toggles KEYS -> STUDIO (chip, LED and body class follow)  -> mode=studio led=false cls=""
+ ok   ` toggles KEYS -> STUDIO (chip, LED and body class follow)  -> mode=studio led=false cls="av-reduce-motion"
  ok   ` toggles STUDIO -> KEYS again  -> mode=keys armed=true led=true
  ok   Escape disarms KEYS (armed false, LED off, chip back to STUDIO)  -> mode=studio armed=false led=false
  ok   leaving KEYS under a held note stops it (STUDIO chip click -> bus held empty)  -> {"before":["c4"],"mode":"studio","after":[]}
@@ -23,7 +23,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   a11y: the note auto-releases (~350 ms timer) - held empty at +720 ms  -> {"held":[]}
  ok   persistence: av-input-mode=keys survives a real reload  -> {"mode":"keys","armed":true,"keys":61,"led":true}
  ok   persistence: the restored KEYS mode really plays (A -> c4 after the reload)  -> {"note":"c4","held":["c4"]}
- ok   persistence: a corrupt stored mode ("klingon") falls back to STUDIO at boot  -> {"mode":"studio","on":["studio"],"keys":61,"cls":""}
+ ok   persistence: a corrupt stored mode ("klingon") falls back to STUDIO at boot  -> {"mode":"studio","on":["studio"],"keys":61,"cls":"av-reduce-motion"}
  ok   screenshot: dock closeup in KEYS mode -> renders/p0-keys-suite.png  -> C:\Users\Moddy\anvil\renders\p0-keys-suite.png (156827 bytes)
  ok   zero console errors for the whole run
 

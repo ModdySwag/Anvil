@@ -1340,3 +1340,70 @@ button.av-pwa-chip:hover { border-color: var(--teal-deep); color: var(--text); }
 .av-fam-empty { font-size: 11px; color: var(--text-3); }
 .av-fam-note { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
 .av-fam-busy { opacity: .65; }
+
+/* ==== P7 wave (av_a11y.js) - generated block from avA11yClasses() + the pinned a11y surfaces.
+   Tokens: the house :root set. Contrast = token overrides on body.av-contrast; motion = the WCAG
+   duration snippet for both the manual class and the OS preference. */
+
+/* ---- the header host + toggles (av_a11y.js) ---- */
+.av-a11y { display: inline-flex; align-items: center; gap: 6px; }
+.av-a11y-btn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .06em;
+  color: var(--text-2); background: var(--raised);
+  border: 1px solid var(--hair); border-radius: 6px; padding: 4px 9px; cursor: pointer;
+}
+.av-a11y-btn:hover { border-color: var(--teal-deep); color: var(--text); }
+.av-a11y-btn[aria-pressed="true"] { color: var(--teal); border-color: var(--teal-deep); }
+
+/* ---- skip link: hidden until focused, never in normal flow ---- */
+.av-a11y-skip {
+  position: fixed; left: 12px; top: 8px; z-index: 60;
+  transform: translateY(-200%);
+  font-family: var(--mono); font-size: 12px; color: var(--text);
+  background: var(--panel); border: 1px solid var(--teal); border-radius: 6px;
+  padding: 8px 12px; text-decoration: none;
+}
+.av-a11y-skip:focus { transform: translateY(0); outline: 2px solid var(--teal); outline-offset: 2px; }
+
+/* ---- screen-reader-only (the live region rides this) ---- */
+.av-a11y-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
+
+/* ---- focus visibility rings (keyboard users) ---- */
+.av-a11y-btn:focus-visible, .av-btn:focus-visible, .av-knob:focus-visible,
+select:focus-visible, input:focus-visible, a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--teal); outline-offset: 2px;
+}
+
+/* ---- high contrast variant (body.av-contrast) ---- */
+body.av-contrast {
+  --text: #FFFFFF;
+  --text-2: #D9E6EA;
+  --text-3: #AEC1C9;
+  --hair: #46606C;
+  --teal: #57F0E1;
+  --teal-deep: #16A99C;
+}
+body.av-contrast .av-a11y-btn, body.av-contrast .av-btn, body.av-contrast .av-chip { border-width: 2px; }
+body.av-contrast .av-card { border-color: var(--hair); }
+
+/* ---- reduced motion: manual class path ---- */
+.av-reduce-motion *, .av-reduce-motion *::before, .av-reduce-motion *::after {
+  animation-duration: .01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* ---- reduced motion: OS preference path ---- */
+@media (prefers-reduced-motion: reduce) {
+  * , *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -512,6 +512,26 @@ async function main() {
   check('PLATFORM pwa: file:// guard (module live, unsupported here, manifest link NOT injected)',
     pfS.pwaApi === 'object' && pfS.pwaSupported === false && pfS.manifest === false, JSON.stringify(pfS));
 
+  /* P7: the accessibility layer */
+  const p7R = await ev(`(() => {
+    try {
+      const s = (window.__avA11y && typeof window.__avA11y.state === 'function') ? window.__avA11y.state() : null;
+      const skip = document.getElementById('av-a11y-skip');
+      const main = document.getElementById('av-main');
+      const btn = document.querySelector('#av-a11y-contrast');
+      const mo = document.querySelector('#av-a11y-motion');
+      return { api: typeof window.__avA11y,
+               s: s ? { skip: s.skip, live: s.live, sliders: s.counts ? s.counts.sliders : null, unnamed: s.counts ? s.counts.unnamed : null } : null,
+               skipHref: skip ? skip.getAttribute('href') : null, mainId: !!main,
+               toggles: !!(btn && mo), pressed: btn ? btn.getAttribute('aria-pressed') : null };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const p7S = p7R.value || {};
+  check('P7 a11y: module live + skip link -> #av-main + aria-pressed toggles',
+    p7S.api === 'object' && p7S.s && p7S.s.skip === true && p7S.s.live === true && p7S.skipHref === '#av-main' && p7S.mainId === true && p7S.toggles === true && (p7S.pressed === 'true' || p7S.pressed === 'false'), JSON.stringify(p7S));
+  check('P7 a11y: knobs decorated (>= 85 sliders) + zero unnamed buttons',
+    p7S.s && typeof p7S.s.sliders === 'number' && p7S.s.sliders >= 85 && p7S.s.unnamed === 0, JSON.stringify(p7S.s));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

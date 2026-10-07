@@ -17,6 +17,7 @@ CHAIN s4 exit=0
 CHAIN s5 exit=0
 CHAIN code exit=0
 CHAIN m1 exit=0
-CHAIN m2 exit=1
+CHAIN m2 exit=0
 CHAIN platform exit=0
+CHAIN a11y exit=0
 BATTERY-DONE
