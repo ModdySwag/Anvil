@@ -443,3 +443,39 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
   DEFINITIVE attribution run must happen on a quiet machine (no agents, no user activity) — run it in
   a quiet window and commit both records (`stress-p2-run2.log` committed as raw evidence). Bench
   stays the publishable metric (stable across both runs). Resume phrase: **"continue anvil"**.
+
+## SESSION SAVE — 2026-10-07 (~13:25; context full → CONTINUED SESSION)
+
+**Delivered this session (in order):**
+1. **P1.x CLOSE-OUT** — commits `2c930ef`→`69884a0`: alias gates MET (BH4 rig 30/30; VA worst
+   −58.2 / WT worst −91.2 dBc), battery 11/18/27/33, bench 128 @ 47.6 %, stress ×2 recorded raw
+   (cold-start delta reproduced; uni-7 probe hot) → P·2 optimisation queued. Addendum 12 + README +
+   contract close-out + node-harness evidence committed.
+2. **P2 wave END-TO-END** — contract `c6c4da0`; 7 children (deleg_9846f2ce) → parent integration
+   (29 counted edits) → **battery ALL GREEN on frozen `7ddfedf7` (483,056 B): smoke 11 · feel 18 ·
+   keys 27 · midi 33 · cdp_sample 29 · cdp_rec 29**; commit `96a4233`; demos in `renders/`
+   (demo_acid_line / demo_accent / demo_slide / kits_demo).
+3. **P2 PERF GATE** — bench-v5: **128 voices @ 47.1 % (stable, publishable)**; stress run1 = 142,
+   run2 = 627 but **CONTAMINATED** (ran with all 7 P3 children + desktop load) → attribution on a
+   QUIET machine deferred. Commits `fe41c51` + `e5f0cd1`.
+4. **P3 wave** — contract `5e7527d`; 7 children (deleg_126ca06f) ALL GREEN (`2a1bc84`: verb 61/61 ·
+   delay+mod 49 · drive+dyn 49 · cdp_fx rig · mod 89/89 · grain+sampler 146/146 · synth panels 85
+   knobs); integration flags banked (`e1e46a2`, the section above). **Integration NOT yet done.**
+5. Owner directives recorded: docs/07 batch 4 `b0e1a8d` · docs/08 studio mandate `194b2da` · full
+   build permission (docs/05 §2.10). Owner standing order: **build to the final product, complete.**
+
+**FIRST MOVES in the continued session:**
+1. Read this file's "P3 wave — Children Landed" section (integration flags 1–7) + `verify/_p3_wave.md`;
+   then run the parent integration accordingly (av_dsp: registerFx/chain + bindEngine + kind widening
+   1..5 + samples/zones + mod application; av_engine: avEngineMod/Sample/Zones; build.py concat/parts;
+   hosts/styles/boot; smoke 70→85 knobs).
+2. Rebuild → battery + `cdp_fx` (pin EXPECT_SHA) → commit P3 close-out + addendum 14.
+3. Perf gate on a **quiet machine** (no agents, no desktop activity) — includes the deferred P2/P3
+   stress attribution; bench stays the publishable metric.
+4. Then **P4** (sequencer/groovebox: step-objects, chains/songs, acid lane, audio-clock) per the
+   GOLDEN BUILD program. Housekeeping: delete stray `verify/verb_node_out.*`; docs/05 §3 option-7
+   resolve note; skill P3 update after integration passes.
+
+**State at save:** HEAD `e1e46a2` (tree CLEAN); all child evidence + transcripts on disk
+(`cache\delegation\live\deleg_126ca06f\`); mnemosyne canonical 'anvil' current. Nothing at risk.
+Resume phrase: **"continue anvil"**.
