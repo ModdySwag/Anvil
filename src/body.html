@@ -13,7 +13,7 @@
   <section class="av-card">
     <h1>Phase 1 &mdash; the voice engine is live</h1>
     <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P2 engine stack &mdash; VA (minBLEP + wavetable), ACID (303 lineage with accent memory), STRING (Karplus-Strong) and DRUM (an 11-voice kit) &mdash; plus the sample core and the tap recorder. Sequencer next (P4).</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core and the tap recorder. Sequencer next (P4).</p>
   </section>
 
   <section class="av-card" id="av-levels">
@@ -26,6 +26,16 @@
     <h2>Synth</h2>
     <div id="av-synth-knobs"></div>
     <p class="av-note av-dim">Play it from the piano dock below or your MIDI keys.</p>
+  </section>
+
+  <section class="av-card" id="av-fx">
+    <h2>FX Rack</h2>
+    <div id="av-fx-host"><p class="av-note av-dim">The rack lands here &mdash; five modules inside the mixer worklet: drive &rarr; mod &rarr; delay &rarr; verb &rarr; dyn. All off = bit-identical bypass.</p></div>
+  </section>
+
+  <section class="av-card" id="av-mod">
+    <h2>Mod Matrix</h2>
+    <div id="av-mod-host"><p class="av-note av-dim">The matrix lands here &mdash; 8 macro knobs and up to 32 routing slots (env / LFO / velocity / key / rand &rarr; cutoff, reso, pitch, osc levels, pan).</p></div>
   </section>
 
   <section class="av-card" id="av-midi-card">
@@ -62,7 +72,7 @@
 </main>
 
 <footer class="av-foot">
-  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Phase 2 &middot; sound identity &middot; AGPL-3.0-or-later</span>
+  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Phase 3 &middot; colour &middot; AGPL-3.0-or-later</span>
 </footer>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">

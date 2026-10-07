@@ -1,7 +1,7 @@
 {
  "harness": "verb_node.mjs",
  "version": "p3.0",
- "done": "2026-10-07T02:43:39.991Z",
+ "done": "2026-10-07T03:02:27.733Z",
  "g10": {
   "rows": 108,
   "bad": 0
@@ -314,7 +314,7 @@
  "g6": [
   {
    "mode": "plate",
-   "delta": -56
+   "delta": -296
   },
   {
    "mode": "fdn",

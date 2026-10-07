@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.2.0", phase: "P2 · sound identity", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.3.0", phase: "P3 · colour", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -63,11 +63,17 @@ function avMountLevels() {
   try { padsOk = (typeof avPadsInit === "function") ? (avPadsInit() !== false) : false; } catch (e) { console.warn("[anvil] pads init failed", e); }
   try { sampleOk = (typeof avSampleInit === "function") ? (avSampleInit() !== false) : false; } catch (e) { console.warn("[anvil] sample init failed", e); }
   try { const r0 = (typeof avRecInit === "function") ? avRecInit() : null; recOk = !!(r0 && r0.ok === true); } catch (e) { console.warn("[anvil] rec init failed", e); }
+  let fxOk = false, modOk = false;
+  try { fxOk = (typeof avFxInit === "function") ? (avFxInit() !== false) : false; } catch (e) { console.warn("[anvil] fx rack init failed", e); }
+  try { modOk = (typeof avModInit === "function") ? (avModInit() !== false) : false; } catch (e) { console.warn("[anvil] mod matrix init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
     if (typeof avEngineEnsure === "function") {
-      avEngineEnsure().catch(e => console.warn("[anvil] engine boot failed", e));
+      avEngineEnsure().then(h => {
+        /* P3: mirror the transport tempo into the delay module (div follows avState.bpm) */
+        if (h) { try { h.setParam("fx.delay.bpm", avState.bpm); } catch (e) { /* bpm mirror is best-effort */ } }
+      }).catch(e => console.warn("[anvil] engine boot failed", e));
     }
   } catch (e) { console.warn("[anvil] engine ensure threw", e); }
   const ver = document.getElementById("av-version");
@@ -75,7 +81,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
@@ -169,14 +175,20 @@ async function avEngineSelfTest() {
     /* P2: kind switch acceptance + drum routing round-trip */
     out.kinds = {};
     let kindsOk = true;
-    for (const k of ["va", "acid", "string", "drum"]) {
+    for (const k of ["va", "acid", "string", "drum", "grain", "sampler"]) {
       let acc = h.setParam("engine.kind", k) === true;
       if (acc && k === "acid") acc = h.setParam("acid.cutoff", 900) === true;
       if (acc && k === "string") acc = h.setParam("string.damp", 0.4) === true;
       if (acc && k === "drum") acc = h.setParam("drum.kick.decay", 0.3) === true;
+      if (acc && k === "grain") acc = h.setParam("grain.pos", 0.25) === true;
+      if (acc && k === "sampler") acc = h.setParam("sampler.root", 60) === true;
       out.kinds[k] = acc;
       kindsOk = kindsOk && acc;
     }
+    /* P3: FX + mod wire acceptance (delivery semantics; default values re-sent, state unchanged) */
+    out.fx = h.setParam("fx.verb.mix", 0.3) === true && h.setParam("fx.delay.time", 0.3) === true
+      && h.setParam("fx.mod.rate", 0.6) === true && h.setParam("fx.drive.mode", "sat") === true;
+    try { out.mod = (typeof avEngineMod === "function") ? (avEngineMod({ macros: new Float64Array(8), slots: new Float64Array(128) }) !== false) : false; } catch (e) { out.mod = false; }
     h.setParam("engine.kind", "drum");
     await new Promise(r => setTimeout(r, 150));
     h.noteOn(36, 0.9);
@@ -187,7 +199,7 @@ async function avEngineSelfTest() {
     await new Promise(r => setTimeout(r, 150));
     h.setParam("engine.kind", "va");
     out.kindsOk = kindsOk;
-    out.ok = !!out.tier && out.allocated === true && kindsOk && out.drumNote === true;
+    out.ok = !!out.tier && out.allocated === true && kindsOk && out.drumNote === true && out.fx === true && out.mod === true;
   } catch (e) { out.error = String((e && e.message) || e); }
   avTestLine("ENGINE SELFTEST " + JSON.stringify(out), "av-enginetest");
   window.__avEngineTest = out;

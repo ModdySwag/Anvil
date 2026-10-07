@@ -1,5 +1,5 @@
 === drivedyn_node.mjs -- Anvil P3 child C: av_fx_drive.js (AVFXDRIVE) + av_fx_dyn.js (AVFXDYN) ===
-node v26.7.0   2026-10-07T02:44:12.616Z
+node v26.7.0   2026-10-07T03:02:10.819Z
 repo C:/Users/Moddy/anvil   sr 48000 (cross-rate spots at 44100)
 
 --- 0. module laws (both files) ---
@@ -29,7 +29,7 @@ repo C:/Users/Moddy/anvil   sr 48000 (cross-rate spots at 44100)
   PASS  D-S6b. NaN / non-numeric value -> false
   PASS  Y-S6a. dyn param table accepts its 11 paths, rejects foreign/unknown, clamps  ::  eqLo->15 thresh->-40 ratio->1 att->0.001 rel->1 makeup->24 ceiling->0
   PASS  Y-S6b. NaN value -> false
-  PASS  S7. alloc-free process() x2 modules (2x 40x4800 calls, gc both sides)  ::  drive heapD=-7120 B  dyn heapD=-8448 B
+  PASS  S7. alloc-free process() x2 modules (2x 40x4800 calls, gc both sides)  ::  drive heapD=-11072 B  dyn heapD=4840 B
   PASS  Y-S7. bindEngine: pre-bind params honoured; sr rebuilds coeffs (44.1k == fresh, 48k differs)  ::  b0 48k=1.007856353 44.1k=1.008554016 lookN=144/132
   PASS  D-S7. bindEngine: sr-derived coefficients rebuild (44.1k pre-bind == fresh 44.1k)
 

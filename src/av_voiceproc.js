@@ -3,7 +3,8 @@
    registration. No page/global-scope reach-ins; timing runs through a guarded clock so the
    same source also loads in plain-scope rigs. Message protocol (both directions) is pinned:
    in  {t:'param', path, v} | {t:'note', on, midi, gain} | {t:'allOff'} |
-       {t:'bench', cmd:'reset'|'read', id} | {t:'stats', id} | {t:'hello', id}
+       {t:'bench', cmd:'reset'|'read', id} | {t:'stats', id} | {t:'hello', id} |
+       {t:'sample', id, name, rate, ch1, ch2?} | {t:'zones', zones} | {t:'mod', macros, slots}
    out {t:'ready', sr, maxVoices, os, version} | {t:'bench', id, data} | {t:'stats', id, data} */
 "use strict";
 
@@ -33,6 +34,10 @@ class AVVoiceProcessor extends AudioWorkletProcessor {
         return;
       }
       if (m.t === 'allOff') { AVDSP.allOff(eng); return; }
+      /* P3: sample / zones / mod arrive as messages; allocation happens HERE, never in render */
+      if (m.t === 'sample') { AVDSP.setSample(eng, m.id, m.name, m.rate, m.ch1, m.ch2); return; }
+      if (m.t === 'zones') { AVDSP.setZones(eng, m.zones); return; }
+      if (m.t === 'mod') { AVDSP.setMod(eng, m.macros, m.slots); return; }
       if (m.t === 'bench') {
         if (m.cmd === 'reset') AVDSP.benchReset(eng);
         else this.port.postMessage({ t: 'bench', id: m.id, data: AVDSP.benchRead(eng) });

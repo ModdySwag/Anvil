@@ -60,7 +60,7 @@ module: C:/Users/Moddy/anvil/src/av_fx_verb.js   version=p3.0
   PASS  G5 freeverb |rho| < 0.9  ::  rho=0.033
 
 --- G6. alloc-free render (heap-flat, gc both sides where available) ---
-  PASS  G6 plate    heap delta < 65536 B per 100x4800 frames  ::  delta=-56 B
+  PASS  G6 plate    heap delta < 65536 B per 100x4800 frames  ::  delta=-296 B
   PASS  G6 fdn      heap delta < 65536 B per 100x4800 frames  ::  delta=-64 B
   PASS  G6 freeverb heap delta < 65536 B per 100x4800 frames  ::  delta=-64 B
 

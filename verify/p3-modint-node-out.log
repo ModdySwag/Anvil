@@ -1,0 +1,53 @@
+== A. registration surface ==
+  PASS  syntax+version: AVDSP.version p3.0  ::  p3.0
+  PASS  registerFx exported (function)
+  PASS  setSample/setZones/setMod exported
+  PASS  kind kext init widened: grain kext seeded (grBuf)  ::  grBuf=0
+  PASS  kind kext init widened: sampler kext seeded (svVol)  ::  svVol=0.8
+  PASS  kind voice init widened: grain v.k fields on every voice (grAct)
+  PASS  kind voice init widened: sampler v.k fields (svPos number)
+  PASS  FX chain built at create: fixed order drive,mod,delay,verb,dyn  ::  drive,mod,delay,verb,dyn
+  PASS  FX chain wet flags: drive=1 mod=0 delay=0 verb=1 dyn=1  ::  1,0,0,1,1
+  PASS  FX states bound to the engine sr  ::  48000,48000,48000,48000,48000
+  PASS  kind ids widened: registerKind(6, ...) refused, (4/5) already taken by real modules
+  PASS  registerFx refuses bogus prefix
+== B. FX chain: determinism + bypass nulls ==
+  PASS  determinism pair: two fresh engines, same note -> bit-identical (all FX off)  ::  de4c38b3feddef67/de4c38b3feddef67 vs de4c38b3feddef67/de4c38b3feddef67
+  PASS  mix=0 all-ON === all-off, BIT-IDENTICAL both channels (maxAbsDiff 0)  ::  dL=0 dR=0
+  PASS  verb ON mix=1 CHANGES the render (chain live, not dead)  ::  diff=0.387572
+  PASS  delay ON: an echo lands in the 0.2 s window after a short burst  ::  peak=0.287199
+  PASS  no NaN/Inf in any chain render buffer (verb/delay active)
+== C. mod matrix: accuracy + flags ==
+  PASS  cutoff baseline a2 matches the analytic SVF coefficient (fc 200)  ::  0.006485121787806047 vs 0.006485121787804625
+  PASS  mod cutoff +4 oct: fc 200->3200 exact (a2 analytic match)  ::  0.090699 vs 0.090699
+  PASS  exp curve(0.5)=0.25 -> +1 oct (fc 400) exact  ::  0.012852 vs 0.012852
+  PASS  S curve(0.5)=0.5 -> +2 oct (fc 800) exact  ::  0.025239 vs 0.025239
+  PASS  mod reso +0.5: fk matches 2-1.98*0.8 exactly  ::  0.416000 vs 0.416000
+  PASS  mod pitch +12 st: inc1 doubles exactly (ratio 2)  ::  0.005450532610429138 / 0.002725266305214569
+  PASS  empty matrix clears the per-voice cache (modCut/modPitch 0 after clear)  ::  cut=0 pit=0
+  PASS  empty matrix: modCount/modPitchOn/modPanOn all 0
+  PASS  mod osc1.level +1: rms x5 (0.2 -> 1.0)  ::  5.000000
+  PASS  mod pan +1: L channel collapsed vs R (equal-power right)  ::  L=1.1100969616331061e-15 R=18.12925918568513
+  PASS  mod pan inactive: output L === R bit-identical
+  PASS  rand deterministic for same seed  ::  0.45953582832589746 / 0.45953582832589746
+  PASS  rand differs across seeds  ::  0.45953582832589746 / -0.8174974974244833
+  PASS  key source normalisation: midi 84 -> +1.0 (x24 window)
+== D. sampler end-to-end (kind 5) ==
+  PASS  setSample: slot shape {name,rate,n,ch1,ch2}
+  PASS  setSample: out-of-range slot refused
+  PASS  slot stored: n=1000 rate=48000 ch2=null
+  PASS  setZones true
+  PASS  zones copied (zone0 = 48,72,60,0,1)
+  PASS  one-shot output exactly matches the pinned gain law (mid-buffer)  ::  0.083700 vs 0.083700
+  PASS  one-shot: ended by sample 1200 -> silence  ::  0.000000
+  PASS  sampler zone latched (v.k.svZone 0, svBuf 0, root 60)  ::  {"state":1,"kindId":5,"zone":0,"buf":0,"root":60}
+  PASS  no NaN in sampler render
+== E. grain end-to-end (kind 4) ==
+  PASS  grain voice renders nonzero energy  ::  sum=8.833924
+  PASS  grain spawned grains (grSpawn > 0)  ::  spawns=20
+  PASS  grain budget NEVER exceeded (grMaxLive <= 24, >= 1)  ::  maxLive=4
+  PASS  no NaN in grain render
+== F. render alloc discipline (coarse) ==
+  PASS  render with mod+grain active: heap flat (< 200 KB drift)  ::  -1 KB
+
+MOD-DSP INTEGRATION: ALL PASS

@@ -479,3 +479,45 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
 **State at save:** HEAD `e1e46a2` (tree CLEAN); all child evidence + transcripts on disk
 (`cache\delegation\live\deleg_126ca06f\`); mnemosyne canonical 'anvil' current. Nothing at risk.
 Resume phrase: **"continue anvil"**.
+
+
+## Resume addendum 14 — 2026-10-07 (P3 wave INTEGRATED — battery ALL GREEN on 5861d7d6)
+
+- **Parent integration landed** (ONE counted-assert script, all-or-nothing; path
+  `cache/scratch/p3/integrate/_p3_integrate.py`), per the e1e46a2 flags:
+  av_dsp **p3.0** — FX_MODS/registerFx + the post-mix chain drive→mod→delay→verb→dyn with the
+  per-module convention split (drive/verb/dyn = wet + parent blend; mod/delay = module-final
+  copy; `bindEngine(st, eng)` right after each `createState`; `st.on === 0` = skipped, chain
+  bit-identical to P2 when all off); kind ids widen **1..5** (grain = 4, sampler = 5);
+  `eng.samples[4]` + `eng.zones(40)` + `eng.modMacros(8)`/`eng.modSlots(128)` with
+  setSample/setZones/setMod at message time (allocation only there); v1 mod application at the
+  recomputeFilter/computePitch cadence — cutoff ±4 oct · reso ±0.5 · pitch ±12 st · osc levels
+  ±1 · pan ±1 (block-rate, macro sources in v1) with curves linear / sign·x² / sign·smoothstep
+  and a per-note `v.randVal`. Plus: av_voiceproc `{t:'sample'|'zones'|'mod'}` branches · facade
+  `avEngineMod` / `avEngineSample` (transferables) / `avEngineZones` · build.py (worklet concat +
+  js_parts: five av_fx_* + av_fx + av_mod in order) · app_core (avFxInit/avModInit guarded boot,
+  ENGINE SELFTEST kinds 6 + fx/mod acceptance, `fx.delay.bpm` mirror) · body hosts + P3 copy ·
+  cdp_smoke counts (85 synth knobs, six engine options, fx rack 20 knobs + 5 toggles + 4 selects,
+  mod 8 macro knobs) · docs/05 §3 options 7 + 9 resolved notes.
+- **Frozen build: `index.html` = 5861d7d6… (775,551 B).**
+- **Battery ALL GREEN on the frozen bytes** (logs refreshed in `verify/last-*.log`): smoke **14/14** ·
+  cdp_knob_feel 18/18 · keys 27/27 · midi 33/33 (pin now 5861d7d6) · sample 29/29 · rec 29/29 ·
+  **cdp_fx 27/27** (new rig: rack mounted, reverb tail WITNESSED on the master tap, bypass-null
+  bit-identical A≡B and mix0≡off, all-ON-mix1 changes the render, 29/29 param round-trips,
+  screenshot `renders/p3-fx-suite.png`).
+- **Parent node harness (NEW)**: `cache/scratch/p3/integrate/mod_dsp_node.mjs` — the mod-DSP
+  accuracy + integration group — **ALL PASS (34 checks)**: analytic a2 matches (cutoff +4 oct,
+  exp curve → +1 oct, S curve → +2 oct), reso fk exact, pitch inc1 ×2, osc1 level rms ×5, pan
+  collapse, rand determinism, chain determinism pair + mix=0 null, sampler exact-output (0.0837
+  pinned law) + zone latch, grain spawns/budget. Evidence: `verify/p3-modint-node-out.{log,json}`.
+- **Child harness summary re-run (parent)**: verb 61/61 (passes with `--expose-gc`) · delaymod
+  49/49 after ONE test-side expectation fix (I5 asserted av_dsp **p2.0** — the un-integrated
+  value; now asserts the integrated **p3.0**, registerFx real) · drivedyn 49/49 · grain+sampler
+  146/146 · mod UI 89/89; `verify/p3-*-node-out.*` refreshed.
+- Cleanup: `verify/verb_node_out.*` dupes removed (git rm); all freeze pins updated.
+- **PERF GATE: running next on a QUIET machine** — bench (publishable metric) + stress, including
+  the deferred P2 stress attribution (run2 was contaminated by the P3 children). Records +
+  addendum 15 land in the next commit.
+- NEXT: perf gate → **P4 sequencer/groovebox** (step-objects, chains/songs, acid lane, audio-clock;
+  `bpm` mirror seam already live) per the GOLDEN BUILD program. Resume phrase: **"continue anvil"**.
+

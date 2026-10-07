@@ -33,7 +33,7 @@ const page = path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after. */
-const EXPECT_SHA = '7ddfedf7d17d799f84ecbc72cb2d7cf7bd49aa254082f705b589a96cec613c23';
+const EXPECT_SHA = '5861d7d650a75810b2f9af5abd781dd20473c04435bdbabcfe696132a80b9b76';
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
 console.log('index.html sha256 (before): ' + shaBefore);
@@ -250,7 +250,7 @@ async function main() {
   await sleep(700);
 
   /* 0. freeze: the bytes under test */
-  check('freeze: index.html sha256 before = 7ddfedf7…', shaBefore === EXPECT_SHA, shaBefore);
+  check('freeze: index.html sha256 before = 5861d7d6…', shaBefore === EXPECT_SHA, shaBefore);
 
   /* boot contract */
   let ready = false;
@@ -634,7 +634,7 @@ async function main() {
   /* ── 12. freeze: the bytes under test, after ── */
   const shaAfter = shaOf(page);
   console.log('index.html sha256 (after): ' + shaAfter);
-  check('freeze: index.html sha256 after = 7ddfedf7… (unchanged by the run)', shaAfter === EXPECT_SHA && shaAfter === shaBefore, shaAfter);
+  check('freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)', shaAfter === EXPECT_SHA && shaAfter === shaBefore, shaAfter);
 
   if (appBugs.length) { console.log('\n' + appBugs.length + ' app bug(s) recorded:'); appBugs.forEach(b => console.log('  - ' + b)); }
   console.log('\n' + pass + ' passed, ' + fail + ' failed');

@@ -180,15 +180,40 @@ async function main() {
   const io = ioR.value || {};
   check('keyboard dock: 61 keys, snap handle, MIDI deck mounted', io.keys === 61 && io.dock === true && io.kbsnap === 'function' && io.midi === 'object' && io.midiBody === true, JSON.stringify(io));
 
-  /* 6c. the P1 SYNTH card + controls */
+  /* 6c. the SYNTH card + controls (P3 counts: 85 knobs, six engine kinds) */
   const synR = await ev(`(() => {
     const host = document.getElementById('av-synth-knobs');
     const knobs = [...document.querySelectorAll('#av-synth .av-knob[data-knob]')];
     const sels = [...document.querySelectorAll('#av-synth select.av-select')];
-    return { host: !!host, knobs: knobs.length, bound: knobs.every(k => k.dataset.knobBound === '1'), sels: sels.length };
+    const engOpts = [...document.querySelectorAll('#av-synth-engine option')].map(o => o.value);
+    return { host: !!host, knobs: knobs.length, bound: knobs.every(k => k.dataset.knobBound === '1'), sels: sels.length, engOpts: engOpts };
   })()`);
   const syn = synR.value || {};
-  check('synth card: knobs + selects mounted + bound', syn.host === true && syn.knobs >= 12 && syn.bound === true && syn.sels >= 3, JSON.stringify(syn));
+  check('synth card: knobs + selects mounted + bound (85 knobs)', syn.host === true && syn.knobs >= 85 && syn.bound === true && syn.sels >= 3, JSON.stringify(syn));
+  check('synth card: ENGINE select offers all six kinds', JSON.stringify(syn.engOpts) === JSON.stringify(['va', 'acid', 'string', 'drum', 'grain', 'sampler']), JSON.stringify(syn.engOpts));
+
+  /* 6d. the P3 FX rack + mod matrix cards */
+  const p3R = await ev(`(() => {
+    const fx = document.getElementById('av-fx-host');
+    const md = document.getElementById('av-mod-host');
+    const strips = fx ? [...fx.querySelectorAll('.av-fx-strip')] : [];
+    const knobs = fx ? [...fx.querySelectorAll('.av-knob[data-knob]')] : [];
+    const toggles = fx ? [...fx.querySelectorAll('[data-fx-toggle]')] : [];
+    const sels = fx ? [...fx.querySelectorAll('select.av-fx-select')] : [];
+    const macroKnobs = md ? [...md.querySelectorAll('.av-knob[data-knob]')] : [];
+    return {
+      fx: !!fx, mod: !!md,
+      order: strips.map(s => s.dataset.mod).join(','), strips: strips.length,
+      knobs: knobs.length, knobsBound: knobs.filter(k => k.dataset.knobBound === '1').length,
+      toggles: toggles.filter(t => t.dataset.fxBound === '1').length,
+      sels: sels.filter(s => s.dataset.fxBound === '1').length,
+      macros: macroKnobs.length, macrosBound: macroKnobs.filter(k => k.dataset.knobBound === '1').length,
+    };
+  })()`);
+  const p3 = p3R.value || {};
+  check('P3 fx rack: 5 strips (drive,mod,delay,verb,dyn) · 20 knobs + 5 toggles + 4 selects all bound',
+    p3.fx === true && p3.order === 'drive,mod,delay,verb,dyn' && p3.strips === 5 && p3.knobs === 20 && p3.knobsBound === 20 && p3.toggles === 5 && p3.sels === 4, JSON.stringify(p3));
+  check('P3 mod matrix: card mounted with 8 bound macro knobs', p3.mod === true && p3.macros === 8 && p3.macrosBound === 8, JSON.stringify({ macros: p3.macros, bound: p3.macrosBound }));
 
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

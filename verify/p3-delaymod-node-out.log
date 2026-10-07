@@ -9,9 +9,9 @@ protocol: 48 kHz unless noted; output convention = module-side final mix (dry*(1
   PASS  I3. footer registration: registerFx("delay", AVFXDELAY) + registerFx("mod", AVFXMOD)  ::  keys=delay,mod
   PASS  I4. law scan: no page-scope tokens, ONE top-level const, strict, pinned footer
       delay(bad=none topConsts=1 strict=true footer=true) | mod(bad=none topConsts=1 strict=true footer=true)
-  PASS  I5. concat with av_dsp.js text loads (strict, single scope) and both register via a registerFx stub  ::  av_dsp=p2.0 reg=delay,mod
-  note: av_dsp.js at this commit has no registerFx yet (parent adds it per _p3_wave.md 2.2);
-        without the stub both modules load and skip registration (guarded typeof) -- verified above.
+  PASS  I5. concat with av_dsp.js text loads (strict, single scope) and both register via a registerFx stub  ::  av_dsp=p3.0 reg=delay,mod
+  note: av_dsp.js is now the INTEGRATED p3.0 (registerFx real); this check still drives the
+        single-scope concat through a stub to prove the footers register identically either way.
 
 --- setParam semantics (known -> true, unknown/enum/non-finite -> false, ranges clamp) ---
   PASS  P1. delay setParam accept/reject + clamps (time 0.01..2, fb 0..0.95, bpm 20..300, div->base 0.25 @1000bpm)  ::  fx.delay.time->true fx.delay.spread->true fx.delay.feedback->true fx.delay.pingpong->true fx.delay.duck->true fx.delay.div->true fx.delay.bpm->true fx.delay.on->true fx.delay.mix->true fx.delay.div->false fx.delay.nope->false fx.mod.mix->false fx.delay.time->false fx.delay.feedback->false delay.time->false | clamped: time=0.01 fb=0.95 bpm=300 div=4 base=0.1
@@ -48,7 +48,7 @@ protocol: 48 kHz unless noted; output convention = module-side final mix (dry*(1
   PASS  D4b. live sweeps (time/fb/pp/duck/spread/div/bpm/mix every 4096 smp): all finite  ::  nonfinite=0 peak=1.28
 
 --- D5 alloc-free render (heap-flat across process() calls; --expose-gc sharpens) ---
-  PASS  D5. delay heap-flat: steady 3128 B, glide 3832 B (|d| < 65536)  ::  gc both sides
+  PASS  D5. delay heap-flat: steady 2776 B, glide 3760 B (|d| < 65536)  ::  gc both sides
 
 --- X1 mix=0 bit-identical passthrough (Object.is per sample, incl. -0/denormals), on=0, mix=1 wet ---
   PASS  X1a. mix=0 -> st.oL/oR bit-identical to input (5000 smp x2 modules, Object.is incl. -0)  ::  exact
@@ -79,7 +79,7 @@ protocol: 48 kHz unless noted; output convention = module-side final mix (dry*(1
   PASS  M4b. live mode/rate/depth/fb/stages/mix sweeps every 2048 smp: all finite  ::  nonfinite=0 peak=1.40
 
 --- M5 mod alloc-free render (heap-flat; --expose-gc sharpens) ---
-  PASS  M5. mod heap-flat across modes: chorus 3184 B · ensemble 16 B · flanger 232 B · phaser 640 B (|d| < 65536)
+  PASS  M5. mod heap-flat across modes: chorus 3952 B · ensemble 16 B · flanger 232 B · phaser 640 B (|d| < 65536)
 
 --- X4 chain order mod -> delay on a stereo bus (the parent 2.2 loop: process then COPY st.oL/oR) ---
   PASS  X4a. mod->delay chain (both on) finite, bounded  ::  nonfinite=0 peak=0.30
@@ -87,5 +87,5 @@ protocol: 48 kHz unless noted; output convention = module-side final mix (dry*(1
   PASS  X4c. both modules ON at mix=0 -> chain copy bit-identical (module-side responsibility, 2.2)  ::  exact
 
 --- perf indicative (informational; node, single core, 48 kHz) ---
-  delay  0.0412 us/smp -> 1.979 ms/s audio (0.198% of one core)
-  phaser 0.0366 us/smp -> 1.755 ms/s audio (0.176% of one core)
+  delay  0.0399 us/smp -> 1.917 ms/s audio (0.192% of one core)
+  phaser 0.0368 us/smp -> 1.768 ms/s audio (0.177% of one core)

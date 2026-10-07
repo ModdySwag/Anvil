@@ -21,13 +21,19 @@
      setParam returns false, never throws.
    - P2 (verify/_p2_wave.md section 2): KIND_MODS/registerKind + AVLADDER are the sanctioned
      cross-module refs (guarded typeof); kind voices own their full per-sample chain via
-     stepVoice; v.kindId routes per note; engine.kind + drum.split routing; ladder24 + filter.drive. */
+     stepVoice; v.kindId routes per note; engine.kind + drum.split routing; ladder24 + filter.drive.
+   - P3 (verify/_p3_wave.md sections 2/4/5/6): FX_MODS/registerFx + the post-mix chain
+     (drive -> mod -> delay -> verb -> dyn; per-module convention: drive/verb/dyn write WET and
+     the parent blends dry*(1-mix)+wet*mix; mod/delay write their FINAL mix and the parent
+     copies); kind ids widen to 1..5 (grain = 4, sampler = 5); eng.samples[4] + eng.zones(40)
+     written at message time; eng.modMacros[8]/modSlots[128] with the v1 mod application
+     (recomputeFilter / computePitch cadence). */
 "use strict";
 
 const AVDSP = (function () {
 
   /* ---- constants ---- */
-  const VERSION = "p2.0";   /* P2: engine kinds (acid/string/drum) + ladder24 + drive */
+  const VERSION = "p3.0";   /* P3: FX chain + mod matrix + grain/sampler kinds (1..5) */
   const OS = 2;                                  /* voice-core oversampling factor */
   const TAU = Math.PI * 2;
   const SINE_N = 4096;                           /* sine LUT entries */
@@ -72,10 +78,10 @@ const AVDSP = (function () {
   /* ---- P2 engine kinds (contract verify/_p2_wave.md section 2) ----
      Kind modules (av_acid/av_string/av_drum) self-register at load. Kind voices own
      osc+filter+env+decimation via stepVoice; shared = pool, steal, velocity, fade, state. */
-  const KIND_MODS = [null, null, null, null];    /* 0 va · 1 acid · 2 string · 3 drum */
+  const KIND_MODS = [null, null, null, null, null, null];  /* 0 va · 1 acid · 2 string · 3 drum · 4 grain · 5 sampler */
   function registerKind(id, mod) {
     const i = Number(id);
-    if (!(i >= 1 && i <= 3) || !mod || typeof mod.stepVoice !== "function") return false;
+    if (!(i >= 1 && i <= 5) || !mod || typeof mod.stepVoice !== "function") return false;
     KIND_MODS[i] = mod;
     return true;
   }
@@ -83,6 +89,23 @@ const AVDSP = (function () {
     let k = eng.kind;
     if (k === 3 && eng.kext && eng.kext.split > 0 && midi >= eng.kext.split) k = 0;
     return k;
+  }
+
+  /* ---- P3 FX chain (contract verify/_p3_wave.md section 2) ----
+     FX modules (av_fx_*.js) self-register at load. Chain order is FIXED:
+     drive -> mod -> delay -> verb -> dyn; states are created at AVDSP.create (one per engine)
+     and bindEngine(st, eng) runs right after each so sr-derived coefficients are exact.
+     Per-module output convention (wave integration flag): drive/verb/dyn write WET (parent
+     blends); mod/delay write their FINAL mix (parent copies). st.on === 0 = skipped entirely,
+     so the chain is bit-identical to P2 when every module is off. */
+  const FX_MODS = [];                                      /* registered modules, index = slot */
+  const FX_PREFIX = ["drive", "mod", "delay", "verb", "dyn"];
+  const FX_WET = [1, 0, 0, 1, 1];                          /* 1 = wet (blend) · 0 = final (copy) */
+  function registerFx(prefix, mod) {
+    const fi = FX_PREFIX.indexOf(String(prefix));
+    if (fi < 0 || !mod || typeof mod.createState !== "function" || typeof mod.process !== "function") return false;
+    FX_MODS[fi] = mod;
+    return true;
   }
 
   /* ---- module tables (built once by buildTables) ---- */
@@ -331,7 +354,9 @@ const AVDSP = (function () {
       lfoPhase: 0, lfoVal: 0, shVal: 0,
       fade: 0, fadeStep: 0,
       pending: 0, pendingMidi: -1, pendingVel: 0, pendingStart: 0,
-      kindId: 0,                    /* P2: engine kind for the current note (set in reinitVoice) */
+      /* P3 mod-matrix per-voice cache (evaluated at the recomputeFilter cadence; 0 = inactive) */
+      randVal: 0, modCut: 0, modReso: 0, modPitch: 0, modL1: 0, modL2: 0,
+      kindId: 0,                    /* P2/P3: engine kind for the current note (set in reinitVoice) */
       k: {},                        /* P2: kind voice-state union (initVoiceK per module, at create) */
       lad: (typeof AVLADDER !== "undefined" && AVLADDER && typeof AVLADDER.createState === "function")
         ? AVLADDER.createState() : null,   /* P2: Moog-ladder state (filter.mode ladder24) */
@@ -387,17 +412,32 @@ const AVDSP = (function () {
       ring: new Float64Array(256), ringI: 0, ringN: 0, underruns: 0, budgetUs: 128e6 / sr,
       /* P2 kind machinery */
       kind: 0, kext: {}, tDrive: 0, cDrive: 0,
+      /* P3: sample registry + zone table + mod matrix + FX chain (message/setup-time writes) */
+      samples: [null, null, null, null], zones: new Float64Array(40),
+      modMacros: new Float64Array(8), modSlots: new Float64Array(128),
+      modCount: 0, modPitchOn: 0, modPanOn: 0,
+      fx: [],
     };
-    for (let kk = 1; kk <= 3; kk++) {
+    for (let kk = 1; kk <= 5; kk++) {
       const m0 = KIND_MODS[kk];
       if (m0 && typeof m0.initEngineK === "function") { try { m0.initEngineK(eng.kext); } catch (e) { } }
     }
     for (let vi0 = 0; vi0 < maxVoices; vi0++) {
       const kv0 = voices[vi0].k;
-      for (let kk = 1; kk <= 3; kk++) {
+      for (let kk = 1; kk <= 5; kk++) {
         const m0 = KIND_MODS[kk];
         if (m0 && typeof m0.initVoiceK === "function") { try { m0.initVoiceK(kv0); } catch (e) { } }
       }
+    }
+    /* P3: build the FX chain exactly once (states + engine binding); order = the fixed slot order */
+    for (let fi = 0; fi < FX_PREFIX.length; fi++) {
+      const m0 = FX_MODS[fi];
+      if (!m0) continue;
+      let st0 = null;
+      try { st0 = m0.createState({ sampleRate: sr }); } catch (e) { st0 = null; }
+      if (!st0) continue;
+      if (typeof m0.bindEngine === "function") { try { m0.bindEngine(st0, eng); } catch (e) { } }
+      eng.fx.push({ mod: m0, st: st0, wet: FX_WET[fi] });
     }
     eng.msBoot = Date.now() - t0;
     return eng;
@@ -488,18 +528,32 @@ const AVDSP = (function () {
       case "tune": { const n = Number(value); if (!isFinite(n)) return false; eng.tune = cl(n, -12, 12); eng.pitchGen++; return true; }
       case "engine.outScale": { const n = Number(value); if (!isFinite(n)) return false; eng.tOutScale = cl(n, 0.05, 1); return true; }
       case "engine.kind": {
-        const e = mapEnum(value, ["va", "acid", "string", "drum"]);
+        const e = mapEnum(value, ["va", "acid", "string", "drum", "grain", "sampler"]);
         if (e < 0) return false;
         eng.kind = e;
         return true;
       }
       case "filter.drive": { const n = Number(value); if (!isFinite(n)) return false; eng.tDrive = cl(n, 0, 1); return true; }
       default: {
-        /* P2 kind params: prefix dispatch to the registered module that claims the prefix */
+        /* P3 FX params: fx.<prefix>.* dispatch to the registered module state */
+        if (path.slice(0, 3) === "fx.") {
+          const dot2 = path.indexOf(".", 3);
+          if (dot2 > 3) {
+            const pre = path.slice(3, dot2);
+            for (let j = 0; j < eng.fx.length; j++) {
+              const e0 = eng.fx[j];
+              if (e0.mod && e0.mod.PREFIX === pre && typeof e0.mod.setParam === "function") {
+                try { return e0.mod.setParam(e0.st, path, value) === true; } catch (e) { return false; }
+              }
+            }
+          }
+          return false;
+        }
+        /* P2/P3 kind params: prefix dispatch to the registered module that claims the prefix */
         const dot = path.indexOf(".");
         if (dot > 0) {
           const pre = path.slice(0, dot);
-          for (let kk = 1; kk <= 3; kk++) {
+          for (let kk = 1; kk <= 5; kk++) {
             const m0 = KIND_MODS[kk];
             if (m0 && m0.PREFIX === pre && typeof m0.setParam === "function") {
               try { return m0.setParam(eng, path, value) === true; } catch (e) { return false; }
@@ -534,7 +588,8 @@ const AVDSP = (function () {
     }
     /* pitch is the gliding MIDI note value; normalise to A4=440 Hz (section 4.4 test 5 pins
        midi 69 -> 440 Hz), then bend/tune (semitones) + LFO pitch (+-50 ct at +-1) */
-    const st = (v.pitch - 69) + eng.bend + eng.tune + 0.5 * eng.lfoToPitch * v.lfoVal;
+    let st = (v.pitch - 69) + eng.bend + eng.tune + 0.5 * eng.lfoToPitch * v.lfoVal;
+    if (v.modPitch !== 0) st += v.modPitch * 12;                  /* P3: pitch ±12 st */
     let f = 440 * Math.pow(2, st / 12);
     if (f > eng.fLim) f = eng.fLim;                      /* safety: keeps increments < 0.5 */
     v.inc1 = f * eng.tune1F / eng.fs2;
@@ -577,6 +632,7 @@ const AVDSP = (function () {
     for (let i = 0; i < 7; i++) { v.ph1[i] = prngUnit(eng); v.ph2[i] = prngUnit(eng); }
     v.phSub = prngUnit(eng);
     v.shVal = prngBip(eng);
+    v.randVal = prngBip(eng);      /* P3: per-note rand source for the mod matrix */
     /* decimator + filter states */
     v.sa0 = 0; v.sa1 = 0; v.sa2 = 0;
     v.sb0 = 0; v.sb1 = 0; v.sb2 = 0;
@@ -601,6 +657,7 @@ const AVDSP = (function () {
     v.lfoPhase = 0; v.lfoVal = 0;
     v.fade = 0;
     v.fadeStep = 1 / eng.fadeInSamples;
+    if (eng.modCount > 0) modEvalVoice(eng, v);   /* P3: seed the mod cache before the first pitch pass */
     computePitch(eng, v);
     /* P2 (contract R2): kind per-note reset AFTER the core fields; AVACID reads v.pitch as the
        slide origin and scans eng.voices for the legato origin. Ladder state resets per note. */
@@ -770,7 +827,7 @@ const AVDSP = (function () {
         ph1[i] = nn;
       }
     }
-    o1 *= v.uni1Gain * eng.cOsc1Level;
+    o1 *= v.uni1Gain * ((v.modL1 !== 0) ? cl(eng.cOsc1Level + v.modL1, 0, 1) : eng.cOsc1Level);
     /* osc2 -- wavetable mip, cubic read */
     let o2 = 0;
     const frame = wtBank[eng.osc2Type * WT_LEVELS + v.mip2];
@@ -781,7 +838,7 @@ const AVDSP = (function () {
       let nn = tt + dt; if (nn >= 1) nn -= 1;
       ph2[i] = nn;
     }
-    o2 *= v.uni2Gain * eng.cOsc2Level;
+    o2 *= v.uni2Gain * ((v.modL2 !== 0) ? cl(eng.cOsc2Level + v.modL2, 0, 1) : eng.cOsc2Level);
     /* sub -- minBLEP square (or LUT sine) at f/2 */
     let so = 0;
     if (eng.cSubLevel > 0) {
@@ -845,13 +902,81 @@ const AVDSP = (function () {
     return x - v.fk * v1 - v2;
   }
 
+  /* ---- P3 mod matrix (contract verify/_p3_wave.md section 4; v1 application) ----
+     Wire: avEngineMod -> eng.modMacros[8] (0..1) + eng.modSlots[128] ([srcIdx, dstIdx, amt, curve] x32).
+     v1 evaluation lives at the recomputeFilter / computePitch cadence:
+       per-voice targets — cutoff ±4 oct · reso ±0.5 · pitch ±12 st · osc1/osc2 levels ±1;
+       engine target — pan ±1 (block-rate, MACRO sources only: per-voice sources have no
+       engine-wide value; v1 decision, recorded in the wave report/harness).
+     Sources (indices pinned by av_mod.js): 0 env1 · 1 env2 · 2 lfo1 · 3 vel · 4 key · 5 rand ·
+     6..13 macro1..8; key = (midi-60)/24 clamped ±1; rand = the per-note v.randVal draw.
+     Curves: 0 linear · 1 sign(x)*x^2 · 2 sign(x)*smoothstep(|x|). All-zero slot = inactive. */
+  function modCurve(c, x) {
+    if (c === 1 || c === 2) {
+      const neg = x < 0;
+      let a = neg ? -x : x;
+      if (a > 1) a = 1;
+      const y = (c === 1) ? a * a : a * a * (3 - 2 * a);
+      return neg ? -y : y;
+    }
+    return x;
+  }
+  function modSrcVal(eng, v, i) {
+    switch (i | 0) {
+      case 0: return v.e1Val;
+      case 1: return v.e2Val;
+      case 2: return v.lfoVal;
+      case 3: return v.vel;
+      case 4: { const kx = (v.noteMidi - 60) / 24; return kx < -1 ? -1 : (kx > 1 ? 1 : kx); }
+      case 5: return v.randVal;
+      default: { const mi = i - 6; return (mi >= 0 && mi < 8) ? eng.modMacros[mi] : 0; }
+    }
+  }
+  /* one pass over the slots -> the per-voice cache (recomputeFilter cadence, alloc-free) */
+  function modEvalVoice(eng, v) {
+    let cut = 0, reso = 0, pit = 0, l1 = 0, l2 = 0;
+    const s = eng.modSlots;
+    for (let i = 0; i < 32; i++) {
+      const o = i * 4;
+      const amt = s[o + 2];
+      if (amt === 0) continue;
+      const d = s[o + 1] | 0;
+      const val = amt * modCurve(s[o + 3] | 0, modSrcVal(eng, v, s[o] | 0));
+      if (d === 0) cut += val;
+      else if (d === 1) reso += val;
+      else if (d === 2) pit += val;
+      else if (d === 3) l1 += val;
+      else if (d === 4) l2 += val;
+    }
+    v.modCut = cut; v.modReso = reso; v.modPitch = pit; v.modL1 = l1; v.modL2 = l2;
+  }
+  /* engine-level pan value (block-rate): macro sources only in v1 */
+  function modPanEval(eng) {
+    let p = 0;
+    const s = eng.modSlots;
+    for (let i = 0; i < 32; i++) {
+      const o = i * 4;
+      const amt = s[o + 2];
+      if (amt === 0 || (s[o + 1] | 0) !== 5) continue;
+      const src = s[o] | 0;
+      if (src < 6 || src > 13) continue;
+      p += amt * modCurve(s[o + 3] | 0, eng.modMacros[src - 6]);
+    }
+    return p;
+  }
+
   /* filter coefficients: recomputed at least every 16 output samples (tan hoisting) */
   function recomputeFilter(eng, v) {
-    const l2 = eng.cCutoffLog2 + eng.cEnvAmt * v.e2Val + 2 * eng.lfoToCut * v.lfoVal + eng.ktrk * v.ktrkOct;
+    /* P3: refresh the mod-matrix cache at this cadence (no-op when the matrix is empty) */
+    if (eng.modCount > 0) modEvalVoice(eng, v);
+    let l2 = eng.cCutoffLog2 + eng.cEnvAmt * v.e2Val + 2 * eng.lfoToCut * v.lfoVal + eng.ktrk * v.ktrkOct;
+    if (v.modCut !== 0) l2 += v.modCut * 4;                       /* cutoff ±4 oct */
     let fc = Math.pow(2, l2);
     if (fc < 10) fc = 10; else if (fc > eng.fcMax) fc = eng.fcMax;
     const g = Math.tan(Math.PI * fc / eng.fs2);
-    const k = 2 - 1.98 * eng.cReso;
+    let baseK = eng.cReso;
+    if (v.modReso !== 0) { baseK += v.modReso * 0.5; baseK = cl(baseK, 0, 1); }   /* reso ±0.5 */
+    const k = 2 - 1.98 * baseK;
     const a1 = 1 / (1 + g * (g + k));
     v.a1 = a1;
     v.a2 = g * a1;
@@ -932,8 +1057,8 @@ const AVDSP = (function () {
     else if (eng.lfoShape === 2) lv = ph < 0.5 ? 1 : -1;
     else lv = v.shVal;
     v.lfoVal = lv;
-    /* pitch-dependent updates: while gliding, while pitch-routed, or on a pitch change */
-    if (v.gliding || eng.lfoToPitch !== 0 || v.pitchGen !== eng.pitchGen) computePitch(eng, v);
+    /* pitch-dependent updates: while gliding, while pitch-routed (LFO or matrix), or on a pitch change */
+    if (v.gliding || eng.lfoToPitch !== 0 || eng.modPitchOn !== 0 || v.pitchGen !== eng.pitchGen) computePitch(eng, v);
     if ((eng.osCount & 15) === 0) recomputeFilter(eng, v);
     /* two 2x internal steps -> halfband decimator (exact algorithm, contract section 3) */
     const s0 = voiceStep2x(eng, v);
@@ -966,6 +1091,17 @@ const AVDSP = (function () {
     if (!(n > 0)) return;
     const voices = eng.voices;
     const maxV = eng.maxVoices;
+    const fx = eng.fx;
+    /* P3 engine-level pan (matrix dst 'pan', macro-driven, block-rate; equal-power gains) */
+    let panL = 1, panR = 1;
+    if (eng.modPanOn !== 0) {
+      let p = modPanEval(eng);
+      if (p !== 0) {
+        if (p > 1) p = 1; else if (p < -1) p = -1;
+        panL = Math.cos((p + 1) * Math.PI * 0.25);
+        panR = Math.sin((p + 1) * Math.PI * 0.25);
+      }
+    }
     for (let i = 0; i < n; i++) {
       stepSmoothing(eng);
       let sum = 0;
@@ -974,11 +1110,100 @@ const AVDSP = (function () {
         if (v.state === 0) continue;
         sum += voiceFrame(eng, v);
       }
-      const out = sum * eng.cOutScale;
-      outL[i] = out;
-      outR[i] = out;
+      let l = sum * eng.cOutScale;
+      let r = l;
+      /* P3 post-mix FX chain (fixed order built at create; off modules are skipped entirely) */
+      for (let fi = 0; fi < fx.length; fi++) {
+        const e0 = fx[fi];
+        const st = e0.st;
+        if (st.on === 0) continue;
+        e0.mod.process(st, l, r);
+        if (e0.wet === 1) {
+          const mix = st.mix;
+          if (mix >= 1) { l = st.oL; r = st.oR; }
+          else if (mix > 0) {
+            const dry = 1 - mix;
+            l = l * dry + st.oL * mix;
+            r = r * dry + st.oR * mix;
+          }
+          /* mix <= 0: the module passed the input through; keep l/r untouched */
+        } else {
+          l = st.oL;
+          r = st.oR;
+        }
+      }
+      if (panL !== 1) outL[i] = l * panL; else outL[i] = l;
+      if (panR !== 1) outR[i] = r * panR; else outR[i] = r;
       eng.osCount++;
     }
+  }
+
+  /* ---- P3 message handlers (worklet port + SPN facade call the SAME paths) ----
+     {t:'sample'}: allocate AT MESSAGE TIME (render stays alloc-free); slot shape pinned:
+     null | { name, rate, n, ch1, ch2 } — ch2 null = mono; a replaced slot frees the old arrays.
+     {t:'zones'}: copy into eng.zones (8 zones x [lo, hi, root, buf, vol]).
+     {t:'mod'}: copy into eng.modMacros/modSlots + recount the active-slot flags. */
+  function setSample(eng, id, name, rate, ch1, ch2) {
+    const i = Number(id);
+    if (!(i >= 0 && i <= 3) || !ch1 || typeof ch1.length !== "number" || ch1.length <= 0) return false;
+    const n = ch1.length | 0;
+    const r = Number(rate);
+    eng.samples[i | 0] = {
+      name: String(name == null ? "" : name),
+      rate: (isFinite(r) && r > 0) ? r : eng.sr,
+      n: n,
+      ch1: ch1,
+      ch2: (ch2 && typeof ch2.length === "number" && ch2.length >= n) ? ch2 : null,
+    };
+    return true;
+  }
+  function setZones(eng, zones) {
+    if (!zones || typeof zones.length !== "number") return false;
+    const n = Math.min(40, zones.length);
+    for (let i = 0; i < n; i++) {
+      const z = Number(zones[i]);
+      eng.zones[i] = isFinite(z) ? z : 0;
+    }
+    for (let i = n; i < 40; i++) eng.zones[i] = 0;
+    return true;
+  }
+  function setMod(eng, macros, slots) {
+    if (macros && typeof macros.length === "number") {
+      const n = Math.min(8, macros.length);
+      for (let i = 0; i < n; i++) { const x = Number(macros[i]); eng.modMacros[i] = isFinite(x) ? cl(x, 0, 1) : 0; }
+      for (let i = n; i < 8; i++) eng.modMacros[i] = 0;
+    }
+    if (slots && typeof slots.length === "number") {
+      const n = Math.min(128, slots.length);
+      for (let i = 0; i < n; i++) {
+        let x = Number(slots[i]);
+        if (!isFinite(x)) x = 0;
+        const m4 = i & 3;
+        if (m4 === 2) x = cl(x, -1, 1);
+        else if (m4 === 3) x = cl(Math.round(x), 0, 2);
+        eng.modSlots[i] = x;
+      }
+      for (let i = n; i < 128; i++) eng.modSlots[i] = 0;
+    }
+    let cnt = 0, pit = 0, pan = 0;
+    for (let i = 0; i < 32; i++) {
+      const o = i * 4;
+      const amt = eng.modSlots[o + 2];
+      if (amt === 0) continue;
+      cnt++;
+      const d = eng.modSlots[o + 1] | 0;
+      if (d === 2) pit = 1;
+      else if (d === 5) pan = 1;
+    }
+    /* matrix emptied: clear every voice's cached contributions (they would otherwise persist) */
+    if (cnt === 0) {
+      for (let vi = 0; vi < eng.maxVoices; vi++) {
+        const v2 = eng.voices[vi];
+        v2.modCut = 0; v2.modReso = 0; v2.modPitch = 0; v2.modL1 = 0; v2.modL2 = 0;
+      }
+    }
+    eng.modCount = cnt; eng.modPitchOn = pit; eng.modPanOn = pan;
+    return true;
   }
 
   /* ---- stats / bench ---- */
@@ -1054,5 +1279,10 @@ const AVDSP = (function () {
     /* P2 additive surface (contract section 2.2) */
     registerKind: registerKind,
     blep: { W: BLEP_W, N: BLEP_N, RL: BLEP_RL, MASK: BLEP_MASK, SUBS: BLEP_SUBS, tab: blepTab, deposit: blepDeposit },
+    /* P3 additive surface (verify/_p3_wave.md sections 2/4/5/6) */
+    registerFx: registerFx,
+    setSample: setSample,
+    setZones: setZones,
+    setMod: setMod,
   };
 })();

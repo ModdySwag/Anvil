@@ -88,9 +88,9 @@
   ok   setParam: builds kext if absent
 
 == 6. grain CPU indicative (grains/sec + ms per 2 s of audio) ==
-  16-17 concurrent (max overlap)     size=0.2 den=16  -> 80.0 grains/s · 18.54 ms per 2 s (24.72 us/128-frame quantum)
+  16-17 concurrent (max overlap)     size=0.2 den=16  -> 80.0 grains/s · 18.28 ms per 2 s (24.37 us/128-frame quantum)
   ok   CPU 16-17 concurrent (max overlap): 2 s of audio renders in sane time
-  1600 grains/s (min size)           size=0.01 den=16  -> 1600.0 grains/s · 19.18 ms per 2 s (25.58 us/128-frame quantum)
+  1600 grains/s (min size)           size=0.01 den=16  -> 1600.0 grains/s · 19.99 ms per 2 s (26.66 us/128-frame quantum)
   ok   CPU 1600 grains/s (min size): 2 s of audio renders in sane time
 
 == 7. sampler rate math (exact) ==
@@ -177,8 +177,8 @@
   ok   append regression: remove() still works
 
 == 12. alloc-free render (heap delta across long renders) ==
-  ok   alloc: 120k stepVoice calls (2 grain + 1 sampler) heap-flat  -- heap delta -56.4 KB (threshold 256 KB)
-  alloc row: heapUsed 5586984 -> 5529200 (-57784 bytes)
+  ok   alloc: 120k stepVoice calls (2 grain + 1 sampler) heap-flat  -- heap delta -56.0 KB (threshold 256 KB)
+  alloc row: heapUsed 5733616 -> 5676320 (-57296 bytes)
 
 == SUMMARY ==
   checks: 146 pass, 0 fail

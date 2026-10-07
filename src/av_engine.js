@@ -23,7 +23,12 @@
    Handle fields app-side code relies on: mode ('worklet'|'spn'), tier ('worklet:blob'|
    'worklet:data'|'spn' — recorded honestly), url ('blob'|'data'|null), sr, maxVoices, os,
    noteOn(midi,gain)->bool, noteOff(midi), allOff(), setParam(path,v)->bool, bench(cmd)->Promise,
-   stats()->Promise, ctx, node, engine (spn), offline, degraded, log, ready. */
+   stats()->Promise, ctx, node, engine (spn), offline, degraded, log, ready.
+
+   P3 additive surface (verify/_p3_wave.md sections 4-6): the facade gains the wire senders
+   avEngineMod({macros F64(8), slots F64(128)}) · avEngineSample(id, name, rate, ch1, ch2) ·
+   avEngineZones(F64(40)) — each routes to the live tier (worklet port message / SPN direct
+   AVDSP call) and returns false honestly when the engine is not ready. */
 "use strict";
 
 const AV_ENGINE_HELLO_MS = 2500;    /* hello → ready handshake budget (§6) */
@@ -636,4 +641,49 @@ function avEngineEnsure(opts) {
     }
   })();
   return avEngineEnsurePromise;
+}
+
+/* ---------- P3 wire senders (verify/_p3_wave.md sections 4-6) ----------
+   The live tier decides the transport: the worklet gets a port message (sample channel buffers
+   transfer); the SPN tier calls the SAME AVDSP setters directly. false = not accepted (no engine
+   yet, or the tier threw) — never a throw. av_mod.js replays at boot via avEngineEnsure().then();
+   av_sample.js sends on user action. */
+function avEngineMod(payload) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  const macros = (payload && payload.macros) || null;
+  const slots = (payload && payload.slots) || null;
+  if (!macros || !slots) return false;
+  if (h.kind === "worklet") {
+    try { h.node.port.postMessage({ t: "mod", macros: macros, slots: slots }); return true; }
+    catch (e) { return false; }
+  }
+  try { return AVDSP.setMod(h.engine, macros, slots) === true; } catch (e) { return false; }
+}
+function avEngineSample(id, name, rate, ch1, ch2) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  if (!ch1 || typeof ch1.length !== "number" || ch1.length <= 0) return false;
+  if (h.kind === "worklet") {
+    try {
+      const msg = { t: "sample", id: id, name: name, rate: rate, ch1: ch1, ch2: ch2 || null };
+      const b1 = (ch1 && ch1.buffer) || null;
+      const b2 = (ch2 && ch2.buffer) || null;
+      if (b1 && b2) h.node.port.postMessage(msg, [b1, b2]);
+      else if (b1) h.node.port.postMessage(msg, [b1]);
+      else h.node.port.postMessage(msg);
+      return true;
+    } catch (e) { return false; }
+  }
+  try { return AVDSP.setSample(h.engine, id, name, rate, ch1, ch2) === true; } catch (e) { return false; }
+}
+function avEngineZones(zones) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  if (!zones || typeof zones.length !== "number") return false;
+  if (h.kind === "worklet") {
+    try { h.node.port.postMessage({ t: "zones", zones: zones }); return true; }
+    catch (e) { return false; }
+  }
+  try { return AVDSP.setZones(h.engine, zones) === true; } catch (e) { return false; }
 }

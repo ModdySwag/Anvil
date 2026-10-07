@@ -730,7 +730,7 @@
     {
       "name": "alloc: 120k stepVoice calls (2 grain + 1 sampler) heap-flat",
       "ok": true,
-      "info": "heap delta -56.4 KB (threshold 256 KB)"
+      "info": "heap delta -56.0 KB (threshold 256 KB)"
     }
   ]
 }

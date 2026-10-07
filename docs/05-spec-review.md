@@ -40,9 +40,9 @@ Date: 2026-10-06 · Reviewer: Bob (Hermes) · Scope: the full package — `00-id
 4. **Cloudflare Workers+D1+R2 at real scale** — row-write limits (100k/day) against sync chattiness; batch writes; re-test at P6.
 5. **AKWF + WaveEdit + FreePats licence re-checks at authoring time** — quote the files again when packs are built (licences can move; T8 verified 2026-10-06).
 6. **x0xb0x MIT claim** — independent re-check before any reuse beyond reference (parent fetch was blocked 403; child-verified only).
-7. **Freeverb tuning constants + Faust libfaust licence discrepancy** — resolve before either enters code (T5 dead-ends).
+7. **Freeverb tuning constants + Faust libfaust licence discrepancy** — RESOLVED 2026-10-07 (P3 child A): the Freeverb tuning.h constants were verified from the primary public-domain source (canonical tuning + revmodel match, evidence in av_fx_verb.js) and ship in the reverb's freeverb mode; the Faust/libfaust licence discrepancy was never load-bearing — no Faust code entered the build.
 8. **Serum 2 wavetable frame-size spec** — confirm from the official guide before any marketing-copy claim.
-9. **Dattorro damping/bandwidth defaults** — verify against the paper before hardcoding (T5 §15 footnote).
+9. **Dattorro damping/bandwidth defaults** — VERIFIED 2026-10-07 (P3 child A) against the paper + the public-domain port cross-check; the plate ships with input diffusion 0.75/0.625, decay diffusion 0.7 / dc+0.15 and ~open bandwidth (av_fx_verb.js header records the numbers).
 10. **Roland50.studio asset stance** — recorded all-rights-reserved (behaviour reference only); no asset reuse regardless of how good the click sounds idea is (recreate our own).
 
 ## 4. Residual risks (accepted, tracked)
