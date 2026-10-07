@@ -1,6 +1,6 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v0.8.0","tier":"tap: armed · engine: booting","voices":true,"version":"0.8.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v0.9.0","tier":"tap: armed · engine: booting","voices":true,"version":"0.9.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":1,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
@@ -17,6 +17,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   P6 deliver: card mounted + wired (loops/bits · both run buttons · download) + offline-export API live  -> {"card":true,"host":true,"root":true,"wired":true,"run":true,"master":true,"loops":true,"bits":true,"dl":true,"api":"object","bounce":"function","wav":"function","mid":"function","zip":"function"}
  ok   S1 studio: card mounted + wired (ENABLE · REC · device · meter · count-in · takes list) + input/metro/takes API live  -> {"card":true,"host":true,"root":true,"wired":true,"enable":true,"rec":true,"device":true,"meter":true,"countin":true,"takes":true,"ui":"object","inputApi":"function","metroApi":"function","takesApi":"function","takesN":14}
  ok   S2 sessions: card mounted + wired (name · SAVE · list · autosave · BACKUP · RESTORE) + session/backup API live  -> {"card":true,"host":true,"root":true,"wired":true,"name":true,"save":true,"list":true,"autosave":true,"backup":true,"restore":true,"ui":"object","sessionApi":"function","backupApi":"function","loadApi":"function","handles":"object|object"}
+ ok   S2.1 comp: card mounted + wired (lanes · comp select · segments · ADD/AUTO/RENDER/EXPORT) + comp API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"lanes":true,"list":true,"segs":true,"add":true,"auto":true,"fade":true,"render":true,"exportBtn":true,"ui":"object","compApi":"function","autoApi":"function","renderApi":"function","exportApi":"function","handles":"object|function"}
  ok   zero page errors
 
-19 passed, 0 failed
+20 passed, 0 failed

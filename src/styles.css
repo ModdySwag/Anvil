@@ -660,3 +660,57 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-sessions-warn-head { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--mod-orange); margin-bottom: 2px; }
 .av-sessions-warn-item { color: var(--mod-orange); font-size: 10.5px; margin: 0; overflow-wrap: anywhere; }
 .av-sessions-foot { margin: 0; }
+
+/* ============================================================================
+   S2.1 — the COMP card (av_comp_ui.js) + the comping layer */
+.av-comp { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-comp-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-comp-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-comp-cap { font-size: 10.5px; color: var(--text-3); }
+.av-comp-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-comp-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-comp-msg { color: var(--text-2); }
+.av-comp-err { color: #ff8a7a; }
+.av-comp-sect { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.av-comp-sect-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-comp-sect-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.av-comp-take-n { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-comp-sel-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-comp-lanes { display: flex; flex-direction: column; gap: 5px; }
+.av-comp-lane { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 8px; min-width: 0; cursor: pointer; }
+.av-comp-lane:hover { border-color: var(--teal-deep); }
+.av-comp-lane.av-comp-sel { border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.18); }
+.av-comp-lane.av-comp-partial .av-comp-lane-lap { color: var(--mod-orange); }
+.av-comp-lane-name { font-family: var(--mono); font-size: 11px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.av-comp-lane-lap { font-family: var(--mono); font-size: 10px; color: var(--mod-sky); }
+.av-comp-lane-secs { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-comp-lane-bar { flex: 1 1 120px; min-width: 80px; max-width: 340px; height: 6px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 3px; overflow: hidden; }
+.av-comp-lane-fill { display: block; height: 100%; background: var(--teal-deep); }
+.av-comp-lane-trim { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-comp-none { margin: 0; }
+.av-comp-lanes-none[hidden] { display: none; }
+.av-comp-segs-none[hidden] { display: none; }
+.av-comp-select { }
+.av-comp-list { min-width: 180px; max-width: 340px; }
+.av-comp-comp-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-comp-segs { display: flex; flex-direction: column; gap: 5px; }
+.av-comp-seg { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 8px; min-width: 0; }
+.av-comp-seg-take { font-family: var(--mono); font-size: 11px; color: var(--text); }
+.av-comp-seg-range { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.av-comp-seg-fade { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-comp-seg-del { }
+.av-comp-seg-del:hover { color: #ff8a7a; border-color: #ff8a7a; }
+.av-comp-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-comp-lab { font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-comp-btn { }
+.av-comp-add { }
+.av-comp-auto { }
+.av-comp-fade { min-width: 64px; background: #0a0e11; color: var(--text); border: 1px solid var(--hair); border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 3px 6px; }
+.av-comp-render { }
+.av-comp-export { }
+.av-comp-render-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-comp-warnings { border: 1px solid #5c4520; border-radius: 6px; padding: 6px 8px; }
+.av-comp-warnings[hidden] { display: none; }
+.av-comp-warn-head { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--mod-orange); margin-bottom: 2px; }
+.av-comp-warn-item { color: var(--mod-orange); font-size: 10.5px; margin: 0; overflow-wrap: anywhere; }
+.av-comp-foot { margin: 0; }

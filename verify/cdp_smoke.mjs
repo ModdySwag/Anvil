@@ -311,6 +311,31 @@ async function main() {
   check('S2 sessions: card mounted + wired (name \u00b7 SAVE \u00b7 list \u00b7 autosave \u00b7 BACKUP \u00b7 RESTORE) + session/backup API live',
     s2.card === true && s2.host === true && s2.root === true && s2.wired === true && s2.name === true && s2.save === true && s2.list === true && s2.autosave === true && s2.backup === true && s2.restore === true && s2.ui === 'object' && s2.sessionApi === 'function' && s2.backupApi === 'function' && s2.loadApi === 'function' && s2.handles === 'object|object', JSON.stringify(s2));
 
+  /* 6j. the S2.1 comp card (take lanes \u00b7 pick-best \u00b7 render + export) */
+  const s21R = await ev(`(() => {
+    const card = document.getElementById('av-comp');
+    const host = document.getElementById('av-comp-host');
+    return { card: !!card, host: !!host,
+             root: !!(host && host.querySelector('.av-comp')),
+             wired: !!(host && host.dataset && host.dataset.avCompUiWired === '1'),
+             status: !!document.getElementById('av-comp-status'),
+             lanes: !!document.getElementById('av-comp-lanes'),
+             list: !!document.getElementById('av-comp-list'),
+             segs: !!document.getElementById('av-comp-segs'),
+             add: !!document.getElementById('av-comp-add'),
+             auto: !!document.getElementById('av-comp-auto'),
+             fade: !!document.getElementById('av-comp-fade'),
+             render: !!document.getElementById('av-comp-render'),
+             exportBtn: !!document.getElementById('av-comp-export'),
+             ui: typeof window.__avCompUi,
+             compApi: typeof avCompList, autoApi: typeof avCompAutoComp,
+             renderApi: typeof avCompRender, exportApi: typeof avCompExport,
+             handles: typeof window.__avComp + '|' + typeof avTakesList };
+  })()`);
+  const s21 = s21R.value || {};
+  check('S2.1 comp: card mounted + wired (lanes \u00b7 comp select \u00b7 segments \u00b7 ADD/AUTO/RENDER/EXPORT) + comp API live',
+    s21.card === true && s21.host === true && s21.root === true && s21.wired === true && s21.status === true && s21.lanes === true && s21.list === true && s21.segs === true && s21.add === true && s21.auto === true && s21.fade === true && s21.render === true && s21.exportBtn === true && s21.ui === 'object' && s21.compApi === 'function' && s21.autoApi === 'function' && s21.renderApi === 'function' && s21.exportApi === 'function' && s21.handles === 'object|function', JSON.stringify(s21));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

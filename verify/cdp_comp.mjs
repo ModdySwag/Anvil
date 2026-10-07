@@ -28,7 +28,8 @@
 //      and the debug handles (window.__avComp version s2.1 incl. pure.xfadeGains/applyXfade/
 //      stitch · window.__avCompUi). Page pristine: zero comps, zero takes, not recording.
 //   2. takes: input enable on the fake device (beep-train witness on avInputNode) + two quick
-//      takes via the avTakes path (avTakesStart/Stop, lapSync false, ~1.2 s each) — the list
+//      takes via the avTakes path (avTakesStart/Stop, lapSync false, ~1.2 s and ~2.0 s — the
+//      capture is 4096-frame block-quantized, so the waits differ by whole blocks) — the list
 //      holds two takes with rig-evidenced DISTINCT frames; the card's lanes repaint (poll).
 //   3. single-segment comp: avCompCreate + avCompAddSegment/avCompSetSegment (take A full range)
 //      -> render frames === take A frames EXACTLY (±0); export -> avWavInfo ok 16-bit/48 kHz
@@ -46,8 +47,8 @@
 //      avCompAutoComp -> segments ≥ regions; the winning takeIds are the rig's OWN recomputed
 //      pick-best winners — the rig re-reads the take store, re-derives cycle/owner/regions and
 //      re-scores every region with its own pooled rms/peak reads (real values, never planted);
-//      the segment ranges match the pinned region math; the render ≈ min(longest take frames,
-//      regions·cycle) and === the exact stitch math ΣL − Σseam.
+//      the segment ranges match the pinned region math; the render === the rig-own region
+//      picks minus the pinned default seams AND === the exact stitch math ΣL − Σseam.
 //   7. seal: card repaint witness + screenshot renders/s2b-comp-suite.png (the comp card, scale
 //      2, taken while the card still carries the run's lanes/segments) · the page is left CLEAN
 //      (comps deleted, takes deleted, transport stopped, input disabled) · zero page errors ·
@@ -75,7 +76,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    S2.1: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent
    may fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = null;
+const EXPECT_SHA = '0f79ebc23d9228d42f80198dc07c190740223a31aff3264cececce7629a0bece';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -513,7 +514,7 @@ async function main() {
     finA.ok === true && finA.stopReason === 'stop' && Array.isArray(finA.takes) && finA.takes.length === 1 && Number(finA.takes[0].frames) === Number(finA.frames),
     JSON.stringify({ start: recA.start, stop: { ok: finA.ok, stopReason: finA.stopReason, frames: finA.frames, takes: (finA.takes || []).map(t => t.frames), error: finA.error } }).slice(0, 420));
   await sleep(300);
-  const recB = await recQuick(1250);
+  const recB = await recQuick(2000);                 /* rig SPEC fix: the 4096-block-quantized capture needs a >1-block wait gap (1250 ms landed on take A's exact block count) */
   const finB = recB.fin || {};
   check('2 take B: start ok (lapSync false) · stop ok · exactly 1 take',
     !!(recB.start && recB.start.ok === true) && finB.ok === true && Array.isArray(finB.takes) && finB.takes.length === 1,
@@ -815,11 +816,19 @@ async function main() {
     expRanges6.length === segs6.length && expRanges6.length > 0 &&
     expRanges6.every((rr, i) => segs6[i] && Number(segs6[i].fromFrame) === Number(rr[0]) && Number(segs6[i].toFrame) === Number(rr[1])),
     JSON.stringify({ expectedRanges: expRanges6, segs: segs6.map(g => [g.fromFrame, g.toFrame]) }).slice(0, 440));
-  const approx6 = Math.min(Number(e6.ownerFrames), Number(a6.regions) * Number(a6.cycleFrames));
-  check('6 render: ~ min(longest take frames, regions*cycle) AND === the exact stitch math sum(L) - sum(seam)',
-    r6.ok === true && Math.abs(Number(r6.frames) - approx6) <= (Number(a6.regions) || 1) * 512 + 1024 &&
+  /* rig SPEC fix: the old '≈ min(longest, regions*cycle)' leg assumed the longest take wins every
+     region; a shorter scorer wins legitimately (winner-clamped ranges), so the expectation = the
+     rig's OWN region picks minus the pinned 240-frame default seams (max(fadeOut_i, fadeIn_i+1)
+     clamped to the shorter segment -> min(240, L_i, L_i+1)). */
+  const rl6 = expRanges6.map(rr => Math.max(0, Number(rr[1]) - Number(rr[0])));
+  let expSeam6 = 0;
+  for (let i = 0; i + 1 < rl6.length; i++) expSeam6 += Math.min(240, rl6[i], rl6[i + 1]);
+  const expFrames6 = rl6.reduce((s, v) => s + v, 0) - expSeam6;
+  check('6 render: === the rig-own region picks minus the pinned default seams AND === the exact stitch math sum(L) - sum(seam)',
+    r6.ok === true && expRanges6.length > 0 &&
+    Math.abs(Number(r6.frames) - expFrames6) <= 2 &&
     Math.abs(Number(r6.frames) - Number(sm6.exact)) <= 2,
-    JSON.stringify({ frames: r6.frames, approx: approx6, exact: sm6.exact, sumL: sm6.sumL, sumSeam: sm6.sumSeam, regions: a6.regions, cycle: a6.cycleFrames }).slice(0, 440));
+    JSON.stringify({ frames: r6.frames, expFrames: expFrames6, expSeams: expSeam6, exact: sm6.exact, sumL: sm6.sumL, sumSeam: sm6.sumSeam, regions: a6.regions, cycle: a6.cycleFrames }).slice(0, 460));
 
   /* ── 7. seal — repaint witness, screenshot (populated), page clean, errors, freeze ── */
   console.log('── 7. seal ──');
