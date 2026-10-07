@@ -1,0 +1,74 @@
+freeze sha256 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563 (1126117 B) [index.html]
+server: http://127.0.0.1:9600/ (repo root C:\Users\Moddy\anvil)
+devtools port: 9601
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+url: http://127.0.0.1:9600/index.html?avtest=1
+=== ANVIL stress rig === (contract §9.4; 10 min; http page; worklet tier; cap 64 voices; sample every 15 s)
+protocol: chord/arpeggio cycles 8..64 · REAL knob commits (avKnobCommit on #av-synth CUTOFF/RESO + UNISON) · allOff drain check ~every 60 s · assert heap growth < 60 MB, zero underrun deltas at cap, pool drains, zero page errors
+--- sanity ---
+engine: attr=worklet tier=worklet url=blob sr=48000 maxVoices=64
+sanity: PASS  state=running  advance=2.01s / wall 2.01s (ratio 1)  windows[2.01]  baseLatency=0.01  sampleRate=48000
+mounted knobs: {"cutoff":{"bound":true,"norm":"0.5340"},"reso":{"bound":true,"norm":"0.3000"},"uni":{"bound":true,"norm":"0.0000"},"host":true}
+--- workload: 10 min — starting ---
+sample t=    0s active=0/64 released=0 stolen=0 heap=4.3MB ur=0 dUR=- mean=15.63 p95=0 max=1000 n=960 ctx=running phase=drain step=cycle 1 cycles=1 capHits=0 drains=0 notes=+0/-0 knobs=0 sErr=0
+sample t=   15s active=64/64 released=0 stolen=0 heap=4.5MB ur=1 dUR=1 mean=964.84 p95=1000 max=1000 n=6593 ctx=running phase=cap step=cap churn 24/34 cycles=1 capHits=1 drains=1 lastDrain=ok@152ms notes=+110/-46 knobs=40 sErr=0
+sample t=   30s active=64/64 released=0 stolen=0 heap=3.4MB ur=1 dUR=0 mean=820.31 p95=1000 max=1000 n=12214 ctx=running phase=cap step=cap reso cycles=2 capHits=2 drains=1 lastDrain=ok@152ms notes=+196/-132 knobs=65 sErr=0
+sample t=   45s active=0/64 released=0 stolen=0 heap=3.8MB ur=1 dUR=0 mean=15.63 p95=0 max=1000 n=17839 ctx=running phase=gap step=gap cycles=2 capHits=2 drains=1 lastDrain=ok@152ms notes=+264/-264 knobs=88 sErr=0
+sample t=   60s active=64/64 released=0 stolen=0 heap=3.6MB ur=1 dUR=0 mean=1339.84 p95=2000 max=2000 n=23464 ctx=running phase=cap step=cap churn 22/34 cycles=3 capHits=3 drains=2 lastDrain=ok@155ms notes=+370/-306 knobs=127 sErr=0
+sample t=   75s active=64/64 released=0 stolen=0 heap=4MB ur=2 dUR=1 mean=507.81 p95=1000 max=1000 n=29085 ctx=running phase=cap step=cap reso cycles=4 capHits=4 drains=2 lastDrain=ok@155ms notes=+460/-396 knobs=150 sErr=0
+sample t=   90s active=0/64 released=8 stolen=0 heap=3.5MB ur=2 dUR=0 mean=195.31 p95=1000 max=1000 n=34710 ctx=running phase=release step=release cycles=4 capHits=4 drains=2 lastDrain=ok@155ms notes=+528/-528 knobs=176 sErr=0
+sample t=  105s active=64/64 released=0 stolen=0 heap=3.9MB ur=2 dUR=0 mean=1003.91 p95=2000 max=2000 n=40332 ctx=running phase=cap step=cap churn 21/34 cycles=5 capHits=5 drains=3 lastDrain=ok@152ms notes=+632/-568 knobs=214 sErr=0
+sample t=  120s active=56/64 released=0 stolen=0 heap=3.6MB ur=2 dUR=0 mean=585.94 p95=1000 max=1000 n=45960 ctx=running phase=build step=build @uni 2 cycles=6 capHits=5 drains=3 lastDrain=ok@152ms notes=+716/-660 knobs=236 sErr=0
+sample t=  135s active=8/64 released=8 stolen=0 heap=4MB ur=2 dUR=0 mean=289.06 p95=1000 max=1000 n=51585 ctx=running phase=release step=release cycles=6 capHits=6 drains=3 lastDrain=ok@152ms notes=+792/-784 knobs=264 sErr=0
+sample t=  150s active=64/64 released=0 stolen=0 heap=3.6MB ur=3 dUR=1 mean=1390.63 p95=2000 max=2000 n=57210 ctx=running phase=cap step=cap churn 19/34 cycles=7 capHits=7 drains=4 lastDrain=ok@164ms notes=+892/-828 knobs=301 sErr=0
+sample t=  165s active=56/64 released=0 stolen=0 heap=4MB ur=7 dUR=4 mean=542.97 p95=1000 max=1000 n=62835 ctx=running phase=build step=build @uni 1 cycles=8 capHits=7 drains=4 lastDrain=ok@164ms notes=+980/-924 knobs=323 sErr=0
+sample t=  180s active=16/64 released=8 stolen=0 heap=3.8MB ur=7 dUR=0 mean=375 p95=1000 max=1000 n=68460 ctx=running phase=release step=release cycles=8 capHits=8 drains=4 lastDrain=ok@164ms notes=+1056/-1040 knobs=352 sErr=0
+sample t=  195s active=64/64 released=0 stolen=0 heap=3.6MB ur=7 dUR=0 mean=843.75 p95=1000 max=2000 n=74082 ctx=running phase=cap step=cap churn 18/34 cycles=9 capHits=9 drains=5 lastDrain=ok@156ms notes=+1154/-1090 knobs=388 sErr=0
+sample t=  210s active=48/64 released=0 stolen=0 heap=3.6MB ur=7 dUR=0 mean=531.25 p95=1000 max=1000 n=79710 ctx=running phase=build step=build @uni 2 cycles=10 capHits=9 drains=5 lastDrain=ok@156ms notes=+1236/-1188 knobs=410 sErr=0
+sample t=  225s active=24/64 released=8 stolen=0 heap=4.1MB ur=7 dUR=0 mean=546.88 p95=1000 max=1000 n=85328 ctx=running phase=release step=release cycles=10 capHits=10 drains=5 lastDrain=ok@156ms notes=+1320/-1296 knobs=440 sErr=0
+sample t=  240s active=64/64 released=0 stolen=0 heap=3.9MB ur=7 dUR=0 mean=1449.22 p95=2000 max=2000 n=90957 ctx=running phase=cap step=cap churn 17/34 cycles=11 capHits=11 drains=6 lastDrain=ok@150ms notes=+1416/-1352 knobs=474 sErr=0
+sample t=  255s active=48/64 released=0 stolen=0 heap=4.2MB ur=7 dUR=0 mean=378.91 p95=1000 max=1000 n=96582 ctx=running phase=build step=build @uni 1 cycles=12 capHits=11 drains=6 lastDrain=ok@150ms notes=+1500/-1452 knobs=497 sErr=0
+sample t=  270s active=32/64 released=8 stolen=0 heap=3.8MB ur=7 dUR=0 mean=492.19 p95=1000 max=1000 n=102207 ctx=running phase=release step=release cycles=12 capHits=12 drains=6 lastDrain=ok@150ms notes=+1584/-1552 knobs=528 sErr=0
+sample t=  285s active=64/64 released=0 stolen=0 heap=4.2MB ur=7 dUR=0 mean=929.69 p95=1000 max=2000 n=107832 ctx=running phase=cap step=cap churn 15/34 cycles=13 capHits=13 drains=7 lastDrain=ok@151ms notes=+1676/-1612 knobs=561 sErr=0
+sample t=  300s active=40/64 released=0 stolen=0 heap=3.9MB ur=7 dUR=0 mean=566.41 p95=1000 max=1000 n=113453 ctx=running phase=build step=build @uni 2 cycles=14 capHits=13 drains=7 lastDrain=ok@151ms notes=+1756/-1716 knobs=584 sErr=0
+sample t=  315s active=40/64 released=8 stolen=0 heap=3.3MB ur=7 dUR=0 mean=781.25 p95=1000 max=1000 n=119082 ctx=running phase=release step=release cycles=14 capHits=14 drains=7 lastDrain=ok@151ms notes=+1848/-1808 knobs=616 sErr=0
+sample t=  330s active=64/64 released=0 stolen=0 heap=3.7MB ur=21 dUR=14 mean=1382.81 p95=2000 max=2000 n=124699 ctx=running phase=cap step=cap churn 14/34 cycles=15 capHits=15 drains=8 lastDrain=ok@151ms notes=+1938/-1874 knobs=648 sErr=0
+sample t=  345s active=32/64 released=0 stolen=0 heap=4MB ur=37 dUR=16 mean=304.69 p95=1000 max=1000 n=130328 ctx=running phase=build step=build @uni 1 cycles=16 capHits=15 drains=8 lastDrain=ok@151ms notes=+2012/-1980 knobs=671 sErr=0
+sample t=  360s active=56/64 released=8 stolen=0 heap=3.8MB ur=37 dUR=0 mean=714.84 p95=1000 max=1000 n=135949 ctx=running phase=release step=release cycles=16 capHits=16 drains=8 lastDrain=ok@151ms notes=+2112/-2056 knobs=704 sErr=0
+sample t=  375s active=64/64 released=0 stolen=0 heap=3.4MB ur=37 dUR=0 mean=1039.06 p95=2000 max=2000 n=141578 ctx=running phase=cap step=cap churn 13/34 cycles=17 capHits=17 drains=9 lastDrain=ok@151ms notes=+2200/-2136 knobs=735 sErr=0
+sample t=  390s active=32/64 released=0 stolen=0 heap=3.7MB ur=37 dUR=0 mean=402.34 p95=1000 max=1000 n=147199 ctx=running phase=build step=build @uni 2 cycles=18 capHits=17 drains=9 lastDrain=ok@151ms notes=+2276/-2244 knobs=757 sErr=0
+sample t=  405s active=64/64 released=0 stolen=0 heap=3.5MB ur=37 dUR=0 mean=742.19 p95=1000 max=1000 n=152828 ctx=running phase=cap step=cap churn 34/34 cycles=18 capHits=18 drains=9 lastDrain=ok@151ms notes=+2374/-2310 knobs=791 sErr=0
+sample t=  420s active=64/64 released=0 stolen=0 heap=3.9MB ur=47 dUR=10 mean=1523.44 p95=2000 max=3000 n=158449 ctx=running phase=cap step=cap churn 11/34 cycles=19 capHits=19 drains=10 lastDrain=ok@156ms notes=+2460/-2396 knobs=822 sErr=0
+sample t=  435s active=24/64 released=0 stolen=0 heap=3.3MB ur=69 dUR=22 mean=265.63 p95=1000 max=1000 n=164078 ctx=running phase=build step=build @uni 1 cycles=20 capHits=19 drains=10 lastDrain=ok@156ms notes=+2532/-2508 knobs=844 sErr=0
+sample t=  450s active=64/64 released=0 stolen=0 heap=3.8MB ur=69 dUR=0 mean=824.22 p95=1000 max=2000 n=169699 ctx=running phase=cap step=cap churn 33/34 cycles=20 capHits=20 drains=10 lastDrain=ok@156ms notes=+2636/-2572 knobs=879 sErr=0
+sample t=  465s active=64/64 released=0 stolen=0 heap=3.6MB ur=69 dUR=0 mean=820.31 p95=1000 max=2000 n=175324 ctx=running phase=cap step=cap churn 10/34 cycles=21 capHits=21 drains=11 lastDrain=ok@161ms notes=+2722/-2658 knobs=909 sErr=0
+sample t=  480s active=24/64 released=0 stolen=0 heap=3.9MB ur=69 dUR=0 mean=265.63 p95=1000 max=1000 n=180949 ctx=running phase=build step=build @uni 2 cycles=22 capHits=21 drains=11 lastDrain=ok@161ms notes=+2796/-2772 knobs=931 sErr=0
+sample t=  495s active=64/64 released=0 stolen=0 heap=3.5MB ur=69 dUR=0 mean=785.16 p95=1000 max=2000 n=186570 ctx=running phase=cap step=cap churn 31/34 cycles=22 capHits=22 drains=11 lastDrain=ok@161ms notes=+2896/-2832 knobs=967 sErr=0
+sample t=  510s active=64/64 released=0 stolen=0 heap=3.8MB ur=69 dUR=0 mean=1464.84 p95=2000 max=2000 n=192199 ctx=running phase=cap step=cap churn 8/34 cycles=23 capHits=23 drains=12 lastDrain=ok@151ms notes=+2982/-2918 knobs=996 sErr=0
+sample t=  525s active=16/64 released=0 stolen=0 heap=3.5MB ur=69 dUR=0 mean=183.59 p95=1000 max=1000 n=197824 ctx=running phase=build step=build @uni 1 cycles=24 capHits=23 drains=12 lastDrain=ok@151ms notes=+3052/-3036 knobs=1018 sErr=0
+sample t=  540s active=64/64 released=0 stolen=0 heap=4MB ur=69 dUR=0 mean=566.41 p95=1000 max=1000 n=203445 ctx=running phase=cap step=cap churn 30/34 cycles=24 capHits=24 drains=12 lastDrain=ok@151ms notes=+3158/-3094 knobs=1055 sErr=0
+sample t=  555s active=64/64 released=0 stolen=0 heap=3.5MB ur=69 dUR=0 mean=898.44 p95=1000 max=2000 n=209074 ctx=running phase=cap step=cap churn 7/34 cycles=25 capHits=25 drains=13 lastDrain=ok@155ms notes=+3244/-3180 knobs=1082 sErr=0
+sample t=  570s active=16/64 released=0 stolen=0 heap=3.8MB ur=69 dUR=0 mean=234.38 p95=1000 max=1000 n=214699 ctx=running phase=build step=build @uni 2 cycles=26 capHits=25 drains=13 lastDrain=ok@155ms notes=+3316/-3300 knobs=1105 sErr=0
+sample t=  585s active=64/64 released=0 stolen=0 heap=3.7MB ur=69 dUR=0 mean=796.88 p95=1000 max=2000 n=220317 ctx=running phase=cap step=cap churn 29/34 cycles=26 capHits=26 drains=13 lastDrain=ok@155ms notes=+3420/-3356 knobs=1143 sErr=0
+sample t=  600s active=64/64 released=0 stolen=0 heap=4MB ur=70 dUR=1 mean=1335.94 p95=2000 max=2000 n=225945 ctx=running phase=cap step=cap churn 6/34 cycles=27 capHits=27 drains=14 lastDrain=ok@157ms notes=+3506/-3442 knobs=1169 sErr=0
+sample t=  615s active=0/64 released=0 stolen=0 heap=3.5MB ur=73 dUR=3 mean=11.72 p95=0 max=1000 n=231570 ctx=running phase=done step=done cycles=27 capHits=27 drains=15 lastDrain=ok@151ms notes=+3564/-3564 knobs=1191 sErr=0
+post-run sample active=0 released=0 heap=3.5MB ur=73 drains=15 done=true sErr=0
+shot: renders/p1-stress.png (130639 B)
+==== STRESS ASSERTS ====
+heap growth: 0.1 MB (first 4.3 / max 4.5 / last 3.5; limit 60 MB) -> PASS
+underrun deltas at cap: verified-envelope FAIL · strict(all-cap) FAIL (total delta 73 over 41 intervals; nonzero 10; at-cap 10 [verified-window 1 · uni>3-window 9]; outside-cap 0)
+  uni>3 over-drive probe deltas: [{"from":60,"to":75,"delta":1,"wins":[{"cycle":3,"uni":7,"start":52129,"end":64127},{"cycle":4,"uni":1,"start":74971,"end":86961}]},{"from":135,"to":150,"delta":1,"wins":[{"cycle":7,"uni":7,"start":143056,"end":155041}]},{"from":150,"to":165,"delta":4,"wins":[{"cycle":7,"uni":7,"start":143056,"end":155041}]},{"from":315,"to":330,"delta":14,"wins":[{"cycle":15,"uni":7,"start":324848,"end":336851}]},{"from":330,"to":345,"delta":16,"wins":[{"cycle":15,"uni":7,"start":324848,"end":336851}]}]
+  VERIFIED-ENVELOPE deltas: [{"from":0,"to":15,"delta":1,"wins":[{"cycle":1,"uni":3,"start":6647,"end":18644}]}]
+pool drains: PASS (15 checks; worst 164 ms; 15/15 ok)
+page errors: PASS (0)
+ctx.state over all samples: PASS (running)
+cap coverage: PASS (cycles 27; cap reached 27x; maxHeld 64; notes +3564/-3564; knob commits 1191; driver errors 0)
+==== STRESS SUMMARY ====
+freeze: sha256 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563 (1126117 B)
+sanity: PASS ratio=1 tier=worklet/blob
+samples: 42 (+1 post-run) over 10 min · cycle count 27
+asserts: heap PASS · underruns FAIL [strict FAIL] · drains PASS · page errors PASS · ctx PASS · cap coverage PASS
+console messages: 2
+  [log] [anvil] boot — v0.5.0 tap=true knobs=true kb=true midi=true synth=true pads=true sample=true rec=true fx=true mod=true seq=true seqUi=true cap=true undo=true store=true bank=true storeUi=true
+  [log] [anvil] engine ready — worklet:blob · sr 48000 · voices 64
+STRESS-RESULT {"sha256":"1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563","verdict":"asserts-not-met","asserts":{"heapGrowthMb":0.1,"underrunDeltas":73,"drains":"PASS","pageErrors":0},"finalSample":{"tSec":615,"active":0,"released":0,"total":0,"stolen":0,"maxVoices":64,"heap":3626761,"heapTotal":4963317,"ur":73,"meanUs":11.72,"p95Us":0,"maxUs":1000,"ringN":231570,"ctxState":"running","phase":"done","step":"done","fatal":null,"cycles":27,"capReached":27,"maxHeld":64,"drains":15,"lastDrain":{"label":"final","ok":true,"ms":151,"active":0,"released":0},"notesOn":3564,"notesOff":3564,"knobCommits":1191,"sErrors":0,"done":true,"postRun":true}}
