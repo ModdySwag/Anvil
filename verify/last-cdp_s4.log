@@ -1,7 +1,7 @@
-index.html sha256 (before): c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287   (EXPECT_SHA not pinned yet — pass --sha <hex> or set the constant)
+index.html sha256 (before): c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9680 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-s4-1791384394916
-download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791384394916
+cdp port 9680 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-s4-1791384689428
+download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791384689428
 ── 1. boot + card + surface ──
  ok   1a boot: data-av-ready flips + engine ctx found/running/ScriptProcessor-capable/sr 48k  -> {"ready":true,"eng":{"found":true,"state":"running","sampleRate":48000,"scp":true}}
  ok   1b rig helpers injected (__s4w v1: fake-FS seam · picker probes · pattern/WAV/card/QR/PNG/share/video legs · page-side digests · cleanup)
@@ -13,8 +13,8 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791384394916
    · picker spies: {"ok":true,"save":true,"open":true}
 ── 2. project save ──
  ok   2a FSA seam: avProjSetFs(fake) accepted · __avProj state fsKind "injected" · fake records zero calls so far · window pickers spied  -> {"fake":{"ok":true,"calls":0,"fsKind":"injected"},"spies":{"ok":true,"save":true,"open":true}}
- ok   2b project save via seam: ok · via fsa · name anvil-project-<slug>.anvl · text captured + __avProjLastSave set  -> {"ok":true,"via":"fsa","name":"anvil-project-rig-save.anvl","bytes":32871,"sugg":"anvil-project-rig-save.anvl","textLen":32871,"closed":true,"lastSave":{"name":"anvil-project-rig-save.anvl","bytes":32871,"via":"fsa","at":"2026-10-07T14:46:35.523Z"},"err":null}
- ok   2c saved bytes parse: avProjParse ok · magic anvl · v 1 · kind project · sessionless state (seq+pattern, params, macros[8], prefs)  -> {"ok":true,"magic":"anvl","v":1,"app":"anvil","kind":"project","at":"string","stateName":null,"stateV":1,"savedAt":1791384395523,"seqKeys":["pattern","chains","song","scenes"],"paramsLen":144,"macrosLen":8,"prefsObj":true,"err":null}
+ ok   2b project save via seam: ok · via fsa · name anvil-project-<slug>.anvl · text captured + __avProjLastSave set  -> {"ok":true,"via":"fsa","name":"anvil-project-rig-save.anvl","bytes":32871,"sugg":"anvil-project-rig-save.anvl","textLen":32871,"closed":true,"lastSave":{"name":"anvil-project-rig-save.anvl","bytes":32871,"via":"fsa","at":"2026-10-07T14:51:30.010Z"},"err":null}
+ ok   2c saved bytes parse: avProjParse ok · magic anvl · v 1 · kind project · sessionless state (seq+pattern, params, macros[8], prefs)  -> {"ok":true,"magic":"anvl","v":1,"app":"anvil","kind":"project","at":"string","stateName":null,"stateV":1,"savedAt":1791384690010,"seqKeys":["pattern","chains","song","scenes"],"paramsLen":144,"macrosLen":8,"prefsObj":true,"err":null}
  ok   2d determinism: avProjBuild(state, meta) twice → identical text · parse→build round-trip fixed point · at pinned by meta  -> {"ok1":true,"ok2":true,"same12":true,"hasAt":true,"ok3":true,"same13":true,"len1":32870,"name1":"anvil-project-rig-det.anvl"}
 ── 3. project open ──
  ok   3a rig pattern + marker: avSeqLoad(RIG PAT 1) ok · master set 0.42 (read-back) · snapshot refs captured  -> {"pl":{"ok":true,"name":"RIG PAT 1"},"mk":{"ret":true,"cur":0.42},"pat0":true,"st0Ok":true,"noteCount":28}
@@ -38,13 +38,13 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791384394916
  ok   7a PNG card: magic 89 50 4E 47 0D 0A 1A 0A · bytes > 4096 · 1080×1080 · blob size == receipt bytes  -> {"ok":true,"bytes":92982,"w":1080,"h":1080,"blobSize":92982,"magic":[137,80,78,71,13,10,26,10],"arrayBytes":92982,"err":null}
    · share hidden: true · save picker hidden: true
    · MAKE CARD click: dispatched
- ok   7b preview: MAKE CARD sets #av-files-card-preview src to a blob: object URL (or the ui snap reports the preview)  -> {"isBlob":true,"src":"blob:null/12f2ba87-3ae0-4107-b6a5-11444f7ef613","tag":"IMG","snapHasPreview":false,"snap":"{\"version\":\"s4.0\",\"inited\":true,\"mounts\":2,\"host\":true,\"wired\":true,\"card\":true,\"sections\":{\"project\":true,\"share\":true,\"video\":true},\"controls\":{\"save\":true,\"open\":true,\"samples\":true,\"cardMake\":true,\"cardCopy\":true,\"ca"}
- ok   7c share absent → download: __avCardLast.via "download" · pngBytes > 4096 · the anchor download recorded  -> {"ok":true,"shareType":"undefined","last":{"enc":"eyJrIjoidmEiLCJwIjp7ImZpbHRlci5jdXRvZmYiOjEyMzQsImZ4LmRlbGF5Lm9uIjowLCJmeC5kcml2ZS5vbiI6MCwiZnguZHluLm9uIjowLCJmeC5tb2Qub24iOjAsImZ4LnZlcmIub24iOjAsIm1hc3RlciI6MC40Mn19","url":"file:///C:/Users/Moddy/anvil/index.html#avp=eyJrIjoidmEiLCJwIjp7ImZpbHRlci5jdXRvZmYiOjEyMzQsImZ4LmRlbGF5Lm9uIjowLCJmeC5kcml2ZS5vbiI6MCwiZnguZHluLm9uIjowLCJmeC5tb2Qub24iOjAsImZ4LnZlcmIub24iOjAsIm1hc3RlciI6MC40Mn19","pngBytes":93078,"via":"download","at":1791384398155},"deliver":{"name":"anvil-card-untitled.png","bytes":93078,"at":1791384398155,"via":"anchor"},"err":null}
+ ok   7b preview: MAKE CARD sets #av-files-card-preview src to a blob: object URL (or the ui snap reports the preview)  -> {"isBlob":true,"src":"blob:null/a1b59a93-7108-4b96-ae7f-e8c0fd1de120","tag":"IMG","snapHasPreview":false,"snap":"{\"version\":\"s4.0\",\"inited\":true,\"mounts\":2,\"host\":true,\"wired\":true,\"card\":true,\"sections\":{\"project\":true,\"share\":true,\"video\":true},\"controls\":{\"save\":true,\"open\":true,\"samples\":true,\"cardMake\":true,\"cardCopy\":true,\"ca"}
+ ok   7c share absent → download: __avCardLast.via "download" · pngBytes > 4096 · the anchor download recorded  -> {"ok":true,"shareType":"undefined","last":{"enc":"eyJrIjoidmEiLCJwIjp7ImZpbHRlci5jdXRvZmYiOjEyMzQsImZ4LmRlbGF5Lm9uIjowLCJmeC5kcml2ZS5vbiI6MCwiZnguZHluLm9uIjowLCJmeC5tb2Qub24iOjAsImZ4LnZlcmIub24iOjAsIm1hc3RlciI6MC40Mn19","url":"file:///C:/Users/Moddy/anvil/index.html#avp=eyJrIjoidmEiLCJwIjp7ImZpbHRlci5jdXRvZmYiOjEyMzQsImZ4LmRlbGF5Lm9uIjowLCJmeC5kcml2ZS5vbiI6MCwiZnguZHluLm9uIjowLCJmeC5tb2Qub24iOjAsImZ4LnZlcmIub24iOjAsIm1hc3RlciI6MC40Mn19","pngBytes":93078,"via":"download","at":1791384692443},"deliver":{"name":"anvil-card-untitled.png","bytes":93078,"at":1791384692443,"via":"anchor"},"err":null}
 ── 8. video ──
  ok   8a video supported: capture+recorder true · mime in the webm chain · audio flag + reasons[] present  -> {"ok":true,"capture":true,"recorder":true,"audio":true,"mime":"video/webm;codecs=vp9,opus","reasons":[]}
    · video record started: {"pl":{"ok":true,"name":"RIG PAT 1"},"noteCount":28,"vs":{"state":"started"}}
- ok   8b video record 2s@15fps: EBML magic 1A 45 DF A3 · bytes > 8192 · mime webm · seconds 2 · warnings [] (polled)  -> {"pl":{"ok":true,"name":"RIG PAT 1"},"noteCount":28,"vn":{"state":"done","ms":2102,"ok":true,"error":null,"seconds":2,"bytes":118587,"mime":"video/webm;codecs=vp9,opus","warnings":[],"refused":null,"magic":[26,69,223,163],"fileBytes":118587}}
- ok   8c __avVideoLast set: bytes/seconds/mime/at consistent with the receipt  -> {"bytes":118587,"seconds":2,"mime":"video/webm;codecs=vp9,opus","at":1791384400270}
+ ok   8b video record 2s@15fps: EBML magic 1A 45 DF A3 · bytes > 8192 · mime webm · seconds 2 · warnings [] (polled)  -> {"pl":{"ok":true,"name":"RIG PAT 1"},"noteCount":28,"vn":{"state":"done","ms":2084,"ok":true,"error":null,"seconds":2,"bytes":119497,"mime":"video/webm;codecs=vp9,opus","warnings":[],"refused":null,"magic":[26,69,223,163],"fileBytes":119497}}
+ ok   8c __avVideoLast set: bytes/seconds/mime/at consistent with the receipt  -> {"bytes":119497,"seconds":2,"mime":"video/webm;codecs=vp9,opus","at":1791384694540}
 ── 9. seal ──
  ok   9a screenshot: renders/s4-suite.png (the card, scale 2 — taken while previews are live)  -> 144390 bytes · clip 1048×487 @2x
  ok   9b cleanup: notes released · params (master/kind) restored · cutoff restored · hash cleared  -> {"held":0,"taken":0,"params":{"master":0.8,"kind":"va","cutoff":800},"arm":{"master":0.8,"kind":"va","cutoff":800},"hashIs":"","cutoffOk":true}
@@ -53,10 +53,8 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791384394916
  ok   9e zero page errors (exceptions · Log errors · console.error)  -> page errors=0
 index.html sha256 (after): c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287
  ok   9f freeze: index.html sha256 before === after (unchanged by the run)  -> c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287
-   · 10 EXPECT_SHA not pinned — after the S4 build, pass --sha <hex> or set the constant (never loosen)
+ ok   10 freeze pin leg: index.html sha256 = pinned  -> pinned c92a4445bae7...
 
-RESULT: 36 passed, 0 failed
-S4-RESULT {"kind":"anvil-cdp-s4","sha256Before":"c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287","sha256After":"c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287","pinned":null,"passed":36,"failed":0,"checks":36,"verdict":"pass"}
+RESULT: 37 passed, 0 failed
+S4-RESULT {"kind":"anvil-cdp-s4","sha256Before":"c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287","sha256After":"c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287","pinned":"c92a4445bae784a4dd3d2eda2726e31d39fc5e3d151e4950e24f346a65a84287","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 S4 PASSED
-rig exit=0
-S4-RIG-DONE 01:16:41
