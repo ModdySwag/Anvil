@@ -1,6 +1,6 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v1.1.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.1.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v1.2.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.2.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":2,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
@@ -20,6 +20,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   S2.1 comp: card mounted + wired (lanes · comp select · segments · ADD/AUTO/RENDER/EXPORT) + comp API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"lanes":true,"list":true,"segs":true,"add":true,"auto":true,"fade":true,"render":true,"exportBtn":true,"ui":"object","compApi":"function","autoApi":"function","renderApi":"function","exportApi":"function","handles":"object|function"}
  ok   S3 mix: card mounted + wired (ADD · render · export · auto-mix · A/B) + mix/loud API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"addSrc":true,"add":true,"tracks":true,"render":true,"exportBtn":true,"bits":true,"dither":true,"auto":true,"refFile":true,"compare":true,"playab":true,"ui":"object","mixApi":"function","autoApi":"function","refApi":"function","cmpApi":"function","loudApi":"function","handles":"object|object"}
  ok   DECK: card mounted + wired (RUN · FREEZE · FLOOR · waterfalls · meters · readouts) + deck API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"run":true,"freeze":true,"dbfloor":true,"wfrate":true,"scope":true,"spectrum":true,"waterfall":true,"lufs":true,"tp":true,"bpm":true,"ui":"object","deckApi":"function","attachApi":"function","readsApi":"function","handles":"object|function"}
+ ok   S4: card mounted + wired (.anvl · samples · share card · PNG · video clip) + proj/card/video API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"save":true,"open":true,"samples":true,"cardmake":true,"cardcopy":true,"cardpng":true,"preview":true,"videorun":true,"videoprev":true,"ui":"object","projApi":"function","openApi":"function","cardApi":"function","qrApi":"function","videoApi":"function","handles":"object|object|object"}
  ok   zero page errors
 
-22 passed, 0 failed
+23 passed, 0 failed

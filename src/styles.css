@@ -874,3 +874,31 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-deck-rd-val { font-family: var(--mono); font-size: 11px; color: var(--teal); }
 .av-deck-note { margin: 0; }
 .av-deck-foot { margin: 0; }
+
+/* ==================== S4 — PROJECT & SHARE card (deliver extras) ==================== */
+/* ============================================================================
+   S4 — PROJECT & SHARE card (av_files_ui.js): .anvl projects · sample import · patch cards · video clips */
+.av-files { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-files-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-files-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-files-cap { font-size: 10.5px; color: var(--text-3); }
+.av-files-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-files-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-files-msg { color: var(--text-2); }
+.av-files-err { color: #ff8a7a; }
+.av-files-secs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1100px) { .av-files-secs { grid-template-columns: 1fr; } }
+.av-files-sec { display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--raised); border: 1px solid var(--hair); border-radius: 8px; padding: 10px 12px; }
+.av-files-sec-title { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin: 0; }
+.av-files-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-width: 0; }
+.av-files-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-files-btn { }
+.av-files-prev-row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px; min-width: 0; }
+.av-files-preview { display: block; width: 100%; max-width: 100%; height: auto; background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; }
+.av-files-card-preview { max-width: 220px; aspect-ratio: 1 / 1; object-fit: contain; }
+.av-files-video-preview { max-width: 460px; aspect-ratio: 16 / 9; }
+.av-files-stat { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin: 0; overflow-wrap: anywhere; min-width: 0; }
+.av-files-note { margin: 0; }
+.av-files-foot { margin: 0; }
+.av-files-busy { opacity: .55; }
+

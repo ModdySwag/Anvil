@@ -392,6 +392,33 @@ async function main() {
   check('DECK: card mounted + wired (RUN \u00b7 FREEZE \u00b7 FLOOR \u00b7 waterfalls \u00b7 meters \u00b7 readouts) + deck API live',
     deckS.card === true && deckS.host === true && deckS.root === true && deckS.wired === true && deckS.status === true && deckS.run === true && deckS.freeze === true && deckS.dbfloor === true && deckS.wfrate === true && deckS.scope === true && deckS.spectrum === true && deckS.waterfall === true && deckS.lufs === true && deckS.tp === true && deckS.bpm === true && deckS.ui === 'object' && deckS.deckApi === 'function' && deckS.attachApi === 'function' && deckS.readsApi === 'function' && deckS.handles === 'object|function', JSON.stringify(deckS));
 
+  /* 6m. the PROJECT & SHARE card (files \u00b7 card \u00b7 video) */
+  const filesR = await ev(`(() => {
+    const card = document.getElementById('av-files');
+    const host = document.getElementById('av-files-host');
+    return { card: !!card, host: !!host,
+             root: !!(host && host.querySelector('.av-files')),
+             wired: !!(host && host.dataset && host.dataset.avFilesUiWired === '1'),
+             status: !!document.getElementById('av-files-status'),
+             save: !!document.getElementById('av-files-save'),
+             open: !!document.getElementById('av-files-open'),
+             samples: !!document.getElementById('av-files-samples'),
+             cardmake: !!document.getElementById('av-files-card-make'),
+             cardcopy: !!document.getElementById('av-files-card-copy'),
+             cardpng: !!document.getElementById('av-files-card-png'),
+             preview: !!document.getElementById('av-files-card-preview'),
+             videorun: !!document.getElementById('av-files-video-run'),
+             videoprev: !!document.getElementById('av-files-video-preview'),
+             ui: typeof window.__avFilesUi,
+             projApi: typeof avProjSave, openApi: typeof avProjOpen,
+             cardApi: typeof avCardEncode, qrApi: typeof avCardQr,
+             videoApi: typeof avVideoRecord,
+             handles: typeof window.__avProj + '|' + typeof window.__avCard + '|' + typeof window.__avVideo };
+  })()`);
+  const filesS = filesR.value || {};
+  check('S4: card mounted + wired (.anvl \u00b7 samples \u00b7 share card \u00b7 PNG \u00b7 video clip) + proj/card/video API live',
+    filesS.card === true && filesS.host === true && filesS.root === true && filesS.wired === true && filesS.status === true && filesS.save === true && filesS.open === true && filesS.samples === true && filesS.cardmake === true && filesS.cardcopy === true && filesS.cardpng === true && filesS.preview === true && filesS.videorun === true && filesS.videoprev === true && filesS.ui === 'object' && filesS.projApi === 'function' && filesS.openApi === 'function' && filesS.cardApi === 'function' && filesS.qrApi === 'function' && filesS.videoApi === 'function' && filesS.handles === 'object|object|object', JSON.stringify(filesS));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
