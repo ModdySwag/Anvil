@@ -1,0 +1,2845 @@
+{
+  "v": 1,
+  "id": "starter-100",
+  "meta": {
+    "name": "STARTER 100",
+    "author": "MODDYS Foundry",
+    "license": "CC0-1.0",
+    "tags": [
+      "starter"
+    ],
+    "description": "The tutorial tour: 100 own-authored presets, simplest-first, covering every Anvil module — VA · ACID · STRING · DRUM · GRAIN · SAMPLER · FX · MOD · SEQ. Doubles as the engine smoke-corpus.",
+    "engine": "mixed"
+  },
+  "presets": [
+    {
+      "name": "Saw Basics",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "init"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.type": "saw"
+      }
+    },
+    {
+      "name": "Square Basics",
+      "section": "VA",
+      "tags": [
+        "osc"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.type": "square"
+      }
+    },
+    {
+      "name": "Pulse Width",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "pulse"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.type": "pulse",
+        "osc1.pw": 0.3
+      }
+    },
+    {
+      "name": "Triangle Soft",
+      "section": "VA",
+      "tags": [
+        "osc"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.type": "tri",
+        "filter.cutoff": 2400,
+        "filter.envAmt": 0.6
+      }
+    },
+    {
+      "name": "Sine Pure",
+      "section": "VA",
+      "tags": [
+        "osc"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.type": "sine",
+        "filter.cutoff": 5000,
+        "filter.envAmt": 0
+      }
+    },
+    {
+      "name": "Two Oscillators",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "mix"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc2.type": "wt.saw",
+        "osc2.level": 0.35
+      }
+    },
+    {
+      "name": "Wavetable Square",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "wt"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc2.type": "wt.square",
+        "osc2.level": 0.45
+      }
+    },
+    {
+      "name": "Wavetable Tri",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "wt"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc2.type": "wt.tri",
+        "osc2.level": 0.4,
+        "osc1.level": 0.85
+      }
+    },
+    {
+      "name": "Wavetable Sine",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "wt"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc2.type": "wt.sine",
+        "osc2.level": 0.4
+      }
+    },
+    {
+      "name": "Wavetable Pulse25",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "wt"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc2.type": "wt.pulse25",
+        "osc2.level": 0.35
+      }
+    },
+    {
+      "name": "Octave Stack",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "tune"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc2.tune": -12,
+        "osc2.level": 0.5
+      }
+    },
+    {
+      "name": "Sub Sine",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "sub"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "sub.level": 0.6,
+        "sub.wave": "sine"
+      }
+    },
+    {
+      "name": "Noise Wind",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "noise"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.level": 0,
+        "osc2.level": 0,
+        "noise.level": 0.9,
+        "filter.mode": "bp",
+        "filter.cutoff": 1100,
+        "filter.reso": 0.5
+      }
+    },
+    {
+      "name": "Filter Drop",
+      "section": "VA",
+      "tags": [
+        "filter",
+        "env"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "filter.cutoff": 300,
+        "filter.envAmt": 3,
+        "env1.d": 0.7,
+        "env1.s": 0.25
+      }
+    },
+    {
+      "name": "Negative Env",
+      "section": "VA",
+      "tags": [
+        "filter",
+        "env"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "filter.envAmt": -2.5,
+        "filter.cutoff": 6000,
+        "env1.d": 0.9,
+        "env1.s": 0.2
+      }
+    },
+    {
+      "name": "Highpass Sweep",
+      "section": "VA",
+      "tags": [
+        "filter"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "filter.mode": "hp",
+        "filter.cutoff": 1500,
+        "filter.envAmt": 2
+      }
+    },
+    {
+      "name": "Bandpass Voice",
+      "section": "VA",
+      "tags": [
+        "filter"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "filter.mode": "bp",
+        "filter.cutoff": 900,
+        "filter.reso": 0.65
+      }
+    },
+    {
+      "name": "LP12 Bright",
+      "section": "VA",
+      "tags": [
+        "filter"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "filter.mode": "lp12",
+        "filter.cutoff": 3000,
+        "filter.envAmt": 0
+      }
+    },
+    {
+      "name": "Ladder Drive",
+      "section": "VA",
+      "tags": [
+        "filter",
+        "ladder"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "filter.mode": "ladder24",
+        "filter.drive": 0.6,
+        "filter.cutoff": 800,
+        "filter.reso": 0.35
+      }
+    },
+    {
+      "name": "Key Tracking",
+      "section": "VA",
+      "tags": [
+        "filter",
+        "keys"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "filter.ktrk": 0.7,
+        "filter.cutoff": 400,
+        "filter.envAmt": 1.2
+      }
+    },
+    {
+      "name": "Pluck Envelope",
+      "section": "VA",
+      "tags": [
+        "env"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "env1.a": 0.001,
+        "env1.d": 0.22,
+        "env1.s": 0,
+        "env1.r": 0.18
+      }
+    },
+    {
+      "name": "Pad Attack",
+      "section": "VA",
+      "tags": [
+        "env"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "env1.a": 1.8,
+        "env1.d": 1.2,
+        "env1.s": 0.9,
+        "env1.r": 2.4
+      }
+    },
+    {
+      "name": "Glide Portamento",
+      "section": "VA",
+      "tags": [
+        "voice"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "voice.glide": 0.25,
+        "osc1.type": "tri"
+      }
+    },
+    {
+      "name": "Unison Saws",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "unison"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.uni": 5,
+        "osc1.spread": 28
+      }
+    },
+    {
+      "name": "Supersaw Wide",
+      "section": "VA",
+      "tags": [
+        "osc",
+        "unison"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.uni": 7,
+        "osc1.spread": 42,
+        "filter.cutoff": 1800,
+        "filter.envAmt": 1
+      }
+    },
+    {
+      "name": "LFO Cutoff Wobble",
+      "section": "VA",
+      "tags": [
+        "lfo"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "lfo.shape": "tri",
+        "lfo.rate": 4.5,
+        "lfo.toCut": 0.65,
+        "filter.cutoff": 900
+      }
+    },
+    {
+      "name": "LFO Sample & Hold",
+      "section": "VA",
+      "tags": [
+        "lfo"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "lfo.shape": "sh",
+        "lfo.rate": 8,
+        "lfo.toCut": 0.4
+      }
+    },
+    {
+      "name": "Vibrato LFO",
+      "section": "VA",
+      "tags": [
+        "lfo"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "lfo.toPitch": 0.12,
+        "lfo.rate": 5.5,
+        "env1.s": 1
+      }
+    },
+    {
+      "name": "Acid Basics",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "init"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.volume": 0.8
+      }
+    },
+    {
+      "name": "Acid Square Wave",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "osc"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.wave": 1
+      }
+    },
+    {
+      "name": "Acid Cutoff Low",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "filter"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.cutoff": 400
+      }
+    },
+    {
+      "name": "Acid Resonance",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "filter"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.reso": 0.85,
+        "acid.cutoff": 300
+      }
+    },
+    {
+      "name": "Acid Env Mod",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "env"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.envMod": 0.9,
+        "acid.decay": 0.18,
+        "acid.cutoff": 250
+      }
+    },
+    {
+      "name": "Acid Accent Punch",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "accent"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.accent": 0.9,
+        "acid.accentDecay": 0.1
+      }
+    },
+    {
+      "name": "Acid Slide Legato",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "slide"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.slide": 0.18,
+        "acid.veg": 1.2
+      }
+    },
+    {
+      "name": "Acid Muffled",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "filter"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.muffler": 0.35,
+        "acid.filterTrack": 0.6
+      }
+    },
+    {
+      "name": "Acid Overdrive",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "drive"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.overdrive": 8,
+        "acid.sweep": 0.5
+      }
+    },
+    {
+      "name": "Acid Soft Attack",
+      "section": "ACID",
+      "tags": [
+        "acid",
+        "env"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.softAttack": 0.02,
+        "acid.accentMode": 2,
+        "acid.decay": 0.5,
+        "acid.envMod": 0.6,
+        "acid.cutoff": 600
+      }
+    },
+    {
+      "name": "String Pluck",
+      "section": "STRING",
+      "tags": [
+        "string",
+        "init"
+      ],
+      "patch": {
+        "engine.kind": "string"
+      }
+    },
+    {
+      "name": "String Nylon Soft",
+      "section": "STRING",
+      "tags": [
+        "string"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.damp": 0.3,
+        "string.decay": 0.6,
+        "string.tone": 0.4
+      }
+    },
+    {
+      "name": "String Koto Bright",
+      "section": "STRING",
+      "tags": [
+        "string"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.exciter": "saw",
+        "string.tone": 0.75,
+        "string.damp": 0.25
+      }
+    },
+    {
+      "name": "String Pulse Pick",
+      "section": "STRING",
+      "tags": [
+        "string"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.exciter": "pulse",
+        "string.pluck": 0.5
+      }
+    },
+    {
+      "name": "String Long Decay",
+      "section": "STRING",
+      "tags": [
+        "string"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.decay": 0.85,
+        "string.damp": 0.2
+      }
+    },
+    {
+      "name": "String Muted Short",
+      "section": "STRING",
+      "tags": [
+        "string"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.decay": 0.25,
+        "string.damp": 0.7
+      }
+    },
+    {
+      "name": "String Comb Position",
+      "section": "STRING",
+      "tags": [
+        "string"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.pluck": 0.8
+      }
+    },
+    {
+      "name": "String Dark Wood",
+      "section": "STRING",
+      "tags": [
+        "string"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.tone": 0.15,
+        "string.damp": 0.6
+      }
+    },
+    {
+      "name": "String Glassy",
+      "section": "STRING",
+      "tags": [
+        "string"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.tone": 0.9,
+        "string.decay": 0.5,
+        "string.exciter": "noise"
+      }
+    },
+    {
+      "name": "String Chime Reverb",
+      "section": "STRING",
+      "tags": [
+        "string",
+        "fx"
+      ],
+      "patch": {
+        "engine.kind": "string",
+        "string.decay": 0.9,
+        "string.pluck": 0.9,
+        "string.damp": 0.1,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.mix": 0.3
+      }
+    },
+    {
+      "name": "Drum Kick Classic",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "kick",
+        "init"
+      ],
+      "patch": {
+        "engine.kind": "drum"
+      }
+    },
+    {
+      "name": "Drum Kick Deep",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "kick"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.kick.tune": -4,
+        "drum.kick.decay": 0.6
+      }
+    },
+    {
+      "name": "Drum Snare Crack",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "snare"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.snare.decay": 0.3,
+        "drum.snare.tune": 2,
+        "drum.snare.level": 1
+      }
+    },
+    {
+      "name": "Drum Clap Wide",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "clap"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.clap.decay": 0.2,
+        "drum.clap.level": 0.9
+      }
+    },
+    {
+      "name": "Drum Rim Tick",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "rim"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.rim.decay": 0.04,
+        "drum.rim.level": 0.8
+      }
+    },
+    {
+      "name": "Drum Hat Closed",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "hat"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.ch.decay": 0.035,
+        "drum.ch.level": 0.8
+      }
+    },
+    {
+      "name": "Drum Hat Open",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "hat"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.oh.decay": 0.45,
+        "drum.oh.level": 0.75
+      }
+    },
+    {
+      "name": "Drum Toms Row",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "toms"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.lt.decay": 0.5,
+        "drum.mt.decay": 0.35,
+        "drum.ht.decay": 0.3,
+        "drum.ht.tune": 4
+      }
+    },
+    {
+      "name": "Drum Crash Ride",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "cymbal"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.crash.decay": 1.8,
+        "drum.crash.level": 0.8,
+        "drum.ride.decay": 1,
+        "drum.ride.level": 0.6
+      }
+    },
+    {
+      "name": "Drum Kit Balance",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "mix"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.kick.level": 1,
+        "drum.snare.level": 0.95,
+        "drum.ch.level": 0.6,
+        "drum.oh.level": 0.6,
+        "drum.volume": 0.85
+      }
+    },
+    {
+      "name": "Drum Split Point",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "split"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.split": 60,
+        "drum.volume": 0.9
+      }
+    },
+    {
+      "name": "Drum Bus Drive",
+      "section": "DRUM",
+      "tags": [
+        "drum",
+        "fx"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.volume": 1,
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.35,
+        "fx.drive.mix": 0.5
+      }
+    },
+    {
+      "name": "Grain Basics",
+      "section": "GRAIN",
+      "tags": [
+        "grain",
+        "init"
+      ],
+      "patch": {
+        "engine.kind": "grain",
+        "grain.buf": 0
+      }
+    },
+    {
+      "name": "Grain Position Scan",
+      "section": "GRAIN",
+      "tags": [
+        "grain"
+      ],
+      "patch": {
+        "engine.kind": "grain",
+        "grain.pos": 0.5
+      }
+    },
+    {
+      "name": "Grain Long Window",
+      "section": "GRAIN",
+      "tags": [
+        "grain"
+      ],
+      "patch": {
+        "engine.kind": "grain",
+        "grain.size": 0.18,
+        "grain.density": 3
+      }
+    },
+    {
+      "name": "Grain Dense Cloud",
+      "section": "GRAIN",
+      "tags": [
+        "grain"
+      ],
+      "patch": {
+        "engine.kind": "grain",
+        "grain.density": 12,
+        "grain.size": 0.05
+      }
+    },
+    {
+      "name": "Grain Pitch Up",
+      "section": "GRAIN",
+      "tags": [
+        "grain"
+      ],
+      "patch": {
+        "engine.kind": "grain",
+        "grain.pitch": 7,
+        "grain.density": 6
+      }
+    },
+    {
+      "name": "Grain Jitter Drift",
+      "section": "GRAIN",
+      "tags": [
+        "grain"
+      ],
+      "patch": {
+        "engine.kind": "grain",
+        "grain.jitter": 0.4,
+        "grain.pos": 0.5,
+        "grain.density": 8
+      }
+    },
+    {
+      "name": "Grain Stereo Spread",
+      "section": "GRAIN",
+      "tags": [
+        "grain"
+      ],
+      "patch": {
+        "engine.kind": "grain",
+        "grain.spread": 1,
+        "grain.vol": 0.9
+      }
+    },
+    {
+      "name": "Grain Amb Pad",
+      "section": "GRAIN",
+      "tags": [
+        "grain",
+        "fx"
+      ],
+      "patch": {
+        "engine.kind": "grain",
+        "grain.size": 0.2,
+        "grain.density": 16,
+        "grain.spread": 0.6,
+        "fx.verb.on": 1,
+        "fx.verb.mode": "fdn",
+        "fx.verb.mix": 0.3
+      }
+    },
+    {
+      "name": "Sampler One Shot",
+      "section": "SAMPLER",
+      "tags": [
+        "sampler",
+        "init"
+      ],
+      "patch": {
+        "engine.kind": "sampler",
+        "sampler.buf": 0,
+        "sampler.loop": 0
+      }
+    },
+    {
+      "name": "Sampler Root Shift",
+      "section": "SAMPLER",
+      "tags": [
+        "sampler",
+        "root"
+      ],
+      "patch": {
+        "engine.kind": "sampler",
+        "sampler.root": 48,
+        "sampler.tune": 0
+      }
+    },
+    {
+      "name": "Sampler Tune Up",
+      "section": "SAMPLER",
+      "tags": [
+        "sampler",
+        "tune"
+      ],
+      "patch": {
+        "engine.kind": "sampler",
+        "sampler.tune": 7
+      }
+    },
+    {
+      "name": "Sampler Loop On",
+      "section": "SAMPLER",
+      "tags": [
+        "sampler",
+        "loop"
+      ],
+      "patch": {
+        "engine.kind": "sampler",
+        "sampler.loop": 1
+      }
+    },
+    {
+      "name": "Sampler Loop Window",
+      "section": "SAMPLER",
+      "tags": [
+        "sampler",
+        "loop"
+      ],
+      "patch": {
+        "engine.kind": "sampler",
+        "sampler.loop": 1,
+        "sampler.loopStart": 0.25,
+        "sampler.loopEnd": 0.75
+      }
+    },
+    {
+      "name": "Sampler Volume Trim",
+      "section": "SAMPLER",
+      "tags": [
+        "sampler",
+        "mix"
+      ],
+      "patch": {
+        "engine.kind": "sampler",
+        "sampler.vol": 0.5
+      }
+    },
+    {
+      "name": "Drive Soft Sat",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "drive"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.drive.on": 1,
+        "fx.drive.mode": "sat",
+        "fx.drive.amount": 0.45,
+        "fx.drive.tone": 0.6,
+        "fx.drive.mix": 0.6
+      }
+    },
+    {
+      "name": "Drive Fold Wall",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "drive"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.drive.on": 1,
+        "fx.drive.mode": "fold",
+        "fx.drive.amount": 0.7,
+        "fx.drive.tone": 0.35,
+        "fx.drive.mix": 0.7
+      }
+    },
+    {
+      "name": "Drive Crush Bits",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "drive"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.drive.on": 1,
+        "fx.drive.mode": "crush",
+        "fx.drive.bits": 8,
+        "fx.drive.down": 4,
+        "fx.drive.amount": 0.6,
+        "fx.drive.mix": 0.8
+      }
+    },
+    {
+      "name": "Mod Chorus Wide",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "mod"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.mod.on": 1,
+        "fx.mod.mode": "chorus",
+        "fx.mod.rate": 0.6,
+        "fx.mod.depth": 0.5,
+        "fx.mod.mix": 0.5
+      }
+    },
+    {
+      "name": "Mod Ensemble Slow",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "mod"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.mod.on": 1,
+        "fx.mod.mode": "ensemble",
+        "fx.mod.rate": 0.3,
+        "fx.mod.depth": 0.7,
+        "fx.mod.stages": 6,
+        "fx.mod.mix": 0.55
+      }
+    },
+    {
+      "name": "Mod Flanger Jet",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "mod"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.mod.on": 1,
+        "fx.mod.mode": "flanger",
+        "fx.mod.rate": 0.25,
+        "fx.mod.depth": 0.8,
+        "fx.mod.feedback": 0.5,
+        "fx.mod.stages": 4,
+        "fx.mod.mix": 0.5
+      }
+    },
+    {
+      "name": "Mod Phaser Haze",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "mod"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.mod.on": 1,
+        "fx.mod.mode": "phaser",
+        "fx.mod.rate": 0.35,
+        "fx.mod.depth": 0.6,
+        "fx.mod.feedback": 0.3,
+        "fx.mod.stages": 8,
+        "fx.mod.mix": 0.5
+      }
+    },
+    {
+      "name": "Delay Quarter",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "delay"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/4",
+        "fx.delay.bpm": 120,
+        "fx.delay.feedback": 0.35,
+        "fx.delay.mix": 0.35
+      }
+    },
+    {
+      "name": "Delay Ping Pong",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "delay"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.delay.on": 1,
+        "fx.delay.div": "1/8",
+        "fx.delay.pingpong": 1,
+        "fx.delay.spread": 0.8,
+        "fx.delay.feedback": 0.45,
+        "fx.delay.mix": 0.4
+      }
+    },
+    {
+      "name": "Delay Ducked",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "delay"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.delay.on": 1,
+        "fx.delay.time": 0.25,
+        "fx.delay.feedback": 0.5,
+        "fx.delay.duck": 1,
+        "fx.delay.mix": 0.4
+      }
+    },
+    {
+      "name": "Verb Plate Small",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "verb"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.verb.on": 1,
+        "fx.verb.mode": "plate",
+        "fx.verb.size": 0.35,
+        "fx.verb.decay": 0.45,
+        "fx.verb.damp": 0.5,
+        "fx.verb.predelay": 0.01,
+        "fx.verb.mix": 0.3
+      }
+    },
+    {
+      "name": "Verb FDN Hall",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "verb"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.verb.on": 1,
+        "fx.verb.mode": "fdn",
+        "fx.verb.size": 0.8,
+        "fx.verb.decay": 0.8,
+        "fx.verb.damp": 0.35,
+        "fx.verb.predelay": 0.03,
+        "fx.verb.mix": 0.45
+      }
+    },
+    {
+      "name": "Verb Freeverb Bright",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "verb"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.verb.on": 1,
+        "fx.verb.mode": "freeverb",
+        "fx.verb.size": 0.6,
+        "fx.verb.decay": 0.5,
+        "fx.verb.damp": 0.15,
+        "fx.verb.mix": 0.35
+      }
+    },
+    {
+      "name": "Dyn Compressor Glue",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "dyn"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "engine.outScale": 0.7,
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 1,
+        "fx.dyn.comp.thresh": -18,
+        "fx.dyn.comp.ratio": 4,
+        "fx.dyn.comp.att": 0.01,
+        "fx.dyn.comp.rel": 0.3,
+        "fx.dyn.comp.makeup": 6
+      }
+    },
+    {
+      "name": "Dyn Limiter EQ",
+      "section": "FX",
+      "tags": [
+        "fx",
+        "dyn"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "fx.dyn.on": 1,
+        "fx.dyn.mix": 1,
+        "fx.dyn.lim.ceiling": -1,
+        "fx.dyn.eqLo": 1.5,
+        "fx.dyn.eqMid": -1,
+        "fx.dyn.eqHi": 2
+      }
+    },
+    {
+      "name": "Macro One",
+      "section": "MOD",
+      "tags": [
+        "mod",
+        "macro"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "mod.macro1": 0.7
+      }
+    },
+    {
+      "name": "Macro Pair A B",
+      "section": "MOD",
+      "tags": [
+        "mod",
+        "macro"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "mod.macro1": 0.3,
+        "mod.macro2": 0.8,
+        "osc1.uni": 3
+      }
+    },
+    {
+      "name": "Macro Plus Env2",
+      "section": "MOD",
+      "tags": [
+        "mod",
+        "env"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "mod.macro3": 0.5,
+        "env2.a": 0.5,
+        "env2.d": 1,
+        "env2.s": 0.5,
+        "env2.r": 1.5,
+        "osc1.type": "square"
+      }
+    },
+    {
+      "name": "Macro Pitch Setup",
+      "section": "MOD",
+      "tags": [
+        "mod",
+        "macro"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "mod.macro4": 0.9,
+        "mod.macro5": 0.4,
+        "voice.glide": 0.08,
+        "osc1.type": "tri"
+      }
+    },
+    {
+      "name": "Macros All Eight",
+      "section": "MOD",
+      "tags": [
+        "mod",
+        "macro"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "mod.macro1": 0.1,
+        "mod.macro2": 0.2,
+        "mod.macro3": 0.3,
+        "mod.macro4": 0.4,
+        "mod.macro5": 0.5,
+        "mod.macro6": 0.6,
+        "mod.macro7": 0.7,
+        "mod.macro8": 0.8,
+        "osc1.uni": 5,
+        "osc1.spread": 20
+      }
+    },
+    {
+      "name": "Seq Step Grid",
+      "section": "SEQ",
+      "tags": [
+        "seq",
+        "grid"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.type": "tri",
+        "env1.d": 0.3,
+        "env1.s": 0.6
+      },
+      "seq": {
+        "v": 1,
+        "name": "STEP GRID",
+        "bpm": 120,
+        "grid": "16",
+        "swing": 50,
+        "tracks": [
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 1,
+                "note": "c4"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "e4"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "g4"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c5"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "g4"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "e4"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "d4"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c4"
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          }
+        ],
+        "rng": 305419896
+      }
+    },
+    {
+      "name": "Seq Swing 8T",
+      "section": "SEQ",
+      "tags": [
+        "seq",
+        "swing"
+      ],
+      "patch": {
+        "engine.kind": "drum"
+      },
+      "seq": {
+        "v": 1,
+        "name": "SWING 8T",
+        "bpm": 128,
+        "grid": "8t",
+        "swing": 66,
+        "tracks": [
+          {
+            "len": 12,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 1,
+                "note": "c2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 12,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "d2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "d2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 12,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 12,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          }
+        ],
+        "rng": 305419896
+      }
+    },
+    {
+      "name": "Seq Probability",
+      "section": "SEQ",
+      "tags": [
+        "seq",
+        "probability"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.type": "saw",
+        "filter.cutoff": 1200
+      },
+      "seq": {
+        "v": 1,
+        "name": "PROBABILITY",
+        "bpm": 124,
+        "grid": "16",
+        "swing": 58,
+        "tracks": [
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 1,
+                "note": "c4",
+                "vel": 0.9
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "e4",
+                "prob": 60
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "g4",
+                "prob": 35
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "b4",
+                "cond": "first"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c5"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          }
+        ],
+        "rng": 305419896
+      }
+    },
+    {
+      "name": "Seq Ratchet Micro",
+      "section": "SEQ",
+      "tags": [
+        "seq",
+        "ratchet"
+      ],
+      "patch": {
+        "engine.kind": "va",
+        "osc1.type": "square",
+        "env1.d": 0.15,
+        "env1.s": 0.3
+      },
+      "seq": {
+        "v": 1,
+        "name": "RATCHET",
+        "bpm": 120,
+        "grid": "16",
+        "swing": 50,
+        "tracks": [
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 1,
+                "note": "c4",
+                "ratchet": 2
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "e4",
+                "ratchet": 3,
+                "micro": 6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "g4",
+                "ratchet": 4,
+                "gate": 0.4
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c5",
+                "micro": -4
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          }
+        ],
+        "rng": 305419896
+      }
+    },
+    {
+      "name": "Seq Acid Lane",
+      "section": "SEQ",
+      "tags": [
+        "seq",
+        "acid",
+        "lane"
+      ],
+      "patch": {
+        "engine.kind": "acid",
+        "acid.cutoff": 500,
+        "acid.envMod": 0.8,
+        "acid.reso": 0.7,
+        "acid.accent": 0.8
+      },
+      "seq": {
+        "v": 1,
+        "name": "ACID LANE",
+        "bpm": 130,
+        "grid": "16",
+        "swing": 62,
+        "tracks": [
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 1,
+                "note": "c2",
+                "vel": 0.9,
+                "gate": 0.6,
+                "accent": 1
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c2",
+                "vel": 0.9,
+                "gate": 0.6,
+                "slide": 1
+              },
+              {
+                "on": 1,
+                "note": "c2",
+                "vel": 0.9,
+                "gate": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "e2",
+                "vel": 0.9,
+                "gate": 0.6,
+                "accent": 1
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c2",
+                "vel": 0.9,
+                "gate": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "g1",
+                "vel": 0.9,
+                "gate": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "b1",
+                "vel": 0.9,
+                "gate": 0.6,
+                "slide": 1
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c2",
+                "vel": 0.9,
+                "gate": 0.6,
+                "oct": 1
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          }
+        ],
+        "rng": 305419896
+      }
+    },
+    {
+      "name": "Seq PLock Ride",
+      "section": "SEQ",
+      "tags": [
+        "seq",
+        "plock"
+      ],
+      "patch": {
+        "engine.kind": "drum",
+        "drum.volume": 0.9
+      },
+      "seq": {
+        "v": 1,
+        "name": "PLOCK RIDE",
+        "bpm": 126,
+        "grid": "16",
+        "swing": 62,
+        "tracks": [
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 1,
+                "note": "c2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "c2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "d2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "d2"
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 1,
+                "note": "f#2",
+                "vel": 0.6
+              },
+              {
+                "on": 0
+              }
+            ]
+          },
+          {
+            "len": 16,
+            "speed": 1,
+            "mute": 0,
+            "steps": [
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              },
+              {
+                "on": 0
+              }
+            ]
+          }
+        ],
+        "plocks": [
+          {
+            "path": "filter.cutoff",
+            "interp": "lin",
+            "steps": {
+              "0": 800,
+              "8": 4000,
+              "15": 1200
+            }
+          }
+        ],
+        "rng": 305419896
+      }
+    }
+  ]
+}

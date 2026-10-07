@@ -1,0 +1,95 @@
+=== witness_foundry.mjs — P5 sa-4 witness: packs/techno-foundry.avbank.json ===
+AVDSP version p3.0 · avSeqCore p4.0 · sr 48000
+
+== A. pack structure ==
+  PASS  v === 1  ::  1
+  PASS  id === techno-foundry  ::  techno-foundry
+  PASS  meta.license === CC0-1.0  ::  CC0-1.0
+  PASS  meta.name + author present  ::  TECHNO FOUNDRY / MODDYS Foundry
+  PASS  meta.engine === drum  ::  drum
+  PASS  presets.length === 64  ::  64
+  PASS  split: 32 KIT + 32 PAT  ::  32 + 32
+  PASS  preset names unique
+  PASS  every preset has a patch object
+  PASS  32 pattern presets carry a seq
+  PASS  kit presets carry no seq (kits are sound-only)
+
+== B. per-preset witness (patch -> noteOn(36) -> 2.0 s render -> finite / peak / determinism) ==
+  PASS  [KIT] Concrete Kick              paths:35 peak:0.2366 slots:16/16 det:0
+  PASS  [KIT] Warehouse Stomp            paths:35 peak:0.2275 slots:16/16 det:0
+  PASS  [KIT] Berghain Deep              paths:35 peak:0.2405 slots:16/16 det:0
+  PASS  [KIT] Peak Time Punch            paths:35 peak:0.2150 slots:16/16 det:0
+  PASS  [KIT] Sub Boom 808               paths:42 peak:0.3903 slots:16/16 det:0
+  PASS  [KIT] Miami Circuit              paths:35 peak:0.2082 slots:16/16 det:0
+  PASS  [KIT] Low Rider Toms             paths:35 peak:0.2392 slots:16/16 det:0
+  PASS  [KIT] Industrial Hammer          paths:35 peak:0.2215 slots:16/16 det:0
+  PASS  [KIT] Rubble Crush               paths:42 peak:0.4244 slots:16/16 det:0
+  PASS  [KIT] Sheet Metal                paths:35 peak:0.2204 slots:16/16 det:0
+  PASS  [KIT] Minimal Tick               paths:35 peak:0.2189 slots:16/16 det:0
+  PASS  [KIT] Dub Chamber                paths:41 peak:0.1543 slots:16/16 det:0
+  PASS  [KIT] Micro Click                paths:35 peak:0.2256 slots:16/16 det:0
+  PASS  [KIT] Tape Dust                  paths:44 peak:0.2299 slots:16/16 det:0
+  PASS  [KIT] Boom Bap Basement          paths:44 peak:0.3769 slots:16/16 det:0
+  PASS  [KIT] Trap Skitter               paths:35 peak:0.2461 slots:16/16 det:0
+  PASS  [KIT] Tumbao Corner              paths:35 peak:0.2083 slots:16/16 det:0
+  PASS  [KIT] Afro Ratio                 paths:35 peak:0.2148 slots:16/16 det:0
+  PASS  [KIT] Rave Stamper               paths:35 peak:0.2245 slots:16/16 det:0
+  PASS  [KIT] Old Skool Break            paths:35 peak:0.2320 slots:16/16 det:0
+  PASS  [KIT] Acid House 88              paths:35 peak:0.2255 slots:16/16 det:0
+  PASS  [KIT] Glass Foundry              paths:35 peak:0.2035 slots:16/16 det:0
+  PASS  [KIT] Concrete Pad               paths:35 peak:0.2499 slots:16/16 det:0
+  PASS  [KIT] Static Wash                paths:41 peak:0.1099 slots:16/16 det:0
+  PASS  [KIT] Tom Choir                  paths:35 peak:0.1977 slots:16/16 det:0
+  PASS  [KIT] Bell Tower                 paths:35 peak:0.2042 slots:16/16 det:0
+  PASS  [KIT] Tight Room                 paths:35 peak:0.2176 slots:16/16 det:0
+  PASS  [KIT] Silent Hall                paths:41 peak:0.1290 slots:16/16 det:0
+  PASS  [KIT] Utility Flat               paths:35 peak:0.2189 slots:16/16 det:0
+  PASS  [KIT] Layer Cake                 paths:35 peak:0.2208 slots:16/16 det:0
+  PASS  [KIT] Hard Groove                paths:35 peak:0.2213 slots:16/16 det:0
+  PASS  [KIT] Detroit Line               paths:35 peak:0.2360 slots:16/16 det:0
+  PASS  [PAT] Pattern 01 - Four Floor    paths: 2 peak:0.2189 events:66 ons:33 notes:4 patPeak:0.2782 patDet:0 det:0
+  PASS  [PAT] Pattern 02 - Rolling 4x4   paths: 2 peak:0.2189 events:68 ons:34 notes:4 patPeak:0.4219 patDet:0 det:0
+  PASS  [PAT] Pattern 03 - Warehouse Roll paths: 2 peak:0.2189 events:92 ons:46 notes:4 patPeak:0.2969 patDet:0 det:0
+  PASS  [PAT] Pattern 04 - Peak Time Stomp paths: 2 peak:0.2189 events:70 ons:35 notes:4 patPeak:0.3716 patDet:0 det:0
+  PASS  [PAT] Pattern 05 - Offbeat Tool  paths: 2 peak:0.2189 events:84 ons:42 notes:4 patPeak:0.2757 patDet:0 det:0
+  PASS  [PAT] Pattern 06 - Skank Groove  paths: 2 peak:0.2189 events:104 ons:52 notes:4 patPeak:0.2845 patDet:0 det:0
+  PASS  [PAT] Pattern 07 - Hat Runner    paths: 2 peak:0.2189 events:124 ons:62 notes:4 patPeak:0.2728 patDet:0 det:0
+  PASS  [PAT] Pattern 08 - Tom Trail     paths: 2 peak:0.2189 events:82 ons:41 notes:6 patPeak:0.4214 patDet:0 det:0
+  PASS  [PAT] Pattern 09 - Perc Cascade  paths: 2 peak:0.2189 events:94 ons:47 notes:7 patPeak:0.2807 patDet:0 det:0
+  PASS  [PAT] Pattern 10 - Rim Talk      paths: 2 peak:0.2189 events:80 ons:40 notes:3 patPeak:0.2875 patDet:0 det:0
+  PASS  [PAT] Pattern 11 - Shuffle Cell  paths: 2 peak:0.2189 events:88 ons:44 notes:4 patPeak:0.4250 patDet:0 det:0
+  PASS  [PAT] Pattern 12 - Triplet Hat   paths: 2 peak:0.2189 events:148 ons:74 notes:4 patPeak:0.2960 patDet:0 det:0
+  PASS  [PAT] Pattern 13 - Break Study   paths: 2 peak:0.2189 events:92 ons:46 notes:4 patPeak:0.2840 patDet:0 det:0
+  PASS  [PAT] Pattern 14 - Two Step      paths: 2 peak:0.2189 events:52 ons:26 notes:4 patPeak:0.2557 patDet:0 det:0
+  PASS  [PAT] Pattern 15 - Skitter 16    paths: 2 peak:0.2189 events:158 ons:79 notes:4 patPeak:0.2967 patDet:0 det:0
+  PASS  [PAT] Pattern 16 - Half Time Plod paths: 2 peak:0.2189 events:46 ons:23 notes:4 patPeak:0.2558 patDet:0 det:0
+  PASS  [PAT] Pattern 17 - Rolling Tom   paths: 2 peak:0.2189 events:92 ons:46 notes:4 patPeak:0.3421 patDet:0 det:0
+  PASS  [PAT] Pattern 18 - Euclid Field  paths: 2 peak:0.2189 events:96 ons:48 notes:4 patPeak:0.2668 patDet:0 det:0
+  PASS  [PAT] Pattern 19 - Ghost Chamber paths: 2 peak:0.2189 events:84 ons:42 notes:4 patPeak:0.2856 patDet:0 det:0
+  PASS  [PAT] Pattern 20 - Micro Shuffle paths: 2 peak:0.2189 events:64 ons:32 notes:4 patPeak:0.3910 patDet:0 det:0
+  PASS  [PAT] Pattern 21 - Ratchet Machine paths: 2 peak:0.2189 events:100 ons:50 notes:4 patPeak:0.3152 patDet:0 det:0
+  PASS  [PAT] Pattern 22 - Probability Web paths: 2 peak:0.2189 events:84 ons:42 notes:4 patPeak:0.2869 patDet:0 det:0
+  PASS  [PAT] Pattern 23 - Fill Beacon   paths: 2 peak:0.2189 events:66 ons:33 notes:4 patPeak:0.3837 patDet:0 det:0
+  PASS  [PAT] Pattern 24 - Modulo Talk   paths: 2 peak:0.2189 events:58 ons:29 notes:4 patPeak:0.3867 patDet:0 det:0
+  PASS  [PAT] Pattern 25 - First Flag    paths: 2 peak:0.2189 events:64 ons:32 notes:4 patPeak:0.2724 patDet:0 det:0
+  PASS  [PAT] Pattern 26 - Aux Perc      paths: 2 peak:0.2189 events:82 ons:41 notes:7 patPeak:0.3460 patDet:0 det:0
+  PASS  [PAT] Pattern 27 - Sub Sway      paths: 2 peak:0.2189 events:62 ons:31 notes:4 patPeak:0.3535 patDet:0 det:0
+  PASS  [PAT] Pattern 28 - Open Wide     paths: 2 peak:0.2189 events:80 ons:40 notes:4 patPeak:0.2733 patDet:0 det:0
+  PASS  [PAT] Pattern 29 - Crash Landing paths: 2 peak:0.2189 events:70 ons:35 notes:4 patPeak:0.3764 patDet:0 det:0
+  PASS  [PAT] Pattern 30 - Hats Off      paths: 2 peak:0.2189 events:132 ons:66 notes:4 patPeak:0.3037 patDet:0 det:0
+  PASS  [PAT] Pattern 31 - Clinic Grid   paths: 2 peak:0.2189 events:66 ons:33 notes:4 patPeak:0.3742 patDet:0 det:0
+  PASS  [PAT] Pattern 32 - Machine Code  paths: 2 peak:0.2189 events:170 ons:85 notes:5 patPeak:0.3043 patDet:0 det:0
+
+== C. aggregates ==
+  PASS  witnessed 64/64  ::  64/64
+  PASS  distinct patch paths all accepted (sampled)  ::  50 distinct paths; bad=
+  PASS  swing within the brief 60..70  ::  60..70
+  PASS  some probability steps  ::  69
+  PASS  some accented steps  ::  11
+  PASS  some ratcheted steps  ::  9
+  PASS  some micro-timed steps  ::  8
+  PASS  some conditional steps  ::  7
+  PASS  pattern hit density sane (>= 300 steps)  ::  468
+  PASS  every kit slot audible across all 32 kits (min slot peak > 1e-4)  ::  min=0.0257
+
+TECHNO FOUNDRY WITNESS: ALL PASS — 64/64 witnessed (32 KIT + 32 PAT)

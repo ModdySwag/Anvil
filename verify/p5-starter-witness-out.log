@@ -1,0 +1,129 @@
+== STARTER 100 witness (P5 §2) == 2026-10-07T04:50:02.490Z
+AVDSP.version=p3.0 · seqCore loaded · mod rule=av_mod.js (shipped)
+  PASS  mod page rule: mod.macro1..8 -> 0..7, near-misses refused (av_mod.js (shipped))  ::  clean
+  PASS  mod clamp01 parity (0.5, -1->0, 2->1, non-numeric->0)
+  PASS  pack: v=1, id=starter-100, license CC0-1.0
+  PASS  preset count = 100  ::  100
+  PASS  seq loader negative control (null / v=2 / array refused)
+
+== per-preset rows (name · section · paths · peak · hash · verdict) ==
+  1  PASS  VA       Saw Basics              paths= 2              peak=0.2664  hash=4bca6eab/4bca6eab
+  2  PASS  VA       Square Basics           paths= 2              peak=0.3167  hash=aedf526b/aedf526b
+  3  PASS  VA       Pulse Width             paths= 3              peak=0.3167  hash=4fece2d1/4fece2d1
+  4  PASS  VA       Triangle Soft           paths= 4              peak=0.3037  hash=b68398a2/b68398a2
+  5  PASS  VA       Sine Pure               paths= 4              peak=0.1902  hash=97e6ad92/97e6ad92
+  6  PASS  VA       Two Oscillators         paths= 3              peak=0.2645  hash=dca2712a/dca2712a
+  7  PASS  VA       Wavetable Square        paths= 3              peak=0.3212  hash=f8eb157e/f8eb157e
+  8  PASS  VA       Wavetable Tri           paths= 4              peak=0.3039  hash=194900f2/194900f2
+  9  PASS  VA       Wavetable Sine          paths= 3              peak=0.3272  hash=2b8191f7/2b8191f7
+ 10  PASS  VA       Wavetable Pulse25       paths= 3              peak=0.2624  hash=42d3bb06/42d3bb06
+ 11  PASS  VA       Octave Stack            paths= 3              peak=0.2801  hash=2aa5d7f9/2aa5d7f9
+ 12  PASS  VA       Sub Sine                paths= 3              peak=0.2796  hash=97323f77/97323f77
+ 13  PASS  VA       Noise Wind              paths= 7              peak=0.1647  hash=9b16a8a8/9b16a8a8
+ 14  PASS  VA       Filter Drop             paths= 5              peak=0.2650  hash=dea37e1e/dea37e1e
+ 15  PASS  VA       Negative Env            paths= 5              peak=0.2654  hash=05e506a9/05e506a9
+ 16  PASS  VA       Highpass Sweep          paths= 4              peak=0.2025  hash=184700fe/184700fe
+ 17  PASS  VA       Bandpass Voice          paths= 4              peak=0.2435  hash=de0727a9/de0727a9
+ 18  PASS  VA       LP12 Bright             paths= 4              peak=0.2598  hash=741b971a/741b971a
+ 19  PASS  VA       Ladder Drive            paths= 5              peak=0.1176  hash=313cda0b/313cda0b
+ 20  PASS  VA       Key Tracking            paths= 4              peak=0.2640  hash=fb5f6353/fb5f6353
+ 21  PASS  VA       Pluck Envelope          paths= 5              peak=0.2549  hash=6cf37b5f/6cf37b5f
+ 22  PASS  VA       Pad Attack              paths= 5              peak=0.2563  hash=e1a3eab3/e1a3eab3
+ 23  PASS  VA       Glide Portamento        paths= 3              peak=0.3043  hash=a2d7cce5/a2d7cce5
+ 24  PASS  VA       Unison Saws             paths= 3              peak=0.2861  hash=9e97e5f8/9e97e5f8
+ 25  PASS  VA       Supersaw Wide           paths= 5              peak=0.3900  hash=c9436c66/c9436c66
+ 26  PASS  VA       LFO Cutoff Wobble       paths= 5              peak=0.2671  hash=6e85c007/6e85c007
+ 27  PASS  VA       LFO Sample & Hold       paths= 4              peak=0.2632  hash=1c5eabba/1c5eabba
+ 28  PASS  VA       Vibrato LFO             paths= 4              peak=0.2676  hash=3a28df5d/3a28df5d
+ 29  PASS  ACID     Acid Basics             paths= 2              peak=0.0785  hash=90673c0b/90673c0b
+ 30  PASS  ACID     Acid Square Wave        paths= 2              peak=0.0877  hash=cd291b27/cd291b27
+ 31  PASS  ACID     Acid Cutoff Low         paths= 2              peak=0.0685  hash=bd7661bc/bd7661bc
+ 32  PASS  ACID     Acid Resonance          paths= 3              peak=0.0667  hash=35fdf48c/35fdf48c
+ 33  PASS  ACID     Acid Env Mod            paths= 4              peak=0.0733  hash=362f0644/362f0644
+ 34  PASS  ACID     Acid Accent Punch       paths= 3              peak=0.0955  hash=6f866c88/6f866c88
+ 35  PASS  ACID     Acid Slide Legato       paths= 3              peak=0.0778  hash=e273e344/e273e344
+ 36  PASS  ACID     Acid Muffled            paths= 3              peak=0.0775  hash=31bf9e90/31bf9e90
+ 37  PASS  ACID     Acid Overdrive          paths= 3              peak=0.0994  hash=00258851/00258851
+ 38  PASS  ACID     Acid Soft Attack        paths= 6              peak=0.0740  hash=dbcc42cf/dbcc42cf
+ 39  PASS  STRING   String Pluck            paths= 1              peak=0.1235  hash=5f5eb606/5f5eb606
+ 40  PASS  STRING   String Nylon Soft       paths= 4              peak=0.0726  hash=f4bc90f2/f4bc90f2
+ 41  PASS  STRING   String Koto Bright      paths= 4              peak=0.1652  hash=f7340fdc/f7340fdc
+ 42  PASS  STRING   String Pulse Pick       paths= 3              peak=0.2250  hash=980d0eae/980d0eae
+ 43  PASS  STRING   String Long Decay       paths= 3              peak=0.1235  hash=e7788a22/e7788a22
+ 44  PASS  STRING   String Muted Short      paths= 3              peak=0.1235  hash=9bc4658d/9bc4658d
+ 45  PASS  STRING   String Comb Position    paths= 2              peak=0.1102  hash=86b7eb10/86b7eb10
+ 46  PASS  STRING   String Dark Wood        paths= 3              peak=0.0258  hash=74184fd9/74184fd9
+ 47  PASS  STRING   String Glassy           paths= 4              peak=0.1846  hash=29a47f6d/29a47f6d
+ 48  PASS  STRING   String Chime Reverb     paths= 7              peak=0.0643  hash=ac24b981/4228c0c2
+ 49  PASS  DRUM     Drum Kick Classic       paths= 1              peak=0.2189  hash=6ac113f8/6ac113f8
+ 50  PASS  DRUM     Drum Kick Deep          paths= 3              peak=0.2383  hash=b96c1e6b/b96c1e6b
+ 51  PASS  DRUM     Drum Snare Crack        paths= 4              peak=0.2189  hash=6ac113f8/6ac113f8
+ 52  PASS  DRUM     Drum Clap Wide          paths= 3              peak=0.2189  hash=6ac113f8/6ac113f8
+ 53  PASS  DRUM     Drum Rim Tick           paths= 3              peak=0.2189  hash=6ac113f8/6ac113f8
+ 54  PASS  DRUM     Drum Hat Closed         paths= 3              peak=0.2189  hash=6ac113f8/6ac113f8
+ 55  PASS  DRUM     Drum Hat Open           paths= 3              peak=0.2189  hash=6ac113f8/6ac113f8
+ 56  PASS  DRUM     Drum Toms Row           paths= 5              peak=0.2189  hash=6ac113f8/6ac113f8
+ 57  PASS  DRUM     Drum Crash Ride         paths= 5              peak=0.2189  hash=6ac113f8/6ac113f8
+ 58  PASS  DRUM     Drum Kit Balance        paths= 6              peak=0.2067  hash=90f7ca21/90f7ca21
+ 59  PASS  DRUM     Drum Split Point        paths= 3              peak=0.2189  hash=6ac113f8/6ac113f8
+ 60  PASS  DRUM     Drum Bus Drive          paths= 6              peak=0.2735  hash=01976570/01976570
+ 61  PASS  GRAIN    Grain Basics            paths= 2              peak=0.0268  hash=e2dd26cb/e2dd26cb
+ 62  PASS  GRAIN    Grain Position Scan     paths= 2              peak=0.0121  hash=ef65fbd0/ef65fbd0
+ 63  PASS  GRAIN    Grain Long Window       paths= 3              peak=0.0215  hash=a15e7310/a15e7310
+ 64  PASS  GRAIN    Grain Dense Cloud       paths= 3              peak=0.0298  hash=dd39bc9d/dd39bc9d
+ 65  PASS  GRAIN    Grain Pitch Up          paths= 3              peak=0.0226  hash=1a3f0d25/1a3f0d25
+ 66  PASS  GRAIN    Grain Jitter Drift      paths= 4              peak=0.0126  hash=f7ab6083/f7ab6083
+ 67  PASS  GRAIN    Grain Stereo Spread     paths= 3              peak=0.0300  hash=843866d9/843866d9
+ 68  PASS  GRAIN    Grain Amb Pad           paths= 7              peak=0.0156  hash=6146097a/f1af80a3
+ 69  PASS  SAMPLER  Sampler One Shot        paths= 3              peak=0.1221  hash=9736c4cb/9736c4cb
+ 70  PASS  SAMPLER  Sampler Root Shift      paths= 3              peak=0.1221  hash=06157b8d/06157b8d
+ 71  PASS  SAMPLER  Sampler Tune Up         paths= 2              peak=0.1220  hash=102536ba/102536ba
+ 72  PASS  SAMPLER  Sampler Loop On         paths= 2              peak=0.1223  hash=be237b08/be237b08
+ 73  PASS  SAMPLER  Sampler Loop Window     paths= 4              peak=0.1221  hash=9d2d2313/9d2d2313
+ 74  PASS  SAMPLER  Sampler Volume Trim     paths= 2              peak=0.0763  hash=0e9ad70e/0e9ad70e
+ 75  PASS  FX       Drive Soft Sat          paths= 6              peak=0.6111  hash=46f9873e/46f9873e
+ 76  PASS  FX       Drive Fold Wall         paths= 6              peak=0.8859  hash=ad6acd7c/ad6acd7c
+ 77  PASS  FX       Drive Crush Bits        paths= 7              peak=0.8509  hash=52b62075/52b62075
+ 78  PASS  FX       Mod Chorus Wide         paths= 6              peak=0.2229  hash=6d46cd20/89c3329f
+ 79  PASS  FX       Mod Ensemble Slow       paths= 7              peak=0.2140  hash=7dd3c01e/ec570abe
+ 80  PASS  FX       Mod Flanger Jet         paths= 8              peak=0.3074  hash=b8672305/ad5dcaeb
+ 81  PASS  FX       Mod Phaser Haze         paths= 8              peak=0.2735  hash=4a02d750/6ff4215e
+ 82  PASS  FX       Delay Quarter           paths= 6              peak=0.2010  hash=22ec684a/8c6e5672
+ 83  PASS  FX       Delay Ping Pong         paths= 7              peak=0.1599  hash=7361b130/1cb1e544
+ 84  PASS  FX       Delay Ducked            paths= 6              peak=0.2305  hash=6bc178a7/8bdcab83
+ 85  PASS  FX       Verb Plate Small        paths= 8              peak=0.1873  hash=518edabc/e8c73c4c
+ 86  PASS  FX       Verb FDN Hall           paths= 8              peak=0.4280  hash=7852a790/44b4dcd8
+ 87  PASS  FX       Verb Freeverb Bright    paths= 7              peak=0.2312  hash=d02f6b06/0dc9dccc
+ 88  PASS  FX       Dyn Compressor Glue     paths= 9              peak=0.7024  hash=946aef3e/946aef3e
+ 89  PASS  FX       Dyn Limiter EQ          paths= 7              peak=0.2269  hash=18114ab8/18114ab8
+ 90  PASS  MOD      Macro One               paths= 2 (mod:1)  peak=0.2664  hash=4bca6eab/4bca6eab
+ 91  PASS  MOD      Macro Pair A B          paths= 4 (mod:2)  peak=0.2910  hash=197ecc58/197ecc58
+ 92  PASS  MOD      Macro Plus Env2         paths= 7 (mod:1)  peak=0.2556  hash=7b840880/7b840880
+ 93  PASS  MOD      Macro Pitch Setup       paths= 5 (mod:2)  peak=0.3043  hash=a2d7cce5/a2d7cce5
+ 94  PASS  MOD      Macros All Eight        paths=11 (mod:8)  peak=0.2815  hash=36c2eeb5/36c2eeb5
+ 95  PASS  SEQ      Seq Step Grid           paths= 4              peak=0.3019  hash=ddd1bb5a/ddd1bb5a
+ 96  PASS  SEQ      Seq Swing 8T            paths= 1              peak=0.2189  hash=6ac113f8/6ac113f8
+ 97  PASS  SEQ      Seq Probability         paths= 3              peak=0.2673  hash=be850794/be850794
+ 98  PASS  SEQ      Seq Ratchet Micro       paths= 4              peak=0.3019  hash=142ef7c4/142ef7c4
+ 99  PASS  SEQ      Seq Acid Lane           paths= 5              peak=0.2133  hash=fa56dbc5/fa56dbc5
+100  PASS  SEQ      Seq PLock Ride          paths= 2              peak=0.2189  hash=6ac113f8/6ac113f8
+
+== sections ==
+  VA      28/28
+  ACID    10/10
+  STRING  10/10
+  DRUM    12/12
+  GRAIN   8/8
+  SAMPLER 6/6
+  FX      15/15
+  MOD     5/5
+  SEQ     6/6
+
+== coverage ==
+  sections: VA, ACID, STRING, DRUM, GRAIN, SAMPLER, FX, MOD, SEQ
+  engine kinds: acid, drum, grain, sampler, string, va
+  fx modules: delay, drive, dyn, mod, verb
+  seq presets validated: 6/6
+  patch paths applied+accepted: 416 (14 page-routed mod.macroN)
+
+STARTER-100 WITNESS: 100/100 PASS

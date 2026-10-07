@@ -1,0 +1,88 @@
+== ACID VAULT witness (verify/_p5_wave.md section 2) ==
+pack: C:/Users/Moddy/anvil/packs/acid-vault.avbank.json
+  PASS  pack JSON parses
+AVDSP.version = p3.0 · avSeq core loaded = true
+
+== pack format checks (section 1) ==
+  PASS  v === 1  ::  1
+  PASS  id === "acid-vault"  ::  acid-vault
+  PASS  meta.name === "ACID VAULT"  ::  ACID VAULT
+  PASS  meta.license === "CC0-1.0"  ::  CC0-1.0
+  PASS  meta.engine === "acid"  ::  acid
+  PASS  meta.author + tags + description present
+  PASS  presets is an array of 64  ::  64
+  PASS  preset names unique + non-empty  ::  64 unique
+  PASS  every preset: name/section/tags/patch shapes
+  PASS  patch values are JSON numbers/strings/booleans (finite)
+  PASS  no random-seed paths in any preset (section 1 law)
+  PASS  preset count carrying `seq` > 0 (sa-3: several bassline patterns)  ::  16 presets
+
+== per-preset witness (64 presets: fresh engine - setParam ALL - seq - noteOn - 2.0 s - finite/audible/determinism) ==
+  PASS  [01/64] VAULT SUB  paths=17  peak=0.093162  hash=81323cf6dc82
+  PASS  [02/64] BASEMENT PLATE  paths=17  peak=0.107672  hash=718eee7c5a48
+  PASS  [03/64] CONCRETE SAW  paths=17  peak=0.095322  hash=9bd15e361c47
+  PASS  [04/64] ROTARY CELL  paths=17  peak=0.102537  hash=7620522972c8
+  PASS  [05/64] SQUARE CELL  paths=17  peak=0.121402  hash=a05eedaea3d6
+  PASS  [06/64] RESO ANCHOR  paths=17  peak=0.073457  hash=4de20f332636
+  PASS  [07/64] MUFFLED MONK  paths=17  peak=0.102183  hash=a3ba1e4488a4
+  PASS  [08/64] DRIVE SHAFT  paths=17  peak=0.096117  hash=b2bc4620c15d
+  PASS  [09/64] SLIDE RULE  paths=17  peak=0.069090  hash=fa9ce7afee8c
+  PASS  [10/64] GLIDE DEPOT  paths=17  peak=0.068039  hash=583afb24610f
+  PASS  [11/64] TRACKED FLOOR  paths=17  peak=0.094212  hash=810db71a6e65
+  PASS  [12/64] LOW OCTAVE  paths=17  peak=0.094072  hash=8b4f09b8da5b
+  PASS  [13/64] ACID CARPET  paths=17  peak=0.069246  hash=7e8d2853166d
+  PASS  [14/64] PLASTIC BASS  paths=17  peak=0.037773  hash=f715d05b4906
+  PASS  [15/64] WAPP ENGINE  paths=17  peak=0.076399  hash=148e2309ecf9
+  PASS  [16/64] CAP MEMORY  paths=17  peak=0.081751  hash=4d0b06dfd089
+  PASS  [17/64] STACCATO TABLE  paths=17  peak=0.086929  hash=29ef6782b473
+  PASS  [18/64] SOFT DOOR  paths=17  peak=0.072085  hash=221d95c11618
+  PASS  [19/64] KICKER WEIGHT  paths=17  peak=0.118867  hash=e90725ebbf93
+  PASS  [20/64] RUBBER BAND  paths=17  peak=0.086947  hash=732b51c48c54
+  PASS  [21/64] SQUELCH WIRE  paths=17  peak=0.764438  hash=1816b6544fae
+  PASS  [22/64] NEEDLE CLAW  paths=17  peak=0.647608  hash=a6c9d0403e0f
+  PASS  [23/64] HIGH WIRE  paths=17  peak=0.570627  hash=7aaee9f92d68
+  PASS  [24/64] TRACK MASTER  paths=17  peak=0.233013  hash=6b85ae777455
+  PASS  [25/64] SWEEP DREAMS  paths=17  peak=0.438944  hash=651f6fa16533
+  PASS  [26/64] ACID SIREN  paths=17  peak=0.582260  hash=70feff243842
+  PASS  [27/64] GLASS CUTTER  paths=17  peak=0.492958  hash=c30ca89bb4a5
+  PASS  [28/64] TIN ROOF  paths=17  peak=0.524805  hash=917e3c6ec541
+  PASS  [29/64] MOTOR SQUELCH  paths=17  peak=0.782273  hash=1f799e66c4a1
+  PASS  [30/64] PING LEAD  paths=23  peak=0.397559  hash=1b97000578d0
+  PASS  [31/64] ECHO VAULT  paths=24  peak=0.237640  hash=88053357bbbb
+  PASS  [32/64] CATHEDRAL LINE  paths=24  peak=0.385063  hash=4b645bb60be6
+  PASS  [33/64] SCREAMING TRACK  paths=17  peak=0.510953  hash=414c2d1b6450
+  PASS  [34/64] WHISTLE TIP  paths=17  peak=0.488659  hash=3682b9d2dfa0
+  PASS  [35/64] FIVE AM  paths=17  peak=0.509134  hash=92518a6ad414
+  PASS  [36/64] CANDLE SNAKE  paths=24  peak=0.428189  hash=4cd7edb645b7
+  PASS  [37/64] RAVE GRID  paths=17  peak=0.464105  hash=d937d6932b6e
+  PASS  [38/64] WAREHOUSE JAB  paths=17  peak=0.537013  hash=e559551b2db3
+  PASS  [39/64] LAZER POKE  paths=17  peak=0.568148  hash=8e5d68224c18
+  PASS  [40/64] STROBE HIT  paths=23  peak=0.276790  hash=270fdba626da
+  PASS  [41/64] SMOKE MACHINE  paths=24  peak=0.356163  hash=3f18407f6327
+  PASS  [42/64] FREEFALL  paths=17  peak=0.476034  hash=3469e07242b6
+  PASS  [43/64] CHROME KNIFE  paths=17  peak=0.453518  hash=3e6f3c74b871
+  PASS  [44/64] SIREN SLICE  paths=17  peak=0.619264  hash=a64ac3d38f75
+  PASS  [45/64] VACUUM SLIDE  paths=17  peak=0.476826  hash=f8aa908af37b
+  PASS  [46/64] PAPER CUT  paths=17  peak=0.488525  hash=f28fca7078ff
+  PASS  [47/64] GRIDLOCK  paths=17  peak=0.306477  hash=b6ad6c720dc8
+  PASS  [48/64] FLASH FRAME  paths=23  peak=0.326445  hash=ee7eb1a53f72
+  PASS  [49/64] VAULT LINE 01 P  paths=17 [seq]  peak=0.103009  hash=94d8f36bde1f  seq=VAULT LINE 01 swing=60 on=8 acc=2 slide=2 oct=0
+  PASS  [50/64] VAULT LINE 02 P  paths=17 [seq]  peak=0.102804  hash=24774e33a9c9  seq=VAULT LINE 02 swing=62 on=7 acc=2 slide=2 oct=0
+  PASS  [51/64] VAULT LINE 03 P  paths=17 [seq]  peak=0.103626  hash=eebde766640d  seq=VAULT LINE 03 swing=64 on=8 acc=2 slide=1 oct=3
+  PASS  [52/64] VAULT LINE 04 P  paths=17 [seq]  peak=0.103691  hash=6799367a42e1  seq=VAULT LINE 04 swing=60 on=11 acc=2 slide=1 oct=0
+  PASS  [53/64] VAULT LINE 05 P  paths=17 [seq]  peak=0.089184  hash=3bf0810dd3b8  seq=VAULT LINE 05 swing=66 on=7 acc=2 slide=2 oct=0
+  PASS  [54/64] VAULT LINE 06 P  paths=17 [seq]  peak=0.093591  hash=ba9d566bdb18  seq=VAULT LINE 06 swing=60 on=9 acc=2 slide=2 oct=0
+  PASS  [55/64] VAULT LINE 07 P  paths=17 [seq]  peak=0.090763  hash=8eca7eafdf74  seq=VAULT LINE 07 swing=62 on=9 acc=2 slide=1 oct=0
+  PASS  [56/64] VAULT LINE 08 P  paths=17 [seq]  peak=0.099029  hash=8bdd9e4aa61d  seq=VAULT LINE 08 swing=64 on=10 acc=2 slide=1 oct=0
+  PASS  [57/64] VAULT LINE 09 P  paths=17 [seq]  peak=0.071090  hash=27629d9fc499  seq=VAULT LINE 09 swing=70 on=7 acc=2 slide=1 oct=0
+  PASS  [58/64] VAULT LINE 10 P  paths=17 [seq]  peak=0.093607  hash=6d186f3d04d1  seq=VAULT LINE 10 swing=60 on=10 acc=2 slide=1 oct=0
+  PASS  [59/64] VAULT LINE 11 P  paths=17 [seq]  peak=0.087396  hash=e3a41a43664f  seq=VAULT LINE 11 swing=62 on=9 acc=2 slide=1 oct=0
+  PASS  [60/64] VAULT LINE 12 P  paths=17 [seq]  peak=0.078098  hash=ea2d64d85476  seq=VAULT LINE 12 swing=64 on=8 acc=2 slide=1 oct=2
+  PASS  [61/64] VAULT LINE 13 P  paths=17 [seq]  peak=0.068526  hash=5ad19c514f3a  seq=VAULT LINE 13 swing=66 on=7 acc=2 slide=1 oct=0
+  PASS  [62/64] VAULT LINE 14 P  paths=17 [seq]  peak=0.090576  hash=366ecfd122d8  seq=VAULT LINE 14 swing=60 on=11 acc=2 slide=4 oct=0
+  PASS  [63/64] VAULT LINE 15 P  paths=17 [seq]  peak=0.281678  hash=7837ab235154  seq=VAULT LINE 15 swing=62 on=10 acc=3 slide=1 oct=0
+  PASS  [64/64] VAULT LINE 16 P  paths=23 [seq]  peak=0.062867  hash=cdadca4452d1  seq=VAULT LINE 16 swing=64 on=8 acc=2 slide=2 oct=0
+
+== totals ==
+witnessed 64/64 · seq-carrying presets 16 · total patch paths applied 1140
+ACID VAULT WITNESS: ALL PASS
