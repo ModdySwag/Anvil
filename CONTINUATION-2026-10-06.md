@@ -1217,3 +1217,27 @@ battery 15 → gate → addendum 29 + README.
   generative #72 · arranger #73 · autosave #76 · …) then platform (PWA #78 · suite bridges #82) → P7 polish
   (#79) → deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups · PERFECT TUNINGS ·
   optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.
+
+## SESSION SAVE — 2026-10-08 ~03:30 (S5 wave CLOSED + committed; nothing in flight — clean handoff)
+
+- **State: ALL CLOSED.** HEAD `95342b0` (tree clean, `?? cache/` only) · `index.html` on disk =
+  `7accc9fd…` (2,608,972 B) = the frozen S5 build the whole gate ran against · pins all on `7accc9fd`
+  (15 files) · 18-suite battery green · perf gate + old-bytes control committed
+  (`verify/s5-gate-attribution.txt`, `bench-v17-s5-full.*`, `stress-s5-run1/2.log`, `stress-s5-control.log`) ·
+  addendum 31 + README + docs/05 status in the close commit.
+- **Nothing running** — 0 background jobs, 0 live subagents, 0 real process strays. The `cache/` scratch
+  is intentionally untracked.
+- **The continued session opens on the next GOLDEN BUILD block** (no mid-wave work owed): max
+  modules/racks (FM engine #60 · MPE #61 · chop #65 · wavetable editor #66 · IR #67 · Airwindows bank #68 ·
+  sends/sidechain #69 · master chain #70 · generative #72 · arranger #73 · autosave #76 · …) · platform
+  (PWA #78 · suite bridges #82) → P7 polish (#79) → deploy + live verify + owner pass.
+- Wave assets a next session may want: contract `verify/_s5_wave.md` · rigs `verify/cdp_s5.mjs` +
+  `verify/cdp_code.mjs` · module-API docs `docs/09-code-module-api.md` · integration scripts
+  `cache/scratch/s5/integrate/_s5_{integrate,rigfix,pins}.py` · probe `cache/scratch/s5/probe/` ·
+  children transcripts `cache/delegation/live/deleg_1bb78706/task-{0..7}.log`.
+- **S5 surfaces, one line each** (for future sessions): CODE = `av_umod_wl` (in-worklet eval of user
+  modules · ids ≥ 64 kinds · fx push eng.fx) + `av_code` (facade · IDB 'av-code-store' · examples) +
+  `av_code_ui` (the `#av-code` card); popout = `av_kb_pop` + `#pk-pop`/`#pk-return` + av_kb bed-root hooks;
+  help = `av_help` (avUiKeyHook owns ?/Esc); palette = `av_palette` (Ctrl-K · 41 commands); lessons =
+  `av_lessons` (#av-firstrun · demo groove · 4 lessons · 4 wizards).
+- **Resume phrase: "continue anvil".**
