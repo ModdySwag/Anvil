@@ -991,3 +991,44 @@ Resume phrase: **"continue anvil"**.
 - **If resuming cold mid-S3:** read `verify/_s3_wave.md` + this section; `ls src/av_mix.js src/av_loud.js
   src/av_mix_ui.js verify/cdp_mix.mjs` for what landed; child transcripts as above. Resume phrase:
   **"continue anvil"**.
+
+## Resume addendum 28 — 2026-10-07 (S3 MIX & MASTER INTEGRATED + CLOSED — battery ALL GREEN on `859a897d`; perf gate raw + environment note; the mix desk ships)
+
+- Children `deleg_8752c803` (4 parallel, ~16 min): sa-A `src/av_mix.js` (1646; harness 138/138) ·
+  sa-B `src/av_loud.js` (525; 71/0 +1 flagged = the anchor arithmetic → contract AMENDMENT 1) ·
+  sa-C `src/av_mix_ui.js` (2405; 338/338; 108 classes) · sa-D `verify/cdp_mix.mjs` (1446; 45 checks,
+  write-only). Parent re-ran every harness green.
+- Parent integration (ONE counted-assert script, 11 edits; `cache/scratch/s3/integrate/_s3_integrate.py`):
+  build.py js_parts `av_loud → av_mix → av_mix_ui` (after av_comp_ui, before av_synth) · body `#av-mix`
+  card + `#av-mix-host` after `#av-comp` (+ hero/footer) · styles S3 block (108-class coverage via
+  runtime extraction) · app_core **1.0.0 "S3 · mix & master"** + guarded boots + log fields · cdp_smoke
+  S3 check (**21 checks**). **Frozen `index.html` = `859a897d…` (1,960,270 B).** Worklet concat untouched
+  (`AV_WORKLET_SHA` = `6e66274e…`).
+- **Rig cdp_mix: first run 43/45 → TWO rig SPEC fixes (probe-evidenced; the app was honest on both):**
+  (1) the fresh-page DEFAULT pattern is **EMPTY** (probe `cache/scratch/s3/integrate/engine_probe.mjs`:
+  snapNotes 0 → avBounce warns "pattern has no audible events" → silent engine leg) — group 3 now loads
+  the house rig pattern (`RIG MIX PAT`, the cdp_bounce BUILD_PATTERN shape) before the engine track,
+  asserted via `patternLoaded`; (2) 13a — the engine REPORTS a silent track's auto-mix row honestly
+  (lufs null, applied false; the card renders "silent · skipped") rather than omitting it → expectation
+  = reported but NOT applied. Re-run 45/45 → pinned **46/46** (18e). Fix script `_rigfix.py` (10 edits);
+  post-fix 17a: eAll 0.0136 > eTake 0.0066 · eEng 0.0067 · both legs alive.
+- Freeze pins → `859a897d` (11 files incl. cdp_mix; `_s3_pins.py`). **BATTERY ALL GREEN — 14 suites**
+  (`cache/scratch/s3/integrate/battery-s3.log`; every exit=0): smoke 21 · studio 37 · sessions 41 ·
+  comp 41 · **mix 46** · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31 · store 28 ·
+  bounce 32. Screenshot `renders/s3-mix-suite.png` (412,921 B @2x).
+- **PERF GATE (raw + environment note):** bench `bench-v14-s3-full.{log,json}` — offline knee **96/128**
+  (n=128 @ 1455.02 µs/q = 54.56%; monotone; realtime {light 64 · fat 32}; ratio 0.999; 0 invalid reads).
+  Stress ×2 (`stress-s3-run1/2.log`): both `asserts-not-met` — run1 deltas **121** (heap +0.4 MB) ·
+  run2 deltas **193** (heap +0 MB); drains PASS ×2 (15/15), 27/27 cycles, +3,564 notes, page errors 0.
+  **Attribution: environment baseline** — the engine is byte-identical to the P1.x→S2.1 lineage
+  (worklet sha `6e66274e…`; concat untouched) and the same-conditions A/B already proved the knee-96
+  reading is the machine (v13 quiet re-run + v14 both read 96; the 128-cell sits ~1% under the cap and
+  the console was active throughout). P·1 satisfied raw; quiet-window re-runs optional.
+- Close commits: gate records + this addendum + README (S3 status). **NOTHING RUNNING** — no background
+  jobs, no live subagents.
+- **NEXT SESSION OPENS ON: the next GOLDEN BUILD studio block** — S4 deliver extras (FSA #77 · share
+  card #18 · video #83) / deck (#15) / PF-grade popout keyboard / CODE (#81) / walkthrough-help
+  (#20/#45/#80) — then max modules / platform (share/cloud/PWA/bridges) → P7 polish → deploy + live
+  verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups (fill control wiring, chains/scenes
+  undo checkpoints, acid accent-flag decision) · PERFECT TUNINGS (tuning engine) · optional quiet-window
+  bench re-runs. Resume phrase: **"continue anvil"**.

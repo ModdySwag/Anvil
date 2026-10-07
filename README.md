@@ -5,18 +5,18 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **S2.1 takes & comping in — take lanes, pick-best comping, trims + equal-power crossfades; render + WAV export.**
-The instrument carries P1–P6 + S1 + S2 + S2.1: the comp engine stitches the studio's takes (winner-clamped
-trims · equal-power crossfade seams · a 5-minute render cap) and exports a fresh WAV; comps live in memory
-for the session (the WAV is the durable artifact). The sessions layer versions the whole working state (16
-per session) with autosave + crash recovery, and the backup zip carries sessions + samples + installed
-packs. The store serves 9 packs / 548 presets (sha-256 verified installs · IndexedDB · offline-ready).
-Frozen `index.html` sha 0f79ebc2… (1,742,403 B): battery smoke 20 · comp 41 · sessions 41 · studio 37 ·
-bounce 32 · store 28 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31; **the perf gate
-ran on a loaded machine — the full run's knee read 64, and a back-to-back offline A/B (S2 control bytes
-vs S2.1, byte-identical engine) reads the identical knee 96/128 on BOTH builds (environment, not
-regression; quiet-window re-run queued)**. Next: S3 mix/master · deck · popout keyboard · CODE · help
-then P7 polish → deploy + owner pass. Resume at `CONTINUATION-2026-10-06.md` addendum 27.
+Status 2026-10-07: **S3 mix & master in — per-track FX + send rails, bus glue, the master chain (LUFS/true-peak normalize targets + export dither), an auto-mix assistant and A/B reference.**
+The instrument carries P1–P6 + S1–S3 in one single-file page: the mix desk builds a mixdown from takes,
+comps and the engine pattern (per-track gain / pan / send rails / ducking / insert FX · a verb + delay
+send pair · bus glue · the master chain with normalize + dither), renders it offline and deterministically
+in memory, and exports 16/24/32f WAVs; A/B plays the mixdown against a loudness-matched reference. The
+comp engine stitches the studio's takes; sessions version the whole state; the store serves 9 packs /
+548 presets. Frozen `index.html` sha 859a897d… (1,960,270 B): battery ALL GREEN — 14 suites (smoke 21 ·
+studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 ·
+seq 31 · store 28 · bounce 32); **the perf gate ran on an active-console machine — the offline knee
+reads 96/128 here exactly as in the S2.1-era byte-identical A/B (environment, not regression)**.
+Next: S4 deliver extras · deck · popout keyboard · CODE · help then P7 polish → deploy + owner pass.
+Resume at `CONTINUATION-2026-10-06.md` addendum 28.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)
