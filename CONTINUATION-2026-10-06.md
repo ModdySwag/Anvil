@@ -544,3 +544,30 @@ Resume phrase: **"continue anvil"**.
   stays queued as **P·2 (minBLEP cost-optimisation pass)**; the per-wave gate P·1 is satisfied
   (bench stable + recorded). Records committed with this addendum.
 
+
+## P4 wave DISPATCHED — 2026-10-07 (7 children; contract `verify/_p4_wave.md`)
+
+- Contract: `verify/_p4_wave.md` (commit `6d06a59`) — §2 global pins (time model: 16ths/"8t",
+  swing `stepDur×(S−50)/100` ∈ [50,80] def 66, micro ±12 ticks @ stepDur/24, prob 0..100 seeded
+  xorshift32, conditions fill/a:b/first/!first, ratchet 1..4, gate, accent ⇒ gain 1.0; lookahead
+  0.12 s / wake 25 ms against the live handle ctx; trace ring `window.__avSeqTrace`; 4 tracks
+  len 1..64 + speed 0.25..4; onset gates mean ≤ 8 ms + no drift) · §3 module pins · §4 pattern
+  schema · §5 gates/reports/laws · §6 parent integration checklist.
+- Children — delegation `deleg_663f07ab` (background; results re-enter the session when done):
+  sa-0 core `av_seq_core.js` · sa-1 sched `av_seq_sched.js` · sa-2 ui+rig `av_seq_ui.js` +
+  `verify/cdp_seq.mjs` (write-only) · sa-3 acid `av_seq_acid.js` · sa-4 plock `av_plock.js` ·
+  sa-5 undo `av_undo.js` · sa-6 capture `av_seq_capture.js`. Transcripts:
+  `cache\delegation\live\deleg_663f07ab	ask-{0..6}.log`; child reports + harness outputs in
+  `cache/scratch/p4/<name>/`.
+- **On return: parent integrates per `_p4_wave.md` §6** — build.py parts (core→sched→plock→capture→
+  undo→acid→ui before app_core), app_core boot (avSeqInit/avSeqUiInit/avUndoInit/avSeqCaptureInit
+  guarded) + the `"bpm"` branch in avApplyParam (avState.bpm clamp 20..300 + `fx.delay.bpm` mirror),
+  body card `#av-seq` + `#av-seq-host`, styles (child class lists), smoke additions, rebuild →
+  child harness summary + `cdp_seq` rig (pin EXPECT_SHA) → FULL P3 battery on frozen bytes →
+  PERF GATE (bench + stress, quiet machine) → commits + addendum 17.
+- **If resuming cold mid-P4:** `ls src/av_seq*.js src/av_plock.js src/av_undo.js` for what landed,
+  read the child reports, then integrate per `_p4_wave.md` §6. Never integrate half-landed files.
+- Carried: **P·2 minBLEP cost-optimisation pass** (named deliverable, docs/07 batch 4) — the P3
+  perf records (`stress-p3-run1/2.log`, `bench-v6-p3-full.*`) are its baseline. Resume phrase:
+  **"continue anvil"**.
+
