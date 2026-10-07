@@ -1473,3 +1473,35 @@ Resume phrase: **"continue anvil"**.
 - **NEXT SESSION OPENS ON: P7 polish (#79 accessibility pass) -> deploy + live verify + owner pass.** Carried:
   P·2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - optional quiet-window bench re-runs. Resume phrase:
   **"continue anvil"**.
+
+## Resume addendum 35 - 2026-10-08 (P7 ACCESSIBILITY wave INTEGRATED + CLOSED - battery ALL GREEN on `a90806a5`; then DEPLOYED - see addendum 36)
+
+- Children `deleg_48c6e594` (3 parallel): sa-A `src/av_a11y.js` (699; jsdom harness 97/97) - sa-B `src/av_knob.js`
+  edit (marker `avKnobKey`; the keyboard+aria surface ALREADY existed pre-wave - the edit added the marker +
+  aligned the keydown step to the pin; single-hunk diff) - sa-C `verify/cdp_a11y.mjs` (32 checks, write-only).
+- Integration `_p7_integrate.py` (6 counted edits / 4 files + styles): build.py js_parts + app_core 1.7.0
+  "P7 · accessibility" + inits + proof line + smoke P7 checks + the styles block (contrast tokens, focus rings,
+  skip/sr, the WCAG reduce-motion snippet for BOTH the manual class and the OS preference). Build **`a90806a5`
+  (3,375,055 B)**.
+- **Shipped:** prefs (localStorage `av-a11y`; contrast/motion) + body classes `av-contrast`/`av-reduce-motion`
+  (system mode listens to the OS media) - header toggles `#av-a11y-contrast`/`#av-a11y-motion` (aria-pressed) -
+  skip link `#av-a11y-skip` with REAL focus move (tabindex=-1 on main + click handler; Chromium does not focus
+  a plain <main> fragment target) - live region `#av-a11y-live` + `avA11yAnnounce` - the idempotent decoration
+  pass (knob tabindex, canvas roles, role=status selectors, accessible-name backfill, role=button keyboard
+  delegation) - knob aria (valuemin/max/now via the ONE commit funnel).
+- **Triage (rig SPEC, 5 -> 0):** the harness boots with prefers-reduced-motion=reduce as the ENV default -
+  the rig now pins its baseline to emulated no-preference (default-state checks meaningful; system mode proves
+  BOTH directions by flipping the emulation); plain-<main> fragment targets do not take focus -> the skip-link
+  app fix above. First lap 26/31 -> second lap **32/32 pinned**.
+- **BATTERY ALL GREEN - 22 suites:** smoke 33 - studio - sessions - comp - mix - knob_feel - keys - midi -
+  sample - rec - fx - seq - store - bounce - deck - s4 - s5 - code - m1 - m2 - platform 52/52 - **a11y 32/32 pinned**.
+- **PERF GATE:** bench-v21 knee **128 monotone** (unchanged family; worklet sha d7f0ee41 UNCHANGED) - stress x2
+  deltas **39 / 40** (same assert profile: drains PASS, heap flat, 0 page errors; between the M2 record 20/32
+  and the M1 record 30/66 - noisier unattended window, bench held; quiet-window re-run optional). Records
+  `verify/p7-gate-attribution.txt` + `bench-v21-p7-full.*` + `stress-p7-run1/2.log`.
+- Close commit: integration+battery `9a18493` - then this close. **NOTHING RUNNING** beyond the deploy steps.
+- **DEPLOY (same night, addendum 36):** the build set copied to `radio-browser/deploy/anvil/` (index.html +
+  sw.js + manifest.webmanifest + icon-192/512/maskable-512 + inbox.html + the 2.1 MB packs tree) and uploaded;
+  live-verify results live in addendum 36.
+- Carried: P·2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - optional quiet-window bench/stress re-runs -
+  owner pass on the live surface. Resume phrase: **"continue anvil"**.

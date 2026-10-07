@@ -1,0 +1,4 @@
+CHAIN bench exit=0
+CHAIN stress1 exit=1
+CHAIN stress2 exit=1
+GATE-DONE

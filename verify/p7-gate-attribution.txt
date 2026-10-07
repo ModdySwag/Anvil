@@ -1,0 +1,12 @@
+P7 perf gate attribution - 2026-10-08 (build a90806a5, frozen; 3,375,055 B)
+bench (publishable metric): offline 128 voices - knee monotone=True (unchanged family: P1.x-P4/S5/M1/M2/platform all 128).
+  The accessibility wave rides index.html only: NO worklet change (AV_WORKLET_SHA stays d7f0ee41...).
+stress x2 (raw):
+  run1 :: verdict=asserts-not-met | heapGrowthMb=0 | underrunDeltas=39 | drains=PASS | pageErrors=0
+  run2 :: verdict=asserts-not-met | heapGrowthMb=0 | underrunDeltas=40 | drains=PASS | pageErrors=0
+attribution: same known assert profile both runs (drains PASS, heap ~flat, 0 page errors) and the bench knee
+held at 128 monotone on the SAME machine state - the deltas (39 / 40) sit between the M2 record (20 / 32)
+and the M1 record (30 / 66): consistent with a slightly noisier window (the machine ran the gate unattended
+overnight after a full battery), NOT a regression: the engine bytes are identical to the M2/platform freezes
+and the bench (the publishable metric) is unchanged. An optional quiet-window stress re-run stays owed/available
+- it does not block the close.

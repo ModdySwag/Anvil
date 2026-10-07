@@ -22,7 +22,7 @@ seq 31 · store 28 · bounce 32 · deck 35 · s4 37 · s5 36 · code 36 · m1 33
 unchanged (128 · monotone) and the stress window read quieter than the previous record (no control
 needed); the worklet sha changed by design (FM + FLAVOUR + CONV joined the worklet concat; all off by
 default). The FM card renders every operator's knobs so share links stay compact.
-Next: P7 polish (accessibility #79) → deploy + live verify + owner pass. Frozen `b34a28b6` — battery 21 suites green (platform wave closed 2026-10-08).
+Frozen `a90806a5` — battery 22 suites green (P7 accessibility closed 2026-10-08). Deploy + live verify + owner pass remaining (see addendum 36).
 Resume at `CONTINUATION-2026-10-06.md` addendum 32.
 
 ## Build
