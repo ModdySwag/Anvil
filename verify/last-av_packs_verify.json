@@ -2,7 +2,7 @@
  "v": 1,
  "tool": "verify_avpacks.mjs",
  "mode": "index",
- "at": "2026-10-07T06:01:00.427Z",
+ "at": "2026-10-07T06:10:04.533Z",
  "node": "v26.7.0",
  "ok": true,
  "errors": [],
@@ -24,6 +24,24 @@
      "classic"
     ],
     "engine": "acid"
+   },
+   {
+    "id": "bass-forge",
+    "name": "BASS FORGE",
+    "file": "bass-forge.avbank.json",
+    "sha256": "0245ea30ac972955aef5bd57aa63b5650f2c572fd501fb6c418327b6cfc1f964",
+    "bytes": 58828,
+    "presetCount": 64,
+    "tags": [
+     "bass",
+     "sub",
+     "reese",
+     "hybrid",
+     "acid",
+     "growl",
+     "drive"
+    ],
+    "engine": "mixed"
    },
    {
     "id": "blade-pads",
@@ -60,6 +78,41 @@
      "space"
     ],
     "engine": "mixed"
+   },
+   {
+    "id": "fx-risers",
+    "name": "FX & RISERS",
+    "file": "fx-risers.avbank.json",
+    "sha256": "f2145214d3d9ad68bf68d27a894e6c8f50e5814aacaa4ef5b202a5aee66f3be1",
+    "bytes": 62086,
+    "presetCount": 48,
+    "tags": [
+     "fx",
+     "risers",
+     "sweeps",
+     "impacts",
+     "noise",
+     "transitions"
+    ],
+    "engine": "va"
+   },
+   {
+    "id": "lead-lab",
+    "name": "LEAD LAB",
+    "file": "lead-lab.avbank.json",
+    "sha256": "c3977c4a78abe338863e0ba30d4a37799b411095224048135c40572e9e04e5a3",
+    "bytes": 81753,
+    "presetCount": 64,
+    "tags": [
+     "lead",
+     "unison",
+     "supersaw",
+     "solo",
+     "expressive",
+     "digital",
+     "va"
+    ],
+    "engine": "va"
    },
    {
     "id": "neon-strings",
