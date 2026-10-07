@@ -1382,9 +1382,26 @@ Resume phrase: **"continue anvil"**.
   edit path always pushed; the song runner + PLAY did not — fixed); a rig window after a row
   boundary must start past one chunk (~500 ms @120 bpm) + release.
 - Remaining pipeline: run 5 → pins (16 existing EXPECT_SHA files + cdp_m2 pin; battery = 20 suites)
-  → battery run → perf gate (bench knee vs 96/128 + stress ×2 + old-bytes control if jumps) → close
-  commits + addendum 33 + README + docs/05 status + mnemosyne.
-- Resume phrase: **"continue anvil"**.
+  → perf gate (bench knee vs 96/128 + stress ×2 + old-bytes control if jumps) → close
+    commits + addendum 33 + README + docs/05 status + mnemosyne.
+  - Resume phrase: **"continue anvil"**.
+
+  **SESSION SAVE — 2026-10-08 (M2 wave CLOSED; clean handoff — "save for a continued session when safe")**
+
+  - `git status --short` → `?? cache/` only · HEAD `538370d` (logs refresh; beneath it close `2d58c1a`,
+    integration+battery `2252772`, wave-open `d4feaf9`) · `index.html` on disk = **`d311eaf8…`
+    (3,205,003 B — the frozen build the whole gate ran against)** · pins **17 files** on `d311eaf8` ·
+    battery **20 suites green** · gate records committed (`verify/m2-gate-attribution.txt`,
+    `bench-v19-m2-full.*`, `stress-m2-run1/2.log`, `renders/m2-suite.png`) · close records in
+    addendum 33 + README + docs/05 §2.7 · skill `anvil-synth-ops` updated with the M2 pins + the
+    scheduler-push law + the rig measurement laws.
+  - Process census: **0 rig strays** (no node/msedge with 'anvil' in the command line); no background
+    jobs, no live subagents. The only late notice this session was the wave's first phantom-exit
+    wrapper (`proc_f37d507d3b0b`) reporting long after everything moved on — its log was overwritten
+    by the later runs; no action owed. **Nothing at risk.**
+  - **NEXT SESSION OPENS ON: the PLATFORM wave** — PWA offline (#78) · suite bridges (#82) → P7
+    polish (#79) → deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups ·
+    PERFECT TUNINGS · optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.
 
 ## Resume addendum 33 — 2026-10-08 (M2 EXPRESSION wave INTEGRATED + CLOSED — battery ALL GREEN on `d311eaf8`; MPE · CHOP · generative · arranger ship)
 
