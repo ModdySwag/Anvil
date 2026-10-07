@@ -1032,3 +1032,26 @@ Resume phrase: **"continue anvil"**.
   verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups (fill control wiring, chains/scenes
   undo checkpoints, acid accent-flag decision) · PERFECT TUNINGS (tuning engine) · optional quiet-window
   bench re-runs. Resume phrase: **"continue anvil"**.
+
+## DECK wave DISPATCHED — 2026-10-07 (3 children; contract `f65f0df`)
+
+- Contract: `verify/_deck_wave.md` (commit `f65f0df`) — **pro deck readouts (#15)**: deck core §2.1
+  (av_deck.js — analyser attach · rings · pure math · the synchronous step engine) · card §2.2
+  (av_deck_ui.js — scope/spectrum/waterfall canvases · LUFS/TP meters · readouts · rAF discipline) ·
+  rig §2.3 (cdp_deck.mjs, the 10 proof groups); laws §3, integration §4, watch §5. Scope note: the
+  deck is also the capture surface video capture (#83) will need — deck first, then S4 extras /
+  platform.
+- Children — delegation **`deleg_37e0ff7f`** (3 in parallel, background): sa-A `src/av_deck.js` ·
+  sa-B `src/av_deck_ui.js` · sa-C `verify/cdp_deck.mjs` (WRITE-ONLY rig). Transcripts:
+  `cache\delegation\live\deleg_37e0ff7f\task-{0..2}.log`; scratch `cache/scratch/deck/<name>/`.
+- **On return (parent integration per `_deck_wave.md` §4):** read child reports → ONE counted-assert
+  script (`cache/scratch/deck/integrate/_deck_integrate.py`): build.py js_parts (`av_deck` →
+  `av_deck_ui` after `av_mix_ui`, before `av_synth`) · body `#av-deck` card + `#av-deck-host` after
+  `#av-mix` (+ hero/footer) · styles block (coverage-checked) · app_core **1.1.0 "DECK · pro
+  readouts"** + guarded avDeckInit/avDeckUiInit boots · cdp_smoke deck-card check (→ 22). Then
+  rebuild → node re-runs + `cdp_deck` first run (pin EXPECT_SHA; re-run) → FULL battery (15 suites;
+  re-pin all) → PERF GATE (bench must read within variance of bench-v14 — the deck adds no offline
+  cost; worklet sha must stay `6e66274e`) → commits + addendum 29 + README.
+- **If resuming cold mid-DECK:** read `verify/_deck_wave.md` + this section; `ls src/av_deck.js
+  src/av_deck_ui.js verify/cdp_deck.mjs` for what landed; child transcripts as above. Resume phrase:
+  **"continue anvil"**.
