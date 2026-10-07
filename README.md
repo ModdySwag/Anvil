@@ -5,7 +5,7 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-08: **S5 code · keys · help in — the CODE section (write your own sandboxed DSP modules — FX or whole voice engines — and run them live in the engine), the Pattern-Forge-grade popout keyboard, the Ctrl-K command palette, the 60-second tour + tooltips + guides, and the lesson ladder with the demo groove and sound wizards.**
+Status 2026-10-08: **M1 sound depot in — the FM engine (6 operators · 8 algorithms · DX-style envelopes — a full voice kind with its own operator card), the studio FLAVOUR bank (console · tape · drive · air · warm), convolution IRs (true-stereo partitioned FFT · six factory spaces + your own impulse import), and the wavetable editor (draw · spectral tools · frame morphing · your own tables into OSC2, with a local library). Plus the FX rack and mod matrix finally got their card skins.**
 The instrument carries P1–P6 + S1–S5 in one single-file page: the studio chain builds a mixdown from
 takes, comps and the engine pattern (per-track gain / pan / send rails / ducking / insert FX · a verb +
 delay send pair · bus glue · the master chain with normalize + dither), renders it offline and
@@ -16,13 +16,14 @@ to the live engine and keeps a local module library; the popout keyboard adopts 
 own window with key forwarding; help ships the shortcut map, the 60-second tour, tooltips and the four
 outcome guides; the palette runs 41 commands from Ctrl-K. Nothing uploads — every artifact is local.
 The comp engine stitches the studio's takes; sessions version the whole state; the store serves 9 packs
-/ 548 presets. Frozen `index.html` sha 7accc9fd… (2,608,972 B): battery ALL GREEN — 18 suites (smoke 24 ·
+/ 548 presets. Frozen `index.html` sha 335f4bd0… (2,933,715 B): battery ALL GREEN — 19 suites (smoke 26 ·
 studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 ·
-seq 31 · store 28 · bounce 32 · deck 35 · s4 37 · s5 36 · code 36); the perf-gate bench knee is
-unchanged (96/128 · monotone) and the old-bytes same-conditions control proved the stress-window jump
-environmental; worklet sha `e2601849…` (the CODE runtime joined the worklet concat by design).
-Next: max modules / platform (PWA, suite bridges) → P7 polish → deploy + live verify + owner pass.
-Resume at `CONTINUATION-2026-10-06.md` addendum 31.
+seq 31 · store 28 · bounce 32 · deck 35 · s4 37 · s5 36 · code 36 · m1 33); the perf-gate bench knee is
+unchanged (128 · monotone) and the stress window read quieter than the previous record (no control
+needed); the worklet sha changed by design (FM + FLAVOUR + CONV joined the worklet concat; all off by
+default). The FM card renders every operator's knobs so share links stay compact.
+Next: M2 (MPE · chop · generative · arranger) → platform (PWA, suite bridges) → P7 polish → deploy + live verify + owner pass.
+Resume at `CONTINUATION-2026-10-06.md` addendum 32.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)

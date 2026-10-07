@@ -1,16 +1,16 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v1.3.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.3.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v1.4.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.4.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":2,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
  ok   KNOB SELFTEST ok  -> {"ok":true,"knobFound":true,"keysBound":true,"committed":true,"params":true,"state":true,"aria":true,"readout":true,"ctxState":"running","gain":0.55,"gainOk":true}
- ok   ENGINE SELFTEST ok (tier + allocation)  -> {"ok":true,"tier":"worklet","url":"data","sr":48000,"maxVoices":64,"allocated":true,"released":true,"voices":[0,1,0],"kinds":{"va":true,"acid":true,"string":true,"drum":true,"grain":true,"sampler":true},"fx":true,"mod":true,"drumNote":true,"kindsOk":true}
+ ok   ENGINE SELFTEST ok (tier + allocation)  -> {"ok":true,"tier":"worklet","url":"data","sr":48000,"maxVoices":64,"allocated":true,"released":true,"voices":[0,1,0],"kinds":{"va":true,"acid":true,"string":true,"drum":true,"grain":true,"sampler":true,"fm":true},"fx":true,"mod":true,"drumNote":true,"kindsOk":true}
  ok   layout: no horizontal overflow at 1440  -> scrollWidth 1425 vs innerWidth 1440
  ok   keyboard dock: 61 keys, snap handle, MIDI deck mounted  -> {"keys":61,"dock":true,"kbsnap":"function","midi":"object","midiBody":true}
- ok   synth card: knobs + selects mounted + bound (85 knobs)  -> {"host":true,"knobs":85,"bound":true,"sels":7,"engOpts":["va","acid","string","drum","grain","sampler"]}
- ok   synth card: ENGINE select offers all six kinds  -> ["va","acid","string","drum","grain","sampler"]
- ok   P3 fx rack: 5 strips (drive,mod,delay,verb,dyn) · 20 knobs + 5 toggles + 4 selects all bound  -> {"fx":true,"mod":true,"order":"drive,mod,delay,verb,dyn","strips":5,"knobs":20,"knobsBound":20,"toggles":5,"sels":4,"macros":8,"macrosBound":8}
+ ok   synth card: knobs + selects mounted + bound (85 knobs)  -> {"host":true,"knobs":85,"bound":true,"sels":7,"engOpts":["va","acid","string","drum","grain","sampler","fm"]}
+ ok   synth card: ENGINE select offers all seven kinds  -> ["va","acid","string","drum","grain","sampler","fm"]
+ ok   M1 fx rack: 7 strips (drive,aw,mod,delay,verb,conv,dyn) · 27 knobs + 7 toggles + 6 selects all bound + IR import  -> {"fx":true,"mod":true,"order":"drive,aw,mod,delay,verb,conv,dyn","strips":7,"knobs":27,"knobsBound":27,"toggles":7,"sels":6,"imp":true,"macros":8,"macrosBound":8}
  ok   P3 mod matrix: card mounted with 8 bound macro knobs  -> {"macros":8,"bound":8}
  ok   P4 sequencer: card + grid mounted (4 rows · ≥64 cells) + transport controls + bpm knob  -> {"card":true,"host":true,"rows":4,"cells":64,"play":true,"stop":true,"rec":true,"pos":true,"bpmKnob":true}
  ok   P5 store: card mounted + wired (search · chips · lists) + BANK row in the synth card  -> {"card":true,"host":true,"root":true,"wired":true,"search":true,"filters":3,"lists":true,"mode":true,"bank":true,"bankSels":1,"core":"function","ui":"object","api":"object"}
@@ -22,6 +22,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   DECK: card mounted + wired (RUN · FREEZE · FLOOR · waterfalls · meters · readouts) + deck API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"run":true,"freeze":true,"dbfloor":true,"wfrate":true,"scope":true,"spectrum":true,"waterfall":true,"lufs":true,"tp":true,"bpm":true,"ui":"object","deckApi":"function","attachApi":"function","readsApi":"function","handles":"object|function"}
  ok   S4: card mounted + wired (.anvl · samples · share card · PNG · video clip) + proj/card/video API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"save":true,"open":true,"samples":true,"cardmake":true,"cardcopy":true,"cardpng":true,"preview":true,"videorun":true,"videoprev":true,"ui":"object","projApi":"function","openApi":"function","cardApi":"function","qrApi":"function","videoApi":"function","handles":"object|object|object"}
  ok   S5: CODE card mounted + wired (editor · library · params · status) + popout buttons + help/palette/lessons/popout APIs live  -> {"card":true,"host":true,"src":true,"lib":true,"run":true,"stop":true,"params":true,"status":true,"pop":true,"ret":true,"helpApi":"function","palApi":"function","lesApi":"function","popApi":"function","codeApi":"function","kindsApi":"function","codeUi":"object","codeHandle":"object"}
+ ok   M1 FM: card mounted + wired (6 op tabs · algo select · knobs bound · api)  -> {"fmCard":true,"fmHost":true,"wtCard":true,"wtHost":true,"tabs":6,"algo":true,"knobs":50,"knobsBound":50,"canvas":true,"lib":true,"install":true,"fmUi":"object","wtUi":"object","wtApi":"function","installApi":"function"}
+ ok   M1 WT: editor card mounted + wired (canvas · library · install · api)  -> {"fmCard":true,"fmHost":true,"wtCard":true,"wtHost":true,"tabs":6,"algo":true,"knobs":50,"knobsBound":50,"canvas":true,"lib":true,"install":true,"fmUi":"object","wtUi":"object","wtApi":"function","installApi":"function"}
  ok   zero page errors
 
-24 passed, 0 failed
+26 passed, 0 failed

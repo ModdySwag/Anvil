@@ -1,0 +1,21 @@
+M1 wave perf-gate attribution — 2026-10-08 (frozen 335f4bd0, 2,933,715 B)
+
+Bench (bench-v18-m1-full): offline knee last-pass n=128 · first-fail none · monotone=true ·
+published 128 @ 1265.6 us/q (47.46% budget); realtime light 64 / fat 48; ratio 0.996 ·
+invalidReads 0 · tier worklet:blob. Knee family unchanged vs v16/v17 (96/128 monotone envelope —
+the 128 cell sits ~1 % under cap on this machine; this window read the full 128).
+
+Stress x2 (stress-m1-run1/2.log): both asserts-not-met (STANDING shape — the uni>3 over-drive
+probe windows dominate):
+  run1: total delta 30 over 41 intervals; at-cap 12 [verified-window 1 · uni>3-window 11]; outside-cap 0
+  run2: total delta 66; at-cap 13 [verified 2 · uni>3 11]; outside-cap 0
+  drains PASS x2 · heap +0.1 MB · page errors 0 · ctx running · capReached 27/27.
+
+Attribution: ENVIRONMENT-QUIET — the raw counts are BELOW the S5 record (360/183; old-bytes
+control 230 [verified 1 · uni>3 14]) and the DECK-era envelope; outside-cap 0; the bench knee is
+unchanged; the worklet sha changed by design (av_fm + av_fx_aw + av_fx_conv joined the concat)
+and the new modules are OFF by default (st.on=0 skip; FM is not the default kind) so the existing
+patch path is byte-equivalent. No old-bytes control run was needed (counts did not jump).
+
+Records: verify/bench-v18-m1-full.{log,json} · verify/stress-m1-run1.log · verify/stress-m1-run2.log ·
+renders/m1-bench.png.

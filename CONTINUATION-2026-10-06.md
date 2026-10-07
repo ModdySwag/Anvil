@@ -1280,3 +1280,44 @@ live verify + owner pass. Resume phrase: **"continue anvil"**.
   battery (19 suites) → perf gate (bench knee vs 96/128 + stress ×2 + old-bytes control if the counts
   jump) → close commits + addendum 32 + README + docs/05 status.
 - Resume phrase: **"continue anvil"**.
+
+## Resume addendum 32 — 2026-10-08 (M1 SOUND DEPOT INTEGRATED + CLOSED — battery ALL GREEN on `335f4bd0`; FM · FLAVOUR · CONV · WT editor ship)
+
+- Children `deleg_9716d625` (7 parallel): sa-A `src/av_fm.js` (490; 78/78) · sa-B `src/av_fm_ui.js`
+  (640; 64/64) · sa-C `src/av_fx_aw.js` (359; 73/73) · sa-D `src/av_fx_conv.js` (792; 25/25) ·
+  sa-E `src/av_wt.js` (1062; 100/100) · sa-F `src/av_wt_ui.js` (1979; 304/304) · sa-G
+  `verify/cdp_m1.mjs` (1148; write-only). Parent re-ran every harness green.
+- **Shipped surfaces:** **FM engine = kind 6** (`AVFM`; 6 operators · 8 algorithms matching
+  `AVFM.algoInfo(i)` · DX-style ADSR per op · op6 self-feedback · exact 51-path schema) + **FM card**
+  `#av-fm` (op tabs; ALL six op bodies render — every knob carries its data-def) · **AVFXAW**
+  "FLAVOUR" (console/tape/drive/air/warm, wet convention, null law bit-identical) · **AVFXCONV**
+  (true-stereo partitioned FFT, P=512 → 511-sample latency, 6 deterministic factory modes + user IR;
+  `avEngineConv` sender + IMPORT IR leg in the rack; regen DRAG-COALESCED 120/150 ms after measured
+  4.6–9 ms stalls per drag step) · **WT editor** (`av_wt` + `#av-wt` card: draw/spectral/morph ·
+  mip law identical to factory · IDB `av-wt-store` · JSON + Serum `.wt` (vawt/RIFF) importers ·
+  `wt.user0..15` installs via `avEngineWt`/`setUserWt`; osc2 pick + `avSynthOscOptionsRefresh`).
+- **Integration** (`_m1_integrate.py`, 53 counted edits): kind range 1..6 (×5 sites) · engine.kind
+  "fm" · `FX_PREFIX` = drive,aw,mod,delay,verb,conv,dyn + FX_WET [1,1,0,0,1,1,1] · osc2.user tables +
+  frame resolver (fallback wt.sine) · `setUserWt`/`setConvImpulse` + voiceproc `wtab`/`conv` branches ·
+  `stats()` += uwt/fxChain · FM panel in synth card · app_core **1.4.0 "M1 · fm · flavours · conv ·
+  wavetable"** + boots + ENGINE SELFTEST fm · styles M1 block — **incl. skins for the FX rack strips
+  and mod-matrix rows (a P3-era gap: both cards shipped with NO css — flat text soup; now skinned)**.
+- **Triage (battery first lap):** cdp_fx re-pinned to the 7-strip rack (40 controls 27/7/6) ·
+  **s4 QR wire bloated (829 B > 500 cap)** — root cause: the FM card rendered only the ACTIVE op's
+  knobs, so 40 non-DOM defaults rode the share diff → fix = render ALL op bodies (inactive hidden) →
+  s4 37/37, wire compact again · **2f rig fixture fix**: algos 0/3 are byte-identical over {op1,op2};
+  the check now opens op3/op4 first (strength preserved).
+- **Frozen `index.html` = `335f4bd0…` (2,933,715 B)** · rig cdp_m1 **33/33 pinned** · **BATTERY ALL
+  GREEN — 19 suites**: smoke 26 · studio · sessions · comp · mix · knob_feel · keys · midi · sample ·
+  rec · fx 27 · seq · store · bounce · deck · s4 37 · s5 · code · **m1 33 pinned**. Screenshot
+  `renders/m1-suite.png`.
+- **PERF GATE:** bench-v18 knee **128 monotone @ 47.46%** (unchanged family) · stress ×2 **30/66**
+  (BELOW the S5 record 360/183 — environment-quiet; **no control run needed**) · records
+  `verify/m1-gate-attribution.txt` + `bench-v18-m1-full.*` + `stress-m1-run1/2.log`.
+- Close commits: integration+battery `35175a6` · then this close (gate records + addendum 32 +
+  README + docs/05 status). **NOTHING RUNNING** — no background jobs, no live subagents.
+- **NEXT SESSION OPENS ON: the M2 wave** — MPE #61 · chop #65 · generative #72 remaining (per-track
+  clock divide/swing · polyrhythm) · arranger #73 remaining (song-rows UI/timeline · quantised scene
+  transitions · arrangement export) → then platform (PWA #78 · suite bridges #82) → P7 polish (#79) →
+  deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups · PERFECT TUNINGS ·
+  optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.
