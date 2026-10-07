@@ -1,0 +1,451 @@
+{
+  "pass": 89,
+  "fail": 0,
+  "rows": [
+    {
+      "id": "syntax.node-check",
+      "ok": true,
+      "detail": "exit 0"
+    },
+    {
+      "id": "pins.sources",
+      "ok": true,
+      "detail": "env1,env2,lfo1,vel,key,rand,macro1,macro2,macro3,macro4,macro5,macro6,macro7,macro8"
+    },
+    {
+      "id": "pins.sources.count14",
+      "ok": true,
+      "detail": "§4 text says (17); literal list = 14 — flagged as deviation"
+    },
+    {
+      "id": "pins.targets",
+      "ok": true,
+      "detail": "cutoff,reso,pitch,osc1.level,osc2.level,pan"
+    },
+    {
+      "id": "pins.curves",
+      "ok": true,
+      "detail": "linear,exp,S"
+    },
+    {
+      "id": "pins.srcIndex",
+      "ok": true,
+      "detail": "env1=0 rand=5 macro1=6 macro8=13 unknown=-1"
+    },
+    {
+      "id": "pins.dstIndex",
+      "ok": true,
+      "detail": "cutoff=0 osc1.level=3 pan=5 unknown=-1"
+    },
+    {
+      "id": "defaults.snapShape",
+      "ok": true,
+      "detail": "macros=8 slots=0"
+    },
+    {
+      "id": "defaults.macroNames",
+      "ok": true,
+      "detail": "MACRO 1,MACRO 2,MACRO 3,MACRO 4,MACRO 5,MACRO 6,MACRO 7,MACRO 8"
+    },
+    {
+      "id": "defaults.macroValues",
+      "ok": true,
+      "detail": "all 0"
+    },
+    {
+      "id": "payload.empty.types",
+      "ok": true,
+      "detail": "[object Float64Array]"
+    },
+    {
+      "id": "payload.empty.lengths",
+      "ok": true,
+      "detail": "8x8B / 128x8B"
+    },
+    {
+      "id": "payload.empty.zeros",
+      "ok": true,
+      "detail": "all zero"
+    },
+    {
+      "id": "add.slot0",
+      "ok": true,
+      "detail": "env1->pitch"
+    },
+    {
+      "id": "add.slot1",
+      "ok": true,
+      "detail": "macro8->pan"
+    },
+    {
+      "id": "add.slot2",
+      "ok": true,
+      "detail": "rand->osc1.level"
+    },
+    {
+      "id": "add.refuseBadSrc",
+      "ok": true,
+      "detail": "unknown src refused"
+    },
+    {
+      "id": "add.refuseBadDst",
+      "ok": true,
+      "detail": "unknown dst refused"
+    },
+    {
+      "id": "payload.exactHead",
+      "ok": true,
+      "detail": "[0,2,0.5,1,13,5,-0.25,2,5,3,1,0]"
+    },
+    {
+      "id": "payload.paddingZero",
+      "ok": true,
+      "detail": "slots[12..127] all zero"
+    },
+    {
+      "id": "add.clampedAccepts",
+      "ok": true,
+      "detail": "out-of-range numbers accepted, clamped in the model"
+    },
+    {
+      "id": "payload.clampedValues",
+      "ok": true,
+      "detail": "[3,1,1,2,4,0,-1,0] (amt 5->1, curve 9->2, amt -9->-1, curve -3->0)"
+    },
+    {
+      "id": "payload.macroValue",
+      "ok": true,
+      "detail": "macro1=0.75"
+    },
+    {
+      "id": "remove.resequence",
+      "ok": true,
+      "detail": "[0,2,0.5,1,13,5,-0.25,2,3,1,1,2,4,0,-1,0]"
+    },
+    {
+      "id": "remove.refuseOOR",
+      "ok": true,
+      "detail": "out-of-range refused"
+    },
+    {
+      "id": "roundtrip.loadTrue",
+      "ok": true,
+      "detail": "load(snap) ok"
+    },
+    {
+      "id": "roundtrip.deepEqual",
+      "ok": true,
+      "detail": "snap -> load -> snap identical"
+    },
+    {
+      "id": "roundtrip.slots4",
+      "ok": true,
+      "detail": "4 slots live"
+    },
+    {
+      "id": "roundtrip.snapshotDetached",
+      "ok": true,
+      "detail": "external mutation of the snapshot ignored"
+    },
+    {
+      "id": "roundtrip.payloadFresh",
+      "ok": true,
+      "detail": "fresh arrays per call"
+    },
+    {
+      "id": "load.badTrue",
+      "ok": true,
+      "detail": "sanitising load accepts the object"
+    },
+    {
+      "id": "load.macroClamp",
+      "ok": true,
+      "detail": "value clamped, name capped/stripped"
+    },
+    {
+      "id": "load.macroMissDefault",
+      "ok": true,
+      "detail": "missing entries -> defaults"
+    },
+    {
+      "id": "load.slotsSanitised",
+      "ok": true,
+      "detail": "[{\"src\":\"env1\",\"dst\":\"cutoff\",\"amt\":1,\"curve\":2},{\"src\":\"vel\",\"dst\":\"cutoff\",\"amt\":0,\"curve\":0},{\"src\":\"env2\",\"dst\":\"pan\",\"amt\":-0.5,\"curve\":0}] (bogus src dropped)"
+    },
+    {
+      "id": "load.cap32",
+      "ok": true,
+      "detail": "40 -> 32"
+    },
+    {
+      "id": "load.cap32.payloadTail",
+      "ok": true,
+      "detail": "slot 31 encoded, no slot 32"
+    },
+    {
+      "id": "load.rejectNonObject",
+      "ok": true,
+      "detail": "non-objects / shapeless refused"
+    },
+    {
+      "id": "init.hostTrue",
+      "ok": true,
+      "detail": "mount with host stub"
+    },
+    {
+      "id": "init.boundOnce",
+      "ok": true,
+      "detail": "re-init safe, delegation bound once"
+    },
+    {
+      "id": "init.htmlBody",
+      "ok": true,
+      "detail": "host innerHTML carries the card"
+    },
+    {
+      "id": "init.macros8",
+      "ok": true,
+      "detail": "8 macro knobs"
+    },
+    {
+      "id": "init.emptyState",
+      "ok": true,
+      "detail": "empty state rendered at 0 slots"
+    },
+    {
+      "id": "interact.add",
+      "ok": true,
+      "detail": "{\"src\":\"env1\",\"dst\":\"cutoff\",\"amt\":0.5,\"curve\":0}"
+    },
+    {
+      "id": "render.slotsBox",
+      "ok": true,
+      "detail": "rows re-rendered into .av-mod-slots"
+    },
+    {
+      "id": "render.count",
+      "ok": true,
+      "detail": "1 / 32"
+    },
+    {
+      "id": "interact.select",
+      "ok": true,
+      "detail": "dst change -> pan"
+    },
+    {
+      "id": "interact.slider",
+      "ok": true,
+      "detail": "amt input -> 0.75"
+    },
+    {
+      "id": "interact.remove",
+      "ok": true,
+      "detail": "delete button removes the row"
+    },
+    {
+      "id": "cap.addFalse",
+      "ok": true,
+      "detail": "33rd add refused"
+    },
+    {
+      "id": "cap.buttonDisabled",
+      "ok": true,
+      "detail": "add button disabled at 32"
+    },
+    {
+      "id": "load.repaintMacros",
+      "ok": true,
+      "detail": "macro row repainted from load"
+    },
+    {
+      "id": "load.mirror",
+      "ok": true,
+      "detail": "avParams mirror updated"
+    },
+    {
+      "id": "funnel.hookTrue",
+      "ok": true,
+      "detail": "one-shot wrap installed"
+    },
+    {
+      "id": "funnel.commit",
+      "ok": true,
+      "detail": "macro3 -> 0.5 in model + payload"
+    },
+    {
+      "id": "funnel.forwarded",
+      "ok": true,
+      "detail": "original funnel still called (path passthrough)"
+    },
+    {
+      "id": "funnel.passthrough",
+      "ok": true,
+      "detail": "non-mod path untouched"
+    },
+    {
+      "id": "funnel.badPathsIgnored",
+      "ok": true,
+      "detail": "macro9 / macro1.5 ignored"
+    },
+    {
+      "id": "funnel.idempotent",
+      "ok": true,
+      "detail": "second ensureHooks does not double-wrap"
+    },
+    {
+      "id": "funnel.knobCommit",
+      "ok": true,
+      "detail": "avKnobCommit reached model + mirror"
+    },
+    {
+      "id": "fallback.hook",
+      "ok": true,
+      "detail": "event belt bound (no avApplyParam)"
+    },
+    {
+      "id": "fallback.bound",
+      "ok": true,
+      "detail": "one 'av-param' listener"
+    },
+    {
+      "id": "fallback.hit",
+      "ok": true,
+      "detail": "macro5 -> 0.8, non-mod ignored"
+    },
+    {
+      "id": "fallback.hitClamped",
+      "ok": true,
+      "detail": "clamped to 1"
+    },
+    {
+      "id": "ui.secs",
+      "ok": true,
+      "detail": "MACROS + MATRIX sections"
+    },
+    {
+      "id": "ui.macroKnobAttrs",
+      "ok": true,
+      "detail": "knob attrs"
+    },
+    {
+      "id": "ui.srcOptions",
+      "ok": true,
+      "detail": "env1,env2,lfo1,vel,key,rand,macro1,macro2,macro3,macro4,macro5,macro6,macro7,macro8"
+    },
+    {
+      "id": "ui.dstOptions",
+      "ok": true,
+      "detail": "cutoff,reso,pitch,osc1.level,osc2.level,pan"
+    },
+    {
+      "id": "ui.dstSelected",
+      "ok": true,
+      "detail": "current target pre-selected"
+    },
+    {
+      "id": "ui.curveOptions",
+      "ok": true,
+      "detail": "0,1,2 + S selected"
+    },
+    {
+      "id": "ui.slider",
+      "ok": true,
+      "detail": "amt slider attrs"
+    },
+    {
+      "id": "ui.amtReadout",
+      "ok": true,
+      "detail": "+50% readout"
+    },
+    {
+      "id": "ui.remove",
+      "ok": true,
+      "detail": "remove button"
+    },
+    {
+      "id": "ui.actions",
+      "ok": true,
+      "detail": "add + count (empty)"
+    },
+    {
+      "id": "ui.rowIndex",
+      "ok": true,
+      "detail": "row indices"
+    },
+    {
+      "id": "ui.escaped",
+      "ok": true,
+      "detail": "no raw '<' leakage from values"
+    },
+    {
+      "id": "init.noHost",
+      "ok": true,
+      "detail": "false without #av-mod-host"
+    },
+    {
+      "id": "init.throwingDoc",
+      "ok": true,
+      "detail": "false, no throw when getElementById throws (belt)"
+    },
+    {
+      "id": "init.noKnobParts",
+      "ok": true,
+      "detail": "false when av_knob.js parts absent"
+    },
+    {
+      "id": "classes.list",
+      "ok": true,
+      "detail": "19 classes"
+    },
+    {
+      "id": "classes.unique",
+      "ok": true,
+      "detail": "no dupes"
+    },
+    {
+      "id": "post.noFacade",
+      "ok": true,
+      "detail": "false + no throw when the facade is absent"
+    },
+    {
+      "id": "post.facade",
+      "ok": true,
+      "detail": "avEngineMod called"
+    },
+    {
+      "id": "post.payloadShape",
+      "ok": true,
+      "detail": "8/128"
+    },
+    {
+      "id": "post.payloadExact",
+      "ok": true,
+      "detail": "sent arrays == avModPayload()"
+    },
+    {
+      "id": "post.payloadLayout",
+      "ok": true,
+      "detail": "0,2,0.5,1,13,5,-0.25,2"
+    },
+    {
+      "id": "post.onEveryChange",
+      "ok": true,
+      "detail": "5 posts for 5 changes"
+    },
+    {
+      "id": "replay.scheduled",
+      "ok": true,
+      "detail": "one replay post after ensure resolves"
+    },
+    {
+      "id": "replay.readyShortcut",
+      "ok": true,
+      "detail": "immediate post when __avEngine.ready"
+    },
+    {
+      "id": "replay.noFacade",
+      "ok": true,
+      "detail": "false without the facade"
+    }
+  ]
+}

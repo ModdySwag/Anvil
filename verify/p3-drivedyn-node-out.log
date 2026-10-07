@@ -1,0 +1,77 @@
+=== drivedyn_node.mjs -- Anvil P3 child C: av_fx_drive.js (AVFXDRIVE) + av_fx_dyn.js (AVFXDYN) ===
+node v26.7.0   2026-10-07T02:44:12.616Z
+repo C:/Users/Moddy/anvil   sr 48000 (cross-rate spots at 44100)
+
+--- 0. module laws (both files) ---
+  PASS  drive L1. strict mode directive present
+  PASS  drive L2. exactly one top-level name (AVFXDRIVE)  ::  top=[AVFXDRIVE]
+  PASS  drive L3. no window/document/location/globalThis/self/performance (comments stripped)
+  PASS  drive L4. registerFx footer fires once, prefix "drive", module identity  ::  calls=1
+  PASS  drive L5. VERSION p3.0 + PREFIX  ::  VERSION=p3.0 PREFIX=drive
+  PASS  dyn L1. strict mode directive present
+  PASS  dyn L2. exactly one top-level name (AVFXDYN)  ::  top=[AVFXDYN]
+  PASS  dyn L3. no window/document/location/globalThis/self/performance (comments stripped)
+  PASS  dyn L4. registerFx footer fires once, prefix "dyn", module identity  ::  calls=1
+  PASS  dyn L5. VERSION p3.0 + PREFIX  ::  VERSION=p3.0 PREFIX=dyn
+
+--- 1. bootstrap: state shape / silence / reset / determinism / edge / params ---
+  PASS  D-S1. drive createState shape (20 preallocated fields)  ::  ["a15","aTone","bits","cAmount","cTone","down","holdL","holdN","holdR","levels","lpL","lpR","mix","mode","oL","oR","on",...
+  PASS  Y-S1. dyn createState shape (fixed, monomorphic)  ::  fields=41
+  PASS  D-S2. silence -> exact zeros (fresh state)
+  PASS  Y-S2. silence -> exact zeros (fresh state, all stages armed)
+  PASS  D-S3. reset() zeroes audio state + snaps smoothers  ::  cAmount=0.1 tAmount=0.1
+  PASS  Y-S3. reset() zeroes EQ/detector/gain/delay state
+  PASS  D-S4. determinism pair (bit-identical)  ::  maxAbsDiff=0
+  PASS  Y-S4. determinism pair (bit-identical)  ::  maxAbsDiff=0
+  PASS  D-S5. NaN/Inf/huge inputs: finite outputs, no throw, state survives
+  PASS  Y-S5. NaN/Inf/huge inputs: finite outputs, no throw, state survives
+  PASS  D-S6a. drive param table accepts its 7 paths, rejects foreign/unknown, clamps  ::  amount->1 tone->0 bits->16 down->1 mix->1
+  PASS  D-S6b. NaN / non-numeric value -> false
+  PASS  Y-S6a. dyn param table accepts its 11 paths, rejects foreign/unknown, clamps  ::  eqLo->15 thresh->-40 ratio->1 att->0.001 rel->1 makeup->24 ceiling->0
+  PASS  Y-S6b. NaN value -> false
+  PASS  S7. alloc-free process() x2 modules (2x 40x4800 calls, gc both sides)  ::  drive heapD=-7120 B  dyn heapD=-8448 B
+  PASS  Y-S7. bindEngine: pre-bind params honoured; sr rebuilds coeffs (44.1k == fresh, 48k differs)  ::  b0 48k=1.007856353 44.1k=1.008554016 lookN=144/132
+  PASS  D-S7. bindEngine: sr-derived coefficients rebuild (44.1k pre-bind == fresh 44.1k)
+
+--- 2. DRIVE: THD / fold / crush / tone / null ---
+    sat amp=0.5 THD% amount 0..1 step .05: 1.96 2.71 3.70 5.01 6.68 8.76 11.24 14.11 17.25 20.55 23.86 27.03 29.95 32.58 34.89 36.89 38.62 40.09 41.36 42.43 43.34
+  PASS  D1. THD strictly rises with amount (sat, amp 0.5)  ::  THD(0)=1.96% THD(1)=43.34%
+    sat amp=0.25 THD% amount 0..1 step .05: 0.51 0.72 1.01 1.41 1.95 2.69 3.69 4.99 6.66 8.73 11.21 14.06 17.21 20.51 23.81 26.98 29.92 32.55 34.86 36.87 38.60
+  PASS  D2. THD strictly rises with amount (sat, amp 0.25)  ::  THD(0)=0.51% THD(1)=38.60%
+  PASS  D3. THD(amount=1) >> THD(amount=0) in every mode  ::  sat 1.96->43.34%  fold 0.00->362.47%  crush(12/4) 0.00->44.07%
+  PASS  D4. fold: bounded + finite for |x| up to 1e6, tone 0.5/0/1 (worst |y| 2.275)  ::  
+    crush clean   bits=16 down= 1 amt=0.1  THD=0.00%  worst spur -124.1 dBc @ 20898 Hz
+    crush clipped bits=16 down= 1 amt=0.75  THD=40.46%  worst spur -68.8 dBc @ 21007 Hz
+    crush clipped bits=16 down= 8 amt=0.75  THD=38.93%  worst spur -34.5 dBc @ 11800 Hz
+    crush clipped bits=12 down= 4 amt=0.75  THD=40.07%  worst spur -34.5 dBc @ 11800 Hz
+    crush clipped bits= 8 down= 8 amt=0.75  THD=38.93%  worst spur -34.5 dBc @ 11800 Hz
+    crush clipped bits= 4 down=32 amt=0.75  THD=26.48%  worst spur -15.5 dBc @ 900 Hz
+    crush clipped bits= 4 down= 2 amt=0.75  THD=40.39%  worst spur -37.7 dBc @ 23800 Hz
+  PASS  D5. crush spectrum reported; 16-bit/1x/0.1 row near-clean (spur <= -70 dBc); clipped rows alias by design  ::  clean=-124.1dBc  crush(12/4)=-34.5dBc
+    tone=0.5  30 Hz -0.00 dB   12 kHz -0.00 dB
+    tone=1    30 Hz -22.96 dB   12 kHz 5.54 dB
+    tone=0    30 Hz 6.01 dB   12 kHz -16.61 dB
+  PASS  D6. tone: 0.5 = flat (+-0.5 dB); 1 = bright (HF > +4, LF < -8); 0 = dark (LF > +4, HF < -8)
+  PASS  D6b. tone=0.5 is a bit-exact passthrough of the shaper (tanh path)
+  PASS  D7/Y9. null law: bit-identical passthrough at mix=0 and on=0 (both modules)  ::  drive mix0=true off=true  dyn mix0=true off=true
+  PASS  D8. 44.1k: THD rises with amount (sat)  ::  1.96% -> 43.34%
+
+--- 3. DYN: EQ / compressor / limiter / soft-clip ---
+  PASS  Y6. EQ: 22 points vs independent RBJ reference within +-1 dB (worst 0.000 dB)  ::  band0 -12dB @30.0Hz
+  PASS  Y6b. EQ at 0/0/0 is 0.00 dB  ::  -0.000 dB
+  PASS  Y1. compressor static transfer: 117 rows within +-0.5 dB of the dB computer (worst 0.227 dB)  ::  grid T-40 R12 L-4 mk0
+  PASS  Y1b. knee sweep: output rises with input, step slope <= 1.05 dB/dB, below-knee 1.0, above-knee 1/R=0.25  ::  below=1.000 dB/dB above=0.250 dB/dB
+    worst rows: grid T-40 R12 L-4 mk0 err 0.23dB · grid T-40 R12 L-8 mk0 err 0.23dB · grid T-30 R12 L-4 mk0 err 0.23dB
+    ceiling -6 dBFS (0.501): pre 0.250  burst post-peak 0.502  (0.01 dB over ceiling)  recovery 0.226/0.243/0.248
+  PASS  Y3. limiter catches +6.02 dB burst: post peak <= ceiling + 0.1 dB  ::  over=0.013 dB
+  PASS  Y3b. nothing below the ceiling is touched (pre-burst peak 0.250)
+  PASS  Y3c. release recovers monotonically toward the pre-burst level  ::  0.2258 -> 0.2429 -> 0.2480
+    link: L burst peak post 0.503 (ceil 0.501)  R ducked to 0.033  (pre 0.100, post 0.100)
+  PASS  Y4. stereo-linked: L burst pulls R down (>6 dB) and both stay <= ceiling+0.1 dB  ::  rDuck=0.033
+  PASS  Y7. EQ/comp/limiter unity path is bit-exact = input delayed by lookN (144 samples)  ::  firstBad=-1
+  PASS  Y7b. lookN = round(3 ms x sr) at 48k  ::  lookN=144
+  PASS  Y8. hot +12 dB input: output strictly bounded (< 1.0), finite  ::  peak=0.966
+  PASS  Y8b. ceiling -6: hot input capped at ceiling+0.1 dB  ::  peak=0.507
+  PASS  Y10. 44.1k: comp static row within +-0.5 dB  ::  err=0.183 dB  lookN=132
+
+==== GATES: ALL PASS ====

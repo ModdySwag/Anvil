@@ -1,0 +1,91 @@
+=== delaymod_node.mjs -- Anvil P3 FX wave, child B (delay + mod) node harness ===
+modules: C:/Users/Moddy/anvil/src/av_fx_delay.js (vp3.0 prefix delay) + C:/Users/Moddy/anvil/src/av_fx_mod.js (vp3.0 prefix mod)
+drive: createState -> bindEngine -> setParam(st, fx.<prefix>.*) -> process(st, xL, xR) -> st.oL/st.oR
+protocol: 48 kHz unless noted; output convention = module-side final mix (dry*(1-mix)+wet*mix)
+
+--- interface + laws + registration ---
+  PASS  I1. delay: version p3.0 / prefix delay / exports complete  ::  version=p3.0 prefix=delay
+  PASS  I2. mod: version p3.0 / prefix mod / exports complete  ::  version=p3.0 prefix=mod
+  PASS  I3. footer registration: registerFx("delay", AVFXDELAY) + registerFx("mod", AVFXMOD)  ::  keys=delay,mod
+  PASS  I4. law scan: no page-scope tokens, ONE top-level const, strict, pinned footer
+      delay(bad=none topConsts=1 strict=true footer=true) | mod(bad=none topConsts=1 strict=true footer=true)
+  PASS  I5. concat with av_dsp.js text loads (strict, single scope) and both register via a registerFx stub  ::  av_dsp=p2.0 reg=delay,mod
+  note: av_dsp.js at this commit has no registerFx yet (parent adds it per _p3_wave.md 2.2);
+        without the stub both modules load and skip registration (guarded typeof) -- verified above.
+
+--- setParam semantics (known -> true, unknown/enum/non-finite -> false, ranges clamp) ---
+  PASS  P1. delay setParam accept/reject + clamps (time 0.01..2, fb 0..0.95, bpm 20..300, div->base 0.25 @1000bpm)  ::  fx.delay.time->true fx.delay.spread->true fx.delay.feedback->true fx.delay.pingpong->true fx.delay.duck->true fx.delay.div->true fx.delay.bpm->true fx.delay.on->true fx.delay.mix->true fx.delay.div->false fx.delay.nope->false fx.mod.mix->false fx.delay.time->false fx.delay.feedback->false delay.time->false | clamped: time=0.01 fb=0.95 bpm=300 div=4 base=0.1
+  PASS  P2. mod setParam accept/reject + clamps (rate 0.05..10, fb +-0.95, stages 4|6|8, mode enum)  ::  fx.mod.mode->true fx.mod.rate->true fx.mod.depth->true fx.mod.feedback->true fx.mod.stages->true fx.mod.on->true fx.mod.mix->true fx.mod.mode->false fx.mod.stages->false fx.mod.nope->false fx.mod.rate->false fx.mod.depth->false fx.delay.mix->false | clamped: rate=10 fb=-0.95 stages=4 mode=1
+
+--- D1 echo spacing within 1% (impulse in, mix=1 wet; 0.5 s settle after param moves) ---
+  PASS  D1.free 50.3ms [L] spacing within 1%  ::  target 50.300 ms · first echo 50.312 ms (0.0229% off) · 9 echoes · worst spacing err 0.0112% (50.295,50.306,50.298,50.304,50.298,50.303,50.299,50.302,50.300 ms)
+  PASS  D1.free 50.3ms [R] spacing within 1%  ::  target 50.300 ms · first echo 50.312 ms (0.0229% off) · 9 echoes · worst spacing err 0.0112% (50.295,50.306,50.298,50.304,50.298,50.303,50.299,50.302,50.300 ms)
+  PASS  D1.free 251.7ms [L] spacing within 1%  ::  target 251.700 ms · first echo 251.708 ms (0.0033% off) · 9 echoes · worst spacing err 0.0030% (251.708,251.695,251.701,251.704,251.699,251.701,251.703,251.699,251.701 ms)
+  PASS  D1.free 251.7ms [R] spacing within 1%  ::  target 251.700 ms · first echo 251.708 ms (0.0033% off) · 9 echoes · worst spacing err 0.0030% (251.708,251.695,251.701,251.704,251.699,251.701,251.703,251.699,251.701 ms)
+  PASS  D1.free 613.7ms spread1 [L] spacing within 1%  ::  target 460.275 ms · first echo 460.278 ms (0.0007% off) · 9 echoes · worst spacing err 0.0013% (460.281,460.272,460.275,460.279,460.276,460.274,460.275,460.277,460.276 ms)
+  PASS  D1.free 613.7ms spread1 [R] spacing within 1%  ::  target 767.125 ms · first echo 767.125 ms (0.0000% off) · 6 echoes · worst spacing err 0.0000% (767.125,767.125,767.125,767.125,767.125,767.125 ms)
+  PASS  D1.div 1/8 @120 [L] spacing within 1%  ::  target 250.000 ms · first echo 250.000 ms (0.0000% off) · 9 echoes · worst spacing err 0.0000% (250.000,250.000,250.000,250.000,250.000,250.000,250.000,250.000,250.000 ms)
+  PASS  D1.div 1/8d @140 [L] spacing within 1%  ::  target 321.429 ms · first echo 321.437 ms (0.0027% off) · 8 echoes · worst spacing err 0.0023% (321.436,321.422,321.431,321.433,321.426,321.431,321.430,321.428 ms)
+  PASS  D1.free 123.4ms @44.1k [L] spacing within 1%  ::  target 123.400 ms · first echo 123.401 ms (0.0011% off) · 10 echoes · worst spacing err 0.0011% (123.401,123.401,123.401,123.401,123.401,123.401,123.401,123.401,123.401,123.401 ms)
+  PASS  D1.free 123.4ms @44.1k [R] spacing within 1%  ::  target 123.400 ms · first echo 123.401 ms (0.0011% off) · 10 echoes · worst spacing err 0.0011% (123.401,123.401,123.401,123.401,123.401,123.401,123.401,123.401,123.401,123.401 ms)
+
+--- D2 feedback decay curve (impulse; echo ENERGY per repeat vs fx.delay.feedback - the      ---
+    allpass interpolator is lossless, so sqrt(E[k+1]/E[k]) must equal fb exactly) ---
+  PASS  D2.fb=0.6 per-echo energy ratio == feedback (|err|<=1%) + decay to <50% + no growth  ::  echoes=18 · energy ratios 0.600000,0.600000,0.600000,0.600000,0.600000 · worst err 0.0000%
+      (info) peak ratios creep with the allpass IR shape: 0.488,0.485,0.646,0.547,0.536,0.632,0.549,0.578
+  PASS  D2.fb=0.8 per-echo energy ratio == feedback (|err|<=1%) + decay to <50% + no growth  ::  echoes=18 · energy ratios 0.800000,0.800000,0.800000,0.800000,0.800000 · worst err 0.0000%
+      (info) peak ratios creep with the allpass IR shape: 0.650,0.646,0.862,0.730,0.715,0.842,0.732,0.771
+  PASS  D2.fb=0.95 per-echo energy ratio == feedback (|err|<=1%) + decay to <50% + no growth  ::  echoes=18 · energy ratios 0.950000,0.950000,0.950000,0.950000,0.950000 · worst err 0.0000%
+      (info) peak ratios creep with the allpass IR shape: 0.772,0.767,1.024,0.867,0.849,1.000,0.870,0.916
+  PASS  D2.fb=0 single echo (no feedback tail)  ::  echoes=1
+
+--- D3 ping-pong alternation (impulse into L only, pp=1 cross vs pp=0 straight) ---
+  PASS  D3.pp=1 alternates L/R per echo  ::  e1[L 0.816 R 0.000] e2[L 0.000 R 0.420] e3[L 0.239 R 0.000] e4[L 0.000 R 0.135] e5[L 0.075 R 0.000] e6[L 0.000 R 0.045]
+  PASS  D3.pp=0 stays in L (no cross)  ::  e1[L 0.816 R 0.000] e2[L 0.420 R 0.000] e3[L 0.239 R 0.000] e4[L 0.135 R 0.000] e5[L 0.074 R 0.000] e6[L 0.045 R 0.000]
+
+--- D4 no NaN/Inf: param cross x signal classes; live mid-render sweeps ---
+  PASS  D4a. full cross (672 combos, incl. +-4 impulses + noise): finite, no throw  ::  nonfinite=0 throws=0 peakMax=2.66
+  PASS  D4b. live sweeps (time/fb/pp/duck/spread/div/bpm/mix every 4096 smp): all finite  ::  nonfinite=0 peak=1.28
+
+--- D5 alloc-free render (heap-flat across process() calls; --expose-gc sharpens) ---
+  PASS  D5. delay heap-flat: steady 3128 B, glide 3832 B (|d| < 65536)  ::  gc both sides
+
+--- X1 mix=0 bit-identical passthrough (Object.is per sample, incl. -0/denormals), on=0, mix=1 wet ---
+  PASS  X1a. mix=0 -> st.oL/oR bit-identical to input (5000 smp x2 modules, Object.is incl. -0)  ::  exact
+  PASS  X1b. on=0 -> st.oL/oR bit-identical to input  ::  ok
+  PASS  X2. determinism pair: delay maxAbsDiff=0 · mod maxAbsDiff=0  ::  bit-identical on both
+  PASS  X3. reset -> silence out of silence in (delay 0 nz, mod 0 nz)  ::  ok
+  PASS  X5. retune path: createState()=48k -> bindEngine({sr:44100}) retunes the lines, 44.1k echo spacing within 1%; mod createState({sr}) sets phInc exactly  ::  delay.sr 44100 cap 112463 · echoes 3 worst err 0.0047% · mod.sr 44100
+
+--- M2 mod LFO rate spot-check (440 Hz sine in, mix=0.5, depth=1; envelope autocorrelation + DFT) ---
+  PASS  M2.chorus@1.5Hz envelope periodic at a small harmonic of the LFO rate (DFT argmax 3.030 Hz = 2x)  ::  envDFT 3.030 Hz (k=2, err 1.0000%) · autocorr first peak 0.333 s r=0.415 -> 3.000 Hz · top autocorr peaks [{"lagS":0.667,"r":0.865},{"lagS":0.333,"r":0.415},{"lagS":1,"r":0.355}]
+  PASS  M2.chorus@4Hz envelope periodic at a small harmonic of the LFO rate (DFT argmax 8.010 Hz = 2x)  ::  envDFT 8.010 Hz (k=2, err 0.1250%) · autocorr first peak 0.125 s r=0.456 -> 7.979 Hz · top autocorr peaks [{"lagS":0.251,"r":0.93},{"lagS":0.125,"r":0.456},{"lagS":0.375,"r":0.432}]
+  PASS  M2.flanger@1.5Hz envelope periodic at a small harmonic of the LFO rate (DFT argmax 2.978 Hz = 2x)  ::  envDFT 2.978 Hz (k=2, err -0.7500%) · autocorr first peak 0.332 s r=0.309 -> 3.012 Hz · top autocorr peaks [{"lagS":0.668,"r":0.864},{"lagS":1.332,"r":0.732},{"lagS":0.332,"r":0.309}]
+  PASS  M2.flanger@4Hz envelope periodic at a small harmonic of the LFO rate (DFT argmax 7.990 Hz = 2x)  ::  envDFT 7.990 Hz (k=2, err -0.1250%) · autocorr first peak 0.125 s r=0.329 -> 7.979 Hz · top autocorr peaks [{"lagS":0.249,"r":0.942},{"lagS":0.125,"r":0.329},{"lagS":0.375,"r":0.312}]
+  PASS  M2.rate-ratio: envelope frequency scales with the rate knob (2.64 vs 2.67)  ::  envHz 3.030 -> 8.010
+
+--- M3 phaser notch movement (noise in, mix=0.5, depth=1, rate=1 Hz; Goertzel notch trajectory) ---
+  PASS  M3a. phaser notch MOVES across the sweep (tracked range >= 250 Hz over 40 log probes)  ::  notch 164..1266 Hz (range 1102 Hz)
+      (info) tracked-notch autocorr peaks (noisy single-notch trace): []
+  PASS  M3b. 1Hz: wet-envelope autocorr top peak at T/2 or T of the LFO (r>=0.4)  ::  peak lag 0.997 s (r=0.700) = 0.997 LFO periods
+  PASS  M3b. 2Hz: wet-envelope autocorr top peak at T/2 or T of the LFO (r>=0.4)  ::  peak lag 0.501 s (r=0.855) = 1.003 LFO periods
+  PASS  M3b. rate-ratio: phaser envelope period scales 1:1 with the rate knob (1.99 vs 2.00)  ::  lags 0.997 s / 0.501 s
+  PASS  M3c.400Hz probe: notch sweeps through (envelope dip >= 4 dB)  ::  dip 19.54 dB
+  PASS  M3c.800Hz probe: notch sweeps through (envelope dip >= 4 dB)  ::  dip 27.65 dB
+  PASS  M3c.1600Hz probe: notch sweeps through (envelope dip >= 4 dB)  ::  dip 20.09 dB
+
+--- M4 mod no NaN: modes x rate/depth/fb/stages cross; live sweeps ---
+  PASS  M4a. full cross (324 combos, incl. +-3 impulses + noise): finite, no throw  ::  nonfinite=0 throws=0 peakMax=3.89
+  PASS  M4b. live mode/rate/depth/fb/stages/mix sweeps every 2048 smp: all finite  ::  nonfinite=0 peak=1.40
+
+--- M5 mod alloc-free render (heap-flat; --expose-gc sharpens) ---
+  PASS  M5. mod heap-flat across modes: chorus 3184 B · ensemble 16 B · flanger 232 B · phaser 640 B (|d| < 65536)
+
+--- X4 chain order mod -> delay on a stereo bus (the parent 2.2 loop: process then COPY st.oL/oR) ---
+  PASS  X4a. mod->delay chain (both on) finite, bounded  ::  nonfinite=0 peak=0.30
+  PASS  X4b. both modules off -> the chain copy is bit-identical to the bus (20000 smp)  ::  exact
+  PASS  X4c. both modules ON at mix=0 -> chain copy bit-identical (module-side responsibility, 2.2)  ::  exact
+
+--- perf indicative (informational; node, single core, 48 kHz) ---
+  delay  0.0412 us/smp -> 1.979 ms/s audio (0.198% of one core)
+  phaser 0.0366 us/smp -> 1.755 ms/s audio (0.176% of one core)

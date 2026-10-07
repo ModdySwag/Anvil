@@ -16,13 +16,14 @@
      delay  on · mix · div(free|1/1|1/2|1/4|1/8|1/8d|1/16) · time · feedback · pingpong
      verb   on · mix · mode(plate|fdn|freeverb) · size · decay · damp
      dyn    on · mix · comp.thresh · comp.ratio · lim.ceiling
-   UI-pinned defaults (documented, not in the wave doc): mix drive .5 / mod .5 / delay .3 /
-   verb .35 / dyn 1.0; drive.tone 0..1 with .5 = neutral, bits 16 = off; verb decay .55 /
-   size .6 / damp .5 (a clearly audible plate); mod rate .6 Hz depth .5 feedback 0; delay
-   time .25 s feedback .35 pingpong 0; dyn thresh −18 dB ratio 4:1 ceiling −1 dBFS.
-   Not mounted in the v1 rack (engine-side / next wave): verb.predelay, delay.spread ·
-   duck · bpm, mod.stages, drive.downsample, dyn.eq.* · comp.att/rel/makeup — the rig still
-   sweeps every one of those paths for delivery acceptance (cdp_fx §sweep).
+   Defaults MIRROR the modules' own documented stock values (first paint = a module's stock
+   sound the moment it is switched on; on = 0 for every module): drive mix 1 · amount 0 ·
+   tone .5 (neutral) · bits 16; mod mix .5 · rate .6 Hz · depth .5 · feedback 0; delay mix
+   .35 · time .3 s · feedback .4 · pingpong .5; verb mix .3 · size .5 · decay .5 (T60 ≈
+   1.9 s) · damp .3; dyn mix 1 · thresh 0 · ratio 1 · ceiling 0 (neutral — dial it in).
+   Not mounted in the v1 rack (engine-side / next wave): fx.verb.predelay, fx.delay.spread ·
+   duck · bpm, fx.mod.stages, fx.drive.down, fx.dyn.eqLo/eqMid/eqHi · comp.att/rel/makeup —
+   the rig still sweeps every one of those paths for delivery acceptance (cdp_fx §sweep).
 
    Exports (globals, build.py part order parent-owned):
      avFxInit()      → mount into #av-fx-host; false without throw when the host is absent or
@@ -50,8 +51,8 @@ const AV_FX_MODULES = [
       { path: "fx.drive.mode", label: "MODE", aria: "Drive mode (sat · fold · crush)", options: ["sat", "fold", "crush"], def: "sat" },
     ],
     knobs: [
-      { path: "fx.drive.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct" } },
-      { path: "fx.drive.amount", label: "DRIVE", opts: { min: 0, max: 1, step: 0.01, def: 0.4, fmt: "pct", hint: "up to +30 dB" } },
+      { path: "fx.drive.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 1, fmt: "pct" } },
+      { path: "fx.drive.amount", label: "DRIVE", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct", hint: "up to +30 dB" } },
       { path: "fx.drive.tone", label: "TONE", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct", hint: "one-pole tilt · 50% neutral" } },
       { path: "fx.drive.bits", label: "BITS", opts: { min: 4, max: 16, step: 1, def: 16, fmt: "int", hint: "crush mode quantiser" } },
     ],
@@ -76,10 +77,10 @@ const AV_FX_MODULES = [
       { path: "fx.delay.div", label: "DIV", aria: "Delay sync division (free or tempo)", options: ["free", "1/1", "1/2", "1/4", "1/8", "1/8d", "1/16"], def: "free" },
     ],
     knobs: [
-      { path: "fx.delay.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 0.3, fmt: "pct" } },
-      { path: "fx.delay.time", label: "TIME", opts: { min: 0.01, max: 2, step: 0.001, def: 0.25, curve: "log", fmt: "ms" } },
-      { path: "fx.delay.feedback", label: "FEEDBACK", opts: { min: 0, max: 0.95, step: 0.01, def: 0.35, fmt: "pct" } },
-      { path: "fx.delay.pingpong", label: "PING-PONG", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct", hint: "cross-feedback" } },
+      { path: "fx.delay.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 0.35, fmt: "pct" } },
+      { path: "fx.delay.time", label: "TIME", opts: { min: 0.01, max: 2, step: 0.001, def: 0.3, curve: "log", fmt: "ms" } },
+      { path: "fx.delay.feedback", label: "FEEDBACK", opts: { min: 0, max: 0.95, step: 0.01, def: 0.4, fmt: "pct" } },
+      { path: "fx.delay.pingpong", label: "PING-PONG", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct", hint: "cross-feedback" } },
     ],
   },
   {
@@ -89,10 +90,10 @@ const AV_FX_MODULES = [
       { path: "fx.verb.mode", label: "MODE", aria: "Reverb mode (plate · fdn · freeverb)", options: ["plate", "fdn", "freeverb"], def: "plate" },
     ],
     knobs: [
-      { path: "fx.verb.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 0.35, fmt: "pct" } },
-      { path: "fx.verb.size", label: "SIZE", opts: { min: 0, max: 1, step: 0.01, def: 0.6, fmt: "pct" } },
-      { path: "fx.verb.decay", label: "DECAY", opts: { min: 0, max: 1, step: 0.01, def: 0.55, fmt: "pct", hint: "≈ T60 0.3–12 s" } },
-      { path: "fx.verb.damp", label: "DAMP", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct" } },
+      { path: "fx.verb.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 0.3, fmt: "pct" } },
+      { path: "fx.verb.size", label: "SIZE", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct" } },
+      { path: "fx.verb.decay", label: "DECAY", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct", hint: "≈ T60 0.3–12 s" } },
+      { path: "fx.verb.damp", label: "DAMP", opts: { min: 0, max: 1, step: 0.01, def: 0.3, fmt: "pct" } },
     ],
   },
   {
@@ -101,9 +102,9 @@ const AV_FX_MODULES = [
     selects: [],
     knobs: [
       { path: "fx.dyn.mix", label: "MIX", opts: { min: 0, max: 1, step: 0.01, def: 1, fmt: "pct" } },
-      { path: "fx.dyn.comp.thresh", label: "THRESH", opts: { min: -40, max: 0, step: 0.5, def: -18, fmt: "db", hint: "compressor threshold" } },
-      { path: "fx.dyn.comp.ratio", label: "RATIO", opts: { min: 1, max: 20, step: 0.1, def: 4, fmt: "x", hint: "compressor ratio" } },
-      { path: "fx.dyn.lim.ceiling", label: "CEIL", opts: { min: -6, max: 0, step: 0.1, def: -1, fmt: "db", hint: "limiter ceiling" } },
+      { path: "fx.dyn.comp.thresh", label: "THRESH", opts: { min: -40, max: 0, step: 0.5, def: 0, fmt: "db", hint: "compressor threshold" } },
+      { path: "fx.dyn.comp.ratio", label: "RATIO", opts: { min: 1, max: 20, step: 0.1, def: 1, fmt: "x", hint: "compressor ratio" } },
+      { path: "fx.dyn.lim.ceiling", label: "CEIL", opts: { min: -6, max: 0, step: 0.1, def: 0, fmt: "db", hint: "limiter ceiling" } },
     ],
   },
 ];

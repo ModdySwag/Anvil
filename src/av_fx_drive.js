@@ -180,7 +180,7 @@ const AVFXDRIVE = (function () {
     let vL, vR;
     const mo = st.mode;
     if (mo === 0) {
-      /* taper: tanh saturation, bounded < 1 */
+      /* saturator: tanh saturation, bounded < 1 */
       vL = Math.tanh(g * xL);
       vR = Math.tanh(g * xR);
     } else if (mo === 1) {

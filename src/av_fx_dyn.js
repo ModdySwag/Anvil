@@ -22,7 +22,7 @@
    - Compressor (feed-forward; stereo-linked peak detector):
        fx.dyn.comp.thresh -40..0 dBFS (default 0) · ratio 1..20 (default 1)
        att 0.001..0.3 s · rel 0.05..1 s · makeup 0..24 dB · soft knee 6 dB
-       detector: peak follower of max(|L|,|R|) with 1 ms attack smoothing (PINNED) and 50 ms
+       detector: peak follower of max(|L|,|R|) with 1 ms attack smoothing (PINNED) and 100 ms
        decay; gain computer in dB (Reiss soft-knee form); gain smoothed by att/rel one-poles.
    - Limiter (stereo-linked, TRUE 3 ms lookahead):
        fx.dyn.lim.ceiling -6..0 dBFS (default 0)
@@ -32,8 +32,8 @@
        sample is bounded by the ceiling up to the smoothing residual (<= ~0.02 dB measured).
    - Master soft-clip safety, ALWAYS ON as the last wet stage (no param disables it; the
        module-wide on/mix<=0 null law still passes the dry signal through bit-identically):
-       |x| <= 0.7 exact passthrough; above: sign*(0.7 + 0.3*tanh((|x|-0.7)/0.3)), asymptote
-       +-1.0 (0 dBFS). Kink-free (value + slope continuous at 0.7).
+       |x| <= 0.85 exact passthrough; above: sign*(0.85 + 0.15*tanh((|x|-0.85)/0.15)),
+       asymptote +-1.0 (0 dBFS). Kink-free (value + slope continuous at 0.85).
 
    MIX / BYPASS LAW (section 2.1/2.2): process() writes the WET signal into st.oL/st.oR; the
    parent computes out = dry*(1-mix) + wet*mix. When `on` is 0 or `mix` <= 0 the module writes
@@ -57,7 +57,7 @@ const AVFXDYN = (function () {
   const EQ_LO_F = 120, EQ_MID_F = 1000, EQ_HI_F = 8000;
 
   /* compressor detector (pinned 1 ms attack smoothing) + knee */
-  const DET_ATT_S = 0.001, DET_REL_S = 0.05;
+  const DET_ATT_S = 0.001, DET_REL_S = 0.1;
   const KNEE_DB = 6;
 
   /* limiter */
@@ -68,7 +68,7 @@ const AVFXDYN = (function () {
   const LK_REL_S = 0.12;          /* gain release (120 ms) */
 
   /* soft-clip */
-  const SC_KNEE = 0.7, SC_SPAN = 0.3;
+  const SC_KNEE = 0.85, SC_SPAN = 0.15;
 
   const MAX_X = 1e6;              /* entry guard: |x| beyond this (or non-finite) -> 0 */
 

@@ -7,8 +7,8 @@
    top-level name, self-registration at load, guarded so a build without registerFx still loads.
 
    LAWS (carried from P1/P2, do not drift):
-   - worklet-safe: strict mode, no page/global-scope reach-ins (no window/document/location/
-     Math.random/eval), ONE top-level name (AVFXMOD).
+   - worklet-safe: strict mode, no page/global-scope reach-ins of any kind (this text runs
+     verbatim inside the audio scope, where none of them exist), ONE top-level name (AVFXMOD).
    - alloc-free render: the delay lines and stage arrays are allocated in createState() only;
      process() writes scalars into the preallocated state, never objects/arrays/closures.
    - no NaN: setParam rejects non-finite values; feedback is hard-bounded to +-0.95 (< 1 loop
@@ -17,11 +17,13 @@
 
    INTERFACE (pinned by the wave contract):
      VERSION = "p3.0" · PREFIX = "mod"
-     createState() -> st        allocates the delay lines + phaser stage arrays (ONLY allocation)
-     reset(st)                  zeroes lines/states/LFO phase, snaps coefficients
-     bindEngine(st, eng)        optional parent hook; stores st.eng backref (may be null)
-     setParam(st, path, v)      handles "fx.mod.*" only; true on accept, false otherwise
-     process(st, xL, xR)        ONE stereo sample; result in st.oL / st.oR (no return value)
+     createState(opts) -> st     allocates delay lines + phaser stage arrays (ONLY allocation);
+                                 opts.sampleRate (or opts.sr) picks the rate, default 48000
+     reset(st)                   zeroes lines/states/LFO phase, snaps coefficients
+     bindEngine(st, eng)         optional parent hook; stores st.eng and re-tunes to eng.sr when
+                                 it differs from the create default (setup-time only)
+     setParam(st, path, v)       handles "fx.mod.*" only; true on accept, false otherwise
+     process(st, xL, xR)         ONE stereo sample; result in st.oL / st.oR (no return value)
 
    OUTPUT CONVENTION (module-side final mix, section 2.2 "module-side responsibility"):
      st.oL / st.oR carry the module's FINAL output = dry*(1-mix) + wet*mix, computed HERE (wet =
@@ -70,27 +72,44 @@ const AVFXMOD = (function () {
 
   function cl(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
 
+  /* (re)allocate for a sample rate: called from createState, and from bindEngine when the parent
+     engine's rate differs from the create default (setup-time only, never mid-render; the ONLY
+     allocation point of this module) */
+  function retune(st, sr) {
+    st.sr = sr;
+    st.cap = Math.ceil(sr * CAP_S) + 8;
+    st.lineL = new Float64Array(st.cap);
+    st.lineR = new Float64Array(st.cap);
+    st.w = 0;
+    st.ph = 0;
+    st.phInc = st.rate / sr;
+    st.yL = 0; st.yR = 0; st.fL = 0; st.fR = 0;
+    st.ctrl = 0;
+    st.oL = 0; st.oR = 0;
+    phCoeffs(st);
+  }
+
   function createState(opts) {
     const o = (opts && typeof opts === "object") ? opts : {};
     let sr = Number(o.sampleRate);
+    if (!isFinite(sr) || sr <= 0) sr = Number(o.sr);          /* parent may pass either key */
     if (!isFinite(sr) || sr <= 0) sr = 48000;
-    const cap = Math.ceil(sr * CAP_S) + 8;
     const st = {
-      sr: sr, cap: cap,
-      lineL: new Float64Array(cap), lineR: new Float64Array(cap),
+      sr: 0, cap: 0,
+      lineL: null, lineR: null,
       w: 0,
       pL: new Float64Array(8), pR: new Float64Array(8),   /* phaser stage states (max 8) */
       yL: 0, yR: 0,                                       /* phaser feedback store */
       fL: 0, fR: 0,                                       /* flanger feedback store */
       aL: 0, aR: 0,                                       /* phaser coefficients (current) */
       ctrl: 0,
-      ph: 0, phInc: 0.6 / sr,
+      ph: 0, phInc: 0,
       /* params */
       mode: 0, rate: 0.6, depth: 0.5, fb: 0, n: 6, on: 0, mix: 0.5,
       oL: 0, oR: 0,
       eng: null,
     };
-    phCoeffs(st);                                       /* seed both coefficients */
+    retune(st, sr);
     return st;
   }
 
@@ -123,7 +142,14 @@ const AVFXMOD = (function () {
   }
 
   function bindEngine(st, eng) {
-    if (st) st.eng = eng || null;
+    if (!st) return false;
+    st.eng = eng || null;
+    /* parent binds right after createState, before any render: re-tune to the engine's true rate
+       when it differs from the create default (setup-time allocation only) */
+    if (eng && isFinite(eng.sr) && eng.sr > 0 && eng.sr !== st.sr) {
+      retune(st, eng.sr);
+      st.phInc = st.rate / st.sr;
+    }
     return true;
   }
 

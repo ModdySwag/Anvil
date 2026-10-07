@@ -5,8 +5,8 @@
    top-level name, self-registration at load, guarded so a build without registerFx still loads.
 
    LAWS (carried from P1/P2, do not drift):
-   - worklet-safe: strict mode, no page/global-scope reach-ins (no window/document/location/
-     Math.random/eval), ONE top-level name (AVFXDELAY).
+   - worklet-safe: strict mode, no page/global-scope reach-ins of any kind (this text runs
+     verbatim inside the audio scope, where none of them exist), ONE top-level name (AVFXDELAY).
    - alloc-free render: every buffer is allocated in createState() only; process() writes
      scalars into the preallocated state and never creates objects/arrays/strings/closures.
    - no NaN: setParam rejects non-finite values; every per-sample op is on finite data; the
@@ -15,11 +15,13 @@
 
    INTERFACE (pinned by the wave contract):
      VERSION = "p3.0" · PREFIX = "delay"
-     createState() -> st        allocates the two delay lines (the ONLY allocation point)
-     reset(st)                  zeroes lines/states, snaps the smoothed delay to target
-     bindEngine(st, eng)        optional parent hook; stores st.eng backref (may be null)
-     setParam(st, path, v)      handles "fx.delay.*" only; true on accept, false otherwise
-     process(st, xL, xR)        ONE stereo sample; result in st.oL / st.oR (no return value)
+     createState(opts) -> st     allocates the two delay lines (the ONLY allocation point);
+                                 opts.sampleRate (or opts.sr) picks the rate, default 48000
+     reset(st)                   zeroes lines/states, snaps the smoothed delay to target
+     bindEngine(st, eng)         optional parent hook; stores st.eng and re-tunes to eng.sr when
+                                 it differs from the create default (setup-time only)
+     setParam(st, path, v)       handles "fx.delay.*" only; true on accept, false otherwise
+     process(st, xL, xR)         ONE stereo sample; result in st.oL / st.oR (no return value)
 
    OUTPUT CONVENTION (module-side final mix, section 2.2 "module-side responsibility"):
      st.oL / st.oR carry the module's FINAL output = dry*(1-mix) + wet*mix, computed HERE from
@@ -79,22 +81,40 @@ const AVFXDELAY = (function () {
     st.tgtR = r;
   }
 
+  /* (re)allocate everything for a sample rate: called from createState and from bindEngine when
+     the parent's engine rate differs from the create default (setup-time only, never mid-render;
+     the ONLY allocation point of this module) */
+  function retune(st, sr) {
+    st.sr = sr;
+    st.cap = Math.ceil(sr * (T_MAX * (1 + SPREAD_MAX) + 0.05)) + 8;
+    st.maxD = st.cap - 4;
+    st.lineL = new Float64Array(st.cap);
+    st.lineR = new Float64Array(st.cap);
+    st.sl = 1 - Math.exp(-1 / (SMOOTH_S * sr));
+    st.duckAtt = 1 - Math.exp(-1 / (DUCK_ATT_S * sr));
+    st.duckRel = 1 - Math.exp(-1 / (DUCK_REL_S * sr));
+    st.w = 0;
+    st.apL = 0; st.apR = 0;
+    st.duckEnv = 0;
+    st.oL = 0; st.oR = 0;
+    recompute(st);
+    st.dL = st.tgtL;
+    st.dR = st.tgtR;
+  }
+
   function createState(opts) {
     const o = (opts && typeof opts === "object") ? opts : {};
     let sr = Number(o.sampleRate);
+    if (!isFinite(sr) || sr <= 0) sr = Number(o.sr);          /* parent may pass either key */
     if (!isFinite(sr) || sr <= 0) sr = 48000;
-    const cap = Math.ceil(sr * (T_MAX * (1 + SPREAD_MAX) + 0.05)) + 8;
     const st = {
-      sr: sr, cap: cap, maxD: cap - 4,
-      lineL: new Float64Array(cap), lineR: new Float64Array(cap),
+      sr: 0, cap: 0, maxD: 0,
+      lineL: null, lineR: null,
       w: 0,
       apL: 0, apR: 0,               /* allpass interpolation states (one per channel) */
       dL: 0, dR: 0,                 /* current (glided) delays, samples */
       tgtL: 0, tgtR: 0,             /* targets, samples */
-      sl: 1 - Math.exp(-1 / (SMOOTH_S * sr)),
-      duckAtt: 1 - Math.exp(-1 / (DUCK_ATT_S * sr)),
-      duckRel: 1 - Math.exp(-1 / (DUCK_REL_S * sr)),
-      duckEnv: 0,
+      sl: 0, duckAtt: 0, duckRel: 0, duckEnv: 0,
       /* params */
       time: 0.3, spread: 0.15, fb: 0.4, pp: 0.5, duck: 0,
       div: 0, bpm: 120, on: 0, mix: 0.35,
@@ -102,9 +122,7 @@ const AVFXDELAY = (function () {
       oL: 0, oR: 0,
       eng: null,
     };
-    recompute(st);
-    st.dL = st.tgtL;
-    st.dR = st.tgtR;
+    retune(st, sr);
     return st;
   }
 
@@ -122,7 +140,11 @@ const AVFXDELAY = (function () {
   }
 
   function bindEngine(st, eng) {
-    if (st) st.eng = eng || null;
+    if (!st) return false;
+    st.eng = eng || null;
+    /* the parent binds right after createState, before any render: re-tune to the engine's true
+       rate when it differs from the create default (setup-time allocation only) */
+    if (eng && isFinite(eng.sr) && eng.sr > 0 && eng.sr !== st.sr) retune(st, eng.sr);
     return true;
   }
 

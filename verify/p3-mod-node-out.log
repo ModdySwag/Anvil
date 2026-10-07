@@ -1,0 +1,91 @@
+PASS  syntax.node-check  — exit 0
+PASS  pins.sources  — env1,env2,lfo1,vel,key,rand,macro1,macro2,macro3,macro4,macro5,macro6,macro7,macro8
+PASS  pins.sources.count14  — §4 text says (17); literal list = 14 — flagged as deviation
+PASS  pins.targets  — cutoff,reso,pitch,osc1.level,osc2.level,pan
+PASS  pins.curves  — linear,exp,S
+PASS  pins.srcIndex  — env1=0 rand=5 macro1=6 macro8=13 unknown=-1
+PASS  pins.dstIndex  — cutoff=0 osc1.level=3 pan=5 unknown=-1
+PASS  defaults.snapShape  — macros=8 slots=0
+PASS  defaults.macroNames  — MACRO 1,MACRO 2,MACRO 3,MACRO 4,MACRO 5,MACRO 6,MACRO 7,MACRO 8
+PASS  defaults.macroValues  — all 0
+PASS  payload.empty.types  — [object Float64Array]
+PASS  payload.empty.lengths  — 8x8B / 128x8B
+PASS  payload.empty.zeros  — all zero
+PASS  add.slot0  — env1->pitch
+PASS  add.slot1  — macro8->pan
+PASS  add.slot2  — rand->osc1.level
+PASS  add.refuseBadSrc  — unknown src refused
+PASS  add.refuseBadDst  — unknown dst refused
+PASS  payload.exactHead  — [0,2,0.5,1,13,5,-0.25,2,5,3,1,0]
+PASS  payload.paddingZero  — slots[12..127] all zero
+PASS  add.clampedAccepts  — out-of-range numbers accepted, clamped in the model
+PASS  payload.clampedValues  — [3,1,1,2,4,0,-1,0] (amt 5->1, curve 9->2, amt -9->-1, curve -3->0)
+PASS  payload.macroValue  — macro1=0.75
+PASS  remove.resequence  — [0,2,0.5,1,13,5,-0.25,2,3,1,1,2,4,0,-1,0]
+PASS  remove.refuseOOR  — out-of-range refused
+PASS  roundtrip.loadTrue  — load(snap) ok
+PASS  roundtrip.deepEqual  — snap -> load -> snap identical
+PASS  roundtrip.slots4  — 4 slots live
+PASS  roundtrip.snapshotDetached  — external mutation of the snapshot ignored
+PASS  roundtrip.payloadFresh  — fresh arrays per call
+PASS  load.badTrue  — sanitising load accepts the object
+PASS  load.macroClamp  — value clamped, name capped/stripped
+PASS  load.macroMissDefault  — missing entries -> defaults
+PASS  load.slotsSanitised  — [{"src":"env1","dst":"cutoff","amt":1,"curve":2},{"src":"vel","dst":"cutoff","amt":0,"curve":0},{"src":"env2","dst":"pan","amt":-0.5,"curve":0}] (bogus src dropped)
+PASS  load.cap32  — 40 -> 32
+PASS  load.cap32.payloadTail  — slot 31 encoded, no slot 32
+PASS  load.rejectNonObject  — non-objects / shapeless refused
+PASS  init.hostTrue  — mount with host stub
+PASS  init.boundOnce  — re-init safe, delegation bound once
+PASS  init.htmlBody  — host innerHTML carries the card
+PASS  init.macros8  — 8 macro knobs
+PASS  init.emptyState  — empty state rendered at 0 slots
+PASS  interact.add  — {"src":"env1","dst":"cutoff","amt":0.5,"curve":0}
+PASS  render.slotsBox  — rows re-rendered into .av-mod-slots
+PASS  render.count  — 1 / 32
+PASS  interact.select  — dst change -> pan
+PASS  interact.slider  — amt input -> 0.75
+PASS  interact.remove  — delete button removes the row
+PASS  cap.addFalse  — 33rd add refused
+PASS  cap.buttonDisabled  — add button disabled at 32
+PASS  load.repaintMacros  — macro row repainted from load
+PASS  load.mirror  — avParams mirror updated
+PASS  funnel.hookTrue  — one-shot wrap installed
+PASS  funnel.commit  — macro3 -> 0.5 in model + payload
+PASS  funnel.forwarded  — original funnel still called (path passthrough)
+PASS  funnel.passthrough  — non-mod path untouched
+PASS  funnel.badPathsIgnored  — macro9 / macro1.5 ignored
+PASS  funnel.idempotent  — second ensureHooks does not double-wrap
+PASS  funnel.knobCommit  — avKnobCommit reached model + mirror
+PASS  fallback.hook  — event belt bound (no avApplyParam)
+PASS  fallback.bound  — one 'av-param' listener
+PASS  fallback.hit  — macro5 -> 0.8, non-mod ignored
+PASS  fallback.hitClamped  — clamped to 1
+PASS  ui.secs  — MACROS + MATRIX sections
+PASS  ui.macroKnobAttrs  — knob attrs
+PASS  ui.srcOptions  — env1,env2,lfo1,vel,key,rand,macro1,macro2,macro3,macro4,macro5,macro6,macro7,macro8
+PASS  ui.dstOptions  — cutoff,reso,pitch,osc1.level,osc2.level,pan
+PASS  ui.dstSelected  — current target pre-selected
+PASS  ui.curveOptions  — 0,1,2 + S selected
+PASS  ui.slider  — amt slider attrs
+PASS  ui.amtReadout  — +50% readout
+PASS  ui.remove  — remove button
+PASS  ui.actions  — add + count (empty)
+PASS  ui.rowIndex  — row indices
+PASS  ui.escaped  — no raw '<' leakage from values
+PASS  init.noHost  — false without #av-mod-host
+PASS  init.throwingDoc  — false, no throw when getElementById throws (belt)
+PASS  init.noKnobParts  — false when av_knob.js parts absent
+PASS  classes.list  — 19 classes
+PASS  classes.unique  — no dupes
+PASS  post.noFacade  — false + no throw when the facade is absent
+PASS  post.facade  — avEngineMod called
+PASS  post.payloadShape  — 8/128
+PASS  post.payloadExact  — sent arrays == avModPayload()
+PASS  post.payloadLayout  — 0,2,0.5,1,13,5,-0.25,2
+PASS  post.onEveryChange  — 5 posts for 5 changes
+PASS  replay.scheduled  — one replay post after ensure resolves
+PASS  replay.readyShortcut  — immediate post when __avEngine.ready
+PASS  replay.noFacade  — false without the facade
+
+89 pass · 0 fail

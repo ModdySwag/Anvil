@@ -38,7 +38,8 @@
 //      the pinned semantics; the worklet param protocol has no ack) with an exact avParams
 //      mirror echo, and the control repaints from the mirror; then the old value is restored.
 //      The §3 paths NOT mounted in the v1 rack (predelay · spread · duck · bpm · stages ·
-//      downsample · eq.* · comp.att/rel/makeup) are swept the same way for delivery acceptance.
+//      down · eqLo/eqMid/eqHi · comp.att/rel/makeup) are swept the same way for delivery
+//      acceptance.
 //   6. zero page errors · screenshot renders/p3-fx-suite.png (the rack card, scale 2) ·
 //      freeze sha256 before === after.
 import { spawn, execSync } from 'node:child_process';
@@ -182,11 +183,12 @@ const ROUNDTRIP_FN = `window.__fxRoundTrip = async function () {
         if (!(typeof moved === 'number' && (up ? moved > old : moved < old))) { out.err = 'wheel did not move the mirror through the bound handler'; rows.push(out); continue; }
         let v = (i % 2) ? max : min;
         if (v === old) v = (old === max ? min : max);
-        let rv = false;
-        try { rv = avApplyParam(e.path, v) === true; } catch (err) { rv = false; }
+        let rvRaw = null;
+        try { rvRaw = avApplyParam(e.path, v); } catch (err) { rvRaw = 'threw: ' + ((err && err.message) || err); }
+        const rv = rvRaw === true;
         const echo = avParams[e.path] === v;
-        out.accept = { v: v, returned: rv, echo: echo };
-        if (!rv || !echo) { out.err = 'funnel rejected (returned=' + rv + ' echo=' + echo + ')'; rows.push(out); continue; }
+        out.accept = { v: v, returned: rvRaw, echo: echo };
+        if (!rv || !echo) { out.err = 'funnel rejected (returned=' + JSON.stringify(rvRaw) + ' echo=' + echo + ')'; rows.push(out); continue; }
         try { avApplyParam(e.path, old); } catch (err) { }
         avFxSync();
         out.restored = avParams[e.path] === old;
@@ -198,13 +200,14 @@ const ROUNDTRIP_FN = `window.__fxRoundTrip = async function () {
       }
       if (e.kind === 'toggle') {
         const v = old ? 0 : 1;
-        let rv = false;
-        try { rv = avApplyParam(e.path, v) === true; } catch (err) { rv = false; }
+        let rvRaw = null;
+        try { rvRaw = avApplyParam(e.path, v); } catch (err) { rvRaw = 'threw: ' + ((err && err.message) || err); }
+        const rv = rvRaw === true;
         avFxSync();
         const pressed = el.getAttribute('aria-pressed') === (v ? 'true' : 'false');
         const cls = el.classList.contains('on') === !!v;
         const echo = avParams[e.path] === v;
-        out.accept = { v: v, returned: rv, echo: echo, pressed: pressed, cls: cls };
+        out.accept = { v: v, returned: rvRaw, echo: echo, pressed: pressed, cls: cls };
         try { avApplyParam(e.path, old); avFxSync(); } catch (err) { }
         out.restored = avParams[e.path] === old;
         out.ok = rv && echo && pressed && cls && out.restored;
@@ -220,9 +223,10 @@ const ROUNDTRIP_FN = `window.__fxRoundTrip = async function () {
       el.dispatchEvent(new Event('change', { bubbles: true }));
       await sleep(30);
       const echo = avParams[e.path] === v;
-      let rv = false;
-      try { rv = avApplyParam(e.path, v) === true; } catch (err) { rv = false; }
-      out.accept = { v: v, echo: echo, returned: rv };
+      let rvRaw = null;
+      try { rvRaw = avApplyParam(e.path, v); } catch (err) { rvRaw = 'threw: ' + ((err && err.message) || err); }
+      const rv = rvRaw === true;
+      out.accept = { v: v, echo: echo, returned: rvRaw };
       el.value = old;
       el.dispatchEvent(new Event('change', { bubbles: true }));
       await sleep(30);
@@ -247,11 +251,12 @@ const SWEEP_FN = `window.__fxSweep = async function (list) {
     const p = list[i].path, v = list[i].v;
     const had = Object.prototype.hasOwnProperty.call(avParams, p);
     const old = avParams[p];
-    let rv = false;
-    try { rv = avApplyParam(p, v) === true; } catch (e) { rv = false; }
+    let rvRaw = null;
+    try { rvRaw = avApplyParam(p, v); } catch (e) { rvRaw = 'threw: ' + ((e && e.message) || e); }
+    const rv = rvRaw === true;
     const echo = avParams[p] === v;
     try { if (had) avParams[p] = old; else delete avParams[p]; } catch (e) { }
-    rows.push({ path: p, returned: rv, echo: echo, ok: rv && echo });
+    rows.push({ path: p, returned: rvRaw, echo: echo, ok: rv && echo });
   }
   const bad = rows.filter((r) => !r.ok).map((r) => r.path);
   return { n: rows.length, okN: rows.length - bad.length, bad: bad, rows: rows };
@@ -340,10 +345,10 @@ const SWEEP = [
   { path: 'fx.delay.duck', v: 0.2 },
   { path: 'fx.delay.bpm', v: 120 },
   { path: 'fx.mod.stages', v: 6 },
-  { path: 'fx.drive.downsample', v: 2 },
-  { path: 'fx.dyn.eq.lo', v: -3 },
-  { path: 'fx.dyn.eq.mid', v: 0 },
-  { path: 'fx.dyn.eq.hi', v: 3 },
+  { path: 'fx.drive.down', v: 2 },
+  { path: 'fx.dyn.eqLo', v: -3 },
+  { path: 'fx.dyn.eqMid', v: 0 },
+  { path: 'fx.dyn.eqHi', v: 3 },
   { path: 'fx.dyn.comp.att', v: 0.01 },
   { path: 'fx.dyn.comp.rel', v: 0.2 },
   { path: 'fx.dyn.comp.makeup', v: 0 },
@@ -392,15 +397,6 @@ async function main() {
       return { error: e };
     }
     return { value: r.result?.value };
-  };
-  const until = async (expr, ms = 3000, step = 100) => {
-    const t0 = Date.now();
-    for (;;) {
-      const r = await ev(expr);
-      if (r.value === true) return true;
-      if (Date.now() - t0 > ms) return false;
-      await sleep(step);
-    }
   };
   const mouse = (type, x, y, extra = {}) => send('Input.dispatchMouseEvent', { type, x: Math.round(x), y: Math.round(y), button: 'left', buttons: type === 'mouseReleased' ? 0 : 1, clickCount: 1, ...extra });
   const drag = async (from, deltas, gap = 16) => {
@@ -638,7 +634,7 @@ async function main() {
   if (!sw) {
     check('§3 path sweep: unmounted paths accepted for delivery (12/12)', false, JSON.stringify(swR.error || 'no value'));
   } else {
-    check(`§3 path sweep: unmounted module paths accepted for delivery (${SWEEP.length}/${SWEEP.length} — predelay · spread · duck · bpm · stages · downsample · eq.* · comp.att/rel/makeup)`,
+    check(`§3 path sweep: unmounted module paths accepted for delivery (${SWEEP.length}/${SWEEP.length} — predelay · spread · duck · bpm · stages · down · eqLo/eqMid/eqHi · comp.att/rel/makeup)`,
       sw.n === SWEEP.length && sw.okN === SWEEP.length && sw.bad.length === 0,
       sw.bad.length ? 'bad: ' + sw.bad.join(', ') : (sw.n + '/' + sw.okN + ' ok'));
   }

@@ -1,0 +1,184 @@
+
+== 1. registration, footer, laws (grain + sampler) ==
+  ok   grain registers kind 4  -- id=4
+  ok   grain footer passes the module
+  ok   sampler registers kind 5  -- id=5
+  ok   sampler footer passes the module
+  ok   grain.VERSION = p3.0  -- p3.0
+  ok   grain.PREFIX = grain
+  ok   grain exports initEngineK
+  ok   grain exports initVoiceK
+  ok   grain exports initVoice
+  ok   grain exports stepVoice
+  ok   grain exports isVoiceDone
+  ok   grain exports setParam
+  ok   sampler.VERSION = p3.0  -- p3.0
+  ok   sampler.PREFIX = sampler
+  ok   sampler exports initEngineK
+  ok   sampler exports initVoiceK
+  ok   sampler exports initVoice
+  ok   sampler exports stepVoice
+  ok   sampler exports isVoiceDone
+  ok   sampler exports setParam
+  ok   grain laws: exactly ONE top-level decl  -- ["AVGRAIN"]
+  ok   grain laws: strict mode before the name
+  ok   grain laws: no page-scope/worker tokens  -- clean
+  ok   grain laws: all 23 voice fields in initVoiceK  -- complete
+  ok   grain laws: stepVoice has no `new`/push/closure tokens
+  ok   grain footer is the guarded one-liner
+  ok   sampler laws: exactly ONE top-level decl  -- ["AVSAMPLER"]
+  ok   sampler laws: strict mode before the name
+  ok   sampler laws: no page-scope/worker tokens  -- clean
+  ok   sampler laws: all 21 voice fields in initVoiceK  -- complete
+  ok   sampler laws: stepVoice has no `new`/push/closure tokens
+  ok   sampler footer is the guarded one-liner
+  ok   modules load quietly with no AVDSP / with a bare AVDSP  -- no throw
+
+== 2. grain-start spacing vs density (pin: spacing = size/density) ==
+  density  size(s)  period(ms)   starts  mean spacing(ms)  max dev%   verdict
+  ok   spacing d=10 size=0.125  -- P=600.00 mean=600.000 maxDev=0.0000% n=160 (exact row)
+      10    0.125      12.50     160           12.500    0.0000   PASS
+  ok   spacing d=10 integer period is EXACT (every diff === 600)
+  ok   spacing d=5 size=0.0625  -- P=600.00 mean=600.000 maxDev=0.0000% n=160 (exact row)
+       5   0.0625      12.50     160           12.500    0.0000   PASS
+  ok   spacing d=5 integer period is EXACT (every diff === 600)
+  ok   spacing d=10 size=0.15625  -- P=750.00 mean=750.000 maxDev=0.0000% n=128 (exact row)
+      10  0.15625      15.63     128           15.625    0.0000   PASS
+  ok   spacing d=10 integer period is EXACT (every diff === 750)
+  ok   spacing d=3.5 size=0.05  -- P=685.71 mean=685.719 maxDev=0.1042% n=140
+     3.5     0.05      14.29     140           14.286    0.1042   PASS
+  ok   spacing d=16 size=0.01  -- P=30.00 mean=30.000 maxDev=0.0000% n=3200
+      16     0.01       0.63    3200            0.625    0.0000   PASS
+
+== 3. grain budget (hard 24, oldest-refusal) ==
+  ok   steady (0.2s x16): live counter == recount every sample  -- badSamples=0
+  ok   steady (0.2s x16): max live within [15,17], never >24  -- max=16
+  ok   steady: no evictions below the budget  -- evict=0
+  steady row: maxLive=16 spawns=160 evict=0
+  ok   forced: live counter == recount every sample (both phases)  -- badSamples=0
+  ok   forced: budget eviction fires (oldest-refusal), evict>0  -- evict=15
+  ok   forced: max live capped at the 24 budget  -- max=24
+  ok   forced: the cap was actually exercised (max live reaches ~24)  -- max=24
+  forced row: maxLive phase1=16 phase2=24 evict=15 spawns=3280
+
+== 4. grain NaN cross, registry edge cases, release drain ==
+  ok   NaN cross: 18 runs (6 param combos x 3 srs) all finite  -- bad=0
+  ok   registry: absent eng.samples -> silence, no throw, no grains
+  ok   registry: slot injection mid-note starts the cloud  -- spawns=20 nonzero=23799
+  ok   registry: malformed slot -> no throw
+  ok   registry: slot replacement mid-grain is safe (refs latched)
+  ok   registry: missing kext -> silence, no throw
+  ok   release: voice is live before release  -- live=15
+  ok   release: isVoiceDone NEVER true for an active voice
+  ok   release: spawns stop at release  -- spawns 80 -> 80
+  ok   release: grains drain, done within grain.size + slack  -- doneAt=8999 (187.5 ms)
+  ok   release: done implies live==0  -- live=0
+  ok   steal: no spawns while state 3  -- spawns 20 -> 20
+  ok   steal: isVoiceDone still false in state 3
+  ok   steal: re-init resets the cloud
+  ok   steal: the retriggered note spawns again
+
+== 5. grain determinism pair + setParam semantics ==
+  ok   determinism: same seed -> bit-identical pair (119166ac)
+  ok   determinism: different seed -> differs
+  ok   setParam: all 8 grain.* paths accept + clamp
+  ok   setParam: unknown path false
+  ok   setParam: NaN false
+  ok   setParam: numeric string accepted (facade sends strings too)
+  ok   setParam: builds kext if absent
+
+== 6. grain CPU indicative (grains/sec + ms per 2 s of audio) ==
+  16-17 concurrent (max overlap)     size=0.2 den=16  -> 80.0 grains/s · 18.54 ms per 2 s (24.72 us/128-frame quantum)
+  ok   CPU 16-17 concurrent (max overlap): 2 s of audio renders in sane time
+  1600 grains/s (min size)           size=0.01 den=16  -> 1600.0 grains/s · 19.18 ms per 2 s (25.58 us/128-frame quantum)
+  ok   CPU 1600 grains/s (min size): 2 s of audio renders in sane time
+
+== 7. sampler rate math (exact) ==
+  ok   rate: +2 st == 2^(2/12) exactly  -- 1.1224620483 vs 1.1224620483
+  ok   rate: +12 st == 2.0 exactly
+  ok   rate: -12 st == 0.5 exactly
+  ok   rate: buffer-rate compensation exact (44100/48000 x 2^(2/12))  -- 1.0312620069
+  ok   rate: tune +2 st multiplies by 2^(2/12)
+  ok   rate: pitchGen tick retunes live (60 -> 72 gives x2)  -- 2.000000 vs 2.000000
+
+== 8. sampler one-shot end + loop wrap (+-1 sample) ==
+  ok   one-shot: all 100 buffer frames play, value-exact  -- last out[99]=0.10000000149011612 ramp[99]=0.10000000149011612
+  ok   one-shot: silence immediately after the buffer end  -- out[100..104]=0,0,0,0,0
+  ok   one-shot: ended flag set, pos at the end  -- svEnd=1 pos=100
+  ok   one-shot: isVoiceDone false while active (state law)
+  ok   one-shot: released + ended -> done
+  ok   one-shot frac: inc is 0.5  -- 0.5
+  ok   one-shot frac: first two outputs interpolate  -- o1=0.001500000071246177 want=0.001500000071246177
+  ok   one-shot frac: head runs to the end and stops  -- svEnd=1
+  ok   loop: points resolved to [20, 40)  -- [20,40)
+  ok   loop: every output sample reads within [lpS,lpE) at the exact expected frame
+  ok   loop: wrap count exact after 260 samples  -- wraps=12 want=12
+  ok   loop: wrap lands on lpS exactly (within +-1 sample)
+  ok   loop: lpE <= lpS disables looping (no NaN path)
+  ok   loop: hostile inc on a 1-frame loop wraps exactly (finite, no stall)  -- pos=20
+
+== 9. sampler zone table (Float64Array(40) layout) ==
+  ok   zones: selection table (11 notes) matches nearest-zone law
+  ok   zones: zone root drives the rate (42 vs root 40 -> x2^(2/12))  -- 1.12246205
+  ok   zones: zone vol scales the voice (const 1.0 source -> 0.5)  -- y=0.5
+  ok   zones: absent table -> params path (buf 2, no zone)  -- inc=1.18920712
+  ok   zones: all-zero table -> params path
+  ok   zones: a NaN zone row is skipped, the next valid one still selects
+  ok   zones: short table read defensively (no throw)
+  ok   zones: bogus table object read defensively (no throw)
+
+== 10. sampler gain laws, release, determinism, setParam ==
+  ok   gain: vel=1, vol=1 -> 1.0 (law 0.3+0.7*1)  -- 1.00000000
+  ok   gain: vel=0.5 -> 0.65 (law 0.3+0.7*0.5)  -- 0.65000000
+  ok   gain: vel=0.05 -> 0.335 (law floor)  -- 0.33500000
+  ok   gain: sampler.vol scales linearly (0.5 -> half)
+  ok   release: held output full, released output decays  -- held=1.000 rel=0.000
+  ok   release: done within ~40 ms of audio  -- doneAt=1919 (40.0 ms)
+  ok   determinism: sampler pair bit-identical (8873e14b)
+  ok   determinism: different root -> differs
+  ok   NaN cross: 12 sampler runs all finite  -- bad=0
+  ok   stereo: mono return is the channel fold 0.5*(L+R)  -- y=0.75 want=0.75
+  ok   stereo: svOutL/R carry the raw pair
+  ok   defensive: no slot -> silence, no throw
+  ok   defensive: done immediately once released
+  ok   defensive: never done while active
+  ok   defensive: slot n clamps playback (last nonzero at frame 9)  -- lastNZ=9
+  ok   setParam: all 7 sampler.* paths accept + clamp
+  ok   setParam: unknown path false
+  ok   setParam: NaN false
+  ok   setParam: boolean loop accepted
+
+== 11. av_sample.js append: avSampleSendToEngine ==
+  ok   append loads; window.__avSample published
+  ok   append: existing API intact (get/add/remove/snap/max/version)
+  ok   append: sent table present
+  ok   append: snap() still JSON-safe (count 0)
+  ok   send: resolves true with the facade present
+  ok   send: posts SLOT 0 (sN-1 mod 4), name, rate  -- {"id":0,"name":"kick","rate":48000}
+  ok   send: ch1 is a plain Float32Array of frame length
+  ok   send: ch2 null for a mono entry
+  ok   send: data is a COPY (source AudioBuffer never detached/shared)
+  ok   send: slot record in store.sent
+  ok   send: stereo entry -> ch1 + ch2 both Float32Array  -- slot=1
+  ok   send: slot 1 for s2
+  ok   send: s5 recycles slot 0 ((N-1) mod 4)
+  ok   send: explicit slot arg wins
+  ok   send: explicit slot clamps to 3
+  ok   send: >60 s entry clamps to 60 s per channel  -- frames=6000
+  ok   send: unknown id -> false
+  ok   send: entry without buffer -> false
+  ok   send: facade refused -> false
+  ok   send: facade threw -> false + lastError
+  ok   send: promise facade true -> true
+  ok   send: promise facade false -> false
+  ok   send: promise facade reject -> false
+  ok   send: facade ABSENT -> resolves false honestly
+  ok   send: null id -> false, never a throw
+  ok   append regression: remove() still works
+
+== 12. alloc-free render (heap delta across long renders) ==
+  ok   alloc: 120k stepVoice calls (2 grain + 1 sampler) heap-flat  -- heap delta -56.4 KB (threshold 256 KB)
+  alloc row: heapUsed 5586984 -> 5529200 (-57784 bytes)
+
+== SUMMARY ==
+  checks: 146 pass, 0 fail

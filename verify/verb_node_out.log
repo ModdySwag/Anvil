@@ -1,0 +1,88 @@
+=== verb_node.mjs -- Anvil P3 FX-A reverb node harness ===
+module: C:/Users/Moddy/anvil/src/av_fx_verb.js   version=p3.0
+
+--- G1. interface + registry + setParam coverage ---
+  PASS  G1 version === "p3.0"  ::  p3.0
+  PASS  G1 PREFIX === "verb"  ::  verb
+  PASS  G1 exports createState/reset/setParam/process/bindEngine  ::  VERSION,PREFIX,createState,reset,setParam,process,bindEngine
+  PASS  G1 footer self-registers with AVDSP.registerFx("verb", MOD)  ::  err=
+  PASS  G1 every fx.verb.* path accepted (full + bare)
+  PASS  G1 unknown path / bad enum / NaN / Inf -> false, no throw
+  PASS  G1 clamps: size[-1]=0 size[5]=1 decay=1 predelay=0.15 mix=1 on=1  ::  s1=0 s2=1 d2=1 p2=0.15 m2=1 o2=1
+  PASS  G1 unbound state works (sr default 48000) and mid=plate
+
+--- G2. mix=0 / on=0 bit-identical passthrough ---
+  PASS  G2 plate    mix=0 -> oL/oR === input bitwise  ::  maxAbsDiff=0
+  PASS  G2 plate    parent-formula null (x*(1-m)+wet*m === x)
+  PASS  G2 fdn      mix=0 -> oL/oR === input bitwise  ::  maxAbsDiff=0
+  PASS  G2 fdn      parent-formula null (x*(1-m)+wet*m === x)
+  PASS  G2 freeverb mix=0 -> oL/oR === input bitwise  ::  maxAbsDiff=0
+  PASS  G2 freeverb parent-formula null (x*(1-m)+wet*m === x)
+  PASS  G2 on=0 -> passthrough bitwise
+
+--- G3. RT60 within +-30% of target (48 kHz) ---
+  PASS  plate    damp 0 target 0.5s -> RT60 0.61s (122.9% of target)
+  PASS  plate    damp 0 target 2s -> RT60 2.06s (103.2% of target)
+  PASS  plate    damp 0 target 6s -> RT60 5.84s (97.3% of target)
+  PASS  plate    damp 0.3 target 0.5s -> RT60 0.60s (119.6% of target)
+  PASS  plate    damp 0.3 target 2s -> RT60 1.94s (97.2% of target)
+  PASS  plate    damp 0.3 target 6s -> RT60 5.42s (90.3% of target)
+  PASS  fdn      damp 0 target 0.5s -> RT60 0.52s (104.7% of target)
+  PASS  fdn      damp 0 target 2s -> RT60 1.99s (99.7% of target)
+  PASS  fdn      damp 0 target 6s -> RT60 5.99s (99.8% of target)
+  PASS  fdn      damp 0.3 target 0.5s -> RT60 0.47s (93.5% of target)
+  PASS  fdn      damp 0.3 target 2s -> RT60 1.71s (85.3% of target)
+  PASS  fdn      damp 0.3 target 6s -> RT60 5.17s (86.2% of target)
+  PASS  freeverb damp 0 target 0.5s -> RT60 0.50s (100.0% of target)
+  PASS  freeverb damp 0 target 2s -> RT60 2.00s (100.1% of target)
+  PASS  freeverb damp 0 target 6s -> RT60 6.01s (100.1% of target)
+  PASS  freeverb damp 0.3 target 0.5s -> RT60 0.43s (86.8% of target)
+  PASS  freeverb damp 0.3 target 2s -> RT60 1.70s (85.0% of target)
+  PASS  freeverb damp 0.3 target 6s -> RT60 5.14s (85.7% of target)
+
+--- G4. stability + no-NaN at decay=1 (12 s, corners) ---
+  PASS  G4 plate    size=0 damp=0 finite, peak<32  ::  peakL=6.398 peakR=6.216 nonfinite=0
+  PASS  G4 plate    size=1 damp=0 finite, peak<32  ::  peakL=4.230 peakR=4.694 nonfinite=0
+  PASS  G4 plate    size=0 damp=1 finite, peak<32  ::  peakL=2.413 peakR=2.100 nonfinite=0
+  PASS  G4 plate    size=1 damp=1 finite, peak<32  ::  peakL=2.210 peakR=2.112 nonfinite=0
+  PASS  G4 fdn      size=0 damp=0 finite, peak<32  ::  peakL=9.832 peakR=10.492 nonfinite=0
+  PASS  G4 fdn      size=1 damp=0 finite, peak<32  ::  peakL=6.844 peakR=6.645 nonfinite=0
+  PASS  G4 fdn      size=0 damp=1 finite, peak<32  ::  peakL=0.505 peakR=0.469 nonfinite=0
+  PASS  G4 fdn      size=1 damp=1 finite, peak<32  ::  peakL=0.402 peakR=0.448 nonfinite=0
+  PASS  G4 freeverb size=0 damp=0 finite, peak<32  ::  peakL=1.042 peakR=1.111 nonfinite=0
+  PASS  G4 freeverb size=1 damp=0 finite, peak<32  ::  peakL=1.541 peakR=1.679 nonfinite=0
+  PASS  G4 freeverb size=0 damp=1 finite, peak<32  ::  peakL=0.313 peakR=0.327 nonfinite=0
+  PASS  G4 freeverb size=1 damp=1 finite, peak<32  ::  peakL=0.607 peakR=0.661 nonfinite=0
+
+--- G5. stereo decorrelation (mono noise in; rho = zero-lag corr of L/R) ---
+  PASS  G5 plate    |rho| < 0.9  ::  rho=-0.001
+  PASS  G5 fdn      |rho| < 0.9  ::  rho=0.041
+  PASS  G5 freeverb |rho| < 0.9  ::  rho=0.033
+
+--- G6. alloc-free render (heap-flat, gc both sides where available) ---
+  PASS  G6 plate    heap delta < 65536 B per 100x4800 frames  ::  delta=-56 B
+  PASS  G6 fdn      heap delta < 65536 B per 100x4800 frames  ::  delta=-64 B
+  PASS  G6 freeverb heap delta < 65536 B per 100x4800 frames  ::  delta=-64 B
+
+--- G7. determinism (fresh state pair, same patch/input -> bit-identical) ---
+  PASS  G7 plate    bit-identical  ::  sumAbsDiff=0
+  PASS  G7 fdn      bit-identical  ::  sumAbsDiff=0
+  PASS  G7 freeverb bit-identical  ::  sumAbsDiff=0
+
+--- G8. 44.1 kHz parity spot ---
+  PASS  G8 plate    44.1k target 2 s -> RT60  ::  1.93s (96.7%)
+  PASS  G8 fdn      44.1k target 2 s -> RT60  ::  1.71s (85.3%)
+  PASS  G8 freeverb 44.1k target 2 s -> RT60  ::  1.70s (85.2%)
+
+--- G9. reset() -> state behaves as fresh ---
+  PASS  G9 plate    post-reset render === fresh render  ::  sumAbsDiff=0
+  PASS  G9 fdn      post-reset render === fresh render  ::  sumAbsDiff=0
+  PASS  G9 freeverb post-reset render === fresh render  ::  sumAbsDiff=0
+
+--- G10. finite across a 24-corner parameter sweep ---
+  PASS  G10 108 corner renders all finite, peak<64  ::  all finite
+
+--- wet level + impulse diagnostics ---
+  plate    wet RMS (0.5-amp noise) 0.289 | impulse peak 0.084
+  fdn      wet RMS (0.5-amp noise) 0.279 | impulse peak 0.735
+  freeverb wet RMS (0.5-amp noise) 0.282 | impulse peak 0.093
