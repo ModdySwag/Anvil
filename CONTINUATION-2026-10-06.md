@@ -386,7 +386,34 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
   30.7 ms @60 ms · saw −6.46 dB/oct) + 3 demo WAVs · string ALL PASS (f0 ±0.05 %) · drum 16-slot
   gates + kits demo · ladder 44/44 (Huovilainen form, ampl→freq pull documented). Harness outputs
   + demos archived (scratch/p2 → copies in verify/ + renders/).
-- **IN FLIGHT: PERF GATE (P·1)** — bench + stress chained on 7ddfedf7 (background; results commit
-  after). P1.x base for deltas: 56734133 = offline 128 @ 47.6 %.
+- **PERF GATE (P·1) on 7ddfedf7:** bench = **128 voices @ 47.1 %** (unchanged vs P1.x 47.6 %;
+  light 64×3 stable, fat published 48; fallback spn fine) → the P2 engines add ZERO VA-path cost.
+  Stress run1 = 142 deltas total (2 verified-window: the known cold-start one + one late single
+  (cycles 20/21); 14 in uni-7 windows) vs P1.x 35–45 → fatter tail, means UNCHANGED (~1.45 ms):
+  attribution re-run (stress run2) running; records committed `fe41c51` (bench-v5-p2-full.*,
+  stress-p2-run1.log). If run2 reproduces the elevation → feeds P·2 (minBLEP optim); if clean →
+  environment (machine busier at 06:10).
 - **NEXT: P3** (FX rack ≥12 modules + mod matrix + macros + granular + sampler) per docs/05 §2.7–2.10;
   carry: minBLEP cost-optimisation (P·2), smoke-check extension for the P2 cards.
+
+## P3 wave DISPATCHED — 2026-10-07 (7 children; contract `verify/_p3_wave.md`)
+
+- Contract: `verify/_p3_wave.md` — §2 FX chain interface (registerFx, st.oL/oR, fixed chain order
+  drive→mod→delay→verb→dyn, bypass = bit-identical) · §3 module specs (verb: Dattorro plate/FDN/
+  Freeverb; delay: ping-pong/duck/bpm-div; mod: chorus/ensemble/flanger/phaser; drive: sat/fold/
+  crush; dyn: EQ+comp+limiter+soft-clip) · §4 mod matrix (8 macros, ≤32 slots, pinned wire format
+  avEngineMod → Float64Array(8) + Float64Array(32*4)) · §5 grain (KIND 4, Hann grains, budget 24,
+  buffer transfer {t:'sample'} ≤4×60 s) · §6 sampler (KIND 5, loop/root/zones {t:'zones'}) ·
+  §7 UI (av_fx rack + av_mod matrix + av_synth grain/sampler panels) + cdp_fx rig · §8 gates/laws.
+- Children — delegation `deleg_126ca06f`: sa-0 verb `av_fx_verb.js` · sa-1 delay+mod
+  `av_fx_delay.js`+`av_fx_mod.js` · sa-2 drive+dyn `av_fx_drive.js`+`av_fx_dyn.js` · sa-3 fx UI
+  `av_fx.js` + `verify/cdp_fx.mjs` · sa-4 mod matrix `av_mod.js` · sa-5 grain+sampler `av_grain.js`+
+  `av_sampler.js` + av_sample.js append · sa-6 synth panels `av_synth.js` ext. Transcripts:
+  `cache\delegation\live\deleg_126ca06f\task-{0..6}.log`.
+- On return: parent integrates per `_p3_wave.md` — registerFx chain section in av_dsp.render (post
+  mix), mod application, kinds 4/5 dispatch, facade avEngineMod/avEngineSample/avEngineZones +
+  processor branches, build.py concat (worklet source += the 5 FX modules + grain + sampler, after
+  the drum module, before voiceproc), hosts (`#av-fx-host`/`#av-mod-host`) + styles + boot calls,
+  rebuild, battery + cdp_fx (parent-run), perf gate, commits + addendum 14.
+- **P2 perf-gate tail:** stress run2 (attribution of the elevated uni-7 deltas at 06:10 vs the
+  re-run around 13:00) running — commit its records when done. Resume phrase: **"continue anvil"**.
