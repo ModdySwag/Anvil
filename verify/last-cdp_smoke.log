@@ -1,11 +1,11 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v1.4.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.4.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v1.5.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.5.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":2,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
  ok   KNOB SELFTEST ok  -> {"ok":true,"knobFound":true,"keysBound":true,"committed":true,"params":true,"state":true,"aria":true,"readout":true,"ctxState":"running","gain":0.55,"gainOk":true}
- ok   ENGINE SELFTEST ok (tier + allocation)  -> {"ok":true,"tier":"worklet","url":"data","sr":48000,"maxVoices":64,"allocated":true,"released":true,"voices":[0,1,0],"kinds":{"va":true,"acid":true,"string":true,"drum":true,"grain":true,"sampler":true,"fm":true},"fx":true,"mod":true,"drumNote":true,"kindsOk":true}
+ ok   ENGINE SELFTEST ok (tier + allocation)  -> {"ok":true,"tier":"worklet","url":"data","sr":48000,"maxVoices":64,"allocated":true,"released":true,"voices":[0,1,0],"kinds":{"va":true,"acid":true,"string":true,"drum":true,"grain":true,"sampler":true,"fm":true},"fx":true,"mod":true,"drumNote":true,"kindsOk":true,"mpe":{"on":true,"expr":true,"voice":true,"off":true}}
  ok   layout: no horizontal overflow at 1440  -> scrollWidth 1425 vs innerWidth 1440
  ok   keyboard dock: 61 keys, snap handle, MIDI deck mounted  -> {"keys":61,"dock":true,"kbsnap":"function","midi":"object","midiBody":true}
  ok   synth card: knobs + selects mounted + bound (85 knobs)  -> {"host":true,"knobs":85,"bound":true,"sels":7,"engOpts":["va","acid","string","drum","grain","sampler","fm"]}
@@ -24,6 +24,9 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   S5: CODE card mounted + wired (editor · library · params · status) + popout buttons + help/palette/lessons/popout APIs live  -> {"card":true,"host":true,"src":true,"lib":true,"run":true,"stop":true,"params":true,"status":true,"pop":true,"ret":true,"helpApi":"function","palApi":"function","lesApi":"function","popApi":"function","codeApi":"function","kindsApi":"function","codeUi":"object","codeHandle":"object"}
  ok   M1 FM: card mounted + wired (6 op tabs · algo select · knobs bound · api)  -> {"fmCard":true,"fmHost":true,"wtCard":true,"wtHost":true,"tabs":6,"algo":true,"knobs":50,"knobsBound":50,"canvas":true,"lib":true,"install":true,"fmUi":"object","wtUi":"object","wtApi":"function","installApi":"function"}
  ok   M1 WT: editor card mounted + wired (canvas · library · install · api)  -> {"fmCard":true,"fmHost":true,"wtCard":true,"wtHost":true,"tabs":6,"algo":true,"knobs":50,"knobsBound":50,"canvas":true,"lib":true,"install":true,"fmUi":"object","wtUi":"object","wtApi":"function","installApi":"function"}
+ ok   M2 MPE: deck row + API live + engine expression sender  -> {"chopCard":true,"chopHost":true,"detect":true,"pads":true,"apply":true,"chopUi":"object","chopApi":"function","mpeRow":true,"mpeApi":"object","mpeSet":"function","mpeExprApi":"function","gen":true,"rows":true,"songPlay":true,"trackCtl":true,"songApi":"object"}
+ ok   M2 CHOP: card mounted + wired (detect / pads / apply) + api  -> {"chopCard":true,"chopHost":true,"detect":true,"pads":true,"apply":true,"chopUi":"object","chopApi":"function","mpeRow":true,"mpeApi":"object","mpeSet":"function","mpeExprApi":"function","gen":true,"rows":true,"songPlay":true,"trackCtl":true,"songApi":"object"}
+ ok   M2 arranger + generative: GEN block / song rows / PLAY SONG / track ctl + song api  -> {"chopCard":true,"chopHost":true,"detect":true,"pads":true,"apply":true,"chopUi":"object","chopApi":"function","mpeRow":true,"mpeApi":"object","mpeSet":"function","mpeExprApi":"function","gen":true,"rows":true,"songPlay":true,"trackCtl":true,"songApi":"object"}
  ok   zero page errors
 
-26 passed, 0 failed
+29 passed, 0 failed

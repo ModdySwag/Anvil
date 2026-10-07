@@ -1,7 +1,7 @@
-index.html sha256 (before): 335f4bd06f7aafff68725c1645a1b00518936a9c74fd90969221a7d2ce7d0d15
+index.html sha256 (before): d311eaf88c5ff9202aa612e5e607ed896f2d850146bb4efc760b3dde33bff738
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9680 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-s4-1791394218987
-download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791394218987
+cdp port 9680 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-s4-1791399091052
+download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791399091052
 ── 1. boot + card + surface ──
  ok   1a boot: data-av-ready flips + engine ctx found/running/ScriptProcessor-capable/sr 48k  -> {"ready":true,"eng":{"found":true,"state":"running","sampleRate":48000,"scp":true}}
  ok   1b rig helpers injected (__s4w v1: fake-FS seam · picker probes · pattern/WAV/card/QR/PNG/share/video legs · page-side digests · cleanup)
@@ -13,12 +13,12 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791394218987
    · picker spies: {"ok":true,"save":true,"open":true}
 ── 2. project save ──
  ok   2a FSA seam: avProjSetFs(fake) accepted · __avProj state fsKind "injected" · fake records zero calls so far · window pickers spied  -> {"fake":{"ok":true,"calls":0,"fsKind":"injected"},"spies":{"ok":true,"save":true,"open":true}}
- ok   2b project save via seam: ok · via fsa · name anvil-project-<slug>.anvl · text captured + __avProjLastSave set  -> {"ok":true,"via":"fsa","name":"anvil-project-rig-save.anvl","bytes":33947,"sugg":"anvil-project-rig-save.anvl","textLen":33947,"closed":true,"lastSave":{"name":"anvil-project-rig-save.anvl","bytes":33947,"via":"fsa","at":"2026-10-07T17:30:19.694Z"},"err":null}
- ok   2c saved bytes parse: avProjParse ok · magic anvl · v 1 · kind project · sessionless state (seq+pattern, params, macros[8], prefs)  -> {"ok":true,"magic":"anvl","v":1,"app":"anvil","kind":"project","at":"string","stateName":null,"stateV":1,"savedAt":1791394219694,"seqKeys":["pattern","chains","song","scenes"],"paramsLen":206,"macrosLen":8,"prefsObj":true,"err":null}
- ok   2d determinism: avProjBuild(state, meta) twice → identical text · parse→build round-trip fixed point · at pinned by meta  -> {"ok1":true,"ok2":true,"same12":true,"hasAt":true,"ok3":true,"same13":true,"len1":33946,"name1":"anvil-project-rig-det.anvl"}
+ ok   2b project save via seam: ok · via fsa · name anvil-project-<slug>.anvl · text captured + __avProjLastSave set  -> {"ok":true,"via":"fsa","name":"anvil-project-rig-save.anvl","bytes":33987,"sugg":"anvil-project-rig-save.anvl","textLen":33987,"closed":true,"lastSave":{"name":"anvil-project-rig-save.anvl","bytes":33987,"via":"fsa","at":"2026-10-07T18:51:31.738Z"},"err":null}
+ ok   2c saved bytes parse: avProjParse ok · magic anvl · v 1 · kind project · sessionless state (seq+pattern, params, macros[8], prefs)  -> {"ok":true,"magic":"anvl","v":1,"app":"anvil","kind":"project","at":"string","stateName":null,"stateV":1,"savedAt":1791399091738,"seqKeys":["pattern","chains","song","scenes"],"paramsLen":206,"macrosLen":8,"prefsObj":true,"err":null}
+ ok   2d determinism: avProjBuild(state, meta) twice → identical text · parse→build round-trip fixed point · at pinned by meta  -> {"ok1":true,"ok2":true,"same12":true,"hasAt":true,"ok3":true,"same13":true,"len1":33986,"name1":"anvil-project-rig-det.anvl"}
 ── 3. project open ──
  ok   3a rig pattern + marker: avSeqLoad(RIG PAT 1) ok · master set 0.42 (read-back) · snapshot refs captured  -> {"pl":{"ok":true,"name":"RIG PAT 1"},"mk":{"ret":true,"cur":0.42},"pat0":true,"st0Ok":true,"noteCount":28}
- ok   3b open via seam: save→mutate(param+pattern)→open(opts.state) → param 0.42 + pattern RIG PAT 1 restored · applied >= 1 · picker skipped  -> {"saveOk":true,"savedLen":33701,"parse":true,"mutMaster":0.9,"mutName":"RIG PAT 2","open":{"ok":true,"error":null,"name":null,"applied":221,"skipped":[],"warnings":[]},"master":0.42,"patBack":true,"patName":"RIG PAT 1","noteCount":28,"opensBefore":0,"opensAfter":0}
+ ok   3b open via seam: save→mutate(param+pattern)→open(opts.state) → param 0.42 + pattern RIG PAT 1 restored · applied >= 1 · picker skipped  -> {"saveOk":true,"savedLen":33741,"parse":true,"mutMaster":0.9,"mutName":"RIG PAT 2","open":{"ok":true,"error":null,"name":null,"applied":221,"skipped":[],"warnings":[]},"master":0.42,"patBack":true,"patName":"RIG PAT 1","noteCount":28,"opensBefore":0,"opensAfter":0}
  ok   3c foreign refusal: bad magic / v2 / wrong kind / garbage all ok:false · foreign file via the fake picker refused · nothing applied  -> {"parses":[false,false,false,false],"open":{"ok":false,"error":"bad magic","name":"foreign","applied":0,"skipped":[],"warnings":[]},"masterSame":true,"patSame":true,"opens":1}
 ── 4. samples ──
  ok   4a samples: page-side WAV File (avWavEncode) via seam picker → receipt ok · added includes it · via fsa  -> {"ok":true,"added":["rig-s4-sample.wav"],"via":"fsa","wavVia":"avWavEncode","fileBytes":48044,"count":1,"errors":[]}
@@ -38,23 +38,23 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s4-dl-1791394218987
  ok   7a PNG card: magic 89 50 4E 47 0D 0A 1A 0A · bytes > 4096 · 1080×1080 · blob size == receipt bytes  -> {"ok":true,"bytes":97120,"w":1080,"h":1080,"blobSize":97120,"magic":[137,80,78,71,13,10,26,10],"arrayBytes":97120,"err":null}
    · share hidden: true · save picker hidden: true
    · MAKE CARD click: dispatched
- ok   7b preview: MAKE CARD sets #av-files-card-preview src to a blob: object URL (or the ui snap reports the preview)  -> {"isBlob":true,"src":"blob:null/4b11faa2-9080-4738-b7a3-5db79e077d2c","tag":"IMG","snapHasPreview":false,"snap":"{\"version\":\"s4.0\",\"inited\":true,\"mounts\":2,\"host\":true,\"wired\":true,\"card\":true,\"sections\":{\"project\":true,\"share\":true,\"video\":true},\"controls\":{\"save\":true,\"open\":true,\"samples\":true,\"cardMake\":true,\"cardCopy\":true,\"ca"}
- ok   7c share absent → download: __avCardLast.via "download" · pngBytes > 4096 · the anchor download recorded  -> {"ok":true,"shareType":"undefined","last":{"enc":"eyJrIjoidmEiLCJwIjp7ImZpbHRlci5jdXRvZmYiOjEyMzQsImZtLmFsZ28iOjAsImZ4LmF3Lm9uIjowLCJmeC5jb252Lm9uIjowLCJmeC5kZWxheS5vbiI6MCwiZnguZHJpdmUub24iOjAsImZ4LmR5bi5vbiI6MCwiZngubW9kLm9uIjowLCJmeC52ZXJiLm9uIjowLCJtYXN0ZXIiOjAuNDJ9fQ","url":"file:///C:/Users/Moddy/anvil/index.html#avp=eyJrIjoidmEiLCJwIjp7ImZpbHRlci5jdXRvZmYiOjEyMzQsImZtLmFsZ28iOjAsImZ4LmF3Lm9uIjowLCJmeC5jb252Lm9uIjowLCJmeC5kZWxheS5vbiI6MCwiZnguZHJpdmUub24iOjAsImZ4LmR5bi5vbiI6MCwiZngubW9kLm9uIjowLCJmeC52ZXJiLm9uIjowLCJtYXN0ZXIiOjAuNDJ9fQ","pngBytes":96974,"via":"download","at":1791394222300},"deliver":{"name":"anvil-card-untitled.png","bytes":96974,"at":1791394222300,"via":"anchor"},"err":null}
+ ok   7b preview: MAKE CARD sets #av-files-card-preview src to a blob: object URL (or the ui snap reports the preview)  -> {"isBlob":true,"src":"blob:null/6ce7a27b-06dd-4119-9ea8-88e23344b6c2","tag":"IMG","snapHasPreview":false,"snap":"{\"version\":\"s4.0\",\"inited\":true,\"mounts\":2,\"host\":true,\"wired\":true,\"card\":true,\"sections\":{\"project\":true,\"share\":true,\"video\":true},\"controls\":{\"save\":true,\"open\":true,\"samples\":true,\"cardMake\":true,\"cardCopy\":true,\"ca"}
+ ok   7c share absent → download: __avCardLast.via "download" · pngBytes > 4096 · the anchor download recorded  -> {"ok":true,"shareType":"undefined","last":{"enc":"eyJrIjoidmEiLCJwIjp7ImZpbHRlci5jdXRvZmYiOjEyMzQsImZtLmFsZ28iOjAsImZ4LmF3Lm9uIjowLCJmeC5jb252Lm9uIjowLCJmeC5kZWxheS5vbiI6MCwiZnguZHJpdmUub24iOjAsImZ4LmR5bi5vbiI6MCwiZngubW9kLm9uIjowLCJmeC52ZXJiLm9uIjowLCJtYXN0ZXIiOjAuNDJ9fQ","url":"file:///C:/Users/Moddy/anvil/index.html#avp=eyJrIjoidmEiLCJwIjp7ImZpbHRlci5jdXRvZmYiOjEyMzQsImZtLmFsZ28iOjAsImZ4LmF3Lm9uIjowLCJmeC5jb252Lm9uIjowLCJmeC5kZWxheS5vbiI6MCwiZnguZHJpdmUub24iOjAsImZ4LmR5bi5vbiI6MCwiZngubW9kLm9uIjowLCJmeC52ZXJiLm9uIjowLCJtYXN0ZXIiOjAuNDJ9fQ","pngBytes":96974,"via":"download","at":1791399094468},"deliver":{"name":"anvil-card-untitled.png","bytes":96974,"at":1791399094468,"via":"anchor"},"err":null}
 ── 8. video ──
  ok   8a video supported: capture+recorder true · mime in the webm chain · audio flag + reasons[] present  -> {"ok":true,"capture":true,"recorder":true,"audio":true,"mime":"video/webm;codecs=vp9,opus","reasons":[]}
    · video record started: {"pl":{"ok":true,"name":"RIG PAT 1"},"noteCount":28,"vs":{"state":"started"}}
- ok   8b video record 2s@15fps: EBML magic 1A 45 DF A3 · bytes > 8192 · mime webm · seconds 2 · warnings [] (polled)  -> {"pl":{"ok":true,"name":"RIG PAT 1"},"noteCount":28,"vn":{"state":"done","ms":2122,"ok":true,"error":null,"seconds":2,"bytes":119506,"mime":"video/webm;codecs=vp9,opus","warnings":[],"refused":null,"magic":[26,69,223,163],"fileBytes":119506}}
- ok   8c __avVideoLast set: bytes/seconds/mime/at consistent with the receipt  -> {"bytes":119506,"seconds":2,"mime":"video/webm;codecs=vp9,opus","at":1791394224426}
+ ok   8b video record 2s@15fps: EBML magic 1A 45 DF A3 · bytes > 8192 · mime webm · seconds 2 · warnings [] (polled)  -> {"pl":{"ok":true,"name":"RIG PAT 1"},"noteCount":28,"vn":{"state":"done","ms":2110,"ok":true,"error":null,"seconds":2,"bytes":119951,"mime":"video/webm;codecs=vp9,opus","warnings":[],"refused":null,"magic":[26,69,223,163],"fileBytes":119951}}
+ ok   8c __avVideoLast set: bytes/seconds/mime/at consistent with the receipt  -> {"bytes":119951,"seconds":2,"mime":"video/webm;codecs=vp9,opus","at":1791399096581}
 ── 9. seal ──
- ok   9a screenshot: renders/s4-suite.png (the card, scale 2 — taken while previews are live)  -> 153226 bytes · clip 1048×487 @2x
+ ok   9a screenshot: renders/s4-suite.png (the card, scale 2 — taken while previews are live)  -> 153027 bytes · clip 1048×487 @2x
  ok   9b cleanup: notes released · params (master/kind) restored · cutoff restored · hash cleared  -> {"held":0,"taken":0,"params":{"master":0.8,"kind":"va","cutoff":800},"arm":{"master":0.8,"kind":"va","cutoff":800},"hashIs":"","cutoffOk":true}
  ok   9c cleanup: pattern restored (avSeqSnap identical) · sample removed · fake FS released + window pickers/share restored  -> {"patRestored":true,"patEqOrig":true,"sample":{"removed":true,"id":"s1","count":0},"pick":{"ok":true,"save":true,"open":true},"fs":true,"shareR":true}
  ok   9d FSA discipline: every project call rode the injected fake (saves+opens recorded) · zero real picker reaches  -> {"calls":4,"saves":2,"opens":2,"saveNames":["anvil-project-rig-save.anvl","anvil-project-rig-open-save.anvl"],"closed":[true,true],"kinds":["save","save","open","open"],"reach":{"save":0,"open":0},"fsKindAtInject":"injected"}
  ok   9e zero page errors (exceptions · Log errors · console.error)  -> page errors=0
-index.html sha256 (after): 335f4bd06f7aafff68725c1645a1b00518936a9c74fd90969221a7d2ce7d0d15
- ok   9f freeze: index.html sha256 before === after (unchanged by the run)  -> 335f4bd06f7aafff68725c1645a1b00518936a9c74fd90969221a7d2ce7d0d15
- ok   10 freeze pin leg: index.html sha256 = pinned  -> pinned 335f4bd06f7a...
+index.html sha256 (after): d311eaf88c5ff9202aa612e5e607ed896f2d850146bb4efc760b3dde33bff738
+ ok   9f freeze: index.html sha256 before === after (unchanged by the run)  -> d311eaf88c5ff9202aa612e5e607ed896f2d850146bb4efc760b3dde33bff738
+ ok   10 freeze pin leg: index.html sha256 = pinned  -> pinned d311eaf88c5f...
 
 RESULT: 37 passed, 0 failed
-S4-RESULT {"kind":"anvil-cdp-s4","sha256Before":"335f4bd06f7aafff68725c1645a1b00518936a9c74fd90969221a7d2ce7d0d15","sha256After":"335f4bd06f7aafff68725c1645a1b00518936a9c74fd90969221a7d2ce7d0d15","pinned":"335f4bd06f7aafff68725c1645a1b00518936a9c74fd90969221a7d2ce7d0d15","passed":37,"failed":0,"checks":37,"verdict":"pass"}
+S4-RESULT {"kind":"anvil-cdp-s4","sha256Before":"d311eaf88c5ff9202aa612e5e607ed896f2d850146bb4efc760b3dde33bff738","sha256After":"d311eaf88c5ff9202aa612e5e607ed896f2d850146bb4efc760b3dde33bff738","pinned":"d311eaf88c5ff9202aa612e5e607ed896f2d850146bb4efc760b3dde33bff738","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 S4 PASSED
