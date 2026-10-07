@@ -645,3 +645,31 @@ Resume phrase: **"continue anvil"**.
   fill control wiring, chains/scenes undo checkpoints, acid accent-flag mapping decision (flag 4),
   F's plock skip DONE. Resume phrase: **"continue anvil"**.
 
+
+## Resume addendum 18 — 2026-10-07 (P4 PERF GATE records + attribution)
+
+- **Bench (publishable metric) on 83e4b478:** `verify/bench-v7-p4-full.{log,json}` — **offline 128
+  voices @ 1292.5 µs/q = 48.47 % budget** (P3 49.35 % · P2 47.1 % · P1.x 47.6 % — engine unchanged;
+  the delta is run variance). Realtime published {light 64 · fat 48}; fallback spn PASS; every
+  offline cell replay-stable. `verify/last-cdp_bench.*` refreshed.
+- **Stress ×2** (`verify/stress-p4-run1.log` · `run2`) — both `asserts-not-met` for the SAME two
+  known reasons:
+  - verified-envelope: **1 delta in each run, IDENTICAL signature** (cycle 1 @ uni 3, ~6.6–18.7 s —
+    the systematic cold first-cap entry, unchanged since P1.x);
+  - uni>3 over-drive probe windows: the SAME five clusters as the P3 runs (cycles 3/4 · 7 · 11) with
+    HOTTER magnitudes (13 / 144 deltas vs P3's 2–4 per cluster);
+  - everything else PASS both runs: heap +0.2 MB · drains 15/15 · 0 page errors · ctx running ·
+    coverage 27/27 cycles (+3,564 notes on/off) · driver errors 0.
+- **Attribution (recorded):** environment, not the engine — (a) the engine is byte-identical to P3
+  (no av_dsp/worklet changes in P4) and the bench is stable; (b) the asserted verified windows
+  reproduce the exact P1.x→P3 signature; (c) **the user session was ACTIVE at the console during
+  both runs** (Moddy at the machine — Discord/pythonw/audiodg live) and the metric is documented
+  load-sensitive at the margin (the P2 contamination precedent); (d) the P4 page's idle cost was
+  measured trivial (the seq rAF loop early-exits when the transport is stopped: two calls + one
+  getElementById per frame). **Queued:** a controlled quiet-window re-run (or fold into the P·2
+  minBLEP pass) if the margin matters; both raw runs stand as committed evidence.
+- Pins/freeze unchanged (83e4b478). **NEXT: P5 — STORE** (10 packs / 580 presets + drum + loop
+  packs; preview renders; IDB install) per the GOLDEN BUILD program. Carried: P·2 minBLEP pass;
+  P4 follow-ups: fill control wiring, chains/scenes undo checkpoints, acid accent-flag decision.
+  Resume phrase: **"continue anvil"**.
+
