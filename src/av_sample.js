@@ -580,3 +580,82 @@ function avSampleInit() {
 
 /* ---------- debug/verify surface (suites + console read this; snap() is JSON-safe) ---------- */
 if (typeof window !== "undefined") window.__avSample = avSampleStore;
+
+/* ================================ engine transfer (P3, child F append) ================================
+   avSampleSendToEngine(id[, slot]) -> Promise<bool> — copy an entry's channel data into PLAIN
+   Float32Arrays (decoupled from the live AudioBuffer; <= 60 s per channel) and hand them to the
+   engine through the parent-added facade avEngineSample(slot, name, rate, ch1, ch2). Pinned with the
+   engine side (see the av_grain.js / av_sampler.js headers): the worklet keeps up to 4 slots
+   (eng.samples[0..3] = null | {name, rate, n, ch1, ch2}); the message is
+   {t:"sample", id, name, rate, ch1, ch2?} with id = the SLOT index 0..3. Slot choice: an explicit
+   second arg wins; else the entry's import sequence (sN -> (N-1) mod 4 — the first four sends fill
+   slots 0..3, later sends recycle in order). Resolves false HONESTLY whenever the transfer cannot
+   happen: unknown entry, no decodable buffer, facade absent, facade refused/threw. On success the
+   slot record lands in avSampleStore.sent[slot] = {slot, id, name, rate, frames, at}.
+
+   Laws kept: append-only (the P2 API above is untouched); no throw paths; nothing touches the audio
+   graph here (pure copy + facade call); the copy is what makes transferables safe — the live
+   AudioBuffer's channel data must never be detached or sent anywhere. */
+
+avSampleStore.sent = [null, null, null, null];   /* per-slot records: {slot, id, name, rate, frames, at} */
+
+avSampleStore.sendToEngine = function (entryId, slotArg) {
+  const st = avSampleStore;
+  try {
+    const e = (entryId && typeof entryId === "object") ? entryId : st.get(entryId);
+    if (!e || !e.buffer || typeof e.buffer.getChannelData !== "function") return Promise.resolve(false);
+    const buf = e.buffer;
+    let n = (isFinite(buf.length) ? Math.max(0, buf.length | 0) : 0);
+    const rate = (isFinite(buf.sampleRate) && buf.sampleRate > 0) ? buf.sampleRate : ((isFinite(e.sampleRate) && e.sampleRate > 0) ? e.sampleRate : 0);
+    if (n <= 0) return Promise.resolve(false);
+    const cap = rate > 0 ? Math.round(60 * rate) : n;        /* <= 60 s per channel (engine law) */
+    if (n > cap) n = cap;
+    /* slot: explicit wins; else the entry's import sequence (sN -> N-1, mod 4) */
+    let slot = null;
+    if (slotArg !== undefined && slotArg !== null) {
+      const s0 = Number(slotArg);
+      if (isFinite(s0)) slot = Math.round(s0);
+    }
+    if (slot === null || !isFinite(slot)) {
+      const m = /(\d+)$/.exec(String(e.id == null ? "" : e.id));
+      const seq = m ? parseInt(m[1], 10) : (st.entries.indexOf(e) + 1);
+      slot = Math.max(0, seq - 1) % 4;
+    }
+    slot = Math.max(0, Math.min(3, slot | 0));
+    const channels = Math.max(1, Math.min(2, (isFinite(buf.numberOfChannels) ? buf.numberOfChannels | 0 : 1)));
+    /* the copies: plain, exact-length Float32Arrays (structured-clone / transfer safe) */
+    const src1 = buf.getChannelData(0);
+    const ch1 = new Float32Array(n);
+    ch1.set(src1.subarray(0, Math.min(n, src1.length)));
+    let ch2 = null;
+    if (channels > 1) {
+      const src2 = buf.getChannelData(1);
+      ch2 = new Float32Array(n);
+      ch2.set(src2.subarray(0, Math.min(n, src2.length)));
+    }
+    if (typeof avEngineSample !== "function") return Promise.resolve(false);
+    let r;
+    try { r = avEngineSample(slot, String(e.name || e.id || "sample"), rate, ch1, ch2); }
+    catch (err) { st.lastError = String((err && err.message) || err); return Promise.resolve(false); }
+    if (r === false) return Promise.resolve(false);
+    const at = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+    const rec = { slot: slot, id: e.id, name: String(e.name || e.id || "sample"), rate: rate, frames: n, at: at };
+    if (r && typeof r.then === "function") {
+      return r.then(function (x) {
+        if (x === false) return false;
+        st.sent[slot] = rec;
+        return true;
+      }, function (err) { st.lastError = String((err && err.message) || err); return false; });
+    }
+    st.sent[slot] = rec;
+    return Promise.resolve(true);
+  } catch (e) {
+    try { avSampleStore.lastError = String((e && e.message) || e); } catch (e2) { /* ok */ }
+    return Promise.resolve(false);
+  }
+};
+
+/* the pinned top-level name (the parent's UI/rig calls this) */
+function avSampleSendToEngine(id, slot) {
+  return avSampleStore.sendToEngine(id, slot);
+}

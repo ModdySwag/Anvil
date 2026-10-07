@@ -415,5 +415,9 @@ PROGRAM (resume from the latest addendum; waves may split across sessions):
   processor branches, build.py concat (worklet source += the 5 FX modules + grain + sampler, after
   the drum module, before voiceproc), hosts (`#av-fx-host`/`#av-mod-host`) + styles + boot calls,
   rebuild, battery + cdp_fx (parent-run), perf gate, commits + addendum 14.
-- **P2 perf-gate tail:** stress run2 (attribution of the elevated uni-7 deltas at 06:10 vs the
-  re-run around 13:00) running — commit its records when done. Resume phrase: **"continue anvil"**.
+- **P2 perf-gate tail — stress run2 INVALID (contaminated):** ran 13:00–13:10 concurrently with all 7
+  P3 children hammering the CPU + desktop activity → 627 deltas (run1's 142 was mildly shared-load
+  too; P1.x 35–45 was a quiet box). Decision: the delta metric is load-sensitive at the margin; the
+  DEFINITIVE attribution run must happen on a quiet machine (no agents, no user activity) — run it in
+  a quiet window and commit both records (`stress-p2-run2.log` committed as raw evidence). Bench
+  stays the publishable metric (stable across both runs). Resume phrase: **"continue anvil"**.

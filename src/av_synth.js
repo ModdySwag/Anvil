@@ -1,7 +1,7 @@
-/* Anvil — SYNTH card (P1 voice engine, P2 ENGINE layer). avSynthInit() mounts the engine
+/* Anvil — SYNTH card (P1 voice engine, P2 ENGINE layer, P3 grain + sampler panels). avSynthInit() mounts the engine
    controls into the parent-owned host #av-synth-knobs:
-   - one ENGINE select (#av-synth-engine — va · acid · string · drum) at the top of the card,
-     committing engine.kind through avApplyParam;
+   - one ENGINE select (#av-synth-engine — va · acid · string · drum · grain · sampler) at the
+     top of the card, committing engine.kind through avApplyParam;
    - one panel per kind, a <div class="av-synth-panel" data-kind=...> section shown/hidden by
      the exported avSynthSetKind(kind):
        va     = the P1 body, unchanged: selects row (osc1 wave · osc2 wave · filter mode) plus
@@ -11,13 +11,17 @@
        string = §3.2: damp · decay · pluck · exciter pick · tone.
        drum   = §3.3: 11 voices x {tune, decay, level} in a compact 3-column kit grid, plus
                 drum.split + drum.volume.
+       grain   = P3 §5 (KIND 4): buf · pos · size · density · pitch · jitter · spread · vol.
+       sampler = P3 §6 (KIND 5): buf · root · tune · loop · loopStart · loopEnd · vol.
    All knobs ride the standard avKnob mechanics (avKnobCommit → avApplyParam); selects commit
-   directly through avApplyParam. Defaults mirror verify/_p1_wave.md §4.2 (va) and
-   verify/_p2_wave.md §3.1–3.3 (kinds) — the single source of truth for paths/ranges/defaults.
-   No persistence: a fresh page always starts on those defaults. */
+   directly through avApplyParam. Defaults mirror verify/_p1_wave.md §4.2 (va),
+   verify/_p2_wave.md §3.1–3.3 (kinds) and the P3 pins in verify/_p3_wave.md §5/§6 (grain,
+   sampler — ranges pinned there; defaults documented in avSynthDefaults below) — the single
+   source of truth for paths/ranges/defaults. No persistence: a fresh page always starts on
+   those defaults. */
 "use strict";
 
-const AV_SYNTH_VERSION = "p2.0";
+const AV_SYNTH_VERSION = "p3.0";   /* P3: grain + sampler kind panels (KIND 4/5) */
 
 /* the per-voice kit table (§3.3): id = the drum.<id> path segment, label = the voice caption,
    decay/level are the kit defaults (tune defaults to 0 st). One table drives both the defaults
@@ -36,9 +40,9 @@ const AV_SYNTH_DRUM_VOICES = [
   { id: "ride", label: "RIDE", decay: 0.8, level: 0.65 },
 ];
 
-/* the path→default table for every control this card mounts (§4.2 va + §3.1–3.3 kinds).
-   avSynthDefaults() hands out a fresh copy — the parent may reuse it when replaying the
-   mirror into the engine at boot. */
+/* the path→default table for every control this card mounts (§4.2 va + §3.1–3.3 kinds +
+   P3 §5/§6 grain/sampler). avSynthDefaults() hands out a fresh copy — the parent may reuse it
+   when replaying the mirror into the engine at boot. */
 function avSynthDefaults() {
   const d = {
     /* va — the P1 defaults (§4.2), unchanged */
@@ -92,6 +96,30 @@ function avSynthDefaults() {
     d["drum." + v.id + ".decay"] = v.decay;
     d["drum." + v.id + ".level"] = v.level;
   }
+  /* P3 grain (§5, KIND 4) — ranges pinned in verify/_p3_wave.md §5; defaults documented here
+     (the worklet voices read these through the normal replay path):
+       buf 0 · pos 0 · size 0.1 s (100 ms, centre of the pinned 10–200 ms Hann window) ·
+       density 4 (low end of the docs/03 §2.1 "overlap 4–8" band, well under the 24-grain
+       hard budget) · pitch 0 st · jitter 0 (deterministic until dialed) · spread 0.5
+       (centred, moderate stereo width) · vol 0.8 (house engine-volume convention). */
+  d["grain.buf"] = 0;
+  d["grain.pos"] = 0;
+  d["grain.size"] = 0.1;
+  d["grain.density"] = 4;
+  d["grain.pitch"] = 0;
+  d["grain.jitter"] = 0;
+  d["grain.spread"] = 0.5;
+  d["grain.vol"] = 0.8;
+  /* P3 sampler (§6, KIND 5) — ranges pinned in verify/_p3_wave.md §6; defaults documented here:
+       buf 0 · root 60 (C4 — playback rate runs from key/root) · tune 0 st · loop 0 (one-shot
+       until switched; 1 = loop) · loopStart 0 · loopEnd 1 (full-buffer loop) · vol 0.8. */
+  d["sampler.buf"] = 0;
+  d["sampler.root"] = 60;
+  d["sampler.tune"] = 0;
+  d["sampler.loop"] = 0;
+  d["sampler.loopStart"] = 0;
+  d["sampler.loopEnd"] = 1;
+  d["sampler.vol"] = 0.8;
   return d;
 }
 
@@ -129,11 +157,13 @@ const AV_SYNTH_ROWS = [
   ] },
 ];
 
-/* the four engine kinds (§2.1) — the card shows one panel per kind */
-const AV_SYNTH_KINDS = ["va", "acid", "string", "drum"];
+/* the six engine kinds (§2.1 + P3 §5/§6) — the card shows one panel per kind; the ordinal
+   mapping (0 = va · 1 = acid · 2 = string · 3 = drum · 4 = grain · 5 = sampler) matches the
+   worklet registerKind ids (KIND 4/5, per verify/_p3_wave.md §5/§6) */
+const AV_SYNTH_KINDS = ["va", "acid", "string", "drum", "grain", "sampler"];
 
-/* accept the string enum or the §2.1 ordinal (0 = va · 1 = acid · 2 = string · 3 = drum);
-   anything else → null */
+/* accept the string enum or the §2.1/P3 ordinal (0 = va · 1 = acid · 2 = string · 3 = drum ·
+   4 = grain · 5 = sampler); anything else → null */
 function avSynthKindNorm(kind) {
   if (typeof kind === "number" && isFinite(kind)) {
     const i = Math.round(kind);
@@ -146,7 +176,7 @@ function avSynthKindNorm(kind) {
 /* the ENGINE pick — always at the top of the card, data-knob-free (§6) */
 const AV_SYNTH_ENGINE = {
   path: "engine.kind", id: "av-synth-engine", label: "ENGINE",
-  aria: "Engine — voice architecture (va · acid · string · drum)",
+  aria: "Engine — voice architecture (va · acid · string · drum · grain · sampler)",
 };
 
 /* ACID (§3.1) — the hero row (8) and the EXPANDED mods row (8) */
@@ -187,6 +217,39 @@ const AV_SYNTH_STRING_KNOBS = [
 const AV_SYNTH_DRUM_GLOBALS = [
   { path: "drum.split", label: "SPLIT", opts: { min: 0, max: 127, step: 1, def: 0, fmt: "int", hint: "0 = off · notes ≥ split play the synth" } },
   { path: "drum.volume", label: "VOLUME", opts: { min: 0, max: 1, step: 0.01, def: 0.8, fmt: "pct" } },
+];
+
+/* GRAIN (P3 §5, KIND 4) — the granular voice: 8 knobs, ranges pinned in verify/_p3_wave.md §5.
+   Defaults (documented; mirrored in avSynthDefaults — keep the two in lockstep):
+     buf 0 → slot 0 (first registered sample) · pos 0 → buffer start ·
+     size 0.1 → 100 ms Hann, centre of the pinned 10–200 ms · density 4 → 4 overlapping grains
+     (low end of the docs/03 §2.1 "overlap 4–8" band, well under the 24-grain hard budget) ·
+     pitch 0 st → untransposed · jitter 0 → deterministic cloud until dialed ·
+     spread 0.5 → centred, moderate stereo width · vol 0.8 → house engine-volume convention. */
+const AV_SYNTH_GRAIN_KNOBS = [
+  { path: "grain.buf", label: "BUF", opts: { min: 0, max: 3, step: 1, def: 0, fmt: "int", hint: "sample slot 0–3" } },
+  { path: "grain.pos", label: "POS", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct", hint: "playhead 0–1 of buffer" } },
+  { path: "grain.size", label: "SIZE", opts: { min: 0.01, max: 0.2, step: 0.001, def: 0.1, fmt: "ms", hint: "Hann grain 10–200 ms" } },
+  { path: "grain.density", label: "DENSITY", opts: { min: 1, max: 16, step: 1, def: 4, fmt: "int", hint: "overlapping grains · budget 24" } },
+  { path: "grain.pitch", label: "PITCH", opts: { min: -24, max: 24, step: 0.1, def: 0, unit: "st" } },
+  { path: "grain.jitter", label: "JITTER", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct", hint: "position randomness (seeded)" } },
+  { path: "grain.spread", label: "SPREAD", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct", hint: "stereo width" } },
+  { path: "grain.vol", label: "VOL", opts: { min: 0, max: 1, step: 0.01, def: 0.8, fmt: "pct" } },
+];
+
+/* SAMPLER (P3 §6, KIND 5) — the one-shot/loop voice: 7 knobs, ranges pinned in
+   verify/_p3_wave.md §6. Defaults (documented; mirrored in avSynthDefaults — keep in lockstep):
+     buf 0 → slot 0 · root 60 → C4 root key (playback rate = key/root) · tune 0 st ·
+     loop 0 → one-shot until switched (1 = loop) · loopStart 0 → buffer start ·
+     loopEnd 1 → buffer end (full-buffer loop) · vol 0.8. */
+const AV_SYNTH_SAMPLER_KNOBS = [
+  { path: "sampler.buf", label: "BUF", opts: { min: 0, max: 3, step: 1, def: 0, fmt: "int", hint: "sample slot 0–3" } },
+  { path: "sampler.root", label: "ROOT", opts: { min: 0, max: 127, step: 1, def: 60, fmt: "int", hint: "root key · 60 = C4" } },
+  { path: "sampler.tune", label: "TUNE", opts: { min: -24, max: 24, step: 0.1, def: 0, unit: "st" } },
+  { path: "sampler.loop", label: "LOOP", opts: { min: 0, max: 1, step: 1, def: 0, fmt: "int", hint: "0 = one-shot · 1 = loop" } },
+  { path: "sampler.loopStart", label: "LOOP ST", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct", hint: "loop start 0–1 of buffer" } },
+  { path: "sampler.loopEnd", label: "LOOP END", opts: { min: 0, max: 1, step: 0.01, def: 1, fmt: "pct", hint: "loop end 0–1 of buffer" } },
+  { path: "sampler.vol", label: "VOL", opts: { min: 0, max: 1, step: 0.01, def: 0.8, fmt: "pct" } },
 ];
 
 /* local escaper (same rules as avKnobEsc): this part carries no extra dependency on other parts */
@@ -257,7 +320,15 @@ function avSynthBodyHTML() {
     '<div class="av-drum-kit">' + kit + "</div>" +
     avSynthKnobSpecRowHTML("av-drum-globals", AV_SYNTH_DRUM_GLOBALS));
 
-  return engineRow + va + acid + str + drum;
+  /* grain — the P3 granular voice knobs (§5, KIND 4) */
+  const grain = avSynthPanelHTML("grain", kind === "grain",
+    avSynthKnobSpecRowHTML("av-synth-grain", AV_SYNTH_GRAIN_KNOBS));
+
+  /* sampler — the P3 sampler voice knobs (§6, KIND 5) */
+  const smpl = avSynthPanelHTML("sampler", kind === "sampler",
+    avSynthKnobSpecRowHTML("av-synth-sampler", AV_SYNTH_SAMPLER_KNOBS));
+
+  return engineRow + va + acid + str + drum + grain + smpl;
 }
 
 /* the shared commit path for picks/kind: mirror first, then the app-side hook (with avKnobCommit's
@@ -288,10 +359,12 @@ function avSynthBindSelects(root) {
   });
 }
 
-/* switch the visible kind panel. The ENGINE pick calls this on every change; it commits the kind
-   exactly like the select would (mirror + avApplyParam) unless {commit:false} — the card mount
-   passes false because the P1 law is "seed the mirror, never push at init; the engine replay owns
-   the push". Accepts the string enum or the §2.1 ordinal. Unknown kind → false, no throw. */
+/* switch the visible kind panel (all six kinds: va/acid/string/drum/grain/sampler — the P3
+   panels ride the same generic data-kind show/hide). The ENGINE pick calls this on every change;
+   it commits the kind exactly like the select would (mirror + avApplyParam) unless {commit:false}
+   — the card mount passes false because the P1 law is "seed the mirror, never push at init; the
+   engine replay owns the push". Accepts the string enum or the §2.1/P3 ordinal. Unknown kind →
+   false, no throw. */
 function avSynthSetKind(kind, options) {
   const k = avSynthKindNorm(kind);
   if (!k) return false;
