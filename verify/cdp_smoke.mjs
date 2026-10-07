@@ -290,6 +290,27 @@ async function main() {
   check('S1 studio: card mounted + wired (ENABLE \u00b7 REC \u00b7 device \u00b7 meter \u00b7 count-in \u00b7 takes list) + input/metro/takes API live',
     st1.card === true && st1.host === true && st1.root === true && st1.wired === true && st1.enable === true && st1.rec === true && st1.device === true && st1.meter === true && st1.countin === true && st1.takes === true && st1.ui === 'object' && st1.inputApi === 'function' && st1.metroApi === 'function' && st1.takesApi === 'function' && st1.takesN >= 8, JSON.stringify(st1));
 
+  /* 6i. the S2 sessions card (snapshots · autosave · backup) */
+  const s2R = await ev(`(() => {
+    const card = document.getElementById('av-sessions');
+    const host = document.getElementById('av-sessions-host');
+    return { card: !!card, host: !!host,
+             root: !!(host && host.querySelector('.av-sessions')),
+             wired: !!(host && host.dataset && host.dataset.avSessionUiWired === '1'),
+             name: !!document.getElementById('av-sessions-name'),
+             save: !!document.getElementById('av-sessions-save'),
+             list: !!document.getElementById('av-sessions-list'),
+             autosave: !!document.getElementById('av-sessions-autosave'),
+             backup: !!document.getElementById('av-sessions-backup'),
+             restore: !!document.getElementById('av-sessions-restore'),
+             ui: typeof window.__avSessionUi,
+             sessionApi: typeof avSessionSave, backupApi: typeof avBackupBuild, loadApi: typeof avSessionLoad,
+             handles: typeof window.__avSession + '|' + typeof window.__avBackup };
+  })()`);
+  const s2 = s2R.value || {};
+  check('S2 sessions: card mounted + wired (name \u00b7 SAVE \u00b7 list \u00b7 autosave \u00b7 BACKUP \u00b7 RESTORE) + session/backup API live',
+    s2.card === true && s2.host === true && s2.root === true && s2.wired === true && s2.name === true && s2.save === true && s2.list === true && s2.autosave === true && s2.backup === true && s2.restore === true && s2.ui === 'object' && s2.sessionApi === 'function' && s2.backupApi === 'function' && s2.loadApi === 'function' && s2.handles === 'object|object', JSON.stringify(s2));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

@@ -1,0 +1,7 @@
+zip: C:/Users/Moddy/AppData/Local/Temp/anvil-sessions-dl-1791365764337/anvil-backup-20261007-200611.zip
+entries (3): ['manifest.json', 'sessions.json', 'README.txt']
+CRC walk: ALL OK
+manifest: v=1 app=anvil at=2026-10-07T09:36:11.047Z counts={"sessions": 1, "packs": 0, "samples": 0}
+manifest sha256 verified: 2 ok · fails=[]
+sessions.json: v=1 sessions=1
+WITNESS OK

@@ -618,6 +618,68 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-takes-on { color: #ff8a7a; }
 .av-takes-err { color: #ff8a7a; font-size: 11px; }
 
+/* ============================================================================
+   S2 — the SESSIONS card (av_session_ui.js) + the sessions layer */
+.av-sessions { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-sessions-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-sessions-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-sessions-cap { font-size: 10.5px; color: var(--text-3); }
+.av-sessions-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-sessions-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-sessions-msg { color: var(--text-2); }
+.av-sessions-err { color: #ff8a7a; }
+.av-sessions-recovery { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border: 1px solid #5c4520; border-radius: 6px; padding: 6px 8px; }
+.av-sessions-recovery[hidden] { display: none; }
+.av-sessions-recovery-lbl { font-family: var(--mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--mod-orange); }
+.av-sessions-recovery-at { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sessions-recover { }
+.av-sessions-dismiss { }
+.av-sessions-sect { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.av-sessions-sect-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-sessions-sect-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.av-sessions-count { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-sessions-storage { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sessions-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-sessions-lab { font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-sessions-btn { }
+.av-sessions-btn.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-sessions-name { min-width: 160px; flex: 1 1 160px; max-width: 320px; background: #0a0e11; color: var(--text); border: 1px solid var(--hair); border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 3px 6px; }
+.av-sessions-save { }
+.av-sessions-list { display: flex; flex-direction: column; gap: 5px; }
+.av-sessions-none { margin: 0; }
+.av-sessions-none[hidden] { display: none; }
+.av-sessions-session { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 8px; min-width: 0; }
+.av-sessions-session.av-sessions-cur { border-color: var(--teal-deep); }
+.av-sessions-session-name { font-family: var(--mono); font-size: 11px; color: var(--text); min-width: 0; overflow-wrap: anywhere; }
+.av-sessions-session-at { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sessions-session-v { font-family: var(--mono); font-size: 10px; color: var(--mod-sky); }
+.av-sessions-session-cur { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--teal); }
+.av-sessions-session-load { }
+.av-sessions-session-del { }
+.av-sessions-session-del:hover { color: #ff8a7a; border-color: #ff8a7a; }
+.av-sessions-vers { display: flex; flex-direction: column; gap: 3px; flex: 1 1 100%; border-left: 2px solid var(--hair); padding-left: 8px; margin-left: 2px; }
+.av-sessions-ver { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-sessions-ver-n { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.av-sessions-ver-at { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sessions-ver-bytes { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sessions-ver-restore { }
+.av-sessions-autosave { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.av-sessions-autosave.on { color: var(--teal); }
+.av-sessions-autosave-val { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-sessions-autosave-ms { min-width: 72px; }
+.av-sessions-backup { }
+.av-sessions-backup-val { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sessions-restore { }
+.av-sessions-file { }
+.av-sessions-file[hidden] { display: none; }
+.av-sessions-progress { font-family: var(--mono); font-size: 10.5px; color: var(--teal); min-height: 14px; }
+.av-sessions-report { font-family: var(--mono); font-size: 10.5px; color: var(--text-2); overflow-wrap: anywhere; }
+.av-sessions-warnings { border: 1px solid #5c4520; border-radius: 6px; padding: 6px 8px; }
+.av-sessions-warnings[hidden] { display: none; }
+.av-sessions-warn-head { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--mod-orange); margin-bottom: 2px; }
+.av-sessions-warn-item { color: var(--mod-orange); font-size: 10.5px; margin: 0; overflow-wrap: anywhere; }
+.av-sessions-foot { margin: 0; }
+
 </style>
 </head>
 
@@ -634,9 +696,9 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 
 <main class="av-main">
   <section class="av-card">
-    <h1>Phase S1 &mdash; studio: record core (input &middot; count-in &middot; lap takes)</h1>
+    <h1>Phase S2 &mdash; sessions: snapshots &middot; autosave &amp; recovery &middot; backup</h1>
     <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries).</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything).</p>
   </section>
 
   <section class="av-card" id="av-levels">
@@ -702,6 +764,11 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
     <div id="av-studio-host"><p class="av-note av-dim">The studio record core lands here &mdash; mic/line input riding the engine's own context, a count-in metronome, and lap takes that split at sequencer cycle boundaries. Nothing is uploaded.</p></div>
   </section>
 
+  <section class="av-card" id="av-sessions">
+    <h2>Sessions</h2>
+    <div id="av-sessions-host"><p class="av-note av-dim">The sessions card lands here &mdash; versioned snapshots of the working state, autosave with crash recovery, and a one-press backup zip. Everything stays local.</p></div>
+  </section>
+
   <section class="av-card">
     <h2>Roadmap &mdash; from the plan</h2>
     <ul class="av-list">
@@ -716,7 +783,7 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 </main>
 
 <footer class="av-foot">
-  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Studio &middot; record core &middot; AGPL-3.0-or-later</span>
+  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Sessions &middot; autosave + backup &middot; AGPL-3.0-or-later</span>
 </footer>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">
@@ -26109,6 +26176,4132 @@ if (typeof window !== "undefined") {
 }
 
 
+/* av_session.js — Anvil S2 SESSIONS CORE (child sa-A, verify/_s2_wave.md §2.1): working-state
+   snapshots — capture, apply, versioned saves on the pinned IDB store, and the autosave/recovery
+   net. The module mounts nothing (sa-C owns the Sessions card markup).
+
+   PUBLIC SURFACE (classic-script globals, ONE namespace avSession* / AV_SESSION_*):
+     avSessionInit() -> bool              idempotent; no DOM; binds storage lazily (boots hydrate)
+     avSessionCapture(opts?) -> state     the working-state snapshot (schema below; JSON-safe)
+     avSessionApply(state) -> receipt     write path (laws below)
+     avSessionSave(name?) -> Promise      capture -> new VERSION of the current session (creates
+                                          on the first save; the ring keeps the last 16 versions)
+     avSessionList() -> [{id,name,savedAt,updatedAt,version,current}]
+     avSessionLoad(id) -> Promise         apply the session's NEWEST version + mark current
+     avSessionDelete(id) -> bool          memory drop now; the durable drop is kicked (async)
+     avSessionVersions(id?) -> [{version,savedAt,bytes}]
+     avSessionRestore(id, version) -> Promise
+     avSessionAutosave(on, ms?) -> {on, ms}      default 45000 ms; clamp 5000..600000
+     avSessionState() -> state            the honest card state (§2.1 shape + a few extras)
+     avSessionRecover() -> Promise        apply the autosave snapshot; clears the record
+     avSessionDismissRecovery() -> bool
+     avSessionExport() -> {v, sessions:[record...]}
+     avSessionImport(payloadOrRecord) -> {ok, imported, skipped}   tolerant; id-dedupe
+     avSessionTouch() -> bool             mark dirty (best-effort; the fingerprint also works)
+     avSessionClasses() -> string[]       [] — this module mounts nothing
+     avSessionHydrate() -> Promise<mode>  (extra: boot hydrate, idempotent, never rejects)
+     window.__avSession -> { version, init, capture, apply, save, list, load, delete, versions,
+                             restore, autosave, state, recover, export: avSessionExport,
+                             import: avSessionImport }
+                           + extras: touch, dismiss, classes, hydrate
+
+   STATE SCHEMA (v1, JSON-safe by construction):
+     { v:1, name, savedAt,
+       seq: { pattern: avSeqSnap(), chains: avSeqChainsSnap(), song: avSeqSongSnap(),
+              scenes: avSeqScenesSnap() },          // each null when its module is absent
+       params: { ...avParams clone },               // includes engine.kind when the app mirrors it
+       mod: { macros: [8 numbers] },                // from avModPayload(); slot routing = Undetermined v1
+       takesMeta: [...],                            // avTakesList() verbatim (metadata only — the
+                                                    // take AUDIO is not session data)
+       prefs: { inputGain, inputOffsetMs, metro:{ level, beatsPerBar, countIn } } }
+   Unknown prefs read as null (never a fake 0 — a fake 0 would APPLY as a value).
+
+   STORAGE (mirrors av_store's honest-backend pattern): IDB db `av-sessions-store`, object store
+   `sessions` (keyPath id) — one record per session
+   { id, name, createdAt, updatedAt, current, versions:[{ v, savedAt, state }] } (ring <= 16,
+   newest last) plus the SINGLE record id `__autosave` { state, savedAt, name }. LS fallback key
+   `av-sessions-ls` (JSON { v, sessions, autosave }; per session = meta + newest version only).
+   No storage at all -> memory last resort. Every receipt names the tier it actually used
+   (`idb | ls | mem`) and a memory-only write is `volatile:true`. "Nothing durable → not saved":
+   a refused durable write rolls the memory change back and resolves ok:false; only memory mode
+   keeps the change (honest, flagged). Never throws.
+
+   APPLY LAWS (mirror av_bank.js's apply core — read it first):
+     (1) `seq` FIRST: avSeqLoad(pattern) + avSeqChainsLoad/SongLoad/ScenesLoad; then the canonical
+         UI sync pair from av_bank's seq branch — avSeqSetPattern(core's own sanitised snapshot)
+         + avSeqUiSync (a nicety) — then the `"seq"` undo checkpoint AFTER the load (P4 undo law;
+         only when the pattern actually landed).
+     (2) `engine.kind` before any other param.
+     (3) EVERY param path rides the CURRENT avApplyParam binding (resolved per apply call — the
+         av_mod / av_undo / av_plock wraps REASSIGN the funnel; a captured reference would go
+         stale). Booleans normalise to 1/0; non-finite numbers / null / objects are refused and
+         reported in `skipped` (counted, never thrown). Paths are dotted identifiers starting
+         with a letter (`__proto__`-class keys never reach the funnel).
+     (4) mod macros ride the same funnel (`mod.macro1..8` — av_mod's wrap owns those paths; when
+         the funnel we called IS that wrap, its marker is the acceptance, the bank belt).
+     (5) prefs go through their pinned setters only when the module is present (typeof-guarded):
+         avInputGain, avInputOffset, avMetroSet({level,beatsPerBar}); prefs.metro.countIn has no
+         sanctioned setter in v1 -> carried, never silently dropped as a refusal.
+     (6) takesMeta is NOT applied — carried metadata (`carried` names it), never a skip.
+     ok = at least one leg present AND zero skips AND seqOk (bank's full-acceptance law).
+
+   DIRTY + AUTOSAVE (§2.1): dirty = the cheap fingerprint changed — fingerprint =
+   avSeqPatternExport() string + JSON of { params, mod.macros } + avTakesList().length (guarded,
+   never throws). avSessionTouch() marks dirty eagerly. Save/load/restore/recover re-base the
+   fingerprint. The autosave tick (timer at `ms`, only while on) writes the ONE `__autosave`
+   record ({ state, savedAt, name }) only when dirty; a landed write stamps lastAutosaveAt; a
+   refused write stays dirty (honest). Boot performs no write (the baseline is set post-hydrate).
+
+   RECOVERY: hydrate finds the `__autosave` record -> recovery.available with savedAt/name; the
+   offer NEVER auto-applies. avSessionRecover() = apply its state + clear the record durably +
+   note "recovered"; avSessionDismissRecovery() drops offer + record.
+
+   LAWS (verify/_s2_wave.md §3): "use strict"; node-loadable (no DOM/browser reach at load — the
+   only top-level browser touch is the guarded typeof window publish at the end); never throws;
+   no console noise; bounded growth (16 versions/session, ONE autosave record, notes capped).
+
+   v1 notes: save() versions the CURRENT session (the pin — "(creates on first save)"); further
+   sessions arrive via avSessionImport (the backup child's restore path). v1 trusts the seq snap
+   family for detachment (their contract: fresh deep copies). Delete is memory-first (the pinned
+   `-> bool`); a delete made while no DB is up is honoured at the next hydrate (never resurrected). */
+
+"use strict";
+
+/* ---------- pins (§2.1) ---------- */
+
+const AV_SESSION_VERSION = "s2.0";
+const AV_SESSION_STATE_V = 1;
+const AV_SESSION_DB = "av-sessions-store";          /* pinned IDB name (§2.1) */
+const AV_SESSION_DB_VER = 1;
+const AV_SESSION_OS = "sessions";                   /* object store, keyPath "id" */
+const AV_SESSION_LS = "av-sessions-ls";             /* localStorage fallback key (§2.1) */
+const AV_SESSION_MODES = ["idb", "ls", "mem"];      /* reportable backends */
+const AV_SESSION_AUTOSAVE_ID = "__autosave";        /* the ONE autosave record id */
+const AV_SESSION_VERSIONS_MAX = 16;                 /* the ring bound (§2.1) */
+const AV_SESSION_AUTOSAVE_DEF_MS = 45000;
+const AV_SESSION_AUTOSAVE_MIN_MS = 5000;
+const AV_SESSION_AUTOSAVE_MAX_MS = 600000;
+const AV_SESSION_OPEN_CAP_MS = 1800;                /* hung-open give-up (the av_store cap) */
+const AV_SESSION_NAME_CAP = 40;
+const AV_SESSION_ID_CAP = 64;
+const AV_SESSION_NOTES_CAP = 8;                     /* bounded state (no unbounded logs) */
+const AV_SESSION_IMPORT_MAX = 1000;                 /* hostile-payload loop guard */
+const AV_SESSION_MACRO_COUNT = 8;                   /* av_mod's pinned macro count */
+const AV_SESSION_UNDO_LABEL = "session load";       /* the "seq" checkpoint label (P4 undo law) */
+/* a §2.1 path is a dotted identifier starting with a letter — the belt keeps `__proto__`-class
+   keys out of the funnel (identical to av_bank's AV_BANK_PATH_RE) */
+const AV_SESSION_PATH_RE = /^[A-Za-z][A-Za-z0-9_.-]*$/;
+/* av_mod's wrap turf; when that wrap is the funnel we called, its marker is the acceptance */
+const AV_SESSION_MOD_MACRO_RE = /^mod\.macro[1-8]$/;
+const AV_SESSION_CLASSES = Object.freeze([]);       /* this module mounts nothing */
+
+/* ---------- module state (single source of truth; never holds DOM nodes) ---------- */
+
+const avSession = {
+  inited: false,
+  hydrated: false,
+  hydratePromise: null,
+  backend: "mem",            /* 'idb' | 'ls' | 'mem' — stays honest */
+  sessions: {},              /* id -> record {id,name,createdAt,updatedAt,current,versions} */
+  currentId: null,
+  db: null,
+  dbGaveUp: false,
+  dropped: {},               /* ids deleted while no DB was up; honoured at hydrate (never resurrected) */
+  autoRec: null,             /* the latest __autosave record seen/written {id,state,savedAt,name} */
+  recovery: null,            /* {available,savedAt,name,at,state} — the offer (never auto-applied) */
+  auto: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS },
+  timer: null,
+  lastAutosaveAt: 0,
+  baseFp: null,              /* the dirty baseline fingerprint (post-hydrate) */
+  touchDirty: false,         /* avSessionTouch()'s eager flag */
+  notes: [],                 /* bounded strings ("recovered", ...) */
+  lastApply: null,
+  lastSave: null,
+  lastLoad: null,
+  lastError: null,
+};
+
+/* ---------- guarded environment reaches (plain node has none of these) ---------- */
+
+function avSessionLs() {
+  try { if (typeof localStorage !== "undefined" && localStorage) return localStorage; } catch (e) { /* blocked */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && w.localStorage) return w.localStorage; } catch (e) { /* blocked */ }
+  return null;
+}
+
+function avSessionIdb() {
+  try { if (typeof indexedDB !== "undefined" && indexedDB) return indexedDB; } catch (e) { /* none */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && w.indexedDB) return w.indexedDB; } catch (e) { /* none */ }
+  return null;
+}
+
+function avSessionTimer(fn, ms) {
+  try { if (typeof setTimeout === "function") return setTimeout(fn, ms); } catch (e) { /* no timers */ }
+  return null;
+}
+
+function avSessionClear(t) {
+  try { if (t != null && typeof clearTimeout === "function") clearTimeout(t); } catch (e) { /* no timers */ }
+}
+
+function avSessionNow() {
+  try { return Date.now(); } catch (e) { return 0; }
+}
+
+function avSessionErrName(e) { try { return (e && e.name) ? String(e.name) : ""; } catch (e2) { return ""; } }
+function avSessionErrMsg(e) { try { const s = (e && e.message) ? String(e.message) : String(e); return s.slice(0, 120); } catch (e2) { return "error"; } }
+
+/* ---------- tiny value laws (garbage in, sane value out — never throw) ---------- */
+
+function avSessionObj(v) {
+  return (v !== null && typeof v === "object" && !Array.isArray(v));
+}
+
+function avSessionText(v, cap, dflt) {
+  try {
+    if (typeof v === "number") { if (!isFinite(v)) return dflt; v = String(v); }
+    if (typeof v !== "string") return dflt;
+    const s = v.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, cap || 80);
+    return s || dflt;
+  } catch (e) { return dflt; }
+}
+
+function avSessionNum(v, dflt, lo, hi) {
+  try {
+    const n = Number(v);
+    if (v == null || v === "" || !isFinite(n)) return dflt;
+    return Math.max(lo, Math.min(hi, n));
+  } catch (e) { return dflt; }
+}
+
+function avSessionInt(v, dflt, lo, hi) {
+  try {
+    const n = Number(v);
+    if (v == null || v === "" || !isFinite(n)) return dflt;
+    return Math.max(lo, Math.min(hi, Math.round(n)));
+  } catch (e) { return dflt; }
+}
+
+function avSessionBit(v) {
+  try {
+    if (v === 1 || v === true || v === "1") return 1;
+    if (v == null || v === 0 || v === false || v === "0") return 0;
+    const n = Number(v);
+    if (!isFinite(n)) return 0;
+    return Math.max(0, Math.min(1, Math.round(n)));
+  } catch (e) { return 0; }
+}
+
+/* JSON-safe deep copy (states/records are JSON-safe by construction); null when unserialisable */
+function avSessionClone(v) {
+  try { return JSON.parse(JSON.stringify(v)); } catch (e) { return null; }
+}
+
+/* ---------- capture pieces (§2.1 schema) ---------- */
+
+/* the avParams mirror clone: JSON-safe primitives only, §2.1 path shape only (mirrors av_bank's
+   belt — `__proto__`-class keys never enter a state) */
+function avSessionParamsSnap() {
+  const out = {};
+  try {
+    if (typeof avParams === "undefined" || !avParams || typeof avParams !== "object") return out;
+    const keys = Object.keys(avParams);
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      if (typeof k !== "string" || !AV_SESSION_PATH_RE.test(k)) continue;
+      const v = avParams[k], t = typeof v;
+      if (t === "number") { if (isFinite(v)) out[k] = v; continue; }
+      if (t === "string" || t === "boolean" || v === null) out[k] = v;
+    }
+  } catch (e) { /* mirror unreachable — {} is the honest empty */ }
+  return out;
+}
+
+/* macros from avModPayload() — exactly 8 clamped 0..1 numbers (zeros when av_mod is absent) */
+function avSessionMacrosSnap() {
+  const out = [0, 0, 0, 0, 0, 0, 0, 0];
+  try {
+    if (typeof avModPayload === "function") {
+      const p = avModPayload();
+      const m = (p && typeof p === "object") ? p.macros : null;
+      if (m && typeof m.length === "number") {
+        for (let i = 0; i < AV_SESSION_MACRO_COUNT && i < m.length; i++) {
+          const v = Number(m[i]);
+          out[i] = isFinite(v) ? Math.max(0, Math.min(1, v)) : 0;
+        }
+      }
+    }
+  } catch (e) { /* not loaded — zeros */ }
+  return out;
+}
+
+/* takesMeta = avTakesList() verbatim (a fresh copy; metadata only) */
+function avSessionTakesSnap() {
+  const out = [];
+  try {
+    if (typeof avTakesList === "function") {
+      const list = avTakesList();
+      if (Array.isArray(list)) {
+        for (let i = 0; i < list.length; i++) {
+          const c = avSessionClone(list[i]);
+          if (c !== null && avSessionObj(c)) out.push(c);
+        }
+      }
+    }
+  } catch (e) { /* not loaded — [] */ }
+  return out;
+}
+
+/* number-or-null reader (a fake 0 would APPLY as a value — null is the honest unknown) */
+function avSessionNumOrNull(v) {
+  try {
+    if (typeof v === "number") return isFinite(v) ? v : null;
+    return null;
+  } catch (e) { return null; }
+}
+
+function avSessionPrefsSnap() {
+  const prefs = {
+    inputGain: null,
+    inputOffsetMs: null,
+    metro: { level: null, beatsPerBar: null, countIn: null },
+  };
+  try {
+    if (typeof avInputState === "function") {
+      const s = avInputState();
+      if (s && typeof s === "object") {
+        prefs.inputGain = avSessionNumOrNull(s.gain);
+        prefs.inputOffsetMs = avSessionNumOrNull(s.offsetMs);
+      }
+    }
+  } catch (e) { /* input module absent — nulls stand */ }
+  try {
+    if (typeof avMetroState === "function") {
+      const m = avMetroState();
+      if (m && typeof m === "object") {
+        prefs.metro.level = avSessionNumOrNull(m.level);
+        prefs.metro.beatsPerBar = avSessionNumOrNull(m.beatsPerBar);
+      }
+    }
+  } catch (e) { /* metro module absent — nulls stand */ }
+  try {
+    /* countIn is the Studio card's default count-in bars (0..2); captured when reachable */
+    if (typeof avStudioUiSnap === "function") {
+      const su = avStudioUiSnap();
+      if (su && typeof su === "object") {
+        const n = Number(su.countIn);
+        if (isFinite(n)) prefs.metro.countIn = Math.max(0, Math.min(2, Math.round(n)));
+      }
+    }
+  } catch (e) { /* studio ui absent — null stands */ }
+  return prefs;
+}
+
+/* the seq family resolver (belt 1: binding, belt 2: window property) — resolved per call */
+function avSessionSeqFns() {
+  const out = {
+    load: null, set: null, ui: null, snap: null,
+    chainsLoad: null, songLoad: null, scenesLoad: null,
+    chainsSnap: null, songSnap: null, scenesSnap: null,
+  };
+  try {
+    if (typeof avSeqLoad === "function") out.load = avSeqLoad;
+    if (typeof avSeqSetPattern === "function") out.set = avSeqSetPattern;
+    if (typeof avSeqUiSync === "function") out.ui = avSeqUiSync;
+    if (typeof avSeqSnap === "function") out.snap = avSeqSnap;
+    if (typeof avSeqChainsLoad === "function") out.chainsLoad = avSeqChainsLoad;
+    if (typeof avSeqSongLoad === "function") out.songLoad = avSeqSongLoad;
+    if (typeof avSeqScenesLoad === "function") out.scenesLoad = avSeqScenesLoad;
+    if (typeof avSeqChainsSnap === "function") out.chainsSnap = avSeqChainsSnap;
+    if (typeof avSeqSongSnap === "function") out.songSnap = avSeqSongSnap;
+    if (typeof avSeqScenesSnap === "function") out.scenesSnap = avSeqScenesSnap;
+  } catch (e) { /* not injected */ }
+  try {
+    if (typeof window !== "undefined" && window) {
+      if (!out.load && typeof window.avSeqLoad === "function") out.load = window.avSeqLoad;
+      if (!out.set && typeof window.avSeqSetPattern === "function") out.set = window.avSeqSetPattern;
+      if (!out.ui && typeof window.avSeqUiSync === "function") out.ui = window.avSeqUiSync;
+      if (!out.snap && typeof window.avSeqSnap === "function") out.snap = window.avSeqSnap;
+      if (!out.chainsLoad && typeof window.avSeqChainsLoad === "function") out.chainsLoad = window.avSeqChainsLoad;
+      if (!out.songLoad && typeof window.avSeqSongLoad === "function") out.songLoad = window.avSeqSongLoad;
+      if (!out.scenesLoad && typeof window.avSeqScenesLoad === "function") out.scenesLoad = window.avSeqScenesLoad;
+      if (!out.chainsSnap && typeof window.avSeqChainsSnap === "function") out.chainsSnap = window.avSeqChainsSnap;
+      if (!out.songSnap && typeof window.avSeqSongSnap === "function") out.songSnap = window.avSeqSongSnap;
+      if (!out.scenesSnap && typeof window.avSeqScenesSnap === "function") out.scenesSnap = window.avSeqScenesSnap;
+    }
+  } catch (e) { /* no window */ }
+  return out;
+}
+
+function avSessionSeqCall(fn) {
+  try { if (typeof fn === "function") { const s = fn(); if (avSessionObj(s)) return avSessionClone(s); } } catch (e) { /* refuse */ }
+  return null;
+}
+
+function avSessionSeqSnap() {
+  const f = avSessionSeqFns();
+  return {
+    pattern: avSessionSeqCall(f.snap),
+    chains: avSessionSeqCall(f.chainsSnap),
+    song: avSessionSeqCall(f.songSnap),
+    scenes: avSessionSeqCall(f.scenesSnap),
+  };
+}
+
+/* the current session's name (null when none) */
+function avSessionCurrentName() {
+  try {
+    const id = avSession.currentId;
+    const rec = id ? avSession.sessions[id] : null;
+    return rec ? rec.name : null;
+  } catch (e) { return null; }
+}
+
+/* ---------- avSessionCapture (§2.1) ---------- */
+
+function avSessionCapture(opts) {
+  try {
+    const o = avSessionObj(opts) ? opts : {};
+    const wantName = avSessionText(o.name, AV_SESSION_NAME_CAP, "");
+    return {
+      v: AV_SESSION_STATE_V,
+      name: wantName || avSessionCurrentName() || null,
+      savedAt: avSessionNow(),
+      seq: avSessionSeqSnap(),
+      params: avSessionParamsSnap(),
+      mod: { macros: avSessionMacrosSnap() },
+      takesMeta: avSessionTakesSnap(),
+      prefs: avSessionPrefsSnap(),
+    };
+  } catch (e) {
+    /* the schema stands even when everything else refused */
+    return {
+      v: AV_SESSION_STATE_V, name: null, savedAt: 0,
+      seq: { pattern: null, chains: null, song: null, scenes: null },
+      params: {}, mod: { macros: [0, 0, 0, 0, 0, 0, 0, 0] }, takesMeta: [],
+      prefs: { inputGain: null, inputOffsetMs: null, metro: { level: null, beatsPerBar: null, countIn: null } },
+    };
+  }
+}
+
+/* ---------- the apply core (mirrors av_bank.js) ---------- */
+
+function avSessionFunnel() {
+  try { if (typeof avApplyParam === "function") return avApplyParam; } catch (e) { /* not injected */ }
+  try { if (typeof window !== "undefined" && window && typeof window.avApplyParam === "function") return window.avApplyParam; } catch (e) { /* no window */ }
+  return null;
+}
+
+/* §2.1 values: finite numbers as-is; strings as-is; booleans -> 1/0; everything else refuses */
+function avSessionValueNorm(v) {
+  if (typeof v === "number") return isFinite(v) ? v : null;
+  if (typeof v === "string") return v;
+  if (typeof v === "boolean") return v ? 1 : 0;
+  return null;
+}
+
+/* ordered, validated param rows: `engine.kind` FIRST (mirrors av_bankPatchRows) */
+function avSessionParamRows(params) {
+  const rows = [], refused = [];
+  if (params == null) return { rows: rows, refused: refused, bad: false };
+  if (!avSessionObj(params)) return { rows: rows, refused: refused, bad: true };
+  let keys = [];
+  try { keys = Object.keys(params); } catch (e) { keys = []; }
+  const order = [];
+  for (let i = 0; i < keys.length; i++) if (keys[i] !== "engine.kind") order.push(keys[i]);
+  if (keys.indexOf("engine.kind") >= 0) order.unshift("engine.kind");
+  for (let i = 0; i < order.length; i++) {
+    const path = order[i];
+    if (typeof path !== "string" || !AV_SESSION_PATH_RE.test(path)) { refused.push(String(path)); continue; }
+    const v = avSessionValueNorm(params[path]);
+    if (v === null) { refused.push(path); continue; }
+    rows.push({ path: path, v: v });
+  }
+  return { rows: rows, refused: refused, bad: false };
+}
+
+/* state.mod -> [8 clamped numbers] | null (an invalid container is one counted refusal handled
+   by the caller) */
+function avSessionMacroList(mod) {
+  if (!avSessionObj(mod)) return null;
+  const m = mod.macros;
+  if (!Array.isArray(m) || m.length < AV_SESSION_MACRO_COUNT) return null;
+  const out = [];
+  for (let i = 0; i < AV_SESSION_MACRO_COUNT; i++) {
+    const v = Number(m[i]);
+    if (!isFinite(v)) return null;
+    out.push(Math.max(0, Math.min(1, v)));
+  }
+  return out;
+}
+
+/* the seq leg (§2.1 law 1): pattern load FIRST, then chains/song/scenes loads, then the canonical
+   UI sync pair (av_bank's seq branch: avSeqSetPattern of the CORE's own sanitised snapshot +
+   avSeqUiSync), then the "seq" undo checkpoint AFTER the load (P4 undo law). Returns the leg
+   count contributed (0|1); failures land in receipt.skipped and clear receipt.seqOk. */
+function avSessionSeqLegLand(value, fn) {
+  if (!avSessionObj(value)) return false;
+  if (typeof fn !== "function") return false;
+  let ok = false;
+  try { ok = fn(value) === true; } catch (e) { ok = false; }
+  return ok;
+}
+
+function avSessionSeqApply(seq, receipt) {
+  const out = { pattern: null, chains: null, song: null, scenes: null };
+  receipt.seq = out;
+  if (!avSessionObj(seq)) {
+    receipt.skipped.push("seq");
+    receipt.seqOk = false;
+    return 0;
+  }
+  let legs = 0;
+  const f = avSessionSeqFns();
+  let patternLanded = false;
+  if (seq.pattern != null) {
+    legs = 1;
+    if (!avSessionObj(seq.pattern)) { out.pattern = false; receipt.skipped.push("seq.pattern"); receipt.seqOk = false; }
+    else if (typeof f.load !== "function" || typeof f.set !== "function") { out.pattern = false; receipt.skipped.push("seq.pattern"); receipt.seqOk = false; }
+    else {
+      let ok = false;
+      try { ok = f.load(seq.pattern) === true; } catch (e) { ok = false; }
+      if (!ok) { out.pattern = false; receipt.skipped.push("seq.pattern"); receipt.seqOk = false; }
+      else patternLanded = true;
+    }
+  }
+  if (seq.chains != null) {
+    legs = 1;
+    if (avSessionSeqLegLand(seq.chains, f.chainsLoad)) { out.chains = true; receipt.applied += 1; }
+    else { out.chains = false; receipt.skipped.push("seq.chains"); receipt.seqOk = false; }
+  }
+  if (seq.song != null) {
+    legs = 1;
+    if (avSessionSeqLegLand(seq.song, f.songLoad)) { out.song = true; receipt.applied += 1; }
+    else { out.song = false; receipt.skipped.push("seq.song"); receipt.seqOk = false; }
+  }
+  if (seq.scenes != null) {
+    legs = 1;
+    if (avSessionSeqLegLand(seq.scenes, f.scenesLoad)) { out.scenes = true; receipt.applied += 1; }
+    else { out.scenes = false; receipt.skipped.push("seq.scenes"); receipt.seqOk = false; }
+  }
+  /* the UI sync pair — only after a landed pattern load (bank law: load+set are the leg) */
+  if (patternLanded) {
+    let norm = seq.pattern;
+    try { if (typeof f.snap === "function") { const s = f.snap(); if (avSessionObj(s)) norm = s; } } catch (e) { /* raw seq stands */ }
+    let setOk = false;
+    try { setOk = f.set(norm) !== false; } catch (e) { setOk = false; }
+    if (!setOk) { out.pattern = false; receipt.skipped.push("seq.pattern"); receipt.seqOk = false; }
+    else {
+      out.pattern = true;
+      receipt.applied += 1;
+      try { if (typeof f.ui === "function") f.ui(); } catch (e) { /* repaint is a nicety — the pattern landed */ }
+      /* P4 undo law: the checkpoint lands AFTER the change; the previous checkpoint becomes before */
+      try { if (typeof avUndoPush === "function") avUndoPush("seq", AV_SESSION_UNDO_LABEL); } catch (e) { /* F optional */ }
+    }
+  }
+  return legs;
+}
+
+/* the prefs leg (§2.1 law 5): pinned setters only, typeof-guarded; countIn is carried (no
+   sanctioned setter in v1). Returns the leg count contributed (0|1). */
+function avSessionPrefsApply(prefs, receipt) {
+  if (!avSessionObj(prefs)) {
+    receipt.skipped.push("prefs");
+    return 0;
+  }
+  let legs = 0;
+  const gain = avSessionNumOrNull(prefs.inputGain);
+  if (gain !== null) {
+    legs = 1;
+    if (typeof avInputGain === "function") {
+      try { avInputGain(gain); receipt.applied += 1; } catch (e) { receipt.skipped.push("prefs.inputGain"); }
+    } else receipt.skipped.push("prefs.inputGain");
+  } else if (prefs.inputGain !== undefined && prefs.inputGain !== null) {
+    legs = 1; receipt.skipped.push("prefs.inputGain");
+  }
+  const off = avSessionNumOrNull(prefs.inputOffsetMs);
+  if (off !== null) {
+    legs = 1;
+    if (typeof avInputOffset === "function") {
+      try { avInputOffset(off); receipt.applied += 1; } catch (e) { receipt.skipped.push("prefs.inputOffsetMs"); }
+    } else receipt.skipped.push("prefs.inputOffsetMs");
+  } else if (prefs.inputOffsetMs !== undefined && prefs.inputOffsetMs !== null) {
+    legs = 1; receipt.skipped.push("prefs.inputOffsetMs");
+  }
+  const metro = prefs.metro;
+  if (avSessionObj(metro)) {
+    const lvl = avSessionNumOrNull(metro.level);
+    const bpb = avSessionNumOrNull(metro.beatsPerBar);
+    if (lvl !== null || bpb !== null) {
+      legs = 1;
+      const patch = {};
+      if (lvl !== null) patch.level = lvl;
+      if (bpb !== null) patch.beatsPerBar = bpb;
+      if (typeof avMetroSet === "function") {
+        let ok = false;
+        try { const r = avMetroSet(patch); ok = (r !== false && r != null); } catch (e) { ok = false; }
+        if (ok) receipt.applied += 1; else receipt.skipped.push("prefs.metro");
+      } else receipt.skipped.push("prefs.metro");
+    } else if ((metro.level !== undefined && metro.level !== null) || (metro.beatsPerBar !== undefined && metro.beatsPerBar !== null)) {
+      legs = 1; receipt.skipped.push("prefs.metro");
+    }
+    /* no sanctioned setter in v1 -> carried, honest (NOT a refusal) */
+    if (avSessionNumOrNull(metro.countIn) !== null) receipt.carried.push("prefs.metro.countIn");
+  }
+  return legs;
+}
+
+/* avSessionApply(state) -> { ok, applied, skipped, carried, seq, seqOk, error }
+   Never throws; every refusal is counted in `skipped`, every carried-not-applied item in
+   `carried`; ok = at least one leg AND zero skips AND the seq leg fully landed. */
+function avSessionApply(state) {
+  const receipt = { ok: false, applied: 0, skipped: [], carried: [], seq: null, seqOk: true, error: null };
+  avSession.lastApply = receipt;
+  try {
+    if (!avSessionObj(state)) { receipt.error = "not a state object"; return receipt; }
+    let legs = 0;
+    /* (1) seq FIRST */
+    if (state.seq != null) legs += avSessionSeqApply(state.seq, receipt);
+    /* (2)+(3) params — engine.kind first, every path through the CURRENT funnel binding */
+    const parsed = avSessionParamRows(state.params);
+    const funnel = avSessionFunnel();
+    if (parsed.bad) {
+      receipt.skipped.push("params");
+    } else if (parsed.rows.length > 0) {
+      legs = 1;
+      for (let i = 0; i < parsed.rows.length; i++) {
+        const row = parsed.rows[i];
+        if (!funnel) { receipt.skipped.push(row.path); continue; }
+        let rv = false;
+        try { rv = funnel(row.path, row.v, { from: "session" }); } catch (e) { rv = false; }
+        let accepted = rv !== false;
+        /* av_mod's wrap owns exactly mod.macro1..8: when the funnel we called IS that wrap, the
+           macro landed model-side even if the passthrough's engine leg said false (bank belt) */
+        if (!accepted && AV_SESSION_MOD_MACRO_RE.test(row.path) && funnel.__avModWrap === true) accepted = true;
+        if (accepted) receipt.applied += 1; else receipt.skipped.push(row.path);
+      }
+      for (let i = 0; i < parsed.refused.length; i++) receipt.skipped.push(parsed.refused[i]);
+    } else if (parsed.refused.length) {
+      for (let i = 0; i < parsed.refused.length; i++) receipt.skipped.push(parsed.refused[i]);
+    }
+    /* (4) mod macros via the funnel (same acceptance belt) */
+    if (state.mod != null) {
+      const macros = avSessionMacroList(state.mod);
+      if (macros === null) {
+        receipt.skipped.push("mod.macros");
+      } else {
+        legs = 1;
+        for (let i = 0; i < AV_SESSION_MACRO_COUNT; i++) {
+          const path = "mod.macro" + (i + 1);
+          if (!funnel) { receipt.skipped.push(path); continue; }
+          let rv = false;
+          try { rv = funnel(path, macros[i], { from: "session" }); } catch (e) { rv = false; }
+          let accepted = rv !== false;
+          if (!accepted && AV_SESSION_MOD_MACRO_RE.test(path) && funnel.__avModWrap === true) accepted = true;
+          if (accepted) receipt.applied += 1; else receipt.skipped.push(path);
+        }
+      }
+    }
+    /* (5) prefs via their pinned setters */
+    if (state.prefs != null) legs += avSessionPrefsApply(state.prefs, receipt);
+    /* (6) takesMeta is NOT applied — carried metadata only */
+    if (Array.isArray(state.takesMeta) && state.takesMeta.length > 0) receipt.carried.push("takesMeta");
+    receipt.ok = (legs > 0) && receipt.skipped.length === 0 && receipt.seqOk === true;
+    return receipt;
+  } catch (e) {
+    receipt.error = avSessionErrMsg(e);
+    receipt.ok = false;
+    return receipt;
+  }
+}
+
+/* ---------- dirty fingerprint (§2.1) ---------- */
+
+function avSessionFingerprint() {
+  let a = "", b = "", c = "";
+  try { a = (typeof avSeqPatternExport === "function") ? String(avSeqPatternExport() || "") : ""; } catch (e) { a = ""; }
+  try { b = JSON.stringify({ params: avSessionParamsSnap(), mod: { macros: avSessionMacrosSnap() } }); } catch (e) { b = ""; }
+  try { c = (typeof avTakesList === "function") ? String(avTakesList().length | 0) : ""; } catch (e) { c = ""; }
+  if (typeof b !== "string") b = "";
+  return a + "\n" + b + "\n" + c;
+}
+
+function avSessionDirty() {
+  try {
+    const st = avSession;
+    if (st.touchDirty === true) return true;
+    if (st.baseFp == null) return false;                 /* no baseline yet — nothing provable */
+    return avSessionFingerprint() !== st.baseFp;
+  } catch (e) { return false; }
+}
+
+function avSessionMarkBaseline() {
+  try { avSession.baseFp = avSessionFingerprint(); } catch (e) { avSession.baseFp = null; }
+  avSession.touchDirty = false;
+}
+
+function avSessionPushNote(text) {
+  try {
+    avSession.notes.push(String(text));
+    while (avSession.notes.length > AV_SESSION_NOTES_CAP) avSession.notes.shift();
+  } catch (e) { /* notes are a nicety */ }
+}
+
+/* ---------- IndexedDB plumbing (promise-wrapped, never throws — av_store's discipline) ---------- */
+
+function avSessionDbOpen() {
+  return new Promise(function (res) {
+    let capTimer = null;
+    try {
+      const st = avSession;
+      if (st.db) return res(st.db);
+      if (st.dbGaveUp) return res(null);
+      const idb = avSessionIdb();
+      if (!idb) return res(null);
+      let settled = false;
+      const give = function (v) { if (!settled) { settled = true; res(v); } };
+      /* a hung open (blocked upgrade) must not wedge the sessions core: give up after 1.8 s */
+      capTimer = avSessionTimer(function () { avSession.dbGaveUp = true; give(null); }, AV_SESSION_OPEN_CAP_MS);
+      const rq = idb.open(AV_SESSION_DB, AV_SESSION_DB_VER);
+      rq.onupgradeneeded = function () {
+        try {
+          const db = rq.result;
+          if (!db.objectStoreNames || !db.objectStoreNames.contains(AV_SESSION_OS)) db.createObjectStore(AV_SESSION_OS, { keyPath: "id" });
+        } catch (e) { /* upgrade raced */ }
+      };
+      rq.onsuccess = function () {
+        avSessionClear(capTimer);
+        if (avSession.dbGaveUp) { try { rq.result.close(); } catch (e) { /* ignore */ } return give(null); }
+        const db = rq.result;
+        st.db = db;
+        try { db.onclose = function () { if (avSession.db === db) avSession.db = null; }; } catch (e) { /* fine */ }
+        give(db);
+      };
+      rq.onerror = function () { avSessionClear(capTimer); give(null); };
+      rq.onblocked = function () { avSessionClear(capTimer); give(null); };
+    } catch (e) { avSessionClear(capTimer); res(null); }
+  });
+}
+
+function avSessionDbAll(db) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_SESSION_OS, "readonly");
+      const rq = tx.objectStore(AV_SESSION_OS).getAll();
+      rq.onsuccess = function () { res(rq.result || []); };
+      rq.onerror = function () { res(null); };
+      tx.onerror = function () { res(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+function avSessionDbWrite(db, rec) {
+  return new Promise(function (res, rej) {
+    try {
+      const tx = db.transaction(AV_SESSION_OS, "readwrite");
+      tx.objectStore(AV_SESSION_OS).put(rec);
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { rej((tx.error) || new Error("idb write failed")); };
+      tx.onabort = function () { rej((tx.error) || new Error("idb write aborted")); };
+    } catch (e) { rej(e); }
+  });
+}
+
+function avSessionDbRemove(db, id) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_SESSION_OS, "readwrite");
+      tx.objectStore(AV_SESSION_OS).delete(id);
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { res(false); };
+      tx.onabort = function () { res(false); };
+    } catch (e) { res(false); }
+  });
+}
+
+/* ---------- record normalisation (garbage in -> null / cleaned record out) ---------- */
+
+function avSessionVersionNorm(raw) {
+  if (!avSessionObj(raw)) return null;
+  if (!avSessionObj(raw.state)) return null;
+  const state = avSessionClone(raw.state);
+  if (!avSessionObj(state)) return null;
+  const v = Math.round(Number(raw.v));
+  return {
+    v: (isFinite(v) && v >= 1) ? v : 0,
+    savedAt: avSessionNum(raw.savedAt, 0, 0, 9e15),
+    state: state,
+  };
+}
+
+function avSessionRecordNorm(raw) {
+  if (!avSessionObj(raw)) return null;
+  let id = "";
+  try {
+    id = (typeof raw.id === "string") ? raw.id.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, AV_SESSION_ID_CAP) : "";
+  } catch (e) { id = ""; }
+  if (!id || id === AV_SESSION_AUTOSAVE_ID) return null;   /* the autosave id is reserved */
+  const createdAt = avSessionNum(raw.createdAt, 0, 0, 9e15);
+  const updatedAt = avSessionNum(raw.updatedAt, createdAt, 0, 9e15);
+  const versions = [];
+  const rawV = Array.isArray(raw.versions) ? raw.versions : [];
+  for (let i = 0; i < rawV.length; i++) {
+    const vv = avSessionVersionNorm(rawV[i]);
+    if (!vv) continue;
+    if (vv.v === 0) vv.v = i + 1;
+    versions.push(vv);
+  }
+  versions.sort(function (a, b) { return a.v - b.v; });
+  while (versions.length > AV_SESSION_VERSIONS_MAX) versions.shift();   /* keep the newest */
+  return {
+    id: id,
+    name: avSessionText(raw.name, AV_SESSION_NAME_CAP, "Session"),
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+    current: avSessionBit(raw.current) === 1,
+    versions: versions,
+  };
+}
+
+/* a detached copy for storage/export ({id,name,createdAt,updatedAt,current,versions:[{v,savedAt,
+   state}]}); null when a state cannot be serialised */
+function avSessionRecordForStore(rec) {
+  try {
+    const out = {
+      id: rec.id, name: rec.name, createdAt: rec.createdAt, updatedAt: rec.updatedAt,
+      current: rec.current === true, versions: [],
+    };
+    for (let i = 0; i < rec.versions.length; i++) {
+      const vv = rec.versions[i];
+      const state = avSessionClone(vv.state);
+      if (!state) return null;
+      out.versions.push({ v: vv.v, savedAt: vv.savedAt, state: state });
+    }
+    return out;
+  } catch (e) { return null; }
+}
+
+function avSessionAutoRecNorm(raw) {
+  if (!avSessionObj(raw)) return null;
+  if (!avSessionObj(raw.state)) return null;
+  const state = avSessionClone(raw.state);
+  if (!avSessionObj(state)) return null;
+  return {
+    id: AV_SESSION_AUTOSAVE_ID,
+    state: state,
+    savedAt: avSessionNum(raw.savedAt, 0, 0, 9e15),
+    name: (typeof raw.name === "string") ? avSessionText(raw.name, AV_SESSION_NAME_CAP, null) : null,
+  };
+}
+
+function avSessionAutoRecForStore(rec) {
+  const state = avSessionClone(rec.state);
+  if (!state) return null;
+  return { id: AV_SESSION_AUTOSAVE_ID, state: state, savedAt: rec.savedAt, name: rec.name };
+}
+
+/* ---------- LS fallback (JSON: sessions = meta + newest version only, + the autosave record) --- */
+
+function avSessionLsRead() {
+  const out = { sessions: {}, autosave: null, bad: false };
+  try {
+    const ls = avSessionLs();
+    const raw = ls ? ls.getItem(AV_SESSION_LS) : null;
+    if (raw == null) return out;
+    let obj = null;
+    try { obj = JSON.parse(String(raw)); } catch (e) { out.bad = true; return out; }
+    if (!avSessionObj(obj)) { out.bad = true; return out; }
+    if (avSessionObj(obj.sessions)) {
+      const keys = Object.keys(obj.sessions);
+      for (let i = 0; i < keys.length; i++) {
+        const rec = avSessionRecordNorm(obj.sessions[keys[i]]);
+        if (rec) out.sessions[rec.id] = rec;
+      }
+    }
+    if (obj.autosave != null) out.autosave = avSessionAutoRecNorm(obj.autosave);
+  } catch (e) { out.bad = true; }
+  return out;
+}
+
+function avSessionLsPayload() {
+  const st = avSession;
+  const sessions = {};
+  const ids = Object.keys(st.sessions);
+  for (let i = 0; i < ids.length; i++) {
+    const rec = st.sessions[ids[i]];
+    if (!rec) continue;
+    const newest = rec.versions.length ? rec.versions[rec.versions.length - 1] : null;
+    sessions[rec.id] = {
+      id: rec.id, name: rec.name, createdAt: rec.createdAt, updatedAt: rec.updatedAt,
+      current: rec.current === true,
+      versions: newest ? [{ v: newest.v, savedAt: newest.savedAt, state: newest.state }] : [],
+    };
+  }
+  return { v: AV_SESSION_STATE_V, sessions: sessions, autosave: st.autoRec ? avSessionAutoRecForStore(st.autoRec) : null };
+}
+
+/* write the whole LS snapshot; {ok} / {ok:false,error:'quota'|'ls'} / {skipped:true} without LS */
+function avSessionLsWrite() {
+  const ls = avSessionLs();
+  if (!ls) return { skipped: true };
+  try {
+    const payload = avSessionLsPayload();
+    ls.setItem(AV_SESSION_LS, JSON.stringify(payload));
+    if (avSession.backend === "mem") avSession.backend = "ls";   /* the tier really is in use now */
+    avSession.lastError = null;
+    return { ok: true };
+  } catch (e) {
+    if (avSessionErrName(e) === "QuotaExceededError") { avSession.lastError = "quota"; return { ok: false, error: "quota" }; }
+    return { ok: false, error: "ls" };   /* storage fully unavailable: memory fallback follows */
+  }
+}
+
+/* ---------- hydrate (LS snapshot paints first, then the DB takes over — av_store's law) -------- */
+
+function avSessionHydrate() {
+  const st = avSession;
+  if (st.hydratePromise) return st.hydratePromise;
+  try {
+    st.hydratePromise = avSessionHydrateRun().catch(function (e) {
+      st.lastError = "hydrate:" + avSessionErrMsg(e);
+      st.hydrated = true;
+      return st.backend;
+    });
+    return st.hydratePromise;
+  } catch (e) {
+    st.hydrated = true;
+    return Promise.resolve(st.backend);
+  }
+}
+
+function avSessionMergeSessions(fromDb, lsClean) {
+  const st = avSession;
+  const out = {};
+  const k1 = Object.keys(fromDb);
+  for (let i = 0; i < k1.length; i++) out[k1[i]] = fromDb[k1[i]];
+  /* the LS snapshot is written only by a session that could not reach the DB, so for a duplicate
+     id the SNAPSHOT wins (av_store's law); this live page's own records win over both */
+  const k2 = Object.keys(lsClean);
+  for (let i = 0; i < k2.length; i++) out[k2[i]] = lsClean[k2[i]];
+  const k3 = Object.keys(st.sessions);
+  for (let i = 0; i < k3.length; i++) out[k3[i]] = st.sessions[k3[i]];
+  st.sessions = out;
+}
+
+function avSessionFixCurrent() {
+  const st = avSession;
+  if (st.currentId && !st.sessions[st.currentId]) st.currentId = null;
+  if (!st.currentId) {
+    let best = null;
+    const ids = Object.keys(st.sessions);
+    for (let i = 0; i < ids.length; i++) {
+      const rec = st.sessions[ids[i]];
+      if (!rec || rec.current !== true) continue;
+      if (!best || (rec.updatedAt || 0) > (best.updatedAt || 0)) best = rec;
+    }
+    if (best) st.currentId = best.id;
+  }
+  const ids2 = Object.keys(st.sessions);
+  for (let i = 0; i < ids2.length; i++) {
+    const rec = st.sessions[ids2[i]];
+    if (rec) rec.current = (rec.id === st.currentId);
+  }
+}
+
+async function avSessionHydrateRun() {
+  const st = avSession;
+  if (st.hydrated) return st.backend;
+  const ls = avSessionLsRead();
+  if (ls.bad) st.lastError = "ls:json";
+  const lsClean = ls.sessions;
+  const lsHad = Object.keys(lsClean).length > 0 || !!ls.autosave;
+  const db = await avSessionDbOpen();
+  if (db) {
+    const recs = await avSessionDbAll(db);
+    if (recs === null) {
+      st.backend = lsHad ? "ls" : "mem";                 /* the read blew up: stay on the snapshot */
+      avSessionMergeSessions({}, lsClean);
+      if (ls.autosave) st.autoRec = ls.autosave;
+    } else {
+      st.backend = "idb";
+      const fromDb = {};
+      for (let i = 0; i < recs.length; i++) {
+        const r = recs[i];
+        if (!avSessionObj(r)) continue;
+        if (r.id === AV_SESSION_AUTOSAVE_ID) {
+          const ar = avSessionAutoRecNorm(r);
+          if (ar && !st.autoRec) st.autoRec = ar;
+          continue;
+        }
+        const rec = avSessionRecordNorm(r);
+        if (rec) fromDb[rec.id] = rec;
+      }
+      /* removals made while the DB was unreachable stay honoured (never resurrected) */
+      const dropIds = Object.keys(st.dropped);
+      for (let i = 0; i < dropIds.length; i++) {
+        const id = dropIds[i];
+        delete fromDb[id];
+        delete lsClean[id];
+        try { avSessionDbRemove(db, id); } catch (e) { /* best-effort */ }
+      }
+      st.dropped = {};
+      avSessionMergeSessions(fromDb, lsClean);
+      if (ls.autosave) st.autoRec = ls.autosave;         /* snapshot wins for the autosave too */
+      /* write through every snapshot id; retire the LS key once its content is safe */
+      const ids = Object.keys(lsClean);
+      let want = 0, landed = 0;
+      for (let i = 0; i < ids.length; i++) {
+        want += 1;
+        try {
+          const payload = avSessionRecordForStore(st.sessions[ids[i]]);
+          if (payload) { await avSessionDbWrite(db, payload); landed += 1; }
+        } catch (e) { /* best-effort import */ }
+      }
+      if (st.autoRec && ls.autosave) {
+        try {
+          const ar = avSessionAutoRecForStore(st.autoRec);
+          if (ar) await avSessionDbWrite(db, ar);
+        } catch (e) { /* best-effort */ }
+      }
+      if (want && landed === want) {
+        try { const l = avSessionLs(); if (l) l.removeItem(AV_SESSION_LS); } catch (e) { /* keep the spare copy */ }
+      }
+    }
+  } else {
+    st.backend = lsHad ? "ls" : "mem";
+    avSessionMergeSessions({}, lsClean);
+    if (ls.autosave) st.autoRec = ls.autosave;
+  }
+  avSessionFixCurrent();
+  /* the recovery offer: an autosave record exists -> available (NEVER auto-applied) */
+  if (st.autoRec) {
+    st.recovery = {
+      available: true,
+      savedAt: st.autoRec.savedAt,
+      name: st.autoRec.name,
+      at: avSessionNow(),
+      state: st.autoRec.state,
+    };
+  }
+  st.hydrated = true;
+  avSessionMarkBaseline();
+  return st.backend;
+}
+
+/* ---------- durable commits (tier-honest: idb -> ls -> mem; quota never silently downgrades) --- */
+
+async function avSessionCommitRecord(rec) {
+  const st = avSession;
+  const payload = avSessionRecordForStore(rec);
+  if (!payload) { st.lastError = "store:serialize"; return { ok: false, error: "serialize", backend: st.backend }; }
+  if (st.db) {
+    try {
+      await avSessionDbWrite(st.db, payload);
+      st.lastError = null;
+      return { ok: true, backend: "idb" };
+    } catch (e) {
+      const name = avSessionErrName(e);
+      if (name === "InvalidStateError" || name === "TransactionInactiveError") {
+        st.db = null;
+        try { await avSessionDbOpen(); } catch (e2) { /* stays null */ }
+      }
+      const err = (name === "QuotaExceededError") ? "quota" : ("idb:" + (name || "error"));
+      st.lastError = err;
+      return { ok: false, backend: "idb", error: err };
+    }
+  }
+  if (avSessionLs()) {
+    const w = avSessionLsWrite();
+    if (w && w.ok) return { ok: true, backend: "ls" };
+    if (w && w.error === "quota") return { ok: false, backend: "ls", error: "quota" };
+    /* storage fully unavailable: fall to memory for this session */
+  }
+  st.lastError = null;
+  return { ok: true, backend: "mem", volatile: true };
+}
+
+async function avSessionCommitAutoRec(rec) {
+  const st = avSession;
+  const prev = st.autoRec;
+  const payload = avSessionAutoRecForStore(rec);
+  if (!payload) { st.lastError = "autosave:serialize"; return { ok: false, error: "serialize", backend: st.backend }; }
+  if (st.db) {
+    try {
+      await avSessionDbWrite(st.db, payload);
+      st.autoRec = rec;
+      st.lastError = null;
+      return { ok: true, backend: "idb" };
+    } catch (e) {
+      const err = (avSessionErrName(e) === "QuotaExceededError") ? "quota" : ("idb:" + (avSessionErrName(e) || "error"));
+      st.lastError = err;
+      return { ok: false, backend: "idb", error: err };
+    }
+  }
+  if (avSessionLs()) {
+    st.autoRec = rec;
+    const w = avSessionLsWrite();
+    if (w && w.ok) return { ok: true, backend: "ls" };
+    st.autoRec = prev;
+    return { ok: false, backend: "ls", error: (w && w.error) || "ls" };
+  }
+  st.autoRec = rec;
+  st.lastError = null;
+  return { ok: true, backend: "mem", volatile: true };
+}
+
+async function avSessionClearAutoRec() {
+  const st = avSession;
+  const prev = st.autoRec;
+  if (st.db) {
+    const ok = await avSessionDbRemove(st.db, AV_SESSION_AUTOSAVE_ID);
+    if (ok) { st.autoRec = null; st.lastError = null; return { ok: true, backend: "idb" }; }
+    st.lastError = "clear:" + AV_SESSION_AUTOSAVE_ID;
+    return { ok: false, backend: "idb", error: "idb:clear" };
+  }
+  if (avSessionLs()) {
+    st.autoRec = null;
+    const w = avSessionLsWrite();
+    if (w && w.ok) return { ok: true, backend: "ls" };
+    st.autoRec = prev;
+    return { ok: false, backend: "ls", error: (w && w.error) || "ls" };
+  }
+  st.autoRec = null;
+  return { ok: true, backend: "mem" };
+}
+
+/* ---------- small session helpers ---------- */
+
+function avSessionFind(id) {
+  try {
+    if (id == null) return null;
+    const key = String(id);
+    return avSession.sessions[key] || null;
+  } catch (e) { return null; }
+}
+
+function avSessionNextId() {
+  let max = 0;
+  try {
+    const ids = Object.keys(avSession.sessions);
+    for (let i = 0; i < ids.length; i++) {
+      const m = /^s(\d+)$/.exec(ids[i]);
+      if (m) { const n = Number(m[1]); if (isFinite(n) && n > max) max = n; }
+    }
+  } catch (e) { max = 0; }
+  let id = "s" + (max + 1);
+  let guard = 0;
+  while (avSession.sessions[id] && guard++ < 64) id = "s" + (max + 1 + guard);
+  if (avSession.sessions[id]) {                       /* timestamp fallback (never expected) */
+    id = "s" + avSessionNow();
+    guard = 0;
+    while (avSession.sessions[id] && guard++ < 64) id = "s" + avSessionNow() + "-" + guard;
+  }
+  return id;
+}
+
+function avSessionClearOtherCurrent(id) {
+  try {
+    const ids = Object.keys(avSession.sessions);
+    for (let i = 0; i < ids.length; i++) {
+      const rec = avSession.sessions[ids[i]];
+      if (rec) rec.current = (rec.id === id);
+    }
+  } catch (e) { /* flags are re-derived by avSessionFixCurrent after hydrates */ }
+}
+
+function avSessionEnsure() {
+  try { if (!avSession.inited) avSessionInit(); } catch (e) { /* init never throws anyway */ }
+  return avSession.inited === true;
+}
+
+function avSessionPersistRecords(recs) {
+  const st = avSession;
+  try {
+    if (st.db) {
+      for (let i = 0; i < recs.length; i++) {
+        const payload = avSessionRecordForStore(recs[i]);
+        if (!payload) continue;
+        st.db && avSessionDbWrite(st.db, payload).catch(function () { st.lastError = "persist:" + recs[i].id; });
+      }
+      return true;
+    }
+    if (avSessionLs()) {
+      const w = avSessionLsWrite();
+      if (!w || w.ok !== true) st.lastError = "persist:" + ((w && w.error) || "ls");
+      return true;
+    }
+  } catch (e) { st.lastError = "persist"; }
+  return false;
+}
+
+/* ---------- public surface: init / save / list / load / delete / versions / restore ---------- */
+
+function avSessionInit() {
+  try {
+    const st = avSession;
+    if (!st.inited) {
+      st.inited = true;
+      avSessionHydrate();                 /* best-effort boot hydrate; idempotent by promise */
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionSave(name) {
+  try {
+    avSessionEnsure();
+    return Promise.resolve(avSessionSaveRun(name)).catch(function (e) {
+      return { ok: false, error: avSessionErrMsg(e) };
+    });
+  } catch (e) {
+    return Promise.resolve({ ok: false, error: avSessionErrMsg(e) });
+  }
+}
+
+async function avSessionSaveRun(name) {
+  const st = avSession;
+  await avSessionHydrate();
+  const nm = avSessionText(name, AV_SESSION_NAME_CAP, "");
+  const now = avSessionNow();
+  let rec = (st.currentId && st.sessions[st.currentId]) ? st.sessions[st.currentId] : null;
+  let created = false, prevName = null, prevUpdatedAt = 0, prevLen = 0, prevCurrentId = st.currentId;
+  if (!rec) {
+    const id = avSessionNextId();
+    rec = { id: id, name: nm || "Session", createdAt: now, updatedAt: now, current: true, versions: [] };
+    st.sessions[id] = rec;
+    st.currentId = id;
+    created = true;
+  } else {
+    prevName = rec.name;
+    prevUpdatedAt = rec.updatedAt;
+    if (nm) rec.name = nm;
+  }
+  prevLen = rec.versions.length;
+  const stateObj = avSessionCapture();
+  stateObj.name = rec.name;
+  stateObj.savedAt = now;
+  let nextV = 1;
+  if (rec.versions.length) nextV = (Math.round(Number(rec.versions[rec.versions.length - 1].v)) || 0) + 1;
+  if (!(nextV >= 1)) nextV = 1;
+  rec.versions.push({ v: nextV, savedAt: now, state: stateObj });
+  while (rec.versions.length > AV_SESSION_VERSIONS_MAX) rec.versions.shift();   /* the 16 ring */
+  rec.updatedAt = now;
+  rec.current = true;
+  avSessionClearOtherCurrent(rec.id);
+  const put = await avSessionCommitRecord(rec);
+  if (!put || put.ok !== true) {
+    /* "nothing durable → not saved": roll the memory change back so list matches storage */
+    rec.versions.length = prevLen;
+    rec.updatedAt = prevUpdatedAt;
+    if (created) {
+      delete st.sessions[rec.id];
+      if (st.currentId === rec.id) st.currentId = prevCurrentId;
+    } else if (prevName != null) {
+      rec.name = prevName;
+    }
+    st.lastError = (put && put.error) || "save";
+    const bad = { ok: false, id: rec.id, name: rec.name, version: nextV, savedAt: now, backend: (put && put.backend) || st.backend, error: (put && put.error) || "write failed", versions: rec.versions.length };
+    st.lastSave = bad;
+    return bad;
+  }
+  avSessionMarkBaseline();
+  const receipt = { ok: true, id: rec.id, name: rec.name, version: nextV, savedAt: now, backend: put.backend, volatile: !!put.volatile, versions: rec.versions.length };
+  st.lastSave = receipt;
+  st.lastError = null;
+  return receipt;
+}
+
+function avSessionList() {
+  const out = [];
+  try {
+    const st = avSession;
+    const ids = Object.keys(st.sessions);
+    for (let i = 0; i < ids.length; i++) {
+      const rec = st.sessions[ids[i]];
+      if (!rec) continue;
+      const newest = rec.versions.length ? rec.versions[rec.versions.length - 1] : null;
+      out.push({
+        id: rec.id,
+        name: rec.name,
+        savedAt: newest ? newest.savedAt : rec.updatedAt,
+        updatedAt: rec.updatedAt,
+        version: newest ? newest.v : 0,
+        current: (rec.current === true) || (rec.id === st.currentId),
+      });
+    }
+  } catch (e) { /* [] */ }
+  return out;
+}
+
+async function avSessionMarkCurrent(rec) {
+  const st = avSession;
+  const prevId = st.currentId;
+  st.currentId = rec.id;
+  avSessionClearOtherCurrent(rec.id);
+  let put = await avSessionCommitRecord(rec);
+  if (prevId && prevId !== rec.id && st.sessions[prevId]) {
+    const p = await avSessionCommitRecord(st.sessions[prevId]);
+    if (!p.ok && put.ok) put = p;                       /* a failure is reported honestly */
+  }
+  return put;
+}
+
+function avSessionLoad(id) {
+  try {
+    avSessionEnsure();
+    return Promise.resolve(avSessionLoadRun(id)).catch(function (e) {
+      return { ok: false, id: String(id == null ? "" : id), error: avSessionErrMsg(e) };
+    });
+  } catch (e) {
+    return Promise.resolve({ ok: false, id: String(id == null ? "" : id), error: avSessionErrMsg(e) });
+  }
+}
+
+async function avSessionLoadRun(id) {
+  const st = avSession;
+  await avSessionHydrate();
+  const rec = avSessionFind(id);
+  if (!rec) return { ok: false, id: String(id == null ? "" : id), error: "no-session" };
+  if (!rec.versions.length) return { ok: false, id: rec.id, name: rec.name, error: "no-versions" };
+  const ver = rec.versions[rec.versions.length - 1];
+  const ap = avSessionApply(ver.state);
+  const marked = await avSessionMarkCurrent(rec);
+  avSessionMarkBaseline();
+  const receipt = {
+    ok: ap.ok === true, id: rec.id, name: rec.name, version: ver.v, savedAt: ver.savedAt,
+    applied: ap.applied, skipped: ap.skipped, carried: ap.carried, seqOk: ap.seqOk,
+    marked: marked.ok === true, backend: marked.backend, error: ap.error,
+  };
+  st.lastLoad = receipt;
+  if (!ap.ok && ap.error) st.lastError = ap.error;
+  return receipt;
+}
+
+function avSessionDelete(id) {
+  try {
+    const st = avSession;
+    avSessionEnsure();
+    const rec = avSessionFind(id);
+    if (!rec) return false;
+    delete st.sessions[rec.id];
+    if (st.currentId === rec.id) st.currentId = null;
+    if (st.db) {
+      avSessionDbRemove(st.db, rec.id).then(function (ok) {
+        if (!ok) st.lastError = "delete:" + rec.id;
+      }, function () { st.lastError = "delete:" + rec.id; });
+    } else if (avSessionLs()) {
+      st.dropped[rec.id] = true;
+      const w = avSessionLsWrite();
+      if (!w || w.ok !== true) st.lastError = "delete:" + ((w && w.error) || "ls");
+    } else {
+      st.dropped[rec.id] = true;                        /* memory last resort */
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionVersions(id) {
+  try {
+    const st = avSession;
+    const want = (id == null) ? st.currentId : id;
+    const rec = want != null ? avSessionFind(want) : null;
+    if (!rec) return [];
+    const out = [];
+    for (let i = 0; i < rec.versions.length; i++) {
+      const vv = rec.versions[i];
+      let bytes = 0;
+      try { bytes = JSON.stringify(vv.state).length; } catch (e) { bytes = 0; }
+      out.push({ version: vv.v, savedAt: vv.savedAt, bytes: bytes });
+    }
+    return out;
+  } catch (e) { return []; }
+}
+
+function avSessionRestore(id, version) {
+  try {
+    avSessionEnsure();
+    return Promise.resolve(avSessionRestoreRun(id, version)).catch(function (e) {
+      return { ok: false, id: String(id == null ? "" : id), error: avSessionErrMsg(e) };
+    });
+  } catch (e) {
+    return Promise.resolve({ ok: false, id: String(id == null ? "" : id), error: avSessionErrMsg(e) });
+  }
+}
+
+async function avSessionRestoreRun(id, version) {
+  const st = avSession;
+  await avSessionHydrate();
+  const rec = avSessionFind(id);
+  if (!rec) return { ok: false, id: String(id == null ? "" : id), error: "no-session" };
+  const want = Math.round(Number(version));
+  let ver = null;
+  for (let i = 0; i < rec.versions.length; i++) if (rec.versions[i].v === want) { ver = rec.versions[i]; break; }
+  if (!ver) return { ok: false, id: rec.id, name: rec.name, version: (isFinite(want) ? want : null), error: "no-version" };
+  const ap = avSessionApply(ver.state);
+  const marked = await avSessionMarkCurrent(rec);
+  avSessionMarkBaseline();
+  const receipt = {
+    ok: ap.ok === true, id: rec.id, name: rec.name, version: ver.v, savedAt: ver.savedAt,
+    applied: ap.applied, skipped: ap.skipped, carried: ap.carried, seqOk: ap.seqOk,
+    marked: marked.ok === true, backend: marked.backend, error: ap.error,
+  };
+  st.lastLoad = receipt;
+  if (!ap.ok && ap.error) st.lastError = ap.error;
+  return receipt;
+}
+
+/* ---------- autosave (ONE timer; one __autosave record; dirty-only writes) ---------- */
+
+function avSessionAutosave(on, ms) {
+  try {
+    avSessionEnsure();
+    const st = avSession;
+    let changed = false;
+    if (on !== undefined && on !== null) { st.auto.on = !!on; changed = true; }
+    if (ms !== undefined && ms !== null) {
+      const n = Number(ms);
+      if (isFinite(n)) st.auto.ms = Math.max(AV_SESSION_AUTOSAVE_MIN_MS, Math.min(AV_SESSION_AUTOSAVE_MAX_MS, Math.round(n)));
+      changed = true;
+    }
+    if (changed) avSessionAutosaveRearm();
+    return { on: st.auto.on === true, ms: st.auto.ms };
+  } catch (e) {
+    return { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS };
+  }
+}
+
+function avSessionAutosaveRearm() {
+  const st = avSession;
+  if (st.timer != null) { avSessionClear(st.timer); st.timer = null; }
+  if (st.auto.on !== true) return;
+  st.timer = avSessionTimer(avSessionAutosaveTick, st.auto.ms);
+}
+
+function avSessionAutosaveTick() {
+  const st = avSession;
+  st.timer = null;
+  try {
+    if (st.auto.on === true) {
+      const fp = avSessionFingerprint();
+      const dirty = st.touchDirty === true || (st.baseFp != null && fp !== st.baseFp);
+      if (dirty) {
+        const stateObj = avSessionCapture();
+        const rec = { id: AV_SESSION_AUTOSAVE_ID, state: stateObj, savedAt: avSessionNow(), name: stateObj.name };
+        avSessionCommitAutoRec(rec).then(function (r) {
+          if (r && r.ok === true) {
+            st.lastAutosaveAt = rec.savedAt;
+            st.baseFp = fp;
+            st.touchDirty = false;
+            if (st.recovery && st.recovery.available === true) {   /* refresh the pending offer */
+              st.recovery.savedAt = rec.savedAt;
+              st.recovery.name = rec.name;
+              st.recovery.state = rec.state;
+            }
+          } else {
+            st.lastError = "autosave:" + ((r && r.error) || "write failed");   /* stays dirty */
+          }
+        }, function () { st.lastError = "autosave:write failed"; });
+      }
+    }
+  } catch (e) { st.lastError = "autosave:" + avSessionErrMsg(e); }
+  if (st.auto.on === true) st.timer = avSessionTimer(avSessionAutosaveTick, st.auto.ms);
+}
+
+/* ---------- state / recovery ---------- */
+
+function avSessionNote() {
+  try {
+    const st = avSession;
+    if (st.hydrated !== true) return null;
+    if (st.backend === "idb") return null;
+    if (avSessionLs()) return "no IndexedDB — sessions keep the newest version per session (localStorage)";
+    return "no persistent storage here — sessions live only until this page closes";
+  } catch (e) { return null; }
+}
+
+function avSessionState() {
+  try {
+    const st = avSession;
+    const ids = Object.keys(st.sessions);
+    let current = null;
+    if (st.currentId && st.sessions[st.currentId]) current = { id: st.currentId, name: st.sessions[st.currentId].name };
+    const rec = st.recovery;
+    const hasRec = !!(rec && rec.available === true && avSessionObj(rec.state));
+    return {
+      version: AV_SESSION_VERSION,
+      init: st.inited === true,
+      inited: st.inited === true,
+      hydrated: st.hydrated === true,
+      backend: st.backend,
+      volatile: st.backend === "mem",
+      modes: AV_SESSION_MODES.slice(),
+      note: avSessionNote(),
+      notes: st.notes.slice(),
+      count: ids.length,
+      current: current,
+      dirty: avSessionDirty(),
+      lastAutosaveAt: st.lastAutosaveAt,
+      autosave: { on: st.auto.on === true, ms: st.auto.ms },
+      recovery: hasRec
+        ? { available: true, savedAt: rec.savedAt, name: rec.name, at: rec.at }
+        : { available: false, savedAt: null, name: null, at: null },
+      lastError: st.lastError,
+      lastSave: st.lastSave ? avSessionClone(st.lastSave) : null,
+      lastLoad: st.lastLoad ? avSessionClone(st.lastLoad) : null,
+    };
+  } catch (e) {
+    return {
+      version: AV_SESSION_VERSION, init: false, inited: false, hydrated: false, backend: null,
+      volatile: false, modes: AV_SESSION_MODES.slice(), note: null, notes: [], count: 0,
+      current: null, dirty: false, lastAutosaveAt: 0,
+      autosave: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS },
+      recovery: { available: false, savedAt: null, name: null, at: null },
+      lastError: "state", lastSave: null, lastLoad: null,
+    };
+  }
+}
+
+function avSessionRecover() {
+  try {
+    avSessionEnsure();
+    return Promise.resolve(avSessionRecoverRun()).catch(function (e) {
+      return { ok: false, error: avSessionErrMsg(e), applied: 0, skipped: [], carried: [] };
+    });
+  } catch (e) {
+    return Promise.resolve({ ok: false, error: avSessionErrMsg(e), applied: 0, skipped: [], carried: [] });
+  }
+}
+
+async function avSessionRecoverRun() {
+  const st = avSession;
+  await avSessionHydrate();
+  const rec = st.recovery;
+  if (!rec || rec.available !== true || !avSessionObj(rec.state)) {
+    return { ok: false, error: "no-recovery", applied: 0, skipped: [], carried: [] };
+  }
+  const savedAt = rec.savedAt;
+  const ap = avSessionApply(rec.state);
+  st.recovery = null;                                   /* the offer is consumed */
+  const clear = await avSessionClearAutoRec();
+  avSessionPushNote("recovered");
+  avSessionMarkBaseline();
+  const receipt = {
+    ok: ap.ok === true, applied: ap.applied, skipped: ap.skipped, carried: ap.carried,
+    seqOk: ap.seqOk, savedAt: savedAt, cleared: clear.ok === true, backend: clear.backend,
+    error: ap.error,
+  };
+  st.lastLoad = receipt;
+  return receipt;
+}
+
+function avSessionDismissRecovery() {
+  try {
+    const st = avSession;
+    avSessionEnsure();
+    if (!st.recovery || st.recovery.available !== true) return false;
+    st.recovery = null;
+    avSessionPushNote("recovery dismissed");
+    avSessionClearAutoRec().then(function (r) {
+      if (!r || r.ok !== true) st.lastError = "dismiss:" + ((r && r.error) || "clear failed");
+    }, function () { st.lastError = "dismiss:clear failed"; });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- export / import (the backup child's seam) ---------- */
+
+function avSessionExport() {
+  try {
+    const out = [];
+    const ids = Object.keys(avSession.sessions);
+    for (let i = 0; i < ids.length; i++) {
+      const rec = avSession.sessions[ids[i]];
+      if (!rec) continue;
+      const payload = avSessionRecordForStore(rec);   /* detached, raw records for the backup child */
+      if (payload) out.push(payload);
+    }
+    return { v: AV_SESSION_STATE_V, sessions: out };
+  } catch (e) { return { v: AV_SESSION_STATE_V, sessions: [] }; }
+}
+
+function avSessionImport(payloadOrRecord) {
+  const receipt = { ok: false, imported: 0, skipped: 0, ids: [] };
+  try {
+    avSessionEnsure();
+    const st = avSession;
+    let list = null;
+    if (Array.isArray(payloadOrRecord)) list = payloadOrRecord;
+    else if (avSessionObj(payloadOrRecord)) {
+      if (Array.isArray(payloadOrRecord.sessions)) list = payloadOrRecord.sessions;
+      else if (payloadOrRecord.id != null || Array.isArray(payloadOrRecord.versions)) list = [payloadOrRecord];
+    }
+    if (!list) { receipt.error = "not a payload"; return receipt; }
+    const n = Math.min(list.length, AV_SESSION_IMPORT_MAX);
+    const touched = [];
+    for (let i = 0; i < n; i++) {
+      const rec = avSessionRecordNorm(list[i]);
+      if (!rec || !rec.versions.length) { receipt.skipped += 1; continue; }
+      if (st.sessions[rec.id]) { receipt.skipped += 1; continue; }   /* id-dedupe: the existing wins */
+      st.sessions[rec.id] = rec;
+      touched.push(rec);
+      receipt.imported += 1;
+      receipt.ids.push(rec.id);
+    }
+    if (list.length > n) receipt.skipped += (list.length - n);
+    if (touched.length) avSessionPersistRecords(touched);
+    avSessionFixCurrent();
+    receipt.ok = (receipt.imported > 0 && receipt.skipped === 0);
+    return receipt;
+  } catch (e) {
+    receipt.ok = false;
+    receipt.error = avSessionErrMsg(e);
+    return receipt;
+  }
+}
+
+/* ---------- touch / classes ---------- */
+
+function avSessionTouch() {
+  try {
+    avSessionEnsure();
+    avSession.touchDirty = true;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionClasses() {
+  return AV_SESSION_CLASSES.slice();   /* this module mounts nothing — the card owns markup */
+}
+
+/* ---------- debug handle (rigs + parent call these; names are the contract) ---------- */
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avSession = {
+      version: AV_SESSION_VERSION,
+      init: avSessionInit,
+      capture: avSessionCapture,
+      apply: avSessionApply,
+      save: avSessionSave,
+      list: avSessionList,
+      load: avSessionLoad,
+      "delete": avSessionDelete,
+      versions: avSessionVersions,
+      restore: avSessionRestore,
+      autosave: avSessionAutosave,
+      state: avSessionState,
+      recover: avSessionRecover,
+      "export": avSessionExport,
+      "import": avSessionImport,
+      touch: avSessionTouch,
+      dismiss: avSessionDismissRecovery,
+      classes: avSessionClasses,
+      hydrate: avSessionHydrate,
+    };
+  } catch (e) { /* no window — node harness only */ }
+}
+
+
+/* av_backup.js — Anvil S2 (sessions wave, sa-B): BACKUP — a portable zip of the durable state
+   (sessions · installed packs · sample slots), plus a NEW store-method zip READER and the
+   additive restore. This module is the ONE owner of the backup/restore path.
+
+   Pins (verify/_s2_wave.md §2.2):
+   - avBackupInit() -> boolean                idempotent; no DOM; nothing durable to bind here.
+   - avBackupBuild(opts?) -> Promise<{ ok, name, bytes, buffer (ArrayBuffer), manifest, skipped, at }>
+     writes `anvil-backup-<YYYYMMDD-HHMMSS>.zip` with avZipBuild (store-method entries only):
+       manifest.json      { v:1, app:'anvil', at (ISO), sha256: { '<entry>': '<hex>' }, counts:{sessions,packs,samples} }
+                          (manifest.json itself carries no self-digest — it is the signature file)
+       sessions.json      avSessionExport() payload (ALL sessions incl. versions)
+       packs/<id>.json    one per INSTALLED pack (avStoreGet(id) payload — the full record incl. `pack`)
+       samples/slot<n>-<name>.wav   one per non-empty sample slot (avWavEncode of {rate, ch1, ch2};
+                          name + slot live in the WAV filename; 32f = bit-exact round trip of the float data)
+       README.txt         what-this-is + the additive-restore hint
+     Build opts (all optional): `now` (epoch ms — pins the stamp + manifest.at for harnesses),
+     `date` (zip DOS timestamp: Date | number | null; null = avZipBuild's deterministic 1980 epoch).
+     `skipped` lists everything that could not be included (counted, never silent).
+   - avBackupRead(buf) -> { ok, error, entries: [{ name, size, bytes(Uint8Array) }], manifest,
+     errors: [], count, bytes }
+     The reader is OWN code: little-endian EOCD scan + central-directory walk; store (method 0)
+     entries only; CRC-32 validated with the existing avZipCrc32 — a bad CRC / a deflate entry / a
+     structural problem lands in `errors[]` and the entry is withheld, never thrown. ok:false only
+     when the container itself is unreadable (bad/truncated/no EOCD, corrupt central directory,
+     no CRC helper). `bytes` are zero-copy views into the source buffer — copy before mutating it.
+   - avBackupRestore(bufOrReadResult, mode?) -> Promise<{ ok, error, restored:{sessions,packs,samples},
+     skipped (flat total), skippedBy:{sessions,packs,samples}, errors: [], notes: [], at }>
+     ADDITIVE ONLY — nothing the user currently holds is ever deleted:
+       sessions via avSessionImport(payload) (the session module's own id-dedupe law);
+       packs via the store's OWN machinery — avStoreHydrate -> avStoreGet (collision: the installed
+       copy is kept) -> avStoreRecordNorm -> avStoreCommit (never a re-implemented IDB schema);
+       samples via av_sample's import hook avSampleImportFiles (WAVs are handed over as File objects
+       when File exists, else copies of the bytes). `mode` = 'all' (default) | 'sessions' | 'packs'
+       | 'samples'. manifest.sha256 is re-verified per entry: a mismatch withholds the entry +
+       errors[] (malformed digest = unverifiable = withheld). ok:true means the restore ran (fully or
+       partially — read errors[]); ok:false = refused before any write (unreadable zip, missing/foreign
+       manifest, unsupported version).
+     Undetermined v1: engine slot routing for samples (avSampleStore.sent) is live state, not durable —
+     restored WAVs land back in the registry, the send-to-slot routing is NOT re-applied (noted).
+   - avBackupState() -> { version, init, busy, lastBuild:{name,bytes,at,counts}|null,
+     lastRestore:{at,ok,restored,skipped,errorCount,errors[],notes[]}|null, lastError }
+   - avBackupClasses() -> []  (this module mounts nothing — the Sessions card owns markup).
+   - window.__avBackup = { version, init, build, read, restore, state } (guarded).
+
+   Reuse (same page scope, all typeof-guarded, resolved per call): avZipBuild · avZipCrc32 ·
+   avZipNameDecode (av_zipc.js), avWavEncode · avWavInfo (av_wavio.js), avSessionExport/Import
+   (av_session.js), avStoreStatus/Installed/Get/Hydrate/RecordNorm/Commit (av_store.js),
+   avSampleStore / avSampleImportFiles (av_sample.js). sha256 comes from crypto.subtle (guarded;
+   absent -> the manifest carries no digests and the restore notes unverifiable entries).
+
+   Laws kept: "use strict"; classic script (no modules/imports), node-loadable (no DOM/global reach
+   at load, every reach guarded inside functions), ONE namespace (avBackup* / AV_BACKUP_*), never
+   throws (honest refusals, counted skips), no console noise, bounded reports (errors capped at 64),
+   forward-slash zip paths. */
+"use strict";
+
+const AV_BACKUP_VERSION = "s2.0";
+const AV_BACKUP_APP = "anvil";
+const AV_BACKUP_MANIFEST = "manifest.json";
+const AV_BACKUP_SESSIONS = "sessions.json";
+const AV_BACKUP_README = "README.txt";
+const AV_BACKUP_PACK_DIR = "packs/";
+const AV_BACKUP_SAMPLE_DIR = "samples/";
+const AV_BACKUP_METHOD_STORE = 0;
+const AV_BACKUP_MAX_ERRORS = 64;          /* bounded reports — no unbounded logs (§ laws 6) */
+const AV_BACKUP_MAX_ENTRIES = 4096;       /* zip-reader sanity cap (no zip64) */
+const AV_BACKUP_SAMPLE_CAP_S = 60;        /* per-slot encode cap, at the stored frames — no padding */
+const AV_BACKUP_SAMPLE_NAME_RE = /^samples\/slot(\d+)(?:-([\s\S]+))?\.wav$/i;
+const AV_BACKUP_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;     /* same slug law as the pack store */
+const AV_BACKUP_SHA_RE = /^[0-9a-f]{64}$/i;
+const AV_BACKUP_SAFE_RE = /[\/\\:*?"<>|\u0000-\u001f]+/g;
+
+/* ---------- state (the report surface; JSON-safe by construction) ---------- */
+
+const avBackupStore = {
+  inited: false,
+  busy: 0,                 /* > 0 while a build/restore is in flight */
+  lastBuild: null,         /* { name, bytes, at, counts } */
+  lastRestore: null,       /* { at, ok, restored, skipped, errorCount, errors, notes } */
+  lastError: null,
+};
+
+/* ---------- guarded environment reaches (never throw; plain node has none of these) ---------- */
+
+function avBackupErrText(e) {
+  try {
+    const s = (e && (e.message || e.name)) ? String(e.message || e.name) : String(e);
+    return (s || "unknown error").slice(0, 160);
+  } catch (e2) { return "unknown error"; }
+}
+
+function avBackupNow() { try { return Date.now(); } catch (e) { return 0; } }
+
+function avBackupBytes(x) {
+  try {
+    if (x == null) return null;
+    if (typeof ArrayBuffer !== "undefined" && x instanceof ArrayBuffer) return new Uint8Array(x);
+    if (typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView && ArrayBuffer.isView(x)) {
+      return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+    }
+    return null;
+  } catch (e) { return null; }
+}
+
+function avBackupSubtle() {
+  try { if (typeof crypto !== "undefined" && crypto && crypto.subtle && typeof crypto.subtle.digest === "function") return crypto.subtle; } catch (e) { /* none */ }
+  try {
+    if (typeof window !== "undefined" && window && window.crypto && window.crypto.subtle && typeof window.crypto.subtle.digest === "function") return window.crypto.subtle;
+  } catch (e) { /* no window */ }
+  return null;
+}
+
+function avBackupHex(u8) {
+  try {
+    let s = "";
+    for (let i = 0; i < u8.length; i++) { const h = u8[i].toString(16); s += h.length < 2 ? "0" + h : h; }
+    return s;
+  } catch (e) { return ""; }
+}
+
+/* sha-256 hex of bytes; "" when crypto.subtle is unavailable or digest refuses (honest, capped) */
+function avBackupSha256Hex(bytes) {
+  try {
+    const subtle = avBackupSubtle();
+    if (!subtle) return Promise.resolve("");
+    const b = avBackupBytes(bytes);
+    if (!b) return Promise.resolve("");
+    return Promise.resolve(subtle.digest("SHA-256", b)).then(
+      function (d) { return avBackupHex(new Uint8Array(d)); },
+      function () { return ""; }
+    );
+  } catch (e) { return Promise.resolve(""); }
+}
+
+/* ---------- utf-8 (TextEncoder/Decoder when present, manual fallback otherwise) ---------- */
+
+function avBackupUtf8(str) {
+  const s = String(str == null ? "" : str);
+  try { if (typeof TextEncoder !== "undefined") return new TextEncoder().encode(s); } catch (e) { /* fallback */ }
+  const out = [];
+  try {
+    for (let i = 0; i < s.length; i++) {
+      let cp = s.charCodeAt(i);
+      if (cp >= 0xD800 && cp <= 0xDBFF && i + 1 < s.length) {
+        const lo = s.charCodeAt(i + 1);
+        if (lo >= 0xDC00 && lo <= 0xDFFF) { cp = 0x10000 + ((cp - 0xD800) << 10) + (lo - 0xDC00); i++; }
+      }
+      if (cp < 0x80) out.push(cp);
+      else if (cp < 0x800) out.push(0xC0 | (cp >> 6), 0x80 | (cp & 63));
+      else if (cp < 0x10000) out.push(0xE0 | (cp >> 12), 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));
+      else out.push(0xF0 | (cp >> 18), 0x80 | ((cp >> 12) & 63), 0x80 | ((cp >> 6) & 63), 0x80 | (cp & 63));
+    }
+  } catch (e) { /* refuse to the partial */ }
+  return Uint8Array.from(out);
+}
+
+function avBackupUtf8Decode(b) {
+  try { if (typeof TextDecoder !== "undefined") return new TextDecoder("utf-8", { fatal: false }).decode(b); } catch (e) { /* fallback */ }
+  let s = "", i = 0;
+  try {
+    while (i < b.length) {
+      const c = b[i++];
+      if (c < 0x80) s += String.fromCharCode(c);
+      else if (c >= 0xC0 && c < 0xE0 && i < b.length) s += String.fromCharCode(((c & 0x1F) << 6) | (b[i++] & 0x3F));
+      else if (c >= 0xE0 && c < 0xF0 && i + 1 < b.length) {
+        s += String.fromCharCode(((c & 0x0F) << 12) | ((b[i++] & 0x3F) << 6) | (b[i++] & 0x3F));
+      } else if (c >= 0xF0 && i + 2 < b.length) {
+        let cp = ((c & 0x07) << 18) | ((b[i++] & 0x3F) << 12) | ((b[i++] & 0x3F) << 6) | (b[i++] & 0x3F);
+        cp -= 0x10000;
+        s += String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 0x3FF));
+      } else s += String.fromCharCode(c);
+    }
+  } catch (e) { /* partial */ }
+  return s;
+}
+
+/* ---------- tiny value laws (garbage in, sane value out) ---------- */
+
+function avBackupJson(o) { try { return JSON.stringify(o); } catch (e) { return null; } }
+
+function avBackupInt(v) {
+  try {
+    const n = Number(v);
+    if (!isFinite(n) || n < 0) return 0;
+    return Math.min(1000000000, Math.round(n));
+  } catch (e) { return 0; }
+}
+
+/* bounded push (laws: counted skips, no unbounded logs) */
+function avBackupPush(list, msg) {
+  try {
+    if (!Array.isArray(list)) return;
+    const s = String(msg == null ? "unknown" : msg);
+    if (list.length < AV_BACKUP_MAX_ERRORS) list.push(s);
+    else if (list.length === AV_BACKUP_MAX_ERRORS) list.push("...more problems were omitted");
+  } catch (e) { /* reporting is best-effort */ }
+}
+
+function avBackupPad2(n) { const v = Math.max(0, Math.min(99, n | 0)); return (v < 10 ? "0" : "") + v; }
+
+function avBackupStamp(ms) {
+  try {
+    const d = new Date(ms);
+    if (!d || !isFinite(d.getTime())) return String(ms == null ? "0" : ms).replace(/[^0-9]/g, "") || "0";
+    return String(d.getFullYear()) + avBackupPad2(d.getMonth() + 1) + avBackupPad2(d.getDate()) +
+      "-" + avBackupPad2(d.getHours()) + avBackupPad2(d.getMinutes()) + avBackupPad2(d.getSeconds());
+  } catch (e) { return "0"; }
+}
+
+/* filename-safe sample name (keeps unicode; strips path-hostile chars + leading/trailing dots) */
+function avBackupSafeName(s, dflt) {
+  try {
+    let v = String(s == null ? "" : s).replace(AV_BACKUP_SAFE_RE, "_").replace(/^[.\s]+/, "");
+    v = v.replace(/[.\s]+$/, "");
+    if (v.length > 80) v = v.slice(0, 80);
+    return v || String(dflt || "sample");
+  } catch (e) { return String(dflt || "sample"); }
+}
+
+/* ---------- zip-reader internals (little-endian; shared-scope avZip* helpers, all guarded) ---------- */
+
+function avBackupU16(b, o) { return b[o] | (b[o + 1] << 8); }
+function avBackupU32(b, o) { return ((b[o] | (b[o + 1] << 8) | (b[o + 2] << 16) | (b[o + 3] << 24)) >>> 0); }
+
+function avBackupNameDecode(b, utf8) {
+  try { if (typeof avZipNameDecode === "function") return avZipNameDecode(b, utf8); } catch (e) { /* fallback below */ }
+  let s = "";
+  try {
+    if (typeof TextDecoder !== "undefined") {
+      return new TextDecoder(utf8 ? "utf-8" : "windows-1252", { fatal: false }).decode(b);
+    }
+  } catch (e) { /* fallback below */ }
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return s;
+}
+
+function avBackupCrcFn() {
+  try { return (typeof avZipCrc32 === "function") ? avZipCrc32 : null; } catch (e) { return null; }
+}
+
+function avBackupFindEntry(entries, name) {
+  try {
+    for (let i = 0; i < entries.length; i++) if (entries[i] && entries[i].name === name) return entries[i];
+  } catch (e) { /* refuse */ }
+  return null;
+}
+
+/* avBackupRead: OWN store-method reader. Never throws — structural problems refuse the read,
+   per-entry problems (deflate, CRC mismatch, bad local header) are counted in errors[] and the
+   entry is withheld. */
+function avBackupRead(buf) {
+  const out = { ok: false, error: null, entries: [], manifest: null, errors: [], count: 0, bytes: 0 };
+  try {
+    const b = avBackupBytes(buf);
+    if (!b) { out.error = "unsupported buffer (ArrayBuffer or a typed-array view required)"; avBackupPush(out.errors, out.error); return out; }
+    out.bytes = b.length;
+    const n = b.length;
+    if (n < 22) { out.error = "too short for an end-of-central-directory record"; avBackupPush(out.errors, out.error); return out; }
+    const crcFn = avBackupCrcFn();
+    if (typeof crcFn !== "function") {
+      out.error = "CRC-32 helper (avZipCrc32 from av_zipc.js) is not loaded — entries cannot be validated";
+      avBackupPush(out.errors, out.error); return out;
+    }
+
+    /* EOCD: backwards scan, comment-aware (same discipline as avZipInfo) */
+    const floor = Math.max(0, n - 22 - 0xFFFF);
+    let eocd = -1;
+    for (let i = n - 22; i >= floor; i--) {
+      if (b[i] === 0x50 && b[i + 1] === 0x4B && b[i + 2] === 0x05 && b[i + 3] === 0x06) {
+        const clen = avBackupU16(b, i + 20);
+        if (i + 22 + clen === n) { eocd = i; break; }
+      }
+    }
+    if (eocd < 0) { out.error = "no end-of-central-directory record"; avBackupPush(out.errors, out.error); return out; }
+    const count = avBackupU16(b, eocd + 10);
+    const cdSize = avBackupU32(b, eocd + 12);
+    const cdOff = avBackupU32(b, eocd + 16);
+    if (count > AV_BACKUP_MAX_ENTRIES) { out.error = "implausible entry count (" + count + ") — refused"; avBackupPush(out.errors, out.error); return out; }
+    if (cdOff === 0xFFFFFFFF || cdSize === 0xFFFFFFFF) { out.error = "zip64 archives are not supported"; avBackupPush(out.errors, out.error); return out; }
+    if (cdOff + cdSize > n) { out.error = "central directory out of range"; avBackupPush(out.errors, out.error); return out; }
+
+    let p = cdOff;
+    for (let i = 0; i < count; i++) {
+      if (p + 46 > n) { out.error = "central directory truncated at entry " + i; avBackupPush(out.errors, out.error); return out; }
+      if (!(b[p] === 0x50 && b[p + 1] === 0x4B && b[p + 2] === 0x01 && b[p + 3] === 0x02)) {
+        out.error = "central directory corrupt at entry " + i; avBackupPush(out.errors, out.error); return out;
+      }
+      const flags = avBackupU16(b, p + 8);
+      const method = avBackupU16(b, p + 10);
+      const crc = avBackupU32(b, p + 16);
+      const compSize = avBackupU32(b, p + 20);
+      const unComp = avBackupU32(b, p + 24);
+      const nameLen = avBackupU16(b, p + 28);
+      const extraLen = avBackupU16(b, p + 30);
+      const cmtLen = avBackupU16(b, p + 32);
+      const loff = avBackupU32(b, p + 42);
+      if (p + 46 + nameLen > n) { out.error = "central directory name truncated at entry " + i; avBackupPush(out.errors, out.error); return out; }
+      const name = avBackupNameDecode(b.subarray(p + 46, p + 46 + nameLen), !!(flags & 0x0800));
+      p += 46 + nameLen + extraLen + cmtLen;
+
+      if (!name) { avBackupPush(out.errors, "zip: entry #" + i + " carries an empty name — skipped"); continue; }
+      if (method !== AV_BACKUP_METHOD_STORE) {
+        avBackupPush(out.errors, "zip: " + name + ": compression method " + method + " is not store (0) — skipped");
+        continue;
+      }
+      if (compSize !== unComp) { avBackupPush(out.errors, "zip: " + name + ": stored sizes disagree — skipped"); continue; }
+      if (loff + 30 > n) { avBackupPush(out.errors, "zip: " + name + ": local header out of range — skipped"); continue; }
+      if (!(b[loff] === 0x50 && b[loff + 1] === 0x4B && b[loff + 2] === 0x03 && b[loff + 3] === 0x04)) {
+        avBackupPush(out.errors, "zip: " + name + ": local header corrupt — skipped"); continue;
+      }
+      const lNameLen = avBackupU16(b, loff + 26);
+      const lExtraLen = avBackupU16(b, loff + 28);
+      const dataOff = loff + 30 + lNameLen + lExtraLen;
+      if (dataOff + compSize > n) { avBackupPush(out.errors, "zip: " + name + ": data out of range — skipped"); continue; }
+      const data = b.subarray(dataOff, dataOff + compSize);
+      if (crcFn(data) !== crc) { avBackupPush(out.errors, "zip: " + name + ": CRC-32 mismatch — skipped (the data is damaged)"); continue; }
+      out.entries.push({ name: name, size: compSize, bytes: data });
+    }
+    if (p > cdOff + cdSize + 0xFFFF) { out.error = "central directory overran its size"; avBackupPush(out.errors, out.error); return out; }
+
+    /* the manifest rides inside the archive; parse it tolerantly (info for the caller, gate for restore) */
+    const mani = avBackupFindEntry(out.entries, AV_BACKUP_MANIFEST);
+    if (!mani) {
+      avBackupPush(out.errors, "manifest.json is missing — this zip is not an Anvil backup");
+    } else {
+      let obj = null;
+      try { obj = JSON.parse(avBackupUtf8Decode(mani.bytes)); } catch (e) { obj = null; }
+      if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
+        avBackupPush(out.errors, "manifest.json is not a JSON object — ignored");
+      } else {
+        out.manifest = obj;
+        if (obj.app !== AV_BACKUP_APP) avBackupPush(out.errors, "manifest: app is " + String(obj.app) + " (expected \"anvil\")");
+        else if (obj.v !== 1) avBackupPush(out.errors, "manifest: unsupported version " + String(obj.v));
+        if (obj.sha256 != null && (typeof obj.sha256 !== "object" || Array.isArray(obj.sha256))) {
+          avBackupPush(out.errors, "manifest: sha256 map is not an object — ignored");
+        }
+      }
+    }
+    out.ok = true;
+    out.count = out.entries.length;
+    return out;
+  } catch (e) {
+    out.ok = false;
+    out.error = "zip read failed: " + avBackupErrText(e);
+    avBackupPush(out.errors, out.error);
+    return out;
+  }
+}
+
+/* ---------- build (avZipBuild + avWavEncode + the sibling export paths, all guarded) ---------- */
+
+function avBackupCountSessions(bytes) {
+  try {
+    const obj = JSON.parse(avBackupUtf8Decode(bytes));
+    if (obj && Array.isArray(obj.sessions)) return obj.sessions.length;
+  } catch (e) { /* unparseable */ }
+  return 0;
+}
+
+function avBackupBuild(opts) {
+  return new Promise(function (resolve) {
+    const out = { ok: false, error: null, name: null, bytes: 0, buffer: null, manifest: null, skipped: [], at: 0 };
+    let done = false;
+    const finish = function () {
+      if (done) return; done = true;
+      try { avBackupStore.busy = Math.max(0, avBackupStore.busy - 1); } catch (e) { /* ok */ }
+      try { resolve(out); } catch (e) { /* resolve never throws */ }
+    };
+    try {
+      avBackupStore.busy += 1;
+      avBackupBuildRun(opts, out).then(
+        function () { finish(); },
+        function (e) {
+          out.ok = false;
+          out.error = "backup build failed: " + avBackupErrText(e);
+          avBackupPush(out.skipped, out.error);
+          finish();
+        }
+      );
+    } catch (e) {
+      out.ok = false;
+      out.error = "backup build failed: " + avBackupErrText(e);
+      avBackupPush(out.skipped, out.error);
+      finish();
+    }
+  });
+}
+
+async function avBackupBuildRun(opts, out) {
+  const o = (opts && typeof opts === "object" && !Array.isArray(opts)) ? opts : {};
+  const skipped = out.skipped;
+  let now = avBackupNow();
+  try { const n0 = Number(o.now); if (isFinite(n0) && n0 >= 0) now = Math.round(n0); } catch (e) { /* default */ }
+  out.at = now;
+  let date = (o.date === undefined) ? new Date(now) : o.date;   /* null passes through (deterministic epoch) */
+
+  /* 1) sessions: the whole avSessionExport() payload */
+  let sessionsPayload = { v: 1, sessions: [] };
+  try {
+    if (typeof avSessionExport === "function") {
+      let s = avSessionExport();
+      if (s && typeof s.then === "function") s = await s;
+      if (s && typeof s === "object" && !Array.isArray(s)) sessionsPayload = s;
+      else avBackupPush(skipped, "sessions: avSessionExport() returned nothing usable — sessions.json left empty");
+    } else {
+      avBackupPush(skipped, "sessions: av_session.js is not loaded — sessions.json left empty");
+    }
+  } catch (e) {
+    avBackupPush(skipped, "sessions: export failed (" + avBackupErrText(e) + ") — sessions.json left empty");
+  }
+  let sessionsCount = Array.isArray(sessionsPayload.sessions) ? sessionsPayload.sessions.length : 0;
+
+  /* 2) packs: one entry per INSTALLED pack, the avStoreGet(id) record verbatim */
+  const packItems = [];
+  if (typeof avStoreGet === "function") {
+    let list = [];
+    if (typeof avStoreStatus === "function") {
+      try { const stt = avStoreStatus(); list = (stt && Array.isArray(stt.installed)) ? stt.installed : []; } catch (e) { list = []; }
+    }
+    if (!list.length && typeof avStoreInstalled === "function") {
+      try { list = avStoreInstalled() || []; } catch (e) { list = []; }
+    }
+    if (!Array.isArray(list)) list = [];
+    const seen = {};
+    for (let i = 0; i < list.length; i++) {
+      const id = (list[i] && typeof list[i].id === "string") ? list[i].id : "";
+      if (!id || seen[id]) continue;
+      seen[id] = true;
+      let rec = null;
+      try { rec = avStoreGet(id); } catch (e) { rec = null; }
+      if (rec && typeof rec === "object" && rec.pack && typeof rec.pack === "object" && !Array.isArray(rec.pack)) {
+        packItems.push({ id: id, payload: rec });
+      } else {
+        avBackupPush(skipped, "packs: " + id + ": payload unavailable — skipped");
+      }
+    }
+  } else {
+    avBackupPush(skipped, "packs: av_store.js is not loaded — no packs in this backup");
+  }
+
+  /* 3) samples: one WAV per non-empty slot whose audio is still in the registry */
+  const sampleItems = [];
+  const sampleStore = (typeof avSampleStore !== "undefined" && avSampleStore) ? avSampleStore : null;
+  if (!sampleStore) {
+    avBackupPush(skipped, "samples: av_sample.js is not loaded — no samples in this backup");
+  } else if (Array.isArray(sampleStore.sent) && sampleStore.sent.length) {
+    if (typeof avWavEncode !== "function") {
+      avBackupPush(skipped, "samples: av_wavio.js is not loaded — samples cannot be encoded");
+    } else {
+      for (let slot = 0; slot < sampleStore.sent.length && slot < 4; slot++) {
+        const rec = sampleStore.sent[slot];
+        if (!rec) continue;
+        const rid = (typeof rec.id === "string") ? rec.id : "";
+        let entry = null;
+        try { entry = (rid && typeof sampleStore.get === "function") ? sampleStore.get(rid) : null; } catch (e) { entry = null; }
+        const buf = (entry && entry.buffer) ? entry.buffer : null;
+        if (!buf || typeof buf.getChannelData !== "function") {
+          avBackupPush(skipped, "samples: slot " + slot + " (" + avBackupSafeName(rec.name || rid, "sample") + ") has no audio in the registry — skipped");
+          continue;
+        }
+        const rate = (isFinite(buf.sampleRate) && buf.sampleRate > 0) ? Math.round(buf.sampleRate) :
+          ((isFinite(entry.sampleRate) && entry.sampleRate > 0) ? Math.round(entry.sampleRate) : 48000);
+        let frames = (isFinite(buf.length) && buf.length > 0) ? (buf.length | 0) : 0;
+        const cap = Math.round(AV_BACKUP_SAMPLE_CAP_S * rate);
+        if (frames > cap) frames = cap;
+        if (frames <= 0) { avBackupPush(skipped, "samples: slot " + slot + ": empty audio — skipped"); continue; }
+        let wav = null;
+        try {
+          const ch1 = buf.getChannelData(0);
+          const ch2 = (buf.numberOfChannels > 1) ? buf.getChannelData(1) : ch1;
+          if (!ch1 || !ch2) { avBackupPush(skipped, "samples: slot " + slot + ": channel data unavailable — skipped"); continue; }
+          const m = Math.min(frames, ch1.length, ch2.length);
+          if (m <= 0) { avBackupPush(skipped, "samples: slot " + slot + ": empty audio — skipped"); continue; }
+          wav = avWavEncode({ l: ch1.subarray(0, m), r: ch2.subarray(0, m), sr: rate, bits: "32f" });
+        } catch (e) { wav = null; }
+        if (!wav) { avBackupPush(skipped, "samples: slot " + slot + ": WAV encode refused — skipped"); continue; }
+        sampleItems.push({ slot: slot, name: avBackupSafeName(entry.name || rec.name, "sample"), data: wav });
+      }
+    }
+  }
+
+  /* 4) entry payloads (text entries as strings; WAVs as their ArrayBuffers) + digests */
+  const data = [];                        /* [{ name, text }] — WAVs handled separately below */
+  const sessText = avBackupJson(sessionsPayload);
+  if (sessText == null) {
+    avBackupPush(skipped, "sessions: payload is not JSON-safe — sessions.json left empty");
+    sessionsCount = 0;
+    data.push({ name: AV_BACKUP_SESSIONS, text: "{\"v\":1,\"sessions\":[]}" });
+  } else {
+    data.push({ name: AV_BACKUP_SESSIONS, text: sessText });
+  }
+  for (let i = 0; i < packItems.length; i++) {
+    const t = avBackupJson(packItems[i].payload);
+    if (t == null) { avBackupPush(skipped, "packs: " + packItems[i].id + ": payload is not JSON-safe — skipped"); continue; }
+    data.push({ name: AV_BACKUP_PACK_DIR + packItems[i].id + ".json", text: t });
+  }
+  const packsCount = data.length - 1;                    /* entries after sessions.json so far */
+  const counts = { sessions: sessionsCount, packs: packsCount, samples: sampleItems.length };
+  let atIso = "";
+  try { atIso = new Date(now).toISOString(); } catch (e) { atIso = ""; }
+  const readme = "Anvil backup — " + counts.sessions + " session(s), " + counts.packs + " installed pack(s), " +
+    counts.samples + " sample slot(s).\n" +
+    "Restore: open Anvil → SESSIONS card → RESTORE (backup zip), or call avBackupRestore(buffer) in the console. " +
+    "Restore is additive — nothing you currently have is deleted; a session or pack whose id you already hold is left untouched.\n" +
+    "Built " + (atIso || String(now)) + " · app: anvil · schema v1 · sample WAVs are 32-bit float.\n";
+
+  /* digests cover every content entry; manifest.json itself is the signature file (no self-digest) */
+  const shaMap = {};
+  let shaNotes = 0;
+  if (avBackupSubtle()) {
+    const all = [];
+    for (let i = 0; i < data.length; i++) all.push({ name: data[i].name, bytes: avBackupUtf8(data[i].text) });
+    for (let i = 0; i < sampleItems.length; i++) {
+      all.push({ name: AV_BACKUP_SAMPLE_DIR + "slot" + sampleItems[i].slot + "-" + sampleItems[i].name + ".wav", bytes: avBackupBytes(sampleItems[i].data) });
+    }
+    all.push({ name: AV_BACKUP_README, bytes: avBackupUtf8(readme) });
+    for (let i = 0; i < all.length; i++) {
+      const h = await avBackupSha256Hex(all[i].bytes);
+      if (!h) { shaNotes += 1; break; }
+      shaMap[all[i].name] = h;
+    }
+    if (shaNotes) avBackupPush(skipped, "sha256: crypto.subtle refused mid-run — some digests are missing from the manifest");
+  } else {
+    avBackupPush(skipped, "sha256: crypto.subtle is unavailable — the manifest carries no digests");
+  }
+  const manifest = { v: 1, app: AV_BACKUP_APP, at: atIso, sha256: shaMap, counts: counts };
+  const manText = avBackupJson(manifest);
+  if (manText == null) { out.ok = false; out.error = "manifest is not JSON-safe — build refused"; return; }
+
+  /* 5) assemble in the pinned layout order: manifest, sessions, packs, samples, README */
+  const zipEntries = [{ name: AV_BACKUP_MANIFEST, data: manText }];
+  for (let i = 0; i < data.length; i++) zipEntries.push({ name: data[i].name, data: data[i].text });
+  for (let i = 0; i < sampleItems.length; i++) {
+    zipEntries.push({ name: AV_BACKUP_SAMPLE_DIR + "slot" + sampleItems[i].slot + "-" + sampleItems[i].name + ".wav", data: sampleItems[i].data });
+  }
+  zipEntries.push({ name: AV_BACKUP_README, data: readme });
+
+  if (typeof avZipBuild !== "function") { out.ok = false; out.error = "av_zipc.js (avZipBuild) is not loaded — cannot build a backup"; return; }
+  let buf = null;
+  try { buf = avZipBuild(zipEntries, { date: date }); } catch (e) { buf = null; }
+  if (!buf || typeof buf.byteLength !== "number") {
+    out.ok = false;
+    out.error = "avZipBuild refused the archive (bad opts.date or an entry was refused)";
+    return;
+  }
+  out.ok = true;
+  out.name = "anvil-backup-" + avBackupStamp(now) + ".zip";
+  out.bytes = buf.byteLength;
+  out.buffer = buf;
+  out.manifest = manifest;
+  try {
+    avBackupStore.lastBuild = { name: out.name, bytes: out.bytes, at: now, counts: counts };
+    avBackupStore.lastError = null;
+  } catch (e) { /* nicety */ }
+}
+
+/* ---------- restore (additive; the siblings' own write paths; never a re-implemented schema) ---------- */
+
+function avBackupRestore(input, mode) {
+  return new Promise(function (resolve) {
+    const out = {
+      ok: false, error: null,
+      restored: { sessions: 0, packs: 0, samples: 0 },
+      skipped: 0,                                   /* flat total (the card reads a number) */
+      skippedBy: { sessions: 0, packs: 0, samples: 0 },
+      errors: [], notes: [], at: 0,
+    };
+    let done = false;
+    const finish = function () {
+      if (done) return; done = true;
+      try { out.skipped = out.skippedBy.sessions + out.skippedBy.packs + out.skippedBy.samples; } catch (e) { /* ok */ }
+      try { out.at = avBackupNow(); } catch (e) { /* ok */ }
+      try { avBackupStore.busy = Math.max(0, avBackupStore.busy - 1); } catch (e) { /* ok */ }
+      try {
+        avBackupStore.lastRestore = {
+          at: out.at, ok: !!out.ok,
+          restored: out.restored, skipped: out.skipped, skippedBy: out.skippedBy,
+          errorCount: out.errors.length, errors: out.errors.slice(0, 8), notes: out.notes.slice(0, 4),
+        };
+        if (!out.ok) avBackupStore.lastError = out.error;
+      } catch (e) { /* nicety */ }
+      try { resolve(out); } catch (e) { /* resolve never throws */ }
+    };
+    try {
+      avBackupStore.busy += 1;
+      Promise.resolve(avBackupRestoreRun(input, mode, out)).then(finish, function (e) {
+        out.ok = false;
+        out.error = "restore failed: " + avBackupErrText(e);
+        avBackupPush(out.errors, out.error);
+        finish();
+      });
+    } catch (e) {
+      out.ok = false;
+      out.error = "restore failed: " + avBackupErrText(e);
+      avBackupPush(out.errors, out.error);
+      finish();
+    }
+  });
+}
+
+async function avBackupRestoreRun(input, mode, out) {
+  /* 0) the read (accept a raw buffer/view or a previous avBackupRead result) */
+  let read = null;
+  if (input && typeof input === "object" && Array.isArray(input.entries) && typeof input.ok === "boolean") read = input;
+  else read = avBackupRead(input);
+  if (!read || read.ok !== true) {
+    out.ok = false;
+    out.error = "zip not readable" + (read && read.error ? ": " + read.error : "");
+    const errs = (read && Array.isArray(read.errors)) ? read.errors : [];
+    for (let i = 0; i < errs.length; i++) avBackupPush(out.errors, errs[i]);
+    avBackupPush(out.errors, out.error);
+    return;
+  }
+  /* reader-level refusals (withheld entries: CRC, deflate, ...) are part of the restore story */
+  if (Array.isArray(read.errors)) {
+    for (let i = 0; i < read.errors.length; i++) avBackupPush(out.errors, read.errors[i]);
+  }
+
+  /* 1) the manifest gates the restore */
+  const man = read.manifest;
+  if (!man || typeof man !== "object" || Array.isArray(man)) {
+    out.ok = false;
+    out.error = "manifest.json is missing or unreadable — restore refused (an Anvil backup always carries one)";
+    avBackupPush(out.errors, out.error);
+    return;
+  }
+  if (man.app !== AV_BACKUP_APP) {
+    out.ok = false;
+    out.error = "not an Anvil backup (manifest.app = " + String(man.app) + ") — restore refused";
+    avBackupPush(out.errors, out.error);
+    return;
+  }
+  if (man.v !== 1) {
+    out.ok = false;
+    out.error = "unsupported backup version " + String(man.v) + " — restore refused (this build reads v1)";
+    avBackupPush(out.errors, out.error);
+    return;
+  }
+
+  /* 2) mode ('all' default; a subset selector is allowed, additive either way) */
+  let only = null;
+  if (mode === "sessions" || mode === "packs" || mode === "samples") only = mode;
+  else if (mode != null && mode !== "all") out.notes.push("mode " + String(mode) + " is unknown — restoring everything");
+
+  /* 3) manifest.sha256 re-verification (mismatch/malformed -> the entry is withheld) */
+  const shaBad = {};
+  const map = (man.sha256 && typeof man.sha256 === "object" && !Array.isArray(man.sha256)) ? man.sha256 : null;
+  const subtleOK = !!avBackupSubtle();
+  let verified = 0, unverified = 0, noDigest = 0;
+  for (let i = 0; i < read.entries.length; i++) {
+    const e = read.entries[i];
+    if (e.name === AV_BACKUP_MANIFEST) continue;          /* the signature file has no self-digest */
+    let want = map ? map[e.name] : null;
+    if (typeof want === "string") want = want.trim().toLowerCase();
+    if (want == null || want === "") { noDigest += 1; continue; }
+    if (!AV_BACKUP_SHA_RE.test(want)) {
+      shaBad[e.name] = true;
+      avBackupPush(out.errors, "sha: " + e.name + ": manifest digest is malformed — entry withheld");
+      continue;
+    }
+    if (!subtleOK) { unverified += 1; continue; }
+    const got = await avBackupSha256Hex(e.bytes);
+    if (!got) { unverified += 1; continue; }
+    if (got !== want) {
+      shaBad[e.name] = true;
+      avBackupPush(out.errors, "sha: " + e.name + ": digest mismatch — entry withheld (not restored)");
+    } else verified += 1;
+  }
+  if (verified) out.notes.push("sha: " + verified + " entr(ies) match their manifest digests");
+  if (unverified) out.notes.push("sha: " + unverified + " entr(ies) could not be verified (crypto.subtle unavailable)");
+  if (noDigest) out.notes.push("sha: " + noDigest + " entr(ies) carried no manifest digest (unverified)");
+
+  /* 4) sessions — via avSessionImport (its own id-dedupe law) */
+  if (!only || only === "sessions") {
+    const se = avBackupFindEntry(read.entries, AV_BACKUP_SESSIONS);
+    if (!se) {
+      avBackupPush(out.errors, "sessions: sessions.json is missing from the zip — nothing restored");
+    } else if (shaBad[se.name]) {
+      const c = avBackupCountSessions(se.bytes);
+      out.skippedBy.sessions += (c > 0 ? c : 1);          /* withheld by the sha gate (error already noted) */
+    } else if (typeof avSessionImport !== "function") {
+      const c = avBackupCountSessions(se.bytes);
+      out.skippedBy.sessions += (c > 0 ? c : 1);
+      avBackupPush(out.errors, "sessions: av_session.js is not loaded — sessions not restored (they stay in the zip)");
+    } else {
+      let payload = null;
+      try { payload = JSON.parse(avBackupUtf8Decode(se.bytes)); } catch (e) { payload = null; }
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+        out.skippedBy.sessions += 1;
+        avBackupPush(out.errors, "sessions: sessions.json is not a JSON object — skipped");
+      } else {
+        let r = null;
+        try { r = await avSessionImport(payload); } catch (e) {
+          r = null;
+          avBackupPush(out.errors, "sessions: import refused (" + avBackupErrText(e) + ")");
+        }
+        if (r && typeof r === "object") {
+          out.restored.sessions += avBackupInt(r.imported);
+          out.skippedBy.sessions += avBackupInt(r.skipped);
+          /* av_session's ok is false whenever ANY id was deduped (normal additive behaviour) —
+             only a wholly empty result or a hard `error` string is a problem worth listing */
+          if (r.ok === false && typeof r.error === "string" && r.error) {
+            avBackupPush(out.errors, "sessions: the session module reported " + r.error);
+          } else if (r.ok === false && avBackupInt(r.imported) === 0 && avBackupInt(r.skipped) === 0) {
+            avBackupPush(out.errors, "sessions: the session module reported ok:false (nothing imported)");
+          }
+        } else if (r == null) {
+          const c = avBackupCountSessions(se.bytes);
+          out.skippedBy.sessions += (c > 0 ? c : 1);
+        } else {
+          avBackupPush(out.errors, "sessions: import returned nothing usable — skipped");
+          out.skippedBy.sessions += 1;
+        }
+      }
+    }
+  }
+
+  /* 5) packs — through the store's OWN machinery (hydrate -> get -> norm -> commit) */
+  if (!only || only === "packs") {
+    const packEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_PACK_DIR.length) === AV_BACKUP_PACK_DIR && nm.slice(-5) === ".json") packEntries.push(read.entries[i]);
+    }
+    const storeReady = (typeof avStoreGet === "function" && typeof avStoreCommit === "function");
+    if (packEntries.length && !storeReady) {
+      avBackupPush(out.errors, "packs: av_store.js install machinery is not loaded — packs not restored (they stay in the zip)");
+    }
+    let hydrated = false;
+    for (let i = 0; i < packEntries.length; i++) {
+      const pe = packEntries[i];
+      if (shaBad[pe.name]) { out.skippedBy.packs += 1; continue; }
+      const base = pe.name.slice(AV_BACKUP_PACK_DIR.length, pe.name.length - 5);
+      let payload = null;
+      try { payload = JSON.parse(avBackupUtf8Decode(pe.bytes)); } catch (e) { payload = null; }
+      if (!payload || typeof payload !== "object" || Array.isArray(payload) ||
+          !payload.pack || typeof payload.pack !== "object" || Array.isArray(payload.pack)) {
+        out.skippedBy.packs += 1;
+        avBackupPush(out.errors, "packs/" + base + ": not a pack record — skipped");
+        continue;
+      }
+      let id = (typeof payload.id === "string") ? payload.id.trim() : base;
+      if (!AV_BACKUP_ID_RE.test(id)) {
+        out.skippedBy.packs += 1;
+        avBackupPush(out.errors, "packs/" + base + ": id is not a valid slug — skipped");
+        continue;
+      }
+      if (!storeReady) { out.skippedBy.packs += 1; continue; }
+      if (!hydrated) {
+        hydrated = true;
+        if (typeof avStoreHydrate === "function") { try { await avStoreHydrate(); } catch (e) { /* commit still tries */ } }
+      }
+      let existing = null;
+      try { existing = avStoreGet(id); } catch (e) { existing = null; }
+      if (existing) {
+        out.skippedBy.packs += 1;
+        out.notes.push("packs: " + id + " is already installed — the installed copy was kept (additive restore)");
+        continue;
+      }
+      let record = payload;
+      if (typeof avStoreRecordNorm === "function") {
+        try { const nrm = avStoreRecordNorm(id, payload); if (nrm) record = nrm; } catch (e) { /* use the payload as-is */ }
+      }
+      try { if (record && typeof record === "object") record.id = id; } catch (e) { /* frozen payload: commit as-is */ }
+      let put = null;
+      try { put = await avStoreCommit(record); } catch (e) { put = null; }
+      if (put && put.ok === true) {
+        out.restored.packs += 1;
+      } else {
+        out.skippedBy.packs += 1;
+        const why = (put && typeof put.error === "string" && put.error) ? put.error : "unknown";
+        avBackupPush(out.errors, "packs: " + id + ": the store refused the write (" + why + ")");
+      }
+    }
+    /* entries under packs/ that are not .json — ignored, counted once */
+    let otherPacks = 0;
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_PACK_DIR.length) === AV_BACKUP_PACK_DIR && nm.slice(-5) !== ".json") otherPacks += 1;
+    }
+    if (otherPacks) out.notes.push("packs: " + otherPacks + " non-json entr(ies) under packs/ were ignored");
+  }
+
+  /* 6) samples — via av_sample's import hook (best-effort; slot routing is live state) */
+  if (!only || only === "samples") {
+    const matched = [];
+    let ignored = 0;
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_SAMPLE_DIR.length) !== AV_BACKUP_SAMPLE_DIR) continue;
+      const m = AV_BACKUP_SAMPLE_NAME_RE.exec(nm);
+      if (m) matched.push({ entry: read.entries[i], slot: parseInt(m[1], 10), part: m[2] || "" });
+      else { ignored += 1; out.skippedBy.samples += 1; avBackupPush(out.errors, "samples: unrecognized entry " + nm + " — ignored"); }
+    }
+    matched.sort(function (a, b) { return (a.slot - b.slot) || (a.entry.name < b.entry.name ? -1 : (a.entry.name > b.entry.name ? 1 : 0)); });
+    if (matched.length) {
+      if (typeof avSampleImportFiles !== "function") {
+        out.skippedBy.samples += matched.length;
+        avBackupPush(out.errors, "samples: av_sample.js exposes no import hook in this build — sample restore is best-effort only and could not run (the WAVs stay in the zip)");
+        out.notes.push("Undetermined: samples were not restored (no import hook to call)");
+      } else {
+        const items = [];
+        for (let i = 0; i < matched.length; i++) {
+          const me = matched[i];
+          if (shaBad[me.entry.name]) { out.skippedBy.samples += 1; continue; }
+          if (typeof avWavInfo === "function") {
+            let wi = null;
+            try { wi = avWavInfo(me.entry.bytes); } catch (e) { wi = null; }
+            if (wi && wi.ok !== true) {
+              out.skippedBy.samples += 1;
+              avBackupPush(out.errors, "samples: " + me.entry.name + ": not a readable WAV (" + String(wi.error) + ") — skipped");
+              continue;
+            }
+          }
+          const file = avBackupSampleFile(me.entry, me.part);
+          if (!file) { out.skippedBy.samples += 1; avBackupPush(out.errors, "samples: " + me.entry.name + ": could not be handed over — skipped"); continue; }
+          items.push(file);
+        }
+        if (items.length) {
+          let r = null;
+          try { r = await avSampleImportFiles(items); } catch (e) {
+            r = null;
+            avBackupPush(out.errors, "samples: import refused (" + avBackupErrText(e) + ")");
+          }
+          if (r && typeof r === "object") {
+            const added = Array.isArray(r.added) ? r.added.length : avBackupInt(r.added);
+            out.restored.samples += added;
+            out.skippedBy.samples += Math.max(0, items.length - added);
+            if (Array.isArray(r.errors)) {
+              for (let i = 0; i < r.errors.length && i < AV_BACKUP_MAX_ERRORS; i++) avBackupPush(out.errors, "samples: " + String(r.errors[i]));
+            }
+            out.notes.push("samples: audio restored into the registry; engine slot routing (sendToEngine) is live state and was not re-applied");
+          } else if (r == null) {
+            out.skippedBy.samples += items.length;
+          }
+        }
+      }
+    }
+  }
+
+  out.ok = true;
+}
+
+/* a File object when the platform has one (name preserved for the decode path), else a byte copy */
+function avBackupSampleFile(entry, part) {
+  const name = ((part && part.length) ? part : "sample") + ".wav";
+  try {
+    if (typeof File === "function") return new File([entry.bytes], name, { type: "audio/wav" });
+  } catch (e) { /* fall through to the copy */ }
+  try { return entry.bytes.slice().buffer; } catch (e) { return null; }
+}
+
+/* ---------- public surface ---------- */
+
+function avBackupInit() {
+  try { avBackupStore.inited = true; return true; } catch (e) { return false; }
+}
+
+function avBackupState() {
+  try {
+    const st = avBackupStore;
+    return {
+      version: AV_BACKUP_VERSION,
+      init: !!st.inited,
+      busy: st.busy > 0,
+      lastBuild: st.lastBuild ? { name: st.lastBuild.name, bytes: st.lastBuild.bytes, at: st.lastBuild.at, counts: st.lastBuild.counts } : null,
+      lastRestore: st.lastRestore ? {
+        at: st.lastRestore.at, ok: !!st.lastRestore.ok,
+        restored: { sessions: st.lastRestore.restored.sessions, packs: st.lastRestore.restored.packs, samples: st.lastRestore.restored.samples },
+        skipped: (typeof st.lastRestore.skipped === "number") ? st.lastRestore.skipped : 0,
+        skippedBy: st.lastRestore.skippedBy ? {
+          sessions: st.lastRestore.skippedBy.sessions, packs: st.lastRestore.skippedBy.packs, samples: st.lastRestore.skippedBy.samples,
+        } : { sessions: 0, packs: 0, samples: 0 },
+        errorCount: st.lastRestore.errorCount, errors: st.lastRestore.errors.slice(), notes: st.lastRestore.notes.slice(),
+      } : null,
+      lastError: st.lastError,
+    };
+  } catch (e) {
+    return { version: AV_BACKUP_VERSION, init: false, busy: false, lastBuild: null, lastRestore: null, lastError: "state: " + avBackupErrText(e) };
+  }
+}
+
+/* the card adds shared classes later; this module mounts nothing (S1 metro convention) */
+function avBackupClasses() { return []; }
+
+if (typeof window !== "undefined") {
+  try {
+    window.__avBackup = {
+      version: AV_BACKUP_VERSION,
+      init: avBackupInit,
+      build: avBackupBuild,
+      read: avBackupRead,
+      restore: avBackupRestore,
+      state: avBackupState,
+    };
+  } catch (e) { /* a locked-down window is not a reason to fail the script */ }
+}
+
+
+/* Anvil — S2 SESSIONS card (child sa-C): the session snapshot UI mounted into the parent-owned
+   host `#av-sessions-host` (the parent adds the `#av-sessions` card at integration and calls
+   avSessionUiInit(); this module only fills the host). Per verify/_s2_wave.md §2.3.
+
+   WHAT THIS CARD IS
+   - RECOVERY banner row (shown only while avSessionState().recovery.available): states the
+     snapshot's savedAt/name; RECOVER applies it (avSessionRecover), DISMISS clears the offer
+     (avSessionDismissRecovery). The offer never auto-applies.
+   - SESSIONS: a name field + SAVE (avSessionSave(name)) and the saved-sessions list
+     (avSessionList()): one row per session — name · savedAt · vN · LOAD (avSessionLoad) · ✕
+     (avSessionDelete, immediate — the module owns refusal semantics); the current session is
+     marked CURRENT; every session carries a versions sub-row with per-version RESTORE
+     (avSessionRestore(id, version)).
+   - AUTOSAVE: toggle (avSessionAutosave(on, ms)) + interval select 15/30/45/90 s + readout
+     (on/off · interval · last write from avSessionState().lastAutosaveAt).
+   - BACKUP: BACKUP NOW -> avBackupBuild() -> anchor-blob download (the av_deliver_ui
+     technique) + window.__avSessionUiLastExport stamp · RESTORE (FILE) -> the hidden
+     #av-sessions-restore-file input -> avBackupRestore(buffer) with a progress line and a
+     report of the restored counts (sessions/packs/samples), skipped and errors.
+   - status line + warnings area (degradation is reported there, never console noise).
+
+   LAW: every sibling call is consumed through the pinned §2.1/§2.2 names with typeof guards
+   ONLY — avSessionState/List/Save/Load/Delete/Versions/Restore/Autosave/Recover/
+   DismissRecovery · avBackupBuild/State/Restore. This file never reaches into another
+   module's internals and never calls the siblings' Init functions (app_core owns those
+   boots). It never throws. No console noise at all. No DOM at top level — the file loads in
+   plain node (harness). ONE namespace avSessionUi* / AV_SESSION_UI_*.
+
+   ORCHESTRATION DECISIONS (documented seams for the parent):
+   - the card never edits session state directly: every read goes through avSessionState() /
+     avSessionList() / avSessionVersions() per paint, every write through the pinned calls
+     (single source of truth).
+   - rAF-free: repaint happens on user actions, on async settles and via a light ~1.2 s poll
+     that compares a state+list signature (autosave writes and recovery availability surface
+     without any loop churn). The poll uses setInterval, guarded; it never runs before init.
+   - versions sub-rows are fetched per session per repaint through avSessionVersions(id) with
+     a typeof guard; if the module returns a non-array (future async shape), the sub-rows are
+     simply omitted — never a throw. Rendering is capped at 16 versions/session and 32
+     sessions (the module ring is <= 16, so real data always fits).
+   - BACKUP / RESTORE (FILE) and the per-row ops (SAVE · LOAD · ✕ · RESTORE(v)) share one
+     module-op gate: one pinned call in flight at a time keeps the pin honest without queuing
+     surprises; the controls stay disabled meanwhile.
+   - the delete ✕ is immediate (single click) — matching the studio take-✕ precedent; the
+     module owns refusal semantics for a missing record.
+   - a non-standard autosave interval set elsewhere is shown honestly as an extra option in
+     the select (the four pinned values stay 15/30/45/90 s).
+   - the recovery banner states savedAt exactly as avSessionState() reports it (epoch ms,
+     ISO string or a plain string) — normalized for display, never invented.
+   - BACKUP download uses the anchor-blob path from av_deliver_ui (Blob + object URL + a
+     click); no File System Access picker (the backup button is the user activation). A
+     receipt without buffer bytes says so honestly instead of pretending a download happened.
+   - restore-file reads via file.arrayBuffer() with a FileReader fallback; the input value is
+     reset so the same file can be picked again.
+
+   OBSERVABLES: avSessionUiInit() -> bool (false without host, never throws, idempotent,
+   dataset marker avSessionUiWired='1') · avSessionUiSync() -> bool (repaint) ·
+   avSessionUiClasses() -> string[] (the NEW css classes; the parent styles them) ·
+   avSessionUiSnap() -> the honest card state · window.__avSessionUi = { version, init, sync,
+   classes, state, save, load, del, restore, backup, pick, recover, dismiss, autosave } ·
+   window.__avSessionUiLastExport = { kind, name, bytes, downloaded, at } (backup download
+   stamp) · window.__avSessionUiLastRestore = { name, bytes, restored, skipped, errors, at }.
+
+   ID INVENTORY (rig + parent rely on these):
+     #av-sessions-status
+     #av-sessions-recovery · #av-sessions-recovery-at · #av-sessions-recover · #av-sessions-dismiss
+     #av-sessions-count · #av-sessions-storage
+     #av-sessions-name · #av-sessions-save · #av-sessions-list · #av-sessions-none
+     #av-sessions-autosave · #av-sessions-autosave-val · #av-sessions-autosave-ms
+     #av-sessions-backup · #av-sessions-backup-val · #av-sessions-restore · #av-sessions-restore-file
+     #av-sessions-progress · #av-sessions-report · #av-sessions-warnings · #av-sessions-foot
+   CARD HOOKS: `.av-sessions[data-av-sessions="1"]` · `.av-sessions-session[data-id]` (state
+   class `av-sessions-cur`) · `.av-sessions-ver[data-id][data-ver]` ·
+   `[data-act=load|del|restore]`.
+   ONE writer (child sa-C). Never throws. */
+
+"use strict";
+
+const AV_SESSION_UI_VERSION = "s2.0";
+const AV_SESSION_UI_WARN_MAX = 8;
+const AV_SESSION_UI_AS_OPTS = [15, 30, 45, 90];      /* pinned interval select values, seconds */
+const AV_SESSION_UI_AS_DEF = 45;                      /* the module's own default interval */
+const AV_SESSION_UI_LIST_MAX = 32;                    /* sessions rendered (bounded growth) */
+const AV_SESSION_UI_VERS_MAX = 16;                    /* versions rendered per session (ring bound) */
+const AV_SESSION_UI_NAME_MAX = 64;
+const AV_SESSION_UI_POLL_MS = 1200;
+
+/* UI-local state only — every module fact is read through the pinned av* APIs per paint */
+const avSessionUiState = {
+  inited: false, mounts: 0, timerId: null,
+  /* module mirror (avSessionState) */
+  count: 0, curId: "", curName: "", dirty: false, lastAsAt: 0,
+  autosaveOn: false, autosaveMs: AV_SESSION_UI_AS_DEF * 1000,
+  recAvail: false, recAt: "", recName: "",
+  backend: "",
+  /* name-field refill memo (refill only when the current session id changes) */
+  nameId: null,
+  /* op gate + transient phases */
+  saveBusy: false, opBusy: null, backupBusy: false, restoreFileBusy: false, recovering: false,
+  /* last backup receipt (fallback when avBackupState is absent) */
+  lastBackup: null,
+  /* status + report + warnings */
+  lastMsg: "", lastMsgKind: "msg",
+  progress: "", report: "", reportKind: "msg",
+  warnings: [], warnKey: "",
+  /* paint memos */
+  sessKey: "", asKey: "",
+  /* poll signature sentinel so the first poll always syncs */
+  pollSig: "\u0000",
+};
+
+/* ---------- small pure helpers (no DOM; harness-covered) ---------- */
+
+const avSessionUiEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const avSessionUiNum = (v, d) => { const n = Number(v); return isFinite(n) ? n : d; };
+
+function avSessionUiClean(s, max) {
+  let t = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  if (max && t.length > max) t = t.slice(0, max - 1) + "\u2026";
+  return t;
+}
+
+/* int with clamp; non-finite/garbage -> def (null def = refuse) */
+function avSessionUiInt(v, lo, hi, def) {
+  const n = Math.round(Number(v));
+  if (!isFinite(n)) return (def === undefined ? null : def);
+  return Math.max(lo, Math.min(hi, n));
+}
+
+function avSessionUiPad2(n) { return n < 10 ? ("0" + n) : String(n); }
+
+/* local-time "YYYY-MM-DD HH:MM" for a finite ms epoch */
+function avSessionUiFmtDate(ms) {
+  const d = new Date(Number(ms));
+  if (!isFinite(d.getTime())) return "";
+  return d.getFullYear() + "-" + avSessionUiPad2(d.getMonth() + 1) + "-" + avSessionUiPad2(d.getDate()) +
+    " " + avSessionUiPad2(d.getHours()) + ":" + avSessionUiPad2(d.getMinutes());
+}
+
+/* savedAt/at normalizer: epoch ms (or seconds), ISO/date string, Date — display only */
+function avSessionUiWhen(v) {
+  try {
+    if (v == null || v === "") return "";
+    if (typeof v === "number") {
+      if (!isFinite(v) || v <= 0) return "";
+      return avSessionUiFmtDate(v < 1e11 ? v * 1000 : v);
+    }
+    if (typeof v === "string") {
+      const t = v.trim();
+      if (!t) return "";
+      if (/^\d+$/.test(t)) return avSessionUiWhen(Number(t));
+      const parsed = Date.parse(t);
+      if (isFinite(parsed)) return avSessionUiFmtDate(parsed);
+      return avSessionUiClean(t, 24);
+    }
+    if (typeof v === "object" && v !== null && typeof v.getTime === "function") {
+      const t = v.getTime();
+      if (isFinite(t)) return avSessionUiFmtDate(t);
+    }
+  } catch (e) { /* none */ }
+  return "";
+}
+
+function avSessionUiFmtBytes(n) {
+  const v = Number(n);
+  if (!isFinite(v) || v < 0) return "";
+  if (v < 1024) return Math.round(v) + " B";
+  if (v < 1048576) return (v / 1024).toFixed(1) + " KB";
+  return (v / 1048576).toFixed(2) + " MB";
+}
+
+/* module errors -> honest one-liners (the raw text is kept when nothing matches) */
+function avSessionUiErrText(err) {
+  let raw = "";
+  try { raw = String((err && err.message) ? err.message : (err == null ? "" : err)); } catch (e) { raw = ""; }
+  raw = raw.replace(/\s+/g, " ").trim().slice(0, 140);
+  const e = raw.toLowerCase();
+  if (/no session|unknown session|not found|missing session|no record/.test(e)) return "that session no longer exists";
+  if (/quota|full|space/.test(e)) return "browser storage is full \u2014 delete something first";
+  if (/blocked|denied|idb|indexeddb|storage|refused the write/.test(e)) return "browser storage refused \u2014 nothing landed";
+  if (/zip|corrupt|parse|json|invalid|bad file|foreign/.test(e)) return "the file could not be read \u2014 not a valid backup zip";
+  if (/busy|in progress/.test(e)) return "another operation is still running \u2014 try again";
+  return raw || "refused";
+}
+
+/* receipt verdict: explicit false / null / {ok:false} refuse; everything else (incl.
+   undefined) counts as success (the pinned calls only refuse explicitly) */
+function avSessionUiOK(r) {
+  try {
+    if (r === false || r === null) return false;
+    if (r && typeof r === "object" && r.ok === false) return false;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* warnings list helpers (pure) — dedupe by key, newest last, bounded */
+function avSessionUiWarnMerge(list, key, text, max) {
+  const out = [];
+  try {
+    const src = Array.isArray(list) ? list : [];
+    for (let i = 0; i < src.length; i++) {
+      const w = src[i];
+      if (!w || w.key === key) continue;
+      out.push(w);
+    }
+    out.push({ key: key, text: text });
+    while (out.length > (max || AV_SESSION_UI_WARN_MAX)) out.shift();
+  } catch (e) { /* keep what we have */ }
+  return out;
+}
+
+function avSessionUiWarnDrop(list, key) {
+  const out = [];
+  try {
+    const src = Array.isArray(list) ? list : [];
+    for (let i = 0; i < src.length; i++) {
+      const w = src[i];
+      if (!w || w.key === key) continue;
+      out.push(w);
+    }
+  } catch (e) { /* empty */ }
+  return out;
+}
+
+/* boolean flag read from a state object: explicit true/false/1/0/on/off only */
+function avSessionUiFlagFrom(obj, keys) {
+  try {
+    if (!obj || typeof obj !== "object" || !Array.isArray(keys)) return null;
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      if (!Object.prototype.hasOwnProperty.call(obj, k)) continue;
+      const v = obj[k];
+      if (v === true || v === 1 || v === "on" || v === "true") return true;
+      if (v === false || v === 0 || v === "off" || v === "false") return false;
+    }
+  } catch (e) { /* unknown */ }
+  return null;
+}
+
+function avSessionUiNumField(obj, keys) {
+  try {
+    if (!obj || typeof obj !== "object" || !Array.isArray(keys)) return null;
+    for (let i = 0; i < keys.length; i++) {
+      const v = obj[keys[i]];
+      if (typeof v === "number" && isFinite(v)) return v;
+      if (typeof v === "string" && v !== "" && isFinite(Number(v))) return Number(v);
+    }
+  } catch (e) { /* none */ }
+  return null;
+}
+
+function avSessionUiStrField(obj, keys) {
+  try {
+    if (!obj || typeof obj !== "object" || !Array.isArray(keys)) return "";
+    for (let i = 0; i < keys.length; i++) {
+      const v = obj[keys[i]];
+      if (typeof v === "string" && v) return v;
+    }
+  } catch (e) { /* none */ }
+  return "";
+}
+
+/* "N applied · N skipped" bits out of a receipt (guarded) */
+function avSessionUiCountBits(r) {
+  const bits = [];
+  try {
+    if (!r || typeof r !== "object") return bits;
+    const applied = avSessionUiNumField(r, ["applied"]);
+    if (applied != null) bits.push(Math.round(applied) + " applied");
+    const skipped = avSessionUiNumField(r, ["skipped"]);
+    if (skipped != null && skipped > 0) bits.push(Math.round(skipped) + " skipped");
+  } catch (e) { /* none */ }
+  return bits;
+}
+
+/* ---------- guarded DOM access (no throw, no noise) ---------- */
+
+function avSessionUiHost() {
+  try {
+    if (typeof document !== "undefined" && document && typeof document.getElementById === "function") {
+      return document.getElementById("av-sessions-host");
+    }
+  } catch (e) { /* no document */ }
+  return null;
+}
+
+function avSessionUiEl(sel) {
+  try {
+    const host = avSessionUiHost();
+    if (host && typeof host.querySelector === "function") return host.querySelector(sel);
+  } catch (e) { /* no DOM */ }
+  return null;
+}
+
+function avSessionUiSetValue(el, v) {
+  try {
+    if (!el) return false;
+    const str = String(v == null ? "" : v);
+    let focused = false;
+    try { if (typeof document !== "undefined" && document && document.activeElement === el) focused = true; } catch (e) { focused = false; }
+    if (focused) return false;   /* never clobber the control being edited */
+    if (String(el.value) !== str) el.value = str;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiSetText(host, sel, txt) {
+  try { const el = host.querySelector(sel); if (el && el.textContent !== txt) el.textContent = txt; } catch (e) { /* no DOM */ }
+}
+
+/* ---------- warnings (stateful wrappers over the pure list helpers) ---------- */
+
+function avSessionUiWarn(key, text) {
+  try {
+    avSessionUiState.warnings = avSessionUiWarnMerge(avSessionUiState.warnings, String(key || "general"), avSessionUiClean(text, 170), AV_SESSION_UI_WARN_MAX);
+  } catch (e) { /* never throws */ }
+}
+
+function avSessionUiWarnDropKey(key) {
+  try { avSessionUiState.warnings = avSessionUiWarnDrop(avSessionUiState.warnings, String(key || "")); } catch (e) { /* ok */ }
+}
+
+/* degraded-module notes: set when missing, dropped when present (honest every init) */
+function avSessionUiModulesNote() {
+  const sessionCore = (typeof avSessionState === "function") || (typeof avSessionList === "function") || (typeof avSessionSave === "function");
+  if (sessionCore) avSessionUiWarnDropKey("modules.session");
+  else avSessionUiWarn("modules.session", "the session module (av_session.js) is not loaded \u2014 saving, loading and versions are unavailable");
+  if (sessionCore && typeof avSessionVersions !== "function") {
+    avSessionUiWarn("missing.versions", "this build does not expose avSessionVersions() \u2014 version history is unavailable");
+  } else avSessionUiWarnDropKey("missing.versions");
+  if (typeof avBackupBuild === "function" && typeof avBackupRestore === "function") avSessionUiWarnDropKey("modules.backup");
+  else avSessionUiWarn("modules.backup", "the backup module (av_backup.js) is not loaded \u2014 backup and restore are unavailable");
+}
+
+/* honest note when a single pinned function is absent while the module is present */
+function avSessionUiMissingNote(fn, what) {
+  avSessionUiWarn("missing." + String(fn || "fn"), "this build does not expose " + String(fn || "a needed function") + "() \u2014 " + String(what || "that action is unavailable"));
+}
+
+/* storage honesty (mirrors the module's own backend reporting) */
+function avSessionUiStorageNote() {
+  if (avSessionUiState.backend === "mem") {
+    avSessionUiWarn("storage.mem", "browser storage is not durable right now (memory backend) \u2014 sessions vanish on reload");
+  } else {
+    avSessionUiWarnDropKey("storage.mem");
+  }
+}
+
+/* ---------- mirror reads (pinned APIs, typeof-guarded, explicit reads only) ---------- */
+
+function avSessionUiStateSync() {
+  if (typeof avSessionState !== "function") return false;
+  let st = null;
+  try { st = avSessionState(); } catch (e) { st = null; }
+  if (!st || typeof st !== "object") return false;
+  const s = avSessionUiState;
+  try {
+    const cnt = avSessionUiNumField(st, ["count"]);
+    if (cnt != null) s.count = Math.max(0, Math.round(cnt));
+    const be = avSessionUiStrField(st, ["backend"]);
+    if (be) s.backend = be;
+    const dirty = avSessionUiFlagFrom(st, ["dirty"]);
+    if (dirty !== null) s.dirty = dirty;
+    if (Object.prototype.hasOwnProperty.call(st, "current")) {
+      const cur = st.current;
+      if (!cur || typeof cur !== "object") { s.curId = ""; s.curName = ""; }
+      else {
+        s.curId = avSessionUiStrField(cur, ["id"]);
+        s.curName = avSessionUiStrField(cur, ["name"]);
+      }
+    }
+    const la = avSessionUiNumField(st, ["lastAutosaveAt"]);
+    s.lastAsAt = (la != null && la > 0) ? la : 0;
+    const as = st.autosave;
+    if (as && typeof as === "object") {
+      const on = avSessionUiFlagFrom(as, ["on"]);
+      if (on !== null) s.autosaveOn = on;
+      const ms = avSessionUiNumField(as, ["ms"]);
+      if (ms != null && ms > 0) s.autosaveMs = Math.max(5000, Math.min(600000, ms));
+    }
+    const rc = st.recovery;
+    if (rc && typeof rc === "object") {
+      const av = avSessionUiFlagFrom(rc, ["available"]);
+      if (av !== null) s.recAvail = av;
+      const when = (rc.savedAt != null) ? rc.savedAt : rc.at;
+      s.recAt = avSessionUiWhen(when);
+      s.recName = avSessionUiStrField(rc, ["name"]);
+      if (av === false) { s.recAt = ""; s.recName = ""; }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiListRead() {
+  try {
+    if (typeof avSessionList !== "function") return [];
+    const l = avSessionList();
+    return Array.isArray(l) ? l : [];
+  } catch (e) { return []; }
+}
+
+/* ---------- markup (pure string builders) ---------- */
+
+function avSessionUiAsOptionsHTML(extraSecs) {
+  let out = "";
+  const list = AV_SESSION_UI_AS_OPTS.slice();
+  if (extraSecs != null && list.indexOf(extraSecs) < 0) { list.push(extraSecs); list.sort(function (a, b) { return a - b; }); }
+  for (let i = 0; i < list.length; i++) {
+    const n = list[i];
+    out += '<option value="' + n + '"' + (n === AV_SESSION_UI_AS_DEF ? " selected" : "") + ">" + n + " s</option>";
+  }
+  return out;
+}
+
+function avSessionUiVerRowHTML(id, ver, busy) {
+  const idEsc = avSessionUiEsc(id);
+  const v = Math.max(1, Math.round(avSessionUiNum(ver && ver.n, 1)));
+  return '<div class="av-sessions-ver" data-id="' + idEsc + '" data-ver="' + v + '">' +
+    '<span class="av-sessions-ver-n">v' + v + "</span>" +
+    '<span class="av-sessions-ver-at">' + avSessionUiEsc((ver && ver.atText) || "\u2014") + "</span>" +
+    '<span class="av-sessions-ver-bytes">' + avSessionUiEsc((ver && ver.bytesText) || "") + "</span>" +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-ver-restore" data-act="restore" data-id="' + idEsc + '" data-ver="' + v + '"' + (busy ? " disabled" : "") +
+    ' title="Restore this version \u2014 it replaces the working state">' + (busy ? "\u2026" : "RESTORE") + "</button>" +
+    "</div>";
+}
+
+function avSessionUiSessionRowHTML(view, opBusy) {
+  const idEsc = avSessionUiEsc(view.id);
+  const loadBusy = !!(opBusy && opBusy.kind === "load" && opBusy.id === view.id);
+  const delBusy = !!(opBusy && opBusy.kind === "del" && opBusy.id === view.id);
+  let html = '<div class="av-sessions-session' + (view.cur ? " av-sessions-cur" : "") + '" data-id="' + idEsc + '">' +
+    '<span class="av-sessions-session-name" title="' + idEsc + '">' + avSessionUiEsc(view.name) + "</span>" +
+    '<span class="av-sessions-session-at">' + avSessionUiEsc(view.atText || "\u2014") + "</span>" +
+    '<span class="av-sessions-session-v">v' + view.v + "</span>" +
+    (view.cur ? '<span class="av-sessions-session-cur">CURRENT</span>' : "") +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-session-load" data-act="load" data-id="' + idEsc + '"' + (loadBusy ? " disabled" : "") +
+    ' title="Load this session\u2019s newest version \u2014 it replaces the working state">' + (loadBusy ? "\u2026" : "LOAD") + "</button>" +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-session-del" data-act="del" data-id="' + idEsc + '"' + (delBusy ? " disabled" : "") +
+    ' title="Delete this session (every version)">\u2715</button>' +
+    "</div>";
+  if (view.vers && view.vers.length) {
+    html += '<div class="av-sessions-vers" data-id="' + idEsc + '">';
+    for (let i = 0; i < view.vers.length; i++) {
+      const vrow = view.vers[i];
+      const rBusy = !!(opBusy && opBusy.kind === "restore" && opBusy.id === view.id && opBusy.ver === vrow.n);
+      html += avSessionUiVerRowHTML(view.id, vrow, rBusy);
+    }
+    html += "</div>";
+  }
+  return html;
+}
+
+function avSessionUiBodyHTML() {
+  return '<div class="av-sessions" data-av-sessions="1">' +
+    '<div class="av-sessions-head"><span class="av-sessions-title">SESSIONS</span>' +
+    '<span class="av-sessions-cap">save the whole working state (pattern \u00b7 chains \u00b7 song \u00b7 scenes \u00b7 params \u00b7 macros) as named sessions with version history; autosave keeps a recovery snapshot; BACKUP packs sessions, installed packs and samples into one zip. Nothing is uploaded.</span></div>' +
+    '<div class="av-sessions-status-line"><span class="av-sessions-status av-sessions-msg" id="av-sessions-status" role="status">\u2026</span></div>' +
+
+    '<div class="av-sessions-recovery" id="av-sessions-recovery" hidden>' +
+    '<span class="av-sessions-recovery-lbl">RECOVERY</span>' +
+    '<span class="av-sessions-recovery-at" id="av-sessions-recovery-at"></span>' +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-recover" id="av-sessions-recover" title="Apply the autosaved snapshot to the working state">RECOVER</button>' +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-dismiss" id="av-sessions-dismiss" title="Dismiss the recovery offer">DISMISS</button>' +
+    "</div>" +
+
+    '<section class="av-sessions-sect" data-sect="sessions">' +
+    '<div class="av-sessions-sect-head"><span class="av-sessions-sect-lbl">SESSIONS</span>' +
+    '<span class="av-sessions-count" id="av-sessions-count">0 sessions</span>' +
+    '<span class="av-sessions-storage" id="av-sessions-storage">storage \u2014</span></div>' +
+    '<div class="av-sessions-row">' +
+    '<input type="text" class="av-sessions-name" id="av-sessions-name" spellcheck="false" autocomplete="off" maxlength="64" placeholder="session name" aria-label="Session name">' +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-save" id="av-sessions-save" title="Save the current working state (new session, or a new version of the current one)">SAVE</button>' +
+    "</div>" +
+    '<div class="av-sessions-list" id="av-sessions-list"></div>' +
+    '<p class="av-sessions-none av-note av-dim" id="av-sessions-none">No sessions yet \u2014 press SAVE to keep the current working state.</p>' +
+    "</section>" +
+
+    '<section class="av-sessions-sect" data-sect="autosave">' +
+    '<div class="av-sessions-sect-head"><span class="av-sessions-sect-lbl">AUTOSAVE</span>' +
+    '<span class="av-sessions-autosave-val" id="av-sessions-autosave-val">off</span></div>' +
+    '<div class="av-sessions-row">' +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-autosave" id="av-sessions-autosave" aria-pressed="false" title="Autosave \u2014 while on, a recovery snapshot is written whenever the working state changes">AUTOSAVE</button>' +
+    '<label class="av-sessions-lab" for="av-sessions-autosave-ms">EVERY</label>' +
+    '<select class="av-select av-sessions-autosave-ms" id="av-sessions-autosave-ms" aria-label="Autosave interval">' + avSessionUiAsOptionsHTML(null) + "</select>" +
+    "</div>" +
+    "</section>" +
+
+    '<section class="av-sessions-sect" data-sect="backup">' +
+    '<div class="av-sessions-sect-head"><span class="av-sessions-sect-lbl">BACKUP</span>' +
+    '<span class="av-sessions-backup-val" id="av-sessions-backup-val"></span></div>' +
+    '<div class="av-sessions-row">' +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-backup" id="av-sessions-backup" title="Build a zip with every session, installed pack and sample slot, then download it">BACKUP NOW</button>' +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-restore" id="av-sessions-restore" title="Restore sessions, packs and samples from a backup zip">RESTORE (FILE)</button>' +
+    '<input type="file" class="av-sessions-file" id="av-sessions-restore-file" accept=".zip,application/zip" hidden aria-label="Backup zip to restore">' +
+    "</div>" +
+    '<p class="av-note av-dim av-sessions-progress" id="av-sessions-progress" hidden></p>' +
+    '<p class="av-note av-sessions-report" id="av-sessions-report" hidden></p>' +
+    "</section>" +
+
+    '<div class="av-sessions-warnings" id="av-sessions-warnings" hidden><div class="av-sessions-warn-head">WARNINGS</div></div>' +
+    '<p class="av-note av-dim av-sessions-foot" id="av-sessions-foot">Sessions keep the working state (pattern \u00b7 chains \u00b7 song \u00b7 scenes \u00b7 params \u00b7 macros) \u2014 not audio; takes and samples ride the backup zip. Nothing is uploaded.</p>' +
+    "</div>";
+}
+
+/* ---------- async settle (receipts may be promises or sync values; never throws) ---------- */
+
+function avSessionUiSettle(p, cb) {
+  const done = { v: false };
+  const once = function (r) {
+    if (done.v) return;
+    done.v = true;
+    try { cb(r); } catch (e) { /* settle never throws */ }
+  };
+  try {
+    if (p && typeof p.then === "function") {
+      p.then(once).catch(function (e) { once({ ok: false, error: String((e && e.message) || e || "failed") }); });
+      return true;
+    }
+    once(p);
+    return true;
+  } catch (e) {
+    once({ ok: false, error: String((e && e.message) || e || "failed") });
+    return false;
+  }
+}
+
+/* one module op at a time (keeps the pin honest; controls disabled meanwhile) */
+function avSessionUiBusy() {
+  const s = avSessionUiState;
+  return !!(s.saveBusy || s.opBusy || s.backupBusy || s.restoreFileBusy || s.recovering);
+}
+
+/* ---------- SESSIONS actions ---------- */
+
+function avSessionUiSave(nameArg) {
+  const s = avSessionUiState;
+  try {
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionSave !== "function") {
+      avSessionUiMissingNote("avSessionSave", "saving is unavailable");
+      s.lastMsg = "the session module is not loaded \u2014 nothing can be saved";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    let name = "";
+    if (typeof nameArg === "string" && nameArg.trim()) name = avSessionUiClean(nameArg, AV_SESSION_UI_NAME_MAX);
+    else {
+      const el = avSessionUiEl("#av-sessions-name");
+      if (el && typeof el.value === "string") name = avSessionUiClean(el.value, AV_SESSION_UI_NAME_MAX);
+    }
+    s.saveBusy = true;
+    s.lastMsg = "saving\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = name ? avSessionSave(name) : avSessionSave(); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "save failed") }; }
+    avSessionUiSettle(p, avSessionUiSaveSettle);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiSaveSettle(r) {
+  const s = avSessionUiState;
+  s.saveBusy = false;
+  if (avSessionUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+    s.lastMsg = "save refused \u2014 " + why;
+    s.lastMsgKind = "err";
+    avSessionUiWarn("save.fail", "the save was refused \u2014 " + why);
+  } else {
+    const rname = (r && typeof r === "object") ? avSessionUiStrField(r, ["name"]) : "";
+    const rver = (r && typeof r === "object") ? avSessionUiNumField(r, ["version", "v"]) : null;
+    s.lastMsg = "saved" + (rname ? " \u201c" + avSessionUiClean(rname, 48) + "\u201d" : "") + (rver != null ? " v" + Math.round(rver) : "") + " \u2014 the working state is kept";
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("save.fail");
+    s.nameId = null;   /* refill the name field from the new current on the next paint */
+  }
+  avSessionUiSync();
+}
+
+function avSessionUiLoad(id) {
+  const s = avSessionUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionLoad !== "function") {
+      avSessionUiMissingNote("avSessionLoad", "loading is unavailable");
+      s.lastMsg = "this build cannot load sessions (avSessionLoad is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    s.opBusy = { kind: "load", id: id, ver: 0 };
+    s.lastMsg = "loading\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = avSessionLoad(id); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "load failed") }; }
+    avSessionUiSettle(p, avSessionUiLoadSettle);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiLoadSettle(r) {
+  const s = avSessionUiState;
+  s.opBusy = null;
+  if (avSessionUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+    s.lastMsg = "loading refused \u2014 " + why;
+    s.lastMsgKind = "err";
+    avSessionUiWarn("load.fail", "the session was not loaded \u2014 " + why);
+  } else {
+    const rname = (r && typeof r === "object") ? avSessionUiStrField(r, ["name"]) : "";
+    const bits = avSessionUiCountBits(r);
+    s.lastMsg = "loaded" + (rname ? " \u201c" + avSessionUiClean(rname, 48) + "\u201d" : "") + " \u2014 the working state was replaced" + (bits.length ? " (" + bits.join(" \u00b7 ") + ")" : "");
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("load.fail");
+    s.nameId = null;   /* the current session may have changed */
+  }
+  avSessionUiSync();
+}
+
+function avSessionUiDelete(id) {
+  const s = avSessionUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionDelete !== "function") {
+      avSessionUiMissingNote("avSessionDelete", "deleting is unavailable");
+      s.lastMsg = "this build cannot delete sessions (avSessionDelete is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    let ok = true;
+    try { if (avSessionDelete(id) === false) ok = false; } catch (e) { ok = false; }
+    if (ok) {
+      s.lastMsg = "session deleted";
+      s.lastMsgKind = "msg";
+      avSessionUiWarnDropKey("del.fail");
+    } else {
+      s.lastMsg = "the session could not be deleted (it may no longer exist)";
+      s.lastMsgKind = "err";
+      avSessionUiWarn("del.fail", "the session could not be deleted \u2014 it may no longer exist");
+    }
+    avSessionUiSync();
+    return ok;
+  } catch (e) { return false; }
+}
+
+function avSessionUiRestore(id, ver) {
+  const s = avSessionUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    const v = avSessionUiInt(ver, 1, 9999, null);
+    if (v == null) return false;
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionRestore !== "function") {
+      avSessionUiMissingNote("avSessionRestore", "version restore is unavailable");
+      s.lastMsg = "this build cannot restore versions (avSessionRestore is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    s.opBusy = { kind: "restore", id: id, ver: v };
+    s.lastMsg = "restoring v" + v + "\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = avSessionRestore(id, v); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "restore failed") }; }
+    avSessionUiSettle(p, avSessionUiRestoreSettle);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiRestoreSettle(r) {
+  const s = avSessionUiState;
+  const op = s.opBusy || {};
+  s.opBusy = null;
+  if (avSessionUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+    s.lastMsg = "the version was not restored \u2014 " + why;
+    s.lastMsgKind = "err";
+    avSessionUiWarn("restoreV.fail", "the version restore was refused \u2014 " + why);
+  } else {
+    const rname = (r && typeof r === "object") ? avSessionUiStrField(r, ["name"]) : "";
+    s.lastMsg = "restored v" + (op.ver || "?") + (rname ? " of \u201c" + avSessionUiClean(rname, 48) + "\u201d" : "") + " \u2014 the working state was replaced";
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("restoreV.fail");
+    s.nameId = null;
+  }
+  avSessionUiSync();
+}
+
+/* ---------- AUTOSAVE actions ---------- */
+
+function avSessionUiAutosaveSet(on, ms) {
+  const s = avSessionUiState;
+  try {
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionAutosave !== "function") {
+      avSessionUiMissingNote("avSessionAutosave", "autosave is unavailable");
+      s.lastMsg = "the session module is not loaded \u2014 autosave is unavailable";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    const wantOn = !!on;
+    const wantMs = avSessionUiInt(ms, 5000, 600000, s.autosaveMs);
+    let refused = false;
+    let r = null;
+    try { r = avSessionAutosave(wantOn, wantMs); } catch (e) { refused = true; r = null; }
+    if (!refused && r && typeof r === "object") {
+      const onF = avSessionUiFlagFrom(r, ["on"]);
+      s.autosaveOn = (onF !== null) ? onF : wantOn;
+      const msF = avSessionUiNumField(r, ["ms"]);
+      if (msF != null && msF > 0) s.autosaveMs = Math.max(5000, Math.min(600000, msF));
+      else s.autosaveMs = wantMs;
+    } else if (!refused) {
+      s.autosaveOn = wantOn;
+      s.autosaveMs = wantMs;
+    }
+    if (refused) {
+      s.lastMsg = "autosave refused the change";
+      s.lastMsgKind = "err";
+      avSessionUiWarn("autosave.fail", "autosave refused the change");
+    } else {
+      const secs = Math.round(s.autosaveMs / 1000);
+      s.lastMsg = s.autosaveOn
+        ? "autosave on \u2014 snapshots every " + secs + " s while the state changes"
+        : "autosave off \u2014 no snapshot is written";
+      s.lastMsgKind = "msg";
+      avSessionUiWarnDropKey("autosave.fail");
+    }
+    avSessionUiSync();
+    return !refused;
+  } catch (e) { return false; }
+}
+
+function avSessionUiAutosaveToggle() {
+  const s = avSessionUiState;
+  try { return avSessionUiAutosaveSet(!s.autosaveOn, s.autosaveMs); } catch (e) { return false; }
+}
+
+function avSessionUiAutosaveMsChange(el) {
+  const s = avSessionUiState;
+  try {
+    const secs = avSessionUiInt(el ? el.value : null, AV_SESSION_UI_AS_OPTS[0], AV_SESSION_UI_AS_OPTS[AV_SESSION_UI_AS_OPTS.length - 1], null);
+    if (secs == null) return false;
+    const ok = avSessionUiAutosaveSet(s.autosaveOn, secs * 1000);
+    if (ok) {
+      s.lastMsg = "autosave interval set \u2014 every " + secs + " s" + (s.autosaveOn ? "" : " (autosave is off)");
+      s.lastMsgKind = "msg";
+      avSessionUiSync();
+    }
+    return ok;
+  } catch (e) { return false; }
+}
+
+/* ---------- BACKUP actions ---------- */
+
+/* the anchor-blob download technique from av_deliver_ui (no FSA picker; never throws) */
+function avSessionUiAnchor(buf, name) {
+  try {
+    if (!buf) return false;
+    if (typeof document === "undefined" || !document || typeof document.createElement !== "function") return false;
+    if (typeof Blob === "undefined" || typeof URL === "undefined" || typeof URL.createObjectURL !== "function") return false;
+    let blob = null;
+    if (typeof Blob === "function" && buf instanceof Blob) blob = buf;
+    else { try { blob = new Blob([buf], { type: "application/zip" }); } catch (e) { blob = null; } }
+    if (!blob) return false;
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = name || "anvil_backup.zip";
+    try { a.rel = "noopener"; } catch (e) { /* attribute refused */ }
+    const body = document.body;
+    let attached = false;
+    if (body && typeof body.appendChild === "function") { try { body.appendChild(a); attached = true; } catch (e) { attached = false; } }
+    try { a.click(); } catch (e) { /* a click never throws outward here */ }
+    if (attached && body && typeof body.removeChild === "function") { try { body.removeChild(a); } catch (e) { /* ok */ } }
+    try { if (typeof setTimeout === "function") setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) { /* ok */ } }, 8000); } catch (e) { /* ok */ }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiBackup() {
+  const s = avSessionUiState;
+  try {
+    if (avSessionUiBusy()) return false;
+    if (typeof avBackupBuild !== "function") {
+      avSessionUiMissingNote("avBackupBuild", "backup is unavailable");
+      s.lastMsg = "the backup module is not loaded \u2014 nothing can be packed";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    s.backupBusy = true;
+    s.lastMsg = "building the backup zip\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = avBackupBuild(); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "backup failed") }; }
+    avSessionUiSettle(p, avSessionUiBackupSettle);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiBackupSettle(r) {
+  const s = avSessionUiState;
+  s.backupBusy = false;
+  if (avSessionUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+    s.lastMsg = "the backup was refused \u2014 " + why;
+    s.lastMsgKind = "err";
+    avSessionUiWarn("backup.fail", "the backup was refused \u2014 " + why);
+  } else {
+    const name = (r && typeof r === "object" && typeof r.name === "string" && r.name) ? avSessionUiClean(r.name, 80) : "anvil_backup.zip";
+    const bytes = (r && typeof r === "object") ? avSessionUiNumField(r, ["bytes"]) : null;
+    const buf = (r && typeof r === "object" && r.buffer) ? r.buffer : null;
+    const downloaded = avSessionUiAnchor(buf, name);
+    s.lastBackup = { name: name, bytes: (bytes == null ? null : Math.round(bytes)), at: Date.now() };
+    s.lastMsg = "backup built" + (bytes != null ? " \u2014 " + avSessionUiFmtBytes(bytes) : "") +
+      (downloaded ? " \u2014 check your downloads" : " \u2014 no download handle could be opened");
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("backup.fail");
+    try {
+      if (typeof window !== "undefined" && window) {
+        window.__avSessionUiLastExport = { kind: "backup", name: name, bytes: s.lastBackup.bytes, downloaded: downloaded === true, at: Date.now() };
+      }
+    } catch (e) { /* stamp is a nicety */ }
+  }
+  avSessionUiSync();
+}
+
+/* ---------- RESTORE (FILE) actions ---------- */
+
+function avSessionUiRestoreFilePick() {
+  const s = avSessionUiState;
+  try {
+    const el = avSessionUiEl("#av-sessions-restore-file");
+    if (!el || typeof el.click !== "function") {
+      s.lastMsg = "the file picker is unavailable in this browser";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    s.lastMsg = "choose a backup zip\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    el.click();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* read a File into an ArrayBuffer (file.arrayBuffer() first, FileReader fallback; never throws) */
+function avSessionUiFileRead(file, cb) {
+  const done = { v: false };
+  const once = function (b) {
+    if (done.v) return;
+    done.v = true;
+    try { cb(b); } catch (e) { /* the settle callback never throws */ }
+  };
+  try {
+    if (file && typeof file.arrayBuffer === "function") {
+      try {
+        Promise.resolve(file.arrayBuffer()).then(function (b) { once(b); }).catch(function () { once(null); });
+        return true;
+      } catch (e) { /* fall through */ }
+    }
+    if (typeof FileReader === "function") {
+      try {
+        const fr = new FileReader();
+        fr.onload = function () { once(fr.result); };
+        fr.onerror = function () { once(null); };
+        fr.readAsArrayBuffer(file);
+        return true;
+      } catch (e) { /* fall through */ }
+    }
+  } catch (e) { /* fall through */ }
+  once(null);
+  return false;
+}
+
+function avSessionUiResetFile(el) {
+  try { if (el && typeof el.value === "string") el.value = ""; } catch (e) { /* ok */ }
+}
+
+function avSessionUiFileChange(t) {
+  const s = avSessionUiState;
+  try {
+    if (!t) return false;
+    let file = null;
+    try { if (t.files && t.files.length) file = t.files[0]; } catch (e) { file = null; }
+    if (!file) return false;
+    const fname = avSessionUiClean(file.name || "backup.zip", 80);
+    if (avSessionUiBusy()) { avSessionUiResetFile(t); return false; }
+    if (typeof avBackupRestore !== "function") {
+      avSessionUiMissingNote("avBackupRestore", "restore is unavailable");
+      s.lastMsg = "the backup module is not loaded \u2014 restore is unavailable";
+      s.lastMsgKind = "err";
+      avSessionUiResetFile(t);
+      avSessionUiSync();
+      return false;
+    }
+    s.restoreFileBusy = true;
+    s.progress = "reading " + fname + "\u2026";
+    s.report = "";
+    s.lastMsg = "restoring " + fname + "\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    avSessionUiFileRead(file, function (buf) {
+      if (!buf) {
+        s.restoreFileBusy = false;
+        s.progress = "";
+        s.lastMsg = "the backup file could not be read";
+        s.lastMsgKind = "err";
+        avSessionUiWarn("restore.fail", "the backup file could not be read");
+        avSessionUiSync();
+        avSessionUiResetFile(t);
+        return;
+      }
+      s.progress = "restoring " + fname + "\u2026";
+      s.lastMsg = s.progress;
+      avSessionUiSync();
+      let p = null;
+      try { p = avBackupRestore(buf); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "restore failed") }; }
+      avSessionUiSettle(p, function (r) {
+        avSessionUiFileSettle(fname, buf, r);
+        avSessionUiResetFile(t);
+      });
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiFileSettle(fname, buf, r) {
+  const s = avSessionUiState;
+  s.restoreFileBusy = false;
+  s.progress = "";
+  if (avSessionUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+    s.lastMsg = "restore refused \u2014 " + why;
+    s.lastMsgKind = "err";
+    s.report = "restore of " + fname + " failed \u2014 " + why;
+    s.reportKind = "err";
+    avSessionUiWarn("restore.fail", "restore from " + fname + " failed \u2014 " + why);
+  } else {
+    const rst = (r && typeof r === "object" && r.restored && typeof r.restored === "object") ? r.restored : {};
+    const parts = [];
+    const sn = avSessionUiNumField(rst, ["sessions"]);
+    const pn = avSessionUiNumField(rst, ["packs"]);
+    const smn = avSessionUiNumField(rst, ["samples"]);
+    parts.push("sessions " + (sn != null ? Math.round(sn) : "\u2014"));
+    parts.push("packs " + (pn != null ? Math.round(pn) : "\u2014"));
+    parts.push("samples " + (smn != null ? Math.round(smn) : "\u2014"));
+    let skipped = null;
+    if (r && typeof r === "object") {
+      if (Array.isArray(r.skipped)) skipped = r.skipped.length;
+      else skipped = avSessionUiNumField(r, ["skipped"]);
+    }
+    let line = "restored \u2014 " + parts.join(" \u00b7 ");
+    if (skipped != null && skipped > 0) line += " \u00b7 skipped " + Math.round(skipped);
+    const errs = [];
+    if (r && typeof r === "object" && Array.isArray(r.errors)) {
+      for (let i = 0; i < r.errors.length && errs.length < 4; i++) {
+        let e = "";
+        try { e = avSessionUiClean(String((r.errors[i] && r.errors[i].message) ? r.errors[i].message : r.errors[i]), 70); } catch (x) { e = ""; }
+        if (e) errs.push(e);
+      }
+      if (r.errors.length > 4) errs.push("\u2026 +" + (r.errors.length - 4) + " more");
+    }
+    if (errs.length) line += " \u00b7 errors: " + errs.join("; ");
+    s.report = line;
+    s.reportKind = errs.length ? "err" : "msg";
+    s.lastMsg = "restore done \u2014 sessions " + (sn != null ? Math.round(sn) : "\u2014") + " \u00b7 packs " + (pn != null ? Math.round(pn) : "\u2014") + " \u00b7 samples " + (smn != null ? Math.round(smn) : "\u2014") +
+      (errs.length ? " \u2014 with errors (see the report)" : "");
+    s.lastMsgKind = errs.length ? "err" : "msg";
+    avSessionUiWarnDropKey("restore.fail");
+    if (errs.length) avSessionUiWarn("restore.errors", "the last restore finished with errors \u2014 see the BACKUP report line");
+    else avSessionUiWarnDropKey("restore.errors");
+    try {
+      if (typeof window !== "undefined" && window) {
+        window.__avSessionUiLastRestore = {
+          name: fname,
+          bytes: (buf && typeof buf.byteLength === "number") ? buf.byteLength : null,
+          restored: { sessions: sn, packs: pn, samples: smn },
+          skipped: skipped,
+          errors: errs.length,
+          at: Date.now(),
+        };
+      }
+    } catch (e) { /* stamp is a nicety */ }
+  }
+  avSessionUiSync();
+}
+
+/* ---------- RECOVERY actions ---------- */
+
+function avSessionUiRecover() {
+  const s = avSessionUiState;
+  try {
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionRecover !== "function") {
+      avSessionUiMissingNote("avSessionRecover", "recovery is unavailable");
+      s.lastMsg = "this build cannot recover (avSessionRecover is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    s.recovering = true;
+    s.lastMsg = "recovering the autosaved snapshot\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = avSessionRecover(); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "recover failed") }; }
+    avSessionUiSettle(p, avSessionUiRecoverSettle);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiRecoverSettle(r) {
+  const s = avSessionUiState;
+  s.recovering = false;
+  if (avSessionUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+    s.lastMsg = "recovery refused \u2014 " + why;
+    s.lastMsgKind = "err";
+    avSessionUiWarn("recover.fail", "the recovery was refused \u2014 " + why);
+  } else {
+    const bits = avSessionUiCountBits(r);
+    s.lastMsg = "recovered the autosaved snapshot \u2014 the working state was replaced" + (bits.length ? " (" + bits.join(" \u00b7 ") + ")" : "");
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("recover.fail");
+    s.nameId = null;
+  }
+  avSessionUiSync();
+}
+
+function avSessionUiDismiss() {
+  const s = avSessionUiState;
+  try {
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionDismissRecovery !== "function") {
+      avSessionUiMissingNote("avSessionDismissRecovery", "dismissing is unavailable");
+      s.lastMsg = "this build cannot dismiss the recovery offer (avSessionDismissRecovery is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    let ok = true;
+    try { if (avSessionDismissRecovery() === false) ok = false; } catch (e) { ok = false; }
+    if (ok) {
+      s.lastMsg = "the recovery offer was dismissed";
+      s.lastMsgKind = "msg";
+      avSessionUiWarnDropKey("dismiss.fail");
+    } else {
+      s.lastMsg = "the recovery offer could not be dismissed";
+      s.lastMsgKind = "err";
+      avSessionUiWarn("dismiss.fail", "the recovery offer could not be dismissed");
+    }
+    avSessionUiSync();
+    return ok;
+  } catch (e) { return false; }
+}
+
+/* ---------- paint ---------- */
+
+function avSessionUiIdleText() {
+  const s = avSessionUiState;
+  if (typeof avSessionList !== "function" && typeof avSessionState !== "function") {
+    return "the session module is not loaded \u2014 saving, loading and versions are unavailable";
+  }
+  if (s.curId) {
+    return "current: \u201c" + (s.curName || "untitled") + "\u201d" + (s.dirty ? " \u00b7 unsaved changes" : "") + " \u00b7 " + s.count + " session" + (s.count === 1 ? "" : "s");
+  }
+  if (s.count > 0) return s.count + " session" + (s.count === 1 ? "" : "s") + " \u2014 LOAD one, or SAVE the current state";
+  return "ready \u2014 press SAVE to keep the current working state";
+}
+
+function avSessionUiStatusText() {
+  const s = avSessionUiState;
+  if (s.saveBusy) return { text: "saving\u2026", kind: "msg" };
+  if (s.opBusy) {
+    if (s.opBusy.kind === "load") return { text: "loading\u2026", kind: "msg" };
+    if (s.opBusy.kind === "del") return { text: "deleting\u2026", kind: "msg" };
+    if (s.opBusy.kind === "restore") return { text: "restoring v" + s.opBusy.ver + "\u2026", kind: "msg" };
+  }
+  if (s.backupBusy) return { text: "building the backup zip\u2026", kind: "msg" };
+  if (s.restoreFileBusy) return { text: "restoring from file\u2026", kind: "msg" };
+  if (s.recovering) return { text: "recovering the autosaved snapshot\u2026", kind: "msg" };
+  if (s.lastMsg) return { text: s.lastMsg, kind: (s.lastMsgKind === "err") ? "err" : "msg" };
+  return { text: avSessionUiIdleText(), kind: "msg" };
+}
+
+/* SAVE control: busy label while a save is in flight */
+function avSessionUiPaintSave(host) {
+  const s = avSessionUiState;
+  try {
+    const btn = host.querySelector("#av-sessions-save");
+    if (btn) {
+      if (btn.disabled !== !!s.saveBusy) btn.disabled = !!s.saveBusy;
+      const txt = s.saveBusy ? "SAVING\u2026" : "SAVE";
+      if (btn.textContent !== txt) btn.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* refill the name field from the current session — only when the current id changed */
+function avSessionUiPaintName(host) {
+  const s = avSessionUiState;
+  try {
+    const el = host.querySelector("#av-sessions-name");
+    if (!el) return false;
+    if (s.nameId !== s.curId) {
+      let focused = false;
+      try { if (typeof document !== "undefined" && document && document.activeElement === el) focused = true; } catch (e) { focused = false; }
+      if (focused) return true;   /* never clobber the field being edited; refill retries on a later paint */
+      avSessionUiSetValue(el, s.curName || "");
+      s.nameId = s.curId;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiPaintStatus(host) {
+  try {
+    const st = avSessionUiStatusText();
+    const el = host.querySelector("#av-sessions-status");
+    if (el) {
+      const cls = "av-sessions-status " + (st.kind === "err" ? "av-sessions-err" : "av-sessions-msg");
+      if (el.className !== cls) el.className = cls;
+      if (el.textContent !== st.text) el.textContent = st.text;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiPaintRecovery(host) {
+  const s = avSessionUiState;
+  try {
+    const row = host.querySelector("#av-sessions-recovery");
+    if (row) row.hidden = !s.recAvail;
+    const at = host.querySelector("#av-sessions-recovery-at");
+    if (at) {
+      const txt = s.recAvail
+        ? ("an autosaved snapshot" + (s.recAt ? " from " + s.recAt : "") + (s.recName ? " \u2014 \u201c" + avSessionUiClean(s.recName, 48) + "\u201d" : "") + " is waiting")
+        : "";
+      if (at.textContent !== txt) at.textContent = txt;
+    }
+    const rec = host.querySelector("#av-sessions-recover");
+    if (rec) {
+      if (rec.disabled !== !!s.recovering) rec.disabled = !!s.recovering;
+      const txt = s.recovering ? "RECOVERING\u2026" : "RECOVER";
+      if (rec.textContent !== txt) rec.textContent = txt;
+    }
+    const dis = host.querySelector("#av-sessions-dismiss");
+    if (dis) { if (dis.disabled !== !!s.recovering) dis.disabled = !!s.recovering; }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiPaintCounts(host) {
+  const s = avSessionUiState;
+  try {
+    const cnt = host.querySelector("#av-sessions-count");
+    if (cnt) {
+      const txt = s.count + " session" + (s.count === 1 ? "" : "s");
+      if (cnt.textContent !== txt) cnt.textContent = txt;
+    }
+    const st = host.querySelector("#av-sessions-storage");
+    if (st) {
+      const txt = (s.backend === "idb") ? "storage \u2014 IndexedDB"
+        : (s.backend === "ls") ? "storage \u2014 local storage"
+          : (s.backend === "mem") ? "storage \u2014 memory only"
+            : "storage \u2014";
+      if (st.textContent !== txt) st.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiPaintList(host) {
+  const s = avSessionUiState;
+  try {
+    const box = host.querySelector("#av-sessions-list");
+    const none = host.querySelector("#av-sessions-none");
+    const list = avSessionUiListRead();
+    const views = [];
+    let key = "op:" + (s.opBusy ? s.opBusy.kind + ":" + s.opBusy.id + ":" + (s.opBusy.ver == null ? "" : s.opBusy.ver) : "") + "|";
+    for (let i = 0; i < list.length && views.length < AV_SESSION_UI_LIST_MAX; i++) {
+      const r = list[i];
+      if (!r || typeof r !== "object") continue;
+      const id = avSessionUiStrField(r, ["id"]);
+      if (!id) continue;
+      const name = avSessionUiClean(avSessionUiStrField(r, ["name"]) || "untitled", 48);
+      const atText = avSessionUiWhen(r.savedAt != null ? r.savedAt : r.updatedAt);
+      const v = Math.max(1, Math.round(avSessionUiNum(r.version, 1)));
+      const cur = r.current === true;
+      const vers = [];
+      if (typeof avSessionVersions === "function") {
+        let raw = null;
+        try { raw = avSessionVersions(id); } catch (e) { raw = null; }
+        if (Array.isArray(raw)) {
+          for (let j = 0; j < raw.length && vers.length < AV_SESSION_UI_VERS_MAX; j++) {
+            const e = raw[j];
+            if (!e || typeof e !== "object") continue;
+            vers.push({
+              n: Math.max(1, Math.round(avSessionUiNum(e.version, j + 1))),
+              atText: avSessionUiWhen(e.savedAt),
+              bytesText: avSessionUiFmtBytes(e.bytes),
+            });
+          }
+        }
+      }
+      const view = { id: id, name: name, atText: atText, v: v, cur: cur, vers: vers };
+      views.push(view);
+      key += id + "|" + name + "|" + atText + "|" + v + "|" + (cur ? 1 : 0);
+      for (let j = 0; j < vers.length; j++) key += ">v" + vers[j].n + "@" + vers[j].atText + "#" + vers[j].bytesText;
+      key += "||";
+    }
+    if (box && key !== s.sessKey) {
+      s.sessKey = key;
+      let html = "";
+      for (let i = 0; i < views.length; i++) html += avSessionUiSessionRowHTML(views[i], s.opBusy);
+      box.innerHTML = html;
+    }
+    if (none) none.hidden = views.length > 0;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiSecsOf(ms) {
+  const n = Number(ms);
+  if (!isFinite(n) || n <= 0) return AV_SESSION_UI_AS_DEF;
+  return Math.max(5, Math.min(600, Math.round(n / 1000)));
+}
+
+function avSessionUiPaintAutosave(host) {
+  const s = avSessionUiState;
+  try {
+    const btn = host.querySelector("#av-sessions-autosave");
+    if (btn) {
+      if (btn.classList) btn.classList.toggle("on", !!s.autosaveOn);
+      const pressed = s.autosaveOn ? "true" : "false";
+      if (btn.getAttribute("aria-pressed") !== pressed) btn.setAttribute("aria-pressed", pressed);
+    }
+    const sel = host.querySelector("#av-sessions-autosave-ms");
+    if (sel) {
+      const secs = avSessionUiSecsOf(s.autosaveMs);
+      const extra = (AV_SESSION_UI_AS_OPTS.indexOf(secs) >= 0) ? null : secs;
+      const key = "k:" + String(extra == null ? "" : extra);
+      if (key !== s.asKey) {
+        s.asKey = key;
+        sel.innerHTML = avSessionUiAsOptionsHTML(extra);
+      }
+      avSessionUiSetValue(sel, String(secs));
+    }
+    const val = host.querySelector("#av-sessions-autosave-val");
+    if (val) {
+      let txt;
+      if (typeof avSessionAutosave !== "function") txt = "unavailable";
+      else {
+        const secs = avSessionUiSecsOf(s.autosaveMs);
+        txt = (s.autosaveOn ? "on \u2014 every " + secs + " s" : "off \u2014 no snapshot is written") +
+          (s.lastAsAt > 0 ? " \u00b7 last write " + avSessionUiWhen(s.lastAsAt) : "");
+      }
+      if (val.textContent !== txt) val.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiPaintBackup(host) {
+  const s = avSessionUiState;
+  try {
+    const busy = !!(s.backupBusy || s.restoreFileBusy);
+    const bb = host.querySelector("#av-sessions-backup");
+    if (bb) {
+      if (bb.disabled !== busy) bb.disabled = busy;
+      const txt = s.backupBusy ? "BUILDING\u2026" : "BACKUP NOW";
+      if (bb.textContent !== txt) bb.textContent = txt;
+    }
+    const rb = host.querySelector("#av-sessions-restore");
+    if (rb) {
+      if (rb.disabled !== busy) rb.disabled = busy;
+      const txt = s.restoreFileBusy ? "RESTORING\u2026" : "RESTORE (FILE)";
+      if (rb.textContent !== txt) rb.textContent = txt;
+    }
+    /* last build: the module's own truth when present, else the card's own receipt */
+    let last = null;
+    if (typeof avBackupState === "function") {
+      let bs = null;
+      try { bs = avBackupState(); } catch (e) { bs = null; }
+      if (bs && typeof bs === "object" && bs.lastBuild && typeof bs.lastBuild === "object") last = bs.lastBuild;
+    }
+    if (!last) last = s.lastBackup;
+    const bv = host.querySelector("#av-sessions-backup-val");
+    if (bv) {
+      let txt = "no backup yet \u2014 BACKUP NOW packs sessions \u00b7 packs \u00b7 samples";
+      if (last && typeof last === "object") {
+        const lname = avSessionUiStrField(last, ["name"]);
+        const lbytes = avSessionUiNumField(last, ["bytes"]);
+        const lat = avSessionUiWhen(last.at != null ? last.at : last.savedAt);
+        txt = "last backup" + (lname ? " \u201c" + avSessionUiClean(lname, 48) + "\u201d" : "") +
+          (lbytes != null ? " \u00b7 " + avSessionUiFmtBytes(lbytes) : "") + (lat ? " \u00b7 " + lat : "");
+      }
+      if (bv.textContent !== txt) bv.textContent = txt;
+    }
+    const pg = host.querySelector("#av-sessions-progress");
+    if (pg) {
+      if (pg.textContent !== s.progress) pg.textContent = s.progress;
+      pg.hidden = !s.progress;
+    }
+    const rp = host.querySelector("#av-sessions-report");
+    if (rp) {
+      if (rp.textContent !== s.report) rp.textContent = s.report;
+      rp.hidden = !s.report;
+      const cls = "av-note av-sessions-report" + (s.reportKind === "err" ? " av-sessions-err" : "");
+      if (rp.className !== cls) rp.className = cls;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiPaintWarnings(host) {
+  try {
+    const box = host.querySelector("#av-sessions-warnings");
+    if (!box) return false;
+    const list = avSessionUiState.warnings || [];
+    box.hidden = list.length === 0;
+    let key = "";
+    for (let i = 0; i < list.length; i++) key += list[i].key + ":" + list[i].text + "|";
+    if (key !== avSessionUiState.warnKey) {
+      avSessionUiState.warnKey = key;
+      let html = '<div class="av-sessions-warn-head">WARNINGS</div>';
+      for (let i = 0; i < list.length; i++) html += '<div class="av-sessions-warn-item">' + avSessionUiEsc(list[i].text) + "</div>";
+      box.innerHTML = html;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* full repaint: mirrors first (guarded), then every control (write-on-change only) */
+function avSessionUiSync() {
+  const host = avSessionUiHost();
+  if (!host) return false;
+  try {
+    let card = null;
+    try { card = (typeof host.querySelector === "function") ? host.querySelector(".av-sessions") : null; } catch (e) { card = null; }
+    if (!card) {
+      host.innerHTML = avSessionUiBodyHTML();
+      avSessionUiState.sessKey = "";
+      avSessionUiState.asKey = "";
+      avSessionUiState.warnKey = "";
+      avSessionUiWire(host);
+    }
+    avSessionUiStateSync();
+    avSessionUiStorageNote();
+    avSessionUiPaintName(host);
+    avSessionUiPaintSave(host);
+    avSessionUiPaintStatus(host);
+    avSessionUiPaintRecovery(host);
+    avSessionUiPaintCounts(host);
+    avSessionUiPaintList(host);
+    avSessionUiPaintAutosave(host);
+    avSessionUiPaintBackup(host);
+    avSessionUiPaintWarnings(host);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* ---------- poll (light state+list signature; ~1.2 s, no rAF) ---------- */
+
+function avSessionUiListSig() {
+  try {
+    if (typeof avSessionList !== "function") return "";
+    const l = avSessionList();
+    if (!Array.isArray(l)) return "";
+    let out = "";
+    for (let i = 0; i < l.length && i < AV_SESSION_UI_LIST_MAX; i++) {
+      const r = l[i] || {};
+      out += String(r.id) + ":" + String(r.name) + ":" + String(r.version) + ":" + (r.current === true ? 1 : 0) + ":" + String(r.updatedAt) + "|";
+    }
+    return out;
+  } catch (e) { return ""; }
+}
+
+function avSessionUiSig() {
+  try {
+    let sig = "";
+    if (typeof avSessionState === "function") {
+      let st = null;
+      try { st = avSessionState(); } catch (e) { st = null; }
+      if (st && typeof st === "object") {
+        const cur = st.current;
+        const curId = (cur && typeof cur === "object" && typeof cur.id === "string") ? cur.id : "";
+        const as = st.autosave;
+        const asOn = (as && typeof as === "object") ? (as.on === true ? 1 : (as.on === false ? 0 : -1)) : -1;
+        const asMs = (as && typeof as === "object" && isFinite(Number(as.ms))) ? Number(as.ms) : -1;
+        const rc = st.recovery;
+        const rcAv = (rc && typeof rc === "object") ? (rc.available === true ? 1 : (rc.available === false ? 0 : -1)) : -1;
+        const rcAt = (rc && typeof rc === "object" && rc.savedAt != null) ? String(rc.savedAt) : "";
+        sig += [st.count, curId, (st.dirty === true ? 1 : 0), st.lastAutosaveAt, asOn, asMs, rcAv, rcAt, st.backend].join("|");
+      }
+    }
+    return sig + ";" + avSessionUiListSig();
+  } catch (e) { return ""; }
+}
+
+function avSessionUiPoll() {
+  const s = avSessionUiState;
+  try {
+    if (!s.inited) return false;
+    const sig = avSessionUiSig();
+    if (sig === s.pollSig) return false;
+    s.pollSig = sig;
+    avSessionUiSync();
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiStartPoll() {
+  const s = avSessionUiState;
+  try {
+    if (s.timerId != null) return false;
+    if (typeof setInterval !== "function") return false;
+    s.timerId = setInterval(avSessionUiPoll, AV_SESSION_UI_POLL_MS);
+    return s.timerId != null;
+  } catch (e) { return false; }
+}
+
+/* ---------- wiring (delegated, bound ONCE per host element; the dataset marker) ---------- */
+
+function avSessionUiClick(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest("#av-sessions-save")) { avSessionUiSave(); return; }
+    if (t.closest("#av-sessions-autosave")) { avSessionUiAutosaveToggle(); return; }
+    if (t.closest("#av-sessions-recover")) { avSessionUiRecover(); return; }
+    if (t.closest("#av-sessions-dismiss")) { avSessionUiDismiss(); return; }
+    if (t.closest("#av-sessions-backup")) { avSessionUiBackup(); return; }
+    if (t.closest("#av-sessions-restore")) { avSessionUiRestoreFilePick(); return; }
+    const act = t.closest("[data-act]");
+    if (act) {
+      const what = String(act.getAttribute("data-act") || "");
+      let id = String(act.getAttribute("data-id") || "");
+      if (!id) {
+        const row = (typeof act.closest === "function") ? act.closest("[data-id]") : null;
+        id = row ? String(row.getAttribute("data-id") || "") : "";
+      }
+      if (!id) return;
+      if (what === "load") { avSessionUiLoad(id); return; }
+      if (what === "del") { avSessionUiDelete(id); return; }
+      if (what === "restore") {
+        const ver = String(act.getAttribute("data-ver") || "");
+        avSessionUiRestore(id, ver);
+        return;
+      }
+    }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+function avSessionUiChange(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest("#av-sessions-autosave-ms")) { avSessionUiAutosaveMsChange(t); return; }
+    if (t.closest("#av-sessions-restore-file")) { avSessionUiFileChange(t); return; }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+function avSessionUiWire(host) {
+  if (!host || typeof host.addEventListener !== "function") return false;
+  try {
+    if (host.dataset && host.dataset.avSessionUiWired === "1") return true;   /* one delegation per host element */
+    if (host.dataset) host.dataset.avSessionUiWired = "1";
+    host.addEventListener("click", avSessionUiClick);
+    host.addEventListener("change", avSessionUiChange);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- init (mount, idempotent, re-mountable) ---------- */
+
+function avSessionUiInit() {
+  const host = avSessionUiHost();
+  if (!host) return false;
+  try {
+    let card = null;
+    try { card = (typeof host.querySelector === "function") ? host.querySelector(".av-sessions") : null; } catch (e) { card = null; }
+    if (!card) {
+      host.innerHTML = avSessionUiBodyHTML();
+      avSessionUiState.sessKey = "";
+      avSessionUiState.asKey = "";
+      avSessionUiState.warnKey = "";
+    }
+    avSessionUiWire(host);
+    const s = avSessionUiState;
+    s.inited = true;
+    s.mounts += 1;
+    avSessionUiModulesNote();
+    avSessionUiSync();
+    avSessionUiStartPoll();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- observables ---------- */
+
+function avSessionUiSnap() {
+  const host = avSessionUiHost();
+  const s = avSessionUiState;
+  const snap = {
+    version: AV_SESSION_UI_VERSION,
+    inited: !!s.inited,
+    mounts: s.mounts,
+    host: !!host,
+    wired: !!(host && host.dataset && host.dataset.avSessionUiWired === "1"),
+    card: false,
+    modules: {
+      session: (typeof avSessionState === "function") || (typeof avSessionList === "function") || (typeof avSessionSave === "function"),
+      backup: (typeof avBackupBuild === "function"),
+      versions: (typeof avSessionVersions === "function"),
+    },
+    sessions: {
+      count: s.count,
+      current: s.curId ? { id: s.curId, name: s.curName } : null,
+      curId: s.curId,
+      dirty: !!s.dirty,
+      backend: s.backend,
+    },
+    autosave: { on: !!s.autosaveOn, ms: s.autosaveMs, lastAt: s.lastAsAt },
+    recovery: { available: !!s.recAvail, at: s.recAt, name: s.recName },
+    busy: {
+      save: !!s.saveBusy,
+      op: s.opBusy ? (s.opBusy.kind + ":" + s.opBusy.id + ":" + (s.opBusy.ver == null ? "" : s.opBusy.ver)) : "",
+      backup: !!s.backupBusy,
+      restoreFile: !!s.restoreFileBusy,
+      recovering: !!s.recovering,
+    },
+    status: s.lastMsg, statusKind: s.lastMsgKind,
+    warnings: s.warnings.map(function (w) { return w.text; }),
+    classes: avSessionUiClasses(),
+  };
+  try { if (host && host.querySelector) snap.card = !!host.querySelector(".av-sessions"); } catch (e) { snap.card = false; }
+  return snap;
+}
+
+function avSessionUiClasses() {
+  return [
+    "av-sessions", "av-sessions-head", "av-sessions-title", "av-sessions-cap",
+    "av-sessions-status-line", "av-sessions-status", "av-sessions-msg", "av-sessions-err",
+    "av-sessions-recovery", "av-sessions-recovery-lbl", "av-sessions-recovery-at",
+    "av-sessions-recover", "av-sessions-dismiss",
+    "av-sessions-sect", "av-sessions-sect-head", "av-sessions-sect-lbl",
+    "av-sessions-count", "av-sessions-storage",
+    "av-sessions-row", "av-sessions-lab", "av-sessions-btn",
+    "av-sessions-name", "av-sessions-save",
+    "av-sessions-list", "av-sessions-none",
+    "av-sessions-session", "av-sessions-cur", "av-sessions-session-name",
+    "av-sessions-session-at", "av-sessions-session-v", "av-sessions-session-cur",
+    "av-sessions-session-load", "av-sessions-session-del",
+    "av-sessions-vers", "av-sessions-ver", "av-sessions-ver-n", "av-sessions-ver-at",
+    "av-sessions-ver-bytes", "av-sessions-ver-restore",
+    "av-sessions-autosave", "av-sessions-autosave-val", "av-sessions-autosave-ms", "on",
+    "av-sessions-backup", "av-sessions-backup-val", "av-sessions-restore", "av-sessions-file",
+    "av-sessions-progress", "av-sessions-report",
+    "av-sessions-warnings", "av-sessions-warn-head", "av-sessions-warn-item",
+    "av-sessions-foot",
+  ];
+}
+
+/* ---------- debug/verify handle ---------- */
+
+if (typeof window !== "undefined") {
+  try {
+    window.__avSessionUi = {
+      version: AV_SESSION_UI_VERSION,
+      init: function () { return avSessionUiInit(); },
+      sync: function () { return avSessionUiSync(); },
+      classes: function () { return avSessionUiClasses(); },
+      state: function () { return avSessionUiSnap(); },
+      save: function (name) { return avSessionUiSave(name); },
+      load: function (id) { return avSessionUiLoad(id); },
+      del: function (id) { return avSessionUiDelete(id); },
+      restore: function (id, ver) { return avSessionUiRestore(id, ver); },
+      backup: function () { return avSessionUiBackup(); },
+      pick: function () { return avSessionUiRestoreFilePick(); },
+      recover: function () { return avSessionUiRecover(); },
+      dismiss: function () { return avSessionUiDismiss(); },
+      autosave: function (on, ms) { return avSessionUiAutosaveSet(on, ms); },
+    };
+  } catch (e) { /* no window — nothing to publish */ }
+}
+
+
 /* Anvil — SYNTH card (P1 voice engine, P2 ENGINE layer, P3 grain + sampler panels). avSynthInit() mounts the engine
    controls into the parent-owned host #av-synth-knobs:
    - one ENGINE select (#av-synth-engine — va · acid · string · drum · grain · sampler) at the
@@ -26531,7 +30724,7 @@ function avSynthInit() {
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.7.0", phase: "S1 · record core", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.8.0", phase: "S2 · sessions", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -26627,6 +30820,10 @@ function avMountLevels() {
   try { metroOk = (typeof avMetroInit === "function") ? (avMetroInit() !== false) : false; } catch (e) { console.warn("[anvil] metro init failed", e); }
   try { takesOk = (typeof avTakesInit === "function") ? (avTakesInit() !== false) : false; } catch (e) { console.warn("[anvil] takes init failed", e); }
   try { studioUiOk = (typeof avStudioUiInit === "function") ? (avStudioUiInit() !== false) : false; } catch (e) { console.warn("[anvil] studio ui init failed", e); }
+  let sessionOk = false, backupOk = false, sessionUiOk = false;
+  try { sessionOk = (typeof avSessionInit === "function") ? (avSessionInit() !== false) : false; } catch (e) { console.warn("[anvil] session init failed", e); }
+  try { backupOk = (typeof avBackupInit === "function") ? (avBackupInit() !== false) : false; } catch (e) { console.warn("[anvil] backup init failed", e); }
+  try { sessionUiOk = (typeof avSessionUiInit === "function") ? (avSessionUiInit() !== false) : false; } catch (e) { console.warn("[anvil] session ui init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -26642,7 +30839,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
