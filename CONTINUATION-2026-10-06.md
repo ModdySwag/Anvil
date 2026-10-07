@@ -521,3 +521,26 @@ Resume phrase: **"continue anvil"**.
 - NEXT: perf gate → **P4 sequencer/groovebox** (step-objects, chains/songs, acid lane, audio-clock;
   `bpm` mirror seam already live) per the GOLDEN BUILD program. Resume phrase: **"continue anvil"**.
 
+
+## Resume addendum 15 — 2026-10-07 (P3 perf gate on a QUIET machine — records + the resolved P2 stress attribution)
+
+- **Bench (the publishable metric) on 5861d7d6, quiet machine:** `verify/bench-v6-p3-full.{log,json}`
+  — **offline 128 voices @ 1316 µs/q = 49.35 % budget** (P1.x 47.6 % · P2 47.1 % · P3 +≈2 pp =
+  the always-on post-mix chain loop + mod gates; monotone; knee = the 128-note midi-space cap).
+  Realtime: **light 64/64 ×3 stable · fat 64/64** (0 underruns — the quiet box published the full
+  64; P1.x published fat 48 under load); fallback spn cell PASS. `verify/last-cdp_bench.*` refreshed.
+- **Stress ×2 on the quiet machine** (`verify/stress-p3-run1.log` · `run2`) — both `asserts-not-met`
+  for the SAME two known reasons, now with quiet numbers:
+  - verified-envelope deltas: **1 in each run, IDENTICAL signature** (cycle 1 @ uni 3, ~6.6–18.6 s —
+    the systematic cold first-cap entry; unchanged since P1.x; run2 6.642–18.632 s vs run1
+    6.648–18.636 s);
+  - uni-7 over-drive probe windows (beyond the bench envelope by design): **10 (run 1) / 11 (run 2)**
+    deltas (P1.x quiet: 9–11).
+  Everything else PASS both runs: heap +0.2 MB, drains 15/15, 0 page errors, ctx running, coverage
+  27/27 cycles (+3,564 notes on/off each), driver errors 0.
+- **P2 stress attribution RESOLVED:** the run1 = 142 / run2 = 627 elevations were LOAD contamination
+  (all 7 P3 children + desktop activity); on a quiet box the profile returns to the P1.x close-out
+  baseline. The residual (1 cold-start delta + hot uni-7 windows) is the KNOWN minBLEP margin →
+  stays queued as **P·2 (minBLEP cost-optimisation pass)**; the per-wave gate P·1 is satisfied
+  (bench stable + recorded). Records committed with this addendum.
+
