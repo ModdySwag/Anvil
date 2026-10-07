@@ -1363,3 +1363,25 @@ Resume phrase: **"continue anvil"**.
   (bench knee + stress ×2 + old-bytes control if counts jump) → close commits + addendum 33 +
   README + docs/05 status.
 - Resume phrase: **"continue anvil"**.
+
+## M2 TRIAGE STATE — 2026-10-08 (mid-wave; compaction insurance)
+
+- Integrated build history: `480323cb` (3,204,051 B — integrate script 71 edits OK) → rig 24/39 ·
+  `a479a8cf` (3,205,003 B — app fix: av_song pushes the live pattern to the scheduler at row apply
+  and both scene-recall applies, ×3 sites) → rig 34/39 · `d311eaf8` (app fix: av_seq_ui PLAY pushes
+  the snapshot first — play-what-you-see) → rig 37/39 · rig **run 5 in flight** on `d311eaf8`.
+- Final two rig-SPEC fixes under test in run 5: **2f** measured the slice TAIL via 6 ms spot-RMS
+  (phase/window-aliased — the dB sign flipped between runs) → now measures the slice BODY (sleep
+  30 ms, rms(120)); **2i** counted rising-edge onsets but 229 ms slices at 125 ms spacing overlap (no
+  gaps) → now asserts audio-present + the `__avSeqTrace` witness (downs cover steps 0..3 with notes
+  c2..c#2..d2..d#2).
+- Triage lessons (fold into the skill): (1) rig spot-RMS over decaying tails is window-aliased —
+  measure the stationary body or use the recorder; (2) overlapping one-shots defeat onset counting —
+  pair audio-present with the seq trace; (3) the scheduler plans in 8-step chunks: EVERY path that
+  writes the pattern while playing MUST `avSeqSetPattern`-push or the change is inaudible (the UI
+  edit path always pushed; the song runner + PLAY did not — fixed); a rig window after a row
+  boundary must start past one chunk (~500 ms @120 bpm) + release.
+- Remaining pipeline: run 5 → pins (16 existing EXPECT_SHA files + cdp_m2 pin; battery = 20 suites)
+  → battery run → perf gate (bench knee vs 96/128 + stress ×2 + old-bytes control if jumps) → close
+  commits + addendum 33 + README + docs/05 status + mnemosyne.
+- Resume phrase: **"continue anvil"**.

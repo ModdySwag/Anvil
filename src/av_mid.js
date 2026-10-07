@@ -688,3 +688,295 @@ function avMidToPattern(parsed, opts) {
     return { ok: true, pattern: pattern, warnings: warnings };
   } catch (e) { return avMidFail("pattern mapping failed (" + avMidErrText(e) + ")"); }
 }
+
+/* ============================================================================================
+   M2 · SONG ARRANGEMENT EXPORT — avMidExportSong (verify/_m2_wave.md §2.6, owner sa-F).
+   ADDITIVE appendix: nothing above this line is touched; avMidExport's pins (format 1, PPQ 480,
+   step 120/160 ticks, the planner event builder, the writer primitives) are reused verbatim.
+
+   avMidExportSong({snap, song:{v,rows}, name, trackMask?}) -> {ok, bytes, rows, noteCount, steps,
+   format, ppq, tracks, events, warnings} | {ok:false, error, warnings}
+
+   - SMF format 1, PPQ 480 (the module's pins). Track 0 = the song name + per-row tempo metas and
+     row markers (name meta, text = row.label || row.ref) at each row's absolute start tick;
+     tracks 1..4 = the seq tracks (trackMask-filtered; channel = seq track index), exactly the
+     avMidExport writer law (deltas, vel7, off-before-on at a tick, EOT).
+   - Rows expand contiguously: L = row.len || avSeqSchedCycleLen() (guarded; floor 16; the
+     module's own avMidCycleLen(snap) is the snap fallback), R = repeats 1..256. Row r starts at
+     absTick = Σ L×R of the rows before it × the grid's ticks per step (PPQ/4 = 120 for "16",
+     PPQ/3 = 160 for "8t").
+   - Row-local events via the existing avSeqPlan-based builder: each row plans [0, span) in the
+     module's 8-step chunks with a row snap (bpm = row.tempo || snap.bpm; track mutes = the ROW's
+     mutes, so a muted row-track combo emits nothing for that row — matching the runner, which
+     loads the row mutes verbatim), absolute seconds (origin 0 = row-local) × the row's
+     ticksPerSec + rowStartTick, single rounding, negative clamped to the row start. The RNG
+     threads ONE stream across rows in order (same seed ⇒ same bytes).
+   - Cap: Σ L×R ≤ 20000 grid steps; beyond → the arrangement is truncated at exactly 20000 steps
+     (the straddling row is cut) + the warning "arrangement truncated at 20000 steps".
+   - Deterministic; honest fail shapes like avMidExport ({ok:false, error, warnings} always).
+   ============================================================================================ */
+
+const AV_MID_SONG_STEP_CAP = 20000;     /* Σ L×R grid steps cap (§2.6) */
+const AV_MID_SONG_REP_MAX = 256;        /* = core AV_SEQ_SONG_REPEAT_MAX */
+const AV_MID_SONG_LEN_MAX = 1024;       /* = core AV_SEQ_ROW_LEN_MAX */
+const AV_MID_SONG_LEN_FLOOR = 16;       /* = avSeqSchedCycleLen's floor */
+
+/* row mutes -> 0|1 x4 ("0"/0/false/null => 0, else 1 — the core avSeqBit collapse for this field) */
+function avMidSongBit(v) {
+  if (v === "0" || v === 0 || v === false || v == null) return 0;
+  return v ? 1 : 0;
+}
+
+function avMidSongMutes(src) {
+  const out = [0, 0, 0, 0];
+  const m = Array.isArray(src) ? src : [];
+  for (let t = 0; t < AV_MID_TRACKS; t++) out[t] = avMidSongBit(m[t]);
+  return out;
+}
+
+/* L = row.len (1..1024) || avSeqSchedCycleLen() (guarded; floor 16) || avMidCycleLen(snap) */
+function avMidSongRowLen(v, snap) {
+  const n = Math.round(Number(v));
+  if (isFinite(n) && n >= 1) return n > AV_MID_SONG_LEN_MAX ? AV_MID_SONG_LEN_MAX : n;
+  try {
+    if (typeof avSeqSchedCycleLen === "function") {
+      const d = Math.round(Number(avSeqSchedCycleLen()));
+      if (isFinite(d) && d >= AV_MID_SONG_LEN_FLOOR) return d > AV_MID_SONG_LEN_MAX ? AV_MID_SONG_LEN_MAX : d;
+    }
+  } catch (e) { /* fall through to the snap law */ }
+  return avMidCycleLen(snap);
+}
+
+/* row.tempo 0 = inherit (snap.bpm); else round-clamp 20..300 */
+function avMidSongRowTempo(v) {
+  const n = Number(v);
+  if (v == null || v === "" || !isFinite(n) || n <= 0) return 0;
+  return avMidClampInt(n, 0, AV_MID_BPM_MIN, AV_MID_BPM_MAX);
+}
+
+/* the row's planner view: shallow snap copy, bpm = the row tempo, track mutes = the row's */
+function avMidSongRowSnap(snap, bpm, mutes) {
+  const rs = {};
+  for (const k in snap) {
+    if (Object.prototype.hasOwnProperty.call(snap, k)) rs[k] = snap[k];
+  }
+  rs.bpm = bpm;
+  const src = Array.isArray(snap.tracks) ? snap.tracks : [];
+  const tracks = [];
+  for (let t = 0; t < AV_MID_TRACKS; t++) {
+    const tr = (src[t] && typeof src[t] === "object") ? src[t] : null;
+    tracks.push(tr ? { len: tr.len, speed: tr.speed, mute: mutes[t] ? 1 : 0, steps: tr.steps } : null);
+  }
+  rs.tracks = tracks;
+  return rs;
+}
+
+function avMidExportSong(opts) {
+  try {
+    const o = (opts && typeof opts === "object" && !Array.isArray(opts)) ? opts : null;
+    const snap = o ? o.snap : null;
+    if (!snap || typeof snap !== "object" || Array.isArray(snap)) return avMidFail("no pattern snap");
+    if (!Array.isArray(snap.tracks)) return avMidFail("no pattern tracks");
+    const song = o ? o.song : null;
+    const rowsRaw = (song && typeof song === "object" && !Array.isArray(song) && Array.isArray(song.rows))
+      ? song.rows : null;
+    if (!rowsRaw || rowsRaw.length === 0) return avMidFail("no song rows");
+    if (typeof avSeqPlan !== "function") return avMidFail("planner unavailable (avSeqPlan)");
+
+    const warnings = [];
+    const snapBpm = avMidClampNum(snap.bpm, AV_MID_BPM_DEF, AV_MID_BPM_MIN, AV_MID_BPM_MAX);
+    const ticksPerStep = (snap.grid === "8t") ? (AV_MID_PPQ / 3) : (AV_MID_PPQ / 4);   /* 160 / 120 */
+
+    /* trackMask [bool x 4]; absent/invalid -> all selected (the avMidExport law) */
+    const mask = [true, true, true, true];
+    const srcMask = (o && Array.isArray(o.trackMask)) ? o.trackMask : null;
+    let selected = 0;
+    for (let i = 0; i < AV_MID_TRACKS; i++) {
+      mask[i] = srcMask ? (srcMask[i] ? true : false) : true;
+      if (mask[i]) selected++;
+    }
+    if (selected === 0) warnings.push("no tracks selected");
+
+    const name = avMidAscii(o && o.name != null ? o.name : snap.name, AV_MID_NAME_CAP) || "Anvil song";
+
+    /* slide warning scan (the avMidExport literal pin, over the same first-4 tracks) */
+    let slideFound = false;
+    for (let ti = 0; ti < snap.tracks.length && ti < AV_MID_TRACKS && !slideFound; ti++) {
+      const sts = (snap.tracks[ti] && Array.isArray(snap.tracks[ti].steps)) ? snap.tracks[ti].steps : [];
+      for (let i = 0; i < sts.length; i++) {
+        const s2 = sts[i];
+        if (s2 && typeof s2 === "object" && s2.on && (s2.slide === 1 || s2.slide === true)) {
+          slideFound = true;
+          break;
+        }
+      }
+    }
+    if (slideFound) warnings.push("slide not representable in SMF (v1)");
+
+    /* rows normalised (markers + spans); junk entries dropped */
+    const rows = [];
+    for (let i = 0; i < rowsRaw.length; i++) {
+      const r = rowsRaw[i];
+      if (!r || typeof r !== "object" || Array.isArray(r)) continue;
+      const ref = avMidAscii(r.ref != null ? r.ref : (r.pattern != null ? r.pattern : ""), AV_MID_PATNAME_CAP)
+        || ("ROW " + (rows.length + 1));
+      rows.push({
+        ref: ref,
+        label: avMidAscii(r.label, AV_MID_NAME_CAP),
+        repeats: avMidClampInt(r.repeats, 1, 1, AV_MID_SONG_REP_MAX),
+        mutes: avMidSongMutes(r.mutes),
+        len: avMidSongRowLen(r.len, snap),
+        tempo: avMidSongRowTempo(r.tempo),
+      });
+    }
+    if (rows.length === 0) return avMidFail("no song rows");
+
+    /* the cap walk: Σ L×R ≤ 20000; the straddling row is cut at the cap (warning once) */
+    let total = 0, truncated = false;
+    const spans = [];
+    for (let i = 0; i < rows.length && !truncated; i++) {
+      let span = rows[i].len * rows[i].repeats;
+      const rem = AV_MID_SONG_STEP_CAP - total;
+      if (span > rem) { span = rem; truncated = true; }
+      if (span <= 0) { truncated = true; break; }
+      spans.push(span);
+      total += span;
+    }
+    rows.length = spans.length;
+    if (truncated) warnings.push("arrangement truncated at 20000 steps");
+
+    /* plan each row (8-step chunks, row-local seconds -> abs ticks); ONE rng across the song */
+    const events = [];
+    const perTrack = [[], [], [], []];
+    const rowTick = [];
+    const rowTempoUs = [];
+    let noteOns = 0, badNotes = 0, seq = 0;
+    let rng = avMidSeedNorm(snap.rng);
+    let rowStartTick = 0;
+    for (let ri = 0; ri < rows.length; ri++) {
+      const row = rows[ri];
+      const span = spans[ri];
+      const effBpm = (row.tempo > 0) ? row.tempo : snapBpm;
+      const tempoTry = Math.round(60000000 / effBpm);
+      const tempoUs = (tempoTry >= 1 && tempoTry <= 0xFFFFFF) ? tempoTry : AV_MID_TEMPO_DEF;
+      const ticksPerSec = (AV_MID_PPQ * (60000000 / tempoUs)) / 60;
+      rowTick.push(rowStartTick);
+      rowTempoUs.push(tempoUs);
+      const rowSnap = avMidSongRowSnap(snap, effBpm, row.mutes);
+      for (let from = 0; from < span; from += AV_MID_CHUNK_STEPS) {
+        const to = Math.min(span, from + AV_MID_CHUNK_STEPS);
+        const res = avSeqPlan(rowSnap, from, to, 0, rng);
+        const evs = (res && Array.isArray(res.events)) ? res.events : [];
+        for (let i = 0; i < evs.length; i++) {
+          const ev = evs[i];
+          if (!ev || typeof ev !== "object") continue;
+          const ti = Math.round(Number(ev.track));
+          if (!(ti >= 0 && ti < AV_MID_TRACKS) || !mask[ti]) continue;
+          if (ev.type !== "on" && ev.type !== "off") continue;
+          const midi = avMidNoteToMidi(ev.note);
+          if (midi == null) { badNotes++; continue; }
+          const t = avMidIsNum(ev.t) ? ev.t : 0;
+          let local = Math.round(t * ticksPerSec);
+          if (local < 0) local = 0;                       /* a negative-micro row head pins to its start */
+          const rec = {
+            t: t, tick: rowStartTick + local, type: ev.type, midi: midi,
+            vel: avMidIsNum(ev.vel) ? ev.vel : 0,
+            track: ti, step: avMidClampInt(ev.step, 0, 0, AV_MID_STEPS - 1), seq: seq++,
+          };
+          perTrack[ti].push(rec);
+          events.push({ t: rec.t, tick: rec.tick, type: rec.type, midi: rec.midi, vel: rec.vel,
+                        track: rec.track, step: rec.step });
+          if (rec.type === "on") noteOns++;
+        }
+        if (res && avMidIsNum(res.rngNext)) rng = res.rngNext >>> 0;
+      }
+      rowStartTick += span * ticksPerStep;
+    }
+    if (badNotes > 0) warnings.push(badNotes + " note(s) unplayable in SMF skipped");
+    if (noteOns === 0) warnings.push("pattern has no audible events");
+
+    /* pair each off with its on (the avMidExport law: note+step, latest open first, >= 1 tick) */
+    for (let ti = 0; ti < AV_MID_TRACKS; ti++) {
+      const list = perTrack[ti];
+      const openIdx = [];
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].type === "on") { openIdx.push(i); continue; }
+        let at = -1;
+        for (let j = openIdx.length - 1; j >= 0; j--) {
+          const cand = list[openIdx[j]];
+          if (cand.midi === list[i].midi && cand.step === list[i].step) { at = j; break; }
+        }
+        const on = (at >= 0) ? list[openIdx.splice(at, 1)[0]] : null;
+        if (on && list[i].tick <= on.tick) list[i].tick = on.tick + 1;   /* >= 1 tick long */
+      }
+    }
+
+    /* conductor: song name + per-row tempo metas + row markers at their absolute ticks */
+    const con = [];
+    avMidPushVlq(con, 0);
+    con.push(0xFF, 0x03);
+    avMidPushText(con, name);
+    let cur = 0;
+    for (let ri = 0; ri < rows.length; ri++) {
+      const tk = rowTick[ri];
+      const us = rowTempoUs[ri];
+      let d = tk - cur;
+      if (d < 0) d = 0;
+      avMidPushVlq(con, d);
+      con.push(0xFF, 0x51, 0x03, (us >> 16) & 0xFF, (us >> 8) & 0xFF, us & 0xFF);
+      avMidPushVlq(con, 0);
+      con.push(0xFF, 0x03);
+      avMidPushText(con, rows[ri].label || rows[ri].ref);
+      cur = tk;
+    }
+    avMidPushVlq(con, 0);
+    con.push(0xFF, 0x2F, 0x00);
+    const chunks = [con];
+
+    /* one MIDI track per selected seq track (same writer law as avMidExport) */
+    let outTracks = 1;
+    for (let ti = 0; ti < AV_MID_TRACKS; ti++) {
+      if (!mask[ti]) continue;
+      outTracks++;
+      const list = perTrack[ti];
+      list.sort(avMidCmpEvents);
+      const data = [];
+      avMidPushVlq(data, 0);
+      data.push(0xFF, 0x03);
+      avMidPushText(data, "T" + (ti + 1));
+      let cur2 = 0;
+      const ch = ti & 0x0F;
+      for (let i = 0; i < list.length; i++) {
+        const e = list[i];
+        let d2 = e.tick - cur2;
+        if (d2 < 0) d2 = 0;
+        avMidPushVlq(data, d2);
+        cur2 = e.tick;
+        if (e.type === "on") data.push(0x90 | ch, e.midi, avMidVel7(e.vel));
+        else data.push(0x80 | ch, e.midi, AV_MID_REL_VEL);
+      }
+      avMidPushVlq(data, 0);
+      data.push(0xFF, 0x2F, 0x00);
+      chunks.push(data);
+    }
+
+    const out = [];
+    avMidPushStr(out, "MThd");
+    avMidPushBe32(out, 6);
+    avMidPushBe16(out, 1);                       /* format 1 */
+    avMidPushBe16(out, outTracks);
+    avMidPushBe16(out, AV_MID_PPQ);
+    for (let i = 0; i < chunks.length; i++) {
+      avMidPushStr(out, "MTrk");
+      avMidPushBe32(out, chunks[i].length);
+      for (let j = 0; j < chunks[i].length; j++) out.push(chunks[i][j] & 0xFF);
+    }
+    const u8 = new Uint8Array(out.length);
+    for (let i = 0; i < out.length; i++) u8[i] = out[i] & 0xFF;
+
+    return {
+      ok: true, bytes: u8.buffer, events: events, format: 1, ppq: AV_MID_PPQ, tracks: outTracks,
+      rows: rows.length, noteCount: noteOns, steps: total, warnings: warnings,
+    };
+  } catch (e) { return avMidFail("song export failed (" + avMidErrText(e) + ")"); }
+}

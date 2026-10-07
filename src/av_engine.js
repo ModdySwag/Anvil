@@ -27,7 +27,7 @@
 
    P3 additive surface (verify/_p3_wave.md sections 4-6): the facade gains the wire senders
    avEngineMod({macros F64(8), slots F64(128)}) · avEngineSample(id, name, rate, ch1, ch2) ·
-   avEngineZones(F64(40)) — each routes to the live tier (worklet port message / SPN direct
+   avEngineZones(F64(40|144)) — each routes to the live tier (worklet port message / SPN direct
    AVDSP call) and returns false honestly when the engine is not ready. */
 "use strict";
 
@@ -271,6 +271,12 @@ async function avEngineTryWorklet(ctx, transport, maxVoices, log) {
   }
 }
 
+/* M2: map a bus channel tag to an engine MPE channel (1..15); 0 = the global path */
+function avEngineChannel(ch) {
+  const c = Math.floor(Number(ch));
+  return (isFinite(c) && c > 0 && c <= 15) ? c : 0;
+}
+
 function avEngineNoteArgs(midi, gain) {
   const m = Math.round(Number(midi));
   if (!isFinite(m) || m < 0 || m > 127) return null;
@@ -300,17 +306,19 @@ function avEngineMakeWorkletHandle(ctx, node, transport, readyMsg, maxVoices, lo
     version: (readyMsg && readyMsg.version) || null,
     sha: avEngineWorkletSha(),
     log: log,
-    noteOn: (midi, gain) => {
+    noteOn: (midi, gain, ch) => {
       avEngineTryResume(ctx);                              /* §6: also try resume inside noteOn */
       const a = avEngineNoteArgs(midi, gain);
       if (!a) return false;
-      try { node.port.postMessage({ t: "note", on: true, midi: a.midi, gain: a.gain }); return true; }
+      const c = avEngineChannel(ch);
+      try { node.port.postMessage(c > 0 ? { t: "mpenote", on: true, midi: a.midi, gain: a.gain, ch: c } : { t: "note", on: true, midi: a.midi, gain: a.gain }); return true; }
       catch (e) { return false; }
     },
-    noteOff: (midi) => {
+    noteOff: (midi, ch) => {
       const a = avEngineNoteArgs(midi, 0.9);
       if (!a) return;
-      try { node.port.postMessage({ t: "note", on: false, midi: a.midi }); } catch (e) { /* engine gone */ }
+      const c = avEngineChannel(ch);
+      try { node.port.postMessage(c > 0 ? { t: "mpenote", on: false, midi: a.midi, ch: c } : { t: "note", on: false, midi: a.midi }); } catch (e) { /* engine gone */ }
     },
     allOff: () => { try { node.port.postMessage({ t: "allOff" }); } catch (e) { /* engine gone */ } },
     /* fire-and-forget by design (k-rate law: everything arrives by port messages, §2.3); true
@@ -380,16 +388,16 @@ function avEngineMakeSpnHandle(ctx, maxVoices, log) {
     version: (typeof AVDSP.version === "string") ? AVDSP.version : null,
     sha: null,
     log: log,
-    noteOn: (midi, gain) => {
+    noteOn: (midi, gain, ch) => {
       avEngineTryResume(ctx);
       const a = avEngineNoteArgs(midi, gain);
       if (!a) return false;
-      try { return AVDSP.noteOn(eng, a.midi, a.gain) === true; } catch (e) { return false; }
+      try { return AVDSP.noteOn(eng, a.midi, a.gain, avEngineChannel(ch)) === true; } catch (e) { return false; }
     },
-    noteOff: (midi) => {
+    noteOff: (midi, ch) => {
       const a = avEngineNoteArgs(midi, 0.9);
       if (!a) return;
-      try { AVDSP.noteOff(eng, a.midi); } catch (e) { /* engine gone */ }
+      try { AVDSP.noteOff(eng, a.midi, avEngineChannel(ch)); } catch (e) { /* engine gone */ }
     },
     allOff: () => { try { AVDSP.allOff(eng); } catch (e) { /* engine gone */ } },
     setParam: (path, v) => { try { return AVDSP.setParam(eng, path, v) === true; } catch (e) { return false; } },
@@ -495,8 +503,8 @@ function avEngineSetWindow(h, err) {
         sr: h.sr,
         maxVoices: h.maxVoices,
         os: h.os,
-        noteOn: (midi, gain) => h.noteOn(midi, gain),
-        noteOff: (midi) => h.noteOff(midi),
+        noteOn: (midi, gain, ch) => h.noteOn(midi, gain, ch),
+        noteOff: (midi, ch) => h.noteOff(midi, ch),
         allOff: () => h.allOff(),
         setParam: (path, v) => h.setParam(path, v),
         bench: (cmd) => h.bench(cmd),
@@ -529,8 +537,8 @@ function avEngineRegisterSink(h) {
   try {
     if (typeof avNoteSetSink !== "function") return;
     avNoteSetSink({
-      on: (midi, gain) => h.noteOn(midi, gain),
-      off: (midi) => { h.noteOff(midi); },
+      on: (midi, gain, name, ch) => h.noteOn(midi, gain, ch),
+      off: (midi, name, ch) => { h.noteOff(midi, ch); },
       allOff: () => { h.allOff(); },
     });
   } catch (e) { avEngineWarn("note sink registration failed — " + avEngineErr(e)); }
@@ -712,4 +720,26 @@ function avEngineConv(id, name, rate, ch1, ch2) {
     catch (e) { return false; }
   }
   try { return AVDSP.setConvImpulse(h.engine, id, name, rate, ch1, ch2) === true; } catch (e) { return false; }
+}
+
+/* M2: MPE zone + per-channel expression senders (verify/_m2_wave.md sections 2.1/4.5) */
+function avEngineMpeSet(on, bend) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  if (h.kind === "worklet") {
+    try { h.node.port.postMessage({ t: "mpe", on: !!on, bend: bend }); return true; }
+    catch (e) { return false; }
+  }
+  try { return AVDSP.mpeSet(h.engine, on, bend) === true; } catch (e) { return false; }
+}
+function avEngineMpeExpr(ch, dim, v) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  const c = avEngineChannel(ch);
+  if (c <= 0) return false;                       /* the master channel keeps the global paths */
+  if (h.kind === "worklet") {
+    try { h.node.port.postMessage({ t: "mpeexpr", ch: c, dim: dim, v: v }); return true; }
+    catch (e) { return false; }
+  }
+  try { return AVDSP.mpeExpr(h.engine, c, dim, v) === true; } catch (e) { return false; }
 }

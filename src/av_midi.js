@@ -81,7 +81,7 @@ let avMidiAccess = null;
 let avMidiStatus = "idle";     /* unsupported | idle | asking | enabled | denied | failed */
 let avMidiError = "";
 let avMidiEnabled = false;
-let avMidiPrefs = { in: "", out: "", playIn: true, clockOut: false };
+let avMidiPrefs = { in: "", out: "", playIn: true, clockOut: false, mpe: false, mpeBend: 48 };
 let avMidiInPort = null;       /* the port we are listening on */
 let avMidiInHandler = null;
 let avMidiHeld = new Set();    /* note names we started on hardware keys, so we can release them */
@@ -447,6 +447,8 @@ function avMidiPanelHTML() {
       '<div class="av-midi-row"><span class="av-midi-cap">TICKS SENT</span><b class="av-midi-stat" id="av-midi-clock-ticks">' + avMidiEsc(avMidiClockTicksText()) + '</b></div>' +
     '</div>' +
 
+    (typeof avMpeDeckPanelHTML === "function" ? avMpeDeckPanelHTML() : "") +
+
     '<div class="av-midi-sec"><b>CC → PARAMETER</b>' +
       '<div class="av-midi-actions">' +
         '<button class="av-btn mini' + (armed ? " on" : "") + '" data-midilearn="arm" title="arm CC learn — the next CC selects the controller">' + (armed ? "LEARN ARMED — CANCEL" : "ARM LEARN") + '</button>' +
@@ -475,6 +477,7 @@ function avMidiRender() {
   const host = document.getElementById("av-midi-body");
   if (!host) return false;
   host.innerHTML = avMidiPanelHTML();
+  try { if (typeof avMpeDeckWire === "function") avMpeDeckWire(host); } catch (e) { /* the MPE row is additive */ }
   avMidiDrawMonitor();
   return true;
 }
@@ -669,6 +672,8 @@ function avMidiOnInputMessage(e, port) {
   avMidiRecord("in", bytes, pname);       /* monitor first (PF L390) */
   const m = avMidiDecode(bytes);
   if (!m) return;
+  /* M2: the MPE branch -- a live member channel routes to the deck; everything else falls through */
+  if (typeof avMpeDeckIncoming === "function" && avMpeDeckIncoming(m) === true) return;
   if (m.type === "noteon") avMidiNoteOn(m.note, m.vel, m.chan);
   else if (m.type === "noteoff") avMidiNoteOff(m.note, m.chan);
   else if (m.type === "cc") avMidiCcIncoming(m);
@@ -696,6 +701,7 @@ function avMidiNoteOff(note, chan) {
 }
 
 function avMidiReleaseAll() {
+  if (typeof avMpeDeckRelease === "function") avMpeDeckRelease();
   if (!avMidiHeld.size) return;
   [...avMidiHeld].forEach(n => { if (typeof avNoteUp === "function") avNoteUp(n); });
   avMidiHeld = new Set();
@@ -1183,6 +1189,8 @@ function avMidiLoadPrefs() {
           out: typeof v.out === "string" ? v.out : "",
           playIn: typeof v.playIn === "boolean" ? v.playIn : true,
           clockOut: typeof v.clockOut === "boolean" ? v.clockOut : false,
+          mpe: typeof v.mpe === "boolean" ? v.mpe : false,
+          mpeBend: (v.mpeBend === 24 || v.mpeBend === 48 || v.mpeBend === 96) ? v.mpeBend : 48,
         };
       }
     }
@@ -1246,6 +1254,7 @@ function avMidiSnap() {
       caps: { ring: AV_MIDI_MON_MAX, dom: AV_MIDI_DOM_MAX, rate: AV_MIDI_MON_RATE, flushMs: AV_MIDI_FLUSH_MS },
     },
     tap: !!avMidiOutTapOk,
+    mpe: (typeof avMpeDeckSnap === "function") ? avMpeDeckSnap() : null,
   };
 }
 

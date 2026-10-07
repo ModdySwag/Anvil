@@ -10,7 +10,7 @@
      cleared value out); NO DOM reach-ins at load — the only top-level browser touch is the guarded
      `typeof window` boot probe at the end; the file loads in plain node with zero browser deps.
    - model: pattern = {v:1, name, bpm 20..300, grid "16"|"8t", swing 50..80, tracks[4], plocks[],
-     rng} · track = {len 1..64, speed 0.25|0.5|1|2|4, mute 0|1, steps[64 full step objects]} ·
+     rng} · track = {len 1..64, speed 0.25|0.5|0.75|1|1.5|2|4, swing 0=inherit|50..80, mute 0|1, steps[64 full step objects]} ·
      step = {on 0|1, note ("avNoteParse"/"avNoteName" canonical, c4=60, fallback grammar mirrored),
      vel 0.05..1, gate 0.05..1, slide 0|1, accent 0|1, oct -2..2, prob 0..100,
      cond ""|"fill"|"a:b"|"first"|"!first" (a,b 1..8), ratchet 1..4, micro -12..12 ticks} ·
@@ -86,7 +86,7 @@ const AV_SEQ_STEPS = 64;              /* §2/§3.1: up to 64 steps     */
 const AV_SEQ_LEN_MIN = 1;
 const AV_SEQ_LEN_MAX = 64;
 const AV_SEQ_LEN_DEF = 16;
-const AV_SEQ_SPEEDS = [0.25, 0.5, 1, 2, 4];      /* §2 speed set      */
+const AV_SEQ_SPEEDS = [0.25, 0.5, 0.75, 1, 1.5, 2, 4];   /* M2 polyrhythm ratios: +3/4, +3/2 */
 const AV_SEQ_BPM_MIN = 20;            /* §6: avState.bpm clamp 20..300 */
 const AV_SEQ_BPM_MAX = 300;
 const AV_SEQ_BPM_DEF = 120;
@@ -235,6 +235,13 @@ function avSeqSpeedNorm(v) {
   return 1;
 }
 
+/* M2: per-track swing override -- 0 = inherit the pattern swing; else 50..80 */
+function avSeqSwingNorm(v) {
+  const n = Number(v);
+  if (!isFinite(n) || n <= 0) return 0;
+  return avSeqInt(n, AV_SEQ_SWING_MIN, AV_SEQ_SWING_MAX, 0);
+}
+
 /* ---------- step / track / pattern construction (pinned key order) ---------- */
 
 function avSeqStepDefault() {
@@ -269,7 +276,7 @@ function avSeqStepNorm(src) {
 function avSeqTrackDefault() {
   const steps = [];
   for (let i = 0; i < AV_SEQ_STEPS; i++) steps.push(avSeqStepDefault());
-  return { len: AV_SEQ_LEN_DEF, speed: 1, mute: 0, steps: steps };
+  return { len: AV_SEQ_LEN_DEF, speed: 1, swing: 0, mute: 0, steps: steps };
 }
 
 function avSeqTrackNorm(src) {
@@ -282,6 +289,7 @@ function avSeqTrackNorm(src) {
   return {
     len: avSeqInt(o ? o.len : undefined, AV_SEQ_LEN_MIN, AV_SEQ_LEN_MAX, AV_SEQ_LEN_DEF),
     speed: avSeqSpeedNorm(o ? o.speed : undefined),
+    swing: avSeqSwingNorm(o ? o.swing : 0),
     mute: avSeqBit(o ? o.mute : 0),
     steps: steps,
   };
@@ -290,7 +298,7 @@ function avSeqTrackNorm(src) {
 function avSeqTrackCopy(tr) {
   const steps = [];
   for (let i = 0; i < tr.steps.length; i++) steps.push(avSeqStepCopy(tr.steps[i]));
-  return { len: tr.len, speed: tr.speed, mute: tr.mute, steps: steps };
+  return { len: tr.len, speed: tr.speed, swing: tr.swing, mute: tr.mute, steps: steps };
 }
 
 /* plock container (E owns rules; the core carries + sanitises the shape) */

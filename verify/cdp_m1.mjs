@@ -120,7 +120,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    M1: the frozen sha of the integrated index.html is not known until build.py runs and the parent
    pins it — EXPECT_SHA stays null; the rig never loosens the before === after check. */
-const EXPECT_SHA = '335f4bd06f7aafff68725c1645a1b00518936a9c74fd90969221a7d2ce7d0d15';
+const EXPECT_SHA = 'd311eaf88c5ff9202aa612e5e607ed896f2d850146bb4efc760b3dde33bff738';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);

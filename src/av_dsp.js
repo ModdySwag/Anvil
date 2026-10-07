@@ -363,10 +363,11 @@ const AVDSP = (function () {
       e2Stage: 0, e2Val: 0, e2Astep: 0, e2Dc: 0, e2Rc: 0, e2S: 0,
       lfoPhase: 0, lfoVal: 0, shVal: 0,
       fade: 0, fadeStep: 0,
-      pending: 0, pendingMidi: -1, pendingVel: 0, pendingStart: 0,
+      pending: 0, pendingMidi: -1, pendingVel: 0, pendingStart: 0, pendingCh: 0,
       /* P3 mod-matrix per-voice cache (evaluated at the recomputeFilter cadence; 0 = inactive) */
       randVal: 0, modCut: 0, modReso: 0, modPitch: 0, modL1: 0, modL2: 0,
       kindId: 0,                    /* P2/P3: engine kind for the current note (set in reinitVoice) */
+      mpeCh: 0, mpeBendApplied: 0,  /* M2: MPE member channel tag (0 = global path) + applied-bend cache */
       k: {},                        /* P2: kind voice-state union (initVoiceK per module, at create) */
       lad: (typeof AVLADDER !== "undefined" && AVLADDER && typeof AVLADDER.createState === "function")
         ? AVLADDER.createState() : null,   /* P2: Moog-ladder state (filter.mode ladder24) */
@@ -423,12 +424,16 @@ const AVDSP = (function () {
       /* P2 kind machinery */
       kind: 0, kext: {}, tDrive: 0, cDrive: 0,
       /* P3: sample registry + zone table + mod matrix + FX chain (message/setup-time writes) */
-      samples: [null, null, null, null], zones: new Float64Array(40),
+      samples: [null, null, null, null], zones: new Float64Array(144),
       modMacros: new Float64Array(8), modSlots: new Float64Array(128),
       modCount: 0, modPitchOn: 0, modPanOn: 0,
       fx: [],
       userWt: [],
+      mpe: null,
     };
+    if (typeof AVM !== "undefined" && AVM && typeof AVM.create === "function") {
+      try { eng.mpe = AVM.create(); } catch (e) { eng.mpe = null; }
+    }
     for (let kk = 1; kk <= 6; kk++) {
       const m0 = KIND_MODS[kk];
       if (m0 && typeof m0.initEngineK === "function") { try { m0.initEngineK(eng.kext); } catch (e) { } }
@@ -618,6 +623,7 @@ const AVDSP = (function () {
     /* pitch is the gliding MIDI note value; normalise to A4=440 Hz (section 4.4 test 5 pins
        midi 69 -> 440 Hz), then bend/tune (semitones) + LFO pitch (+-50 ct at +-1) */
     let st = (v.pitch - 69) + eng.bend + eng.tune + 0.5 * eng.lfoToPitch * v.lfoVal;
+    if (v.mpeCh > 0 && eng.mpe && eng.mpe.on && typeof AVM !== "undefined" && AVM) st += AVM.pitchSemis(eng.mpe, v.mpeCh);
     if (v.modPitch !== 0) st += v.modPitch * 12;                  /* P3: pitch ±12 st */
     let f = 440 * Math.pow(2, st / 12);
     if (f > eng.fLim) f = eng.fLim;                      /* safety: keeps increments < 0.5 */
@@ -637,6 +643,7 @@ const AVDSP = (function () {
     for (let i = 0; i < v.uni1; i++) v.inc1v[i] = v.inc1 * v.det1[i];
     for (let i = 0; i < v.uni2; i++) v.inc2v[i] = v.inc2 * v.det2[i];
     v.pitchGen = eng.pitchGen;
+    v.mpeBendApplied = (v.mpeCh > 0 && eng.mpe) ? eng.mpe.chBend[v.mpeCh] : 0;
   }
 
   function reinitVoice(eng, v, midi, gain, start) {
@@ -712,9 +719,11 @@ const AVDSP = (function () {
   }
 
   /* ---- notes ---- */
-  function noteOn(eng, midi, gain) {
+  function noteOn(eng, midi, gain, ch) {
     const m = Number(midi);
     if (!isFinite(m)) return false;
+    let mc = Math.floor(Number(ch));
+    if (!isFinite(mc) || mc < 0 || mc > 15) mc = 0;
     let g = Number(gain);
     if (!isFinite(g)) g = 1;
     g = cl(g, 0.05, 1);
@@ -728,7 +737,8 @@ const AVDSP = (function () {
       const w = vs[i];
       if (w.state === 0) continue;
       const held = (w.state === 3) ? w.pendingMidi : w.noteMidi;
-      if (held === m) { v = w; break; }
+      const heldCh = (w.state === 3) ? w.pendingCh : w.mpeCh;
+      if (held === m && heldCh === mc) { v = w; break; }
     }
     const same = v !== null;
     /* (2) idle */
@@ -747,10 +757,11 @@ const AVDSP = (function () {
     if (!v) return false;
     eng.lastMidi = m;
     if (v.state === 0) {
+      v.mpeCh = mc;
       reinitVoice(eng, v, m, g, start);
       return true;
     }
-    if (v.state === 3 && v.pendingMidi === m) {
+    if (v.state === 3 && v.pendingMidi === m && v.pendingCh === mc) {
       v.pendingVel = g;
       v.pendingStart = start;
       return true;
@@ -761,22 +772,25 @@ const AVDSP = (function () {
     v.pendingMidi = m;
     v.pendingVel = g;
     v.pendingStart = start;
+    v.pendingCh = mc;
     v.fadeStep = -1 / eng.fadeOutSamples;
     if (!same) eng.stolen++;
     return true;
   }
 
-  function noteOff(eng, midi) {
+  function noteOff(eng, midi, ch) {
     const m = Number(midi);
     if (!isFinite(m)) return;
+    let mc = Math.floor(Number(ch));
+    if (!isFinite(mc) || mc < 0 || mc > 15) mc = 0;
     const vs = eng.voices;
     for (let i = 0; i < eng.maxVoices; i++) {
       const v = vs[i];
-      if (v.state === 1 && v.noteMidi === m) { releaseVoice(eng, v); return; }
+      if (v.state === 1 && v.noteMidi === m && v.mpeCh === mc) { releaseVoice(eng, v); return; }
     }
     for (let i = 0; i < eng.maxVoices; i++) {
       const v = vs[i];
-      if (v.state === 3 && v.pendingMidi === m) { releaseVoice(eng, v); return; }
+      if (v.state === 3 && v.pendingMidi === m && v.pendingCh === mc) { releaseVoice(eng, v); return; }
     }
   }
 
@@ -786,6 +800,27 @@ const AVDSP = (function () {
       const v = vs[i];
       if (v.state === 1 || v.state === 3) releaseVoice(eng, v);
     }
+  }
+
+  /* ---- M2: MPE zone + expression (worklet message + SPN call the same paths) ---- */
+  function mpeSet(eng, on, bend) {
+    if (!eng || !eng.mpe || typeof AVM === "undefined" || !AVM || typeof AVM.setZone !== "function") return false;
+    const wasOn = eng.mpe.on;
+    const r = AVM.setZone(eng.mpe, on, bend) === true;
+    if (r && wasOn && !eng.mpe.on) {
+      /* zone off: release every member voice (the page keeps its own held map in sync) */
+      const vs = eng.voices;
+      for (let i = 0; i < eng.maxVoices; i++) {
+        const v = vs[i];
+        if (v.state === 1 && v.mpeCh > 0) releaseVoice(eng, v);
+        else if (v.state === 3 && v.pendingCh > 0) releaseVoice(eng, v);
+      }
+    }
+    return r;
+  }
+  function mpeExpr(eng, ch, dim, v) {
+    if (!eng || !eng.mpe || typeof AVM === "undefined" || !AVM || typeof AVM.setExpr !== "function") return false;
+    return AVM.setExpr(eng.mpe, ch, dim, v) === true;
   }
 
   /* ---- render --- */
@@ -1001,7 +1036,13 @@ const AVDSP = (function () {
   function recomputeFilter(eng, v) {
     /* P3: refresh the mod-matrix cache at this cadence (no-op when the matrix is empty) */
     if (eng.modCount > 0) modEvalVoice(eng, v);
-    let l2 = eng.cCutoffLog2 + eng.cEnvAmt * v.e2Val + 2 * eng.lfoToCut * v.lfoVal + eng.ktrk * v.ktrkOct;
+    let cutBase = eng.cCutoffLog2;
+    if (v.mpeCh > 0 && eng.mpe && eng.mpe.on && typeof AVM !== "undefined" && AVM) {
+      const tb = AVM.cutBase(eng.mpe, v.mpeCh);
+      if (tb >= 0) cutBase = tb;
+    }
+    let l2 = cutBase + eng.cEnvAmt * v.e2Val + 2 * eng.lfoToCut * v.lfoVal + eng.ktrk * v.ktrkOct;
+    if (v.mpeCh > 0 && eng.mpe && eng.mpe.on && typeof AVM !== "undefined" && AVM) l2 += AVM.atOct(eng.mpe, v.mpeCh);
     if (v.modCut !== 0) l2 += v.modCut * 4;                       /* cutoff ±4 oct */
     let fc = Math.pow(2, l2);
     if (fc < 10) fc = 10; else if (fc > eng.fcMax) fc = eng.fcMax;
@@ -1044,7 +1085,7 @@ const AVDSP = (function () {
       if (v.state === 3) {
         v.fade += v.fadeStep;
         if (v.fade <= 0) {
-          if (v.pending === 1) reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart);
+          if (v.pending === 1) { v.mpeCh = v.pendingCh; reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart); }
           else {
             v.fade = 0; v.state = 2;
             if (typeof m0.releaseVoice === "function") { try { m0.releaseVoice(eng, v); } catch (e) { } }
@@ -1090,7 +1131,8 @@ const AVDSP = (function () {
     else lv = v.shVal;
     v.lfoVal = lv;
     /* pitch-dependent updates: while gliding, while pitch-routed (LFO or matrix), or on a pitch change */
-    if (v.gliding || eng.lfoToPitch !== 0 || eng.modPitchOn !== 0 || v.pitchGen !== eng.pitchGen) computePitch(eng, v);
+    if (v.gliding || eng.lfoToPitch !== 0 || eng.modPitchOn !== 0 || v.pitchGen !== eng.pitchGen
+        || (v.mpeCh > 0 && eng.mpe && v.mpeBendApplied !== eng.mpe.chBend[v.mpeCh])) computePitch(eng, v);
     if ((eng.osCount & 15) === 0) recomputeFilter(eng, v);
     /* two 2x internal steps -> halfband decimator (exact algorithm, contract section 3) */
     const s0 = voiceStep2x(eng, v);
@@ -1109,7 +1151,7 @@ const AVDSP = (function () {
     if (v.state === 3) {
       v.fade += v.fadeStep;
       if (v.fade <= 0) {
-        if (v.pending === 1) reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart);
+        if (v.pending === 1) { v.mpeCh = v.pendingCh; reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart); }
         else { v.fade = 0; v.state = 2; v.e1Stage = 4; v.e2Stage = 4; v.fadeStep = 1 / eng.fadeInSamples; }
       }
     } else if (v.fade < 1) {
@@ -1136,14 +1178,20 @@ const AVDSP = (function () {
     }
     for (let i = 0; i < n; i++) {
       stepSmoothing(eng);
-      let sum = 0;
+      let sum = 0, sumL = 0, sumR = 0;
+      const mpePan = (eng.mpe && eng.mpe.on !== 0 && eng.mpe.panAny !== 0 && typeof AVM !== "undefined" && AVM) ? 1 : 0;
       for (let vi = 0; vi < maxV; vi++) {
         const v = voices[vi];
         if (v.state === 0) continue;
-        sum += voiceFrame(eng, v);
+        const y0 = voiceFrame(eng, v);
+        if (mpePan !== 0 && v.mpeCh > 0 && eng.mpe.chPan[v.mpeCh] !== 0) {
+          const pg = AVM.panGains(eng.mpe, v.mpeCh);
+          sumL += y0 * pg[0];
+          sumR += y0 * pg[1];
+        } else sum += y0;
       }
-      let l = sum * eng.cOutScale;
-      let r = l;
+      let l = (sum + sumL) * eng.cOutScale;
+      let r = (sum + sumR) * eng.cOutScale;
       /* P3 post-mix FX chain (fixed order built at create; off modules are skipped entirely) */
       for (let fi = 0; fi < fx.length; fi++) {
         const e0 = fx[fi];
@@ -1191,13 +1239,26 @@ const AVDSP = (function () {
   }
   function setZones(eng, zones) {
     if (!zones || typeof zones.length !== "number") return false;
-    const n = Math.min(40, zones.length);
-    for (let i = 0; i < n; i++) {
-      const z = Number(zones[i]);
-      eng.zones[i] = isFinite(z) ? z : 0;
+    const L = zones.length | 0;
+    /* M2 zone v2: 144 = 16 x 9 (lo, hi, root, buf, vol, s0, s1, fIn, fOut) — read by av_sampler;
+       the legacy 40 = 8 x 5 v1 table is CONVERTED to v2 (full windows, no fades) right here. */
+    if (L === 144) {
+      for (let i = 0; i < 144; i++) { const z = Number(zones[i]); eng.zones[i] = isFinite(z) ? z : 0; }
+      return true;
     }
-    for (let i = n; i < 40; i++) eng.zones[i] = 0;
-    return true;
+    if (L === 40) {
+      for (let i = 0; i < 8; i++) {
+        const o5 = i * 5, o9 = i * 9;
+        for (let k5 = 0; k5 < 5; k5++) { const z = Number(zones[o5 + k5]); eng.zones[o9 + k5] = isFinite(z) ? z : 0; }
+        eng.zones[o9 + 5] = 0;    /* s0  */
+        eng.zones[o9 + 6] = 1;    /* s1  */
+        eng.zones[o9 + 7] = 0;    /* fIn */
+        eng.zones[o9 + 8] = 0;    /* fOut */
+      }
+      for (let i = 72; i < 144; i++) eng.zones[i] = 0;
+      return true;
+    }
+    return false;
   }
   function setUserWt(eng, slot, name, frames) {
     const i = Number(slot);
@@ -1273,6 +1334,7 @@ const AVDSP = (function () {
       maxVoices: eng.maxVoices, sr: eng.sr, os: OS, stolen: eng.stolen, msBoot: eng.msBoot,
       uwt: (eng.userWt || []).filter(Boolean).length,
       fxChain: eng.fx.map(function (e0) { return e0.mod && e0.mod.PREFIX; }).join(" "),
+      mpe: (eng.mpe ? { on: eng.mpe.on, bend: eng.mpe.bendRange, active: (typeof AVM !== "undefined" && AVM && typeof AVM.activeCount === "function") ? AVM.activeCount(eng.mpe) : 0 } : null),
     };
   }
 
@@ -1341,5 +1403,8 @@ const AVDSP = (function () {
     setMod: setMod,
     setUserWt: setUserWt,
     setConvImpulse: setConvImpulse,
+    /* M2 additive surface (verify/_m2_wave.md sections 2.1/4.3) */
+    mpeSet: mpeSet,
+    mpeExpr: mpeExpr,
   };
 })();

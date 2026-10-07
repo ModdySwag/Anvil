@@ -64,7 +64,7 @@ const AV_SEQ_SCHED_LAST_CAP = 64;                  /* lastEvents cap */
 const AV_SEQ_SCHED_SEED = 0x9E3779B9;              /* engine-lineage default (prngU32) */
 const AV_SEQ_SCHED_BPM_MIN = 20;
 const AV_SEQ_SCHED_BPM_MAX = 300;
-const AV_SEQ_SCHED_SPEEDS = [0.25, 0.5, 1, 2, 4];
+const AV_SEQ_SCHED_SPEEDS = [0.25, 0.5, 0.75, 1, 1.5, 2, 4];   /* M2: + 3/4, 3/2 (polyrhythm ratios) */
 const AV_SEQ_SCHED_TRACKS = 4;
 const AV_SEQ_SCHED_STEPS = 64;
 const AV_SEQ_SCHED_DEF_LEN = 16;
@@ -214,7 +214,8 @@ function avSeqPlan(snap, fromStep, toStep, originT, rngState) {
       const len = avSeqSchedClampInt(tr.len, AV_SEQ_SCHED_DEF_LEN, 1, AV_SEQ_SCHED_STEPS);
       const speed = avSeqSchedPickSpeed(tr.speed);
       const td = stepDur / speed;
-      const swingShift = td * (swing - 50) / 100;      /* T3 §16: pairLen×(S−50)/100 = td×… */
+      const tSwing = (isFinite(Number(tr.swing)) && Number(tr.swing) >= 50) ? avSeqSchedClampNum(tr.swing, swing, 50, 80) : swing;
+      const swingShift = td * (tSwing - 50) / 100;      /* T3 §16: pairLen×(S−50)/100 = td×… */
       const microTick = stepDur / 24;                  /* §2 pin: tick = stepDur/24 */
       const steps = (tr.steps && typeof tr.steps.length === "number") ? tr.steps : null;
       const kFrom = Math.max(0, Math.floor(fs * speed));   /* k-domain tiling: each local step */
@@ -323,7 +324,7 @@ function avSeqSchedHeldMap() {
 function avSeqSchedDefaultSnap() {
   const tracks = [];
   for (let t = 0; t < AV_SEQ_SCHED_TRACKS; t++) {
-    tracks.push({ len: AV_SEQ_SCHED_DEF_LEN, speed: 1, mute: 0, steps: [] });
+    tracks.push({ len: AV_SEQ_SCHED_DEF_LEN, speed: 1, swing: 0, mute: 0, steps: [] });
   }
   return { v: 1, name: "PAT 1", bpm: 120, grid: "16", swing: 66, tracks: tracks, plocks: [], rng: AV_SEQ_SCHED_SEED };
 }

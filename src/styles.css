@@ -1177,3 +1177,92 @@ body.av-palette-open { }
 .av-mod-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .av-mod-count { }
 .av-mod-empty { margin: 0; }
+
+/* ==== M2 wave — expression · chop · generative · arranger ====
+   Generated for: avMpeDeckClasses() [av-midi-mpe, av-midi-select] ·
+   avChopUiClasses() (45) · avSeqUiClasses() delta (27). Tokens: the house :root set. */
+
+/* ---- deck MPE row (av_mpe_deck.js) ---- */
+.av-midi-mpe { display: flex; flex-direction: column; gap: 6px; }
+.av-midi-mpe[data-mpe="1"] { }
+.av-midi-select { font-family: var(--mono); font-size: 11px; background: #0a0e11; color: var(--text-2); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 6px; }
+
+/* ---- CHOP card (av_chop_ui.js) ---- */
+.av-chop { display: flex; flex-direction: column; gap: 8px; }
+.av-chop-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.av-chop-title { font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); font-weight: 600; }
+.av-chop-cap { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-chop-status-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.av-chop-status { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-chop-msg { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.av-chop-err { font-family: var(--mono); font-size: 10px; color: var(--mod-vermillion); }
+.av-chop-srcsec { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.av-chop-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-chop-select { font-family: var(--mono); font-size: 11px; background: #0a0e11; color: var(--text-2); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 6px; }
+.av-chop-btn { }
+.av-chop-range { accent-color: var(--teal); width: 120px; }
+.av-chop-sens-val { font-family: var(--mono); font-size: 10px; color: var(--text-2); min-width: 26px; display: inline-block; }
+.av-chop-stage { position: relative; }
+.av-chop-canvas { width: 100%; height: 84px; display: block; background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; }
+.av-chop-canvas-cap { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-chop-maprow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.av-chop-num { font-family: var(--mono); font-size: 11px; background: #0a0e11; color: var(--text-2); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 6px; width: 64px; }
+.av-chop-slot { width: 52px; }
+.av-chop-base { width: 64px; }
+.av-chop-mapnote { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-chop-slices { display: flex; flex-direction: column; gap: 4px; }
+.av-chop-empty { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-chop-slice { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 6px; }
+.av-chop-slice-off { opacity: .45; }
+.av-chop-slice-num { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 18px; }
+.av-chop-chk { accent-color: var(--teal); }
+.av-chop-trim0 { width: 74px; }
+.av-chop-trim1 { width: 74px; }
+.av-chop-fadein { width: 54px; }
+.av-chop-fadeout { width: 54px; }
+.av-chop-gain { width: 58px; }
+.av-chop-norm { }
+.av-chop-on { }
+.av-chop-slice-info { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-chop-pads { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
+.av-chop-pad { display: flex; flex-direction: column; align-items: center; gap: 1px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 5px 2px; cursor: pointer; color: var(--text-2); font-family: var(--mono); }
+.av-chop-pad:hover { border-color: var(--teal-deep); }
+.av-chop-pad[data-on="1"], .av-chop-pad-on { background: var(--teal-deep); border-color: var(--teal); color: var(--bg); }
+.av-chop-pad-lbl { font-size: 10px; font-weight: 600; }
+.av-chop-pad-note { font-size: 9px; color: var(--text-3); }
+.av-chop-pad[data-on="1"] .av-chop-pad-note, .av-chop-pad-on .av-chop-pad-note { color: var(--bg); }
+.av-chop-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.av-chop-steps-track { width: 52px; }
+.av-chop-steps-start { width: 56px; }
+.av-chop-note { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+
+/* ---- sequencer: track ctl + GEN + SONG/arranger (av_seq_ui.js) ---- */
+.av-seq-track-ctl { display: flex; align-items: center; gap: 3px; }
+.av-seq-tsel { font-family: var(--mono); font-size: 10px; background: #0a0e11; color: var(--text-2); border: 1px solid var(--hair); border-radius: 5px; padding: 1px 3px; }
+.av-seq-gen { display: flex; flex-direction: column; gap: 5px; border-top: 1px solid var(--hair); padding-top: 6px; }
+.av-seq-gen-head { display: flex; align-items: baseline; gap: 8px; }
+.av-seq-gen-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.av-seq-gen-lbl { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 54px; }
+.av-seq-gen-status { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-seq-num { font-family: var(--mono); font-size: 11px; background: #0a0e11; color: var(--text-2); border: 1px solid var(--hair); border-radius: 5px; padding: 2px 5px; width: 56px; }
+.av-seq-arrange { display: flex; flex-direction: column; gap: 5px; border-top: 1px solid var(--hair); padding-top: 6px; }
+.av-seq-arrange-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.av-seq-song-pos { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-seq-song-quant { }
+.av-seq-song-quant-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.av-seq-song-rows { display: flex; flex-direction: column; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.av-seq-songrow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 6px; }
+.av-seq-songrow.cur { border-color: var(--teal); }
+.av-seq-songrow-idx { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 16px; }
+.av-seq-songrow-ref { font-family: var(--mono); font-size: 10px; color: var(--text-2); }
+.av-seq-songrow-label { font-family: var(--mono); font-size: 10px; background: #0a0e11; color: var(--text-2); border: 1px solid var(--hair); border-radius: 5px; padding: 2px 5px; width: 84px; }
+.av-seq-songrow-mutes { display: inline-flex; gap: 3px; }
+.av-seq-songrow-mute { }
+.av-seq-songrow-btn { }
+.av-seq-song-timeline { display: flex; gap: 2px; align-items: stretch; height: 14px; }
+.av-seq-tl-block { background: var(--teal-deep); border-radius: 3px; opacity: .55; }
+.av-seq-tl-block.cur { opacity: 1; background: var(--teal); }
+.av-seq-song-export { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.av-seq-song-file { display: none; }
+.av-seq-song-openbtn { }
+.av-seq-song-status { font-family: var(--mono); font-size: 10px; color: var(--text-2); }

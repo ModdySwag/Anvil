@@ -466,6 +466,32 @@ async function main() {
   check('M1 WT: editor card mounted + wired (canvas \u00b7 library \u00b7 install \u00b7 api)',
     m1S.wtCard === true && m1S.wtHost === true && m1S.canvas === true && m1S.lib === true && m1S.install === true && m1S.wtUi === 'object' && m1S.wtApi === 'function' && m1S.installApi === 'function', JSON.stringify(m1S));
 
+  /* M2: expression / chop / generative / arranger surfaces */
+  const m2R = await ev(`(() => {
+    const chopHost = document.getElementById('av-chop-host');
+    const seqHost = document.getElementById('av-seq-host');
+    return { chopCard: !!document.getElementById('av-chop'), chopHost: !!chopHost,
+             detect: !!(chopHost && chopHost.querySelector('#av-chop-detect')),
+             pads: !!(chopHost && chopHost.querySelectorAll('.av-chop-pad').length >= 16),
+             apply: !!(chopHost && chopHost.querySelector('#av-chop-apply')),
+             chopUi: typeof window.__avChopUi, chopApi: typeof avChopDetectFrames,
+             mpeRow: !!document.getElementById('av-midi-mpe-row'),
+             mpeApi: typeof window.__avMpeDeck, mpeSet: typeof avMpeDeckSet,
+             mpeExprApi: typeof avEngineMpeExpr,
+             gen: !!(seqHost && seqHost.querySelector('#av-seq-gen')),
+             rows: !!(seqHost && seqHost.querySelector('#av-seq-song-rows')),
+             songPlay: !!(seqHost && seqHost.querySelector('#av-seq-song-play')),
+             trackCtl: !!(seqHost && seqHost.querySelector('[data-track-spd]')),
+             songApi: typeof window.__avSong };
+  })()`);
+  const m2S = m2R.value || {};
+  check('M2 MPE: deck row + API live + engine expression sender',
+    m2S.mpeRow === true && m2S.mpeApi === 'object' && m2S.mpeSet === 'function' && m2S.mpeExprApi === 'function', JSON.stringify(m2S));
+  check('M2 CHOP: card mounted + wired (detect / pads / apply) + api',
+    m2S.chopCard === true && m2S.chopHost === true && m2S.detect === true && m2S.pads === true && m2S.apply === true && m2S.chopUi === 'object' && m2S.chopApi === 'function', JSON.stringify(m2S));
+  check('M2 arranger + generative: GEN block / song rows / PLAY SONG / track ctl + song api',
+    m2S.gen === true && m2S.rows === true && m2S.songPlay === true && m2S.trackCtl === true && m2S.songApi === 'object', JSON.stringify(m2S));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

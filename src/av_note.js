@@ -4,7 +4,7 @@
 
    LAWS preserved from Pattern Forge's kbNoteDown / kbNoteUp / kbNoteStopAll
    (src/app_kb.js L454-487; see research/reuse/kb-port-digest.md §4):
-   - dedupe on the note NAME — a second down for a held name is a no-op (also the key-repeat guard;
+   - dedupe on the note key (name, or name@channel for MPE member notes) — a second down for a held name is a no-op (also the key-repeat guard;
      nothing anywhere handles e.repeat).
    - velocity is OPTIONAL and arrives pre-scaled (hardware passes vel/127); gain clamps 0.05..1,
      default 0.9.
@@ -18,9 +18,9 @@
 const AV_NOTE_MIN_GAIN = 0.05;
 const AV_NOTE_DEF_GAIN = 0.9;
 
-const avNoteHeld = new Set();      /* held note names */
-const avNoteGains = new Map();     /* name -> velocity gain (hardware keys); default 0.9 */
-const avNoteTaken = new Set();     /* names the engine sink took */
+const avNoteHeld = new Set();      /* held note keys (name, or name@ch for MPE member notes) */
+const avNoteGains = new Map();     /* key -> velocity gain (hardware keys); default 0.9 */
+const avNoteTaken = new Map();     /* key -> {name, ch} the engine sink took */
 const avNoteSink = { on: null, off: null, allOff: null };
 
 /* 'c4' -> 60, 'f#3' -> 54; null when unparseable */
@@ -45,37 +45,49 @@ function avNoteGain(name) {
   return AV_NOTE_DEF_GAIN;
 }
 
-/* the engine (P1) registers { on(midi, gain, name)->bool, off(midi, name), allOff() } — or null */
+/* the engine (P1) registers { on(midi, gain, name, ch)->bool, off(midi, name, ch), allOff() } — or null */
 function avNoteSetSink(sink) {
   avNoteSink.on = (sink && typeof sink.on === "function") ? sink.on : null;
   avNoteSink.off = (sink && typeof sink.off === "function") ? sink.off : null;
   avNoteSink.allOff = (sink && typeof sink.allOff === "function") ? sink.allOff : null;
 }
 
-/* returns true when this call started a fresh note */
-function avNoteDown(name, vel) {
-  if (!name || avNoteHeld.has(name)) return false;
-  avNoteHeld.add(name);
+/* the bus key: the plain name for the global path, "name@ch" for MPE member channels (1..15) */
+function avNoteKey(name, ch) {
+  const c = Math.floor(Number(ch));
+  return (isFinite(c) && c > 0) ? name + "@" + c : name;
+}
+
+/* returns true when this call started a fresh note; ch > 0 tags an MPE member channel */
+function avNoteDown(name, vel, ch) {
+  const key = avNoteKey(name, ch);
+  if (!name || avNoteHeld.has(key)) return false;
+  avNoteHeld.add(key);
   /* optional gain: hardware keyboards pass velocity/127, the dock and typing keys do not */
-  if (typeof vel === "number" && isFinite(vel)) avNoteGains.set(name, Math.max(AV_NOTE_MIN_GAIN, Math.min(1, vel)));
-  window.__lastNotePreview = name;
-  window.__lastNoteCode = null;   /* the engine is the note path */
+  if (typeof vel === "number" && isFinite(vel)) avNoteGains.set(key, Math.max(AV_NOTE_MIN_GAIN, Math.min(1, vel)));
+  const c = Math.floor(Number(ch));
+  const mpeCh = (isFinite(c) && c > 0) ? c : 0;
+  if (mpeCh === 0) { window.__lastNotePreview = name; window.__lastNoteCode = null; }   /* the dock preview stays global-notes-only */
   const midi = avNoteParse(name);
   let taken = false;
   if (midi != null && typeof avNoteSink.on === "function") {
-    try { taken = avNoteSink.on(midi, avNoteGain(name), name) === true; } catch (e) { taken = false; }
+    const g0 = avNoteGains.has(key) ? avNoteGains.get(key) : AV_NOTE_DEF_GAIN;
+    try { taken = avNoteSink.on(midi, Math.max(AV_NOTE_MIN_GAIN, Math.min(1, g0)), name, mpeCh) === true; } catch (e) { taken = false; }
   }
-  if (taken) avNoteTaken.add(name);
+  if (taken) avNoteTaken.set(key, { name: name, ch: mpeCh });
   return true;
 }
 
-function avNoteUp(name) {
-  if (!name || !avNoteHeld.delete(name)) return false;
-  avNoteGains.delete(name);
-  if (avNoteTaken.delete(name)) {
-    const midi = avNoteParse(name);
+function avNoteUp(name, ch) {
+  const key = avNoteKey(name, ch);
+  if (!name || !avNoteHeld.delete(key)) return false;
+  avNoteGains.delete(key);
+  const t = avNoteTaken.get(key);
+  if (t) {
+    avNoteTaken.delete(key);
+    const midi = avNoteParse(t.name);
     if (midi != null && typeof avNoteSink.off === "function") {
-      try { avNoteSink.off(midi, name); } catch (e) { /* sink gone */ }
+      try { avNoteSink.off(midi, t.name, t.ch); } catch (e) { /* sink gone */ }
     }
   }
   return true;
@@ -92,7 +104,16 @@ function avNoteStopAll() {
 }
 
 function avNoteState() {
-  return { held: [...avNoteHeld], taken: [...avNoteTaken], sink: !!avNoteSink.on };
+  const held = [];
+  const heldCh = [];
+  avNoteHeld.forEach(function (k) {
+    const at = k.lastIndexOf("@");
+    if (at > 0) heldCh.push({ name: k.slice(0, at), ch: Number(k.slice(at + 1)) });
+    else held.push(k);
+  });
+  const taken = [];
+  avNoteTaken.forEach(function (t) { if (t.ch === 0) taken.push(t.name); });
+  return { held: held, heldCh: heldCh, taken: taken, sink: !!avNoteSink.on };
 }
 
 if (typeof window !== "undefined") window.__avNotes = avNoteState;

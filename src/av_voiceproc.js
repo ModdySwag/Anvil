@@ -4,7 +4,8 @@
    same source also loads in plain-scope rigs. Message protocol (both directions) is pinned:
    in  {t:'param', path, v} | {t:'note', on, midi, gain} | {t:'allOff'} |
        {t:'bench', cmd:'reset'|'read', id} | {t:'stats', id} | {t:'hello', id} |
-       {t:'sample', id, name, rate, ch1, ch2?} | {t:'zones', zones} | {t:'mod', macros, slots}
+       {t:'sample', id, name, rate, ch1, ch2?} | {t:'zones', zones} | {t:'mod', macros, slots} |
+       {t:'mpe', on, bend} | {t:'mpenote', on, midi, gain, ch} | {t:'mpeexpr', ch, dim, v}
    out {t:'ready', sr, maxVoices, os, version} | {t:'bench', id, data} | {t:'stats', id, data} */
 "use strict";
 
@@ -40,6 +41,14 @@ class AVVoiceProcessor extends AudioWorkletProcessor {
       if (m.t === 'mod') { AVDSP.setMod(eng, m.macros, m.slots); return; }
       if (m.t === 'wtab') { AVDSP.setUserWt(eng, m.slot, m.name, m.frames); return; }
       if (m.t === 'conv') { AVDSP.setConvImpulse(eng, m.id, m.name, m.rate, m.ch1, m.ch2); return; }
+      /* M2: MPE zone + member notes + per-channel expression */
+      if (m.t === 'mpe') { AVDSP.mpeSet(eng, m.on, m.bend); return; }
+      if (m.t === 'mpenote') {
+        if (m.on) AVDSP.noteOn(eng, m.midi, m.gain, m.ch);
+        else AVDSP.noteOff(eng, m.midi, m.ch);
+        return;
+      }
+      if (m.t === 'mpeexpr') { AVDSP.mpeExpr(eng, m.ch, m.dim, m.v); return; }
       /* S5: user modules (av_umod_wl) — eval + registry + params run in this worklet scope */
       if (m.t === 'umod') {
         try {
