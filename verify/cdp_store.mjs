@@ -64,7 +64,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    P5: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = null;
+const EXPECT_SHA = '1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -348,8 +348,9 @@ async function main() {
   const mb = (await ev(`window.__storeMockReady`)).value;
   const mockOk = !!(mb && mb.ok === true && typeof mb.sha === 'object');
   check('mock built in page: 3 synthetic packs with REAL sha256 (crypto.subtle over the served bytes)',
-    mockOk && /^[0-9a-f]{64}$/.test(mb.sha.alpha) && /^[0-9a-f]{64}$/.test(mb.sha.beta) && mb.sha.bad === 'f'.repeat(64),
-    mockOk ? ('alpha sha ' + mb.sha.alpha.slice(0, 12) + '… · counts ' + JSON.stringify(mb.counts)) : 'mock build failed');
+    mockOk && /^[0-9a-f]{64}$/.test(mb.sha.alpha) && /^[0-9a-f]{64}$/.test(mb.sha.beta) && /^[0-9a-f]{64}$/.test(mb.sha.bad) &&
+    mb.sha.bad !== 'f'.repeat(64) && mb.sha.alpha !== mb.sha.beta,
+    mockOk ? ('alpha sha ' + mb.sha.alpha.slice(0, 12) + '… · beta sha ' + mb.sha.beta.slice(0, 12) + '… · badsha digest ' + mb.sha.bad.slice(0, 12) + '… (real digests; the manifest plants f…f on purpose) · counts ' + JSON.stringify(mb.counts)) : 'mock build failed');
 
   const injR = await ev(`window.__storeMock ? window.__storeMock.inject() : 'no-mock'`);
   check('avStoreSetFetch MOCK injected (the ONLY network path — no server, file:// + seam)',

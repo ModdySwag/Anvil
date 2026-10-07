@@ -98,6 +98,9 @@ js_parts = [
     (SRC / "av_undo.js").read_text(encoding="utf-8"),        # P4 undo/redo + A/B
     (SRC / "av_seq_acid.js").read_text(encoding="utf-8"),    # P4 ACID lane
     (SRC / "av_seq_ui.js").read_text(encoding="utf-8"),      # P4 sequencer card
+    (SRC / "av_store.js").read_text(encoding="utf-8"),        # P5 store core (page module)
+    (SRC / "av_bank.js").read_text(encoding="utf-8"),         # P5 bank apply + BANK row (page module)
+    (SRC / "av_store_ui.js").read_text(encoding="utf-8"),     # P5 store card (page module)
     (SRC / "av_synth.js").read_text(encoding="utf-8"),  # the SYNTH card (P3 engine layer)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]

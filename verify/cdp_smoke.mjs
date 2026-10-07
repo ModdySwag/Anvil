@@ -230,6 +230,26 @@ async function main() {
   check('P4 sequencer: card + grid mounted (4 rows · ≥64 cells) + transport controls + bpm knob',
     seqC.card === true && seqC.host === true && seqC.rows === 4 && seqC.cells >= 64 && seqC.play === true && seqC.stop === true && seqC.rec === true && seqC.pos === true && seqC.bpmKnob === true, JSON.stringify(seqC));
 
+  /* 6f. the P5 store card + the synth-card BANK row */
+  const stR = await ev(`(() => {
+    const card = document.getElementById('av-store');
+    const host = document.getElementById('av-store-host');
+    const bankHost = document.getElementById('av-synth-bank-host');
+    return { card: !!card, host: !!host,
+             root: !!(host && host.querySelector('.av-store')),
+             wired: !!(host && host.dataset && host.dataset.avStoreUiWired === '1'),
+             search: !!document.querySelector('#av-store-host .av-store-search'),
+             filters: document.querySelectorAll('#av-store-host .av-pf-filter').length,
+             lists: !!document.getElementById('av-store-installed') && !!document.getElementById('av-store-avail'),
+             mode: !!document.getElementById('av-store-mode'),
+             bank: !!(bankHost && bankHost.querySelector('.av-bank')),
+             bankSels: bankHost ? bankHost.querySelectorAll('select.av-bank-pack').length : 0,
+             core: typeof avStoreStatus, ui: typeof window.__avStoreUi, api: typeof window.__avBank };
+  })()`);
+  const stC = stR.value || {};
+  check('P5 store: card mounted + wired (search · chips · lists) + BANK row in the synth card',
+    stC.card === true && stC.host === true && stC.root === true && stC.wired === true && stC.search === true && stC.filters === 3 && stC.lists === true && stC.mode === true && stC.bank === true && stC.bankSels === 1 && stC.core === 'function' && stC.ui === 'object' && stC.api === 'object', JSON.stringify(stC));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

@@ -1,6 +1,6 @@
-index.html sha256 (before): 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
+index.html sha256 (before): 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-1791345751640
+cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-1791350306332
  ok   boot: data-av-ready flips
  ok   seq card mounted: #av-seq-host + card root + grid (4 rows)
  ok   grid counts: 4 rows × N cells (N ≥ 4; total ≥ 64), every cell pinned data-track/data-step  -> [16,16,16,16] · total=64
@@ -12,19 +12,19 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-179134575
  ok   timing witness: rig's OWN AnalyserNode armed on the master tap (avMasterFor, ~5 ms RMS sampling)  -> {"ok":true,"sr":48000,"fft":256}
  ok   witness helpers: pattern builder live (H.pattern)  -> ok
  ok   witness patch: engine.kind -> drum accepted (one-shot kick c2 = midi 36; kind restored at the end)  -> {"ok":true,"prev":{"kind":"va","kick":0.4},"mirror":"drum"}
- ok   baseline: silent control window BEFORE the first PLAY (RMS < 0.01)  -> {"max":0,"n":103}
+ ok   baseline: silent control window BEFORE the first PLAY (RMS < 0.01)  -> {"max":0,"n":491}
    · transport run pattern: {"ok":true,"why":"import"}
- ok   real PLAY click: transport runs (avSeqIsPlaying) and the playhead .cur advances  -> playing=true · cur "0:8,1:8,2:8,3:8" -> "0:14,1:14,2:14,3:14" · click window 758 ms
+ ok   real PLAY click: transport runs (avSeqIsPlaying) and the playhead .cur advances  -> playing=true · cur "0:8,1:8,2:8,3:8" -> "0:14,1:14,2:14,3:14" · click window 754 ms
  ok   real STOP click: transport halts and the playhead freezes  -> halted=true · frozen ""
  ok   timing: known 16-step all-on pattern loaded @120 bpm (S=50) via the pinned import path  -> {"ok":true,"why":"import"}
-   · timing capture: samples=3689 · onsets=144 · maxRms=0.091 · slopeThr=0.020
- ok   timing: first onset lands within the PLAY click window (transport actually started)  -> first onset -197 ms after the click reads
+   · timing capture: samples=3686 · onsets=144 · maxRms=0.091 · slopeThr=0.020
+ ok   timing: first onset lands within the PLAY click window (transport actually started)  -> first onset -196 ms after the click reads
  ok   timing: 16 onsets/bar over 8 bars (128 matched grid slots)  -> matched=128/128
- ok   timing: mean |onset − grid| ≤ 8 ms (phase-fitted, jitter witness)  -> mean|Δ|=2.585 ms
- ok   timing: NO cumulative drift — bar 8 within ±6 ms of bar 1  -> bar1=2.356 ms · bar8=2.322 ms · drift=-0.034 ms
+ ok   timing: mean |onset − grid| ≤ 8 ms (phase-fitted, jitter witness)  -> mean|Δ|=2.543 ms
+ ok   timing: NO cumulative drift — bar 8 within ±6 ms of bar 1  -> bar1=1.634 ms · bar8=1.316 ms · drift=-0.319 ms
    · swing pattern: {"ok":true,"why":"import"}
-   · swing capture: onsets=59 · evenShiftAlt=-25.058 ms · evenSpread=0.556
- ok   swing: S=66 ⇒ odd onsets shift ≈ +20 ms (16 % of stepDur) ±6 ms  -> oddShift=25.058 ms over n=48
+   · swing capture: onsets=59 · evenShiftAlt=-24.998 ms · evenSpread=0.677
+ ok   swing: S=66 ⇒ odd onsets shift ≈ +20 ms (16 % of stepDur) ±6 ms  -> oddShift=24.998 ms over n=48
  ok   probability: prob 0 on the odd steps ⇒ deterministic silence (16 onsets / 2 bars)  -> in2bars=16 · total onsets=22
  ok   probability: prob 100 ⇒ all steps present (32 onsets / 2 bars)  -> in2bars=32 · total onsets=42
  ok   pattern round-trip (UI path): real EXPORT writes the pinned JSON → real IMPORT → avSeqSnap() deep-equal  -> exported 29695 chars · import deep-equal
@@ -35,9 +35,9 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-179134575
  ok   undo: UI repaint after avUndo() (cell .on follows the restored snapshot)  -> cell .on cleared=true
    · witness patch restored: engine.kind="va" kick.decay=0.4
  ok   zero page errors
- ok   screenshot: renders/p4-seq-suite.png (the sequencer card, scale 2)  -> 134436 bytes · clip 1010×567 @2x
-index.html sha256 (after): 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
- ok   freeze: index.html sha256 = pinned  -> pinned 83e4b478742c…
+ ok   screenshot: renders/p4-seq-suite.png (the sequencer card, scale 2)  -> 134406 bytes · clip 1010×567 @2x
+index.html sha256 (after): 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
+ ok   freeze: index.html sha256 = pinned  -> pinned 1c2f112c5ed8…
 
 31 passed, 0 failed

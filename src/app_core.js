@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.4.0", phase: "P4 · sequencing", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.5.0", phase: "P5 · store", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -82,6 +82,16 @@ function avMountLevels() {
   try { seqUiOk = (typeof avSeqUiInit === "function") ? (avSeqUiInit() !== false) : false; } catch (e) { console.warn("[anvil] seq ui init failed", e); }
   try { capOk = (typeof avSeqCaptureInit === "function") ? (avSeqCaptureInit() !== false) : false; } catch (e) { console.warn("[anvil] seq capture init failed", e); }
   try { undoOk = (typeof avUndoInit === "function") ? (avUndoInit() !== false) : false; } catch (e) { console.warn("[anvil] undo init failed", e); }
+  let storeOk = false, bankOk = false, storeUiOk = false;
+  try { storeOk = (typeof avStoreInit === "function") ? (avStoreInit() !== false) : false; } catch (e) { console.warn("[anvil] store init failed", e); }
+  try { bankOk = (typeof avBankInit === "function") ? (avBankInit() !== false) : false; } catch (e) { console.warn("[anvil] bank row init failed", e); }
+  try { storeUiOk = (typeof avStoreUiInit === "function") ? (avStoreUiInit() !== false) : false; } catch (e) { console.warn("[anvil] store ui init failed", e); }
+  /* P5: the BANK select follows installs — repaint on every store change */
+  try {
+    if (typeof avStoreOnChange === "function" && typeof avBankRefresh === "function") {
+      avStoreOnChange(function () { try { avBankRefresh(); } catch (e) { /* bank repaint is best-effort */ } });
+    }
+  } catch (e) { console.warn("[anvil] store→bank wire failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -97,7 +107,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

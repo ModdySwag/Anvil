@@ -1,6 +1,6 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v0.4.0","tier":"tap: armed · engine: booting","voices":true,"version":"0.4.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v0.5.0","tier":"tap: armed · engine: booting","voices":true,"version":"0.5.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":1,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
@@ -8,11 +8,12 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   ENGINE SELFTEST ok (tier + allocation)  -> {"ok":true,"tier":"worklet","url":"data","sr":48000,"maxVoices":64,"allocated":true,"released":true,"voices":[0,1,0],"kinds":{"va":true,"acid":true,"string":true,"drum":true,"grain":true,"sampler":true},"fx":true,"mod":true,"drumNote":true,"kindsOk":true}
  ok   layout: no horizontal overflow at 1440  -> scrollWidth 1425 vs innerWidth 1440
  ok   keyboard dock: 61 keys, snap handle, MIDI deck mounted  -> {"keys":61,"dock":true,"kbsnap":"function","midi":"object","midiBody":true}
- ok   synth card: knobs + selects mounted + bound (85 knobs)  -> {"host":true,"knobs":85,"bound":true,"sels":5,"engOpts":["va","acid","string","drum","grain","sampler"]}
+ ok   synth card: knobs + selects mounted + bound (85 knobs)  -> {"host":true,"knobs":85,"bound":true,"sels":7,"engOpts":["va","acid","string","drum","grain","sampler"]}
  ok   synth card: ENGINE select offers all six kinds  -> ["va","acid","string","drum","grain","sampler"]
  ok   P3 fx rack: 5 strips (drive,mod,delay,verb,dyn) · 20 knobs + 5 toggles + 4 selects all bound  -> {"fx":true,"mod":true,"order":"drive,mod,delay,verb,dyn","strips":5,"knobs":20,"knobsBound":20,"toggles":5,"sels":4,"macros":8,"macrosBound":8}
  ok   P3 mod matrix: card mounted with 8 bound macro knobs  -> {"macros":8,"bound":8}
  ok   P4 sequencer: card + grid mounted (4 rows · ≥64 cells) + transport controls + bpm knob  -> {"card":true,"host":true,"rows":4,"cells":64,"play":true,"stop":true,"rec":true,"pos":true,"bpmKnob":true}
+ ok   P5 store: card mounted + wired (search · chips · lists) + BANK row in the synth card  -> {"card":true,"host":true,"root":true,"wired":true,"search":true,"filters":3,"lists":true,"mode":true,"bank":true,"bankSels":1,"core":"function","ui":"object","api":"object"}
  ok   zero page errors
 
-15 passed, 0 failed
+16 passed, 0 failed

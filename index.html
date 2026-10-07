@@ -434,6 +434,75 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-seq-acid-cell { min-width: 34px; height: 22px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px; color: var(--text-3); font-family: var(--mono); font-size: 9px; cursor: pointer; }
 .av-seq-acid-cell.on { background: #2a1804; border-color: var(--mod-orange); color: var(--mod-orange); }
 
+/* ============================================================================
+   P5 — STORE (av_store_ui.js · av_bank.js) — pack store card + BANK row skin */
+.av-store { display: flex; flex-direction: column; gap: 10px; }
+.av-store-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-store-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-store-cap { font-size: 10.5px; color: var(--text-3); }
+.av-store-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.av-store-search { flex: 1 1 240px; min-width: 150px; background: #0a0e11; color: var(--text); border: 1px solid var(--hair); border-radius: 6px; font-family: var(--mono); font-size: 11px; padding: 5px 8px; }
+.av-store-search::placeholder { color: var(--text-3); }
+.av-store-search:focus { outline: none; border-color: var(--teal-deep); box-shadow: 0 0 0 1px rgba(46,216,201,.25); }
+.av-store-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.av-pf-filter { background: transparent; color: var(--text-3); border: 1px solid var(--hair); border-radius: 5px; font-family: var(--mono); font-size: 10px; letter-spacing: .08em; padding: 3px 9px; cursor: pointer; }
+.av-pf-filter:hover { color: var(--text-2); border-color: var(--teal-deep); }
+.av-pf-filter.on { color: var(--teal); background: #0d2422; border-color: var(--teal-deep); box-shadow: inset 0 0 7px rgba(46,216,201,.18); }
+.av-pf-n { margin-left: 6px; color: var(--text-3); }
+.av-pf-filter.on .av-pf-n { color: var(--teal-glow); }
+.av-store-status-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 20px; }
+.av-store-status { font-family: var(--mono); font-size: 10.5px; color: var(--text-2); }
+.av-store-status.av-store-msg { color: var(--text-2); }
+.av-store-status.av-store-err { color: #ff8a7a; }
+.av-store-retry { }
+.av-store-storage { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-store-chip { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; padding: 2px 7px; border: 1px solid var(--hair); border-radius: 999px; color: var(--text-3); background: var(--raised); }
+.av-store-chip.inst { color: var(--teal); border-color: var(--teal-deep); }
+.av-store-chip.eng { color: var(--mod-sky); border-color: #24455a; }
+.av-store-chip.av-store-offline { color: var(--mod-orange); border-color: #5c4520; }
+.av-store-ver.ok { color: var(--mod-green); border-color: #1c4636; }
+.av-store-ver.warn { color: var(--mod-orange); border-color: #5c4520; }
+.av-store-mode.idb { color: var(--teal); border-color: var(--teal-deep); }
+.av-store-mode.ls { color: var(--mod-green); border-color: #1c4636; }
+.av-store-mode.mem { color: var(--mod-yellow); border-color: #55521e; }
+.av-store-used { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-store-sect { display: flex; flex-direction: column; gap: 6px; }
+.av-store-sect-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.av-pack-sect { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.av-pack-sect-n { font-family: var(--mono); font-size: 10px; color: var(--teal); }
+.av-store-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.av-pack-card { background: var(--raised); border: 1px solid var(--hair); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.av-pack-card.installed { border-color: var(--teal-deep); }
+.av-pack-card.busy { opacity: .75; }
+.av-pack-head { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.av-pack-name { font-weight: 600; font-size: 12px; color: var(--text); overflow-wrap: anywhere; min-width: 0; }
+.av-pack-tag { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+.av-store-offline-note { color: var(--mod-orange); font-size: 11px; }
+.av-store-note { color: var(--text-3); font-size: 11px; margin: 0; }
+.av-store-none-note { font-style: italic; }
+.av-pack-guide, .av-pack-blurb { color: var(--text-3); font-size: 11px; margin: 0; overflow-wrap: anywhere; }
+.av-pack-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.av-pack-meta { font-family: var(--mono); font-size: 9px; color: var(--text-3); flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.av-store-btn { }
+.av-store-install { }
+.av-store-remove:hover { color: #ff8a7a; border-color: #ff8a7a; }
+.av-store-prog { flex: 1 1 48px; height: 6px; accent-color: var(--teal); }
+
+/* P5 — the synth-card BANK row (av_bank.js) */
+.av-bank-wrap { }
+.av-bank { display: flex; flex-direction: column; gap: 6px; margin: 2px 0 10px; }
+.av-bank-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-bank-title { font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--teal); }
+.av-bank-cap { font-size: 10px; color: var(--text-3); }
+.av-bank-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.av-bank-pick { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.av-bank-pick-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-bank-pack { min-width: 170px; max-width: 280px; }
+.av-bank-preset { min-width: 170px; max-width: 280px; }
+.av-bank-apply { }
+.av-bank-preview { }
+.av-bank-hint { margin: 0; }
+
 </style>
 </head>
 
@@ -452,7 +521,7 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
   <section class="av-card">
     <h1>Phase 1 &mdash; the voice engine is live</h1>
     <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder and the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes).</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (three factory banks, sha-256-verified installs, offline-ready).</p>
   </section>
 
   <section class="av-card" id="av-levels">
@@ -463,6 +532,7 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 
   <section class="av-card" id="av-synth">
     <h2>Synth</h2>
+    <div id="av-synth-bank-host"></div>
     <div id="av-synth-knobs"></div>
     <p class="av-note av-dim">Play it from the piano dock below or your MIDI keys.</p>
   </section>
@@ -502,6 +572,11 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
     <div id="av-seq-host"><p class="av-note av-dim">The step sequencer lands here &mdash; 4 tracks, swing, probability, p-locks, chains and scenes, driving the synth through the one note bus.</p></div>
   </section>
 
+  <section class="av-card" id="av-store">
+    <h2>Store</h2>
+    <div id="av-store-host"><p class="av-note av-dim">The pack store lands here &mdash; factory packs download once, verify sha-256 before they are stored, and stay available offline.</p></div>
+  </section>
+
   <section class="av-card">
     <h2>Roadmap &mdash; from the plan</h2>
     <ul class="av-list">
@@ -516,7 +591,7 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 </main>
 
 <footer class="av-foot">
-  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Phase 4 &middot; sequencing &middot; AGPL-3.0-or-later</span>
+  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Phase 5 &middot; store &middot; AGPL-3.0-or-later</span>
 </footer>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">
@@ -16185,6 +16260,2708 @@ if (typeof window !== "undefined") {
 }
 
 
+/* av_store.js — Anvil P5 STORE CORE: the pack storage layer. Downloads, verifies and installs
+   `.avbank.json` packs; it is the ONE owner of pack durability and the ONE network path.
+
+   Pins (verify/_p5_wave.md §4b L89-96): `avStoreInit()` · `avStoreIndex(force)` (fetch
+   `packs/index.json`) · `avStoreInstall(id)` · `avStoreRemove(id)` · `avStoreStatus()` ·
+   `avStoreInstalled()` · `avStoreSetFetch(fn|null)` test seam (the ONLY network path; file://
+   uses the seam/mock and shows an honest note; the deployed site uses real fetch). IDB name
+   `av-packs-store`, LS fallback `av-packs-ls`, modes `idb|ls|mem`, quota-honest, sha256 via
+   `crypto.subtle` verified BEFORE commit, offline relaunch hydrates from IDB. Never throws.
+   Manifest shape pin (§4b L95): `{v:1, packs:[{id,name,file,sha256,bytes,presetCount,tags,
+   engine}]}`, store base `packs/`.
+
+   Ported from Pattern Forge's app_store.js per research/reuse/store-port-digest.md
+   (§1.1 core ADAPT · §1.3 install flow · §1.4 quota contract · §1.5 offline relaunch · §3.1-3.3
+   verdicts · §6 seams). PF line refs in comments; renames: pfPacks* → avStore*, DB
+   `av-packs-store` (pinned). Dropped from the port: strudel/pack-kind vocabulary, the Stage-11
+   wavetable-carry subsystem (§3.8 SKIP v1 — `.avbank.json` carries no binary fields).
+
+   Storage tier law (ported verbatim, L9-16 / L245-288 / L191-243):
+   - IndexedDB is the durable home; no IndexedDB → the `av-packs-ls` localStorage map; no
+     storage at all → memory. The mode is always reportable (status().backend) so the UI is
+     honest; a per-call result carries the tier it actually used.
+   - `avStoreInstall` resolves `{ok:false, error:'quota'}` when a tier refuses the write and
+     NOTHING is recorded as installed in that case — a pack that cannot persist is never shown
+     as installed (the old code toasted "installed" while the write was silently swallowed).
+   - Tier fallback happens on UNavailability, never on quota: an IDB write failure returns its
+     name (`'quota'` / `'idb:<Name>'`) without a silent downgrade; only a missing/blocked DB
+     falls through to localStorage, and only a fully unavailable localStorage falls to memory
+     (`volatile:true`).
+   - Hydrate: the LS snapshot paints first, then the database takes over (the snapshot is
+     written only by a session that could not reach the DB, so for a duplicate id the SNAPSHOT
+     wins; every snapshot id is written through and the key retires once its content is safe).
+     Late adoption (one quiet background attempt, 4 s) rescues a cold/blocked open; removals
+     made while the DB was unreachable are honoured in both directions (never resurrected).
+   - IDB open gives up after 1.8 s (a hung open must not wedge the store) — the boot stays
+     fast and the adoption covers the rest.
+
+   The test seam: `avStoreSetFetch(fn|null)` — fn(url, opts) must resolve a fetch-like Response
+   (`.ok`, `.status`, `.text()`, `.arrayBuffer()`). Exactly ONE function in this module reaches
+   the network (`avStoreFetchUrl`); it uses the seam when set, else the real `fetch`, else
+   refuses honestly (`'no-fetch'`). From a `file://` page status().note says so.
+
+   Public surface (classic-script globals, ONE namespace avStore* / AV_STORE_*):
+     avStoreInit() -> bool               wire + start the boot hydrate (idempotent; never throws)
+     avStoreHydrate() -> Promise<mode>   idempotent boot hydrate ('idb'|'ls'|'mem')
+     avStoreIndex(force) -> Promise      fetch+validate packs/index.json; force = refetch
+     avStoreInstall(id) -> Promise       fetch → sha256 verify → parse → commit; {ok, backend,…}
+     avStoreRemove(id) -> Promise<bool>  durable drop first, memory follows on success only
+     avStoreStatus() -> {}               JSON-safe: backend, count, installed, index, net, note
+     avStoreInstalled() -> []            per-pack summaries (no payloads), install order
+     avStoreGet(id) -> {}|null           full record incl. a read-only deep copy of `pack`
+     avStoreSetFetch(fn|null) -> bool    the network seam (returns "seam active?")
+     avStoreBackend/Count/Estimate()     report helpers (Estimate = navigator.storage.estimate)
+     avStoreAdopt(force) -> Promise      manual late-adoption retry (force skips the once-guard)
+     avStoreOnChange(fn) -> bool         listener registry; avStorePaint() fires it (guarded)
+     avStoreNote() -> string|null        the honest file:// note
+     AV_STORE_VERSION, AV_STORE_MODES, AV_STORE_DB, AV_STORE_LS, AV_STORE_BASE, AV_STORE_MAX_BYTES.
+   Result/error vocabulary: 'no-id' · 'no-index' · 'no-pack' · 'too-big' · 'no-fetch' · 'fetch'
+   · 'http' · 'read' · 'json' · 'bad-manifest' · 'no-crypto' · 'sha-mismatch' · 'bad-pack' ·
+   'quota' · 'idb:<Name>' (+ detail string where useful).
+
+   Integration seams (parent): add this file to build.py js_parts BEFORE av_synth.js / the store
+   UI / app_core.js; call `avStoreInit()` (or avStoreHydrate()) from the boot block guarded;
+   the apply core (sa-3) reads packs via `avStoreGet(id)`; the store card (sa-1) subscribes with
+   `avStoreOnChange(fn)`; the rig points the store at a local server with
+   `localStorage['av-store-url']` + `avStoreSetFetch(...)`.
+
+   Laws kept: "use strict"; page module — NO DOM at top level and NO top-level side effects (the
+   file parses and loads in plain node); every DOM/global reach is guarded inside a function;
+   ONE avStore* family; never throws (garbage in → false / null / empty out). */
+
+"use strict";
+
+/* ---------- pins (§4b; PF renames applied) ---------- */
+
+const AV_STORE_VERSION = "p5.0";
+const AV_STORE_DB = "av-packs-store";          /* pinned IDB name (§4b) */
+const AV_STORE_DB_VER = 1;
+const AV_STORE_OS = "packs";                   /* object store, keyPath 'id' (PF L21/L58) */
+const AV_STORE_LS = "av-packs-ls";             /* localStorage fallback key (§4b) */
+const AV_STORE_URL_LS = "av-store-url";        /* store base override (digest §6.8) */
+const AV_STORE_BASE = "packs/";                /* default store base (§4b) */
+const AV_STORE_INDEX = "index.json";
+const AV_STORE_MODES = ["idb", "ls", "mem"];   /* reportable backends (PF L12) */
+const AV_STORE_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;  /* slug law (PF L250, capped at 64) */
+const AV_STORE_SHA_RE = /^[0-9a-f]{64}$/;
+const AV_STORE_MAX_BYTES = 20 * 1024 * 1024;   /* rig law: pack files stay under 20 MB */
+const AV_STORE_OPEN_CAP_MS = 1800;             /* hung-open give-up (PF L51-54) */
+const AV_STORE_ADOPT_MS = 4000;                /* one late adoption attempt (PF L84-89) */
+const AV_STORE_FETCH_MS = 30000;               /* pack download timeout (PF flow L152-155) */
+const AV_STORE_MANIFEST_MS = 10000;            /* manifest timeout (PF app_ui.js:282) */
+
+/* ---------- state (in-memory truth the UI renders from, PF L23-28) ---------- */
+
+const avStoreState = {
+  inited: false,
+  hydrated: false,
+  hydratePromise: null,
+  backend: "mem",              /* 'idb' | 'ls' | 'mem' — stays honest, promoted never demoted */
+  installed: {},               /* id -> record {id,v,name,file,sha256,size,at,presetCount,tags,engine,pack} */
+  db: null,
+  dbGaveUp: false,
+  adoptTried: false,
+  adoptTimer: null,
+  droppedNoDb: new Set(),      /* ids removed while no DB connection was up (PF L28) */
+  lastAdopt: null,
+  fetchFn: null,               /* the ONE seam (avStoreSetFetch) */
+  index: null,                 /* {v, name, updated, packs:[entries]} once ready */
+  indexCount: 0,
+  indexStatus: null,           /* null | 'loading' | 'ready' | 'error' */
+  indexError: null,
+  indexBase: null,
+  indexAt: 0,
+  indexPromise: null,
+  netIndex: 0,
+  netPack: 0,
+  listeners: [],
+  lastError: null,
+};
+
+/* ---------- guarded environment reaches (never throw; plain node has none of these) ---------- */
+
+function avStoreLs() {
+  try { if (typeof localStorage !== "undefined" && localStorage) return localStorage; } catch (e) { /* blocked */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && w.localStorage) return w.localStorage; } catch (e) { /* blocked */ }
+  return null;
+}
+
+function avStoreIdb() {
+  try { if (typeof indexedDB !== "undefined" && indexedDB) return indexedDB; } catch (e) { /* none */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && w.indexedDB) return w.indexedDB; } catch (e) { /* none */ }
+  return null;
+}
+
+function avStoreCryptoSrc() {
+  try { if (typeof crypto !== "undefined" && crypto) return crypto; } catch (e) { /* none */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && w.crypto) return w.crypto; } catch (e) { /* none */ }
+  return null;
+}
+
+function avStoreNetFn() {
+  try { if (typeof avStoreState.fetchFn === "function") return avStoreState.fetchFn; } catch (e) { /* fall through */ }
+  try { if (typeof fetch === "function") return fetch; } catch (e) { /* none */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && typeof w.fetch === "function") return w.fetch; } catch (e) { /* none */ }
+  return null;
+}
+
+function avStoreFetchSource() {
+  try { if (typeof avStoreState.fetchFn === "function") return "seam"; } catch (e) { /* fall through */ }
+  try { if (typeof fetch === "function") return "real"; } catch (e) { /* none */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && typeof w.fetch === "function") return "real"; } catch (e) { /* none */ }
+  return "none";
+}
+
+/* the resolved scheme of a fetch target (relative URLs resolve against the page): "file:" means
+   the browser will scheme-block the request; "" when it cannot be resolved (node harnesses). */
+function avStoreUrlScheme(u) {
+  try {
+    const base = (typeof location !== "undefined" && location && location.href) ? location.href : undefined;
+    if (typeof URL === "function") return String(new URL(String(u), base).protocol || "");
+  } catch (e) { /* no URL/base — scheme-less */ }
+  return "";
+}
+
+function avStoreTimer(fn, ms) {
+  try { if (typeof setTimeout === "function") return setTimeout(fn, ms); } catch (e) { /* no timers */ }
+  return null;
+}
+
+function avStoreClear(t) {
+  try { if (t != null && typeof clearTimeout === "function") clearTimeout(t); } catch (e) { /* no timers */ }
+}
+
+/* ---------- tiny value laws (garbage in, sane value out) ---------- */
+
+function avStoreErrName(e) { try { return (e && e.name) ? String(e.name) : ""; } catch (e2) { return ""; } }
+function avStoreErrMsg(e) { try { const s = (e && e.message) ? String(e.message) : String(e); return s.slice(0, 120); } catch (e2) { return "error"; } }
+
+function avStoreStr(v, dflt, cap) {
+  try {
+    if (typeof v !== "string") return dflt;
+    const s = v.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, cap || 80);
+    return s || dflt;
+  } catch (e) { return dflt; }
+}
+
+function avStoreNum(v, dflt, lo, hi) {
+  try {
+    const n = Number(v);
+    if (!isFinite(n)) return dflt;
+    return Math.max(lo, Math.min(hi, n));
+  } catch (e) { return dflt; }
+}
+
+function avStoreTags(v) {
+  try {
+    if (!Array.isArray(v)) return [];
+    const out = [];
+    for (let i = 0; i < v.length && out.length < 16; i++) {
+      if (typeof v[i] === "string") { const s = avStoreStr(v[i], "", 32); if (s) out.push(s); }
+    }
+    return out;
+  } catch (e) { return []; }
+}
+
+function avStoreHex(u8) {
+  try {
+    let s = "";
+    for (let i = 0; i < u8.length; i++) { const h = u8[i].toString(16); s += h.length < 2 ? "0" + h : h; }
+    return s;
+  } catch (e) { return null; }
+}
+
+function avStoreIdOk(id) {
+  try { return typeof id === "string" && AV_STORE_ID_RE.test(id); } catch (e) { return false; }
+}
+
+/* ---------- the record shape (PF L174-187, minus the kind vocabulary) ---------- */
+
+function avStoreRecordNorm(id, v) {
+  try {
+    const pack = (v && typeof v.pack === "object" && !Array.isArray(v.pack)) ? v.pack : null;
+    const meta = (pack && pack.meta && typeof pack.meta === "object") ? pack.meta : {};
+    const shaIn = (v && typeof v.sha256 === "string") ? v.sha256.trim().toLowerCase() : "";
+    return {
+      id: id,
+      v: 1,
+      name: avStoreStr(v && v.name, avStoreStr(meta.name, id, 80), 80),
+      file: avStoreStr(v && v.file, null, 160),
+      sha256: AV_STORE_SHA_RE.test(shaIn) ? shaIn : null,
+      size: avStoreNum(v && v.size, null, 0, AV_STORE_MAX_BYTES * 128),
+      at: avStoreNum(v && v.at, 0, 0, 9e15),
+      presetCount: avStoreNum(v && v.presetCount, (pack && Array.isArray(pack.presets)) ? pack.presets.length : 0, 0, 1000000),
+      tags: avStoreTags(v && v.tags),
+      engine: avStoreStr(v && v.engine, "", 24),
+      pack: pack,
+    };
+  } catch (e) { return null; }
+}
+
+function avStoreRecordMake(id, entry, pack, bytes, hex) {
+  const meta = (pack && pack.meta && typeof pack.meta === "object") ? pack.meta : {};
+  const etags = (entry && Array.isArray(entry.tags) && entry.tags.length) ? entry.tags : null;
+  const mtags = (Array.isArray(meta.tags) && meta.tags.length) ? meta.tags : null;
+  return {
+    id: id,
+    v: 1,
+    name: avStoreStr(meta.name, avStoreStr(entry && entry.name, id, 80), 80),
+    file: avStoreStr(entry && entry.file, null, 160),
+    sha256: hex,
+    size: bytes,
+    at: Date.now(),
+    presetCount: (pack && Array.isArray(pack.presets)) ? pack.presets.length : 0,
+    tags: avStoreTags(mtags || etags),
+    engine: avStoreStr(meta.engine, avStoreStr(entry && entry.engine, "", 24), 24),
+    pack: pack,
+  };
+}
+
+/* manifest entry → normalised ({id,name,file,sha256,bytes,presetCount,tags,engine}) or null.
+   An entry needs a slug id, a safe relative file and a 64-hex sha256 — the install gate. */
+function avStoreEntryNorm(raw) {
+  try {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const id = (typeof raw.id === "string") ? raw.id.trim() : "";
+    if (!avStoreIdOk(id)) return null;
+    const file = avStoreStr(raw.file, "", 160);
+    if (!file || file.indexOf("..") >= 0 || file.charAt(0) === "/") return null;
+    const shaIn = (typeof raw.sha256 === "string") ? raw.sha256.trim().toLowerCase() : "";
+    if (!AV_STORE_SHA_RE.test(shaIn)) return null;
+    return {
+      id: id,
+      name: avStoreStr(raw.name, id, 80),
+      file: file,
+      sha256: shaIn,
+      bytes: avStoreNum(raw.bytes, null, 0, AV_STORE_MAX_BYTES * 128),
+      presetCount: avStoreNum(raw.presetCount, null, 0, 1000000),
+      tags: avStoreTags(raw.tags),
+      engine: avStoreStr(raw.engine, "", 24),
+    };
+  } catch (e) { return null; }
+}
+
+function avStoreEntry(id) {
+  try {
+    const st = avStoreState;
+    if (!st.index || !Array.isArray(st.index.packs)) return null;
+    for (let i = 0; i < st.index.packs.length; i++) if (st.index.packs[i].id === id) return st.index.packs[i];
+    return null;
+  } catch (e) { return null; }
+}
+
+/* ---------- IndexedDB plumbing (promise-wrapped, never throws — PF L44-172) ---------- */
+
+function avStoreDbOpen() {
+  return new Promise(function (res) {
+    try {
+      const st = avStoreState;
+      if (st.db) return res(st.db);
+      if (st.dbGaveUp) return res(null);
+      const idb = avStoreIdb();
+      if (!idb) return res(null);
+      let settled = false;
+      const give = function (v) { if (!settled) { settled = true; res(v); } };
+      /* a hung open (blocked upgrade in another tab) must not wedge the store: give up after
+         1.8 s — the boot stays honest and fast, and one late attempt below adopts the DB */
+      const timer = avStoreTimer(function () { st.dbGaveUp = true; give(null); avStoreAdoptSoon(); }, AV_STORE_OPEN_CAP_MS);
+      const rq = idb.open(AV_STORE_DB, AV_STORE_DB_VER);
+      rq.onupgradeneeded = function () {
+        try { const db = rq.result; if (!db.objectStoreNames || !db.objectStoreNames.contains(AV_STORE_OS)) db.createObjectStore(AV_STORE_OS, { keyPath: "id" }); }
+        catch (e) { /* upgrade raced */ }
+      };
+      rq.onsuccess = function () {
+        avStoreClear(timer);
+        if (st.dbGaveUp) { try { rq.result.close(); } catch (e) { /* ignore */ } return give(null); }
+        const db = rq.result;
+        st.db = db;
+        try { db.onclose = function () { if (avStoreState.db === db) avStoreState.db = null; }; } catch (e) { /* fine */ }
+        give(db);
+      };
+      rq.onerror = function () { avStoreClear(timer); give(null); };
+      rq.onblocked = function () { avStoreClear(timer); give(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+function avStoreDbAll(db) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_STORE_OS, "readonly");
+      const rq = tx.objectStore(AV_STORE_OS).getAll();
+      rq.onsuccess = function () { res(rq.result || []); };
+      rq.onerror = function () { res(null); };
+      tx.onerror = function () { res(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+function avStoreDbWrite(db, rec) {
+  return new Promise(function (res, rej) {
+    try {
+      const tx = db.transaction(AV_STORE_OS, "readwrite");
+      tx.objectStore(AV_STORE_OS).put(rec);
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { rej((tx.error) || new Error("idb write failed")); };
+      tx.onabort = function () { rej((tx.error) || new Error("idb write aborted")); };
+    } catch (e) { rej(e); }
+  });
+}
+
+function avStoreDbRemove(db, id) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_STORE_OS, "readwrite");
+      tx.objectStore(AV_STORE_OS).delete(id);
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { res(false); };
+      tx.onabort = function () { res(false); };
+    } catch (e) { res(false); }
+  });
+}
+
+/* ---------- base + the ONE network path + sha256 ---------- */
+
+function avStoreBase() {
+  let base = AV_STORE_BASE;
+  try { const ls = avStoreLs(); const v = ls ? ls.getItem(AV_STORE_URL_LS) : null; if (v) base = String(v); } catch (e) { /* default */ }
+  if (typeof base !== "string" || !base) base = AV_STORE_BASE;
+  if (base.charAt(base.length - 1) !== "/") base += "/";
+  return base;
+}
+
+/* the ONLY place this module touches the network. The seam (when set) is called exactly like
+   fetch(url, {signal}) and must resolve a Response-like: .ok, .status, .text(), .arrayBuffer(). */
+function avStoreFetchUrl(url, timeoutMs, kind) {
+  return new Promise(function (res, rej) {
+    let timer = null;
+    try {
+      const st = avStoreState;
+      const fn = avStoreNetFn();
+      if (typeof fn !== "function") return rej(new Error("no-fetch"));
+      /* §4b file:// law: a page fetch of a local file is scheme-blocked by the browser — refuse
+         the doomed request here (and count no attempt) so no console noise fires; the seam,
+         hosted http(s) and localhost servers all fetch as usual, and the note + status copy
+         already explain the file:// state honestly. */
+      if (avStoreFetchSource() === "real" && avStoreUrlScheme(url) === "file:") return rej(new Error("blocked-file"));
+      if (kind === "pack") st.netPack += 1; else st.netIndex += 1;
+      let controller = null;
+      try {
+        if (typeof AbortController === "function") {
+          controller = new AbortController();
+          timer = avStoreTimer(function () { try { controller.abort(); } catch (e) { /* ignore */ } }, (timeoutMs || AV_STORE_FETCH_MS));
+        }
+      } catch (e) { /* no AbortController: fetch without its own timeout */ }
+      let out = null;
+      try { out = fn(url, controller ? { signal: controller.signal } : undefined); }
+      catch (e) { avStoreClear(timer); return rej(e); }
+      Promise.resolve(out).then(
+        function (r) { avStoreClear(timer); res(r); },
+        function (e) { avStoreClear(timer); rej(e); }
+      );
+    } catch (e) { avStoreClear(timer); rej(e); }
+  });
+}
+
+function avStoreBytesToText(buf) {
+  try { if (typeof TextDecoder === "function") return new TextDecoder("utf-8").decode(buf); } catch (e) { /* fall back */ }
+  try {
+    const u8 = new Uint8Array(buf);
+    let s = "";
+    for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+    return s;
+  } catch (e) { return null; }
+}
+
+/* null when crypto.subtle is missing — the caller refuses the install (sha is never skipped) */
+async function avStoreSha256Hex(buf) {
+  const c = avStoreCryptoSrc();
+  if (!c || !c.subtle || typeof c.subtle.digest !== "function") return null;
+  try {
+    const d = await c.subtle.digest("SHA-256", buf);
+    return avStoreHex(new Uint8Array(d));
+  } catch (e) { return null; }
+}
+
+/* ---------- commit (PF pfPacksPut L247-288: quota-honest, tier fallback on unavailability) ---------- */
+
+async function avStoreCommit(record) {
+  const st = avStoreState;
+  /* 1) the durable home */
+  if (st.db) {
+    try {
+      await avStoreDbWrite(st.db, record);
+      st.installed[record.id] = record;
+      st.lastError = null;
+      return { ok: true, backend: "idb" };
+    } catch (e) {
+      const name = avStoreErrName(e);
+      /* a closed connection (tab churn) may heal on the NEXT call; a quota will not — say which */
+      if (name === "InvalidStateError" || name === "TransactionInactiveError") {
+        st.db = null;
+        try { await avStoreDbOpen(); } catch (e2) { /* stays null */ }
+      }
+      const out = { ok: false, backend: "idb", error: name === "QuotaExceededError" ? "quota" : ("idb:" + (name || "error")) };
+      st.lastError = out.error;
+      return out;
+    }
+  }
+  /* 2) no IndexedDB: the localStorage path, with an honest quota failure */
+  const ls = avStoreLs();
+  if (ls) {
+    const map = Object.assign({}, st.installed);
+    map[record.id] = record;
+    try {
+      ls.setItem(AV_STORE_LS, JSON.stringify(map));
+      st.installed[record.id] = record;
+      if (st.backend === "mem") st.backend = "ls";   /* the tier really is in use now (PF L278-279) */
+      st.lastError = null;
+      return { ok: true, backend: "ls" };
+    } catch (e) {
+      if (avStoreErrName(e) === "QuotaExceededError") { st.lastError = "quota"; return { ok: false, error: "quota", backend: "ls" }; }
+      /* storage fully unavailable: fall to memory for this session */
+    }
+  }
+  /* 3) memory — volatile, and the result says so */
+  st.installed[record.id] = record;
+  st.lastError = null;
+  return { ok: true, backend: "mem", volatile: true };
+}
+
+/* ---------- hydrate (PF pfPacksHydrate L191-243) + late adoption (L73-136) ---------- */
+
+function avStoreHydrate() {
+  const st = avStoreState;
+  if (st.hydratePromise) return st.hydratePromise;
+  try {
+    st.hydratePromise = avStoreHydrateRun().catch(function (e) {
+      st.lastError = "hydrate:" + avStoreErrMsg(e);
+      st.hydrated = true;
+      return st.backend;
+    });
+    return st.hydratePromise;
+  } catch (e) {
+    st.hydrated = true;
+    return Promise.resolve(st.backend);
+  }
+}
+
+async function avStoreHydrateRun() {
+  const st = avStoreState;
+  if (st.hydrated) return st.backend;
+  /* 1) the localStorage snapshot paints first; an id from storage is re-validated before it is
+     trusted again (slug + record shape) — PF L197-205 */
+  const lsClean = {};
+  try {
+    const ls = avStoreLs();
+    const raw = ls ? ls.getItem(AV_STORE_LS) : null;
+    if (raw != null) {
+      let obj = null;
+      try { obj = JSON.parse(raw); } catch (e) { obj = null; }
+      if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+        const keys = Object.keys(obj);
+        for (let i = 0; i < keys.length; i++) {
+          const k = keys[i];
+          const v = obj[k];
+          if (avStoreIdOk(k) && v && typeof v === "object" && !Array.isArray(v) && v.pack && typeof v.pack === "object") {
+            const rec = avStoreRecordNorm(k, v);
+            if (rec) lsClean[k] = rec;
+          }
+        }
+      }
+    }
+  } catch (e) { /* storage blocked: memory only */ }
+  st.installed = lsClean;
+  /* 2) the database takes over */
+  const db = await avStoreDbOpen();
+  if (db) {
+    const recs = await avStoreDbAll(db);
+    if (recs === null) {
+      st.backend = Object.keys(lsClean).length ? "ls" : "mem";   /* read blew up: stay on the snapshot */
+    } else {
+      st.backend = "idb";
+      const fromDb = {};
+      for (let i = 0; i < recs.length; i++) {
+        const r = recs[i];
+        if (r && avStoreIdOk(r.id) && r.pack && typeof r.pack === "object") {
+          const rec = avStoreRecordNorm(r.id, r);
+          if (rec) fromDb[r.id] = rec;
+        }
+      }
+      /* the snapshot is written only by a session that could not reach this database, so for a
+         duplicate id the SNAPSHOT is the newer copy and wins (PF L220-223) */
+      st.installed = Object.assign({}, fromDb, lsClean);
+      /* write through EVERY snapshot id, then retire the key once its content is safe (L224-234) */
+      let want = 0, imported = 0;
+      const ids = Object.keys(lsClean);
+      for (let i = 0; i < ids.length; i++) {
+        want += 1;
+        try { await avStoreDbWrite(db, st.installed[ids[i]]); imported += 1; } catch (e) { /* best-effort import */ }
+      }
+      if (want && imported === want) { try { const l2 = avStoreLs(); if (l2) l2.removeItem(AV_STORE_LS); } catch (e) { /* keep the spare copy */ } }
+    }
+  } else {
+    st.backend = Object.keys(lsClean).length ? "ls" : "mem";
+  }
+  st.hydrated = true;
+  avStorePaint();
+  return st.backend;
+}
+
+function avStoreAdoptSoon() {
+  const st = avStoreState;
+  if (st.adoptTried || st.adoptTimer) return;
+  try { st.adoptTimer = avStoreTimer(function () { st.adoptTimer = null; avStoreAdopt(); }, AV_STORE_ADOPT_MS); }
+  catch (e) { /* no timers (hatched test shells): the manual retry still exists */ }
+}
+
+function avStoreAdopt(force) {
+  try { return Promise.resolve(avStoreAdoptRun(!!force)).catch(function () { return avStoreBackend(); }); }
+  catch (e) { return Promise.resolve(avStoreBackend()); }
+}
+
+async function avStoreAdoptRun(force) {
+  const st = avStoreState;
+  if (st.hydratePromise && !st.hydrated) { try { await st.hydratePromise; } catch (e) { /* proceed */ } }
+  if (st.db) return st.backend;                       /* already durable */
+  if (!force && st.adoptTried) return st.backend;     /* once per session (PF L93) */
+  st.adoptTried = true;
+  st.dbGaveUp = false;                                /* forgive the boot timeout, this once */
+  const db = await avStoreDbOpen();
+  if (!db) return st.backend;                         /* still slow: stay honest, stay volatile */
+  st.backend = "idb";
+  const recs = await avStoreDbAll(db);
+  const fromDb = {};
+  const list = recs || [];
+  for (let i = 0; i < list.length; i++) {
+    const r = list[i];
+    if (r && avStoreIdOk(r.id) && r.pack && typeof r.pack === "object") {
+      const rec = avStoreRecordNorm(r.id, r);
+      if (rec) fromDb[r.id] = rec;
+    }
+  }
+  /* a removal made in this degraded session is the user's word, not a pending write: honour it in
+     both directions rather than resurrecting the pack when the database lands (PF L102-110) */
+  let honoured = 0;
+  st.droppedNoDb.forEach(function (id) {
+    if (!(id in fromDb)) return;
+    delete fromDb[id];
+    try { avStoreDbRemove(db, id); honoured += 1; } catch (e) { /* the merge below still wins */ }
+  });
+  st.droppedNoDb = new Set();
+  /* records of earlier sessions join THIS session's list — a pack the session already holds keeps
+     the session's copy (it is the one that is playing) — PF L111-115 */
+  const before = Object.keys(st.installed).length;
+  st.installed = Object.assign({}, fromDb, st.installed);
+  const adopted = Object.keys(st.installed).length - before;
+  /* every pack this session holds only in memory lands in the database now (L116-123) */
+  const have = new Set(Object.keys(fromDb));
+  let landed = 0, failed = 0;
+  const ids = Object.keys(st.installed);
+  for (let i = 0; i < ids.length; i++) {
+    if (have.has(ids[i])) continue;
+    try { await avStoreDbWrite(db, st.installed[ids[i]]); landed += 1; } catch (e) { failed += 1; }
+  }
+  if (!failed) { try { const ls = avStoreLs(); if (ls) ls.removeItem(AV_STORE_LS); } catch (e) { /* keep the spare copy */ } }
+  st.hydrated = true;
+  st.lastAdopt = { adopted: adopted, landed: landed, failed: failed, honoured: honoured, at: Date.now() };
+  st.lastError = null;
+  avStorePaint();
+  return st.backend;
+}
+
+/* ---------- the index (PF refreshPackIndex flow; manifest shape pinned in §4b) ---------- */
+
+function avStoreIndex(force) {
+  const st = avStoreState;
+  try {
+    if (st.indexStatus === "loading" && st.indexPromise) return st.indexPromise;
+    if (!force && st.indexStatus === "ready" && st.index) return Promise.resolve({ ok: true, cached: true, count: st.indexCount });
+    const p = avStoreIndexRun().then(
+      function (r) {
+        if (avStoreState.indexPromise === p) avStoreState.indexPromise = null;
+        return r;
+      },
+      function (e) {
+        if (avStoreState.indexPromise === p) avStoreState.indexPromise = null;
+        return { ok: false, error: "index:" + avStoreErrMsg(e) };
+      }
+    );
+    st.indexPromise = p;
+    return p;
+  } catch (e) { return Promise.resolve({ ok: false, error: "index:" + avStoreErrMsg(e) }); }
+}
+
+async function avStoreIndexRun() {
+  const st = avStoreState;
+  st.indexStatus = "loading";
+  st.indexError = null;
+  const url = avStoreBase() + AV_STORE_INDEX;
+  let res = null;
+  try { res = await avStoreFetchUrl(url, AV_STORE_MANIFEST_MS, "index"); }
+  catch (e) {
+    const m = avStoreErrMsg(e);
+    const err = (m === "no-fetch") ? "no-fetch" : "fetch";
+    st.indexStatus = "error"; st.indexError = err; st.lastError = "index:" + m;
+    avStorePaint();
+    return { ok: false, error: err, detail: m };
+  }
+  if (!res || res.ok !== true) {
+    st.indexStatus = "error"; st.indexError = "http"; st.lastError = "index:http";
+    avStorePaint();
+    return { ok: false, error: "http", detail: (res && res.status != null) ? String(res.status) : "" };
+  }
+  let text = null;
+  try { text = await res.text(); } catch (e) { text = null; }
+  if (text == null) {
+    st.indexStatus = "error"; st.indexError = "read"; st.lastError = "index:read";
+    avStorePaint();
+    return { ok: false, error: "read" };
+  }
+  let man = null, parsed = true;
+  try { man = JSON.parse(text); } catch (e) { parsed = false; }
+  if (!parsed) {
+    st.indexStatus = "error"; st.indexError = "json"; st.lastError = "index:json";
+    avStorePaint();
+    return { ok: false, error: "json" };
+  }
+  if (!man || typeof man !== "object" || Array.isArray(man) || !Array.isArray(man.packs) || (man.v != null && man.v !== 1)) {
+    st.indexStatus = "error"; st.indexError = "bad-manifest"; st.lastError = "index:bad-manifest";
+    avStorePaint();
+    return { ok: false, error: "bad-manifest" };
+  }
+  const packs = [];
+  let dropped = 0;
+  for (let i = 0; i < man.packs.length; i++) {
+    const e = avStoreEntryNorm(man.packs[i]);
+    if (e) packs.push(e); else dropped += 1;
+  }
+  st.index = { v: 1, name: avStoreStr(man.name, null, 80), updated: avStoreStr(man.updated, null, 40), packs: packs };
+  st.indexStatus = "ready";
+  st.indexCount = packs.length;
+  st.indexBase = avStoreBase();
+  st.indexAt = Date.now();
+  st.lastError = null;
+  avStorePaint();
+  return { ok: true, count: packs.length, dropped: dropped, base: st.indexBase };
+}
+
+/* ---------- install (PF install flow L146-180 + pfPacksPut): fetch → sha → parse → commit ---------- */
+
+function avStoreInstall(id) {
+  try {
+    return Promise.resolve(avStoreInstallRun(id)).catch(function (e) { return { ok: false, error: "install:" + avStoreErrMsg(e) }; });
+  } catch (e) { return Promise.resolve({ ok: false, error: "install:" + avStoreErrMsg(e) }); }
+}
+
+async function avStoreInstallRun(id) {
+  const st = avStoreState;
+  if (!avStoreIdOk(id)) return { ok: false, error: "no-id" };
+  if (!st.index && st.indexPromise) { try { await st.indexPromise; } catch (e) { /* fall below */ } }
+  if (!st.index) return { ok: false, error: "no-index" };
+  const entry = avStoreEntry(id);
+  if (!entry) return { ok: false, error: "no-pack" };
+  if (entry.bytes != null && entry.bytes > AV_STORE_MAX_BYTES) return { ok: false, error: "too-big" };
+  const url = avStoreBase() + entry.file;
+  let res = null;
+  try { res = await avStoreFetchUrl(url, AV_STORE_FETCH_MS, "pack"); }
+  catch (e) {
+    const m = avStoreErrMsg(e);
+    st.lastError = "pack:" + m;
+    return { ok: false, error: (m === "no-fetch") ? "no-fetch" : "fetch", detail: m };
+  }
+  if (!res || res.ok !== true) {
+    st.lastError = "pack:http";
+    return { ok: false, error: "http", detail: (res && res.status != null) ? String(res.status) : "" };
+  }
+  let buf = null;
+  try { buf = await res.arrayBuffer(); } catch (e) { buf = null; }
+  if (!buf || typeof buf.byteLength !== "number") return { ok: false, error: "read" };
+  if (buf.byteLength > AV_STORE_MAX_BYTES) return { ok: false, error: "too-big" };
+  const hex = await avStoreSha256Hex(buf);
+  if (!hex) { st.lastError = "no-crypto"; return { ok: false, error: "no-crypto" }; }
+  /* sha256 verified BEFORE commit — a mismatch never reaches either tier */
+  if (hex !== entry.sha256) { st.lastError = "sha-mismatch"; return { ok: false, error: "sha-mismatch", sha: hex }; }
+  const text = avStoreBytesToText(buf);
+  let fresh = null;
+  try { fresh = (text == null) ? null : JSON.parse(text); } catch (e) { fresh = null; }
+  if (!fresh || typeof fresh !== "object" || Array.isArray(fresh) || !Array.isArray(fresh.presets)) {
+    st.lastError = "bad-pack";
+    return { ok: false, error: "bad-pack" };
+  }
+  const record = avStoreRecordMake(id, entry, fresh, buf.byteLength, hex);
+  const put = await avStoreCommit(record);
+  if (!put || put.ok !== true) return put || { ok: false, error: "commit" };
+  avStorePaint();
+  return { ok: true, id: id, backend: put.backend, volatile: !!put.volatile, sha256: hex, presetCount: record.presetCount, size: record.size };
+}
+
+/* ---------- remove (PF pfPacksDelete L290-305): durable drop first, memory on success only ---------- */
+
+function avStoreRemove(id) {
+  try { return Promise.resolve(avStoreRemoveRun(id)).catch(function () { return false; }); }
+  catch (e) { return Promise.resolve(false); }
+}
+
+async function avStoreRemoveRun(id) {
+  const st = avStoreState;
+  if (!avStoreIdOk(id)) return false;
+  let dropped = false;
+  if (st.db) {
+    dropped = await avStoreDbRemove(st.db, id);
+  } else {
+    const ls = avStoreLs();
+    let lsWrite = "none";   /* 'ok' | 'quota' | 'err' | 'none' */
+    if (ls) {
+      const map = Object.assign({}, st.installed);
+      delete map[id];
+      try { ls.setItem(AV_STORE_LS, JSON.stringify(map)); lsWrite = "ok"; }
+      catch (e) { lsWrite = (avStoreErrName(e) === "QuotaExceededError") ? "quota" : "err"; }
+    }
+    if (lsWrite === "ok") {
+      dropped = true;
+      st.droppedNoDb.add(id);                 /* write-through at adoption: never resurrected */
+      if (st.backend === "mem") st.backend = "ls";
+    } else if (lsWrite === "quota") {
+      dropped = false;                        /* the durable tier refused: the pack stays, honest */
+    } else {
+      /* nothing durable was in use (mem mode): there is nothing durable to drop */
+      dropped = (st.backend === "mem");
+      if (dropped) st.droppedNoDb.add(id);
+    }
+  }
+  if (dropped) { delete st.installed[id]; avStorePaint(); }
+  return dropped;
+}
+
+/* ---------- the report surface ---------- */
+
+function avStoreInstalled() {
+  try {
+    const st = avStoreState;
+    const out = [];
+    const ids = Object.keys(st.installed);
+    for (let i = 0; i < ids.length; i++) {
+      const r = st.installed[ids[i]];
+      if (!r) continue;
+      out.push({
+        id: r.id, v: r.v || 1, name: r.name, file: r.file, sha256: r.sha256,
+        size: r.size, at: r.at, presetCount: r.presetCount, engine: r.engine,
+        tags: Array.isArray(r.tags) ? r.tags.slice() : [],
+      });
+    }
+    out.sort(function (a, b) { return (a.at || 0) - (b.at || 0) || (a.id < b.id ? -1 : (a.id > b.id ? 1 : 0)); });
+    return out;
+  } catch (e) { return []; }
+}
+
+function avStoreGet(id) {
+  try {
+    const st = avStoreState;
+    if (typeof id !== "string" || !st.installed[id]) return null;
+    const r = st.installed[id];
+    /* read-only contract: callers get a fresh deep copy, never the store's own record */
+    let pack = r.pack;
+    try { if (typeof JSON !== "undefined") pack = JSON.parse(JSON.stringify(r.pack)); } catch (e) { pack = r.pack; }
+    return {
+      id: r.id, v: r.v || 1, name: r.name, file: r.file, sha256: r.sha256, size: r.size,
+      at: r.at, presetCount: r.presetCount, engine: r.engine,
+      tags: Array.isArray(r.tags) ? r.tags.slice() : [], pack: pack,
+    };
+  } catch (e) { return null; }
+}
+
+function avStoreBackend() { try { return avStoreState.backend; } catch (e) { return null; } }
+function avStoreCount() { try { return Object.keys(avStoreState.installed).length; } catch (e) { return 0; } }
+
+function avStoreEstimate() {
+  try {
+    let nav = null;
+    try { nav = (typeof navigator !== "undefined") ? navigator : ((typeof window !== "undefined" && window) ? window.navigator : null); } catch (e) { nav = null; }
+    if (nav && nav.storage && typeof nav.storage.estimate === "function") {
+      return Promise.resolve(nav.storage.estimate()).then(
+        function (e) { return { usage: (e && e.usage) || 0, quota: (e && e.quota) || 0 }; },
+        function () { return null; }
+      );
+    }
+  } catch (e) { /* none */ }
+  return Promise.resolve(null);
+}
+
+function avStoreStatus() {
+  try {
+    const st = avStoreState;
+    const summaries = avStoreInstalled();
+    return {
+      v: AV_STORE_VERSION,
+      ok: true,
+      inited: !!st.inited,
+      hydrated: !!st.hydrated,
+      backend: st.backend,
+      count: summaries.length,
+      ids: summaries.map(function (e) { return e.id; }),
+      installed: summaries,
+      db: !!st.db,
+      dbGaveUp: !!st.dbGaveUp,
+      adopt: st.lastAdopt ? { adopted: st.lastAdopt.adopted, landed: st.lastAdopt.landed, failed: st.lastAdopt.failed, honoured: st.lastAdopt.honoured, at: st.lastAdopt.at } : null,
+      index: { status: st.indexStatus, count: st.indexCount, base: st.indexBase, at: st.indexAt, error: st.indexError, name: st.index ? st.index.name : null, updated: st.index ? st.index.updated : null, packs: st.index ? st.index.packs : null },
+      net: { source: avStoreFetchSource(), index: st.netIndex, pack: st.netPack },
+      note: avStoreNote(),
+      lastError: st.lastError,
+    };
+  } catch (e) {
+    return { v: AV_STORE_VERSION, ok: false, backend: null, count: 0, installed: [], lastError: "status:" + avStoreErrMsg(e) };
+  }
+}
+
+function avStoreNote() {
+  try {
+    const src = avStoreFetchSource();
+    let filePage = false;
+    try { filePage = (typeof location !== "undefined" && location && String(location.protocol) === "file:"); } catch (e) { filePage = false; }
+    if (src === "none") {
+      return filePage
+        ? "file:// page with no fetch — the store cannot reach packs; it loads packs on the hosted site (or via the test seam)."
+        : "no fetch available here — the store cannot reach packs.";
+    }
+    if (filePage && src === "seam") return "file:// page on the test seam — packs come from the rig's mock server, not the live site.";
+    if (filePage && src === "real") return "file:// page — browsers block local-file fetches; packs load from the hosted site (or a local server via the store seam).";
+    return null;
+  } catch (e) { return null; }
+}
+
+/* ---------- the seam + listeners + init ---------- */
+
+function avStoreSetFetch(fn) {
+  try {
+    if (fn == null) { avStoreState.fetchFn = null; return false; }
+    if (typeof fn === "function") { avStoreState.fetchFn = fn; return true; }
+  } catch (e) { /* ignore */ }
+  try { return typeof avStoreState.fetchFn === "function"; } catch (e) { return false; }
+}
+
+function avStoreOnChange(fn) {
+  try {
+    const st = avStoreState;
+    if (typeof fn === "function" && Array.isArray(st.listeners) && st.listeners.length < 32) { st.listeners.push(fn); return true; }
+  } catch (e) { /* ignore */ }
+  return false;
+}
+
+function avStorePaint() {
+  const st = avStoreState;
+  let snap = null;
+  try { snap = avStoreStatus(); } catch (e) { snap = null; }
+  let list = [];
+  try { list = Array.isArray(st.listeners) ? st.listeners.slice() : []; } catch (e) { list = []; }
+  for (let i = 0; i < list.length; i++) { try { list[i](snap); } catch (e) { /* a listener never breaks the store */ } }
+  return snap;
+}
+
+function avStoreInit() {
+  try {
+    const st = avStoreState;
+    if (!st.inited) {
+      st.inited = true;
+      avStoreHydrate();   /* best-effort boot hydrate; idempotent by promise */
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+
+/* Anvil — P5 BANK row + apply core (verify/_p5_wave.md §4b sa-3; sources: pack-pipeline-port-digest
+   §4/§6, store-port-digest §1.8/§3.9). ONE shared apply core for installed .avbank.json presets:
+   every patch path commits through the app funnel avApplyParam (THE commit funnel — `mod.macroN`
+   rides av_mod's EXISTING wrap, so its acceptance counts: the wrap owns macro paths and lands them
+   model-side; the funnel's own return for those paths is only the passthrough's word). An optional
+   `seq` rides avSeqLoad + avSeqSetPattern + avSeqUiSync (all typeof-guarded). The BANK row mounts
+   ONE compact control row (pack select + preset select + APPLY + PREVIEW) into
+   #av-synth-bank-host when the parent has added it, else directly after the #av-synth h2.
+   PREVIEW auditions a preset on a FRESH offline engine (OfflineAudioContext + avEngineBoot offline,
+   2.0 s @ 44.1 kHz — the §2 witness recipe) and plays the rendered buffer on the live context;
+   resolves null (honestly) when the environment cannot render.
+
+   LAWS preserved (digest §9 + _p5_wave §4b):
+   - page module: NO DOM at top level; every DOM/global reach typeof-guarded inside a function;
+     ONE namespace (avBank* / AV_BANK_*); never throws; node-parseable (node --check clean).
+   - apply: every legal patch path forwarded through the CURRENT avApplyParam binding (resolved per
+     call — av_mod/av_plock wraps REASSIGN the funnel, a captured reference would go stale);
+     `engine.kind` ordered FIRST (digest §6.4: kind-specific paths must land after the kind);
+     booleans normalised to 1/0 (a JSON flag's truth; the live facade's setParam admits only finite
+     numbers/strings, and the witness coerces Number(v) identically); non-finite numbers / null /
+     objects / arrays / functions are REFUSED and reported, never silently dropped; paths are
+     dotted identifiers starting with a letter (`__proto__`-class keys never reach the mirror).
+   - seq leg: avSeqLoad validates into the core model, then avSeqSetPattern gets the core's own
+     sanitised snapshot when avSeqSnap exists (core and scheduler can never drift), then
+     avSeqUiSync repaints (a nicety — its absence is not a failure; load/set are).
+   - preview: the witness recipe verbatim — fresh engine → patch applied via the offline handle's
+     setParam → noteOn(60, 0.9), drum kind → noteOn(36, 0.9) → render 2.0 s → finite + peak >
+     1e-4 gate (the §2 acceptance) → play the buffer on the live ctx (KEYS bus when the tap
+     answers, else the raw destination — the av_sample preview law; the tap part present but
+     unanswerable refuses rather than bypassing). The rendered buffer is post-tap (the offline
+     context builds the same keys→master chain, levels mirrored from the live store) — the audition
+     carries one more pass of the playback path; documented, not compensated. v1 auditions the
+     patch; a `seq` is accepted and reported but NOT rendered (no timed-note facility exists
+     engine-side — integration seam, never a silent claim; §2 witnesses seq out-of-band too).
+   - store reads ride the guarded avStore API (`avStoreInstalled()` — the sa-0 store core); while
+     that module is not loaded every read is an honest [] and the row says so.
+
+   Public surface (classic-script globals, ONE namespace):
+     avBankInit() -> bool                 mount the BANK row (false without host/parts, never throws)
+     avBankRefresh() -> bool              repaint the selects from installed packs (after installs)
+     avBankApplyPreset(preset) -> bool    forward every patch path; seq legs; full acceptance only
+     avBankPreview(patch[, seq]) -> Promise<receipt|null>
+     avBankPresets([packId]) -> []        flat installed-preset list (all packs, or one)
+     avBankPacks() -> []                  installed packs via the guarded avStore API
+     avBankClasses() -> string[]          CSS classes this row introduces (parent styles them)
+     avBankSnap() -> object               observability (mounts, counts, lastApply, lastPreview)
+     window.__avBank -> { … }             debug handle (rigs + parent)
+*/
+"use strict";
+
+const AV_BANK_VERSION = "p5.0";
+const AV_BANK_PREVIEW_SR = 44100;        /* §4b pin: preview sample rate */
+const AV_BANK_PREVIEW_SECS = 2;          /* §4b pin: 2.0 s render (the §2 witness recipe) */
+const AV_BANK_AUDIBLE = 1e-4;            /* §2 witness floor: peak must exceed this */
+const AV_BANK_NOTE_GAIN = 0.9;           /* §2 witness note velocity */
+/* a §1 path is a dotted identifier starting with a letter — the belt keeps `__proto__`-class
+   keys out of avParams; every path the shipped modules accept matches this shape */
+const AV_BANK_PATH_RE = /^[A-Za-z][A-Za-z0-9_.-]*$/;
+/* the av_mod wrap's exact turf; when that wrap is the funnel we called, its marker is the
+   acceptance for these paths (the wrap synced the macro model + reposted the payload) */
+const AV_BANK_MOD_MACRO_RE = /^mod\.macro[1-8]$/;
+
+/* ---------- module state ---------- */
+
+const avBankState = {
+  mounted: false,          /* avBankInit succeeded at least once */
+  mounts: 0,               /* mount passes (re-mountable, like the sibling cards) */
+  host: null,              /* the element the row lives in (repaint target) */
+  packId: null,            /* current pack selection */
+  presetIndex: -1,         /* current preset selection (index within the pack) */
+  activeSrc: null,         /* the ONE preview voice (a new preview preempts) */
+  fallbackCtx: null,       /* lazily created playback context when the engine has none */
+  lastApply: null,         /* {name, forwarded, accepted, refused[], seq, seqOk, reason, ok} */
+  lastPreview: null,       /* the last successful preview receipt */
+  lastPreviewError: null,  /* why the last preview refused (null when it landed) */
+};
+
+/* ---------- guarded global resolvers (belt 1: binding, belt 2: window property) ---------- */
+
+function avBankFunnel() {
+  try { if (typeof avApplyParam === "function") return avApplyParam; } catch (e) { /* not injected */ }
+  try { if (typeof window !== "undefined" && window && typeof window.avApplyParam === "function") return window.avApplyParam; } catch (e) { /* no window */ }
+  return null;
+}
+
+function avBankStoreInstalled() {
+  try { if (typeof avStoreInstalled === "function") return avStoreInstalled; } catch (e) { /* store not loaded */ }
+  try { if (typeof window !== "undefined" && window && typeof window.avStoreInstalled === "function") return window.avStoreInstalled; } catch (e) { /* no window */ }
+  return null;
+}
+
+function avBankSeqFns() {
+  const out = { load: null, set: null, ui: null, snap: null };
+  try { if (typeof avSeqLoad === "function") out.load = avSeqLoad; } catch (e) { /* not injected */ }
+  try { if (typeof avSeqSetPattern === "function") out.set = avSeqSetPattern; } catch (e) { /* not injected */ }
+  try { if (typeof avSeqUiSync === "function") out.ui = avSeqUiSync; } catch (e) { /* not injected */ }
+  try { if (typeof avSeqSnap === "function") out.snap = avSeqSnap; } catch (e) { /* not injected */ }
+  try {
+    if (typeof window !== "undefined" && window) {
+      if (!out.load && typeof window.avSeqLoad === "function") out.load = window.avSeqLoad;
+      if (!out.set && typeof window.avSeqSetPattern === "function") out.set = window.avSeqSetPattern;
+      if (!out.ui && typeof window.avSeqUiSync === "function") out.ui = window.avSeqUiSync;
+      if (!out.snap && typeof window.avSeqSnap === "function") out.snap = window.avSeqSnap;
+    }
+  } catch (e) { /* no window */ }
+  return out;
+}
+
+function avBankBootFn() {
+  try { if (typeof avEngineBoot === "function") return avEngineBoot; } catch (e) { /* not injected */ }
+  try { if (typeof window !== "undefined" && window && typeof window.avEngineBoot === "function") return window.avEngineBoot; } catch (e) { /* no window */ }
+  return null;
+}
+
+function avBankOfflineCtor() {
+  try { if (typeof OfflineAudioContext === "function") return OfflineAudioContext; } catch (e) { /* not here */ }
+  try { if (typeof webkitOfflineAudioContext === "function") return webkitOfflineAudioContext; } catch (e) { /* not here */ }
+  return null;
+}
+
+function avBankAudioCtor() {
+  try { if (typeof AudioContext === "function") return AudioContext; } catch (e) { /* not here */ }
+  try { if (typeof webkitAudioContext === "function") return webkitAudioContext; } catch (e) { /* not here */ }
+  return null;
+}
+
+/* ---------- value + patch laws ---------- */
+
+/* §1 values are JSON number / string / boolean. Admit finite numbers as-is; strings as-is (the
+   exact-enum law is the schema's call, not the mirror's); booleans as 1/0 (flag truth — see the
+   header). Everything else (null, objects, arrays, NaN, ±Infinity, functions, undefined) → null
+   = refuse. */
+function avBankValueNorm(v) {
+  if (typeof v === "number") return isFinite(v) ? v : null;
+  if (typeof v === "string") return v;
+  if (typeof v === "boolean") return v ? 1 : 0;
+  return null;
+}
+
+/* ordered, validated patch rows: `engine.kind` FIRST (digest §6.4 — kind-specific paths must land
+   after the kind), then the map's own order. Refusals carry the path so nothing is silent. */
+function avBankPatchRows(patch) {
+  const rows = [], refused = [];
+  if (patch == null) return { rows: rows, refused: refused, bad: false, empty: true };
+  if (typeof patch !== "object" || Array.isArray(patch)) return { rows: rows, refused: refused, bad: true, empty: false };
+  let keys = [];
+  try { keys = Object.keys(patch); } catch (e) { keys = []; }
+  const order = [];
+  for (let i = 0; i < keys.length; i++) if (keys[i] !== "engine.kind") order.push(keys[i]);
+  if (keys.indexOf("engine.kind") >= 0) order.unshift("engine.kind");
+  for (let i = 0; i < order.length; i++) {
+    const path = order[i];
+    if (typeof path !== "string" || !AV_BANK_PATH_RE.test(path)) { refused.push(String(path)); continue; }
+    const v = avBankValueNorm(patch[path]);
+    if (v === null) { refused.push(path); continue; }
+    rows.push({ path: path, v: v });
+  }
+  return { rows: rows, refused: refused, bad: false, empty: keys.length === 0 };
+}
+
+/* drum-kind detection from the ordered rows (string enum or the §2.1/P3 ordinal 3) — the §2
+   witness plays noteOn(36, 0.9) for drum presets */
+function avBankIsDrumKind(rows) {
+  for (let i = 0; i < rows.length; i++) {
+    if (rows[i].path !== "engine.kind") continue;
+    return rows[i].v === "drum" || rows[i].v === 3;
+  }
+  return false;
+}
+
+/* ---------- the seq leg (§4b): avSeqLoad → avSeqSetPattern → avSeqUiSync ---------- */
+
+function avBankSeqApply(seq, receipt) {
+  const f = avBankSeqFns();
+  if (!f.load || !f.set) { receipt.seqError = "seq modules unavailable"; return false; }
+  let ok = false;
+  try { ok = f.load(seq) === true; } catch (e) { ok = false; }
+  if (!ok) { receipt.seqError = "avSeqLoad refused"; return false; }
+  /* feed the scheduler the core's own sanitised snapshot when available — core and scheduler
+     can never drift; the raw seq is the fallback */
+  let norm = seq;
+  try { if (f.snap) { const s = f.snap(); if (s && typeof s === "object") norm = s; } } catch (e) { /* raw seq stands */ }
+  try { ok = f.set(norm) !== false; } catch (e) { ok = false; }
+  if (!ok) { receipt.seqError = "avSeqSetPattern refused"; return false; }
+  try { if (f.ui) f.ui(); } catch (e) { /* repaint is a nicety — the pattern landed */ }
+  return true;
+}
+
+/* ---------- avBankApplyPreset: the shared apply core (§4b apply law) ---------- */
+
+/* Forward EVERY legal patch path through the current funnel (no early stop), then the seq leg
+   when present. Returns true only on full acceptance: at least one leg, zero refusals, seqOk.
+   The receipt (avBankState.lastApply / avBankSnap) names every refusal — never a silent drop. */
+function avBankApplyPreset(preset) {
+  const receipt = { name: null, forwarded: 0, accepted: 0, refused: [], seq: false, seqOk: true, reason: null, ok: false };
+  avBankState.lastApply = receipt;
+  try {
+    if (!preset || typeof preset !== "object" || Array.isArray(preset)) { receipt.reason = "not a preset object"; return false; }
+    receipt.name = (typeof preset.name === "string" && preset.name) ? preset.name : null;
+    const parsed = avBankPatchRows(preset.patch);
+    if (parsed.bad) { receipt.reason = "patch is not a plain object"; return false; }
+    receipt.refused = parsed.refused.slice();
+    const funnel = avBankFunnel();
+    for (let i = 0; i < parsed.rows.length; i++) {
+      const row = parsed.rows[i];
+      if (!funnel) { receipt.refused.push(row.path); continue; }
+      let rv = false;
+      try { rv = funnel(row.path, row.v, { from: "bank", name: receipt.name }); } catch (e) { rv = false; }
+      receipt.forwarded += 1;
+      let accepted = rv !== false;
+      /* av_mod's wrap owns exactly mod.macro1..8: when the funnel we called IS that wrap, the
+         macro landed model-side even if the passthrough's engine leg said false (SPN tiers). */
+      if (!accepted && AV_BANK_MOD_MACRO_RE.test(row.path) && funnel && funnel.__avModWrap === true) accepted = true;
+      if (accepted) receipt.accepted += 1; else receipt.refused.push(row.path);
+    }
+    if (!funnel && parsed.rows.length > 0) receipt.reason = "no apply funnel";
+    let seqOk = true;
+    const rawSeq = preset.seq;
+    if (rawSeq != null) {
+      if (typeof rawSeq !== "object" || Array.isArray(rawSeq)) { receipt.seqError = "seq is not a pattern object"; seqOk = false; }
+      else { receipt.seq = true; seqOk = avBankSeqApply(rawSeq, receipt); }
+    }
+    const hasLeg = parsed.rows.length > 0 || rawSeq != null;
+    const ok = hasLeg && receipt.refused.length === 0 && seqOk;
+    receipt.seqOk = seqOk;
+    receipt.ok = ok;
+    return ok === true;
+  } catch (e) {
+    receipt.reason = String((e && (e.message || e.name)) || e) || "apply failed";
+    receipt.ok = false;
+    return false;
+  }
+}
+
+/* ---------- avBankPreview: offline witness-recipe audition (§4b preview law) ---------- */
+
+function avBankStopPreview() {
+  const src = avBankState.activeSrc;
+  avBankState.activeSrc = null;
+  if (!src) return false;
+  try { if (typeof src.stop === "function") src.stop(); } catch (e) { /* already stopped */ }
+  try { src.onended = null; } catch (e) { /* ok */ }
+  return true;
+}
+
+/* the live playback context: the engine's own context first (one context, one tap chain), else
+   ONE lazily created fallback of our own (the av_sample pickCtx law) */
+function avBankLiveCtx() {
+  try {
+    const w = (typeof window !== "undefined") ? window.__avEngine : null;
+    const h = (w && w.ready === true && w.handle) ? w.handle : null;
+    const c = h ? h.ctx : null;
+    if (c && c.state !== "closed" && typeof c.createBufferSource === "function") return c;
+  } catch (e) { /* engine facade absent */ }
+  try {
+    const st = avBankState;
+    let c = st.fallbackCtx;
+    if (c && c.state === "closed") c = null;
+    if (!c) {
+      const AC = avBankAudioCtor();
+      if (!AC) return null;
+      c = new AC({ latencyHint: "interactive" });
+      st.fallbackCtx = c;
+    }
+    return (c && typeof c.createBufferSource === "function") ? c : null;
+  } catch (e) { return null; }
+}
+
+/* the playback destination — the av_sample preview law: connect to the KEYS bus (avKeysFor) so
+   the audition rides the master tap; when the tap part is present but cannot answer, refuse
+   rather than bypassing it; the raw destination exists only when av_tap itself does not. */
+function avBankDestFor(ctx) {
+  if (!ctx || typeof ctx.createBufferSource !== "function") return null;
+  let hasTap = false;
+  try { hasTap = (typeof avKeysFor === "function"); } catch (e) { hasTap = false; }
+  let d = null;
+  try { if (hasTap) d = avKeysFor(ctx); } catch (e) { d = null; }
+  if (d && typeof d.connect === "function") return d;
+  try { void ctx.destination; } catch (e) { /* no destination */ }
+  try { if (hasTap) d = avKeysFor(ctx); } catch (e) { d = null; }
+  if (d && typeof d.connect === "function") return d;
+  if (hasTap) return null;
+  try {
+    const real = ctx.destination;
+    return (real && typeof real.connect === "function") ? real : null;
+  } catch (e) { return null; }
+}
+
+function avBankPlayBuffer(buf) {
+  try {
+    const ctx = avBankLiveCtx();
+    if (!ctx) return false;
+    try {
+      if (ctx.state === "suspended" && typeof ctx.resume === "function") {
+        const p = ctx.resume();
+        if (p && typeof p.catch === "function") p.catch(function () { /* gesture-gated — retried by the app */ });
+      }
+    } catch (e) { /* resume refused */ }
+    const dest = avBankDestFor(ctx);
+    if (!dest) return false;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(dest);
+    src.onended = function () { if (avBankState.activeSrc === src) avBankState.activeSrc = null; };
+    src.start();
+    avBankState.activeSrc = src;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* finite + peak over the rendered buffer (the §2 acceptance numbers) */
+function avBankBufferStats(buf) {
+  const out = { length: 0, peak: 0, finite: true };
+  try {
+    out.length = Number(buf.length) || 0;
+    const chs = Math.max(1, Math.min(2, Number(buf.numberOfChannels) || 1));
+    for (let c = 0; c < chs; c++) {
+      const data = buf.getChannelData(c);
+      if (!data || typeof data.length !== "number") continue;
+      for (let i = 0; i < data.length; i++) {
+        const v = data[i];
+        if (!isFinite(v)) { out.finite = false; break; }
+        const a = v < 0 ? -v : v;
+        if (a > out.peak) out.peak = a;
+      }
+    }
+  } catch (e) { out.finite = false; }
+  return out;
+}
+
+/* avBankPreview(patch[, seq]) -> Promise<receipt|null>. A new preview preempts the old one.
+   null = nothing was playable (no OfflineAudioContext / no avEngineBoot / boot failed / note
+   rejected / render threw / render below the audibility floor); avBankState.lastPreviewError
+   says which. The receipt knows: sr/secs/frames/midi/gain/tier/refused[]/peak/played/seq. */
+function avBankPreview(patch, seq) {
+  avBankStopPreview();
+  const st = avBankState;
+  st.lastPreview = null;
+  st.lastPreviewError = null;
+  const parsed = avBankPatchRows(patch);
+  const hasSeq = seq != null && typeof seq === "object" && !Array.isArray(seq);
+  if (parsed.bad || !(parsed.rows.length > 0 || hasSeq)) {
+    st.lastPreviewError = parsed.bad ? "patch is not a plain object" : "nothing to audition";
+    return Promise.resolve(null);
+  }
+  const Ctor = avBankOfflineCtor();
+  if (!Ctor) { st.lastPreviewError = "OfflineAudioContext unavailable"; return Promise.resolve(null); }
+  const boot = avBankBootFn();
+  if (!boot) { st.lastPreviewError = "avEngineBoot unavailable"; return Promise.resolve(null); }
+  return (async function () {
+    try {
+      const frames = Math.round(AV_BANK_PREVIEW_SR * AV_BANK_PREVIEW_SECS);
+      const oc = new Ctor(2, frames, AV_BANK_PREVIEW_SR);
+      if (!oc || typeof oc.startRendering !== "function") { st.lastPreviewError = "offline context unusable"; return null; }
+      const h = await boot(oc, { offline: true });
+      if (!h || h.ready !== true) { st.lastPreviewError = "offline engine boot failed"; return null; }
+      const refused = [];
+      for (let i = 0; i < parsed.rows.length; i++) {
+        const row = parsed.rows[i];
+        let okp = false;
+        try { okp = h.setParam(row.path, row.v) === true; } catch (e) { okp = false; }
+        if (!okp) refused.push(row.path);
+      }
+      const midi = avBankIsDrumKind(parsed.rows) ? 36 : 60;
+      let on = false;
+      try { on = h.noteOn(midi, AV_BANK_NOTE_GAIN) === true; } catch (e) { on = false; }
+      if (!on) { st.lastPreviewError = "note rejected by the offline engine"; return null; }
+      const buf = await oc.startRendering();
+      if (!buf || typeof buf.getChannelData !== "function") { st.lastPreviewError = "render produced no buffer"; return null; }
+      const stats = avBankBufferStats(buf);
+      if (!stats.finite || stats.peak <= AV_BANK_AUDIBLE) {
+        st.lastPreviewError = "render below the audibility floor (peak " + stats.peak + ")";
+        return null;
+      }
+      const receipt = {
+        ok: true, sr: AV_BANK_PREVIEW_SR, secs: AV_BANK_PREVIEW_SECS, frames: frames,
+        length: stats.length, midi: midi, gain: AV_BANK_NOTE_GAIN,
+        tier: (h.tier || h.mode || null), refused: refused, peak: stats.peak,
+        played: avBankPlayBuffer(buf), seq: hasSeq,
+      };
+      st.lastPreview = receipt;
+      return receipt;
+    } catch (e) {
+      st.lastPreviewError = String((e && (e.message || e.name)) || e) || "preview failed";
+      return null;
+    }
+  })();
+}
+
+/* ---------- installed packs via the guarded avStore API (sa-0) ---------- */
+
+function avBankPackNorm(rec) {
+  if (!rec || typeof rec !== "object") return null;
+  const src = (rec.pack && typeof rec.pack === "object") ? rec.pack : rec;
+  const id = (typeof src.id === "string" && src.id) ? src.id : ((typeof rec.id === "string" && rec.id) ? rec.id : null);
+  if (!id) return null;
+  const meta = (src.meta && typeof src.meta === "object") ? src.meta : null;
+  const name = (typeof src.name === "string" && src.name) ? src.name
+    : ((meta && typeof meta.name === "string" && meta.name) ? meta.name
+      : ((typeof rec.name === "string" && rec.name) ? rec.name : id));
+  const presets = Array.isArray(src.presets) ? src.presets : [];
+  const out = { id: id, name: name, meta: meta, presets: presets, count: presets.length };
+  if (typeof rec.sha256 === "string") out.sha256 = rec.sha256;
+  if (isFinite(Number(rec.size))) out.size = Number(rec.size);
+  if (isFinite(Number(rec.at))) out.at = Number(rec.at);
+  return out;
+}
+
+function avBankPacks() {
+  const f = avBankStoreInstalled();
+  if (!f) return [];
+  let raw = null;
+  try { raw = f(); } catch (e) { return []; }
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (let i = 0; i < raw.length; i++) {
+    const p = avBankPackNorm(raw[i]);
+    if (p) out.push(p);
+  }
+  return out;
+}
+
+/* flat preset list in PF bank-list shape (packId, packName, i, name, section, tags, patch, seq):
+   no argument = every installed pack; a packId = that pack only. */
+function avBankPresets(packId) {
+  const want = (typeof packId === "string" && packId) ? packId : null;
+  const packs = avBankPacks(), out = [];
+  for (let i = 0; i < packs.length; i++) {
+    const p = packs[i];
+    if (want && p.id !== want) continue;
+    for (let j = 0; j < p.presets.length; j++) {
+      const pr = p.presets[j];
+      if (!pr || typeof pr !== "object") continue;
+      out.push({
+        packId: p.id,
+        packName: p.name,
+        i: j,
+        name: (typeof pr.name === "string" && pr.name) ? pr.name : ("Preset " + (j + 1)),
+        section: (typeof pr.section === "string") ? pr.section : "",
+        tags: Array.isArray(pr.tags) ? pr.tags : [],
+        patch: (pr.patch && typeof pr.patch === "object" && !Array.isArray(pr.patch)) ? pr.patch : null,
+        seq: (pr.seq && typeof pr.seq === "object" && !Array.isArray(pr.seq)) ? pr.seq : null,
+      });
+    }
+  }
+  return out;
+}
+
+/* ---------- the BANK row (markup — pure string builders, no DOM) ---------- */
+
+const avBankEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function avBankRowHTML() {
+  return '<div class="av-bank" data-av-bank="1">' +
+    '<div class="av-bank-head"><span class="av-bank-title">BANK</span>' +
+    '<span class="av-bank-cap">installed packs &middot; APPLY loads a preset &middot; PREVIEW auditions it (2.0 s offline render)</span></div>' +
+    '<div class="av-bank-row">' +
+    '<label class="av-bank-pick"><span class="av-bank-pick-lbl">PACK</span>' +
+    '<select class="av-select av-bank-pack" aria-label="Bank — installed packs"></select></label>' +
+    '<label class="av-bank-pick"><span class="av-bank-pick-lbl">PRESET</span>' +
+    '<select class="av-select av-bank-preset" aria-label="Preset — selected pack"></select></label>' +
+    '<button type="button" class="av-btn mini av-bank-apply" aria-label="Apply the selected preset">APPLY</button>' +
+    '<button type="button" class="av-btn mini av-bank-preview" aria-label="Preview the selected preset">PREVIEW</button>' +
+    '</div>' +
+    '<p class="av-bank-hint av-note av-dim">0 packs installed — the PACKS card installs banks.</p>' +
+    "</div>";
+}
+
+function avBankPackOptionsHTML(packs, selId) {
+  if (!packs.length) return '<option value="">— no banks installed —</option>';
+  let out = "";
+  for (let i = 0; i < packs.length; i++) {
+    const p = packs[i];
+    out += '<option value="' + avBankEsc(p.id) + '"' + (p.id === selId ? " selected" : "") + ">" +
+      avBankEsc(p.name) + " (" + p.count + ")</option>";
+  }
+  return out;
+}
+
+function avBankPresetOptionsHTML(presets, selIndex) {
+  if (!presets.length) return '<option value="">— no presets —</option>';
+  let out = "";
+  for (let i = 0; i < presets.length; i++) {
+    const pr = presets[i];
+    const label = (pr.section ? pr.section + " · " : "") + pr.name;
+    out += '<option value="' + pr.i + '"' + (pr.i === selIndex ? " selected" : "") + ">" + avBankEsc(label) + "</option>";
+  }
+  return out;
+}
+
+/* ---------- DOM (page side; every reach guarded) ---------- */
+
+function avBankHint(text) {
+  try {
+    const host = avBankState.host;
+    if (!host || typeof host.querySelector !== "function") return false;
+    const el = host.querySelector(".av-bank-hint");
+    if (el) { el.textContent = String(text == null ? "" : text); return true; }
+  } catch (e) { /* hint is a nicety */ }
+  return false;
+}
+
+/* repaint both selects (+ the default hint) from the installed packs; keeps the current pick when
+   it still exists, else falls back to the first pack/preset. Safe with partial DOMs. */
+function avBankPaint(host) {
+  host = host || avBankState.host;
+  if (!host || typeof host.querySelector !== "function") return false;
+  try {
+    const st = avBankState;
+    const packs = avBankPacks();
+    let keep = false;
+    for (let i = 0; i < packs.length; i++) if (packs[i].id === st.packId) keep = true;
+    if (!keep) st.packId = packs.length ? packs[0].id : null;
+    const presets = st.packId ? avBankPresets(st.packId) : [];
+    let keepPreset = false;
+    for (let i = 0; i < presets.length; i++) if (presets[i].i === st.presetIndex) keepPreset = true;
+    if (!keepPreset) st.presetIndex = presets.length ? presets[0].i : -1;
+    const packSel = host.querySelector("select.av-bank-pack");
+    const presetSel = host.querySelector("select.av-bank-preset");
+    if (packSel) {
+      packSel.innerHTML = avBankPackOptionsHTML(packs, st.packId);
+      try { if (st.packId != null) packSel.value = st.packId; } catch (e) { /* value write refused */ }
+    }
+    if (presetSel) {
+      presetSel.innerHTML = avBankPresetOptionsHTML(presets, st.presetIndex);
+      try { if (st.presetIndex >= 0) presetSel.value = String(st.presetIndex); } catch (e) { /* value write refused */ }
+    }
+    const hint = host.querySelector(".av-bank-hint");
+    if (hint) {
+      if (!packs.length) hint.textContent = "0 packs installed — the PACKS card installs banks.";
+      else {
+        let n = 0;
+        for (let i = 0; i < packs.length; i++) n += packs[i].count;
+        hint.textContent = packs.length + " pack" + (packs.length === 1 ? "" : "s") + " · " + n + " presets — pick one, then APPLY or PREVIEW.";
+      }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avBankSelectedPreset() {
+  const st = avBankState;
+  if (!st.packId) return null;
+  const list = avBankPresets(st.packId);
+  for (let i = 0; i < list.length; i++) if (list[i].i === st.presetIndex) return list[i];
+  return list.length ? list[0] : null;
+}
+
+function avBankUiApply() {
+  const st = avBankState;
+  const preset = avBankSelectedPreset();
+  if (!preset) { avBankHint("nothing to apply — install a bank first."); return false; }
+  const ok = avBankApplyPreset(preset);
+  const r = st.lastApply;
+  if (ok) {
+    let msg = "applied: " + preset.name + " — " + r.accepted + "/" + r.forwarded + " paths";
+    if (r.seq) msg += " + seq";
+    avBankHint(msg + ".");
+  } else {
+    let why = "";
+    if (r && r.refused && r.refused.length) why = "refused: " + r.refused.slice(0, 3).join(", ") + (r.refused.length > 3 ? " …" : "");
+    else if (r && (r.seqError || r.reason)) why = r.seqError || r.reason;
+    let booting = false;
+    try { const w = (typeof window !== "undefined") ? window.__avEngine : null; booting = !(w && w.ready === true); } catch (e) { booting = false; }
+    avBankHint("apply refused: " + preset.name + (booting ? " — engine still booting (the mirror replays at boot)" : (why ? " — " + why : "")) + ".");
+  }
+  return ok;
+}
+
+function avBankUiPreview() {
+  const st = avBankState;
+  const preset = avBankSelectedPreset();
+  if (!preset) { avBankHint("nothing to preview — install a bank first."); return false; }
+  avBankHint("preview: rendering " + preset.name + " …");
+  const p = avBankPreview(preset.patch, preset.seq);
+  if (!p || typeof p.then !== "function") { avBankHint("preview unavailable here."); return false; }
+  p.then(function (r) {
+    if (r && r.ok) {
+      avBankHint("preview: " + preset.name + " — 2.0 s @ " + r.sr + " Hz · peak " + (Math.round(r.peak * 1000) / 1000) +
+        (r.played ? "." : " (rendered; no live out)."));
+    } else {
+      avBankHint("preview unavailable — " + (st.lastPreviewError || "unsupported here") + ".");
+    }
+  }).catch(function () {
+    avBankHint("preview unavailable — " + (st.lastPreviewError || "render failed") + ".");
+  });
+  return true;
+}
+
+function avBankEvtTarget(e) {
+  const t = e && e.target;
+  return (t && typeof t.closest === "function") ? t : null;
+}
+
+function avBankChange(e) {
+  const t = avBankEvtTarget(e);
+  if (!t) return;
+  const st = avBankState;
+  let sel = null;
+  try { sel = t.closest("select.av-bank-pack"); } catch (e2) { sel = null; }
+  if (sel) {
+    st.packId = (typeof sel.value === "string" && sel.value) ? sel.value : null;
+    st.presetIndex = -1;
+    avBankPaint();
+    return;
+  }
+  try { sel = t.closest("select.av-bank-preset"); } catch (e2) { sel = null; }
+  if (sel) {
+    const n = Math.round(Number(sel.value));
+    st.presetIndex = isFinite(n) ? n : -1;
+  }
+}
+
+function avBankClick(e) {
+  const t = avBankEvtTarget(e);
+  if (!t) return;
+  let hit = null;
+  try { hit = t.closest(".av-bank-apply"); } catch (e2) { hit = null; }
+  if (hit) { avBankUiApply(); return; }
+  try { hit = t.closest(".av-bank-preview"); } catch (e2) { hit = null; }
+  if (hit) avBankUiPreview();
+}
+
+function avBankWire(host) {
+  if (!host || typeof host.addEventListener !== "function") return false;
+  if (host.__avBankWired === true) return true;
+  host.__avBankWired = true;
+  host.addEventListener("change", avBankChange);
+  host.addEventListener("click", avBankClick);
+  return true;
+}
+
+/* ---------- mount (§4b: #av-synth-bank-host when present, else after the #av-synth h2) ---------- */
+
+function avBankMountHost() {
+  try {
+    const doc = (typeof document !== "undefined") ? document : null;
+    if (!doc || typeof doc.createElement !== "function") return null;
+    if (typeof doc.getElementById === "function") {
+      const primary = doc.getElementById("av-synth-bank-host");
+      if (primary) return primary;
+    }
+    if (typeof doc.querySelector !== "function") return null;
+    /* idempotent fallback wrap: reuse the one we already injected */
+    const existing = doc.querySelector("#av-synth .av-bank-wrap");
+    if (existing) return existing;
+    const h2 = doc.querySelector("#av-synth h2");
+    if (!h2 || !h2.parentNode || typeof h2.parentNode.insertBefore !== "function") return null;
+    const wrap = doc.createElement("div");
+    try { wrap.className = "av-bank-wrap"; } catch (e) { /* className refused — markup still lands */ }
+    h2.parentNode.insertBefore(wrap, h2.nextSibling || null);
+    return wrap;
+  } catch (e) { return null; }
+}
+
+/* mount the BANK row. false without a host (or without a DOM at all), never throws; re-mountable
+   (a second call rebuilds the markup from the live store — the sibling cards' discipline). */
+function avBankInit() {
+  const host = avBankMountHost();
+  if (!host) return false;
+  try {
+    host.innerHTML = avBankRowHTML();
+    avBankState.host = host;
+    avBankWire(host);
+    avBankPaint(host);
+    avBankState.mounted = true;
+    avBankState.mounts += 1;
+    return true;
+  } catch (e) {
+    try { console.warn("[anvil] bank row mount failed", e); } catch (e2) { /* console gone */ }
+    return false;
+  }
+}
+
+/* repaint hook for the parent/sa-1 after install/remove/hydrate (the store paint-hook seam) */
+function avBankRefresh() {
+  let host = avBankState.host;
+  if (!host) {
+    try {
+      const doc = (typeof document !== "undefined") ? document : null;
+      host = (doc && typeof doc.getElementById === "function") ? doc.getElementById("av-synth-bank-host") : null;
+    } catch (e) { host = null; }
+  }
+  if (!host) return false;
+  return avBankPaint(host);
+}
+
+/* ---------- css classes this row introduces (parent styles them in styles.css) ---------- */
+
+function avBankClasses() {
+  return [
+    "av-bank", "av-bank-wrap", "av-bank-head", "av-bank-title", "av-bank-cap", "av-bank-row",
+    "av-bank-pick", "av-bank-pick-lbl", "av-bank-pack", "av-bank-preset",
+    "av-bank-apply", "av-bank-preview", "av-bank-hint",
+  ];
+}
+
+/* ---------- observability (rigs + parent) ---------- */
+
+function avBankSnap() {
+  const st = avBankState;
+  let packs = [], presets = 0;
+  try {
+    packs = avBankPacks();
+    for (let i = 0; i < packs.length; i++) presets += packs[i].count;
+  } catch (e) { packs = []; }
+  let la = null, lp = null;
+  try { if (st.lastApply) la = JSON.parse(JSON.stringify(st.lastApply)); } catch (e) { la = null; }
+  try { if (st.lastPreview) lp = JSON.parse(JSON.stringify(st.lastPreview)); } catch (e) { lp = null; }
+  return {
+    version: AV_BANK_VERSION,
+    mounted: st.mounted === true,
+    mounts: st.mounts,
+    wired: !!(st.host && st.host.__avBankWired === true),
+    host: !!st.host,
+    packs: packs.length,
+    presets: presets,
+    packId: st.packId,
+    presetIndex: st.presetIndex,
+    previewing: !!st.activeSrc,
+    lastApply: la,
+    lastPreview: lp,
+    lastPreviewError: st.lastPreviewError,
+  };
+}
+
+/* ---------- debug handle (rigs + parent call these; names are the contract) ---------- */
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avBank = {
+      version: AV_BANK_VERSION,
+      init: function () { return avBankInit(); },
+      refresh: function () { return avBankRefresh(); },
+      apply: function (preset) { return avBankApplyPreset(preset); },
+      preview: function (patch, seq) { return avBankPreview(patch, seq); },
+      stop: function () { return avBankStopPreview(); },
+      presets: function (packId) { return avBankPresets(packId); },
+      packs: function () { return avBankPacks(); },
+      classes: function () { return avBankClasses(); },
+      snap: function () { return avBankSnap(); },
+    };
+  } catch (e) { /* no window — nothing to publish */ }
+}
+
+
+/* Anvil — PACK STORE card (P5 wave, child sa-1): the store UI mounted into the parent-owned
+   host `#av-store-host` (the parent adds the card at integration and calls avStoreUiInit();
+   this module only fills the host). Per verify/_p5_wave.md §4b and
+   research/reuse/store-port-digest.md §1.2/§3.4/§4/§5/§6.
+
+   WHAT THIS CARD IS (store card anatomy, adapted from Pattern Forge's packs page)
+   - header line (title + one honest cap line);
+   - search input (`#av-store-search`) + filter chips (`#av-store-filters` > `.av-pf-filter
+     [data-f=all|avail|installed]`, live counts in `.av-pf-n[data-count]` — never hardcoded);
+   - status line (`#av-store-status`, role=status) with the RETRY button (`#av-store-retry`)
+     on index errors; storage line (`#av-store-storage`) with the honest backend chip
+     (`#av-store-mode`: IndexedDB | localStorage (fallback) | memory only — this session only);
+   - INSTALLED section (`#av-store-installed`, count `#av-store-n-inst`) and AVAILABLE section
+     (`#av-store-avail`, count `#av-store-n-avail`); empty notes; the offline badge
+     (`.av-store-offline`) appears on installed cards whenever the pack host is unreachable
+     (index load error) — installed packs stay listed and keep working;
+   - card = `.av-pack-card[data-pack=<id>]` (`.installed` / `.busy` states) with `.av-pack-head`
+     (name + INSTALLED chip + count tag + engine + verified chips), clamped guide/blurb,
+     `.av-pack-foot` (size · sha256 prefix) and the action button
+     (`[data-act=install]` `.av-store-install` / `[data-act=remove]` `.av-store-remove`,
+     class `av-btn mini av-store-btn`). While an action runs the card is `.busy`, the button is
+     disabled, a `<progress class="av-store-prog">` (indeterminate) shows, and the status line
+     says what is happening.
+
+   LAW: ALL store state is read through the pinned store-core API with typeof guards only —
+   avStoreStatus() · avStoreInstalled() · avStoreIndex(force) · avStoreInstall(id) ·
+   avStoreRemove(id) (+ avStoreSetFetch is the core's seam, not touched here). The card keeps
+   NO store state of its own beyond UI state (search · filter · in-flight action · last
+   message). It never throws. No DOM at top level (loads in plain node / harness).
+
+   CORE RESULT NORMALIZATION (the core's exact receipt shape is sa-0's; we accept the honest
+   variants): install/remove promises may resolve `true`, a receipt `{ok:true|false, error}`,
+   or undefined; after an install claims success we ALWAYS re-read avStoreInstalled() — a
+   success that left no record is reported as a failure (a claimed install that cannot
+   persist is NOT shown as installed). Refusal copy follows the digest §3.2 vocabulary:
+   quota → "browser storage is full…", sha mismatch → "checksum mismatch…", removal refusal
+   → "storage refused the removal — the pack is still installed".
+
+   INDEX ENTRY ROUTES (all typeof-guarded; the entry accessor is a core seam): this card reads the
+   manifest entries from avStoreCatalog() / avStorePacks() / avStoreIndexEntries() if the core
+   ships one, else status().index.packs / status().manifest.packs / status().packs, else the last
+   index receipt it saw. As of the sa-0 core v1 only `status().index.count` is exposed — when the
+   count is known but no route yields entries, the card shows an honest note and zero available
+   cards (never invented rows); exposing the entries (st.index already holds {packs}) closes the
+   seam. The card also subscribes to avStoreOnChange() (guarded) so core paints repaint it.
+
+   SEAMS / UNDETERMINED (for the parent at integration):
+   - host id `#av-store-host`; the parent adds the card (suggested: a `.av-card` after the
+     Sequencer card) and calls avStoreUiInit() in the boot block like the other cards.
+   - the core's file:// policy is the core's own (seam/mock + honest note); this card only
+     paints what avStoreStatus() reports. If the core refuses network on file://, the card
+     shows "could not reach the pack host — installed packs stay available offline" and RETRY.
+   - auto index kick: init() asks the core for the index once (lazy manifest fetch on first
+     view, digest §6.2); later syncs may re-kick up to a small budget (4/session, >=1.2 s
+     apart) only while no index is known — avStoreUiRefresh(true) resets the budget. This
+     keeps the rig and the app honest without a polling loop.
+
+   OBSERVABLES: avStoreUiInit() -> bool (false without host, never throws, re-mountable)
+   · avStoreUiSync() -> bool (repaint from the core state) · avStoreUiClasses() -> string[]
+   (the NEW css classes; the parent styles them) · avStoreUiRefresh(force) -> Promise
+   ({ok, packs, error} — drives avStoreIndex through this card so the result is captured)
+   · window.__avStoreUi = { version, init, sync, classes, snap, refresh, install, remove }.
+
+   ID INVENTORY (rig + parent rely on these):
+     #av-store-search · #av-store-filters (`.av-pf-filter[data-f]`, `.av-pf-n[data-count]`)
+     #av-store-status · #av-store-retry · #av-store-storage · #av-store-mode · #av-store-used
+     #av-store-installed · #av-store-n-inst · #av-store-none-inst · #av-store-offline-note
+     #av-store-avail · #av-store-n-avail · #av-store-none-avail · #av-store-foot
+   CARD HOOKS: `.av-pack-card[data-pack]` (`.installed`/`.busy`) · `[data-act=install]` ·
+   `[data-act=remove]` · `.av-store-chip.inst` · `.av-store-chip.av-store-offline` ·
+   `progress.av-store-prog`.
+
+   ONE namespace avStoreUi* / AV_STORE_UI_*. ONE writer (child sa-1). Never throws. */
+
+"use strict";
+
+const AV_STORE_UI_VERSION = "p5.0";
+const AV_STORE_UI_ID_RE = /^[a-z0-9][a-z0-9._-]{0,62}$/i;
+const AV_STORE_UI_FILTERS = ["all", "avail", "installed"];
+const AV_STORE_UI_KICK_BUDGET = 4;
+const AV_STORE_UI_KICK_GAP_MS = 1200;
+
+/* UI-local state only — every store fact is read from the avStore* API per paint */
+const avStoreUiState = {
+  inited: false, mounts: 0,
+  search: "", filter: "all",
+  installing: "", removing: "",
+  lastMsg: "", lastMsgKind: "", lastError: "", lastErrKind: "",
+  lastIndex: null, indexLoading: false, indexTried: false, kickAt: 0, kickBudget: AV_STORE_UI_KICK_BUDGET,
+  usedText: "", usedAt: 0, subscribed: false,
+  lastHtml: { inst: null, avail: null },
+  counts: { all: 0, avail: 0, installed: 0, shown: 0 },
+  modeText: "storage: —", backend: "", offline: false, skipped: 0,
+};
+
+/* ---------- small pure helpers (no DOM) ---------- */
+
+const avStoreUiEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const avStoreUiNum = (v, d) => { const n = Number(v); return isFinite(n) ? n : d; };
+
+function avStoreUiClean(s, max) {
+  let t = String(s == null ? "" : s).replace(/\s+/g, " ").trim();
+  if (max && t.length > max) t = t.slice(0, max - 1) + "…";
+  return t;
+}
+
+function avStoreUiIdOK(id) {
+  try { return typeof id === "string" && id.length >= 1 && id.length <= 63 && AV_STORE_UI_ID_RE.test(id); } catch (e) { return false; }
+}
+
+function avStoreUiFmtSize(bytes) {
+  const n = Number(bytes);
+  if (!isFinite(n) || n <= 0) return "";
+  if (n < 1024) return Math.round(n) + " B";
+  if (n < 1048576) return (n / 1024).toFixed(1) + " KB";
+  return (n / 1048576).toFixed(2) + " MB";
+}
+
+function avStoreUiSizeNum(p) {
+  try {
+    const raw = (p && p.bytes != null) ? p.bytes : (p ? p.size : null);
+    const n = Number(raw);
+    return isFinite(n) && n > 0 ? n : null;
+  } catch (e) { return null; }
+}
+
+function avStoreUiCount(p) {
+  try {
+    const n = Number(p && p.presetCount);
+    if (isFinite(n) && n >= 0) return Math.round(n);
+    if (p && Array.isArray(p.presets)) return p.presets.length;
+    const m = Number(p && p.presets);
+    if (isFinite(m) && m >= 0) return Math.round(m);
+  } catch (e) { /* unknown */ }
+  return null;
+}
+
+/* manifest `verified` block (stamped by the canonical verifier; absent in v1 is fine) */
+function avStoreUiVerified(p) {
+  try {
+    const v = p ? p.verified : null;
+    if (v === true) return { ok: true, title: "verified by the canonical pack verifier" };
+    if (!v || typeof v !== "object") return null;
+    const errors = avStoreUiNum(v.errors, null);
+    const checked = avStoreUiNum(v.checked, null);
+    const ok = (v.ok === true) || (errors === 0 && checked != null && checked > 0);
+    const bits = [];
+    if (checked != null) bits.push(checked + " checked");
+    if (errors != null) bits.push(errors + " errors");
+    if (typeof v.engine === "string" && v.engine) bits.push(v.engine);
+    if (typeof v.date === "string" && v.date) bits.push(v.date);
+    return { ok: ok, title: (ok ? "verified" : "unverified") + (bits.length ? " — " + bits.join(" · ") : "") };
+  } catch (e) { return null; }
+}
+
+/* ---------- guarded store-core access (typeof only; never throws) ---------- */
+
+function avStoreUiHost() {
+  try {
+    if (typeof document !== "undefined" && document && typeof document.getElementById === "function") {
+      return document.getElementById("av-store-host");
+    }
+  } catch (e) { /* no document */ }
+  return null;
+}
+
+function avStoreUiStatusRaw() {
+  let s = null;
+  try { if (typeof avStoreStatus === "function") s = avStoreStatus(); } catch (e) { s = null; }
+  return (s && typeof s === "object") ? s : {};
+}
+
+function avStoreUiBackend(st) {
+  try {
+    let b = (st && (st.backend || st.mode || st.storageBackend || st.storage)) || "";
+    b = String(b).toLowerCase();
+    if (b === "idb" || b === "ls" || b === "mem") return b;
+  } catch (e) { /* unknown */ }
+  return "";
+}
+
+/* installed map: id -> record ({id,name,sha256,size,at,pack}); accepts map OR array */
+function avStoreUiInstalledMap() {
+  const out = {};
+  try {
+    if (typeof avStoreInstalled !== "function") return out;
+    const v = avStoreInstalled();
+    if (Array.isArray(v)) {
+      for (let i = 0; i < v.length && i < 500; i++) {
+        const r = v[i];
+        if (r && typeof r === "object" && avStoreUiIdOK(r.id)) out[r.id] = r;
+      }
+      return out;
+    }
+    if (v && typeof v === "object") {
+      for (const k in v) {
+        const r = v[k];
+        if (!r || typeof r !== "object") continue;
+        const id = avStoreUiIdOK(r.id) ? r.id : (avStoreUiIdOK(k) ? k : "");
+        if (id) out[id] = (r.id === id) ? r : Object.assign({ id: id }, r);
+      }
+    }
+  } catch (e) { return out; }
+  return out;
+}
+
+/* packs array from any candidate value: [...] | {packs:[...]} | {index:{packs:[...]}} */
+function avStoreUiPacksFrom(v) {
+  try {
+    if (Array.isArray(v)) return v;
+    if (v && typeof v === "object") {
+      if (Array.isArray(v.packs)) return v.packs;
+      if (v.index && Array.isArray(v.index.packs)) return v.index.packs;
+    }
+  } catch (e) { /* none */ }
+  return null;
+}
+
+/* the current index pack list. Routes, all typeof-guarded: the optional entry accessors
+   avStoreCatalog() / avStorePacks() / avStoreIndexEntries() (whichever the core ships), then
+   status.index.packs / status.manifest.packs / status.packs, then the last receipt we saw.
+   NOTE (see header seam): the shipping sa-0 core exposes only `index.count` today — when no
+   route yields entries this card reports the count honestly instead of inventing cards. */
+function avStoreUiIndexList() {
+  try {
+    const fns = ["avStoreCatalog", "avStorePacks", "avStoreIndexEntries"];
+    for (let i = 0; i < fns.length; i++) {
+      let fn = null;
+      try { if (typeof window !== "undefined" && window && typeof window[fns[i]] === "function") fn = window[fns[i]]; } catch (e) { fn = null; }
+      if (!fn) { try { if (typeof globalThis !== "undefined" && globalThis && typeof globalThis[fns[i]] === "function") fn = globalThis[fns[i]]; } catch (e) { fn = null; } }
+      if (fn) { const packs = avStoreUiPacksFrom(fn()); if (packs) return packs; }
+    }
+  } catch (e) { /* accessor blew up — fall through */ }
+  try {
+    const st = avStoreUiStatusRaw();
+    const cands = [];
+    if (st && st.index && typeof st.index === "object") cands.push(st.index);
+    if (st && st.manifest && typeof st.manifest === "object") cands.push(st.manifest);
+    if (st && Array.isArray(st.packs)) cands.push({ packs: st.packs });
+    if (avStoreUiState.lastIndex && typeof avStoreUiState.lastIndex === "object") cands.push(avStoreUiState.lastIndex);
+    for (let i = 0; i < cands.length; i++) { const packs = avStoreUiPacksFrom(cands[i]); if (packs) return packs; }
+  } catch (e) { /* no index */ }
+  return null;
+}
+
+/* the index COUNT as the core reports it (status.index.count — the summary route; works with
+   the shipping core even when the entries themselves are not exposed) */
+function avStoreUiIndexCount() {
+  try {
+    const st = avStoreUiStatusRaw();
+    if (st && st.index && typeof st.index === "object") {
+      const n = avStoreUiNum(st.index.count, null);
+      if (n != null && n >= 0) return Math.round(n);
+    }
+  } catch (e) { /* none */ }
+  return null;
+}
+
+function avStoreUiTakeIndex(res) {
+  try {
+    let packs = null;
+    if (Array.isArray(res)) packs = res;
+    else if (res && typeof res === "object") {
+      if (Array.isArray(res.packs)) packs = res.packs;
+      else if (res.index && Array.isArray(res.index.packs)) packs = res.index.packs;
+    }
+    if (!packs) return null;
+    avStoreUiState.lastIndex = { packs: packs };
+    return packs;
+  } catch (e) { return null; }
+}
+
+/* ---------- entry normalization ---------- */
+
+function avStoreUiEntry(p) {
+  try {
+    if (!p || typeof p !== "object") return null;
+    const id = String(p.id == null ? "" : p.id);
+    if (!avStoreUiIdOK(id)) return null;
+    const sha = (typeof p.sha256 === "string" && /^[0-9a-f]{8,64}$/i.test(p.sha256)) ? p.sha256.toLowerCase() : "";
+    return {
+      id: id,
+      name: avStoreUiClean(p.name != null ? p.name : id, 56) || id,
+      count: avStoreUiCount(p),
+      size: avStoreUiSizeNum(p),
+      tags: Array.isArray(p.tags) ? p.tags.slice(0, 4).map(t => avStoreUiClean(t, 18)).filter(Boolean) : [],
+      engine: (typeof p.engine === "string" && p.engine) ? avStoreUiClean(p.engine, 14) : "",
+      desc: avStoreUiClean(p.description || p.blurb || p.desc || "", 150),
+      sha: sha,
+      verified: avStoreUiVerified(p),
+      fromRecord: false,
+    };
+  } catch (e) { return null; }
+}
+
+function avStoreUiEntryFromRecord(id, r) {
+  try {
+    const rec = (r && typeof r === "object") ? r : {};
+    const pack = rec.pack;
+    let count = avStoreUiNum(rec.presetCount, null);
+    if (count != null) count = Math.round(count);
+    if (count == null && pack && typeof pack === "object" && Array.isArray(pack.presets)) count = pack.presets.length;
+    let engine = (typeof rec.engine === "string" && rec.engine) ? avStoreUiClean(rec.engine, 14) : "";
+    if (!engine && pack && typeof pack === "object" && pack.meta && typeof pack.meta === "object" && typeof pack.meta.engine === "string") {
+      engine = avStoreUiClean(pack.meta.engine, 14);
+    }
+    return {
+      id: id,
+      name: avStoreUiClean(rec.name != null ? rec.name : id, 56) || id,
+      count: count,
+      size: avStoreUiSizeNum(rec),
+      tags: Array.isArray(rec.tags) ? rec.tags.slice(0, 4).map(t => avStoreUiClean(t, 18)).filter(Boolean) : [],
+      engine: engine,
+      desc: "",
+      sha: (typeof rec.sha256 === "string") ? rec.sha256.toLowerCase() : "",
+      verified: null,
+      fromRecord: true,
+    };
+  } catch (e) { return null; }
+}
+
+function avStoreUiName(id) {
+  try {
+    const list = avStoreUiIndexList();
+    if (list) for (let i = 0; i < list.length; i++) {
+      if (list[i] && String(list[i].id) === id) return avStoreUiClean(list[i].name || id, 40);
+    }
+    const map = avStoreUiInstalledMap();
+    if (map[id] && map[id].name) return avStoreUiClean(map[id].name, 40);
+  } catch (e) { /* fall through */ }
+  return id;
+}
+
+/* ---------- status error probes (error / lastError; index-ish only) ---------- */
+
+function avStoreUiStatusErr(st) {
+  try {
+    if (st && typeof st.error === "string" && st.error) return st.error;
+    if (st && typeof st.lastError === "string" && st.lastError) return st.lastError;
+  } catch (e) { /* none */ }
+  return "";
+}
+
+function avStoreUiErrIndexish(e) {
+  const s = String(e == null ? "" : e);
+  return /^index/i.test(s) || /reach|fetch|network|unreachable|offline|timed|abort/i.test(s);
+}
+
+/* ---------- refusal copy (digest §3.2 vocabulary, adapted) ---------- */
+
+function avStoreUiRefusalText(err, what) {
+  const raw = String(err == null ? "" : err);
+  const e = raw.toLowerCase();
+  if (what === "index") {
+    if (/abort|timeout/.test(e)) return "pack index timed out — press RETRY";
+    if (/quota|full|space/.test(e)) return "browser storage is full — remove a pack, then retry";
+    if (e === "" || /fetch|network|failed|refused|unreachable|offline|load failed|scheme|file:/.test(e)) {
+      return "could not reach the pack host — installed packs stay available offline";
+    }
+    return "pack index failed (" + avStoreUiClean(raw, 70) + ")";
+  }
+  if (/sha|checksum|digest|mismatch/.test(e)) return "checksum mismatch — the pack was refused (not stored)";
+  if (/quota|full|space/.test(e)) return (what === "remove") ? "storage refused the removal — the pack is still installed" : "browser storage is full — remove a pack, then install again";
+  if (/abort|timeout/.test(e)) return "pack download timed out — nothing was installed";
+  if (/fetch|network|unreachable|offline|load failed/.test(e)) return "pack download failed — check the connection to the pack host";
+  if (/bad-?pack|parse|json|schema|invalid/.test(e)) return "bad pack file — refused";
+  if (/no-?id|slug/.test(e)) return "invalid pack id — refused";
+  if (/still-installed/.test(e)) return "storage refused the removal — the pack is still installed";
+  if (/no-?record/.test(e)) return "install did not land — nothing was stored";
+  if (/idb|indexeddb|closed|storage|blocked/.test(e)) return (what === "remove") ? "storage refused the removal — the pack is still installed" : "browser storage refused the write — nothing was installed";
+  if (e === "refused") return "the store refused — nothing was installed";
+  if (/threw/.test(e)) return (what === "remove" ? "removal failed — " : "install failed — ") + avStoreUiClean(raw, 70);
+  return (what === "remove" ? "removal failed (" : "install failed (") + (e ? avStoreUiClean(raw, 70) : "refused") + ")";
+}
+
+/* ---------- storage usage line (honest; optional nicety) ---------- */
+
+function avStoreUiUsageRefresh() {
+  try {
+    if (typeof navigator === "undefined" || !navigator || !navigator.storage || typeof navigator.storage.estimate !== "function") return false;
+    if (Date.now() - (avStoreUiState.usedAt | 0) < 8000) return false;
+    avStoreUiState.usedAt = Date.now();
+    Promise.resolve(navigator.storage.estimate()).then(est => {
+      try {
+        if (!est || !isFinite(est.usage)) { avStoreUiState.usedText = ""; return; }
+        const u = avStoreUiFmtSize(est.usage);
+        avStoreUiState.usedText = u ? (u + " stored") : "";
+        avStoreUiSync();
+      } catch (e) { /* ignore */ }
+    }).catch(() => { /* ignore */ });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the view model (pure read of core state + UI state) ---------- */
+
+function avStoreUiSearchTokens() {
+  const q = avStoreUiClean(avStoreUiState.search, 80).toLowerCase();
+  if (!q) return [];
+  return q.split(" ").filter(Boolean).slice(0, 6);
+}
+
+function avStoreUiMatch(e, tokens) {
+  if (!tokens.length) return true;
+  const hay = (e.id + " " + e.name + " " + e.desc + " " + e.tags.join(" ") + " " + e.engine).toLowerCase();
+  for (let i = 0; i < tokens.length; i++) if (hay.indexOf(tokens[i]) < 0) return false;
+  return true;
+}
+
+function avStoreUiModeText(backend) {
+  if (backend === "idb") return { text: "storage: IndexedDB", cls: "idb", title: "installed packs persist in IndexedDB (av-packs-store) — they survive reloads and work offline" };
+  if (backend === "ls") return { text: "storage: localStorage (fallback)", cls: "ls", title: "IndexedDB is unavailable — the localStorage fallback tier is active (small packs only)" };
+  if (backend === "mem") return { text: "storage: memory only — this session only", cls: "mem", title: "no browser storage is available — installs live for this session only and vanish on reload" };
+  return { text: "storage: —", cls: "", title: "the store core has not reported a storage backend yet" };
+}
+
+function avStoreUiStatusText() {
+  const ui = avStoreUiState;
+  if (ui.installing) return { text: "installing " + avStoreUiName(ui.installing) + "…", kind: "msg" };
+  if (ui.removing) return { text: "removing " + avStoreUiName(ui.removing) + "…", kind: "msg" };
+  if (ui.lastError) return { text: ui.lastError, kind: "err" };
+  if (ui.indexLoading) return { text: "loading the pack index…", kind: "msg" };
+  const list = avStoreUiIndexList();
+  if (list) return { text: ui.lastMsg || ("pack index ready — " + list.length + " pack" + (list.length === 1 ? "" : "s")), kind: "msg" };
+  if (typeof avStoreIndex !== "function") return { text: "store core is not loaded — the pack list is unavailable", kind: "msg" };
+  if (!ui.indexTried) return { text: "pack index not loaded yet — press RETRY", kind: "msg" };
+  return { text: "pack index unavailable", kind: "err" };
+}
+
+function avStoreUiModel() {
+  const st = avStoreUiStatusRaw();
+  const backend = avStoreUiBackend(st);
+  const mode = avStoreUiModeText(backend);
+  const installedMap = avStoreUiInstalledMap();
+  const indexList = avStoreUiIndexList();
+  const idxCount = avStoreUiIndexCount();
+  let indexNote = "";
+  if (!indexList && idxCount != null && idxCount > 0) {
+    indexNote = "the pack index reports " + idxCount + " pack" + (idxCount === 1 ? "" : "s") + ", but the store core does not expose the index entries to this card yet — the sa-0 seam must carry them (avStoreStatus().index.packs)";
+  }
+  const installedIds = Object.keys(installedMap);
+  let skipped = 0;
+  const entries = [];
+  if (indexList) {
+    const cap = Math.min(indexList.length, 500);
+    for (let i = 0; i < cap; i++) {
+      const e = avStoreUiEntry(indexList[i]);
+      if (e) entries.push(e); else skipped += 1;
+    }
+  }
+  const inIndex = {};
+  for (let i = 0; i < entries.length; i++) inIndex[entries[i].id] = true;
+  const installedEntries = [];
+  const installedOnly = [];
+  for (let i = 0; i < entries.length; i++) if (installedMap[entries[i].id]) installedEntries.push(entries[i]);
+  for (let i = 0; i < installedIds.length; i++) {
+    const id = installedIds[i];
+    if (!inIndex[id]) {
+      const e = avStoreUiEntryFromRecord(id, installedMap[id]);
+      if (e) installedOnly.push(e);
+    }
+  }
+  const tokens = avStoreUiSearchTokens();
+  const availAll = entries.filter(e => !installedMap[e.id]);
+  const avail = (avStoreUiState.filter === "installed") ? [] : availAll.filter(e => avStoreUiMatch(e, tokens));
+  let instAll = installedEntries.concat(installedOnly);
+  const inst = (avStoreUiState.filter === "avail") ? [] : instAll.filter(e => avStoreUiMatch(e, tokens));
+  const union = {};
+  for (let i = 0; i < entries.length; i++) union[entries[i].id] = 1;
+  for (let i = 0; i < installedIds.length; i++) union[installedIds[i]] = 1;
+  const stErrRaw = avStoreUiStatusErr(st);
+  const offline = installedIds.length > 0 && (
+    avStoreUiState.lastErrKind === "index" ||
+    (stErrRaw !== "" && avStoreUiErrIndexish(stErrRaw))
+  );
+  const status = avStoreUiStatusText();
+  return {
+    coreOk: (typeof avStoreIndex === "function") || (typeof avStoreInstall === "function") || (typeof avStoreStatus === "function"),
+    backend: backend,
+    modeText: mode.text, modeClass: mode.cls, modeTitle: mode.title,
+    filter: avStoreUiState.filter, search: avStoreUiState.search,
+    indexOk: !!indexList, indexLoading: !!avStoreUiState.indexLoading, offline: offline,
+    indexCount: idxCount, indexNote: indexNote,
+    counts: { all: Object.keys(union).length, avail: availAll.length, installed: installedIds.length, shown: avail.length + inst.length },
+    avail: avail, installedCards: inst, allInstalled: instAll.length,
+    skipped: skipped,
+    statusText: status.text, statusKind: status.kind,
+    canRetry: typeof avStoreIndex === "function",
+    usedText: avStoreUiState.usedText || "",
+    installing: avStoreUiState.installing, removing: avStoreUiState.removing,
+  };
+}
+
+/* ---------- markup (pure string builders) ---------- */
+
+function avStoreUiCardHTML(e, installed, offline) {
+  const busy = (avStoreUiState.installing === e.id) || (avStoreUiState.removing === e.id);
+  const isRemoving = avStoreUiState.removing === e.id;
+  let chips = "";
+  if (installed) chips += '<span class="av-store-chip inst" title="installed — stored locally, works offline">INSTALLED</span>';
+  if (e.count != null) chips += '<span class="av-pack-tag">' + e.count + " preset" + (e.count === 1 ? "" : "s") + "</span>";
+  if (e.engine) chips += '<span class="av-store-chip eng">' + avStoreUiEsc(e.engine) + "</span>";
+  const ver = e.verified;
+  if (ver) chips += '<span class="av-store-chip av-store-ver ' + (ver.ok ? "ok" : "warn") + '" title="' + avStoreUiEsc(ver.title) + '">' + (ver.ok ? "✓ verified" : "⚠ unverified") + "</span>";
+  if (installed && offline) chips += '<span class="av-store-chip av-store-offline" title="the pack host is unreachable — this pack still loads from local storage">OFFLINE</span>';
+  const meta = [];
+  const sizeTxt = avStoreUiFmtSize(e.size);
+  if (sizeTxt) meta.push(sizeTxt);
+  if (e.sha) meta.push("sha256 " + e.sha.slice(0, 10) + "…");
+  let guide = "";
+  if (e.desc) guide = avStoreUiEsc(e.desc);
+  else if (e.tags.length) guide = e.tags.map(t => "#" + avStoreUiEsc(t)).join(" ");
+  else if (e.fromRecord) guide = "from local storage — the pack file is not in the current index";
+  const act = installed
+    ? '<button type="button" class="av-btn mini av-store-btn av-store-remove" data-act="remove"' + (busy ? ' disabled' : '') + ' title="Remove this pack from local storage">' + (isRemoving ? "REMOVING…" : "REMOVE") + "</button>"
+    : '<button type="button" class="av-btn mini av-store-btn av-store-install" data-act="install"' + (busy ? ' disabled' : '') + ' title="Download, verify sha-256, then store this pack">' + (busy ? "INSTALLING…" : "INSTALL") + "</button>";
+  const prog = busy ? '<progress class="av-store-prog" max="100" aria-label="action in progress"></progress>' : "";
+  return '<div class="av-pack-card' + (installed ? " installed" : "") + (busy ? " busy" : "") + '" data-pack="' + avStoreUiEsc(e.id) + '"' + (busy ? ' aria-busy="true"' : "") + ">" +
+    '<div class="av-pack-head"><span class="av-pack-name" title="' + avStoreUiEsc(e.id) + '">' + avStoreUiEsc(e.name) + "</span>" + chips + "</div>" +
+    (guide ? '<p class="av-pack-guide av-pack-blurb" title="' + avStoreUiEsc(e.desc || "") + '">' + guide + "</p>" : "") +
+    '<div class="av-pack-foot"><span class="av-pack-meta">' + (meta.length ? avStoreUiEsc(meta.join(" · ")) : "&nbsp;") + "</span>" + prog + act + "</div>" +
+    "</div>";
+}
+
+function avStoreUiChromeHTML() {
+  return '<div class="av-store" data-av-store="1">' +
+    '<div class="av-store-head"><span class="av-store-title">PACK STORE</span>' +
+    '<span class="av-store-cap">packs download once, verify sha-256 before commit, and stay available offline — a failed verify is refused, never installed</span></div>' +
+    '<div class="av-store-controls">' +
+    '<input type="text" class="av-store-search" id="av-store-search" spellcheck="false" autocomplete="off" placeholder="search — name · tags · engine" aria-label="Search the pack store">' +
+    '<div class="av-store-filters" id="av-store-filters" role="group" aria-label="Filter packs">' +
+    '<button type="button" class="av-pf-filter on" data-f="all" aria-pressed="true">ALL <span class="av-pf-n" data-count="all">0</span></button>' +
+    '<button type="button" class="av-pf-filter" data-f="avail" aria-pressed="false">AVAILABLE <span class="av-pf-n" data-count="avail">0</span></button>' +
+    '<button type="button" class="av-pf-filter" data-f="installed" aria-pressed="false">INSTALLED <span class="av-pf-n" data-count="installed">0</span></button>' +
+    "</div></div>" +
+    '<div class="av-store-status-line">' +
+    '<span class="av-store-status av-store-msg" id="av-store-status" role="status">loading the pack index…</span>' +
+    '<button type="button" class="av-btn mini av-store-retry" id="av-store-retry" hidden title="Re-fetch the pack index">RETRY</button>' +
+    "</div>" +
+    '<div class="av-store-storage"><span class="av-store-chip av-store-mode" id="av-store-mode" title="">storage: —</span>' +
+    '<span class="av-store-used" id="av-store-used"></span></div>' +
+    '<section class="av-store-sect" data-sect="installed">' +
+    '<div class="av-store-sect-head"><span class="av-pack-sect">INSTALLED</span><span class="av-pack-sect-n" id="av-store-n-inst">0</span>' +
+    '<span class="av-store-offline-note av-store-note" id="av-store-offline-note" hidden></span></div>' +
+    '<div class="av-store-list" id="av-store-installed"></div>' +
+    '<p class="av-store-note av-store-none-note" id="av-store-none-inst">No packs installed yet — install one from AVAILABLE below; it works offline afterwards.</p></section>' +
+    '<section class="av-store-sect" data-sect="avail">' +
+    '<div class="av-store-sect-head"><span class="av-pack-sect">AVAILABLE</span><span class="av-pack-sect-n" id="av-store-n-avail">0</span></div>' +
+    '<div class="av-store-list" id="av-store-avail"></div>' +
+    '<p class="av-store-note av-store-none-note" id="av-store-none-avail"></p></section>' +
+    '<p class="av-store-note" id="av-store-foot">Every install lands in this browser first (IndexedDB <b>av-packs-store</b> · localStorage fallback · memory last). Nothing is shown as installed unless it was actually stored — and a pack whose sha-256 does not match the manifest is refused before anything is committed.</p>' +
+    "</div>";
+}
+
+/* ---------- repaint ---------- */
+
+function avStoreUiSetText(host, sel, txt) {
+  try { const el = host.querySelector(sel); if (el && el.textContent !== txt) el.textContent = txt; } catch (e) { /* no DOM */ }
+}
+
+function avStoreUiPaint() {
+  const host = avStoreUiHost();
+  if (!host) return false;
+  try {
+    let card = null;
+    try { card = host.querySelector(".av-store"); } catch (e) { card = null; }
+    if (!card) {
+      host.innerHTML = avStoreUiChromeHTML();
+      avStoreUiWire(host);
+    }
+    const m = avStoreUiModel();
+
+    /* filter chips: live counts + .on state (never hardcoded) */
+    try {
+      host.querySelectorAll("[data-count]").forEach(n => {
+        const k = n.getAttribute("data-count");
+        if (k && m.counts[k] != null && n.textContent !== String(m.counts[k])) n.textContent = String(m.counts[k]);
+      });
+      host.querySelectorAll(".av-pf-filter").forEach(b => {
+        const on = b.getAttribute("data-f") === m.filter;
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+    } catch (e) { /* no DOM */ }
+
+    /* search echo (never clobber active typing) */
+    try {
+      const si = host.querySelector("#av-store-search");
+      if (si && si.value !== avStoreUiState.search) si.value = avStoreUiState.search;
+    } catch (e) { /* no DOM */ }
+
+    /* lists (memoized innerHTML — no churn) */
+    const instHtml = m.installedCards.map(e => avStoreUiCardHTML(e, true, m.offline)).join("");
+    const availHtml = m.avail.map(e => avStoreUiCardHTML(e, false, false)).join("");
+    try {
+      const li = host.querySelector("#av-store-installed");
+      if (li && avStoreUiState.lastHtml.inst !== instHtml) { avStoreUiState.lastHtml.inst = instHtml; li.innerHTML = instHtml; }
+      const la = host.querySelector("#av-store-avail");
+      if (la && avStoreUiState.lastHtml.avail !== availHtml) { avStoreUiState.lastHtml.avail = availHtml; la.innerHTML = availHtml; }
+    } catch (e) { /* no DOM */ }
+
+    /* section counts + empty notes + offline note */
+    avStoreUiSetText(host, "#av-store-n-inst", String(m.counts.installed));
+    avStoreUiSetText(host, "#av-store-n-avail", String(m.counts.avail));
+    try {
+      const noneInst = host.querySelector("#av-store-none-inst");
+      if (noneInst) {
+        noneInst.hidden = m.installedCards.length > 0;
+        noneInst.textContent = (m.counts.installed > 0)
+          ? "Installed packs are hidden by the current filter or search."
+          : "No packs installed yet — install one from AVAILABLE below; it works offline afterwards.";
+      }
+      const noneAvail = host.querySelector("#av-store-none-avail");
+      if (noneAvail) {
+        noneAvail.hidden = m.avail.length > 0;
+        noneAvail.textContent = m.indexOk
+          ? (m.filter === "installed" ? "Showing installed packs only — switch the filter to AVAILABLE or ALL."
+            : (avStoreUiSearchTokens().length ? "No packs match this search." : "Nothing available — everything in the index is installed."))
+          : (m.indexNote ? ("Pack list unavailable here — " + m.indexNote + ".")
+            : (m.offline ? "Pack list unavailable — could not reach the pack host; installed packs stay available offline."
+              : "No pack index yet — RETRY once the pack host is reachable."));
+      }
+      const offl = host.querySelector("#av-store-offline-note");
+      if (offl) {
+        offl.hidden = !m.offline;
+        offl.textContent = m.offline ? "— host unreachable; packs below come from local storage" : "";
+      }
+    } catch (e) { /* no DOM */ }
+
+    /* status line + retry */
+    try {
+      const st = host.querySelector("#av-store-status");
+      if (st) {
+        const cls = "av-store-status " + (m.statusKind === "err" ? "av-store-err" : "av-store-msg");
+        if (st.className !== cls) st.className = cls;
+        if (st.textContent !== m.statusText) st.textContent = m.statusText;
+      }
+      const retry = host.querySelector("#av-store-retry");
+      if (retry) retry.hidden = !(m.statusKind === "err" && m.canRetry);
+    } catch (e) { /* no DOM */ }
+
+    /* storage line */
+    try {
+      const mode = host.querySelector("#av-store-mode");
+      if (mode) {
+        const cls = "av-store-chip av-store-mode" + (m.modeClass ? " " + m.modeClass : "");
+        if (mode.className !== cls) mode.className = cls;
+        if (mode.textContent !== m.modeText) mode.textContent = m.modeText;
+        if (mode.getAttribute("title") !== m.modeTitle) mode.setAttribute("title", m.modeTitle);
+      }
+      const used = host.querySelector("#av-store-used");
+      if (used && used.textContent !== m.usedText) used.textContent = m.usedText;
+    } catch (e) { /* no DOM */ }
+
+    /* cache the model summary for snap() diagnostics */
+    avStoreUiState.counts = m.counts;
+    avStoreUiState.modeText = m.modeText;
+    avStoreUiState.backend = m.backend;
+    avStoreUiState.offline = m.offline;
+    avStoreUiState.skipped = m.skipped;
+    return true;
+  } catch (e) {
+    console.warn("[anvil] store paint failed", e);
+    return false;
+  }
+}
+
+/* ---------- the auto index kick (bounded; see header seams) ---------- */
+
+function avStoreUiMaybeKick() {
+  try {
+    if (typeof avStoreIndex !== "function") return false;
+    if (avStoreUiState.indexLoading) return false;
+    if (avStoreUiIndexList()) return false;
+    if ((avStoreUiState.kickBudget | 0) <= 0) return false;
+    const now = Date.now();
+    if (now - (avStoreUiState.kickAt | 0) < AV_STORE_UI_KICK_GAP_MS) return false;
+    avStoreUiState.kickBudget -= 1;
+    avStoreUiRefresh(false);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- sync (repaint from the core state; the parent/rig call this after external writes) ---------- */
+
+function avStoreUiSync() {
+  const host = avStoreUiHost();
+  if (!host) return false;
+  const ok = avStoreUiPaint();
+  avStoreUiMaybeKick();
+  return ok;
+}
+
+/* ---------- actions ---------- */
+
+function avStoreUiRefresh(force) {
+  return new Promise((resolve) => {
+    if (typeof avStoreIndex !== "function") {
+      avStoreUiState.lastMsg = "store core is not loaded — the pack list is unavailable";
+      avStoreUiState.lastMsgKind = "index";
+      avStoreUiSync();
+      resolve({ ok: false, packs: 0, error: "no store core" });
+      return;
+    }
+    let p = null;
+    try {
+      avStoreUiState.indexLoading = true;
+      avStoreUiState.indexTried = true;
+      avStoreUiState.kickAt = Date.now();
+      avStoreUiState.kickBudget = (force === true) ? AV_STORE_UI_KICK_BUDGET : avStoreUiState.kickBudget;
+      avStoreUiSync();
+      p = avStoreIndex(force === true);
+      if (p && typeof p.then !== "function") p = null;   /* a sync core still lands via status */
+    } catch (e) {
+      p = Promise.reject(e);
+    }
+    Promise.resolve(p).then((res) => {
+      const list = avStoreUiTakeIndex(res);
+      avStoreUiState.indexLoading = false;
+      /* verdict: a FRESH list from the receipt wins; otherwise any failure signal (a receipt
+         {ok:false,error} or an error the core reports in status) is surfaced honestly even
+         when a stale cached list is still renderable — the refetch failed either way. */
+      let resFail = "";
+      try {
+        if (res && typeof res === "object") {
+          if (res.ok === false) resFail = String(res.error || res.reason || "refused");
+          else if (res.ok !== true && typeof res.error === "string" && res.error) resFail = res.error;
+        }
+      } catch (e) { resFail = ""; }
+      const st = avStoreUiStatusRaw();
+      const stErrRaw = avStoreUiStatusErr(st);
+      const stErr = avStoreUiErrIndexish(stErrRaw) ? stErrRaw : "";
+      const cached = avStoreUiIndexList();
+      const idxCount = avStoreUiIndexCount();
+      const stReady = !!(res && typeof res === "object" && res.ok === true) ||
+        (!!(st && st.index && typeof st.index === "object" && st.index.status === "ready")) ||
+        (idxCount != null && idxCount > 0);
+      let out;
+      if (list) {
+        out = { ok: true, packs: list.length, error: "" };
+      } else if (resFail) {
+        out = { ok: false, packs: cached ? cached.length : (idxCount || 0), error: resFail, stale: !!cached };
+      } else if (stErr) {
+        out = { ok: false, packs: cached ? cached.length : (idxCount || 0), error: stErr, stale: !!cached };
+      } else if (cached) {
+        out = { ok: true, packs: cached.length, error: "" };
+      } else if (stReady) {
+        /* the index loaded (count is known) but no route yields the entries to this card */
+        out = { ok: true, packs: idxCount || (res && typeof res === "object" && isFinite(res.count) ? res.count : 0), error: "", entries: false };
+      } else {
+        out = { ok: false, packs: 0, error: "no index" };
+      }
+      if (!out.ok && avStoreUiState.lastErrKind !== "install" && avStoreUiState.lastErrKind !== "remove") {
+        avStoreUiState.lastError = avStoreUiRefusalText(out.error || "no index", "index");
+        avStoreUiState.lastErrKind = "index";
+      }
+      if (out.ok) {
+        avStoreUiState.lastMsg = "pack index ready — " + out.packs + " pack" + (out.packs === 1 ? "" : "s");
+        avStoreUiState.lastMsgKind = "index";
+        if (avStoreUiState.lastErrKind === "index") { avStoreUiState.lastError = ""; avStoreUiState.lastErrKind = ""; }
+        avStoreUiUsageRefresh();
+      }
+      avStoreUiSync();
+      resolve(out);
+    }).catch((err) => {
+      avStoreUiState.indexLoading = false;
+      const msg = String((err && err.message) || err || "fetch failed");
+      if (avStoreUiState.lastErrKind !== "install" && avStoreUiState.lastErrKind !== "remove") {
+        avStoreUiState.lastError = avStoreUiRefusalText(msg, "index");
+        avStoreUiState.lastErrKind = "index";
+      }
+      avStoreUiSync();
+      resolve({ ok: false, packs: 0, error: msg });
+    });
+  });
+}
+
+function avStoreUiVerifyStored(id, base) {
+  try {
+    const map = avStoreUiInstalledMap();
+    if (Object.prototype.hasOwnProperty.call(map, id)) return base;
+    return { ok: false, error: "no-record" };
+  } catch (e) { return { ok: false, error: "no-record" }; }
+}
+
+function avStoreUiInstallVerdict(res, id) {
+  try {
+    if (res === true || res === undefined) return avStoreUiVerifyStored(id, { ok: true });
+    if (res === false || res === null) return { ok: false, error: "refused" };
+    if (res && typeof res === "object") {
+      if (res.ok === true) return avStoreUiVerifyStored(id, { ok: true, backend: res.backend });
+      const e = res.error || res.reason || res.why || res.message;
+      return { ok: false, error: (typeof e === "string" && e) ? e : "refused" };
+    }
+    return avStoreUiVerifyStored(id, { ok: true });
+  } catch (e) { return { ok: false, error: "refused" }; }
+}
+
+function avStoreUiSettleInstall(id, verdict) {
+  try {
+    if (avStoreUiState.installing === id) avStoreUiState.installing = "";
+    if (verdict && verdict.ok) {
+      let suffix = "";
+      if (verdict.backend === "mem") suffix = " — this session only: no browser storage available";
+      else if (verdict.backend === "ls") suffix = " (localStorage fallback)";
+      avStoreUiState.lastMsg = "installed " + avStoreUiName(id) + suffix;
+      avStoreUiState.lastMsgKind = "install";
+      if (avStoreUiState.lastErrKind === "install") { avStoreUiState.lastError = ""; avStoreUiState.lastErrKind = ""; }
+    } else {
+      avStoreUiState.lastError = avStoreUiRefusalText((verdict && verdict.error) || "refused", "install");
+      avStoreUiState.lastErrKind = "install";
+    }
+    avStoreUiUsageRefresh();
+  } catch (e) { /* settle never throws */ }
+  avStoreUiSync();
+}
+
+function avStoreUiInstall(id) {
+  if (!avStoreUiIdOK(id)) return false;
+  if (avStoreUiState.installing) return false;
+  if (typeof avStoreInstall !== "function") {
+    avStoreUiState.lastError = "store core is not loaded — install is unavailable";
+    avStoreUiState.lastErrKind = "install";
+    avStoreUiSync();
+    return false;
+  }
+  avStoreUiState.installing = id;
+  if (avStoreUiState.lastErrKind === "install") { avStoreUiState.lastError = ""; avStoreUiState.lastErrKind = ""; }
+  avStoreUiSync();
+  let p = null;
+  try { p = avStoreInstall(id); } catch (e) {
+    avStoreUiSettleInstall(id, { ok: false, error: "threw: " + String((e && e.message) || e) });
+    return true;
+  }
+  Promise.resolve(p).then((res) => {
+    avStoreUiSettleInstall(id, avStoreUiInstallVerdict(res, id));
+  }).catch((err) => {
+    avStoreUiSettleInstall(id, { ok: false, error: String((err && err.message) || err || "install failed") });
+  });
+  return true;
+}
+
+function avStoreUiRemoveVerdict(res, id) {
+  try {
+    if (res === false || res === null) return { ok: false, error: "refused" };
+    if (res && typeof res === "object" && res.ok === false) return { ok: false, error: String(res.error || res.reason || "refused") };
+    const map = avStoreUiInstalledMap();
+    if (!Object.prototype.hasOwnProperty.call(map, id)) return { ok: true };
+    return { ok: false, error: "still-installed" };
+  } catch (e) { return { ok: false, error: "refused" }; }
+}
+
+function avStoreUiSettleRemove(id, verdict) {
+  try {
+    if (avStoreUiState.removing === id) avStoreUiState.removing = "";
+    if (verdict && verdict.ok) {
+      avStoreUiState.lastMsg = "removed " + avStoreUiName(id);
+      avStoreUiState.lastMsgKind = "remove";
+      if (avStoreUiState.lastErrKind === "remove") { avStoreUiState.lastError = ""; avStoreUiState.lastErrKind = ""; }
+    } else {
+      avStoreUiState.lastError = avStoreUiRefusalText((verdict && verdict.error) || "refused", "remove");
+      avStoreUiState.lastErrKind = "remove";
+    }
+    avStoreUiUsageRefresh();
+  } catch (e) { /* settle never throws */ }
+  avStoreUiSync();
+}
+
+function avStoreUiRemove(id) {
+  if (!avStoreUiIdOK(id)) return false;
+  if (avStoreUiState.removing) return false;
+  if (typeof avStoreRemove !== "function") {
+    avStoreUiState.lastError = "store core is not loaded — remove is unavailable";
+    avStoreUiState.lastErrKind = "remove";
+    avStoreUiSync();
+    return false;
+  }
+  avStoreUiState.removing = id;
+  if (avStoreUiState.lastErrKind === "remove") { avStoreUiState.lastError = ""; avStoreUiState.lastErrKind = ""; }
+  avStoreUiSync();
+  let p = null;
+  try { p = avStoreRemove(id); } catch (e) {
+    avStoreUiSettleRemove(id, { ok: false, error: "threw: " + String((e && e.message) || e) });
+    return true;
+  }
+  Promise.resolve(p).then((res) => {
+    avStoreUiSettleRemove(id, avStoreUiRemoveVerdict(res, id));
+  }).catch((err) => {
+    avStoreUiSettleRemove(id, { ok: false, error: String((err && err.message) || err || "removal failed") });
+  });
+  return true;
+}
+
+/* ---------- wiring (delegated, bound ONCE per host element) ---------- */
+
+function avStoreUiClick(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    const f = t.closest(".av-pf-filter[data-f]");
+    if (f) {
+      const v = String(f.getAttribute("data-f") || "all");
+      avStoreUiState.filter = (AV_STORE_UI_FILTERS.indexOf(v) >= 0) ? v : "all";
+      avStoreUiSync();
+      return;
+    }
+    const act = t.closest("[data-act]");
+    if (act) {
+      const card = act.closest("[data-pack]");
+      const id = card ? String(card.getAttribute("data-pack") || "") : "";
+      if (!id || !avStoreUiIdOK(id)) return;
+      const what = String(act.getAttribute("data-act") || "");
+      if (what === "install") { avStoreUiInstall(id); return; }
+      if (what === "remove") { avStoreUiRemove(id); return; }
+    }
+    if (t.closest("#av-store-retry")) { avStoreUiRefresh(true); return; }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+function avStoreUiInput(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t || !t.closest("#av-store-search")) return;
+    avStoreUiState.search = String(t.value == null ? "" : t.value).slice(0, 80);
+    avStoreUiSync();
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+function avStoreUiWire(host) {
+  if (!host || typeof host.addEventListener !== "function") return false;
+  try {
+    if (host.dataset && host.dataset.avStoreUiWired === "1") return true;   /* one delegation per host element */
+    if (host.dataset) host.dataset.avStoreUiWired = "1";
+    host.addEventListener("click", avStoreUiClick);
+    host.addEventListener("input", avStoreUiInput);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* subscribe to the core's change paints (avStoreOnChange), once per module instance; the core
+   fires it after index load/failure, installs, removals and late adoption (guarded both ways) */
+function avStoreUiSubscribe() {
+  try {
+    if (avStoreUiState.subscribed) return false;
+    if (typeof avStoreOnChange !== "function") return false;
+    const ok = avStoreOnChange(function () { try { avStoreUiSync(); } catch (e) { /* never break the store */ } }) === true;
+    if (ok) avStoreUiState.subscribed = true;
+    return ok;
+  } catch (e) { return false; }
+}
+
+/* ---------- init (mount, re-mountable) ---------- */
+
+function avStoreUiInit() {
+  const host = avStoreUiHost();
+  if (!host) return false;
+  try {
+    if (!host.querySelector(".av-store")) host.innerHTML = avStoreUiChromeHTML();
+    avStoreUiWire(host);
+    avStoreUiSubscribe();
+    avStoreUiState.inited = true;
+    avStoreUiState.mounts += 1;
+    avStoreUiState.lastHtml.inst = null;
+    avStoreUiState.lastHtml.avail = null;
+    avStoreUiSync();
+    return true;
+  } catch (e) {
+    console.warn("[anvil] store card mount failed", e);
+    return false;
+  }
+}
+
+/* ---------- observables ---------- */
+
+function avStoreUiSnap() {
+  const host = avStoreUiHost();
+  let m = null;
+  try { m = avStoreUiModel(); } catch (e) { m = null; }
+  const snap = {
+    version: AV_STORE_UI_VERSION,
+    inited: !!avStoreUiState.inited,
+    mounts: avStoreUiState.mounts,
+    host: !!host,
+    wired: !!(host && host.dataset && host.dataset.avStoreUiWired === "1"),
+    card: !!(host && host.querySelector && host.querySelector(".av-store")),
+    filter: avStoreUiState.filter,
+    search: avStoreUiState.search,
+    installing: avStoreUiState.installing,
+    removing: avStoreUiState.removing,
+    lastMsg: avStoreUiState.lastMsg,
+    lastError: avStoreUiState.lastError,
+    modeText: m ? m.modeText : avStoreUiState.modeText,
+    backend: m ? m.backend : avStoreUiState.backend,
+    offline: m ? m.offline : !!avStoreUiState.offline,
+    counts: m ? m.counts : Object.assign({}, avStoreUiState.counts),
+    indexOk: !!avStoreUiIndexList(),
+    indexCount: m ? m.indexCount : avStoreUiIndexCount(),
+    indexNote: m ? m.indexNote : "",
+    indexLoading: !!avStoreUiState.indexLoading,
+    indexTried: !!avStoreUiState.indexTried,
+    skipped: m ? m.skipped : avStoreUiState.skipped,
+    sections: { installed: 0, avail: 0 },
+    classes: avStoreUiClasses(),
+  };
+  try {
+    if (host && host.querySelectorAll) {
+      snap.sections.installed = host.querySelectorAll("#av-store-installed .av-pack-card").length;
+      snap.sections.avail = host.querySelectorAll("#av-store-avail .av-pack-card").length;
+    }
+  } catch (e) { /* no DOM */ }
+  return snap;
+}
+
+function avStoreUiClasses() {
+  return [
+    "av-store", "av-store-head", "av-store-title", "av-store-cap",
+    "av-store-controls", "av-store-search", "av-store-filters", "av-pf-filter", "on", "av-pf-n",
+    "av-store-status-line", "av-store-status", "av-store-msg", "av-store-err", "av-store-retry",
+    "av-store-storage", "av-store-mode", "idb", "ls", "mem", "av-store-used",
+    "av-store-sect", "av-store-sect-head", "av-pack-sect", "av-pack-sect-n", "av-store-list",
+    "av-pack-card", "installed", "busy", "av-pack-head", "av-pack-name", "av-pack-tag",
+    "av-store-chip", "inst", "eng", "av-store-ver", "ok", "warn", "av-store-offline",
+    "av-store-offline-note", "av-store-note", "av-store-none-note",
+    "av-pack-guide", "av-pack-blurb", "av-pack-foot", "av-pack-meta",
+    "av-store-btn", "av-store-install", "av-store-remove", "av-store-prog",
+  ];
+}
+
+/* ---------- debug/verify handle ---------- */
+
+if (typeof window !== "undefined") {
+  window.__avStoreUi = {
+    version: AV_STORE_UI_VERSION,
+    init: () => avStoreUiInit(),
+    sync: () => avStoreUiSync(),
+    classes: () => avStoreUiClasses(),
+    snap: () => avStoreUiSnap(),
+    refresh: (force) => avStoreUiRefresh(force),
+    install: (id) => avStoreUiInstall(id),
+    remove: (id) => avStoreUiRemove(id),
+  };
+}
+
+
 /* Anvil — SYNTH card (P1 voice engine, P2 ENGINE layer, P3 grain + sampler panels). avSynthInit() mounts the engine
    controls into the parent-owned host #av-synth-knobs:
    - one ENGINE select (#av-synth-engine — va · acid · string · drum · grain · sampler) at the
@@ -16607,7 +19384,7 @@ function avSynthInit() {
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "0.4.0", phase: "P4 · sequencing", built: "2026-10-07" });
+const ANVIL = Object.freeze({ version: "0.5.0", phase: "P5 · store", built: "2026-10-07" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -16686,6 +19463,16 @@ function avMountLevels() {
   try { seqUiOk = (typeof avSeqUiInit === "function") ? (avSeqUiInit() !== false) : false; } catch (e) { console.warn("[anvil] seq ui init failed", e); }
   try { capOk = (typeof avSeqCaptureInit === "function") ? (avSeqCaptureInit() !== false) : false; } catch (e) { console.warn("[anvil] seq capture init failed", e); }
   try { undoOk = (typeof avUndoInit === "function") ? (avUndoInit() !== false) : false; } catch (e) { console.warn("[anvil] undo init failed", e); }
+  let storeOk = false, bankOk = false, storeUiOk = false;
+  try { storeOk = (typeof avStoreInit === "function") ? (avStoreInit() !== false) : false; } catch (e) { console.warn("[anvil] store init failed", e); }
+  try { bankOk = (typeof avBankInit === "function") ? (avBankInit() !== false) : false; } catch (e) { console.warn("[anvil] bank row init failed", e); }
+  try { storeUiOk = (typeof avStoreUiInit === "function") ? (avStoreUiInit() !== false) : false; } catch (e) { console.warn("[anvil] store ui init failed", e); }
+  /* P5: the BANK select follows installs — repaint on every store change */
+  try {
+    if (typeof avStoreOnChange === "function" && typeof avBankRefresh === "function") {
+      avStoreOnChange(function () { try { avBankRefresh(); } catch (e) { /* bank repaint is best-effort */ } });
+    }
+  } catch (e) { console.warn("[anvil] store→bank wire failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -16701,7 +19488,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

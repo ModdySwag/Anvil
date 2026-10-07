@@ -152,6 +152,16 @@ function avStoreFetchSource() {
   return "none";
 }
 
+/* the resolved scheme of a fetch target (relative URLs resolve against the page): "file:" means
+   the browser will scheme-block the request; "" when it cannot be resolved (node harnesses). */
+function avStoreUrlScheme(u) {
+  try {
+    const base = (typeof location !== "undefined" && location && location.href) ? location.href : undefined;
+    if (typeof URL === "function") return String(new URL(String(u), base).protocol || "");
+  } catch (e) { /* no URL/base — scheme-less */ }
+  return "";
+}
+
 function avStoreTimer(fn, ms) {
   try { if (typeof setTimeout === "function") return setTimeout(fn, ms); } catch (e) { /* no timers */ }
   return null;
@@ -369,6 +379,11 @@ function avStoreFetchUrl(url, timeoutMs, kind) {
       const st = avStoreState;
       const fn = avStoreNetFn();
       if (typeof fn !== "function") return rej(new Error("no-fetch"));
+      /* §4b file:// law: a page fetch of a local file is scheme-blocked by the browser — refuse
+         the doomed request here (and count no attempt) so no console noise fires; the seam,
+         hosted http(s) and localhost servers all fetch as usual, and the note + status copy
+         already explain the file:// state honestly. */
+      if (avStoreFetchSource() === "real" && avStoreUrlScheme(url) === "file:") return rej(new Error("blocked-file"));
       if (kind === "pack") st.netPack += 1; else st.netIndex += 1;
       let controller = null;
       try {
@@ -829,7 +844,7 @@ function avStoreStatus() {
       db: !!st.db,
       dbGaveUp: !!st.dbGaveUp,
       adopt: st.lastAdopt ? { adopted: st.lastAdopt.adopted, landed: st.lastAdopt.landed, failed: st.lastAdopt.failed, honoured: st.lastAdopt.honoured, at: st.lastAdopt.at } : null,
-      index: { status: st.indexStatus, count: st.indexCount, base: st.indexBase, at: st.indexAt, error: st.indexError, name: st.index ? st.index.name : null, updated: st.index ? st.index.updated : null },
+      index: { status: st.indexStatus, count: st.indexCount, base: st.indexBase, at: st.indexAt, error: st.indexError, name: st.index ? st.index.name : null, updated: st.index ? st.index.updated : null, packs: st.index ? st.index.packs : null },
       net: { source: avStoreFetchSource(), index: st.netIndex, pack: st.netPack },
       note: avStoreNote(),
       lastError: st.lastError,

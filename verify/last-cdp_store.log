@@ -1,0 +1,36 @@
+index.html sha256 (before): 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791350236168
+ ok   boot: data-av-ready flips
+ ok   store card mounted: #av-store-host + card root + search + 3 filter chips + both list containers + mode chip
+ ok   exports: avStoreUiInit + avStoreUiSync + avStoreUiClasses + window.__avStoreUi (p5.0, ≥40 classes) · host wired  -> {"init":true,"sync":true,"classes":true,"refresh":true,"handle":true,"version":"p5.0","classesN":50,"wired":true}
+ ok   store core preflight: the 7 pinned APIs present (init/index/install/remove/status/installed/setFetch)  -> all present · backend=mem
+ ok   index entries accessor: the store core exposes the manifest entries to the card (avStoreCatalog/avStorePacks/avStoreIndexEntries or status().index.packs)  -> exposed via status().index.packs
+ ok   absent-host contract: avStoreUiInit() -> false without throwing; re-attached host re-mounts the card  -> {"absent":false,"absentThrew":false,"remount":true,"remountThrew":false,"card":true,"wired":true,"modes":3}
+ ok   mock built in page: 3 synthetic packs with REAL sha256 (crypto.subtle over the served bytes)  -> alpha sha 6ba99a2bd176… · beta sha c9fc5e1a77ba… · badsha digest 06fc83e8babb… (real digests; the manifest plants f…f on purpose) · counts {"packs":3,"alphaPresets":3,"betaPresets":2}
+ ok   avStoreSetFetch MOCK injected (the ONLY network path — no server, file:// + seam)  -> true
+ ok   index loads through the seam: refresh() ok + 3 packs -> 3 available cards  -> {"ok":true,"packs":3,"error":""} · dom cards=3
+ ok   cards: name + preset-count tag + size/sha meta + INSTALL button each; chips carry LIVE counts (3/3/0)  -> {"n":3,"ids":"rig-alpha,rig-badsha,rig-beta","tags":["3 presets","2 presets","1 preset"],"meta":["471 B · sha256 6ba99a2bd1…","336 B · sha256 c9fc5e1a77…","262 B · sha256 ffffffffff…"],"names":["RIG ALPHA","RIG BETA","RIG BAD SHA"],"installs":3,"counts":{"all":"3","avail":"3","installed":"0"},"filters":3,"status":"pack index ready — 3 packs"}
+ ok   storage chip honest to the reported backend (mem)  -> {"backend":"mem","mode":"storage: memory only — this session only"}
+   · install initial action via click
+ ok   install progress affordance: card .busy + disabled button + indeterminate <progress>  -> {"busy":true,"disabled":true,"prog":true,"aria":"true"}
+ ok   install (click): badge INSTALLED + counts (0→1 inst, 3→2 avail) + client layer avStoreInstalled() + status copy  -> {"present":true,"chip":"INSTALLED","cnt":"1","nInst":"1","avail":"2","client":true,"status":"installed RIG ALPHA"}
+ ok   ground truth: independent indexedDB.open(av-packs-store) read finds the record with the manifest sha  -> {"ok":true,"count":1,"rec":{"id":"rig-alpha","sha256":"6ba99a2bd176f07da4045c50d32767c6ac36dc54837ef82b693c7ea82ee8341f","hasPack":true}}
+ ok   filter chips: .on/aria-pressed flip + installed side filters (INST 1 / AVAIL 0 / ALL 1) + avail side (0 / 2 / 2)  -> {"c1":{"avail":0,"inst":1,"on":true,"pressed":"true"},"c2":{"avail":2,"inst":0},"c3":{"avail":2,"inst":1}}
+ ok   search cuts the list (beta only) and clearing restores the full list  -> {"search":{"avail":1,"id":"rig-beta","inst":0},"restored":2}
+ ok   remove (real click): badge clears, counts restore (0 inst / 3 avail), client layer empty, status copy  -> {"gone":true,"cnt":"0","avail":"3","status":"removed RIG ALPHA","client":false}
+ ok   ground truth: the av-packs-store record is gone after remove  -> {"ok":true,"count":0,"rec":null}
+ ok   reinstall is idempotent: one record, same sha, one badge (click)  -> {"dom":true,"via":"click","idb":{"ok":true,"count":1,"rec":{"id":"rig-alpha","sha256":"6ba99a2bd176f07da4045c50d32767c6ac36dc54837ef82b693c7ea82ee8341f","hasPack":true}}}
+ ok   host down: installed pack survives + OFFLINE badge + status says the host is unreachable  -> {"card":true,"off":"OFFLINE","status":"could not reach the pack host — installed packs stay available offline","client":true} · refresh={"ok":false,"error":"fetch"} · seam-refresh-failed=true
+ ok   host back: OFFLINE badge clears and the index refreshes (refresh ok=true)  -> {"off":0,"cards":2,"status":"pack index ready — 3 packs"}
+ ok   mem-mode honest chip: backend forced to mem -> chip says memory-only, never IndexedDB  -> {"took":{"took":true},"chip":{"text":"storage: memory only — this session only","cls":"av-store-chip av-store-mode mem"}}
+ ok   chip restores to the real backend after the stub is removed  -> {"backend":"idb","text":"storage: IndexedDB"}
+ ok   sha-mismatch refusal: INSTALL on rig-badsha refused (click) — no badge, count unchanged (1), no client record, honest copy  -> {"badge":false,"cnt":"1","status":"checksum mismatch — the pack was refused (not stored)","client":false}
+ ok   zero page errors
+ ok   screenshot: renders/p5-store-suite.png (the store card, scale 2)  -> 95223 bytes · clip 1010×424 @2x
+index.html sha256 (after): 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
+ ok   freeze: index.html sha256 = pinned  -> pinned 1c2f112c5ed8…
+
+28 passed, 0 failed
+STORE PASSED

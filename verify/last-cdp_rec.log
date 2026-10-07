@@ -1,7 +1,7 @@
-index.html sha256 (before): 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
+index.html sha256 (before): 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9430 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-rec-1791345862396
- ok   freeze: index.html sha256 before = 83e4b478…  -> 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
+cdp port 9430 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-rec-1791350288333
+ ok   freeze: index.html sha256 before = 1c2f112c…  -> 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
  ok   boot: data-av-ready flips
  ok   engine: ready (tier · sampleRate recorded)  -> {"ready":true,"tier":"worklet","sr":48000}
  ok   engine ctx: running + ScriptProcessor-capable (capture target alive)  -> {"found":true,"state":"running","sampleRate":48000,"scp":true}
@@ -9,27 +9,27 @@ cdp port 9430 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-rec-17913458623
  ok   module: avRecInit() ok + class list (av-rec-row in it) · second call idempotent  -> {"first":{"ok":true,"host":true,"version":"p2.0","classes":["av-rec-row","av-rec-btn","av-rec-time","av-rec-state","av-rec-link","av-rec-on","av-rec-err"]},"second":{"ok":true}}
  ok   tap: armed · master node present · real output known (branch can be pulled)  -> {"installed":true,"masters":1,"real":true}
  ok   control take: avRecStart() starts on the master tap; a duplicate start is refused  -> {"start":{"ok":true,"sampleRate":48000,"block":4096,"capture":"scriptprocessor","version":"p2.0"},"dup":{"ok":false,"error":"already recording"}}
- ok   control take: avRecStats() reports recording while armed (seconds moving)  -> {"first":{"recording":true,"seconds":1.9626666666666666},"second":{"recording":true,"seconds":2.3893333333333335}}
- ok   control take: avRecStop() resolves a take ({ok, seconds, bytes, blob})  -> bytes=557100 · seconds=2.901 · frames=139264
- ok   control take: WAV parses (RIFF/WAVE · PCM fmt · 2ch · 16-bit · header rate === take rate)  -> {"dataOff":44,"dataLen":557056,"bytesPer":2,"frames":139264,"format":1,"channels":2,"sampleRate":48000,"byteRate":192000,"blockAlign":4,"bits":16}
- ok   control take: duration sane (WAV vs take wall clock ±0.5 s)  -> 2.901 s · wall 2.892 s · Δ 0.010 s
+ ok   control take: avRecStats() reports recording while armed (seconds moving)  -> {"first":{"recording":true,"seconds":0.256},"second":{"recording":true,"seconds":2.2186666666666666}}
+ ok   control take: avRecStop() resolves a take ({ok, seconds, bytes, blob})  -> bytes=524332 · seconds=2.731 · frames=131072
+ ok   control take: WAV parses (RIFF/WAVE · PCM fmt · 2ch · 16-bit · header rate === take rate)  -> {"dataOff":44,"dataLen":524288,"bytesPer":2,"frames":131072,"format":1,"channels":2,"sampleRate":48000,"byteRate":192000,"blockAlign":4,"bits":16}
+ ok   control take: duration sane (WAV vs take wall clock ±0.5 s)  -> 2.731 s · wall 2.735 s · Δ 0.004 s
  ok   control take: RMS ≈ 0 on both channels (silence when no note)  -> rms [0.00e+0, 0.00e+0] · peak 0.00e+0
  ok   control take: stats cleared after stop (recording false, seconds 0)  -> {"recording":false,"seconds":0}
  ok   note take: avRecStart() starts the second take  -> {"ok":true,"sampleRate":48000,"block":4096,"capture":"scriptprocessor","version":"p2.0"}
  ok   note take: avNoteDown("c5") held on the bus + taken by the engine sink  -> {"fresh":true,"held":["c5"],"taken":["c5"],"sink":true}
- ok   note take: mid-take stats (recording · seconds ≈ 1+)  -> {"recording":true,"seconds":1.1093333333333333}
+ ok   note take: mid-take stats (recording · seconds ≈ 1+)  -> {"recording":true,"seconds":1.1946666666666668}
  ok   note take: avNoteUp("c5") releases (held empty)  -> {"held":[]}
  ok   note take: avRecStop() resolves the take  -> bytes=688172 · seconds=3.584 · peak=0.22126483917236328
  ok   note take: WAV parses (RIFF/WAVE · PCM fmt · 2ch · 16-bit · header rate === take rate)  -> {"dataOff":44,"dataLen":688128,"bytesPer":2,"frames":172032,"format":1,"channels":2,"sampleRate":48000,"byteRate":192000,"blockAlign":4,"bits":16}
- ok   note take: data chunk length matches duration ±0.2 s (page clock) + frames math exact  -> seconds=3.584 · dur=3.584 · wall=3.532 · Δwall=0.052 s
- ok   note take: held ~3 s → take spans ~3.4–4.3 s (and within 0.45 s of the rig clock)  -> dur=3.584 s · rigWall=3.654 s · Δ=0.070 s
- ok   note take: RMS non-zero (note audible at the master tap)  -> rms [0.0801, 0.0801] · peak 0.2213 · vs control rms 0.00e+0
+ ok   note take: data chunk length matches duration ±0.2 s (page clock) + frames math exact  -> seconds=3.584 · dur=3.584 · wall=3.534 · Δwall=0.050 s
+ ok   note take: held ~3 s → take spans ~3.4–4.3 s (and within 0.45 s of the rig clock)  -> dur=3.584 s · rigWall=3.658 s · Δ=0.074 s
+ ok   note take: RMS non-zero (note audible at the master tap)  -> rms [0.0804, 0.0804] · peak 0.2213 · vs control rms 0.00e+0
  ok   note take: first 40 ms silent (note starts after the capture began — in-take control)  -> head rms [0.00e+0, 0.00e+0]
  ok   download handle: blob: URL returned + __avRec snapshot keeps the take (branch released)  -> {"last":{"seconds":3.584,"frames":172032,"bytes":688172,"url":true},"wired":false,"recording":false,"error":null,"host":true}
  ok   avRecStop() when idle: honest refusal (ok:false · "not recording")  -> {"ok":false,"error":"not recording"}
  ok   UI: row mounted under #av-rec-host (av-rec classes · download link armed)  -> {"host":true,"row":true,"btn":true,"time":true,"state":"saving…","link":true,"linkHref":true}
  ok   zero page errors for the whole run (exceptions · Log errors · console.error)  -> page errors=0
-index.html sha256 (after): 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
- ok   freeze: index.html sha256 unchanged by the run  -> 83e4b478742cb7107a86484e19eda306d92f9e86a6637ffc771fd6c554f1bc4b
+index.html sha256 (after): 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
+ ok   freeze: index.html sha256 unchanged by the run  -> 1c2f112c5ed866aad9a2d7089b1916839890f7c8906acc309afb1d9eca750563
 
 29 passed, 0 failed
