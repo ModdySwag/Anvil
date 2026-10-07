@@ -5,18 +5,21 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **S3 mix & master in — per-track FX + send rails, bus glue, the master chain (LUFS/true-peak normalize targets + export dither), an auto-mix assistant and A/B reference.**
-The instrument carries P1–P6 + S1–S3 in one single-file page: the mix desk builds a mixdown from takes,
-comps and the engine pattern (per-track gain / pan / send rails / ducking / insert FX · a verb + delay
-send pair · bus glue · the master chain with normalize + dither), renders it offline and deterministically
-in memory, and exports 16/24/32f WAVs; A/B plays the mixdown against a loudness-matched reference. The
-comp engine stitches the studio's takes; sessions version the whole state; the store serves 9 packs /
-548 presets. Frozen `index.html` sha 859a897d… (1,960,270 B): battery ALL GREEN — 14 suites (smoke 21 ·
-studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 ·
-seq 31 · store 28 · bounce 32); **the perf gate ran on an active-console machine — the offline knee
-reads 96/128 here exactly as in the S2.1-era byte-identical A/B (environment, not regression)**.
-Next: S4 deliver extras · deck · popout keyboard · CODE · help then P7 polish → deploy + owner pass.
-Resume at `CONTINUATION-2026-10-06.md` addendum 28.
+Status 2026-10-07: **DECK pro readouts in — a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, and engine voice/CPU readouts with a note ticker (the capture surface for the upcoming video deliver extra).**
+The instrument carries P1–P6 + S1–S3 + the deck in one single-file page: the studio chain builds a
+mixdown from takes, comps and the engine pattern (per-track gain / pan / send rails / ducking /
+insert FX · a verb + delay send pair · bus glue · the master chain with normalize + dither), renders
+it offline and deterministically in memory, and exports 16/24/32f WAVs; A/B plays the mixdown against
+a loudness-matched reference. The deck attaches to the live master tap read-only (its own analysers;
+offline renders are never metered) and adds no engine cost — the worklet sha `6e66274e…` is unchanged.
+The comp engine stitches the studio's takes; sessions version the whole state; the store serves 9
+packs / 548 presets. Frozen `index.html` sha 45cc39d7… (2,065,214 B): battery ALL GREEN — 15 suites
+(smoke 22 · studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 ·
+rec 29 · fx 27 · seq 31 · store 28 · bounce 32 · deck 35); offline knee 128 @ 49.42% budget
+(bench-v15 — the deck adds no offline cost); **stress ×2 attributed environment on an active-console
+machine — the S3-bytes control run read the same burst shape while the deck is provably inert**.
+Next: S4 deliver extras · popout keyboard · CODE · help then P7 polish → deploy + owner pass.
+Resume at `CONTINUATION-2026-10-06.md` addendum 29.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)

@@ -1,0 +1,52 @@
+DECK perf-gate attribution record — bench + stress ×2 + the S3-bytes control
+(2026-10-08 ~00:35; machine = Moddy's live console, ACTIVE throughout — `query user` shows the
+console session in use (idle "none"); 16-17 browser/node processes around. The small-hour window
+produced environment underrun bursts on BOTH builds.)
+
+=== The publishable metric — bench (verify/bench-v15-deck-full.{log,json}) ===
+- offline knee 128 · n=128 @ 1317.78 µs/q = 49.42% budget · monotone · no first-fail · 0 invalid reads
+  (v14/S3 read knee 96 with n=128 @ 1455.02 µs/q = 54.56% on a busier window — v15 is BETTER than the
+  S3 record; the deck adds no offline cost.)
+- realtime {light 64 · fat 32} · ratio 1.000.
+- engine byte-identity: AV_WORKLET_SHA = 6e66274efd209229e4446aed63c06d39e0229d9e62153c727229e6892d413081
+  (grep index.html — identical to the P1.x → S2.1 → S3 lineage; the deck is a read-only tap rider).
+
+=== Stress ×2 (verify/stress-deck-run1.log / stress-deck-run2.log) ===
+- run1: total delta 887 over 41 intervals; nonzero 17; at-cap [verified-window 4 · uni>3-window 13];
+  verified deltas 1, 1, 1, 13 (cycle 21 @461s).
+- run2: total delta 322; nonzero 16; [verified-window 2 · uni>3-window 14]; verified deltas 2, 1.
+- Both `asserts-not-met` — the rig's standing verdict shape (the S3 pair was also asserts-not-met; the
+  rig's zero-delta-at-cap assert never passes by design and the uni>3 over-drive windows are
+  reported-not-asserted). Drains PASS ×2 · heapGrowth +0.3 MB ×2 · page errors 0 ×2 · cycles 27/27.
+
+=== The deck is INERT during stress (mechanism check — deck_idle_probe.mjs) ===
+On a stress-like page (?avtest=1, 1440×900 metrics, NO scrolling — the stress rig never scrolls):
+  deck host top = 7642.5 px (far below the 900 px viewport) → IntersectionObserver visible=false →
+  loop.rafOn=false · ticks frozen at 2 over a 9-second window (boot ticks only) · deck.attached=true
+  with 0 forced steps / 0 draws / 0 pulls after boot. The visibility-gated rAF discipline holds — the
+  deck cannot add per-quantum cost. (Watch item "must not wake hidden tabs / add idle CPU when paused"
+  = proven; the probe's full output: {"loop":{"rafOn":false,"visible":false,"hidden":false,
+  "paused":false,"ticks":2,"lastStepAt":318.9},"deck":{"present":true,"attached":true,"steps":2,
+  "forcedSteps":0,"frames":2,"draws":2,"viewSeeded":true},"frames":{"scopeReady":true,
+  "spectrumReady":true,"wfReady":true},"scrollY":0,"innerH":900,"deckHostTop":7642.5}, identical at
+  t0 and t+9 s.)
+
+=== DECISIVE CONTROL — the S3 frozen bytes on the same machine, adjacent window ===
+cache/scratch/deck/integrate/control-s3.sh swapped the S3 bytes (859a897d, extracted from commit
+5693ddc and sha-verified) into index.html at 00:22:36, ran cdp_stress on them for the standard 615 s,
+then restored the deck bytes at 00:32:56 (sha re-verified = 45cc39d701a8). Result
+(verify/stress-s3control-run.log):
+- control: total delta 760 over 41 intervals; nonzero 17; at-cap [verified-window 4 · uni>3-window 13];
+  verified deltas 1, 1, 1, 3 — the SAME envelope shape as deck-run1's (4 verified windows: 1,1,1,13).
+
+                | bytes     | window      | total | verified windows        | uni>3 windows
+  S3 run1       | 859a897d  | 22:5x       | 121   | 1  (1)                  | 10
+  S3 run2       | 859a897d  | 23:0x       | 193   | 1  (1)                  | 10
+  deck run1     | 45cc39d7  | 00:01-00:11 | 887   | 4  (1,1,1,13)           | 13
+  deck run2     | 45cc39d7  | 00:11-00:21 | 322   | 2  (2,1)                | 14
+  control (S3)  | 859a897d  | 00:22-00:32 | 760   | 4  (1,1,1,3)            | 13
+
+Conclusion: the raw underrun counter is environment-driven in this window — the OLD truth bytes read
+760 with the same cluster shape as the deck bytes' 887, and the spread between two identical deck runs
+(322 vs 887) exceeds any build-to-build difference. Deck inert + worklet byte-identical + bench
+improved → **P·1 satisfied raw; no deck regression. Optional quiet-window re-runs remain carried.**

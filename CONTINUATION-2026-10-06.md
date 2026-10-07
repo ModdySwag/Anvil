@@ -1091,3 +1091,44 @@ HEAD `137a767` · `index.html` on disk = `0ff22c9c…` (matches this save) · pr
 strays (only the querying wrappers self-match) · no background jobs, no live subagents. **Nothing at
 risk.** The continued session opens with: 4b probe → fix → rebuild → smoke → rig re-run → pin →
 battery 15 → gate → addendum 29 + README.
+
+## Resume addendum 29 — 2026-10-08 (DECK wave INTEGRATED + CLOSED — battery ALL GREEN on `45cc39d7`; the pro deck ships)
+
+- Children `deleg_37e0ff7f` (3 parallel): sa-A `src/av_deck.js` (956; harness 125/0) · sa-B
+  `src/av_deck_ui.js` (1479; harness 231/231) · sa-C `verify/cdp_deck.mjs` (34 checks, write-only).
+  Parent re-ran every harness green.
+- Parent integration (ONE counted-assert script, 11 edits; `cache/scratch/deck/integrate/_deck_integrate.py`):
+  build.py js_parts `av_deck → av_deck_ui` (after av_mix_ui, before av_synth) · body `#av-deck` card +
+  `#av-deck-host` after `#av-mix` (+ hero/footer) · styles DECK block (41-class coverage) · app_core
+  **1.1.0 "DECK · pro readouts"** + guarded boots · cdp_smoke DECK card check (21→22).
+- Rig cdp_deck: first run 28/40 → rig SPEC fixes 10 edits (`_deck_rigfix.py`) → 33/34. **OPEN 4b
+  (waterfall canvas paint) FIXED this session:** the live probe (`deck_4b_probe.mjs`; record
+  `verify/deck-4b-probe-out.txt`) read the canvas digest BYTE-IDENTICAL (sumLum 1291008 · ink 0) while
+  the core frame advanced (rows 3→10) — the UI resolver only knew ring/push shapes, never the core's own
+  (rows = COUNT number, latestRow = write INDEX number, cols + flat data ring). **Parent fix
+  `_deck_4bfix.py` (8 edits)** = the UI "flat" ring mode (+7 harness checks → 238/238; probe re-run:
+  mode flat, digest advances sumLum 1291008→1305578 · ink 0→54) → **rebuild `45cc39d7` (2,065,214 B) →
+  smoke 22/22 → rig 34/34 unpinned → pins (`_deck_pins.py`; cdp_deck null→sha) → rig pinned 35/35**
+  (35 = the 34 checks + 10e sha=pinned).
+- **BATTERY ALL GREEN — 15 suites** (`cache/scratch/deck/integrate/battery-deck.log`, every exit=0):
+  smoke 22 · studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 ·
+  rec 29 · fx 27 · seq 31 · store 28 · bounce 32 · **deck 35 pinned**. Screenshot `renders/deck-suite.png`
+  (@2x, live deck card).
+- **PERF GATE:** bench `bench-v15-deck-full.{log,json}` — offline knee **128** (n=128 @ **1317.78 µs/q =
+  49.42%** budget; monotone; no first-fail; v14/S3 read knee 96 @ 54.56% on a busier window); realtime
+  {light 64 · fat 32} · ratio 1.000 · 0 invalid reads; worklet sha `6e66274e…` byte-identical. Stress ×2
+  `stress-deck-run1/2.log`: both `asserts-not-met` (standing shape): r1 **887** [verified 4 · uni>3 13] ·
+  r2 **322** [verified 2 · uni>3 14]; drains PASS ×2 · heap +0.3 MB · page errors 0. **Attribution =
+  environment (proven by control):** the adjacent-window control on the S3 frozen bytes
+  (`stress-s3control-run.log`) read **760** with the SAME envelope shape as r1 (4 verified: 1,1,1,3 vs
+  1,1,1,13) — while the deck is provably INERT during stress (idle probe: loop off · 0 ticks/9 s · deck
+  host 7,642 px below the viewport) and the engine is byte-identical. Records:
+  `verify/deck-gate-attribution.txt`.
+- Close commits: 4b fix `e34e772` · pins `62a9f69` · battery `f4b41c8` · then this close (gate records +
+  addendum 29 + README). **NOTHING RUNNING** — no background jobs, no live subagents.
+- **NEXT SESSION OPENS ON: the next GOLDEN BUILD block** — S4 deliver extras (FSA #77 · share card #18 ·
+  video #83 — the deck is its capture surface) / PF-grade popout keyboard / CODE (#81) / walkthrough-help
+  (#20/#45/#80) — then max modules / platform (share/cloud/PWA/bridges) → P7 polish → deploy + live
+  verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups (fill control wiring, chains/scenes undo
+  checkpoints, acid accent-flag decision) · PERFECT TUNINGS (tuning engine) · optional quiet-window bench
+  re-runs. Resume phrase: **"continue anvil"**.
