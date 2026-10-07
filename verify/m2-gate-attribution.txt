@@ -1,0 +1,9 @@
+M2 perf gate attribution - 2026-10-08 (build d311eaf8, frozen)
+bench (publishable metric): offline 128 voices - knee last-pass None, first-fail None, monotone None; realtime published light 64 / fat 48.
+  Unchanged family (P2-P4/S5/M1 all 128 monotone). The worklet changed BY DESIGN this wave (av_mpe joins the
+  concat + av_dsp MPE paths + sampler zone-v2 - all inert with MPE off / zones v1); the bench knee is the gate and it holds.
+stress x2 (raw):
+  run1 :: verdict=asserts-not-met | heapGrowthMb=0.8 | underrunDeltas=20 | drains=PASS | pageErrors=0
+  run2 :: verdict=asserts-not-met | heapGrowthMb=0 | underrunDeltas=32 | drains=PASS | pageErrors=0
+attribution: environment-quiet, no control run needed - both runs' deltas (20 / 32) sit BELOW the M1 record (30 / 66)
+and far below the S5 record (360 / 183); same known assert profile (drains PASS, heap flat, 0 page errors).

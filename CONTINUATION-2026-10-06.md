@@ -1385,3 +1385,29 @@ Resume phrase: **"continue anvil"**.
   → battery run → perf gate (bench knee vs 96/128 + stress ×2 + old-bytes control if jumps) → close
   commits + addendum 33 + README + docs/05 status + mnemosyne.
 - Resume phrase: **"continue anvil"**.
+
+## Resume addendum 33 — 2026-10-08 (M2 EXPRESSION wave INTEGRATED + CLOSED — battery ALL GREEN on `d311eaf8`; MPE · CHOP · generative · arranger ship)
+
+- Children `deleg_98481d59` (8 parallel): sa-A `av_mpe.js` (254; 74/74) · sa-B `av_mpe_deck.js` (486; 80/80) ·
+  sa-C `av_chop.js` (745; 95/95) · sa-D `av_sampler.js` zone-v2 edit (497; 71/71) · sa-E `av_chop_ui.js` (1646;
+  62/62) · sa-F `av_song.js` + `av_mid.js` edit (550+982; 270/270) · sa-G `av_seq_ui.js` edit (1917; 88/88) ·
+  sa-H `verify/cdp_m2.mjs` (1832; write-only). Parent re-ran every harness green.
+- Integration `_m2_integrate.py` (71 counted edits across 12 files + styles block) — all anchors validated before the
+  children landed (`--anchors` dry run) → build `480323cb`. Triage app fixes: **av_song pushes the live pattern to the
+  scheduler at every row apply + both scene applies** (mute/scene changes were inaudible otherwise — the scheduler
+  plans in 8-step chunks and only avSeqSetPattern invalidates the view) · **av_seq_ui PLAY pushes the snapshot
+  (play-what-you-see)**. Rig triage 24/39 → 34/39 → 37/39 → **40/40 pinned**; rig SPEC fixes: peak/centroid
+  accumulators init to -Infinity (dB data never exceeds 0), playIn helper verifies the flipped state, set(false)
+  returns the NEW state + release-beat sleep, chop source REFRESH click, digest-based 2d reads, slice-BODY RMS
+  measurement (tail-spot RMS is window-aliased), trace-based chop-play step witness (overlapping one-shots defeat
+  onset counting), row-mute window past one plan chunk (~500 ms @120), S2 witness flag = the analyser tap.
+- **Frozen `index.html` = `d311eaf8…` (3,205,003 B)** · worklet sha `d7f0ee41…` (av_mpe joins the concat) · pins **17 files**.
+- **BATTERY ALL GREEN — 20 suites**: smoke 29 · studio 37 · sessions 41 · comp 41 · mix 46 · knob_feel 18 · keys 27 · midi 33 ·
+  sample 29 · rec 29 · fx 27 · seq 31 · store 28 · bounce 32 · deck 35 · s4 37 · s5 36 · code 36 · m1 33 · **m2 40/40** pinned.
+- **PERF GATE:** bench knee **128 monotone** (unchanged family; worklet changed by design — AVM + sampler v2 +
+  MPE paths, inert with MPE off / zones v1) · stress x2 deltas **20 / 32** (BELOW the M1 record 30/66 — environment-quiet;
+  no control run needed). Records `verify/m2-gate-attribution.txt` + `bench-v19-m2-full.*` + `stress-m2-run1/2.log`.
+- Close commits: integration+battery `2252772` · then this close. **NOTHING RUNNING.**
+- **NEXT SESSION OPENS ON: the PLATFORM wave** — PWA offline (#78) · suite bridges (#82) → P7 polish (#79)
+  → deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups · PERFECT TUNINGS ·
+  optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.

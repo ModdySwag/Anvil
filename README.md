@@ -16,7 +16,7 @@ to the live engine and keeps a local module library; the popout keyboard adopts 
 own window with key forwarding; help ships the shortcut map, the 60-second tour, tooltips and the four
 outcome guides; the palette runs 41 commands from Ctrl-K. Nothing uploads — every artifact is local.
 The comp engine stitches the studio's takes; sessions version the whole state; the store serves 9 packs
-/ 548 presets. Frozen `index.html` sha 335f4bd0… (2,933,715 B): battery ALL GREEN — 19 suites (smoke 26 ·
+/ 548 presets. Frozen `index.html` sha d311eaf8… (2,933,715 B): battery ALL GREEN — 20 suites (smoke 26 ·
 studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 ·
 seq 31 · store 28 · bounce 32 · deck 35 · s4 37 · s5 36 · code 36 · m1 33); the perf-gate bench knee is
 unchanged (128 · monotone) and the stress window read quieter than the previous record (no control
