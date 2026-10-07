@@ -673,3 +673,30 @@ Resume phrase: **"continue anvil"**.
   P4 follow-ups: fill control wiring, chains/scenes undo checkpoints, acid accent-flag decision.
   Resume phrase: **"continue anvil"**.
 
+
+## P5 wave STARTED (stage 0) — 2026-10-07 (wave note `verify/_p5_wave.md`; 5 children, `deleg_4e498b21`)
+
+- **Wave note: `verify/_p5_wave.md`** — P5 = STORE per the GOLDEN BUILD program (10 factory packs /
+  580 presets + drum + loop packs; IDB install; previews; add-on modules). Staged: **stage 0 (now)**
+  = 2 PF port digests + Phase-1 content (T8 authoring order); **stage 1** = store infra ports
+  (store core · store UI + cdp_store rig · canonical schema + verifier · synth-card BANK select +
+  shared apply core · preview audition) with briefs written AGAINST the digests; **stage 2** =
+  integration → battery + cdp_store → perf gate. Phase-2/3 packs (NEON STRINGS · BLADE PADS · DEEP
+  SPACE · BASS FORGE · LEAD LAB · FX & RISERS) = later waves P5.1/P5.2; PERFECT TUNINGS blocked on
+  the (unbuilt) tuning engine.
+- **Pinned in the note:** the `.avbank.json` pack format (one file per pack; flat patch path→value
+  maps; optional `seq` = P4 pattern snapshot) + the node WITNESS every content child must run
+  (worklet concat load; every patch path accepted; audible 2 s render; finite; determinism pair;
+  seq validated via av_seq_core). Canonical verifier (stage 1) must re-witness ALL stage-0 presets.
+- **Children — delegation `deleg_4e498b21`:** sa-0 `research/reuse/store-port-digest.md` (PF store
+  read-only digest; kb-port-digest format) · sa-1 `research/reuse/pack-pipeline-port-digest.md`
+  (schema/author-gate/verify_packs/preview/deploy → .avbank mapping) · sa-2 `packs/starter-100.avbank.json`
+  (100) · sa-3 `packs/acid-vault.avbank.json` (64 + seq basslines) · sa-4
+  `packs/techno-foundry.avbank.json` (64: kits + 32 patterns). Transcripts:
+  `cache\delegation\live\deleg_4e498b21	ask-{0..4}.log`; scratch `cache/scratch/p5/<name>/`.
+- **On return:** read the 2 digests → write the stage-1 orts briefs (store core/UI/rig/verifier/BANK/
+  preview) into `_p5_wave.md` §4 (replace the placeholder) → dispatch stage 1 → then integration per
+  the standard wave discipline + addenda 20+.
+- **If resuming cold mid-P5:** read `verify/_p5_wave.md` first; check `ls packs/ research/reuse/` for
+  what landed; transcripts as above; then continue from "on return". Resume phrase: **"continue anvil"**.
+
