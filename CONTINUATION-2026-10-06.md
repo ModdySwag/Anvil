@@ -1241,3 +1241,12 @@ battery 15 → gate → addendum 29 + README.
   help = `av_help` (avUiKeyHook owns ?/Esc); palette = `av_palette` (Ctrl-K · 41 commands); lessons =
   `av_lessons` (#av-firstrun · demo groove · 4 lessons · 4 wizards).
 - **Resume phrase: "continue anvil".**
+
+**SAVE CERTIFIED — 2026-10-08 ~03:20 (session-end verification):** tree clean (`?? cache/` only) · HEAD
+`60a23d5` (the save; close `95342b0` beneath) · `index.html` on disk = `7accc9fd…` (2,608,972 B — matches
+the save) · pins 15 files on `7accc9fd` · all chain markers closed (BATTERY-S5-DONE · GATE-S5-DONE ·
+CONTROL-S5-DONE · S5-RIGS-DONE) · process census: 0 rig strays (the one live `node server.js` is Moddy's
+own long-running server — the rigs only ever run `node verify/cdp_*.mjs`, and every chain exited) · no
+background jobs, no live subagents. **Nothing at risk.** The continued session opens on the next GOLDEN
+BUILD block — max modules/racks → platform (PWA #78 · suite bridges #82) → P7 polish (#79) → deploy +
+live verify + owner pass. Resume phrase: **"continue anvil"**.
