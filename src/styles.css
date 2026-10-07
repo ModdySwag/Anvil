@@ -483,3 +483,34 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-bank-apply { }
 .av-bank-preview { }
 .av-bank-hint { margin: 0; }
+
+/* P6 — the DELIVER card (av_deliver_ui.js) */
+.av-deliver { display: flex; flex-direction: column; gap: 9px; margin: 2px 0 4px; }
+.av-deliver-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-deliver-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-deliver-cap { font-size: 10.5px; color: var(--text-3); }
+.av-deliver-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-deliver-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-deliver-msg { }
+.av-deliver-err { color: #ff8a7a; }
+.av-deliver-opts { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.av-deliver-opt { display: flex; flex-direction: column; gap: 3px; }
+.av-deliver-opt-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-deliver-loops { min-width: 64px; }
+.av-deliver-bits { min-width: 64px; }
+.av-deliver-check { display: flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10px; color: var(--text-2); user-select: none; }
+.av-deliver-ck { accent-color: var(--teal); }
+.av-deliver-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.av-deliver-go { }
+.av-deliver-progress-line { min-height: 14px; }
+.av-deliver-progress { font-family: var(--mono); font-size: 10.5px; color: var(--teal); }
+.av-deliver-result { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-deliver-res-name { font-family: var(--mono); font-size: 11px; color: var(--text); overflow-wrap: anywhere; min-width: 0; }
+.av-deliver-res-size { font-size: 10px; }
+.av-deliver-dl { }
+.av-deliver-warn { margin: 0; padding-left: 18px; color: var(--mod-orange); font-size: 10.5px; }
+.av-deliver-warn-item { overflow-wrap: anywhere; }
+.av-deliver-note { margin: 0; }
+.av-deliver-degrade { color: var(--mod-orange); font-size: 10.5px; }
+.av-deliver-foot { }
+.av-deliver-busy { opacity: .75; }

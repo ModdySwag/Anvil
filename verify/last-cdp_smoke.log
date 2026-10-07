@@ -1,6 +1,6 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v0.5.0","tier":"tap: armed · engine: booting","voices":true,"version":"0.5.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v0.6.0","tier":"tap: armed · engine: booting","voices":true,"version":"0.6.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":1,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
@@ -14,6 +14,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   P3 mod matrix: card mounted with 8 bound macro knobs  -> {"macros":8,"bound":8}
  ok   P4 sequencer: card + grid mounted (4 rows · ≥64 cells) + transport controls + bpm knob  -> {"card":true,"host":true,"rows":4,"cells":64,"play":true,"stop":true,"rec":true,"pos":true,"bpmKnob":true}
  ok   P5 store: card mounted + wired (search · chips · lists) + BANK row in the synth card  -> {"card":true,"host":true,"root":true,"wired":true,"search":true,"filters":3,"lists":true,"mode":true,"bank":true,"bankSels":1,"core":"function","ui":"object","api":"object"}
+ ok   P6 deliver: card mounted + wired (loops/bits · both run buttons · download) + offline-export API live  -> {"card":true,"host":true,"root":true,"wired":true,"run":true,"master":true,"loops":true,"bits":true,"dl":true,"api":"object","bounce":"function","wav":"function","mid":"function","zip":"function"}
  ok   zero page errors
 
-16 passed, 0 failed
+17 passed, 0 failed

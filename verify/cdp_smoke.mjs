@@ -250,6 +250,25 @@ async function main() {
   check('P5 store: card mounted + wired (search · chips · lists) + BANK row in the synth card',
     stC.card === true && stC.host === true && stC.root === true && stC.wired === true && stC.search === true && stC.filters === 3 && stC.lists === true && stC.mode === true && stC.bank === true && stC.bankSels === 1 && stC.core === 'function' && stC.ui === 'object' && stC.api === 'object', JSON.stringify(stC));
 
+  /* 6g. the P6 deliver card (one-press STEM export) */
+  const dlR = await ev(`(() => {
+    const card = document.getElementById('av-deliver');
+    const host = document.getElementById('av-deliver-host');
+    return { card: !!card, host: !!host,
+             root: !!(host && host.querySelector('.av-deliver')),
+             wired: !!(host && host.dataset && host.dataset.avDeliverUiWired === '1'),
+             run: !!document.getElementById('av-deliver-run'),
+             master: !!document.getElementById('av-deliver-master-run'),
+             loops: !!document.getElementById('av-deliver-loops'),
+             bits: !!document.getElementById('av-deliver-bits'),
+             dl: !!document.getElementById('av-deliver-download'),
+             api: typeof window.__avDeliverUi,
+             bounce: typeof avBounce, wav: typeof avWavEncode, mid: typeof avMidExport, zip: typeof avZipBuild };
+  })()`);
+  const dlC = dlR.value || {};
+  check('P6 deliver: card mounted + wired (loops/bits · both run buttons · download) + offline-export API live',
+    dlC.card === true && dlC.host === true && dlC.root === true && dlC.wired === true && dlC.run === true && dlC.master === true && dlC.loops === true && dlC.bits === true && dlC.dl === true && dlC.api === 'object' && dlC.bounce === 'function' && dlC.wav === 'function' && dlC.mid === 'function' && dlC.zip === 'function', JSON.stringify(dlC));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

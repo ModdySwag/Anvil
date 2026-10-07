@@ -101,6 +101,11 @@ js_parts = [
     (SRC / "av_store.js").read_text(encoding="utf-8"),        # P5 store core (page module)
     (SRC / "av_bank.js").read_text(encoding="utf-8"),         # P5 bank apply + BANK row (page module)
     (SRC / "av_store_ui.js").read_text(encoding="utf-8"),     # P5 store card (page module)
+    (SRC / "av_wavio.js").read_text(encoding="utf-8"),         # P6 deliver: WAV codec 16/24/32f (page module)
+    (SRC / "av_zipc.js").read_text(encoding="utf-8"),          # P6 deliver: ZIP store writer (page module)
+    (SRC / "av_mid.js").read_text(encoding="utf-8"),           # P6 deliver: SMF writer + parser (page module)
+    (SRC / "av_bounce.js").read_text(encoding="utf-8"),        # P6 deliver: offline song bounce (page module)
+    (SRC / "av_deliver_ui.js").read_text(encoding="utf-8"),    # P6 deliver: the Deliver card (page module)
     (SRC / "av_synth.js").read_text(encoding="utf-8"),  # the SYNTH card (P3 engine layer)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]

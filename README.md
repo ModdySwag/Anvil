@@ -5,17 +5,17 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **P5 store in — the instrument now ships P1–P5.** Worklet voice engine (minBLEP
-"Classic" + wavetable, alias gates CLOSED), ACID/STRING/DRUM engines, sample core + recorder, FX
-rack + mod matrix + granular/sampler, the P4 groovebox sequencer, and the P5 pack store (sha-256
-verified installs · IndexedDB · offline-ready; three first-party banks — STARTER 100 · ACID VAULT ·
-TECHNO FOUNDRY, all 228 presets re-witnessed). Frozen `index.html` sha 1c2f112c… (1,126,117 B):
-battery smoke 16 · store 28 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31;
-**measured: 128 voices at 48.3 % of the audio budget** (offline ramp; engine byte-identical since
-the P1.x minBLEP ship). Stress ×2 at cap 64: everything green except the known margin profile
-(one cold-start delta + unison-heavy probe windows — recorded raw; console active both runs).
-Next: P5.1/P5.2 content waves + the studio beats, then P6–P7 share/cloud, deploy + owner pass.
-Resume at `CONTINUATION-2026-10-06.md` addendum 21.
+Status 2026-10-07: **P6 deliver in — one-press STEM export, MIDI I/O and the DAW-ready zip ship.**
+The instrument carries P1–P5 plus the studio's deliver half: a deterministic offline song bounce
+(per-part stems, sample-aligned), WAV 16/24/32f, SMF write + read, a ZIP writer, and the Deliver
+card (stems · master · .mid · README · one-press download). The store serves 9 packs / 548 presets
+(sha-256 verified installs · IndexedDB · offline-ready). Frozen `index.html` sha 877d4d35…
+(1,285,611 B): battery smoke 17 · bounce 32 · store 28 · feel 18 · keys 27 · midi 33 · sample 29 ·
+rec 29 · fx 27 · seq 31; **measured: realtime published {light 64 · fat 64} · offline 128 voices**
+(knee monotone; engine byte-identical since the P1.x minBLEP ship). Stress ×2 at cap 64: the known
+margin profile only (one cold-start delta + unison-heavy probe windows — recorded raw). Next: the
+remaining studio waves (record core · mix/master · deck · popout keyboard · CODE · help) then P7
+polish → deploy + owner pass. Resume at `CONTINUATION-2026-10-06.md` addendum 24.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)

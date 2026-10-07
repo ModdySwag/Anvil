@@ -1,0 +1,53 @@
+/* Anvil P6 — offline render / suspend-injection platform probe (parent-run 2026-10-07)
+   Purpose: verify BEFORE pinning the DELIVER wave contract that an OfflineAudioContext can boot the
+   real engine (avEngineBoot offline ladder) and that timed note events can be injected with
+   suspend()/resume() during the render. Probe law: platform facts are probed in a tiny scratch run
+   before they are pinned in a contract or rig.
+
+   Environment: headless browser via the agent's browser session (Chromium-family), page loaded as
+   file:///C:/Users/Moddy/anvil/index.html (live build 1c2f112c), engine booted per-context.
+
+   Probe script (in-page, async IIFE):
+   -------------------------------------------------------------------------------------------
+   const sr = 48000, total = sr * 2;
+   const oc = new OfflineAudioContext(2, total, sr);
+   const h = await avEngineBoot(oc, { offline: true });
+   oc.suspend(0.5).then(() => { a.ct1 = oc.currentTime; a.on1 = (h.noteOn(60, 0.9) === true); oc.resume(); });
+   oc.suspend(1.0).then(() => { a.ct2 = oc.currentTime; h.noteOff(60); oc.resume(); });
+   for (let k = 0; k < 6; k++) { const t = 1.2 + 0.05*k;
+     oc.suspend(t).then(() => { if (k%2===0) h.noteOn(64,0.9); else h.noteOff(64); oc.resume(); }); }
+   const buf = await oc.startRendering();   // 2 s stereo
+   // windows: pre 0.10-0.45 s · held 0.60-0.95 s · post 1.50-1.95 s ; onset = first |x| > 1e-4
+   -------------------------------------------------------------------------------------------
+
+   RESULT (verbatim, parent session 2026-10-07):
+   {"ready":true,"tier":"worklet:data","os":2,"A":{
+     "ct1":0.5013333333333333,     // suspend(0.5) resolved at frame 24064 = 188x128 (rounds UP to
+                                   // the next render-quantum boundary)
+     "on1":true,                   // noteOn accepted during suspend
+     "ct2":1,                      // suspend(1.0): exact boundary 48000 = 375x128 -> resolves at 1.0
+     "renderMs":35,                // 2 s of stereo audio rendered in ~35 ms wall time
+     "onsetA":24078,"onsetAms":501.625,  // voice audibly starts at the 24064 boundary (+14 frames
+                                         // envelope-attack ramp below the 1e-4 threshold)
+     "onsetB":52800,"onsetBms":1100,     // (contaminated by the held note's release tail above the
+                                         // threshold; chained-suspend scenario itself completed)
+     "pre":"0.00e+0",              // SILENCE before the injected note (nothing leaks)
+     "held":"9.65e-2",             // note audible while held
+     "post":"5.97e-3",             // decaying tail after note off
+     "peak":0.2377,"peakR":0.2377, // stereo, both channels live
+     "frames":96000},
+    "ok":true}
+
+   INTERPRETATION (pinned into verify/_p6_wave.md §0/§3):
+   1. OfflineAudioContext + real engine boot works (tier worklet:data on file://, os 2).
+   2. suspend(t)/resume() note injection works; messages posted during the suspend are processed as
+      rendering resumes, so the voice starts at the resume boundary.
+   3. suspend(t) resolves at the render-quantum boundary reached when the render passes t
+      (round UP to next 128-frame boundary). Event times therefore quantize to 128-frame boundaries
+      (<= 64 frames = 1.33 ms @48k from the analytic planner time) — PINNED as the bounce timing law.
+   4. One identical boundary schedule across parts keeps stems mutually aligned by construction.
+   5. Chained suspends (dozens/hundreds expected in a real song) resolve reliably; render speed is
+      ~57x realtime for this trivial patch — well within rig budgets.
+
+   Probe file: verify/p6-offline-probe-out.log (this file). Contract: verify/_p6_wave.md §0.
+*/
