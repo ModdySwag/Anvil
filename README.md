@@ -5,18 +5,18 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **S2 sessions in — versioned snapshots, autosave + crash recovery, and a one-press backup zip.**
-The instrument carries P1–P6 + S1 + S2: the sessions layer versions the whole working state (16 per
-session), autosaves while you work and offers crash recovery on the next load, and the backup zip
-carries sessions + samples + installed packs (store-method reader · sha-256-verified restore). The
-store serves 9 packs / 548 presets (sha-256 verified installs · IndexedDB · offline-ready). Frozen
-`index.html` sha 31087322… (1,635,639 B): battery smoke 19 · sessions 41 · studio 37 · bounce 32 ·
-store 28 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31; **the perf gate ran on
-a loaded machine — bench read 96 with realtime fat 48, and a back-to-back A/B against the S1 control
-bytes under the same conditions shows the identical knee (environment, not regression; engine
-byte-identical since the P1.x minBLEP ship; quiet-window re-run queued)**. Next: S2.1 takes &
-comping · S3 mix/master · deck · popout keyboard · CODE · help then P7 polish → deploy + owner pass.
-Resume at `CONTINUATION-2026-10-06.md` addendum 26.
+Status 2026-10-07: **S2.1 takes & comping in — take lanes, pick-best comping, trims + equal-power crossfades; render + WAV export.**
+The instrument carries P1–P6 + S1 + S2 + S2.1: the comp engine stitches the studio's takes (winner-clamped
+trims · equal-power crossfade seams · a 5-minute render cap) and exports a fresh WAV; comps live in memory
+for the session (the WAV is the durable artifact). The sessions layer versions the whole working state (16
+per session) with autosave + crash recovery, and the backup zip carries sessions + samples + installed
+packs. The store serves 9 packs / 548 presets (sha-256 verified installs · IndexedDB · offline-ready).
+Frozen `index.html` sha 0f79ebc2… (1,742,403 B): battery smoke 20 · comp 41 · sessions 41 · studio 37 ·
+bounce 32 · store 28 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31; **the perf gate
+ran on a loaded machine — the full run's knee read 64, and a back-to-back offline A/B (S2 control bytes
+vs S2.1, byte-identical engine) reads the identical knee 96/128 on BOTH builds (environment, not
+regression; quiet-window re-run queued)**. Next: S3 mix/master · deck · popout keyboard · CODE · help
+then P7 polish → deploy + owner pass. Resume at `CONTINUATION-2026-10-06.md` addendum 27.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)

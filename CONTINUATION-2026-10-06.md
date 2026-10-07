@@ -930,3 +930,43 @@ Resume phrase: **"continue anvil"**.
   4. Rebuild → smoke → `cdp_comp.mjs` first run (pin EXPECT_SHA; re-run) → **FULL battery — ALL 13 pinned suites** (smoke · studio · sessions · comp · feel · keys · midi · sample · rec · fx · seq · store · bounce; re-pin every file — keep the complete suite list, dropped suits are the S2 lesson) → **PERF GATE** (bench + stress ×2, hidden-detached + marker polling; if the machine is loaded again → record raw + A/B only if the bench drops) → commits + addendum 27.
 - Carried: **quiet-window bench re-run** (S2 gate ran loaded; A/B proven environment; expect 128 restored) · P·2 minBLEP pass · P4 follow-ups · PERFECT TUNINGS · then S3 mix/master / deck / popout keyboard / CODE / help. Resume phrase: **"continue anvil"**.
 - **LANDING UPDATE — 2026-10-07 ~21:10:** sa-A `src/av_comp.js` (894 lines; harness **87/87** re-verified) + sa-B `src/av_comp_ui.js` (1459; **248/248** re-verified) **LANDED GREEN + COMMITTED** (`24530f9`; not yet in index.html — the integration rebuild ships them). **sa-C `verify/cdp_comp.mjs` died pre-write** (its turn ended at "writing the rig"; empty scratch, no file) — **RE-DISPATCHED** as delegation `deleg_5029ff67` (same contract brief + a write-the-file-first amendment). On its landing: run the resume checklist §3–§4 unchanged (pre-flight includes `node --check verify/cdp_comp.mjs`). **— RESOLVED ~21:20: it LANDED (920 lines, `node --check` OK, 40 checks planned); ALL children done, nothing running (see the final landing line above and the save commit).**
+
+## ADDENDUM 27 — 2026-10-07 (S2.1 TAKES & COMPING INTEGRATED + CLOSED — battery ALL GREEN on `0f79ebc2`; perf gate raw + A/B attribution; rig SPEC fixes)
+
+- **INTEGRATED + checkpoint `46c6ca6`:** ONE counted-assert script (11 edits, all-or-nothing) — build.py
+  js_parts `av_comp` → `av_comp_ui` (after `av_session_ui`, before `av_synth`) · body `#av-comp` card +
+  `#av-comp-host` after `#av-sessions` (+ hero/footer) · styles block (48-class coverage gate passed) ·
+  app_core **0.9.0 "S2.1 · takes & comping"** + guarded comp/compUi boots + log fields · cdp_smoke
+  comp-card check (**→ 20 checks**). **Frozen `index.html` sha `0f79ebc2…` = 1,742,403 B.**
+- **Rig `cdp_comp.mjs`: first run 38/40 → TWO rig SPEC fixes** (the app was correct on both — the rig-own
+  winners/ranges recomputation matched the engine and the render matched the stitch math exactly):
+  (1) take-B fixture wait 1250 → 2000 ms — the input capture is **4096-frame block-quantized**, so the old
+  50 ms gap landed on take A's exact block count (65536 vs 65536 → now 65536 vs 102400);
+  (2) check-6 render leg — the old "≈ min(longest, regions·cycle)" assumed the owner take wins every
+  region; a shorter scorer wins legitimately (winner-clamped ranges), so the expectation is now the
+  rig-own region picks minus the pinned 240-frame default seams (ΣL − Σmin(240, Lᵢ, Lᵢ₊₁)). Re-run **40/40**
+  → pinned (`EXPECT_SHA`) → **41/41**; probe + screenshot inspected clean (`renders/s2b-comp-suite.png`:
+  lanes Take 3/4/5 + partial, selected-lane border, RIG AUTO segment `t4 0.00–2.00 s · fade 5.0/5.0 ms`).
+- **Freeze pins re-pinned (10 files → S2.1 sha):** cdp_comp (null → sha) + bounce/fx/midi/rec/seq/sample/
+  sessions/store/studio (S2 sha → S2.1 sha).
+- **BATTERY ALL GREEN — 13 suites** (one detached runner; `cache/scratch/s2b/integrate/battery-s2b.log`):
+  smoke **20** · studio 37 · sessions 41 · comp 41 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 ·
+  fx 27 · seq 31 · store 28 · bounce 32 — every exit=0, fails=0.
+- **PERF GATE (raw + attribution):** bench `bench-v12-s2b-full.{log,json}` full run knee read **64**
+  (the n=96 cell spiked @ 1468.9 µs/q — a transient; n=64 was the fastest seen @ 606.0; realtime
+  {light 64 · fat 48}). **Offline A/B back-to-back under the same conditions** (`bench-ab-s2bctl-offline.*`
+  = S2 control bytes, sha verified 31087322; `bench-ab-s2b-offline.*` = S2.1): BOTH publish the **identical
+  knee 96/128** (control n=96 @ 986.4; S2.1 n=96 @ 1023.5, n=128 @ 1338.9) and the worklet sha
+  `6e66274e…` is byte-identical to the S2 / P1.x lineage ⇒ **ENVIRONMENT, not a regression**. Stress ×2
+  (`stress-s2b-run1/2.log`): `asserts-not-met` both — run1 loaded profile (deltas 1795, uni-7 over-drive
+  windows), run2 near-quiet (deltas 49); drains PASS ×2, heap ≤ 0.3 MB, pageErrors 0. `last-cdp_bench.*`
+  restored to the full S2.1 run.
+- **README updated** (status = S2.1; battery 13 suites; gate raw + A/B attribution line).
+- **Carried:** a genuinely quiet-window bench re-run (both S2 and S2.1 gates ran on an active-console
+  machine; under current conditions BOTH builds read 96 — expect 128 truly quiet) · P·2 minBLEP pass ·
+  P4 follow-ups · PERFECT TUNINGS.
+- **NEXT SESSION OPENS ON: S3 mix/master** — draft `verify/_s3_wave.md` (docs/08 §1: per-track FX +
+  send rails #69 · bus glue · master chain #70 · auto-mix #49 with LUFS/true-peak targets · A/B
+  reference · export dither) + dispatch children; then S4 deliver / deck / popout keyboard / CODE /
+  walkthrough-help. **NOTHING RUNNING** — no background jobs, no live subagents. Resume phrase:
+  **"continue anvil"**.
