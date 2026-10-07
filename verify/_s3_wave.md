@@ -308,3 +308,16 @@ Carried: quiet-window bench re-run (S2 gate ran loaded; A/B-attributed; re-run l
 acid accent-flag decision) · PERFECT TUNINGS (tuning engine) · S4 deliver extras · deck (#15) ·
 popout keyboard · CODE (#81) · walkthrough/help (#20/#45/#80) · max modules · platform (share/cloud/
 PWA/FSA/bridges/video) · P7 polish + deploy + owner pass. Resume phrase: **"continue anvil"**.
+
+## AMENDMENT 1 — 2026-10-07 (parent, after the S3 children landed)
+
+1. **Anchor (a) corrected (SPEC fix).** The −23.0 LUFS anchor for a 997 Hz amp-0.1 sine holds for the
+   SINGLE-CHANNEL reading (measured −23.010). BS.1770 sums channels, so stereo L=R reads −20.000
+   (== single +3.01 — the anchor-(c) relation). `cdp_mix` 11a now asserts single → −23.0 ±0.2 AND
+   stereo → −20.0 ±0.25. av_loud is correct as built; the sa-B harness flag
+   (`cache/scratch/s3/loud/loud_node.out.txt`) is the recorded contract inconsistency this
+   amendment supersedes.
+2. **Glue reading (spec note).** With glue `makeup` 0 the quiet half cannot get louder — the check
+   reads as an improvement of the quiet/loud BALANCE ratio ≥ 1.05 plus a measurably compressed loud
+   half (the literal quiet on/off value is reported for evidence). Physics-sound; strength kept.
+3. Everything else in §2 stands as written.
