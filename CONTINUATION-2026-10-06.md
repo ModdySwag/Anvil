@@ -1505,3 +1505,22 @@ Resume phrase: **"continue anvil"**.
   live-verify results live in addendum 36.
 - Carried: P·2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - optional quiet-window bench/stress re-runs -
   owner pass on the live surface. Resume phrase: **"continue anvil"**.
+
+## Resume addendum 36 - 2026-10-08 (DEPLOYED + LIVE-VERIFIED - Anvil is LIVE at https://moddys.net/anvil/)
+
+- Upload set (radio-browser/deploy/anvil/): index.html (3,375,055 B, sha a90806a5...), sw.js, manifest.webmanifest,
+  icon-192/512/maskable-512.png, inbox.html + the packs/ tree (10 files, 2.1 MB). 17 files uploaded via
+  upload-site.py --only ... ; --verify reports 0 file(s) not in sync (root set + packs set both verified).
+- LIVE PROOFS (headless Edge over https, cache/scratch/p7/probe_live_anvil.mjs): boot data-av-ready at
+  https://moddys.net/anvil/ ; navigator.serviceWorker.controller true; __avPwa.state() = supported/registered/
+  active true, scope https://moddys.net/anvil/ ; caches.keys() = ["anvil-a90806a5"] (the versioned cache
+  matches the frozen build sha); manifest link present; packs/index.json 200 from the live origin; OFFLINE
+  reload boots the app (online:false + av-pwa-offline chip on body) = the local-first spine proven live.
+  4 browser-level net::ERR_INTERNET_DISCONNECTED console messages during the deliberately-offline window
+  (the sanctioned class; the page packs fetch attempt - invisible to users in normal use).
+- Live sha check: curl sha256 of https://moddys.net/anvil/index.html = a90806a5... (matches the frozen build).
+- REMAINING: the owner's real-surface pass (Moddy) - play it, the install prompt, offline use. Optional polish:
+  add anvil/ to the moddys.net root suite nav (the root index.html links forge/musichub/resonance/synthhub;
+  a nav edit needs the radio checkers re-run - deliberately NOT done unattended).
+- The whole GOLDEN BUILD is shipped end to end: P0-P7 + platform, battery 22 suites green, deployed,
+  live-verified. Resume phrase: "continue anvil".
