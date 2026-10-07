@@ -1321,3 +1321,13 @@ live verify + owner pass. Resume phrase: **"continue anvil"**.
   transitions · arrangement export) → then platform (PWA #78 · suite bridges #82) → P7 polish (#79) →
   deploy + live verify + owner pass. Carried: P·2 minBLEP pass · P4 follow-ups · PERFECT TUNINGS ·
   optional quiet-window bench re-runs. Resume phrase: **"continue anvil"**.
+
+**SAVE CERTIFIED — 2026-10-08 ~04:50 (session-end verification):** tree clean (`?? cache/` + the M1
+rig log) · HEAD = this save commit (close `5193b70` beneath) · `index.html` on disk = `335f4bd0…`
+(2,933,715 B — matches the frozen build the whole gate ran against) · pins 16 files on `335f4bd0` ·
+battery 19 suites green · gate records committed (`verify/m1-gate-attribution.txt`,
+`bench-v18-m1-full.*`, `stress-m1-run1/2.log`) · process census: 0 rig strays (only Moddy's own node
+server + EdgeWebView2 processes) · no background jobs, no live subagents. **Nothing at risk.** The
+continued session opens on the M2 wave — MPE #61 · chop #65 · generative #72 remaining · arranger #73
+remaining → platform (PWA #78 · suite bridges #82) → P7 (#79) → deploy + live verify + owner pass.
+Resume phrase: **"continue anvil"**.
