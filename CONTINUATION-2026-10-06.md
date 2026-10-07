@@ -1085,3 +1085,9 @@ Resume phrase: **"continue anvil"**.
   sustains for it — G5 green) · `lastNote.vel` null (the bus exposes no velocity) · attach retry cadence
   2 s (boot comps `avDeckInit` only; the card attaches) · `rowMs` wall-clock gate + 4-step fallback.
 - Resume phrase: **"continue anvil"**.
+
+**SAVE CERTIFIED — 2026-10-07 ~24:20 (session-end verification):** tree clean (`?? cache/` only) ·
+HEAD `137a767` · `index.html` on disk = `0ff22c9c…` (matches this save) · process census = 0 real
+strays (only the querying wrappers self-match) · no background jobs, no live subagents. **Nothing at
+risk.** The continued session opens with: 4b probe → fix → rebuild → smoke → rig re-run → pin →
+battery 15 → gate → addendum 29 + README.
