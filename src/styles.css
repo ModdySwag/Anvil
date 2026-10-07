@@ -829,3 +829,48 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-mix-m-dbtp { }
 .av-mix-m-peak { }
 .av-mix-m-norm { }
+
+/* ============================================================================
+   DECK — the DECK card (av_deck_ui.js): scope · spectrum · waterfall · meters · readouts */
+.av-deck { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-deck-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+.av-deck-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-deck-cap { font-size: 10.5px; color: var(--text-3); }
+.av-deck-status-line { display: flex; align-items: baseline; gap: 8px; min-height: 15px; }
+.av-deck-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.av-deck-msg { color: var(--text-2); }
+.av-deck-err { color: #ff8a7a; }
+.av-deck-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.av-deck-ctl { display: inline-flex; align-items: center; gap: 6px; }
+.av-deck-ctl-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); }
+.av-deck-btn { }
+.av-deck-btn.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-deck-select { min-width: 84px; }
+.av-deck-on { color: var(--teal); }
+.av-deck-panes { display: flex; flex-wrap: wrap; gap: 10px; }
+.av-deck-pane { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1 1 300px; }
+.av-deck-pane-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
+.av-deck-canvas { width: 100%; max-width: 100%; height: auto; display: block; background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; }
+.av-deck-scope { }
+.av-deck-spectrum { }
+.av-deck-waterfall { }
+.av-deck-idle { opacity: .55; }
+.av-deck-meters { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.av-deck-meter { display: inline-flex; align-items: center; gap: 6px; }
+.av-deck-meter-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--text-3); }
+.av-deck-meter-bar { display: inline-block; width: 140px; height: 7px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px; overflow: hidden; }
+.av-deck-meter-fill { display: block; height: 100%; width: 0%; background: var(--teal-deep); }
+.av-deck-meter-val { font-family: var(--mono); font-size: 10px; color: var(--text-2); min-width: 46px; }
+.av-deck-over { color: var(--mod-orange); }
+.av-deck-gain { display: inline-flex; align-items: center; gap: 10px; }
+.av-deck-gain-row { display: inline-flex; align-items: center; gap: 5px; }
+.av-deck-gain-lbl { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+.av-deck-gain-bar { display: inline-block; width: 56px; height: 6px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 3px; overflow: hidden; }
+.av-deck-gain-fill { display: block; height: 100%; width: 0%; background: var(--teal-deep); }
+.av-deck-gain-val { font-family: var(--mono); font-size: 9px; color: var(--text-3); min-width: 38px; }
+.av-deck-readouts { display: flex; flex-wrap: wrap; gap: 14px; }
+.av-deck-rd { display: inline-flex; align-items: baseline; gap: 5px; }
+.av-deck-rd-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--text-3); }
+.av-deck-rd-val { font-family: var(--mono); font-size: 11px; color: var(--teal); }
+.av-deck-note { margin: 0; }
+.av-deck-foot { margin: 0; }

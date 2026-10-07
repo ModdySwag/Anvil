@@ -11,9 +11,9 @@
 
 <main class="av-main">
   <section class="av-card">
-    <h1>Phase S3 &mdash; mix &amp; master: per-track FX + send rails &middot; bus glue &middot; master chain &middot; auto-mix &middot; dither</h1>
+    <h1>Phase DECK &mdash; pro readouts: oscilloscope &middot; spectrum &middot; waterfall &middot; LUFS/true-peak &middot; voice/CPU</h1>
     <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare).</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker).</p>
   </section>
 
   <section class="av-card" id="av-levels">
@@ -94,6 +94,11 @@
     <div id="av-mix-host"><p class="av-note av-dim">The mix desk lands here &mdash; per-track gain, pan, sends, ducking and insert FX; a verb + delay send pair; bus glue; and a master chain with LUFS / true-peak normalize targets and export dither. Render the mixdown offline, A/B it against a reference, and export the WAV. Nothing is uploaded.</p></div>
   </section>
 
+  <section class="av-card" id="av-deck">
+    <h2>Deck</h2>
+    <div id="av-deck-host"><p class="av-note av-dim">The deck lands here &mdash; a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS / true-peak meters, engine voice + CPU readouts and a note ticker. Display only &mdash; nothing is uploaded.</p></div>
+  </section>
+
   <section class="av-card">
     <h2>Roadmap &mdash; from the plan</h2>
     <ul class="av-list">
@@ -108,7 +113,7 @@
 </main>
 
 <footer class="av-foot">
-  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Mix &amp; Master &middot; send rails + master chain &middot; AGPL-3.0-or-later</span>
+  <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; Deck &middot; scope + spectrum + waterfall + meters &middot; AGPL-3.0-or-later</span>
 </footer>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">

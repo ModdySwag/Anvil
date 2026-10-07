@@ -365,6 +365,33 @@ async function main() {
   check('S3 mix: card mounted + wired (ADD \u00b7 render \u00b7 export \u00b7 auto-mix \u00b7 A/B) + mix/loud API live',
     s3.card === true && s3.host === true && s3.root === true && s3.wired === true && s3.status === true && s3.addSrc === true && s3.add === true && s3.tracks === true && s3.render === true && s3.exportBtn === true && s3.bits === true && s3.dither === true && s3.auto === true && s3.refFile === true && s3.compare === true && s3.playab === true && s3.ui === 'object' && s3.mixApi === 'function' && s3.autoApi === 'function' && s3.refApi === 'function' && s3.cmpApi === 'function' && s3.loudApi === 'function' && s3.handles === 'object|object', JSON.stringify(s3));
 
+  /* 6l. the DECK card (scope \u00b7 spectrum \u00b7 waterfall \u00b7 meters \u00b7 readouts) */
+  const deckR = await ev(`(() => {
+    const card = document.getElementById('av-deck');
+    const host = document.getElementById('av-deck-host');
+    return { card: !!card, host: !!host,
+             root: !!(host && host.querySelector('.av-deck')),
+             wired: !!(host && host.dataset && host.dataset.avDeckUiWired === '1'),
+             status: !!document.getElementById('av-deck-status'),
+             run: !!document.getElementById('av-deck-run'),
+             freeze: !!document.getElementById('av-deck-freeze'),
+             dbfloor: !!document.getElementById('av-deck-dbfloor'),
+             wfrate: !!document.getElementById('av-deck-wfrate'),
+             scope: !!document.getElementById('av-deck-scope'),
+             spectrum: !!document.getElementById('av-deck-spectrum'),
+             waterfall: !!document.getElementById('av-deck-waterfall'),
+             lufs: !!document.getElementById('av-deck-m-lufs'),
+             tp: !!document.getElementById('av-deck-m-tp'),
+             bpm: !!document.getElementById('av-deck-rd-bpm'),
+             ui: typeof window.__avDeckUi,
+             deckApi: typeof avDeckStep, attachApi: typeof avDeckAttach,
+             readsApi: typeof avDeckReadouts,
+             handles: typeof window.__avDeck + '|' + typeof avDeckFrame };
+  })()`);
+  const deckS = deckR.value || {};
+  check('DECK: card mounted + wired (RUN \u00b7 FREEZE \u00b7 FLOOR \u00b7 waterfalls \u00b7 meters \u00b7 readouts) + deck API live',
+    deckS.card === true && deckS.host === true && deckS.root === true && deckS.wired === true && deckS.status === true && deckS.run === true && deckS.freeze === true && deckS.dbfloor === true && deckS.wfrate === true && deckS.scope === true && deckS.spectrum === true && deckS.waterfall === true && deckS.lufs === true && deckS.tp === true && deckS.bpm === true && deckS.ui === 'object' && deckS.deckApi === 'function' && deckS.attachApi === 'function' && deckS.readsApi === 'function' && deckS.handles === 'object|function', JSON.stringify(deckS));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

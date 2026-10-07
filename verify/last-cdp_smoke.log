@@ -1,8 +1,8 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v1.0.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.0.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v1.1.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.1.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
- ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":1,"ctxState":"running"}
+ ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":2,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
  ok   KNOB SELFTEST ok  -> {"ok":true,"knobFound":true,"keysBound":true,"committed":true,"params":true,"state":true,"aria":true,"readout":true,"ctxState":"running","gain":0.55,"gainOk":true}
  ok   ENGINE SELFTEST ok (tier + allocation)  -> {"ok":true,"tier":"worklet","url":"data","sr":48000,"maxVoices":64,"allocated":true,"released":true,"voices":[0,1,0],"kinds":{"va":true,"acid":true,"string":true,"drum":true,"grain":true,"sampler":true},"fx":true,"mod":true,"drumNote":true,"kindsOk":true}
@@ -19,6 +19,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   S2 sessions: card mounted + wired (name · SAVE · list · autosave · BACKUP · RESTORE) + session/backup API live  -> {"card":true,"host":true,"root":true,"wired":true,"name":true,"save":true,"list":true,"autosave":true,"backup":true,"restore":true,"ui":"object","sessionApi":"function","backupApi":"function","loadApi":"function","handles":"object|object"}
  ok   S2.1 comp: card mounted + wired (lanes · comp select · segments · ADD/AUTO/RENDER/EXPORT) + comp API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"lanes":true,"list":true,"segs":true,"add":true,"auto":true,"fade":true,"render":true,"exportBtn":true,"ui":"object","compApi":"function","autoApi":"function","renderApi":"function","exportApi":"function","handles":"object|function"}
  ok   S3 mix: card mounted + wired (ADD · render · export · auto-mix · A/B) + mix/loud API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"addSrc":true,"add":true,"tracks":true,"render":true,"exportBtn":true,"bits":true,"dither":true,"auto":true,"refFile":true,"compare":true,"playab":true,"ui":"object","mixApi":"function","autoApi":"function","refApi":"function","cmpApi":"function","loudApi":"function","handles":"object|object"}
+ ok   DECK: card mounted + wired (RUN · FREEZE · FLOOR · waterfalls · meters · readouts) + deck API live  -> {"card":true,"host":true,"root":true,"wired":true,"status":true,"run":true,"freeze":true,"dbfloor":true,"wfrate":true,"scope":true,"spectrum":true,"waterfall":true,"lufs":true,"tp":true,"bpm":true,"ui":"object","deckApi":"function","attachApi":"function","readsApi":"function","handles":"object|function"}
  ok   zero page errors
 
-21 passed, 0 failed
+22 passed, 0 failed

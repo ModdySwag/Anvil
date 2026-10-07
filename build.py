@@ -118,6 +118,8 @@ js_parts = [
     (SRC / "av_loud.js").read_text(encoding="utf-8"),           # S3 mix: loudness suite - LUFS/true-peak (page module)
     (SRC / "av_mix.js").read_text(encoding="utf-8"),            # S3 mix: the mix engine (page module)
     (SRC / "av_mix_ui.js").read_text(encoding="utf-8"),         # S3 mix: the MIX card (page module)
+    (SRC / "av_deck.js").read_text(encoding="utf-8"),            # DECK: the deck core - scope/spectrum/waterfall/meters (page module)
+    (SRC / "av_deck_ui.js").read_text(encoding="utf-8"),         # DECK: the DECK card (page module)
     (SRC / "av_synth.js").read_text(encoding="utf-8"),  # the SYNTH card (P3 engine layer)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]
