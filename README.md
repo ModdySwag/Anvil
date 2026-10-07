@@ -5,17 +5,18 @@ multi-engine sound (acid / wavetable / FM / string / drums / granular / sampler)
 groovebox-grade sequencer, an FX rack, ten factory packs, and multi-user options
 (share links → cloud libraries → community store). **Free** — no monetisation.
 
-Status 2026-10-07: **P6 deliver in — one-press STEM export, MIDI I/O and the DAW-ready zip ship.**
-The instrument carries P1–P5 plus the studio's deliver half: a deterministic offline song bounce
-(per-part stems, sample-aligned), WAV 16/24/32f, SMF write + read, a ZIP writer, and the Deliver
-card (stems · master · .mid · README · one-press download). The store serves 9 packs / 548 presets
-(sha-256 verified installs · IndexedDB · offline-ready). Frozen `index.html` sha 877d4d35…
-(1,285,611 B): battery smoke 17 · bounce 32 · store 28 · feel 18 · keys 27 · midi 33 · sample 29 ·
-rec 29 · fx 27 · seq 31; **measured: realtime published {light 64 · fat 64} · offline 128 voices**
-(knee monotone; engine byte-identical since the P1.x minBLEP ship). Stress ×2 at cap 64: the known
-margin profile only (one cold-start delta + unison-heavy probe windows — recorded raw). Next: the
-remaining studio waves (record core · mix/master · deck · popout keyboard · CODE · help) then P7
-polish → deploy + owner pass. Resume at `CONTINUATION-2026-10-06.md` addendum 24.
+Status 2026-10-07: **S1 record core in — mic/line input, count-in metronome and lap takes ship.**
+The instrument carries P1–P6 plus the first studio wave: audio input riding the engine's own context
+(same-context law · monitor off by default), a lookahead click scheduler with a 1–4-bar count-in,
+and lap takes that split at sequencer cycle boundaries with one-click WAV export — all driven by the
+Studio card. The store serves 9 packs / 548 presets (sha-256 verified installs · IndexedDB ·
+offline-ready). Frozen `index.html` sha 75c9c2eb… (1,448,104 B): battery smoke 18 · studio 37 ·
+bounce 32 · store 28 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31;
+**measured: realtime published {light 64 · fat 64} · offline 128 voices** (knee monotone; engine
+byte-identical since the P1.x minBLEP ship). Stress ×2: the known margin profile only (one cold-start
+delta + unison-heavy probe windows — recorded raw). Next: the next studio waves (sessions ·
+mix/master · deck · popout keyboard · CODE · help) then P7 polish → deploy + owner pass. Resume at
+`CONTINUATION-2026-10-06.md` addendum 25.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)
