@@ -1250,3 +1250,33 @@ own long-running server — the rigs only ever run `node verify/cdp_*.mjs`, and 
 background jobs, no live subagents. **Nothing at risk.** The continued session opens on the next GOLDEN
 BUILD block — max modules/racks → platform (PWA #78 · suite bridges #82) → P7 polish (#79) → deploy +
 live verify + owner pass. Resume phrase: **"continue anvil"**.
+
+## M1 WAVE OPENED — 2026-10-08 (sound depot: FM engine #60 · studio flavours #68 · convolution IR #67 · wavetable editor #66)
+
+- **Contract `verify/_m1_wave.md`** (this wave's single source of truth): FM = kind 6 (PREFIX fm, param
+  schema + 8 algos + `AVFM.algoInfo(i)` pinned in §2.1; card #av-fm §2.2) · AVFXAW prefix `aw` (5
+  modes console/tape/drive/air/warm; §2.3) · AVFXCONV prefix `conv` (partitioned-FFT, factory bank +
+  user impulse, §2.4) · WT core+card (wt.user0..15 + avEngineWt/setUserWt plumbing, §2.5/§2.6) · rig
+  `verify/cdp_m1.mjs` §2.7 · integration recipe §4 · watch-outs §5.
+- **Children — delegation `deleg_9716d625` (7 parallel, background):** sa-A `src/av_fm.js` · sa-B
+  `src/av_fm_ui.js` · sa-C `src/av_fx_aw.js` · sa-D `src/av_fx_conv.js` · sa-E `src/av_wt.js` · sa-F
+  `src/av_wt_ui.js` · sa-G `verify/cdp_m1.mjs` (write-only rig, EXPECT_SHA null). Transcripts:
+  `cache\delegation\live\deleg_9716d625\task-{0..6}.log`; scratch `cache/scratch/m1/<name>/`.
+- **Pre-drafted integration script: `cache/scratch/m1/integrate/_m1_integrate.py`** — counted-assert,
+  all-or-nothing (validates every anchor across all 9 files before writing anything; artifact guard
+  refuses until all 7 child files exist). py_compile OK; guard verified refusing (exit 2) while the
+  children author. Sites: build.py (worklet concat + parts + asserts) · av_dsp (kind range 1..6 ×5
+  sites · kindModOf · engine.kind "fm" · osc2 user tables + frame resolver · userWt literal ·
+  FX_PREFIX/FX_WET 7 slots · setUserWt/setConvImpulse + exports · stats uwt/fxChain) · av_voiceproc
+  (wtab + conv branches) · av_engine (avEngineWt/avEngineConv senders, structured-clone) · av_synth
+  (kinds + fm panel + osc2 optionsFn + avSynthWtOptions/avSynthOscOptionsRefresh) · av_fx (aw/conv
+  strips + IMPORT IR button + import leg) · body (#av-fm + #av-wt cards) · app_core (1.4.0 "M1 · fm ·
+  flavours · conv · wavetable" + boots + ENGINE SELFTEST fm) · smoke (7 kinds · 7 strips/27 knobs ·
+  #av-fm + #av-wt checks).
+- **On resume (cold mid-wave):** check `ls src/av_fm.js src/av_fm_ui.js src/av_fx_aw.js
+  src/av_fx_conv.js src/av_wt.js src/av_wt_ui.js verify/cdp_m1.mjs` + child transcripts; verify files →
+  re-run child harnesses → styles block from `avFmUiClasses()/avWtUiClasses()` → run the integration
+  script → `python3 build.py` → smoke → `node verify/cdp_m1.mjs` first run → SPEC fixes → pins →
+  battery (19 suites) → perf gate (bench knee vs 96/128 + stress ×2 + old-bytes control if the counts
+  jump) → close commits + addendum 32 + README + docs/05 status.
+- Resume phrase: **"continue anvil"**.
