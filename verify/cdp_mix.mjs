@@ -110,7 +110,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    S3: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = null;
+const EXPECT_SHA = '859a897da25b0240f657b0ea7394459be83c455632f929a7e4f1a7fd55cbe207';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -694,6 +694,20 @@ async function main() {
     out.enginePrereq = { avBounce: (typeof avBounce === 'function'), snap: (() => { try { return !!avSeqSnap(); } catch (e) { return false; } })() };
     if (!R.takeA || !R.comp) { out.why = 'rig stash incomplete'; return out; }
     const pack = (x) => ({ ok: !!(x && x.ok === true), id: (x && x.track && x.track.id) || null, name: (x && x.track && x.track.name) || null, error: (x && x.error) || null });
+    /* SPEC fix (parent 2026-10-07): the ENGINE leg needs audible events — the fresh-page default
+       pattern is EMPTY (probe: snapNotes 0 -> avBounce warns "pattern has no audible events").
+       Load the house rig pattern shape (cdp_bounce BUILD_PATTERN: notes on all 4 tracks, prob 100). */
+    out.patternLoaded = (function () {
+      try {
+        const mk = (on, note, vel) => ({ on: on ? 1 : 0, note: note, vel: vel, gate: 0.5, slide: 0, accent: 0, oct: 0, prob: 100, cond: '', ratchet: 1, micro: 0 });
+        const track = (hits, note, vel) => { const steps = []; for (let i = 0; i < 64; i++) steps.push(mk(0, note, vel)); for (let i = 0; i < hits.length; i++) steps[hits[i]] = mk(1, note, vel); return { len: 16, speed: 1, mute: 0, steps: steps }; };
+        const pat = { v: 1, name: 'RIG MIX PAT', bpm: 120, grid: '16', swing: 50, rng: 0x12345678,
+          tracks: [ track([0, 1, 2, 3, 4, 5, 6, 7], 'c3', 0.9), track([0, 1, 2, 3, 4, 5, 6, 7], 'e3', 0.8), track([0, 1, 2, 3, 4, 5, 6, 7], 'g3', 0.8), track([8, 9, 10, 11], 'c4', 0.9) ],
+          plocks: [] };
+        const ok = (typeof avSeqLoad === 'function') ? avSeqLoad(pat) : false;
+        return (ok === true) && !!((typeof avSeqSnap === 'function') && avSeqSnap() && avSeqSnap().name === 'RIG MIX PAT');
+      } catch (e) { return 'err: ' + String((e && e.message) || e); }
+    })();
     const t1 = avMixAddTrack({ name: 'TAKE-A', source: { type: 'take', id: R.takeA.id } });
     const t2 = avMixAddTrack({ name: 'COMP-1', source: { type: 'comp', id: R.comp.id } });
     const t3 = avMixAddTrack({ name: 'ENGINE', source: { type: 'engine', mask: [true, true, true, true], loops: 1, tailS: 0.5 } });
@@ -708,9 +722,9 @@ async function main() {
   const p3a = val(p3aR) || {};
   const add3 = p3a.add || {};
   const metas3 = Array.isArray(p3a.metas) ? p3a.metas : [];
-  expected(!!(add3.t1 && add3.t1.ok === true && add3.t1.id) && !!(add3.t2 && add3.t2.ok === true && add3.t2.id) && !!(add3.t3 && add3.t3.ok === true && add3.t3.id) && p3a.count === 3 && metas3.length === 3 && metas3.every((m) => typeof m.name === 'string' && typeof m.gainDb === 'number'),
-    '3a add tracks: take-A + comp + engine (loops 1, tail 0.5) all ok · state count 3 · list metas carry name/gainDb',
-    J({ add: add3, count: p3a.count, metas: metas3, enginePrereq: p3a.enginePrereq, why: p3a.why }));
+  expected(!!(add3.t1 && add3.t1.ok === true && add3.t1.id) && !!(add3.t2 && add3.t2.ok === true && add3.t2.id) && !!(add3.t3 && add3.t3.ok === true && add3.t3.id) && p3a.count === 3 && metas3.length === 3 && metas3.every((m) => typeof m.name === 'string' && typeof m.gainDb === 'number') && p3a.patternLoaded === true,
+    '3a add tracks: rig pattern loaded (RIG MIX PAT) + take-A + comp + engine (loops 1, tail 0.5) all ok · state count 3 · list metas carry name/gainDb',
+    J({ add: add3, count: p3a.count, metas: metas3, enginePrereq: p3a.enginePrereq, patternLoaded: p3a.patternLoaded, why: p3a.why }));
 
   const p3bR = await ev(`(async () => {
     const W = window.__mixw;
@@ -1174,13 +1188,18 @@ async function main() {
   const ids13 = p13a.ids || {};
   const rowP = rows13.filter((r) => String(r.id) === String(ids13.p))[0] || null;
   const rowQ = rows13.filter((r) => String(r.id) === String(ids13.q))[0] || null;
+  /* SPEC fix (parent, 2026-10-07): the engine REPORTS a silent track's row honestly (lufs null,
+     applied false -- the card renders it "silent \u00b7 skipped") rather than omitting it; the
+     intent asserted here is "reported but NOT applied", strength kept. */
+  const rowS13 = rows13.filter((r) => String(r.id) === String(ids13.sil))[0] || null;
+  const silentOk = !!(rowS13 && rowS13.lufs === null && rowS13.applied === false);
   const trkP = ((p13a.tracks || []).filter((t) => String(t.id) === String(ids13.p))[0] || {}).gainDb;
   const trkQ = ((p13a.tracks || []).filter((t) => String(t.id) === String(ids13.q))[0] || {}).gainDb;
   const deltaGap = (rowP && rowQ && typeof rowP.deltaDb === 'number' && typeof rowQ.deltaDb === 'number') ? Math.abs(rowQ.deltaDb - rowP.deltaDb) : null;
-  const appliedOk = !!(rowP && rowQ && typeof rowP.gainDb === 'number' && typeof rowQ.gainDb === 'number' && typeof trkP === 'number' && typeof trkQ === 'number' && Math.abs(trkP - rowP.gainDb) <= 1e-6 && Math.abs(trkQ - rowQ.gainDb) <= 1e-6);
-  expected(p13a.ok === true && rows13.length === 2 && deltaGap !== null && Math.abs(deltaGap - 20) <= 1 && appliedOk,
-    '13a auto-balance (target -18): two fixtures 20 dB apart -> deltas differ by ~20 dB (±1) · applied gainDb set on the tracks · silent track skipped (rows === 2)',
-    J({ ok: p13a.ok, target: p13a.target, ms: p13a.ms, rows: rows13, tracks: p13a.tracks, deltaGap: deltaGap, appliedOk: appliedOk, why: p13a.why }));
+  const appliedOk = !!(rowP && rowQ && rowP.applied === true && rowQ.applied === true && typeof rowP.gainDb === 'number' && typeof rowQ.gainDb === 'number' && typeof trkP === 'number' && typeof trkQ === 'number' && Math.abs(trkP - rowP.gainDb) <= 1e-6 && Math.abs(trkQ - rowQ.gainDb) <= 1e-6);
+  expected(p13a.ok === true && !!rowP && !!rowQ && deltaGap !== null && Math.abs(deltaGap - 20) <= 1 && appliedOk && silentOk,
+    '13a auto-balance (target -18): two fixtures 20 dB apart -> deltas differ by ~20 dB (±1) · audible rows applied on the tracks · silent track REPORTED but NOT applied (lufs null, applied false)',
+    J({ ok: p13a.ok, target: p13a.target, ms: p13a.ms, rows: rows13, tracks: p13a.tracks, deltaGap: deltaGap, appliedOk: appliedOk, silentOk: silentOk, rowS: rowS13, why: p13a.why }));
 
   const p13bR = await ev(`(() => {
     const W = window.__mixw;
