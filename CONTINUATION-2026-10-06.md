@@ -1331,3 +1331,35 @@ server + EdgeWebView2 processes) · no background jobs, no live subagents. **Not
 continued session opens on the M2 wave — MPE #61 · chop #65 · generative #72 remaining · arranger #73
 remaining → platform (PWA #78 · suite bridges #82) → P7 (#79) → deploy + live verify + owner pass.
 Resume phrase: **"continue anvil"**.
+
+## M2 WAVE OPENED — 2026-10-08 (expression · CHOP · generative · arranger: MPE #61 · chop #65 · generative #72 remainder · arranger #73 remainder)
+
+- **Contract `verify/_m2_wave.md`** (this wave's single source of truth): MPE kernel `AVM` §2.1 +
+  deck MPE surface §2.2 · chop core §2.3 + sampler zone v2 (144 = 16×9, engine converts v1 40) §2.4
+  + CHOP card §2.5 · song runner + quantised scene recall + arrangement SMF export §2.6 · seq UI
+  (track LEN/SPD/SWG · GEN block · song rows/timeline) §2.7 · rig `cdp_m2` §2.8 · integration
+  recipe §4 · watch-outs §5. Battery grows to 20 suites.
+- **Model amendments this wave (documented in the contract):** `AV_SEQ_SPEEDS` gains 0.75 / 1.5
+  (polyrhythm ratios) · track gains `swing` (0 = inherit | 50..80; export key order
+  `{len, speed, swing, mute, steps}`) · `{t:'zones'}` accepts 40 (v1, converted) or 144 (v2) ·
+  avNote bus keys gain `name@ch` for MPE member notes (held/taken observables stay ch-0 compatible,
+  + `heldCh`).
+- **Children — delegation `deleg_98481d59` (8 parallel, background):** sa-A `src/av_mpe.js` ·
+  sa-B `src/av_mpe_deck.js` · sa-C `src/av_chop.js` · sa-D `src/av_sampler.js` (edit, sole writer) ·
+  sa-E `src/av_chop_ui.js` · sa-F `src/av_song.js` + `src/av_mid.js` (edit, sole writer) · sa-G
+  `src/av_seq_ui.js` (edit, sole writer) · sa-H `verify/cdp_m2.mjs`. Transcripts:
+  `cache\delegation\live\deleg_98481d59\task-{0..7}.log`; scratch `cache/scratch/m2/<name>/`.
+- **Pre-drafted integration script `cache/scratch/m2/integrate/_m2_integrate.py`** — counted-assert,
+  all-or-nothing: **71 edits across 12 files** (build.py · av_note · av_dsp · av_voiceproc ·
+  av_engine · av_midi · av_seq_core · av_seq_sched · body · app_core · cdp_smoke · styles append);
+  `--anchors` dry run GREEN (all 71 anchors validated in memory, nothing written); the child-artifact
+  guard refuses correctly while children author. Styles block source =
+  `cache/scratch/m2/integrate/m2-styles.css` (authored at integration time from avChopUiClasses() +
+  avMpeDeckClasses() + the avSeqUiClasses() delta).
+- **On resume (cold mid-wave):** check the 8 artifacts + edit markers (`svW0` in av_sampler ·
+  `av-seq-gen` in av_seq_ui · `avMidExportSong` in av_mid) + child transcripts; re-run child
+  harnesses; author m2-styles.css; run the integration script; `python3 build.py`; smoke;
+  `node verify/cdp_m2.mjs` first run → triage → pins (ALL 20 suites) → battery → perf gate
+  (bench knee + stress ×2 + old-bytes control if counts jump) → close commits + addendum 33 +
+  README + docs/05 status.
+- Resume phrase: **"continue anvil"**.
