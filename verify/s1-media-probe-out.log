@@ -1,0 +1,23 @@
+// S1 wave — media-input platform probe EVIDENCE (parent-run 2026-10-07).
+// Launcher: headless Edge (msedge.exe) with --use-fake-ui-for-media-stream
+// --use-fake-device-for-media-stream, page = file:///C:/Users/Moddy/anvil/index.html (live build
+// 877d4d35). Probe script: cache/scratch/s1/integrate/_media_probe.mjs. In-page sequence:
+// navigator.mediaDevices -> getUserMedia({audio}) -> MediaStreamAudioSourceNode ->
+// ScriptProcessor(4096) capture ~1.2 s -> stats; then enumerateDevices labels.
+//
+// RESULT (verbatim):
+// PROBE: {"has":true,"secure":true,"got":true,
+//   "track":{"label":"Fake Default Audio Input","kind":"audio","enabled":true},
+//   "capture":{"frames":53248,"nonzero":1934,"peak":1.1298,"rms":0.13406,
+//              "ctxState":"running","sr":48000},
+//   "devices":["Fake Default Audio Input","Fake Audio Input 1","Fake Audio Input 2"]}
+//
+// INTERPRETATION (pinned into verify/_s1_wave.md §0):
+// 1. file:// IS a secure context in this browser: getUserMedia resolves WITHOUT a real permission
+//    prompt under the fake-UI flag (and auto-grants in rigs).
+// 2. The fake device is a BEEP TRAIN: nonzero only 1934/53248 samples (~3.6 %), with loud peaks
+//    (1.13) — assertions must target beeps (peak > 0.05, nonzero > 1000 over ≥ 2.5 s), never
+//    continuous audio.
+// 3. Three labeled fake inputs enumerate after grant ("Fake Default Audio Input" default).
+// 4. MediaStreamSource → ScriptProcessor capture at block rate works in-page (53248 frames in
+//    ~1.11 s wall ≈ full-rate capture; ctx running; sr 48000).
