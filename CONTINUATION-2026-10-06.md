@@ -1871,8 +1871,10 @@ Resume phrase: **"continue anvil"**.
   Space dispatch → lastAction play→stop with avSeqIsPlaying true→false witness). Battery 23
   suites + bench: 22 green first-lap; seq swing knife-edge re-ran **31/31 GREEN**; bench exit=0
   (realtime light 32 / fat 48 loaded-window; offline knee monotone - the publishable metric).
-- HONEST OWED: the console's visual pass on the live surface is owed (screenshot probe deferred
-  at the context boundary; owner Ctrl+F5 is the read). Console PREV/NEXT preset stepping is v1 =
+- VISUAL PASS: DONE 2026-10-08 - probe `cache/r1/r11_shot.mjs` captured the console with the
+  transport ON (`renders/r11-console.png`): PAUSE key LED lit, BPM 120 glowing, OLED rows +
+  moved sys chips, power LED lit, keycaps right - no clipping/overlap; reads as hardware.
+  Owner Ctrl+F5 remains the live read. Console PREV/NEXT preset stepping is v1 =
   selection display + card APPLY (recorded; a step-and-apply key pair is a follow-up once the
   bank API surface is pinned).
 - Commits: checkpoint (console+space, smoke 54 on the frozen bytes) + records (battery/bench)
