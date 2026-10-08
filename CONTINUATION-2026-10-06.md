@@ -2242,10 +2242,31 @@ Resume phrase: **"continue anvil"**.
 - Commit: this close commit (styles.css + index.html + sw.js + pins v3 + logs + capture +
   this addendum). R18 (library intelligence, docs/12) remains the next wave.
 
+## Resume addendum 58 - 2026-10-09 (R18 OPENED: library intelligence - ritual re-proof + recon in flight)
+
+- SESSION-START RITUAL (per addendum 57's block): HEAD 098d5ba; live sha = `3f87b4d3` = frozen;
+  worklet `b65160e0`; smoke **74/0** green. cdp_hub first read 27/2 (both fails on RELOAD-wait
+  legs: "receipts survive fresh -> null" + "library loads fresh -> dom:0" - latency timeouts
+  while the recon child + owner activity loaded the machine); SOLO RE-RUN **29/29 green**
+  (recorded as the reload-wait flake class).
+- SOLO BENCH (owed from addendum 57) READ: offline knee **96/128 monotone** (light 64 / fat 32;
+  invalidReads 0) - even solo, so the machine was still active throughout; 96/128 stands as the
+  recorded ENVIRONMENT class (worklet byte-identical; engine path untouched since R16). A
+  true-quiet re-run remains owed/optional - do not chase it while the owner is active.
+- R18 (library intelligence, docs/12 section 5) OPENED: read-only recon child in flight ->
+  `cache/r18/recon-r18.md` (sha256 insertion points + existing in-browser digest pattern;
+  dedupe hook at the import card's completion point; av_lib record/API slots; kit/refs
+  missing-detection points; the FSA directory-picker seam mirrored on avProjSetFs; PWA
+  file_handlers routing; build.py js_parts tail; cdp_hub rig conventions).
+- NEXT: author `verify/_r18_wave.md` (parent, with the source open, pins confirmed from the
+  digest) -> dispatch the R18 authors -> integration -> battery -> deploy. Nothing else in
+  flight.
+- Commit: this R18-open commit (continuation + bench/log updates + addendum 58).
+
 ### Session-end verify-state (2026-10-09 - copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -5                                         # HEAD = the R17b hotfix commit
+    git log --oneline -5                                         # HEAD = the R18-open commit (addendum 58)
     git status --short                                           # clean except `?? cache/`
     curl -s https://moddys.net/anvil/index.html | sha256sum      # = 3f87b4d3... (frozen, live)
     grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (unchanged - page-side wave)
