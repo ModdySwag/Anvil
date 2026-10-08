@@ -699,6 +699,19 @@ async function main() {
     && r5p2.open1 === 1 && r5p2.avail1 === r5p2.avail0 - 1 && r5p2.min1 === 1
     && r5p2.open0 === 0 && r5p2.avail2 === r5p2.avail0, JSON.stringify(r5p2));
 
+  /* 6w. R6: pane scroll-shadow scrims (sticky gradient edges on the zone panes) */
+  const r6R = await ev(`(() => {
+    const z = document.getElementById('av-zone-synth');
+    const cs = z ? getComputedStyle(z, '::before') : null;
+    const cs2 = z ? getComputedStyle(z, '::after') : null;
+    return { beforeBg: cs ? cs.backgroundImage.indexOf('gradient') >= 0 : false,
+             afterBg: cs2 ? cs2.backgroundImage.indexOf('gradient') >= 0 : false,
+             sticky: cs ? cs.position : null };
+  })()`);
+  const r6 = r6R.value || {};
+  check('R6 panes: scroll-shadow scrims (sticky gradient edges on the zone panes)',
+    r6.beforeBg === true && r6.afterBg === true && r6.sticky === 'sticky', JSON.stringify(r6));
+
 
 
   /* 7. zero page errors */

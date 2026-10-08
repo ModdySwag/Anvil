@@ -1,6 +1,6 @@
-index.html sha256 (before): 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
+index.html sha256 (before): 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791454043893
+cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791455286203
  ok   boot: data-av-ready flips
  ok   fx rack mounted: #av-fx-host + card root + 7 strips
  ok   exports: avFxInit + avFxSnap + avFxClasses + avFxInventory + window.__avFx (p3.0)  -> {"init":true,"snap":true,"classes":true,"inventory":true,"handle":true,"version":"p3.0"}
@@ -13,10 +13,10 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791454043
  ok   engine ready (the live tier is up before the tail witness)  -> worklet
  ok   tail witness: rig's OWN AnalyserNode armed on the master tap (avMasterFor)  -> {"ok":true,"sr":48000,"fft":2048}
  ok   tail witness: silent control window BEFORE the note (RMS < 0.005)  -> control max=0.00000 over 33 samples
- ok   tail: note started through the ONE note path (avNoteDown('c4', 1.0))  -> {"ok":true,"t":4851}
- ok   tail: note released (avNoteUp('c4'))  -> {"ok":true,"t":6152.299999982119}
- ok   tail witness: the held note is LOUD on the master tap (RMS > 0.02)  -> hold max=0.1660
- ok   REVERB TAIL WITNESSED: tail RMS after note-off (t+250..t+1000 ms) sits above the silent control window  -> tail max=0.0683 vs control max=0.00000 · tail mean=0.0226 · headless engine, tail table=worklet
+ ok   tail: note started through the ONE note path (avNoteDown('c4', 1.0))  -> {"ok":true,"t":4891.600000023842}
+ ok   tail: note released (avNoteUp('c4'))  -> {"ok":true,"t":6206.100000023842}
+ ok   tail witness: the held note is LOUD on the master tap (RMS > 0.02)  -> hold max=0.1658
+ ok   REVERB TAIL WITNESSED: tail RMS after note-off (t+250..t+1000 ms) sits above the silent control window  -> tail max=0.0706 vs control max=0.00000 · tail mean=0.0231 · headless engine, tail table=worklet
  ok   param round-trip: every mounted module path accepted (40 paths — wheel/change through the bound handler, avApplyParam true, mirror echo, visual repaint, restore)  -> 40/40 ok
    · round-trip sample (first knob): {"path":"fx.drive.mix","kind":"knob","ok":true,"stage":"","wheel":{"from":1,"to":0.99,"dir":"down"},"accept":{"v":0,"returned":true,"echo":true},"restored":true,"visual":true}
  ok   §3 path sweep: unmounted module paths accepted for delivery (12/12 — predelay · spread · duck · bpm · stages · down · eqLo/eqMid/eqHi · comp.att/rel/makeup)  -> 12/12 ok
@@ -27,9 +27,9 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791454043
  ok   mix=0 null (§2.2): all modules ON with mix 0 = all-off, BIT-IDENTICAL (maxAbsDiff 0, both channels)  -> {"ok":true,"lenEq":true,"lenA":144000,"lenB":144000,"maxAbsDiff":0,"dL":0,"dR":0,"firstDiff":144000}
  ok   wet sanity: verb ON mix 1 CHANGES the render vs dry (maxAbsDiff > 0 — the chain is live, not dead)  -> {"ok":true,"lenEq":true,"lenA":144000,"lenB":144000,"maxAbsDiff":0.6657574027776718,"dL":0.5387839302420616,"dR":0.6657574027776718,"firstDiff":0}
  ok   zero page errors
- ok   screenshot: renders/p3-fx-suite.png (the FX rack card, scale 2)  -> 331458 bytes · clip 1010×1030 @2x
-index.html sha256 (after): 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
- ok   freeze: index.html sha256 = pinned  -> pinned 22ea7e52cd7a…
+ ok   screenshot: renders/p3-fx-suite.png (the FX rack card, scale 2)  -> 341989 bytes · clip 1010×1030 @2x
+index.html sha256 (after): 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
+ ok   freeze: index.html sha256 = pinned  -> pinned 37268aca96ca…
 
 27 passed, 0 failed

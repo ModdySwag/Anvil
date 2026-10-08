@@ -42,6 +42,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R4 float controls: pin/opacity/min/max buttons + minimize toggle + named layout save/load  -> {"pin":true,"op":true,"min":true,"max":true,"mini":true,"back":true,"saved":true,"loaded":true,"n":1}
  ok   R5 menu bar: File/Edit/View/Workspace/Help + a dropdown opens with items and closes + MENUBAR SELFTEST  -> {"mb":true,"items":5,"api":"object","proof":{"v":"r5.0","items":5,"ready":true},"opened":true,"popOpen":true,"popItems":5,"closed":true}
  ok   R5 rail quick-view: Available rows (>=20, draggable) + live Open/Minimized reflection on float/min/dock  -> {"box":true,"avail0":22,"draggable":true,"open1":1,"avail1":21,"min1":1,"open0":0,"avail2":22}
+ ok   R6 panes: scroll-shadow scrims (sticky gradient edges on the zone panes)  -> {"beforeBg":true,"afterBg":true,"sticky":"sticky"}
  ok   zero page errors
 
-44 passed, 0 failed
+45 passed, 0 failed

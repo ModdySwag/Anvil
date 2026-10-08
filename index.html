@@ -1663,6 +1663,22 @@ body.av-rail-dragging, body.av-rail-dragging * { cursor: ew-resize !important; u
 .av-rail-prow-empty { font-size: 10.5px; color: var(--text-3); padding: 2px 12px; font-style: italic; }
 body.av-drag-card, body.av-drag-card * { cursor: grabbing !important; }
 
+/* ============================================================================
+   R6 — pane scroll-shadow scrims: sticky gradient edges on the zone panes, the Serum-style scroll
+   hint that tells the eye the pane keeps going. Pure CSS; no layout impact. */
+.av-zone::before, .av-zone::after {
+  content: ""; position: sticky; display: block; height: 16px;
+  pointer-events: none; z-index: 4;
+}
+.av-zone::before {
+  top: 0; margin-bottom: -16px;
+  background: linear-gradient(180deg, rgba(10,14,17,.9) 0%, rgba(10,14,17,0) 100%);
+}
+.av-zone::after {
+  bottom: 0; margin-top: -16px;
+  background: linear-gradient(0deg, rgba(10,14,17,.9) 0%, rgba(10,14,17,0) 100%);
+}
+
 
 
 
