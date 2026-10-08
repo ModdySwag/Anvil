@@ -739,6 +739,9 @@ function avImportUiLibRowHTML(it) {
     meta = "kit \u00b7 " + avImportUiNumOr(counts.zones, 0) + " zones \u00b7 " + avImportUiNumOr(counts.samples, 0) + " samples";
   } else if (isRefs && String(it.format || "") === "serum") {
     meta = "refs \u00b7 " + avImportUiNumOr(counts.tables, 0) + " tables";
+  } else if (isRefs) {
+    /* R15d: non-serum refs rows (als/nki/nbkt/sxt) render the extracted ref count */
+    meta = "refs \u00b7 " + avImportUiNumOr(counts.refs, 0) + " refs \u00b7 " + String(it.format || "");
   } else {
     meta = kind || "item";
     if (it.format) meta += " \u00b7 " + String(it.format);

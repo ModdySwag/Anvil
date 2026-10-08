@@ -1279,6 +1279,68 @@ async function main() {
       : (r15f.result === 'deferred' && String(r15f.reason).indexOf('.SerumPreset \u2014 ') === 0),
     JSON.stringify(r15f));
 
+  /* 6co. R15d: SXT - the card fixture extracts REFE refs; clean run keeps errors empty */
+  const r15gR = await ev(`(async () => {
+    const sxt = Uint8Array.from(atob('Rk9STQAAAUxQVENIQ0FUIAAAAPBSRUZTUkVGRQAAAES8AQEAALwBAQAAAQAAAAAAAAABAAAACktpY2swMS53YXa8AQIAAAC8AQUAAAAAAAAGS2ljazAxAAAAAAAAAAANAAAAAFJFRkUAAACYvAEDAAC8AQEAAAEAAAAAAAAAAgAAAA1QaWFubyBzYW1wbGVzAAAACkdyYW5kUGlhbm+8AQIAAAC8AQUAAAAAAAAHU25hcmUwMgAAAAAAAAAADQAAAAAAAAALU25hcmUwMi53YXa8AQUAAAC8AQUAAAEAAAAAAAAAAgAAAAVEcnVtcwAAAAtTbmFyZTAyLndhdgC8AQUAAABERVNDAAAALbwBAwAAEgAAAAtGaXh0dXJlIFNYVAAAABROTlhUIERpZ2l0YWwgU2FtcGxlcgBBVVRIAAAAErwBAwAAAAAABUFudmlsAAAAAA=='), c => c.charCodeAt(0));
+    const rc = await avImportFiles([ new File([sxt], 'rig.sxt') ]);
+    const it = rc.items[0] || {};
+    const meta = it.meta || {};
+    const r0 = (meta.refs && meta.refs[0]) ? meta.refs[0] : null;
+    return { format: it.format, kind: it.kind, result: it.result, reason: String(it.reason || ''),
+             refCount: meta.refCount, r0name: r0 ? r0.name : null, r0path: r0 ? r0.path : null,
+             pname: meta.presetName, mk: meta.kind, errN: rc.errors.length };
+  })()`);
+  const r15g = r15gR.value || {};
+  check('R15d SXT: card fixture imports as refs (REFE names+paths) + clean errors channel',
+    r15g.format === 'sxt' && r15g.kind === 'refs' && r15g.result === 'imported' && r15g.mk === 'sxt'
+    && r15g.refCount === 2 && r15g.r0name === 'Kick01' && r15g.r0path === './Kick01.wav'
+    && r15g.pname === 'Fixture SXT' && r15g.errN === 0,
+    JSON.stringify(r15g));
+
+  /* 6cp. R15d: legacy NKI (zlib-XML) - zones import as a kit; LOAD lands a slot + zones + sampler */
+  const r15hR = await ev(`(async () => {
+    const nki = Uint8Array.from(atob('f6iQEgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4nJWUUU+DMBDH3/cpmj7pCzDUORPYYowaw8uSmT3shTTuZE1KS0phzE9vKLjCYF187N39//eDXi9YVilDJcicCh7iqePh5WISRH78IrgilINElO+gCrGHEScphPiGF4zdYqSOGYQ4pzxhEGdSJJKk2Hh5zoOHFxOEglWTy+sDQrV5GxlYv9FKFRJQRFXPad44afmKSJKCApn/hRAKNq1BKViRAkYlYQVoBuyelO5QGrxLUWRdp8iPdWzA1kSnPa4nw3WRzcY3dQzeJUQd3woO556RH9fhDmhSI37smkMHc9bHtKL2cHOSZgzWikhl/mkfeVTxynfmGz3PLmHisAEmvqg6GpFVsafJfijxH6+1icCU382utuiW38+t5VII9Q/3H8FhYx+FEcVnwe31l8ZH59b6ZiwtvimDGCr/1KK5y/jZOZByrNmYY+C2Y9kf67P51VX6QZnH2X2JOt8uCb1CXLNDdO60nRa/nYg8fjw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJubyIgPz4KPHNvdW5kaW5mbyB2ZXJzaW9uPSI0MDAiPgogIDxwcm9wZXJ0aWVzPgogICAgPG5hbWU+Rml4dHVyZSBLaXQ8L25hbWU+CiAgICA8YXV0aG9yPkFudmlsIEZpeHR1cmU8L2F1dGhvcj4KICA8L3Byb3BlcnRpZXM+Cjwvc291bmRpbmZvPgo='), c => c.charCodeAt(0));
+    const sr = 8000, N = 400; const l = new Float32Array(N), r = new Float32Array(N);
+    for (let i = 0; i < N; i++) { l[i] = 0.5 * Math.sin(2 * Math.PI * 440 * i / sr); r[i] = l[i]; }
+    const wav = avWavEncode({ l: l, r: r, sr: sr, bits: 16, dither: false });
+    const rc = await avImportFiles([ new File([nki], 'rig.nki'), new File([wav], 'sample_A.wav') ]);
+    const kit = rc.items.find(i => i.format === 'nki') || null;
+    const load = kit ? await avLibLoad(kit.id) : null;
+    return { counts: rc.counts,
+             kit: kit && { kind: kit.kind, result: kit.result,
+               zones: (kit.meta && kit.meta.zones) ? kit.meta.zones.length : -1,
+               sname: (kit.meta && kit.meta.samples && kit.meta.samples[0]) ? kit.meta.samples[0].name : null },
+             load: load && { ok: load.ok, slots: load.slots, zones: load.zones },
+             kind: (typeof avParams === 'object' && avParams) ? avParams['engine.kind'] : null,
+             errN: rc.errors.length };
+  })()`);
+  const r15h = r15hR.value || {};
+  check('R15d NKI legacy: zlib-XML zones import as a kit; LOAD lands 1 zone on 1 slot + engine kind sampler',
+    !!r15h.counts && r15h.counts.kits === 1 && !!r15h.kit && r15h.kit.kind === 'kit'
+    && r15h.kit.result === 'imported' && r15h.kit.zones === 1 && r15h.kit.sname === 'sample_A.wav'
+    && !!r15h.load && r15h.load.ok === true && r15h.load.zones === 1 && r15h.load.slots === 1
+    && r15h.kind === 'sampler' && r15h.errN === 0,
+    JSON.stringify(r15h));
+
+  /* 6cq. R15d: containers - nki refs + nbkt metadata + the encrypted refusal */
+  const r15iR = await ev(`(async () => {
+    const cN = Uint8Array.from(atob('tQIAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0ODxgAAAAAAAAARFNJTgEAAAABAAAAAQAAAAEAAAABAAAAAAAAADRLSU4DAAAAYQIAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0OD0sAAAAAAAAARFNJTmUAAAABAAAAGAAAAAAAAABEU0lOAQAAAAEAAAABAAAAAQAAAAACAAAAAQAAAAcAAAA2AC4ANwAuADEALgAwAAEAAAACAAAAAAAAAERTSU5sAAAA4AAAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0OD7AAAAAAAAAARFNJTmwAAAABAAAAGAAAAAAAAABEU0lOAQAAAAEAAAABAAAAAQAAAAEAAAAAAAAAAAAAAAsAAABGAGkAeAB0AHUAcgBlACAASwBpAHQADQAAAEEAbgB2AGkAbAAgAEYAaQB4AHQAdQByAGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAARFNJTm0AAADuAAAAAAAAAAEAAABoc2luAQAAAAAAAAAAAQIDBAUGBwgJCgsMDQ4PvgAAAAAAAABEU0lObQAAAAEAAAAYAAAAAAAAAERTSU4BAAAAAQAAAAEAAAABAAAAAQAAAAEAAAB2AAAAAAAAAEsAcAAAAAIAAAAAAAIAAAACAAAAAggAAABGAGkAeAB0AHUAcgBlAHMABAoAAABrAGkAYwBrAF8AQQAuAHcAYQB2AAIAAAACCAAAAEYAaQB4AHQAdQByAGUAcwAECwAAAHMAbgBhAHIAZQBfAEEALgB3AGEAdgAAAAAADWJlhQEAAAAAAAAA'), c => c.charCodeAt(0));
+    const cB = Uint8Array.from(atob('swIAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0ODxgAAAAAAAAARFNJTgEAAAABAAAAAQAAAAEAAAABAAAAAAAAADRLSU4DAAAAXwIAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0OD00AAAAAAAAARFNJTmUAAAABAAAAGAAAAAAAAABEU0lOAQAAAAEAAAABAAAAAQAAAAAJAAAAAQAAAAgAAAA0AC4AMQAuADYALgAyADcAAQAAAAIAAAAAAAAARFNJTmwAAADoAAAAAAAAAAEAAABoc2luAQAAAAAAAAAAAQIDBAUGBwgJCgsMDQ4PuAAAAAAAAABEU0lObAAAAAEAAAAYAAAAAAAAAERTSU4BAAAAAQAAAAEAAAABAAAAAQAAAAAAAAAAAAAADwAAAEIAYQB0AHQAZQByAHkAIABGAGkAeAB0AHUAcgBlAA0AAABBAG4AdgBpAGwAIABGAGkAeAB0AHUAcgBlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAQAAAERTSU5tAAAA4gAAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0OD7IAAAAAAAAARFNJTm0AAAABAAAAGAAAAAAAAABEU0lOAQAAAAEAAAABAAAAAQAAAAEAAAABAAAAagAAAAAAAABLAGQAAAACAAAAAAACAAAAAgAAAAIFAAAARAByAHUAbQBzAAQKAAAAawBpAGMAawBfAEIALgB3AGEAdgACAAAAAgUAAABEAHIAdQBtAHMABAsAAABzAG4AYQByAGUAXwBCAC4AdwBhAHYAAAAAAA1iZYUBAAAAAAAAAA=='), c => c.charCodeAt(0));
+    const cE = Uint8Array.from(atob('TwMAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0ODxgAAAAAAAAARFNJTgEAAAABAAAAAQAAAAEAAAABAAAAAAAAADRLSU4DAAAA+wIAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0OD0sAAAAAAAAARFNJTmUAAAABAAAAGAAAAAAAAABEU0lOAQAAAAEAAAABAAAAAQAAAAACAAAAAQAAAAcAAAA2AC4ANwAuADEALgAwAAEAAAADAAAAAAAAAERTSU5sAAAA4AAAAAAAAAABAAAAaHNpbgEAAAAAAAAAAAECAwQFBgcICQoLDA0OD7AAAAAAAAAARFNJTmwAAAABAAAAGAAAAAAAAABEU0lOAQAAAAEAAAABAAAAAQAAAAEAAAAAAAAAAAAAAAsAAABGAGkAeAB0AHUAcgBlACAASwBpAHQADQAAAEEAbgB2AGkAbAAgAEYAaQB4AHQAdQByAGUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAABAAAARFNJTm0AAAC6AAAAAAAAAAEAAABoc2luAQAAAAAAAAAAAQIDBAUGBwgJCgsMDQ4PigAAAAAAAABEU0lObQAAAAEAAAAYAAAAAAAAAERTSU4BAAAAAQAAAAEAAAABAAAAAQAAAAEAAABCAAAAAAAAAEsAPAAAAAIAAAAAAAEAAAACAAAAAggAAABGAGkAeAB0AHUAcgBlAHMABAoAAABrAGkAYwBrAF8AQQAuAHcAYQB2AAAAAAANYmWFAQAAAAAAAAACAAAARFNJTnQAAADCAAAAAAAAAAEAAABoc2luAQAAAAAAAAAAAQIDBAUGBwgJCgsMDQ4PkgAAAAAAAABEU0lOdAAAAAEAAAB5AAAAAAAAAERTSU5zAAAAAQAAABgAAAAAAAAARFNJTgEAAAABAAAAAQAAAAEAAAABAAQAAEAAAACqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqAQAAAAABAAAAAAAAAA=='), c => c.charCodeAt(0));
+    const rc = await avImportFiles([ new File([cN], 'rig.nki'), new File([cB], 'rig.nbkt'), new File([cE], 'locked.nki') ]);
+    const a = rc.items[0] || {}; const b = rc.items[1] || {}; const c = rc.items[2] || {};
+    return { aRes: a.result, aKind: a.kind, aMk: a.meta && a.meta.kind, aName: a.meta && a.meta.presetName, aRefs: a.meta && a.meta.refCount,
+             bRes: b.result, bKind: b.kind, bMk: b.meta && b.meta.kind, bName: b.meta && b.meta.presetName,
+             cRes: c.result, cReason: String(c.reason || ''), errN: rc.errors.length };
+  })()`);
+  const r15i = r15iR.value || {};
+  check('R15d containers: NKI refs + NBKT metadata import; encrypted refuses with the pinned line',
+    r15i.aRes === 'imported' && r15i.aKind === 'refs' && r15i.aMk === 'nki-container' && r15i.aName === 'Fixture Kit' && r15i.aRefs === 2
+    && r15i.bRes === 'imported' && r15i.bKind === 'refs' && r15i.bMk === 'nbkt' && r15i.bName === 'Battery Fixture'
+    && r15i.cRes === 'refused' && String(r15i.cReason).indexOf('.nki \u2014 encrypted') === 0
+    && r15i.errN === 0,
+    JSON.stringify(r15i));
+
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');
   await send('Page.navigate', { url: plainUrl });

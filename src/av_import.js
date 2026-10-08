@@ -1,4 +1,5 @@
-/* Anvil - sample import core (R15b SAMPLE PACKS wave, child C; R15c STRUCTURED PACKS wiring):
+/* Anvil - sample import core (R15b SAMPLE PACKS wave, child C; R15c STRUCTURED PACKS wiring;
+   R15d NI/SXT wiring):
    magic-byte sniffer + per-format policy table + the canonical-bundle pipeline behind
    avImportFiles() + the R15c adapter dispatch layer (EXS24 kits, ADG/ALS refs, SerumPreset refs).
 
@@ -18,7 +19,8 @@
      or the parse fails. wav/mp3/aiff/rex2/mid keep the R15b shapes; every other format stays
      kind "refused" while its result still distinguishes deferred vs refused. The reason strings
      are the pinned contract, kept verbatim (the em dashes inside them are \u2014 escapes so this
-     source stays ASCII-only).
+     source stays ASCII-only). R15d: nki/nbkt/sxt persist true - kind "refs" (the nki legacy
+     branch upgrades item.kind to "kit" when the zones build).
    - avImportFiles(files, opts) -> Promise<receipt> that NEVER rejects:
      receipt = { ok, title, at, version, items, counts, errors } with
      counts = { total, imported, deferred, refused, samples, patterns, kits, refs } and one item
@@ -50,6 +52,14 @@
      A missing reader module defers with the pinned pending line; a parse failure defers with
      the pinned unreadable line (detail capped 80 chars). "imported" is claimed only when the
      reader exists and the parse produced usable content.
+     R15d adapters (section 4.3), same per-call guards:
+     nki/nbkt -> await AVNI.parse(bytes, item.ext): legacy with zones builds via the shared
+                avImportKitMetaFrom (item.kind "kit"); legacy without zones -> refs meta
+                (meta.kind "nki-legacy" + a ctx note); container -> "nki-container"; nbkt ->
+                "nbkt"; encrypted -> refused with the pinned line; other failures -> deferred
+                unreadable. sxt -> AVSXT.extract(bytes) -> refs meta (meta.kind "sxt",
+                presetName + version). Refs hold to AV_IMPORT_NI_REF_CAP / AV_IMPORT_SXT_REF_CAP
+                (512 each) with a ctx note when the cap bites.
    - sibling: for each item - the same-stem (case-insensitive, ext-stripped) sibling inside the
      processed set whose own sniff is wav/mp3/aiff (self excluded), else "".
    - meta from the cheap probes only: sample { rate, channels, frames?, bits? }; pattern
@@ -93,6 +103,21 @@ const AV_IMPORT_ALS_REF_CAP = 512;
 const AV_IMPORT_ALS_NOTE_CAP = 512;
 const AV_IMPORT_SERUM_WT_CAP = 256;
 
+/* R15d NI/SXT adapter pinned lines (sections 2 and 4.3; verbatim -- the em dashes are \u2014
+   escapes, exactly like the neighbours above, so this source stays ASCII-only) */
+const avImportNkiPending = ".nki \u2014 reader pending (this build)";
+const avImportNbktPending = ".nbkt \u2014 reader pending (this build)";
+const avImportSxtPending = ".sxt \u2014 reader pending (this build)";
+const avImportNkiUnread = ".nki \u2014 unreadable (";
+const avImportNbktUnread = ".nbkt \u2014 unreadable (";
+const avImportSxtUnread = ".sxt \u2014 unreadable (";
+const avImportNkiEncrypted = ".nki \u2014 encrypted (locked library); import the pack's Samples folder";
+const avImportNbktEncrypted = ".nbkt \u2014 encrypted (locked library); import the pack's Samples folder";
+
+/* R15d caps (section 2): NI refs (legacy / container / nbkt) and SXT refs, 512 each */
+const AV_IMPORT_NI_REF_CAP = 512;
+const AV_IMPORT_SXT_REF_CAP = 512;
+
 /* ---------- the per-format policy table (pinned verbatim; persist = read + library write) ---------- */
 
 const AV_IMPORT_POLICY = {
@@ -105,9 +130,9 @@ const AV_IMPORT_POLICY = {
   adg:     { kind: "refs",    result: "imported", reason: "", persist: true },
   als:     { kind: "refs",    result: "imported", reason: "", persist: true },
   exs:     { kind: "kit",     result: "imported", reason: "", persist: true },
-  nki:     { kind: "refused", result: "deferred", reason: "Kontakt/Battery library \u2014 partial extraction planned (V2); import the Samples folder", persist: false },
-  nbkt:    { kind: "refused", result: "deferred", reason: "Kontakt/Battery library \u2014 partial extraction planned (V2); import the Samples folder", persist: false },
-  sxt:     { kind: "refused", result: "deferred", reason: "Reason NN-XT patch \u2014 reference extraction planned (V2)", persist: false },
+  nki:     { kind: "refs",    result: "imported", reason: "", persist: true },
+  nbkt:    { kind: "refs",    result: "imported", reason: "", persist: true },
+  sxt:     { kind: "refs",    result: "imported", reason: "", persist: true },
   kong:    { kind: "refused", result: "refused",  reason: "Reason Kong kit \u2014 kit mapping is not readable; import the pack's WAVs", persist: false },
   mxgrp:   { kind: "refused", result: "refused",  reason: "NI Maschine group \u2014 not readable; import the pack's WAVs", persist: false },
   serum:   { kind: "refs",    result: "imported", reason: "", persist: true },
@@ -559,6 +584,17 @@ function avImportHasSerum() {
   catch (e) { return false; }
 }
 
+/* R15d guards: the SXT (av_sxt.js) and NI (av_ni.js) readers, reached per call */
+function avImportHasSxt() {
+  try { return typeof AVSXT === "object" && AVSXT !== null && typeof AVSXT.extract === "function"; }
+  catch (e) { return false; }
+}
+
+function avImportHasNi() {
+  try { return typeof AVNI === "object" && AVNI !== null && typeof AVNI.parse === "function"; }
+  catch (e) { return false; }
+}
+
 /* a rounded finite number clamped into [lo, hi]; garbage -> dflt */
 function avImportKitNum(v, dflt, lo, hi) {
   const n = Number(v);
@@ -601,15 +637,17 @@ function avImportKitZone(zn, sampleName, ref) {
   };
 }
 
-/* AVEXS.parse (sync) -> kit meta { zones, samples, skipped }; { ok, meta } or { ok:false, error }.
-   Zones without a resolvable sampleIndex are dropped (counted in skipped); the 16-zone cap is
-   counted in skipped with a receipt note; oneshot/reverse flags are flattened (note only). */
-function avImportKitMeta(bytes, item, ctx) {
+/* the source-agnostic kit builder (R15d section 4.3): fed by the exs parse and by the AVNI
+   legacy parse with a parsed object carrying zones + samples arrays -> { ok, meta:
+   { zones, samples, skipped } } or { ok:false, error }. Zones without a resolvable sampleIndex
+   are dropped (counted in skipped); the 16-zone cap is counted in skipped with a receipt note;
+   oneshot/reverse flags are flattened (note only). Same error strings, caps and notes as the
+   R15c builder so the EXS path stays bit-identical. */
+function avImportKitMetaFrom(parsed, item, ctx) {
   try {
-    const pr = AVEXS.parse(bytes);
-    if (!pr || pr.ok !== true) return { ok: false, error: avImportDetail(pr && pr.error) };
-    const srcZones = Array.isArray(pr.zones) ? pr.zones : [];
-    const srcSamples = Array.isArray(pr.samples) ? pr.samples : [];
+    if (!parsed || parsed.ok !== true) return { ok: false, error: avImportDetail(parsed && parsed.error) };
+    const srcZones = Array.isArray(parsed.zones) ? parsed.zones : [];
+    const srcSamples = Array.isArray(parsed.samples) ? parsed.samples : [];
     if (!srcZones.length) return { ok: false, error: "no zones found" };
     const zones = [];
     const samples = [];
@@ -642,6 +680,82 @@ function avImportKitMeta(bytes, item, ctx) {
       if (flagsN > 0) ctx.notes.push(nm2 + ": " + flagsN + " oneshot/reverse zone flag(s) flattened (v1)");
     }
     return { ok: true, meta: { zones: zones, samples: samples, skipped: skipped } };
+  } catch (e) {
+    return { ok: false, error: avImportDetail(e) };
+  }
+}
+
+/* AVEXS.parse behind the per-call guard: the parsed object, or null (never throws) */
+function avImportExsParse(bytes) {
+  try {
+    if (!avImportHasExs()) return null;
+    return AVEXS.parse(bytes);
+  } catch (e) {
+    return null;
+  }
+}
+
+/* the exs call site (signature kept from R15c): parse-then-build via the shared builder */
+function avImportKitMeta(bytes, item, ctx) {
+  return avImportKitMetaFrom(avImportExsParse(bytes), item, ctx);
+}
+
+/* the NI refs meta (R15d section 2; container nki / nbkt / the legacy fallback): refs rows
+   held to AV_IMPORT_NI_REF_CAP, refCount, presetName (the reader's name), product, version,
+   kind ("nki-container" | "nki-legacy" | "nbkt"). Beyond-cap refs are counted into a ctx
+   note. */
+function avImportNiRefsMeta(pr, item, ctx, kind) {
+  try {
+    const srcRefs = Array.isArray(pr.refs) ? pr.refs : [];
+    const refs = [];
+    const n = Math.min(srcRefs.length, AV_IMPORT_NI_REF_CAP);
+    for (let i = 0; i < n; i++) {
+      const r = srcRefs[i];
+      if (!r || typeof r !== "object") continue;
+      refs.push({ name: avImportStrOf(r.name, 120), path: avImportStrOf(r.path, 200) });
+    }
+    if (ctx && Array.isArray(ctx.notes) && srcRefs.length > AV_IMPORT_NI_REF_CAP) {
+      const nm2 = avImportCapStr(item && item.name, 60) || "ni";
+      ctx.notes.push(nm2 + ": " + (srcRefs.length - AV_IMPORT_NI_REF_CAP) + " ref(s) beyond the 512-ref cap dropped");
+    }
+    return { ok: true, meta: {
+      refs: refs,
+      refCount: refs.length,
+      presetName: avImportStrOf(pr.name, 120),
+      product: avImportStrOf(pr.product, 60),
+      version: avImportStrOf(pr.version, 60),
+      kind: kind
+    } };
+  } catch (e) {
+    return { ok: false, error: avImportDetail(e) };
+  }
+}
+
+/* the SXT refs meta (R15d section 2; meta.kind "sxt"): refs rows held to AV_IMPORT_SXT_REF_CAP,
+   refCount, presetName (the patch name when the reader found one), version from the tag,
+   product "". Beyond-cap refs are counted into a ctx note. */
+function avImportSxtRefsMeta(ex, item, ctx) {
+  try {
+    const srcRefs = Array.isArray(ex.refs) ? ex.refs : [];
+    const refs = [];
+    const n = Math.min(srcRefs.length, AV_IMPORT_SXT_REF_CAP);
+    for (let i = 0; i < n; i++) {
+      const r = srcRefs[i];
+      if (!r || typeof r !== "object") continue;
+      refs.push({ name: avImportStrOf(r.name, 120), path: avImportStrOf(r.path, 200) });
+    }
+    if (ctx && Array.isArray(ctx.notes) && srcRefs.length > AV_IMPORT_SXT_REF_CAP) {
+      const nm2 = avImportCapStr(item && item.name, 60) || "sxt";
+      ctx.notes.push(nm2 + ": " + (srcRefs.length - AV_IMPORT_SXT_REF_CAP) + " ref(s) beyond the 512-ref cap dropped");
+    }
+    return { ok: true, meta: {
+      refs: refs,
+      refCount: refs.length,
+      presetName: avImportStrOf(ex.name, 120),
+      product: "",
+      version: avImportStrOf(ex.version, 60),
+      kind: "sxt"
+    } };
   } catch (e) {
     return { ok: false, error: avImportDetail(e) };
   }
@@ -767,7 +881,7 @@ async function avImportOne(f, index, o, ctx) {
   item.reason = pol.reason;
   if (!pol.persist) return item;         /* deferred/refused per the pinned table */
 
-  /* persist-policy formats: wav, mp3, aiff, mid, rex2, exs, adg, als, serum */
+  /* persist-policy formats: wav, mp3, aiff, mid, rex2, exs, adg, als, serum, nki, nbkt, sxt */
   if (item.size > AV_IMPORT_ITEM_MAX) return avImportSet(item, "refused", avImportTooLarge);
   if (item.format === "aiff" && !avImportHasAiff()) return avImportSet(item, "deferred", avImportAiffDefer);
   if (item.format === "rex2" && !avImportHasRex()) return avImportSet(item, "deferred", avImportRexDefer);
@@ -775,6 +889,10 @@ async function avImportOne(f, index, o, ctx) {
   if (item.format === "exs" && !avImportHasExs()) return avImportSet(item, "deferred", avImportExsPending);
   if ((item.format === "adg" || item.format === "als") && !avImportHasAls()) return avImportSet(item, "deferred", avImportAlsPending);
   if (item.format === "serum" && !avImportHasSerum()) return avImportSet(item, "deferred", avImportSerumPending);
+  /* R15d readers: the same defer-before-read discipline */
+  if (item.format === "nki" && !avImportHasNi()) return avImportSet(item, "deferred", avImportNkiPending);
+  if (item.format === "nbkt" && !avImportHasNi()) return avImportSet(item, "deferred", avImportNbktPending);
+  if (item.format === "sxt" && !avImportHasSxt()) return avImportSet(item, "deferred", avImportSxtPending);
 
   let bytes = null;
   try { bytes = await avImportFull(f); } catch (e) { bytes = null; }
@@ -802,6 +920,56 @@ async function avImportOne(f, index, o, ctx) {
     return item;
   }
 
+  /* R15d: nki/nbkt -- legacy kits, modern containers, honest refusals (guarded per call) */
+  if (item.format === "nki" || item.format === "nbkt") {
+    let pr = null;
+    try { pr = await AVNI.parse(bytes, item.ext); } catch (e) { pr = null; }
+    if (!pr || pr.ok !== true) {
+      if (pr && pr.encrypted === true) {
+        return avImportSet(item, "refused", (item.format === "nbkt") ? avImportNbktEncrypted : avImportNkiEncrypted);
+      }
+      const un = (item.format === "nbkt") ? avImportNbktUnread : avImportNkiUnread;
+      return avImportSet(item, "deferred", avImportUnreadable(un, pr && pr.error));
+    }
+    const isNbkt = (item.format === "nbkt" || pr.kind === "nbkt");
+    if (pr.kind === "legacy") {
+      const zn = Array.isArray(pr.zones) ? pr.zones : [];
+      if (zn.length) {
+        const k = avImportKitMetaFrom(pr, item, ctx);
+        if (k.ok === true) {
+          item.kind = "kit";
+          item.meta = k.meta;
+          if (o.persist !== false) item.id = await avImportWrite(item, bytes, ctx);
+          return item;
+        }
+        /* "no usable zones": the refs below stand in */
+      } else if (ctx && Array.isArray(ctx.notes)) {
+        const nm2 = avImportCapStr(item.name, 60) || "nki";
+        ctx.notes.push(nm2 + ": legacy parse without zones \u2014 refs only");
+      }
+      const r0 = avImportNiRefsMeta(pr, item, ctx, "nki-legacy");
+      if (r0.ok !== true) return avImportSet(item, "deferred", avImportUnreadable(avImportNkiUnread, r0.error));
+      item.meta = r0.meta;
+      if (o.persist !== false) item.id = await avImportWrite(item, bytes, ctx);
+      return item;
+    }
+    const r = avImportNiRefsMeta(pr, item, ctx, isNbkt ? "nbkt" : "nki-container");
+    if (r.ok !== true) return avImportSet(item, "deferred", avImportUnreadable(isNbkt ? avImportNbktUnread : avImportNkiUnread, r.error));
+    item.meta = r.meta;
+    if (o.persist !== false) item.id = await avImportWrite(item, bytes, ctx);
+    return item;
+  }
+  if (item.format === "sxt") {
+    let ex = null;
+    try { ex = AVSXT.extract(bytes); } catch (e) { ex = null; }
+    if (!ex || ex.ok !== true) return avImportSet(item, "deferred", avImportUnreadable(avImportSxtUnread, ex && ex.error));
+    const r = avImportSxtRefsMeta(ex, item, ctx);
+    if (r.ok !== true) return avImportSet(item, "deferred", avImportUnreadable(avImportSxtUnread, r.error));
+    item.meta = r.meta;
+    if (o.persist !== false) item.id = await avImportWrite(item, bytes, ctx);
+    return item;
+  }
+
   if (item.format === "rex2") {
     const pr = avImportRexProbe(bytes);
     if (!pr || pr.ok !== true) return avImportSet(item, "deferred", avImportRexDefer);
@@ -820,7 +988,10 @@ async function avImportOne(f, index, o, ctx) {
 /* ---------- the run ---------- */
 
 async function avImportRun(receipt, list, o) {
-  const ctx = { at: receipt.at, writeFails: 0 };
+  /* R15d ctx fix: `notes` is part of the pinned context -- `if (ctx.notes.length)` below
+     always runs, so without the array EVERY run threw there and avImportFiles stamped
+     "import run failed" onto receipt.errors (clean runs included). */
+  const ctx = { at: receipt.at, writeFails: 0, notes: [] };
   try {
     for (let i = 0; i < list.length; i++) {
       let item = null;

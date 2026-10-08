@@ -1,7 +1,7 @@
-index.html sha256 (before): b1da601bb3b7e01842c042574931540dfd8655b7f4227e8118f71eb701d25dbc
+index.html sha256 (before): 50d6d793bf5a75e550e656b0d181248f6e4ee89921f230c34abfaa6c61addc6c
 fixtures staged in C:\Users\Moddy\anvil\cache\r15b\rig-fixtures
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791477203934
+cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791480604527
  ok   boot + card: SAMPLE PACKS mounted in the synth zone (drop, pickers, slot, facade)  -> {"card":true,"zone":"synth","drop":true,"file":true,"dir":true,"slot":true,"facade":"function","ver":"r15b.0"}
  ok   IMPORT SELFTEST proof: parses on the avtest load (inited, sniff = wav)  -> {"version":"r15b.0","inited":true,"libCount":0,"sniff":"wav"}
  ok   absent host: avImportUiInit() returns false without throwing; re-attaching restores the card  -> {"r1":false,"threw1":false,"r2":true,"threw2":false,"back":true}
@@ -19,7 +19,10 @@ cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-17914772
  ok   R15c rig: real .exs + sibling WAV -> kit row -> KIT loads a slot (engine kind sampler)  -> {"rows":4,"kit":"imported","sent":{"name":"kit-tone.wav","slot":0},"kind":"sampler"}
  ok   R15c rig: real .als -> refs row -> the SEQ button runs the pattern (undo import)  -> {"als":"imported","seq":{"notes":1,"undo":"import"}}
  ok   R15c rig: without native zstd the real SerumPreset defers honestly (reason starts .SerumPreset —)  -> {"result":"deferred","reason":".SerumPreset — unreadable (zstd decompress unavailable in this browser)"}
+ ok   R15d rig: legacy .nki zones -> kit row -> KIT loads a slot (engine kind sampler)  -> {"rows":2,"sent":{"name":"sample_A.wav","slot":0},"kind":"sampler"}
+ ok   R15d rig: the real CWM container NKI parses to the pinned meta (FM8 Jam / Kontakt / 6.7.1.0 / 61 refs)  -> {"mk":"nki-container","pn":"FM8 Jam","pr":"Kontakt","vr":"6.7.1.0","n":61}
+ ok   R15d rig: synthetic .sxt refs + .nbkt metadata persist through the library  -> {"sk":"sxt","sn":2,"nk":"nbkt","nn":"Battery Fixture"}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned (before === after)  -> pinned b1da601bb3b7… · before b1da601bb3b7… · after b1da601bb3b7…
+ ok   freeze: index.html sha256 = pinned (before === after)  -> pinned 50d6d793bf5a… · before 50d6d793bf5a… · after 50d6d793bf5a…
 
-18 passed, 0 failed
+21 passed, 0 failed

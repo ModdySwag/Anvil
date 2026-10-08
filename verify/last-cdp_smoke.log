@@ -63,7 +63,10 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R15c EXS kit: synthetic .exs + sibling WAV import as a kit; LOAD lands 1 zone on 1 slot + engine kind sampler  -> {"counts":{"total":2,"imported":2,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":1,"refs":0},"kit":{"kind":"kit","result":"imported","zones":1,"sname":"kit-tone.wav"},"load":{"ok":true,"slots":1,"zones":1},"sent":{"name":"kit-tone.wav","slot":0},"kind":"sampler"}
  ok   R15c ADG/ALS: gzip .als extracts 1 ref + 1 note @128 bpm; the mapped pattern loads into the seq core  -> {"counts":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":0,"patterns":0,"kits":0,"refs":1},"it":{"kind":"refs","result":"imported","refs":1,"notes":1,"tempo":128},"loaded":true,"seqNotes":1}
  ok   R15c SerumPreset: without native zstd the container defers honestly (reason starts .SerumPreset)  -> {"via":"none","result":"deferred","kind":"refs","wt":null,"reason":".SerumPreset — unreadable (zstd frame missing)"}
+ ok   R15d SXT: card fixture imports as refs (REFE names+paths) + clean errors channel  -> {"format":"sxt","kind":"refs","result":"imported","reason":"","refCount":2,"r0name":"Kick01","r0path":"./Kick01.wav","pname":"Fixture SXT","mk":"sxt","errN":0}
+ ok   R15d NKI legacy: zlib-XML zones import as a kit; LOAD lands 1 zone on 1 slot + engine kind sampler  -> {"counts":{"total":2,"imported":2,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":1,"refs":0},"kit":{"kind":"kit","result":"imported","zones":1,"sname":"sample_A.wav"},"load":{"ok":true,"slots":1,"zones":1},"kind":"sampler","errN":0}
+ ok   R15d containers: NKI refs + NBKT metadata import; encrypted refuses with the pinned line  -> {"aRes":"imported","aKind":"refs","aMk":"nki-container","aName":"Fixture Kit","aRefs":2,"bRes":"imported","bKind":"refs","bMk":"nbkt","bName":"Battery Fixture","cRes":"refused","cReason":".nki — encrypted (locked library); import the pack's Samples folder","errN":0}
  ok   R12 proof gate: a plain load (no ?avtest=1) renders zero SELFTEST text + an empty proof host  -> {"plainReady":true,"leak":{"hits":0,"hostText":"","consoleEl":false}}
  ok   zero page errors
 
-66 passed, 0 failed
+69 passed, 0 failed

@@ -27,6 +27,7 @@
 //       the REX2 end-to-end witness the child-B node harness anchors in scratch.
 //   13. a RELOAD to the plain page: the library survives (IndexedDB, count 3), the report
 //       resets (fresh page), and no SELFTEST text leaks on the plain load.
+//   R15d: legacy-NKI kit e2e · the real CWM container NKI · synthetic SXT + NBKT legs.
 //   14. zero page errors · screenshot renders/r15b-import-suite.png · freeze sha before === after.
 //
 // Launch skeleton follows cdp_store.mjs / cdp_smoke.mjs VERBATIM (candidates Chrome/Edge/Brave,
@@ -50,7 +51,7 @@ const shaArg = argv.indexOf('--sha');
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
-const EXPECT_SHA = 'b1da601bb3b7e01842c042574931540dfd8655b7f4227e8118f71eb701d25dbc';
+const EXPECT_SHA = '50d6d793bf5a75e550e656b0d181248f6e4ee89921f230c34abfaa6c61addc6c';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -113,6 +114,28 @@ const serumPath = path.join(fxDir, 'rig.SerumPreset');
     if (!found) { console.error('no real .SerumPreset under ' + corpus); process.exit(2); }
     copyFileSync(found, serumPath);
   }
+}
+/* R15d fixtures: the child-verified scratch fixtures (legacy NKI, SXT, NBKT) + the REAL CWM
+   container NKI (verification only). The legacy kit's zone sample is sample_A.wav - its sibling. */
+const nkiPath = path.join(fxDir, 'rig.nki');
+const nkiWavPath = path.join(fxDir, 'sample_A.wav');
+const nkiCwmPath = path.join(fxDir, 'cwm-template.nki');
+const sxtPath = path.join(fxDir, 'rig.sxt');
+const nbktPath = path.join(fxDir, 'rig.nbkt');
+{
+  const r15dSrc = path.join(here, '..', 'cache', 'r15d');
+  const want = [
+    [path.join(r15dSrc, 'ni', 'fix_legacy.nki'), nkiPath],
+    [path.join(r15dSrc, 'ni', 'fix_container_nbkt.bin'), nbktPath],
+    [path.join(r15dSrc, 'cwm', 'Kontakt680Template.nki'), nkiCwmPath],
+  ];
+  for (const pair of want) {
+    if (!existsSync(pair[0])) { console.error('R15d fixture absent: ' + pair[0]); process.exit(2); }
+    copyFileSync(pair[0], pair[1]);
+  }
+  copyFileSync(wavPath, nkiWavPath);
+  const hex = readFileSync(path.join(r15dSrc, 'sxt', 'card-fixture.hex'), 'utf8').trim().replace(/\s+/g, '');
+  writeFileSync(sxtPath, Buffer.from(hex, 'hex'));
 }
 console.log('fixtures staged in ' + fxDir);
 
@@ -418,6 +441,57 @@ async function main() {
   /* ── 14. zero page errors ── */
 
   /* ── 14. zero page errors ── */
+  /* ── R15d leg: the NI/Reason trio on staged fixtures (third import run, same page) ── */
+  {
+    const docR3 = await send('DOM.getDocument', {});
+    const qR3 = (docR3 && docR3.root) ? await send('DOM.querySelector', { nodeId: docR3.root.nodeId, selector: '#av-import-file' }) : null;
+    if (!qR3 || !qR3.nodeId) {
+      check('R15d rig: input missing', false, 'no #av-import-file node');
+    } else {
+      /* leg a: legacy .nki + its sibling WAV -> kit -> KIT action -> slot + sampler */
+      await send('DOM.setFileInputFiles', { nodeId: qR3.nodeId, files: [nkiPath, nkiWavPath] });
+      await sleep(1500);
+      let rows3 = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 2 ? 2 : 0`, 15000);
+      if (!rows3) {
+        await ev(`(() => { const i = document.getElementById('av-import-file'); if (i) i.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
+        rows3 = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 2 ? 2 : 0`, 20000);
+      }
+      const nkiId = await rowId('rig.nki');
+      await clickSel(`[data-av-import-lib="${nkiId}"] [data-av-import-act="kit"]`, 1500);
+      const nkiSent = await waitFor(`(() => { const r = avSampleStore.sent && avSampleStore.sent[0]; return (r && String(r.name).indexOf('sample_A.wav') >= 0) ? { name: r.name, slot: r.slot } : null; })()`, 15000);
+      const nkiKind = (await ev(`(typeof avParams === 'object' && avParams) ? avParams['engine.kind'] : null`)).value;
+      check('R15d rig: legacy .nki zones -> kit row -> KIT loads a slot (engine kind sampler)',
+        rows3 === 2 && !!nkiId && !!nkiSent && nkiSent.slot === 0 && nkiKind === 'sampler',
+        JSON.stringify({ rows: rows3, sent: nkiSent, kind: nkiKind }));
+
+      /* leg b: the REAL CWM container NKI -> refs meta pinned to the harness values */
+      await send('DOM.setFileInputFiles', { nodeId: qR3.nodeId, files: [nkiCwmPath] });
+      await sleep(1500);
+      let rows3b = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 1 ? 1 : 0`, 15000);
+      if (!rows3b) {
+        await ev(`(() => { const i = document.getElementById('av-import-file'); if (i) i.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
+        rows3b = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 1 ? 1 : 0`, 20000);
+      }
+      const cwmRec = await waitFor(`(async () => { if (typeof avLibList !== 'function') return null; const l = await avLibList(); const it = (l.items || []).find(i => i.name === 'cwm-template.nki'); return (it && it.meta) ? { mk: it.meta.kind, pn: it.meta.presetName, pr: it.meta.product, vr: it.meta.version, n: it.meta.refCount } : null; })()`, 15000);
+      check('R15d rig: the real CWM container NKI parses to the pinned meta (FM8 Jam / Kontakt / 6.7.1.0 / 61 refs)',
+        !!cwmRec && cwmRec.mk === 'nki-container' && cwmRec.pn === 'FM8 Jam' && cwmRec.pr === 'Kontakt' && cwmRec.vr === '6.7.1.0' && cwmRec.n === 61,
+        JSON.stringify(cwmRec));
+
+      /* leg c: synthetic SXT + NBKT in one run -> refs metas + DOM rows */
+      await send('DOM.setFileInputFiles', { nodeId: qR3.nodeId, files: [sxtPath, nbktPath] });
+      await sleep(1500);
+      let rows3c = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 2 ? 2 : 0`, 15000);
+      if (!rows3c) {
+        await ev(`(() => { const i = document.getElementById('av-import-file'); if (i) i.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
+        rows3c = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 2 ? 2 : 0`, 20000);
+      }
+      const trioRec = await waitFor(`(async () => { if (typeof avLibList !== 'function') return null; const l = await avLibList(); const s = (l.items || []).find(i => i.format === 'sxt'); const n = (l.items || []).find(i => i.format === 'nbkt'); return (s && n) ? { sk: s.meta && s.meta.kind, sn: s.meta && s.meta.refCount, nk: n.meta && n.meta.kind, nn: n.meta && n.meta.presetName } : null; })()`, 15000);
+      check('R15d rig: synthetic .sxt refs + .nbkt metadata persist through the library',
+        !!trioRec && trioRec.sk === 'sxt' && trioRec.sn === 2 && trioRec.nk === 'nbkt' && trioRec.nn === 'Battery Fixture',
+        JSON.stringify(trioRec));
+    }
+  }
+
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
   /* ── 15. freeze ── */
