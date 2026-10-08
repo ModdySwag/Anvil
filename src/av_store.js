@@ -51,6 +51,10 @@
      avStoreGet(id) -> {}|null           full record incl. a read-only deep copy of `pack`
      avStoreSetFetch(fn|null) -> bool    the network seam (returns "seam active?")
      avStoreBackend/Count/Estimate()     report helpers (Estimate = navigator.storage.estimate)
+     avStorePersist() -> Promise         navigator.storage.persist() -> {ok, persisted, error?};
+                                         a false grant is a SUCCESSFUL call, honestly reported
+     avStorePersisted() -> Promise       navigator.storage.persisted() -> boolean | null (null =
+                                         unsupported). Both R17 helpers never throw.
      avStoreAdopt(force) -> Promise      manual late-adoption retry (force skips the once-guard)
      avStoreOnChange(fn) -> bool         listener registry; avStorePaint() fires it (guarded)
      avStoreNote() -> string|null        the honest file:// note
@@ -821,6 +825,42 @@ function avStoreEstimate() {
     if (nav && nav.storage && typeof nav.storage.estimate === "function") {
       return Promise.resolve(nav.storage.estimate()).then(
         function (e) { return { usage: (e && e.usage) || 0, quota: (e && e.quota) || 0 }; },
+        function () { return null; }
+      );
+    }
+  } catch (e) { /* none */ }
+  return Promise.resolve(null);
+}
+
+/* ---------- R17 persist helpers (verify/_r17_wave.md section 3; avStoreEstimate's nav-lookup
+   style; both never throw) ---------- */
+
+/* navigator.storage.persist() when present. A persist() call that ran and answered false is a
+   SUCCESSFUL call reported honestly ({ok:true, persisted:false}); unsupported / threw ->
+   {ok:false, persisted:false, error}. Never throws. */
+function avStorePersist() {
+  try {
+    let nav = null;
+    try { nav = (typeof navigator !== "undefined") ? navigator : ((typeof window !== "undefined" && window) ? window.navigator : null); } catch (e) { nav = null; }
+    if (nav && nav.storage && typeof nav.storage.persist === "function") {
+      return Promise.resolve().then(function () { return nav.storage.persist(); }).then(
+        function (v) { return { ok: true, persisted: v === true }; },
+        function (e) { return { ok: false, persisted: false, error: "persist:" + avStoreErrMsg(e) }; }
+      );
+    }
+  } catch (e) { /* none */ }
+  return Promise.resolve({ ok: false, persisted: false, error: "unsupported" });
+}
+
+/* navigator.storage.persisted() when present -> Promise<boolean|null>; null when unsupported
+   (or when the query fails). Never throws. */
+function avStorePersisted() {
+  try {
+    let nav = null;
+    try { nav = (typeof navigator !== "undefined") ? navigator : ((typeof window !== "undefined" && window) ? window.navigator : null); } catch (e) { nav = null; }
+    if (nav && nav.storage && typeof nav.storage.persisted === "function") {
+      return Promise.resolve().then(function () { return nav.storage.persisted(); }).then(
+        function (v) { return (v === true) ? true : ((v === false) ? false : null); },
         function () { return null; }
       );
     }

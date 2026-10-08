@@ -1104,8 +1104,8 @@ async function main() {
              facade: typeof f.importFiles, snap: typeof f.snap, ver: f.version || null };
   })()`);
   const r15a = r15aR.value || {};
-  check('R15b import card: mounted in the synth zone (drop + pickers + report + lib + facade)',
-    r15a.card === true && r15a.zone === 'synth' && r15a.drop === true && r15a.file === true && r15a.dir === true
+  check('R15b import card: mounted in the store zone (drop + pickers + report + lib + facade)',
+    r15a.card === true && r15a.zone === 'store' && r15a.drop === true && r15a.file === true && r15a.dir === true
     && r15a.pick === true && r15a.pickdir === true && r15a.status === true && r15a.report === true
     && r15a.lib === true && r15a.slot === true && r15a.note === true && r15a.empty === true
     && r15a.facade === 'function' && r15a.snap === 'function' && r15a.ver === 'r15b.0',
@@ -1411,6 +1411,45 @@ async function main() {
     r16c.via === 'rex2' && r16c.count === 3 && r16c.s2 && r16c.s2.s0 === 100 && r16c.s2.s1 === 200
     && r16c.kitOk === true && r16c.kitN === 3 && r16c.aplOk === true && r16c.slot === 0,
     JSON.stringify(r16c));
+
+  /* 6cu. R17: the import hub v1 - manager controls + runs + storage footer + facade fns */
+  const r17aR = await ev(`(() => {
+    window.__avZoneAuto('#av-import');
+    const q = (s) => !!document.querySelector(s);
+    const f = window.__avImport || {};
+    return { search: q('#av-import-search'), sort: q('#av-import-sort'), filters: q('#av-import-filters'),
+             selall: q('#av-import-selall'), delsel: q('#av-import-delsel'),
+             runs: q('#av-import-runs'), runsclear: q('#av-import-runsclear'),
+             storage: q('#av-import-storage'), persist: q('#av-import-persist'),
+             pick: typeof f.pick, pickDir: typeof f.pickDir, library: typeof f.library,
+             rename: typeof f.rename, exportItem: typeof f.exportItem };
+  })()`);
+  const r17a = r17aR.value || {};
+  check('R17 hub: manager ids + runs + storage footer + facade pick/pickDir/library/rename/exportItem',
+    r17a.search === true && r17a.sort === true && r17a.filters === true && r17a.selall === true
+    && r17a.delsel === true && r17a.runs === true && r17a.runsclear === true && r17a.storage === true
+    && r17a.persist === true && r17a.pick === 'function' && r17a.pickDir === 'function'
+    && r17a.library === 'function' && r17a.rename === 'function' && r17a.exportItem === 'function',
+    JSON.stringify(r17a));
+
+  /* 6cv. R17: the File menu carries the import + library entries */
+  const r17bR = await ev(`(() => {
+    let labels = [];
+    try {
+      if (window.__avMenubar && typeof window.__avMenubar.open === 'function') {
+        window.__avMenubar.open('file');
+        const pop = document.getElementById('av-menu-pop');
+        labels = pop ? Array.prototype.map.call(pop.querySelectorAll('.av-menu-mi'), function (el) { return String(el.textContent || '').trim(); }) : [];
+        window.__avMenubar.close();
+      }
+    } catch (e) { labels = []; }
+    return { labels: labels };
+  })()`);
+  const r17b = r17bR.value || {};
+  check('R17 hub: File menu carries Import sounds / Import folder / Library',
+    Array.isArray(r17b.labels) && r17b.labels.indexOf('Import sounds...') >= 0
+    && r17b.labels.indexOf('Import folder...') >= 0 && r17b.labels.indexOf('Library...') >= 0,
+    JSON.stringify(r17b.labels));
 
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');

@@ -1854,3 +1854,24 @@ header.av-head.av-console > .av-btn:hover { border-color: var(--teal-deep); }
 .av-import-item-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .av-import-item-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
 .av-import-busy { opacity: 0.7; }
+
+/* R17: the import hub v1 -- manager . runs . storage footer . inline rename + states */
+.av-import-manager { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 4px; }
+.av-import-search { flex: 1 1 200px; min-width: 140px; background: #0a0e11; color: var(--text); border: 1px solid var(--hair); border-radius: 6px; font-family: var(--mono); font-size: 11px; padding: 4px 8px; }
+.av-import-search::placeholder { color: var(--text-3); }
+.av-import-search:focus { outline: none; border-color: var(--teal-deep); box-shadow: 0 0 0 1px rgba(46,216,201,.25); }
+.av-import-sort { padding: 3px 6px; }
+.av-import-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+.av-import-fchip { background: transparent; color: var(--text-3); border: 1px solid var(--hair); border-radius: 5px; font-family: var(--mono); font-size: 10px; letter-spacing: .08em; padding: 3px 9px; cursor: pointer; }
+.av-import-fchip:hover { color: var(--text-2); border-color: var(--teal-deep); }
+.av-import-fchip.on { color: var(--teal); background: #0d2422; border-color: var(--teal-deep); box-shadow: inset 0 0 7px rgba(46,216,201,.18); }
+.av-import-check { width: 14px; height: 14px; margin: 0; accent-color: #2ed8c9; flex: none; }
+.av-import-rename { flex: 1 1 140px; min-width: 100px; background: #0a0e11; color: var(--text); border: 1px solid var(--teal-deep); border-radius: 5px; font-family: var(--mono); font-size: 11px; padding: 3px 7px; }
+.av-import-rename:focus { outline: none; box-shadow: 0 0 0 1px rgba(46,216,201,.25); }
+.av-import-runs { display: flex; flex-direction: column; gap: 4px; margin: 4px 0 6px; }
+.av-import-runs-head { display: flex; align-items: baseline; gap: 10px; margin: 8px 0 2px; }
+.av-import-run { display: flex; align-items: center; gap: 10px; padding: 4px 8px; border: 1px solid var(--hair); border-radius: 6px; background: rgba(6, 9, 12, 0.35); font-family: var(--mono); font-size: 10px; letter-spacing: .04em; color: var(--text-2); cursor: pointer; text-align: left; }
+.av-import-run:hover { border-color: var(--teal-deep); color: var(--text); }
+.av-import-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 8px; }
+.av-import-storage { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--text-3); }
+.av-import-hist #av-import-report { border-left: 2px solid var(--teal-deep); padding-left: 8px; }

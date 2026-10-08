@@ -163,14 +163,16 @@ Proof line (`IMPORT SELFTEST`) may gain `hub:true` — gated + deferred law unch
    becomes `['av-store', 'av-import']`; check the following count assertion (update any
    pinned number; total card count stays 24).
 5. `verify/cdp_smoke.mjs` — 6ci (L1107-1112): expected zone `'synth'` -> `'store'`
-   (strength preserved). NEW check (after 6ci): hub v1 structure — search/sort/filters/
-   selall/delsel/runs/runsclear/storage/persist ids present + File popup contains
-   "Import sounds..." / "Import folder..." / "Library..." labels. Smoke 72 -> 74.
+   (strength preserved). NEW checks 6cu + 6cv (inserted before the 6cd proof gate): hub v1
+   structure ids + facade functions; File popup labels. Smoke 72 -> 74. (As-built: 6ck is
+   taken by R15b — the next free labels are 6cu/6cv; both checks live at the file tail so
+   earlier check order is undisturbed.)
 6. `src/styles.css` — R17 block authored by the parent from Child B's runtime class list
    (house law).
-7. Also sweep `verify/cdp_import.mjs` for any card-zone assertion — update to `'store'`
-   ONLY if pinned there (keep strength; its 24 checks must otherwise stay green on the
-   new bytes).
+7. `verify/cdp_import.mjs` — as-built sweep found TWO zone pins: the boot-check trio moves
+   to `'store'` (header comment L6 + title L273 + `b.zone === 'synth'` L274); the CHOP leg
+   (L378-379) legitimately STAYS `'synth'` (the chop card remains in the synth zone).
+   Count stays 24.
 
 ## §6 Child C pins (`verify/cdp_hub.mjs`, NEW rig)
 

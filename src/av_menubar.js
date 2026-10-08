@@ -21,6 +21,11 @@ function avMenuDefs() {
     { id: "file", label: "File", items: [
       ["Save project (.anvl)", function () { return avMenuCall("avProjSave"); }],
       ["Open project...", function () { return avMenuCall("avProjOpen"); }],
+      ["sep", null],
+      ["Import sounds...", function () { return avMenuCall("avImportUiPick"); }],
+      ["Import folder...", function () { return avMenuCall("avImportUiPickDir"); }],
+      ["Library...", function () { return avMenuCall("avImportUiLibrary"); }],
+      ["sep", null],
       ["Export stems (Deliver)", function () { avMenuCall("avZoneShow", "studio", { source: "menu" }); return avMenuCall("avPaletteDeliverHighlight"); }],
       ["Load demo groove", function () { return avMenuCall("avLessonAction", "seq.loadDemo"); }],
     ] },

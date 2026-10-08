@@ -1,0 +1,37 @@
+index.html sha256 (before): a9d67b0e67daff9f6db9c4c3bd553f1612e45112153318b8cfcbdcabf6f3996c
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+cdp port 9580 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-hub-1791487911380
+fixtures: synthesized in-page (avWavEncode WAVs + hand-built SMF + one unknown file)
+ ok   hub boot: card in the store zone + h2 "Import & Library"  -> {"card":true,"zone":"store","h2":"Import & Library"}
+ ok   hub boot: legacy ids intact (drop/file/dir/pick/pickdir/status/counts/report/lib/slot/note/empty)  -> {"drop":true,"file":true,"dir":true,"pick":true,"pickdir":true,"status":true,"counts":true,"report":true,"lib":true,"slot":true,"note":true,"empty":true}
+ ok   hub boot: new ids (search/sort/filters/selall/delsel/runs/runsclear/runs-empty/storage/persist)  -> {"search":true,"sort":true,"filters":true,"selall":true,"delsel":true,"runs":true,"runsclear":true,"runsEmpty":true,"storage":true,"persist":true}
+ ok   facade __avImport: pick/pickDir/library/rename/exportItem + existing keys kept  -> {"pick":"function","pickDir":"function","library":"function","rename":"function","exportItem":"function","importFiles":"function","snap":"function","lrename":"function","recSave":"function","recList":"function","recClear":"function","list":"function","get":"function"}
+ ok   facade __avLib: rename/receiptSave/receiptList/receiptClear + list/get kept  -> {"pick":"function","pickDir":"function","library":"function","rename":"function","exportItem":"function","importFiles":"function","snap":"function","lrename":"function","recSave":"function","recList":"function","recClear":"function","list":"function","get":"function"}
+ ok   menubar File: Import sounds... / Import folder... / Library... present  -> ["Save project (.anvl)","Open project...","Import sounds...","Import folder...","Library...","Export stems (Deliver)","Load demo groove"]
+ ok   library jump: File > Library... and avImportUiLibrary() switch to the store pane (returns true)  -> {"menu":{"clicked":true,"afterMenu":"store"},"fn":{"okSynth":true,"mid":"synth","ret":true,"end":"store"}}
+ ok   import run 1: three files land (2 imported + 1 unknown honest) via the change handler  -> {"filesN":3,"counts":{"total":3,"imported":2,"deferred":0,"refused":1,"samples":1,"patterns":1,"kits":0,"refs":0,"bundles":0},"alpha":"imported","mike":"imported","unk":{"result":"refused","reason":"unrecognized format"}}
+ ok   import run 1: library gains the 2 imports (unknown not persisted) + DOM rows match  -> {"count":2,"names":"hub-alpha.wav,hub-mike.mid","dom":2}
+ ok   import run 1: receipt persisted (avLibReceiptList 1 + #av-import-runs 1 row, empty line hidden)  -> {"count":1,"backend":"idb","rows":1,"snapRuns":1,"emptyHidden":true,"rowText":"06:01 · imported 2 · deferred 0 · refused 1 · import 2026-10-09 06:01"}
+ ok   import run 2: a second run -> receipt count 2 + #av-import-runs 2 rows  -> {"count":2,"rows":2,"rep":1,"zulu":true,"c0":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0}}
+   · reloaded (plain page) — ready=true
+ ok   reload: receipts survive fresh (count 2 + the stored counts intact + runs rows reborn)  -> {"count":2,"rows":2,"a":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0},"b":{"total":3,"imported":2,"deferred":0,"refused":1,"samples":1,"patterns":1,"kits":0,"refs":0,"bundles":0}}
+ ok   reload: the library loads fresh (3 items + DOM rows 3)  -> {"count":3,"names":"hub-alpha.wav,hub-mike.mid,hub-zulu.wav","dom":3}
+ ok   rename: avLibRename applies via the UI commit (avLibList + manager DOM); empty name refused  -> {"ren":{"id":"lmuzxnbva-hub-alpha-wav","acc":true,"nowName":"hub-bravo.wav","r2":{"ok":false,"name":"","err":"no name"},"stillName":"hub-bravo.wav"},"dom":{"hit":true}}
+   · reloaded again — ready=true
+ ok   reload: the renamed item persists (hub-bravo.wav present, hub-alpha.wav gone)  -> {"bravo":true,"alpha":false,"receipts":2}
+ ok   manager search: "mike" narrows 3 items -> 1 hit (snap manager.search)  -> {"rows":1,"hit":true,"search":"mike"}
+ ok   manager filter: chips narrow pattern -> 1, sample -> 2, all -> 3 (snap manager.filter)  -> {"pattern":{"rows":1,"filter":"pattern","on":"all:,sample:,kit:,refs:,pattern:on"},"sample":{"rows":2,"filter":"sample","on":"all:,sample:on,kit:,refs:,pattern:"},"all":{"rows":3,"filter":"all","on":"all:on,sample:,kit:,refs:,pattern:"}}
+ ok   manager sort: name vs newest flips the order (snap manager.sort)  -> {"newest":["hub-zulu.wav","hub-mike.mid","hub-bravo.wav"],"name":["hub-bravo.wav","hub-mike.mid","hub-zulu.wav"],"back":["hub-zulu.wav","hub-mike.mid","hub-bravo.wav"]}
+ ok   manager select-all: all 3 visible rows check + delete-selected arms (snap selected 3)  -> {"checked":3,"armed":true,"selected":3}
+ ok   manager delete selected: the checked rows go, the unchecked row intact (deleted 2)  -> {"count":1,"rows":1,"names":["hub-bravo.wav"],"status":"deleted 2","disarmed":true}
+ ok   export: spy got (bytes, filename) — length === stored size + the name carries the ext; original restored  -> {"ex":{"size":1644,"L":1644,"id":true},"got":{"len":1644,"name":"hub-bravo.wav"},"calls":1,"restored":{"restored":true,"isFn":true},"status":"exported hub-bravo.wav"}
+ ok   storage: the footer line is honest (storage: <used> of <quota> · <tier> or the unavailable fallback)  -> "storage: 16.5 KB of 10240.0 MB · best-effort"
+ ok   persist: avStorePersist() resolves {ok,persisted} honestly + the button writes the honest result  -> {"res":{"ok":true,"persisted":false,"error":""},"status":"persistent storage not granted (best-effort)","claimsGrant":false}
+ ok   drop-anywhere: a non-hub drop routes to the store pane and imports exactly once  -> {"before":2,"settle":{"count":3,"zone":"store","rows":3,"rep":1,"hit":1},"after":3}
+ ok   drop inside the hub: imports exactly once — containment guard, no double import  -> {"before":3,"settle":{"count":4,"rows":4,"rep":1,"hit":1},"after":4}
+   · screenshot: C:\Users\Moddy\anvil\renders\r17-hub-suite.png
+ ok   row action: the surviving sample LOADs end-to-end (48 kHz native, 0.05 s preserved)  -> {"n":1,"rate":48000,"frames":2400,"secs":0.05}
+ ok   zero page errors
+ ok   freeze: index.html sha256 = pinned (before === after)  -> pinned a9d67b0e67da… · before a9d67b0e67da… · after a9d67b0e67da…
+
+28 passed, 0 failed

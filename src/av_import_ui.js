@@ -48,6 +48,26 @@
                 flight.
      . NOTE     #av-import-note -- "Imports land in your local library -- nothing is uploaded."
 
+   R17 -- IMPORT HUB v1 (the card relocates to the Store zone; that move is the PARENT's job --
+   this module stays zone-agnostic and only fills its parent-owned host). The card gains the
+   library manager (search #av-import-search . sort #av-import-sort . kind chips #av-import-filters
+   > .av-import-fchip[data-f] . select-all #av-import-selall . delete-selected #av-import-delsel,
+   both over the VISIBLE rows . per-row checkbox [data-av-import-check] + REN/EXP actions . inline
+   rename input.av-import-rename . per-item export through the guarded avDeliverDownload), the
+   persisted receipts history (#av-import-runs rows button[data-av-import-run] "HH:MM . imported
+   N . deferred N . refused N . title" . #av-import-runsclear . #av-import-runs-empty; a click
+   paints the stored receipt into the report + counts and marks the root .av-import-hist -- the
+   next live run clears it), the storage footer (#av-import-storage "storage: <used> of <quota> .
+   <tier>" + the #av-import-persist nudge through the guarded avStoreEstimate / avStorePersist --
+   never claims a grant it did not get), and drop-anywhere routing (the document-level drop keeps
+   ALWAYS preventDefault and, for targets OUTSIDE #av-import-host, funnels the dataTransfer
+   through avImportUiFilesFromDataTransfer -> avImportUiImport, then avZoneShow("store") +
+   avImportUiReveal; drops INSIDE the host stay the card's own handler -- the containment guard is
+   what prevents a double import). Every avImportFiles completion from the card (the single call
+   site avImportUiImport) fire-and-forget saves a receipt (avLibReceiptSave, guarded) and refreshes
+   the runs list; every manager action obeys the ONE-op busy law (manager controls disabled while
+   busy; the busy classes stay av-import-busy + dataset.avImportBusy + aria-busy).
+
    DOM CONTRACT (exact -- suites pin these):
      host      #av-import-host          parent-owned; absent -> avImportUiInit() returns false
      root      .av-import[data-av-import="1"] (id "av-import" only when no element owns it --
@@ -67,6 +87,15 @@
                five [data-av-import-act] buttons carrying data-id (seq disabled unless the row
                is a pattern)
      note      #av-import-note
+     manager   #av-import-search (input search) . #av-import-sort (select newest|name|size|kind) .
+               #av-import-filters (.av-import-fchip[data-f=all|sample|kit|refs|pattern], active
+               class on) . #av-import-selall . #av-import-delsel (disabled at 0 selected)
+     runs      #av-import-runs (rows button[data-av-import-run]) . #av-import-runsclear .
+               #av-import-runs-empty (static; hidden while rows exist)
+     storage   #av-import-storage . #av-import-persist
+     rows add  lib rows gain input.av-import-check[data-av-import-check] + the
+               [data-av-import-act=rename|export] buttons; the inline editor is
+               input.av-import-rename
      state     .dragover on the host + the drop zone during a drag; .av-import-busy +
                dataset avImportBusy + aria-busy on the root while busy; dataset avImportWired
                on the host (delegation bound once), dataset avImportUi on the host (mount flag,
@@ -81,7 +110,12 @@
    "IMPORT SELFTEST " + JSON of {version, inited, libCount, sniff} (a fixed RIFF+WAVE 12-byte
    fixture sniffs "wav") . avImportUiClasses() -> string[] (every NEW css class this card
    emits). Facade: window.__avImport = {version:"r15b.0", init, snap, importFiles, refresh,
-   classes}.
+   classes}. R17 observables (additive): avImportUiPickDir() (the menubar import-folder) .
+   avImportUiLibrary() (store zone show + reveal + focus; true) . avImportUiReveal() (scroll the
+   hub into view + focus the drop zone) . avImportUiPick(kind) keeps its old contract (no arg or
+   "file" = files, "dir" = folder) . snap() gains runs (the stored receipt count) + manager
+   {search, sort, filter, selected (the selected count)} . the facade gains pick, pickDir,
+   library, rename, exportItem (every existing key kept).
 
    PROOF EMISSION (the console-proof-leak law; mirrors av_lfo.js lines 255-275 EXACTLY in
    shape): at init, gated on the same ?avtest=1 query check the LFO card uses, deferred with
@@ -92,7 +126,10 @@
    (folder-walk depth cap) . AV_IMPORT_UI_MAX_FILES 600 (fallback mirror of the core's
    AV_IMPORT_MAX_FILES) . AV_IMPORT_UI_ROWS_MAX 600 (report rows painted) .
    AV_IMPORT_UI_LIB_ROWS_MAX 400 (library rows painted) . AV_IMPORT_UI_ACCEPT (the input
-   accept list) . AV_IMPORT_UI_CLASSES (below).
+   accept list) . AV_IMPORT_UI_CLASSES (below). R17 additive constants: AV_IMPORT_UI_NAME_MAX 120
+   (the rename cap) . AV_IMPORT_UI_RUN_ITEMS_MAX 60 (receipt items saved per run) .
+   AV_IMPORT_UI_EXT_FALLBACK (the export-filename fallback map) . AV_IMPORT_UI_FILTERS /
+   AV_IMPORT_UI_SORTS (the manager vocabularies).
 
    CSS CLASSES THIS MODULE NEEDS (the parent authors styles.css from this list; the
    parent-owned card id #av-import and host #av-import-host are NOT listed; av-btn / av-note /
@@ -120,6 +157,12 @@
      .av-import-note     the "nothing is uploaded" line
      .av-import-busy     added to the root while a run/action is in flight
      .dragover           added to the host + the drop zone while a drag is over them
+     R17: .av-import-manager .av-import-search .av-import-sort .av-import-filters .av-import-fchip
+          (+ .on while a chip is the active kind filter) .av-import-check (the row checkbox) .
+          .av-import-rename (the inline editor) .av-import-runs .av-import-run (a runs row
+          button) .av-import-runs-head .av-import-foot (the storage footer row) .
+          .av-import-storage (the storage line) .av-import-hist (the root while a stored run
+          is being viewed)
 
    LAWS (house): "use strict"; classic script; ONE namespace avImportUi* / AV_IMPORT_UI_*;
    NO DOM at top level (node-loadable -- the harness loads this text in a Function scope);
@@ -135,6 +178,16 @@ const AV_IMPORT_UI_MAX_FILES = 600;      /* fallback mirror of the core's AV_IMP
 const AV_IMPORT_UI_ROWS_MAX = 600;       /* report rows painted per run                       */
 const AV_IMPORT_UI_LIB_ROWS_MAX = 400;   /* library rows painted                              */
 const AV_IMPORT_UI_ACCEPT = "audio/*,.wav,.aiff,.aif,.aifc,.mp3,.mid,.midi,.rx2,.exs,.nki,.nbkt,.sxt,.kong,.mxgrp,.wt,.fxp,.serumpreset,.adg,.als,.zip";
+/* R17 additive constants (names frozen -- the manager . receipts . storage . export half) */
+const AV_IMPORT_UI_NAME_MAX = 120;        /* inline rename cap (mirror of AV_LIB_NAME_MAX)      */
+const AV_IMPORT_UI_RUN_ITEMS_MAX = 60;    /* receipt items saved per run (AV_LIB_REC_ITEMS_MAX) */
+/* the export-filename fallback when a record carries no ext: format map first, then kind */
+const AV_IMPORT_UI_EXT_FALLBACK = {
+  wav: "wav", mp3: "mp3", aiff: "aiff", rex2: "rx2",
+  "pattern-kind": "mid", "kit-kind": "exs", "refs-kind": "json",
+};
+const AV_IMPORT_UI_FILTERS = ["all", "sample", "kit", "refs", "pattern"];
+const AV_IMPORT_UI_SORTS = ["newest", "name", "size", "kind"];
 
 /* the NEW css classes this card emits (the parent styles them; #av-import / #av-import-host
    are parent-owned card ids and are NOT listed; av-btn / av-note / av-dim / av-select / mini
@@ -157,6 +210,11 @@ const AV_IMPORT_UI_CLASSES = [
   "av-import-acts", "av-import-act",
   "av-import-empty", "av-import-note",
   "av-import-busy", "dragover",
+  /* R17: manager . runs . storage . inline rename + state classes */
+  "av-import-manager", "av-import-search", "av-import-sort", "av-import-filters",
+  "av-import-fchip", "on", "av-import-check", "av-import-rename",
+  "av-import-runs", "av-import-run", "av-import-runs-head",
+  "av-import-foot", "av-import-storage", "av-import-hist",
 ];
 
 /* UI-local state only -- every core fact is read through the pinned apis per call */
@@ -173,6 +231,11 @@ const avImportUiState = {
   lastError: "",
   reportPaintedSeq: -1,           /* report rebuild memo (runSeq)                     */
   libSig: "\u0000",               /* library rebuild memo (list signature)            */
+  mgr: { search: "", sort: "newest", filter: "all", sel: {}, selSeq: 0 },   /* R17 manager view */
+  runs: { ok: false, backend: "", count: 0, list: [], byId: {}, error: "", at: 0 },
+  runsSig: "\u0000",              /* runs rebuild memo (list signature)               */
+  hist: null,                     /* {id, at, title, counts, items} of the viewed run */
+  storage: { checked: false, est: null, tier: "best-effort", at: 0 },
   memos: { text: {}, cls: {} },   /* write-on-change memos so idle syncs never touch  */
 };
 
@@ -393,6 +456,104 @@ function avImportUiFirstReason(items) {
   return "";
 }
 
+/* ---------- R17: manager view (search . sort . kind filter over the lib mirror) ---------- */
+
+/* "HH:MM" out of an epoch ms (or "--:--" when unusable) -- the receipts rows use it */
+function avImportUiClock(at) {
+  try {
+    const n = Number(at);
+    if (!isFinite(n) || n <= 0) return "--:--";
+    const d = new Date(n);
+    if (!isFinite(d.getTime())) return "--:--";
+    const h = d.getHours(), m = d.getMinutes();
+    return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+  } catch (e) { return "--:--"; }
+}
+
+/* an attribute-selector-safe library id (av_lib ids are /^l[a-z0-9-]{0,63}$/) */
+function avImportUiSelId(id) {
+  const t = String(id == null ? "" : id);
+  return /^[a-z0-9-]{1,64}$/.test(t) ? t : "";
+}
+
+/* the manager's visible rows: kind filter + case-insensitive name search + sort, over the
+   library mirror ("newest" = the mirror's own newest-first order). Never mutates the mirror;
+   a filter/sort failure falls back to the mirror order. */
+function avImportUiViewItems() {
+  const s = avImportUiState;
+  const out = [];
+  try {
+    const src = s.lib.items || [];
+    const f = s.mgr.filter;
+    const q = String(s.mgr.search || "").toLowerCase();
+    for (let i = 0; i < src.length; i++) {
+      const it = src[i];
+      if (!it) continue;
+      if (f !== "all" && String(it.kind || "") !== f) continue;
+      if (q && String(it.name || "").toLowerCase().indexOf(q) < 0) continue;
+      out.push(it);
+    }
+  } catch (e) { return []; }
+  try {
+    const byName = function (a, b) {
+      const an = String(a.name || "").toLowerCase(), bn = String(b.name || "").toLowerCase();
+      if (an < bn) return -1;
+      if (an > bn) return 1;
+      return String(a.id) < String(b.id) ? -1 : (String(a.id) > String(b.id) ? 1 : 0);
+    };
+    if (s.mgr.sort === "name") out.sort(byName);
+    else if (s.mgr.sort === "size") out.sort(function (a, b) {
+      const d = avImportUiNumOr(b.size, 0) - avImportUiNumOr(a.size, 0);
+      return d !== 0 ? d : byName(a, b);
+    });
+    else if (s.mgr.sort === "kind") out.sort(function (a, b) {
+      const ak = String(a.kind || ""), bk = String(b.kind || "");
+      if (ak < bk) return -1;
+      if (ak > bk) return 1;
+      return byName(a, b);
+    });
+  } catch (e) { /* the mirror order stands */ }
+  return out;
+}
+
+/* the export extension: the record's own ext first, then the pinned fallback map, then bin */
+function avImportUiExtOf(it) {
+  let ext = "";
+  try { ext = String((it && it.ext) || "").toLowerCase().replace(/[^a-z0-9]/g, ""); } catch (e) { ext = ""; }
+  if (ext) return ext;
+  let f = "";
+  try { f = String((it && it.format) || "").toLowerCase(); } catch (e2) { f = ""; }
+  if (f && AV_IMPORT_UI_EXT_FALLBACK[f]) return AV_IMPORT_UI_EXT_FALLBACK[f];
+  let k = "";
+  try { k = String((it && it.kind) || "").toLowerCase(); } catch (e3) { k = ""; }
+  if (k && AV_IMPORT_UI_EXT_FALLBACK[k + "-kind"]) return AV_IMPORT_UI_EXT_FALLBACK[k + "-kind"];
+  return "bin";
+}
+
+/* the export filename "<name>.<ext>"; a name that already carries the ext is kept as-is
+   (never a doubled ".wav.wav"); the name is sanitised for a download and never empty */
+function avImportUiExportName(it) {
+  let name = "";
+  try { name = String((it && it.name) || "").trim(); } catch (e) { name = ""; }
+  if (!name) name = "item";
+  name = name.replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_");
+  if (name.length > 120) name = name.slice(0, 120);
+  const ext = avImportUiExtOf(it);
+  const suffix = "." + ext.toLowerCase();
+  if (name.toLowerCase().slice(-suffix.length) === suffix) return name;
+  return name + "." + ext;
+}
+
+/* the guarded avDeliverDownload reach (global first, then the window facade) */
+function avImportUiDeliverFn() {
+  try { if (typeof avDeliverDownload === "function") return avDeliverDownload; } catch (e) { /* not loaded */ }
+  try {
+    const w = avImportUiWin();
+    if (w && typeof w.avDeliverDownload === "function") return w.avDeliverDownload;
+  } catch (e2) { /* no window */ }
+  return null;
+}
+
 /* ---------- the file cap (mirror of the core's constant, guarded per access) ---------- */
 
 function avImportUiFileCap() {
@@ -568,7 +729,9 @@ function avImportUiFilesFromDataTransfer(dt) {
 }
 
 /* the document-wide dragover/drop claim-once (av_sample.js L301-310 law: a stray drop must
-   never navigate the page away). One claim per document, preventDefault only. */
+   never navigate the page away). One claim per document; the drop listener ALWAYS
+   preventDefaults and gains the R17 routing for drops outside the hub host (avImportUiDocDrop
+   -- the containment guard). */
 function avImportUiClaimDoc() {
   try {
     const d = avImportUiDoc();
@@ -577,7 +740,12 @@ function avImportUiClaimDoc() {
     if (de && de.dataset && de.dataset.avImportDoc === "1") return true;
     if (de && de.dataset) de.dataset.avImportDoc = "1";
     d.addEventListener("dragover", function (e) { try { e.preventDefault(); } catch (err) { /* ok */ } });
-    d.addEventListener("drop", function (e) { try { e.preventDefault(); } catch (err) { /* ok */ } });
+    d.addEventListener("drop", function (e) {
+      try { e.preventDefault(); } catch (err) { /* ok */ }
+      /* R17: a drop OUTSIDE the hub host imports through the funnel and reveals the hub; a
+         drop INSIDE it stays the card's own handler (never a double import) */
+      avImportUiDocDrop(e);
+    });
     return true;
   } catch (e) { return false; }
 }
@@ -629,11 +797,10 @@ function avImportUiSetStatus(msg, kind) {
   } catch (e) { return false; }
 }
 
-function avImportUiCountsText() {
-  const s = avImportUiState;
+function avImportUiCountsText(c0) {
   try {
-    if (!s.last) return "no runs yet \u2014 drop a folder or files";
-    const c = s.last.counts || {};
+    const c = (c0 && typeof c0 === "object") ? c0 : null;
+    if (!c) return "no runs yet \u2014 drop a folder or files";
     let line = c.total + " files \u00b7 imported " + c.imported + " \u00b7 deferred " + c.deferred +
       " \u00b7 refused " + c.refused + " \u00b7 samples " + c.samples + " \u00b7 patterns " + c.patterns;
     if (c.kits > 0) line += " \u00b7 " + c.kits + " kits";
@@ -645,7 +812,10 @@ function avImportUiCountsText() {
 }
 
 function avImportUiPaintCounts(host) {
-  return avImportUiWriteText(host, "#av-import-counts", avImportUiCountsText(), "counts");
+  /* R17: a viewed stored run paints ITS stored counts; otherwise the latest live run */
+  const s = avImportUiState;
+  const c = (s.hist && s.hist.counts) ? s.hist.counts : (s.last ? s.last.counts : null);
+  return avImportUiWriteText(host, "#av-import-counts", avImportUiCountsText(c), "counts");
 }
 
 function avImportUiEmptyMsg() {
@@ -670,19 +840,30 @@ function avImportUiRowHTML(it) {
   return html;
 }
 
-/* rebuild the report when a run landed (memo: runSeq); the empty state stays in the DOM,
-   hidden, whenever rows exist */
+/* rebuild the report when a run landed (memo: runSeq) or when a stored run is viewed (R17:
+   the paint key gains the hist id); the empty state stays in the DOM, hidden, whenever rows
+   exist */
 function avImportUiPaintReport(host, force) {
   if (!host || typeof host.querySelector !== "function") return false;
   try {
     const s = avImportUiState;
-    if (!force && s.reportPaintedSeq === s.runSeq) return true;
+    const key = s.runSeq + "|" + (s.hist ? s.hist.id : "");
+    if (!force && s.reportPaintedSeq === key) return true;
     const box = host.querySelector("#av-import-report");
     if (!box) return false;
-    const items = s.reportItems || [];
+    const hist = s.hist;
+    const items = hist ? (hist.items || []) : (s.reportItems || []);
     let html = "";
     if (!items.length) {
-      html = '<p class="av-note av-dim av-import-empty" id="av-import-empty">' + avImportUiEsc(avImportUiEmptyMsg()) + "</p>";
+      let msg;
+      if (hist) {
+        msg = (hist.items == null)
+          ? "items from that run are not held in this session \u2014 the counts line is the stored summary"
+          : "that run recorded no items";
+      } else {
+        msg = avImportUiEmptyMsg();
+      }
+      html = '<p class="av-note av-dim av-import-empty" id="av-import-empty">' + avImportUiEsc(msg) + "</p>";
     } else {
       const n = Math.min(items.length, AV_IMPORT_UI_ROWS_MAX);
       for (let i = 0; i < n; i++) html += avImportUiRowHTML(items[i]);
@@ -692,7 +873,7 @@ function avImportUiPaintReport(host, force) {
       html += '<p class="av-note av-dim av-import-empty" id="av-import-empty" hidden>' + avImportUiEsc(avImportUiEmptyMsg()) + "</p>";
     }
     box.innerHTML = html;
-    s.reportPaintedSeq = s.runSeq;
+    s.reportPaintedSeq = key;
     return true;
   } catch (e) { return false; }
 }
@@ -731,9 +912,10 @@ function avImportUiActBtnHTML(id, act, label, title, disabled) {
     (disabled ? " disabled" : "") + ">" + label + "</button>";
 }
 
-/* one library row -- the five pinned actions on sample/pattern rows; R15c: kit rows show the
-   KIT action + DEL, refs rows show SEQ (only when the meta carries a pattern) + DEL */
-function avImportUiLibRowHTML(it) {
+/* one library row -- the pinned load-type actions stay as-is (sample/pattern rows keep
+   LOAD|SEND|CHOP|SEQ|DEL, kit rows KIT|DEL, refs rows SEQ?|DEL); R17 appends the select
+   checkbox + the RENAME/EXPORT management actions on every kind */
+function avImportUiLibRowHTML(it, sel) {
   const id = String(it.id || "");
   const kind = String(it.kind || "");
   const isPattern = (kind === "pattern");
@@ -755,6 +937,8 @@ function avImportUiLibRowHTML(it) {
     meta += " \u00b7 " + avImportUiFmtBytes(it.size);
   }
   let html = '<div class="av-import-item" data-av-import-lib="' + avImportUiEsc(id) + '" data-kind="' + avImportUiEsc(kind) + '">';
+  html += '<input type="checkbox" class="av-import-check" data-av-import-check="1" data-id="' + avImportUiEsc(id) +
+    '" aria-label="' + avImportUiEsc("select " + name) + '"' + ((sel && sel[id]) ? " checked" : "") + ">";
   html += '<span class="av-import-item-name" title="' + avImportUiEsc(name) + '">' + avImportUiEsc(name) + "</span>";
   html += '<span class="av-import-item-meta av-dim">' + avImportUiEsc(meta) + "</span>";
   html += '<span class="av-import-acts">';
@@ -773,6 +957,9 @@ function avImportUiLibRowHTML(it) {
     html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", !isPattern);
     html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
   }
+  /* R17 (append-only -- the load-type set above is untouched) */
+  html += avImportUiActBtnHTML(id, "rename", "REN", "rename this item inline", false);
+  html += avImportUiActBtnHTML(id, "export", "EXP", "export the stored bytes as a download", false);
   html += "</span></div>";
   return html;
 }
@@ -793,27 +980,34 @@ function avImportUiPaintLib(host, force) {
     const s = avImportUiState;
     let sig = (s.lib.ok ? "1" : "0") + "|" + s.lib.backend + "|" + s.lib.count + "|" + s.lib.bytes + "|" + s.lib.items.length;
     if (s.lib.items.length) sig += "|" + s.lib.items[0].id + "|" + s.lib.items[s.lib.items.length - 1].id;
-    if (!force && sig === s.libSig) { avImportUiPaintLibStat(host); return true; }
+    /* R17: the manager view is part of the paint key (search . sort . filter . selection) */
+    sig += "|" + s.mgr.search + "|" + s.mgr.sort + "|" + s.mgr.filter + "|" + s.mgr.selSeq;
+    if (!force && sig === s.libSig) { avImportUiPaintLibStat(host); avImportUiPaintManager(host); return true; }
     const box = host.querySelector("#av-import-lib");
     if (!box) return false;
-    const items = s.lib.items || [];
+    const items = avImportUiViewItems();
     let html = "";
     if (!items.length) {
       let msg;
-      if (s.lib.ok) msg = "library empty \u2014 imported files land here";
-      else if (s.lib.error) msg = "library unavailable \u2014 " + s.lib.error;
-      else msg = "the library (av_lib.js) is not present \u2014 nothing to list yet";
+      if (!(s.lib.items || []).length) {
+        if (s.lib.ok) msg = "library empty \u2014 imported files land here";
+        else if (s.lib.error) msg = "library unavailable \u2014 " + s.lib.error;
+        else msg = "the library (av_lib.js) is not present \u2014 nothing to list yet";
+      } else {
+        msg = "no items match \u2014 clear the search or set the filter to all";
+      }
       html = '<p class="av-note av-dim av-import-empty">' + avImportUiEsc(msg) + "</p>";
     } else {
       const n = Math.min(items.length, AV_IMPORT_UI_LIB_ROWS_MAX);
-      for (let i = 0; i < n; i++) html += avImportUiLibRowHTML(items[i]);
+      for (let i = 0; i < n; i++) html += avImportUiLibRowHTML(items[i], s.mgr.sel);
       if (items.length > n) {
-        html += '<p class="av-note av-dim av-import-empty">' + avImportUiEsc("showing the newest " + n + " of " + items.length + " items") + "</p>";
+        html += '<p class="av-note av-dim av-import-empty">' + avImportUiEsc("showing the first " + n + " of " + items.length + " items") + "</p>";
       }
     }
     box.innerHTML = html;
     s.libSig = sig;
     avImportUiPaintLibStat(host);
+    avImportUiPaintManager(host);
     return true;
   } catch (e) { return false; }
 }
@@ -844,6 +1038,13 @@ function avImportUiApplyLib(r0) {
         if (!it || typeof it !== "object" || it.id == null) continue;
         out.push(avImportUiLibItemPub(it));
       }
+      /* R17: prune selections whose ids are gone (only on a good read) */
+      try {
+        const live = {};
+        for (let i = 0; i < out.length; i++) live[out[i].id] = 1;
+        const sel = s.mgr.sel;
+        for (const k in sel) { if (sel[k] && !live[k]) delete sel[k]; }
+      } catch (e3) { /* pruning is best-effort */ }
       s.lib.items = out;
     }
     s.lib.at = Date.now();
@@ -946,6 +1147,8 @@ function avImportUiPaintBusy(host) {
         if (!card.getAttribute || card.getAttribute("aria-busy") !== av) card.setAttribute("aria-busy", av);
       }
     }
+    /* R17: the manager controls disable while busy (the write-on-change manager paint) */
+    avImportUiPaintManager(host);
     return true;
   } catch (e) { return false; }
 }
@@ -958,6 +1161,10 @@ function avImportUiPaintAll(host, force) {
     avImportUiPaintCounts(h);
     avImportUiPaintReport(h, !!force);
     avImportUiPaintLib(h, !!force);
+    avImportUiPaintRuns(h, !!force);
+    avImportUiPaintManager(h);
+    avImportUiPaintStorage(h);
+    avImportUiPaintHist(h);
     avImportUiPaintBusy(h);
     return true;
   } catch (e) { return false; }
@@ -1013,8 +1220,14 @@ function avImportUiFinishImport(r0) {
     try { avImportUiState.lastError = avImportUiErrText(e, "the import failed"); } catch (e2) { /* ok */ }
   }
   s.busy = false;
+  /* R17: a live run clears the history view (the report returns to the live receipt) */
+  s.hist = null;
   avImportUiPaintAll(avImportUiHost(), false);
   avImportUiRefreshLib();
+  /* R17: after EVERY completion -- the storage line refresh + the fire-and-forget receipt
+     save (its settle refreshes the runs list; a failure notes into the status line) */
+  avImportUiRefreshStorage();
+  avImportUiSaveReceipt(r0 && typeof r0 === "object" ? r0 : {});
   return true;
 }
 
@@ -1432,10 +1645,844 @@ function avImportUiAct(act, id) {
     if (act === "seq") return avImportUiActSeq(id);
     if (act === "kit") return avImportUiActKit(id);
     if (act === "del") return avImportUiActDel(id);
+    /* R17: the management actions */
+    if (act === "rename" || act === "export") return avImportUiActManaged(act, id);
   } catch (e) {
     avImportUiSetStatus("the action failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
   }
   return false;
+}
+
+/* ---------- R17: the library manager (view state . selection . rename . export) ----------
+   Every core reach is typeof-guarded PER CALL; every action obeys the ONE-op busy law. */
+
+/* one view-state write -> the memo'd rebuild (libSig carries the manager state) */
+function avImportUiMgrTouch(selChanged) {
+  try {
+    if (selChanged) avImportUiState.mgr.selSeq += 1;
+    const host = avImportUiHost();
+    avImportUiPaintLib(host, false);
+    avImportUiPaintManager(host);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avImportUiSetSearch(v) {
+  try {
+    const s = avImportUiState;
+    const t = avImportUiStr(v, 120);
+    if (t === s.mgr.search) return false;
+    s.mgr.search = t;
+    return avImportUiMgrTouch(false);
+  } catch (e) { return false; }
+}
+
+function avImportUiSetFilter(f) {
+  try {
+    const s = avImportUiState;
+    const raw = String(f == null ? "" : f);
+    let t = "all";
+    for (let i = 0; i < AV_IMPORT_UI_FILTERS.length; i++) if (AV_IMPORT_UI_FILTERS[i] === raw) t = raw;
+    if (t === s.mgr.filter) return false;
+    s.mgr.filter = t;
+    return avImportUiMgrTouch(false);
+  } catch (e) { return false; }
+}
+
+function avImportUiSetSort(v) {
+  try {
+    const s = avImportUiState;
+    const raw = String(v == null ? "" : v);
+    let t = "newest";
+    for (let i = 0; i < AV_IMPORT_UI_SORTS.length; i++) if (AV_IMPORT_UI_SORTS[i] === raw) t = raw;
+    if (t === s.mgr.sort) return false;
+    s.mgr.sort = t;
+    return avImportUiMgrTouch(false);
+  } catch (e) { return false; }
+}
+
+/* the selected count + the selected ids in the mirror's own order (deterministic) */
+function avImportUiSelCount() {
+  let n = 0;
+  try {
+    const sel = avImportUiState.mgr.sel;
+    for (const k in sel) { if (sel[k]) n += 1; }
+  } catch (e) { n = 0; }
+  return n;
+}
+
+function avImportUiSelIds() {
+  const s = avImportUiState;
+  const out = [];
+  try {
+    const src = s.lib.items || [];
+    for (let i = 0; i < src.length; i++) {
+      const id = src[i] && src[i].id;
+      if (id && s.mgr.sel[id]) out.push(id);
+    }
+  } catch (e) { /* partial stands */ }
+  return out;
+}
+
+function avImportUiToggleSel(id, on) {
+  try {
+    const s = avImportUiState;
+    const sid = avImportUiStr(id, 80);
+    if (!sid) return false;
+    if (on) s.mgr.sel[sid] = 1; else delete s.mgr.sel[sid];
+    return avImportUiMgrTouch(true);
+  } catch (e) { return false; }
+}
+
+/* select-all toggle over the VISIBLE (filtered) rows */
+function avImportUiSelAll() {
+  const s = avImportUiState;
+  try {
+    const vis = avImportUiViewItems();
+    if (!vis.length) return false;
+    let allSel = true;
+    for (let i = 0; i < vis.length; i++) { if (!s.mgr.sel[vis[i].id]) { allSel = false; break; } }
+    for (let i = 0; i < vis.length; i++) {
+      const id = vis[i].id;
+      if (!id) continue;
+      if (allSel) delete s.mgr.sel[id];
+      else s.mgr.sel[id] = 1;
+    }
+    avImportUiMgrTouch(true);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* one remove through the library (guarded per call); resolves true on ok -- never rejects */
+function avImportUiRemoveOne(id) {
+  return new Promise(function (resolve) {
+    let out = null;
+    try { out = avLibRemove(id); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the remove failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      resolve(r.ok === true);
+    });
+  });
+}
+
+/* delete-selected: sequential removes under ONE busy window, then refresh + "deleted N" */
+function avImportUiDelSel() {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avLibRemove !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 removing is unavailable", "err");
+      return false;
+    }
+    const ids = avImportUiSelIds();
+    if (!ids.length) {
+      avImportUiSetStatus("nothing selected \u2014 tick rows first", "err");
+      return false;
+    }
+    if (!avImportUiBegin("deleting " + ids.length + " item" + (ids.length === 1 ? "" : "s"))) return false;
+    let gone = 0, stuck = 0;
+    let chain = Promise.resolve();
+    for (let i = 0; i < ids.length; i++) {
+      (function (id) {
+        chain = chain.then(function () {
+          return avImportUiRemoveOne(id).then(function (ok) {
+            if (ok) {
+              gone += 1;
+              try { delete s.mgr.sel[id]; } catch (e) { /* ok */ }
+            } else stuck += 1;
+          });
+        });
+      })(ids[i]);
+    }
+    chain.then(function () {
+      avImportUiEnd();
+      const line = "deleted " + gone + (stuck > 0 ? " \u00b7 " + stuck + " refused" : "");
+      avImportUiSetStatus(line, (gone === 0 && stuck > 0) ? "err" : "msg");
+      avImportUiMgrTouch(true);
+      avImportUiRefreshLib();
+    }, function () {
+      avImportUiEnd();
+      avImportUiSetStatus("deleted " + gone + (stuck > 0 ? " \u00b7 " + stuck + " refused" : ""), "err");
+      avImportUiMgrTouch(true);
+      avImportUiRefreshLib();
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("delete failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* rename commit: avLibRename (guarded) + refresh; the status line reports the result */
+function avImportUiRename(id, name) {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avLibRename !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 renaming is unavailable", "err");
+      return false;
+    }
+    if (!avImportUiBegin("renaming " + avImportUiLibName(id))) return false;
+    const raw = String(name == null ? "" : name);
+    let out = null;
+    try { out = avLibRename(id, raw); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the rename failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      avImportUiEnd();
+      if (r.ok !== true) {
+        avImportUiSetStatus("rename refused \u2014 " + avImportUiErrText(r, "the library refused"), "err");
+      } else {
+        const nm = avImportUiStr(r.name, 120) || avImportUiStr(raw, 120);
+        avImportUiSetStatus("renamed to " + avImportUiShort(nm, 60), "msg");
+      }
+      avImportUiRefreshLib();
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("rename failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* cancel the inline editor: the name cell comes back with the current name */
+function avImportUiCancelName(id, input) {
+  try {
+    const d = avImportUiDoc();
+    if (!d || typeof d.createElement !== "function") return false;
+    if (!input || !input.parentNode) return false;      /* already replaced by a refresh */
+    const span = d.createElement("span");
+    span.className = "av-import-item-name";
+    const name = avImportUiLibName(id);
+    span.textContent = name;
+    if (typeof span.setAttribute === "function") span.setAttribute("title", name);
+    input.parentNode.replaceChild(span, input);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the inline editor: click rename -> the name cell becomes input.av-import-rename
+   (value = current name, maxlength 120); Enter commits via avLibRename + refresh;
+   Esc and blur cancel. ONE editor at a time; never throws. */
+function avImportUiBeginRename(id) {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    const host = avImportUiHost();
+    const d = avImportUiDoc();
+    if (!host || typeof host.querySelector !== "function" || !d || typeof d.createElement !== "function") return false;
+    if (host.querySelector(".av-import-rename")) return true;   /* one editor at a time */
+    const sid = avImportUiSelId(id);
+    if (!sid) return false;
+    let row = null;
+    try { row = host.querySelector('[data-av-import-lib="' + sid + '"]'); } catch (e) { row = null; }
+    if (!row) {
+      avImportUiSetStatus("that row is gone \u2014 refresh the library list", "err");
+      return false;
+    }
+    let cur = "";
+    try {
+      const items = s.lib.items || [];
+      for (let i = 0; i < items.length; i++) if (items[i].id === id) { cur = String(items[i].name || ""); break; }
+    } catch (e2) { cur = ""; }
+    const input = d.createElement("input");
+    input.type = "text";
+    input.className = "av-import-rename";
+    input.value = cur;
+    try { input.maxLength = AV_IMPORT_UI_NAME_MAX; } catch (e3) { /* the attribute below stands */ }
+    if (typeof input.setAttribute === "function") {
+      input.setAttribute("maxlength", String(AV_IMPORT_UI_NAME_MAX));
+      input.setAttribute("aria-label", "rename " + (cur || String(id)));
+    }
+    const done = { v: false };
+    const commit = function () {
+      if (done.v) return;
+      done.v = true;
+      avImportUiRename(id, input.value);
+    };
+    const cancel = function () {
+      if (done.v) return;
+      done.v = true;
+      avImportUiCancelName(id, input);
+    };
+    input.addEventListener("keydown", function (ev) {
+      try {
+        if (ev.key === "Enter") { if (typeof ev.preventDefault === "function") ev.preventDefault(); commit(); }
+        else if (ev.key === "Escape") { if (typeof ev.preventDefault === "function") ev.preventDefault(); cancel(); }
+      } catch (e4) { /* a listener never throws outward */ }
+    });
+    input.addEventListener("blur", function () { try { cancel(); } catch (e5) { /* ok */ } });
+    let nameEl = null;
+    try { nameEl = row.querySelector(".av-import-item-name"); } catch (e6) { nameEl = null; }
+    if (nameEl && nameEl.parentNode) nameEl.parentNode.replaceChild(input, nameEl);
+    else if (row.firstChild) row.insertBefore(input, row.firstChild);
+    else row.appendChild(input);
+    try { input.focus(); if (typeof input.select === "function") input.select(); } catch (e7) { /* focus is a nicety */ }
+    avImportUiSetStatus("rename \u2014 type the new name; Enter saves, Esc cancels", "msg");
+    return true;
+  } catch (e) { return false; }
+}
+
+/* per-item export: avLibGet (the FULL record incl. bytes) -> avDeliverDownload(bytes, name);
+   the filename is "<name>.<ext>" with the pinned fallback map, then the typed status line */
+function avImportUiExportItem(id) {
+  const s = avImportUiState;
+  const name0 = avImportUiLibName(id);
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avLibGet !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 exporting is unavailable", "err");
+      return false;
+    }
+    if (!avImportUiBegin("exporting " + name0)) return false;
+    let out = null;
+    try { out = avLibGet(id); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the read failed") }; }
+    avImportUiSettle(out, function (r0) {
+      let line = "", kind = "msg";
+      try {
+        const r = avImportUiReceipt(r0);
+        const it = (r.ok === true && r.item && typeof r.item === "object") ? r.item : null;
+        if (!it) {
+          line = "export refused \u2014 " + avImportUiErrText(r, "the item is gone");
+          kind = "err";
+        } else if (!it.bytes || typeof it.bytes.byteLength !== "number") {
+          line = "export refused \u2014 no stored bytes for " + name0;
+          kind = "err";
+        } else {
+          const dl = avImportUiDeliverFn();
+          if (typeof dl !== "function") {
+            line = "export refused \u2014 the download path (avDeliverDownload) is not present";
+            kind = "err";
+          } else {
+            const fname = avImportUiExportName(it);
+            let ok = false;
+            try {
+              const x = dl(it.bytes, fname);
+              ok = (x === true) || !!(x && typeof x === "object" && x.ok === true);
+            } catch (e2) { ok = false; }
+            if (ok) line = "exported " + fname;
+            else { line = "export refused \u2014 the download was refused"; kind = "err"; }
+          }
+        }
+      } catch (e3) {
+        line = "export failed \u2014 " + avImportUiErrText(e3, "unexpected");
+        kind = "err";
+      }
+      avImportUiEnd();
+      avImportUiSetStatus(line, kind);
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("export failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* the act dispatcher's R17 arms (the row buttons route here through avImportUiAct) */
+function avImportUiActManaged(act, id) {
+  try {
+    if (act === "rename") return avImportUiBeginRename(id);
+    if (act === "export") return avImportUiExportItem(id);
+  } catch (e) { /* the dispatcher's own catch stands */ }
+  return false;
+}
+
+/* ---------- R17: the manager paints (write-on-change, like everything else) ---------- */
+
+/* the chips' active states + aria-pressed */
+function avImportUiPaintChips(host) {
+  if (!host || typeof host.querySelector !== "function") return false;
+  try {
+    const f = avImportUiState.mgr.filter;
+    const chips = host.querySelectorAll(".av-import-fchip");
+    for (let i = 0; i < chips.length; i++) {
+      const el = chips[i];
+      const on = String((el.getAttribute && el.getAttribute("data-f")) || "") === f;
+      if (el.classList && typeof el.classList.add === "function") {
+        if (on && !el.classList.contains("on")) el.classList.add("on");
+        else if (!on && el.classList.contains("on")) el.classList.remove("on");
+      }
+      const pressed = on ? "true" : "false";
+      if (typeof el.setAttribute === "function" && (!el.getAttribute || el.getAttribute("aria-pressed") !== pressed)) {
+        el.setAttribute("aria-pressed", pressed);
+      }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the selall label . the delsel disabled state . the busy disables . the chip actives */
+function avImportUiPaintManager(host) {
+  if (!host || typeof host.querySelector !== "function") return false;
+  try {
+    const s = avImportUiState;
+    const busy = !!s.busy;
+    const vis = avImportUiViewItems();
+    let allSel = vis.length > 0;
+    for (let i = 0; i < vis.length; i++) { if (!s.mgr.sel[vis[i].id]) { allSel = false; break; } }
+    avImportUiWriteText(host, "#av-import-selall", allSel ? "clear" : "select all", "selall");
+    const selN = avImportUiSelCount();
+    const ids = ["#av-import-search", "#av-import-sort", "#av-import-selall"];
+    for (let i = 0; i < ids.length; i++) {
+      const el = host.querySelector(ids[i]);
+      if (el && el.disabled !== busy) el.disabled = busy;
+    }
+    const del = host.querySelector("#av-import-delsel");
+    if (del && del.disabled !== (busy || selN === 0)) del.disabled = (busy || selN === 0);
+    let chips = null;
+    try { chips = host.querySelectorAll(".av-import-fchip"); } catch (e2) { chips = null; }
+    if (chips) {
+      for (let i = 0; i < chips.length; i++) {
+        const el = chips[i];
+        if (el && el.disabled !== busy) el.disabled = busy;
+      }
+    }
+    avImportUiPaintChips(host);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the root's history-view marker (a stored run is being viewed) */
+function avImportUiPaintHist(host) {
+  return avImportUiToggleClass(host, ".av-import", "av-import-hist", !!(avImportUiState.hist), "hist");
+}
+
+/* ---------- R17: the receipts history (persisted via the guarded avLibReceipt* trio) ------ */
+
+/* the receipt subset the library stores -- lean, JSON-safe, capped (RUN_ITEMS_MAX) */
+function avImportUiReceiptItems(r) {
+  const out = [];
+  try {
+    const items = (r && r.items && typeof r.items.length === "number") ? r.items : [];
+    const n = Math.min(items.length | 0, AV_IMPORT_UI_RUN_ITEMS_MAX);
+    for (let i = 0; i < n; i++) {
+      const it = items[i];
+      if (!it || typeof it !== "object") continue;
+      out.push({
+        name: avImportUiStr(it.name, 120),
+        format: avImportUiStr(it.format, 24),
+        kind: avImportUiStr(it.kind, 24),
+        result: avImportUiStr(it.result, 16),
+        reason: avImportUiStr(it.reason, 160),
+        size: avImportUiNumOr(it.size, 0),
+      });
+    }
+  } catch (e) { /* empty stands */ }
+  return out;
+}
+
+/* a failed receipt save notes into the status line (honest; never blocks or stomps a busy op) */
+function avImportUiNoteSaveFail(err) {
+  try {
+    const s = avImportUiState;
+    if (s.busy) return false;
+    const note = "receipt save failed \u2014 " + avImportUiShort(err, 60);
+    if (String(s.status || "").indexOf("receipt save failed") >= 0) return false;
+    avImportUiSetStatus(s.status ? (s.status + " \u00b7 " + note) : note, "err");
+    return true;
+  } catch (e) { return false; }
+}
+
+/* after EVERY avImportFiles completion from the card: the fire-and-forget receipt save */
+function avImportUiSaveReceipt(r) {
+  const s = avImportUiState;
+  try {
+    if (typeof avLibReceiptSave !== "function") {
+      avImportUiNoteSaveFail("the library (av_lib.js) is not present");
+      return false;
+    }
+    const items = avImportUiReceiptItems(r);
+    const rec = {
+      at: avImportUiNumOr(r && r.at, Date.now()),
+      title: avImportUiStr(r && r.title, 80),
+      counts: avImportUiCountsOf(r),
+      errors: avImportUiErrorsOf(r),
+      items: items,
+    };
+    let out = null;
+    try { out = avLibReceiptSave(rec); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the receipt save failed") }; }
+    avImportUiSettle(out, function (r0) {
+      try {
+        const rr = avImportUiReceipt(r0);
+        if (rr.ok === true) {
+          const id = avImportUiStr(rr.id, 80);
+          if (id) {
+            if (!s.runs.byId || typeof s.runs.byId !== "object") s.runs.byId = {};
+            s.runs.byId[id] = items;
+          }
+        } else {
+          avImportUiNoteSaveFail(avImportUiErrText(rr, "the receipt save failed"));
+        }
+      } catch (e2) { /* the refresh below still runs */ }
+      avImportUiRefreshRuns();
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* one runs row -- button[data-av-import-run]: "HH:MM . imported N . deferred N . refused N . title" */
+function avImportUiRunRowHTML(run) {
+  const id = avImportUiStr(run && run.id, 80);
+  const c = avImportUiCountsOf(run);
+  const title = avImportUiStr(run && run.title, 80) || "import";
+  const line = avImportUiClock(run && run.at) + " \u00b7 imported " + c.imported + " \u00b7 deferred " +
+    c.deferred + " \u00b7 refused " + c.refused + " \u00b7 " + title;
+  return '<button type="button" class="av-import-run" data-av-import-run="' + avImportUiEsc(id) +
+    '" title="show this run in the report above">' + avImportUiEsc(line) + "</button>";
+}
+
+function avImportUiRunsSig() {
+  const s = avImportUiState;
+  let sig = (s.runs.ok ? "1" : "0") + "|" + s.runs.backend + "|" + s.runs.count + "|" + (s.runs.list || []).length;
+  const list = s.runs.list || [];
+  if (list.length) sig += "|" + list[0].id + "|" + list[list.length - 1].id;
+  return sig;
+}
+
+/* rebuild the runs list (memo: list signature); #av-import-runs-empty is static in the card,
+   hidden while rows exist */
+function avImportUiPaintRuns(host, force) {
+  if (!host || typeof host.querySelector !== "function") return false;
+  try {
+    const s = avImportUiState;
+    const sig = avImportUiRunsSig();
+    if (!force && sig === s.runsSig) return true;
+    const box = host.querySelector("#av-import-runs");
+    if (!box) return false;
+    const list = s.runs.list || [];
+    let html = "";
+    const n = Math.min(list.length, 20);
+    for (let i = 0; i < n; i++) html += avImportUiRunRowHTML(list[i]);
+    box.innerHTML = html;
+    const empty = host.querySelector("#av-import-runs-empty");
+    if (empty) {
+      const msg = s.runs.ok
+        ? "no runs yet"
+        : (s.runs.error ? ("history unavailable \u2014 " + s.runs.error) : "no runs yet");
+      if (empty.textContent !== msg) empty.textContent = msg;
+      if (empty.hidden !== (n > 0)) empty.hidden = (n > 0);
+    }
+    s.runsSig = sig;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* write one avLibReceiptList (or refusal) receipt into the runs mirror + repaint */
+function avImportUiApplyRuns(r0) {
+  const s = avImportUiState;
+  try {
+    const r = avImportUiReceipt(r0);
+    if (r.ok !== true) {
+      s.runs.ok = false;
+      s.runs.error = avImportUiErrText(r, "the receipts read failed");
+      s.runs.backend = (typeof r.backend === "string") ? r.backend : "";
+      s.runs.count = 0;
+      s.runs.list = [];
+    } else {
+      s.runs.ok = true;
+      s.runs.error = "";
+      s.runs.backend = (typeof r.backend === "string") ? r.backend : "";
+      s.runs.count = Math.max(0, Math.round(avImportUiNumOr(r.count, 0)));
+      const src = (r.runs && typeof r.runs.length === "number") ? r.runs : [];
+      const out = [];
+      const n = Math.min(src.length, 20);
+      for (let i = 0; i < n; i++) {
+        const run = src[i];
+        if (!run || typeof run !== "object" || run.id == null) continue;
+        const id = avImportUiStr(run.id, 80);
+        out.push({
+          id: id,
+          at: avImportUiNumOr(run.at, 0),
+          title: avImportUiStr(run.title, 80),
+          counts: avImportUiCountsOf(run),
+        });
+        /* the record's own items, when the tier returned them, feed the history view */
+        try {
+          if (run.items && typeof run.items.length === "number" && !s.runs.byId[id]) {
+            const items = [];
+            const m = Math.min(run.items.length, AV_IMPORT_UI_RUN_ITEMS_MAX);
+            for (let k = 0; k < m; k++) {
+              const it = run.items[k];
+              if (!it || typeof it !== "object") continue;
+              items.push({
+                name: avImportUiStr(it.name, 120),
+                format: avImportUiStr(it.format, 24),
+                kind: avImportUiStr(it.kind, 24),
+                result: avImportUiStr(it.result, 16),
+                reason: avImportUiStr(it.reason, 160),
+                size: avImportUiNumOr(it.size, 0),
+              });
+            }
+            s.runs.byId[id] = items;
+          }
+        } catch (e2) { /* items are a nicety */ }
+      }
+      s.runs.list = out;
+    }
+    s.runs.at = Date.now();
+    avImportUiPaintRuns(avImportUiHost(), true);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the public runs refresh: avLibReceiptList (guarded) -> mirror -> repaint; never rejects */
+function avImportUiRefreshRuns() {
+  const s = avImportUiState;
+  return new Promise(function (resolve) {
+    let done = false;
+    const finish = function (v) { if (!done) { done = true; resolve(v); } };
+    try {
+      if (typeof avLibReceiptList !== "function") {
+        s.runs.ok = false;
+        s.runs.error = "the library (av_lib.js) is not present";
+        s.runs.backend = "";
+        s.runs.count = 0;
+        s.runs.list = [];
+        avImportUiPaintRuns(avImportUiHost(), true);
+        finish(false);
+        return;
+      }
+      let out = null;
+      try { out = avLibReceiptList(); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the receipts read failed") }; }
+      avImportUiSettle(out, function (r0) {
+        try { avImportUiApplyRuns(r0); } catch (e) { /* apply never throws */ }
+        finish(true);
+      });
+    } catch (e) { finish(false); }
+  });
+}
+
+/* click a runs row: paint the stored receipt into the report + counts; the root gets
+   .av-import-hist; the next live run clears it (avImportUiFinishImport) */
+function avImportUiShowRun(id) {
+  const s = avImportUiState;
+  try {
+    const sid = avImportUiStr(id, 80);
+    let run = null;
+    const list = s.runs.list || [];
+    for (let i = 0; i < list.length; i++) if (list[i].id === sid) run = list[i];
+    if (!run) return false;
+    let items = null;
+    try {
+      if (s.runs.byId && s.runs.byId[sid] && typeof s.runs.byId[sid].length === "number") items = s.runs.byId[sid];
+    } catch (e) { items = null; }
+    s.hist = {
+      id: sid,
+      at: avImportUiNumOr(run.at, 0),
+      title: avImportUiStr(run.title, 80),
+      counts: avImportUiCountsOf(run),
+      items: items,
+    };
+    const host = avImportUiHost();
+    avImportUiPaintHist(host);
+    avImportUiPaintCounts(host);
+    avImportUiPaintReport(host, false);
+    avImportUiSetStatus("history view - run at " + avImportUiClock(run.at), "msg");
+    return true;
+  } catch (e) { return false; }
+}
+
+/* "clear history" -> avLibReceiptClear (guarded) -> refresh; the view returns to live */
+function avImportUiClearRuns() {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avLibReceiptClear !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 the history is unavailable", "err");
+      return false;
+    }
+    if (!avImportUiBegin("clearing the run history")) return false;
+    let out = null;
+    try { out = avLibReceiptClear(); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the clear failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      avImportUiEnd();
+      if (r.ok !== true) {
+        avImportUiSetStatus("clear refused \u2014 " + avImportUiErrText(r, "the receipts store refused"), "err");
+      } else {
+        const removed = Math.max(0, Math.round(avImportUiNumOr(r.removed, 0)));
+        avImportUiSetStatus("history cleared \u2014 " + removed + " run" + (removed === 1 ? "" : "s") + " removed", "msg");
+        s.hist = null;
+        s.runs.byId = {};
+        const host = avImportUiHost();
+        avImportUiPaintHist(host);
+        avImportUiPaintCounts(host);
+        avImportUiPaintReport(host, false);
+      }
+      avImportUiRefreshRuns();
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("clear failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* ---------- R17: the storage footer (estimate + the persist nudge; never a false claim) --- */
+
+/* the persist tier: avStorePersisted when present, else the raw navigator query */
+function avImportUiQueryTier() {
+  return new Promise(function (resolve) {
+    let done = false;
+    const fin = function (v) { if (!done) { done = true; resolve(v); } };
+    try {
+      if (typeof avStorePersisted === "function") {
+        let out = null;
+        try { out = avStorePersisted(); } catch (e) { out = null; }
+        avImportUiSettle(out, function (v) { fin(v === true ? "persistent" : "best-effort"); });
+        return;
+      }
+      let nav = null;
+      try { nav = (typeof navigator !== "undefined") ? navigator : null; } catch (e2) { nav = null; }
+      if (nav && nav.storage && typeof nav.storage.persisted === "function") {
+        Promise.resolve(nav.storage.persisted()).then(
+          function (v) { fin(v === true ? "persistent" : "best-effort"); },
+          function () { fin("best-effort"); }
+        );
+        return;
+      }
+    } catch (e3) { /* fall through */ }
+    fin("best-effort");
+  });
+}
+
+/* on init + after runs: avStoreEstimate (guarded) -> the storage line; null = honest fallback */
+function avImportUiRefreshStorage() {
+  const s = avImportUiState;
+  try {
+    avImportUiQueryTier().then(function (tier) {
+      try {
+        s.storage.tier = tier;
+        avImportUiPaintStorage(avImportUiHost());
+      } catch (e2) { /* paint never throws */ }
+    });
+    if (typeof avStoreEstimate !== "function") {
+      s.storage.checked = true;
+      s.storage.est = null;
+      s.storage.at = Date.now();
+      avImportUiPaintStorage(avImportUiHost());
+      return Promise.resolve(false);
+    }
+    let out = null;
+    try { out = avStoreEstimate(); } catch (e) { out = null; }
+    avImportUiSettle(out, function (est) {
+      try {
+        s.storage.est = (est && typeof est === "object")
+          ? { usage: Math.max(0, avImportUiNumOr(est.usage, 0)), quota: Math.max(0, avImportUiNumOr(est.quota, 0)) }
+          : null;
+        s.storage.checked = true;
+        s.storage.at = Date.now();
+        avImportUiPaintStorage(avImportUiHost());
+      } catch (e2) { /* zeros stand */ }
+    });
+    return Promise.resolve(true);
+  } catch (e) { return Promise.resolve(false); }
+}
+
+function avImportUiStorageText() {
+  const s = avImportUiState;
+  if (!s.storage.checked) return "storage: checking\u2026";
+  if (!s.storage.est) return "storage: unavailable (this browser)";
+  const tier = (s.storage.tier === "persistent") ? "persistent" : "best-effort";
+  return "storage: " + avImportUiFmtBytes(s.storage.est.usage) + " of " + avImportUiFmtBytes(s.storage.est.quota) + " \u00b7 " + tier;
+}
+
+function avImportUiPaintStorage(host) {
+  return avImportUiWriteText(host, "#av-import-storage", avImportUiStorageText(), "storage");
+}
+
+/* "make storage persistent" -> avStorePersist (guarded) -> the honest status line */
+function avImportUiPersist() {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avStorePersist !== "function") {
+      avImportUiSetStatus("persistent storage unsupported (this browser)", "err");
+      return false;
+    }
+    if (!avImportUiBegin("asking the browser for persistent storage")) return false;
+    let out = null;
+    try { out = avStorePersist(); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the persist call failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      avImportUiEnd();
+      if (r.ok !== true) {
+        avImportUiSetStatus("persistent storage unsupported (this browser)", "err");
+      } else if (r.persisted === true) {
+        avImportUiSetStatus("persistent storage granted", "msg");
+      } else {
+        avImportUiSetStatus("persistent storage not granted (best-effort)", "msg");
+      }
+      avImportUiRefreshStorage();
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("persistent storage unsupported (this browser)", "err");
+    return false;
+  }
+}
+
+/* ---------- R17: drop-anywhere routing + reveal ---------- */
+
+/* scroll the hub into view + focus the drop zone (the menubar "Library..." jump, drop routing) */
+function avImportUiReveal() {
+  try {
+    const host = avImportUiHost();
+    if (!host) return false;
+    let card = null;
+    try { card = host.querySelector(".av-import"); } catch (e) { card = null; }
+    const target = card || host;
+    try { if (target && typeof target.scrollIntoView === "function") target.scrollIntoView({ block: "nearest" }); } catch (e2) { /* the shell seam may wrap this */ }
+    let zone = null;
+    try { zone = host.querySelector("[data-av-import-drop]"); } catch (e3) { zone = null; }
+    if (zone && typeof zone.focus === "function") {
+      try { zone.focus(); } catch (e4) { /* focus is a nicety */ }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the facade/menubar "Library..." action: jump to the Store zone, reveal + focus the hub */
+function avImportUiLibrary() {
+  try {
+    try { if (typeof avZoneShow === "function") avZoneShow("store", { source: "menu" }); } catch (e) { /* zone seam optional */ }
+    avImportUiReveal();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the menubar "Import folder..." action (avImportUiPick("dir") stays for the old callers) */
+function avImportUiPickDir() {
+  return avImportUiPick("dir");
+}
+
+/* the doc-level drop routing: preventDefault always happens in the claim; a drop OUTSIDE the
+   hub host imports through the funnel and reveals the hub -- a drop INSIDE it stays the card's
+   own handler (the containment guard is what prevents a double import) */
+function avImportUiDocDrop(ev) {
+  try {
+    const s = avImportUiState;
+    if (!s.inited) return false;
+    const host = avImportUiHost();
+    const tgt = ev && ev.target;
+    if (host && tgt && typeof host.contains === "function" && host.contains(tgt)) return false;
+    const dt = ev ? ev.dataTransfer : null;
+    if (!dt) return false;
+    avImportUiFilesFromDataTransfer(dt).then(function (res) {
+      try {
+        if (!res || !res.files || !res.files.length) return;
+        if (res.truncated) s.walkNote = "folder walk capped at " + avImportUiFileCap() + " files";
+        avImportUiImport(res.files);
+        try { if (typeof avZoneShow === "function") avZoneShow("store", { source: "drop" }); } catch (e) { /* zone seam optional */ }
+        avImportUiReveal();
+      } catch (e2) { /* a listener never throws outward */ }
+    }, function () { /* a stray unreadable drop is nothing */ });
+    return true;
+  } catch (e) { return false; }
 }
 
 /* ---------- event wiring (one delegation set per host) ---------- */
@@ -1493,6 +2540,15 @@ function avImportUiOnClick(ev) {
     if (t.closest("#av-import-pick")) { avImportUiPick("file"); return; }
     if (t.closest("#av-import-pickdir")) { avImportUiPick("dir"); return; }
     if (t.closest("#av-import-librefresh")) { avImportUiRefreshLib(); return; }
+    /* R17: the manager + runs + storage controls */
+    if (t.closest("#av-import-selall")) { avImportUiSelAll(); return; }
+    if (t.closest("#av-import-delsel")) { avImportUiDelSel(); return; }
+    const chip = t.closest(".av-import-fchip");
+    if (chip) { avImportUiSetFilter(String((chip.getAttribute && chip.getAttribute("data-f")) || "")); return; }
+    const runBtn = t.closest("[data-av-import-run]");
+    if (runBtn) { avImportUiShowRun(String((runBtn.getAttribute && runBtn.getAttribute("data-av-import-run")) || "")); return; }
+    if (t.closest("#av-import-runsclear")) { avImportUiClearRuns(); return; }
+    if (t.closest("#av-import-persist")) { avImportUiPersist(); return; }
     const zone = t.closest("[data-av-import-drop]");
     if (zone) {
       /* the picker's synthetic click returning through the zone must not loop */
@@ -1517,7 +2573,15 @@ function avImportUiOnKeydown(ev) {
 function avImportUiOnChange(ev) {
   try {
     const t = ev && ev.target;
-    if (!t || !t.id) return;
+    if (!t) return;
+    /* R17: the manager controls (the row checkboxes carry data-id, not an id) */
+    if (t.closest && t.closest("[data-av-import-check]")) {
+      avImportUiToggleSel(String((t.getAttribute && t.getAttribute("data-id")) || ""), !!t.checked);
+      return;
+    }
+    if (!t.id) return;
+    if (t.id === "av-import-sort") { avImportUiSetSort(t.value); return; }
+    if (t.id === "av-import-search") { avImportUiSetSearch(t.value); return; }
     if (t.id === "av-import-file" || t.id === "av-import-dir") {
       /* SNAPSHOT FIRST (house law -- the av_sample pattern): in Chromium, clearing
          input.value empties the LIVE FileList, so checking files.length after the clear always
@@ -1556,6 +2620,14 @@ function avImportUiOnDrop(ev) {
   } catch (e) { /* a listener never throws outward */ }
 }
 
+/* R17: the live search filter (the input event keeps the list in step while typing) */
+function avImportUiOnInput(ev) {
+  try {
+    const t = ev && ev.target;
+    if (t && t.id === "av-import-search") avImportUiSetSearch(t.value);
+  } catch (e) { /* a listener never throws outward */ }
+}
+
 function avImportUiWire(host) {
   if (!host || typeof host.addEventListener !== "function") return false;
   try {
@@ -1564,6 +2636,7 @@ function avImportUiWire(host) {
     host.addEventListener("click", avImportUiOnClick);
     host.addEventListener("keydown", avImportUiOnKeydown);
     host.addEventListener("change", avImportUiOnChange);
+    host.addEventListener("input", avImportUiOnInput);
     host.addEventListener("dragover", function (e) {
       try { e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "copy"; } catch (err) { /* ok */ }
     });
@@ -1601,6 +2674,24 @@ function avImportUiBodyHTML() {
     "</div>" +
     '<div class="av-import-counts av-dim" id="av-import-counts">no runs yet \u2014 drop a folder or files</div>' +
     '<div class="av-import-report" id="av-import-report"></div>' +
+    '<div class="av-import-runs-head"><span class="av-import-libtag">RECENT RUNS</span>' +
+    '<button type="button" class="av-btn mini av-import-btn" id="av-import-runsclear" title="clear the saved run history">clear history</button></div>' +
+    '<div class="av-import-runs" id="av-import-runs"></div>' +
+    '<p class="av-note av-dim av-import-empty" id="av-import-runs-empty">no runs yet</p>' +
+    '<div class="av-import-manager">' +
+    '<input class="av-import-search" id="av-import-search" type="search" placeholder="search the library..." aria-label="Search the library by name">' +
+    '<select class="av-select av-import-sort" id="av-import-sort" aria-label="Sort the library list">' +
+    '<option value="newest" selected>newest</option><option value="name">name</option><option value="size">size</option><option value="kind">kind</option></select>' +
+    '<span class="av-import-filters" id="av-import-filters">' +
+    '<button type="button" class="av-btn mini av-import-fchip on" data-f="all" aria-pressed="true">all</button>' +
+    '<button type="button" class="av-btn mini av-import-fchip" data-f="sample" aria-pressed="false">samples</button>' +
+    '<button type="button" class="av-btn mini av-import-fchip" data-f="kit" aria-pressed="false">kits</button>' +
+    '<button type="button" class="av-btn mini av-import-fchip" data-f="refs" aria-pressed="false">refs</button>' +
+    '<button type="button" class="av-btn mini av-import-fchip" data-f="pattern" aria-pressed="false">patterns</button>' +
+    "</span>" +
+    '<button type="button" class="av-btn mini av-import-btn" id="av-import-selall">select all</button>' +
+    '<button type="button" class="av-btn mini av-import-btn" id="av-import-delsel" disabled>delete selected</button>' +
+    "</div>" +
     '<div class="av-import-libhead">' +
     '<span class="av-import-libtag">LIBRARY</span>' +
     '<span class="av-import-libstat av-dim" id="av-import-libstat">library idle</span>' +
@@ -1610,6 +2701,10 @@ function avImportUiBodyHTML() {
     "</div>" +
     '<div class="av-import-lib" id="av-import-lib"></div>' +
     '<p class="av-note av-dim av-import-note" id="av-import-note">Imports land in your local library \u2014 nothing is uploaded.</p>' +
+    '<div class="av-import-foot">' +
+    '<span class="av-import-storage av-dim" id="av-import-storage">storage: checking\u2026</span>' +
+    '<button type="button" class="av-btn mini av-import-btn" id="av-import-persist" title="ask the browser for persistent storage (best-effort)">make storage persistent</button>' +
+    "</div>" +
     "</div>";
 }
 
@@ -1665,6 +2760,9 @@ function avImportUiInit() {
     try { if (typeof avLibInit === "function") avLibInit(); } catch (e4) { /* library optional */ }
     avImportUiPaintAll(host, true);
     avImportUiRefreshLib();
+    /* R17: the receipts history + the storage footer boot alongside the card (guarded) */
+    avImportUiRefreshRuns();
+    avImportUiRefreshStorage();
     /* proof: ?avtest=1 ONLY, deferred (the R12 leak law -- never parse-time, never on the
        plain page); the deferred tick also lets the host settle before the line lands */
     try {
@@ -1690,6 +2788,8 @@ function avImportUiSnap() {
     last: null,
     report: [],
     lib: { count: 0, bytes: 0, backend: "" },
+    runs: 0,
+    manager: { search: "", sort: "newest", filter: "all", selected: 0 },
     lastError: String(s.lastError || ""),
   };
   try {
@@ -1726,6 +2826,15 @@ function avImportUiSnap() {
     out.lib.bytes = avImportUiNumOr(s.lib.bytes, 0);
     out.lib.backend = String(s.lib.backend || "");
   } catch (e) { /* zeros stand */ }
+  try {
+    out.runs = Math.max(0, Math.round(avImportUiNumOr(s.runs.count, 0)));
+  } catch (e) { /* zero stands */ }
+  try {
+    out.manager.search = String(s.mgr.search || "");
+    out.manager.sort = String(s.mgr.sort || "newest");
+    out.manager.filter = String(s.mgr.filter || "all");
+    out.manager.selected = avImportUiSelCount();
+  } catch (e) { /* defaults stand */ }
   return out;
 }
 
@@ -1742,6 +2851,7 @@ function avImportUiProof() {
     inited: avImportUiState.inited === true,
     libCount: avImportUiNumOr(avImportUiState.lib.count, 0),
     sniff: sniff,
+    hub: true,
   });
 }
 
@@ -1760,6 +2870,12 @@ if (typeof window !== "undefined" && window) {
       importFiles: function (files, opts) { return avImportUiImport(files, opts); },
       refresh: function () { return avImportUiRefreshLib(); },
       classes: function () { return avImportUiClasses(); },
+      /* R17 additions (every existing key kept) */
+      pick: function () { return avImportUiPick("file"); },
+      pickDir: function () { return avImportUiPickDir(); },
+      library: function () { return avImportUiLibrary(); },
+      rename: function (id, name) { return avImportUiRename(id, name); },
+      exportItem: function (id) { return avImportUiExportItem(id); },
     };
   } catch (e) { /* no window -- nothing to publish */ }
 }

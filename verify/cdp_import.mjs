@@ -3,7 +3,7 @@
 //   node verify/cdp_import.mjs [path-to-index.html] [--port N] [--sha <hex>]
 //
 // WHAT IT PROVES, in order (contract: verify/_r15b_wave.md):
-//   1. boot contract (data-av-ready) + the SAMPLE PACKS card mounted in the synth zone
+//   1. boot contract (data-av-ready) + the SAMPLE PACKS card mounted in the store zone
 //      (drop + pickers + report + lib + slot + facade, ids pinned in the contract).
 //   2. the IMPORT SELFTEST proof line parses on an ?avtest=1 load (sniff = "wav").
 //   3. absent-host contract: with #av-import-host detached avImportUiInit() returns false
@@ -52,7 +52,7 @@ const shaArg = argv.indexOf('--sha');
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
-const EXPECT_SHA = 'ebc4e9077fab9fddbb1a2739ef185ba7127cfcf60a2b2ece7cf41f988df0736e';
+const EXPECT_SHA = 'a9d67b0e67daff9f6db9c4c3bd553f1612e45112153318b8cfcbdcabf6f3996c';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -270,8 +270,8 @@ async function main() {
              facade: typeof f.importFiles, ver: f.version || null };
   })()`);
   const b = bootR.value || {};
-  check('boot + card: SAMPLE PACKS mounted in the synth zone (drop, pickers, slot, facade)',
-    ready === true && b.card === true && b.zone === 'synth' && b.drop === true && b.file === true && b.dir === true && b.slot === true
+  check('boot + card: SAMPLE PACKS mounted in the store zone (drop, pickers, slot, facade)',
+    ready === true && b.card === true && b.zone === 'store' && b.drop === true && b.file === true && b.dir === true && b.slot === true
     && b.facade === 'function' && b.ver === 'r15b.0', JSON.stringify(b));
 
   /* ── 2. proof line (?avtest=1) ── */

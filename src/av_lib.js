@@ -20,16 +20,27 @@
                                         item.file / item.arrayBuffer(); missing bytes -> honest
                                         "no bytes" refusal (id stays "")
      avLibList() -> Promise             {ok, backend, count, bytes, items:[{id, name, kind,
-                                        format, size, at, meta}]} - newest first, NO raw bytes
+                                        format, ext, size, at, meta}]} - newest first, NO raw bytes
      avLibGet(id) -> Promise            {ok, item?, error?} - the full record incl. bytes
      avLibRemove(id) -> Promise         {ok, error?} - durable drop first; a removal made while
                                         no DB connection is up is honoured at adoption
      avLibLoad(id) -> Promise           {ok, id, kind, entryId?, pattern?, error?} - never rejects
      avLibStatus() -> {}                sync snapshot: {version, inited, hydrated, backend,
                                         count, bytes, dbName, error, note}
-     window.__avLib                     facade {version, status, list, get, load, remove, add}
+     window.__avLib                     facade {version, status, list, get, load, remove, add,
+                                        rename, receiptSave, receiptList, receiptClear}
 
-   Record shape: { id, v: 1, name, kind, format, size, at, meta, bytes (ArrayBuffer), via }
+   R17 additions (verify/_r17_wave.md section 3; AV_LIB_VERSION stays "r15b.0" - the pinned
+   contract version is not bumped, the new surface is witnessed behaviorally): avLibRename(id,
+   name) - the ONE rename path (trim, cap AV_LIB_NAME_MAX, ladder like avLibRemoveRun; a
+   refused durable write with a DB up answers {ok:false, error:"rename refused"}); the receipts
+   trio avLibReceiptSave/avLibReceiptList/avLibReceiptClear over the OWN database
+   av-receipts-store (v1, store "runs", keyPath "id"; av-samples-store is NEVER migrated) with
+   the av-receipts-ls fallback; rotation keeps the newest AV_LIB_REC_KEEP runs (by at); LS
+   summaries may drop items. The additive record field `ext` (lowercase, dot-stripped, cap
+   AV_LIB_EXT_MAX, "" fallback; old records hydrate as "") rides every read path.
+
+   Record shape: { id, v: 1, name, kind, format, ext, size, at, meta, bytes (ArrayBuffer), via }
      id = "l" + Date.now().toString(36) + "-" + slug(name); slug [a-z0-9-], cap 40.
      kind = "sample" | "pattern" | "kit" | "refs" (R15c). via = the backend the record was
      actually written through.
@@ -108,6 +119,21 @@ const AV_LIB_B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01234567
    receipt carries an honest warning (the chop side consumes at most 16 zones anyway) */
 const AV_LIB_REX_SLICE_MAX = 64;
 
+/* R17 section 3: the receipts history rides its OWN database (pinned name; av-samples-store is
+   never migrated) - plus the rename + ext caps */
+const AV_LIB_RECEIPT_DB = "av-receipts-store";  /* pinned IDB name */
+const AV_LIB_RECEIPT_DB_VER = 1;
+const AV_LIB_RECEIPT_OS = "runs";               /* object store, keyPath "id" */
+const AV_LIB_RECEIPT_LS = "av-receipts-ls";     /* localStorage fallback key */
+const AV_LIB_REC_KEEP = 20;                     /* persisted runs kept (newest by at) */
+const AV_LIB_REC_ITEMS_MAX = 60;                /* stored receipt items cap */
+const AV_LIB_REC_ERR_MAX = 20;                  /* stored error lines per run */
+const AV_LIB_REC_TITLE_MAX = 80;                /* receipt title cap (default "import") */
+const AV_LIB_REC_NOTE_MAX = 160;                /* per error / item-reason line cap */
+const AV_LIB_NAME_MAX = 120;                    /* rename name cap (truncate, not refuse) */
+const AV_LIB_EXT_MAX = 12;                      /* record ext cap */
+const AV_LIB_REC_ID_RE = /^r[a-z0-9-]{0,63}$/;  /* "r" + time36 (+ "-<seq>" on collision) */
+
 /* ---------- state (the in-memory view the UI renders from) ---------- */
 
 const avLibState = {
@@ -182,6 +208,16 @@ function avLibToken(v, dflt, cap) {
   } catch (e) { return dflt; }
 }
 
+/* R17 section 3: the record `ext` (lowercase, dot-stripped, cap AV_LIB_EXT_MAX, "" fallback;
+   old records without it read as "") */
+function avLibExtNorm(v) {
+  try {
+    if (typeof v !== "string") return "";
+    const s = v.toLowerCase().replace(/[\u0000-\u001f\u007f]/g, "").replace(/\./g, "").trim().slice(0, AV_LIB_EXT_MAX);
+    return s || "";
+  } catch (e) { return ""; }
+}
+
 /* JSON-safe meta copy (flat probe objects; R15c kit/refs metas ride the AV_LIB_META_MAX
    bound; circular input -> {}) */
 function avLibMetaNorm(m) {
@@ -232,6 +268,7 @@ function avLibMetaView(rec) {
     name: avLibStr(rec.name, rec.id, 120),
     kind: (rec.kind === "pattern") ? "pattern" : avLibKindNorm(rec.kind) || "sample",
     format: avLibToken(rec.format, "", 12),
+    ext: avLibExtNorm(rec.ext),
     size: avLibNum(rec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
     at: avLibNum(rec.at, 0, 0, 9e15),
     meta: avLibMetaNorm(rec.meta),
@@ -255,6 +292,7 @@ function avLibRecNorm(rec, needBytes) {
       name: avLibStr(rec.name, id, 120),
       kind: (rec.kind === "pattern") ? "pattern" : avLibKindNorm(rec.kind) || "sample",
       format: avLibToken(rec.format, "", 12),
+      ext: avLibExtNorm(rec.ext),
       size: avLibNum(rec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
       at: avLibNum(rec.at, 0, 0, 9e15),
       meta: avLibMetaNorm(rec.meta),
@@ -268,7 +306,7 @@ function avLibRecNorm(rec, needBytes) {
 function avLibLsPayload(rec, b64) {
   return {
     id: rec.id, v: 1,
-    name: rec.name, kind: rec.kind, format: rec.format,
+    name: rec.name, kind: rec.kind, format: rec.format, ext: avLibExtNorm(rec.ext),
     size: rec.size, at: rec.at, meta: rec.meta,
     via: "ls", bytes: b64,
   };
@@ -285,6 +323,7 @@ function avLibPayloadView(pay) {
       name: avLibStr(pay.name, id, 120),
       kind: avLibKindNorm(pay.kind) || "sample",
       format: avLibToken(pay.format, "", 12),
+      ext: avLibExtNorm(pay.ext),
       size: avLibNum(pay.size, 0, 0, AV_LIB_ITEM_MAX * 8),
       at: avLibNum(pay.at, 0, 0, 9e15),
       meta: avLibMetaNorm(pay.meta),
@@ -335,6 +374,7 @@ function avLibItemNorm(item) {
       name: avLibStr(item.name, "item", 120),
       kind: kind,
       format: avLibToken(item.format, "", 12),
+      ext: avLibExtNorm(item.ext),
       meta: avLibMetaNorm(item.meta),
     };
   } catch (e) { return null; }
@@ -814,7 +854,7 @@ async function avLibAddItemRun(item, bytesArg) {
   if (buf.byteLength > AV_LIB_ITEM_MAX) return { ok: false, id: "", backend: st.backend, error: "too large - 96 MB cap" };
   const id = avLibMakeId(it.name);
   const rec = {
-    id: id, v: 1, name: it.name, kind: it.kind, format: it.format,
+    id: id, v: 1, name: it.name, kind: it.kind, format: it.format, ext: it.ext,
     size: buf.byteLength, at: Date.now(), meta: it.meta, bytes: buf, via: "",
   };
   const out = await avLibCommit(rec);
@@ -840,7 +880,7 @@ async function avLibListRun() {
     const it = st.items[ids[i]];
     if (!it) continue;
     out.push({
-      id: it.id, name: it.name, kind: it.kind, format: it.format,
+      id: it.id, name: it.name, kind: it.kind, format: it.format, ext: avLibExtNorm(it.ext),
       size: it.size, at: it.at, meta: avLibMetaNorm(it.meta),
     });
   }
@@ -900,6 +940,529 @@ async function avLibRemoveRun(id) {
   if (removed) { avLibCacheDrop(id); st.lastError = null; return { ok: true, id: id }; }
   if (stuck) { st.lastError = "removal refused"; return { ok: false, id: id, error: "removal refused" }; }
   return { ok: false, id: id, error: "no item" };
+}
+
+/* ---------- R17: rename (verify/_r17_wave.md section 3) - the ONE rename path ---------- */
+
+/* avLibRenameRun: the name is trimmed and capped AV_LIB_NAME_MAX (truncate, not refuse); an
+   empty name is refused "no name". The ladder mirrors avLibRemoveRun: the durable row when a
+   DB is up (read row, update name, put), the memory map, the LS mirror (map rewrite +
+   write-through; refusal -> stuck). The durable leg is attempted first so a refused durable
+   write cannot leave a half-renamed session copy behind: with a DB up that answers
+   {ok:false, error:"rename refused"}. ok:true requires a real application (row / mem / LS);
+   with no DB the mem+LS application answers honestly. st.items[id] follows on success.
+   Never throws. */
+async function avLibRenameRun(id, name) {
+  const st = avLibState;
+  await avLibReady();
+  if (typeof id !== "string" || !id || !AV_LIB_ID_RE.test(id)) {
+    return { ok: false, id: String(id == null ? "" : id), name: "", error: "no item" };
+  }
+  let clean = "";
+  try { clean = avLibStr(name, "", AV_LIB_NAME_MAX); } catch (e) { clean = ""; }
+  if (!clean) return { ok: false, id: id, name: "", error: "no name" };
+  let applied = false;
+  let stuck = false;
+  /* the durable row when a DB is up: read row, update name, put */
+  if (st.db) {
+    let row = null;
+    try { row = await avLibDbGet(st.db, id); } catch (e) { row = null; }
+    if (row && typeof row === "object") {
+      let refused = false;
+      try {
+        const upd = Object.assign({}, row);
+        upd.name = clean; upd.v = 1; upd.via = "idb";
+        await avLibDbWrite(st.db, upd);
+        applied = true;
+      } catch (e) { refused = true; }
+      if (refused) { st.lastError = "rename refused"; return { ok: false, id: id, name: clean, error: "rename refused" }; }
+    }
+  }
+  /* the memory map (the session tier's full record copy) */
+  if (st.memMap[id]) {
+    try { st.memMap[id].name = clean; applied = true; } catch (e) { /* the record stands */ }
+  }
+  /* the LS mirror (map rewrite + write-through; a refusal is stuck) */
+  if (st.lsMirror[id]) {
+    try {
+      const map = Object.assign({}, st.lsMirror);
+      const pay = Object.assign({}, map[id]);
+      pay.name = clean;
+      map[id] = pay;
+      if (avLibLsWriteMap(map)) { st.lsMirror = map; applied = true; }
+      else stuck = true;
+    } catch (e) { stuck = true; }
+  }
+  if (applied) {
+    try { if (st.items[id]) st.items[id].name = clean; } catch (e) { /* the view is a cache */ }
+    st.lastError = null;
+    return { ok: true, id: id, name: clean };
+  }
+  if (stuck) { st.lastError = "rename refused"; return { ok: false, id: id, name: clean, error: "rename refused" }; }
+  return { ok: false, id: id, name: clean, error: "no item" };
+}
+
+/* ---------- R17: the receipts history (section 3) - OWN database av-receipts-store, store
+   "runs" (av-samples-store is NEVER migrated); tier ladder idb -> ls -> mem named after the
+   library's (quota never downgrades - answer the tier it used / the error); rotation keeps
+   the newest AV_LIB_REC_KEEP runs (by at). LS summaries may drop items. ---------- */
+
+const avLibReceiptState = {
+  booted: false,
+  bootPromise: null,
+  backend: "mem",              /* "idb" | "ls" | "mem" - the tier a reach last actually used */
+  db: null,
+  dbGaveUp: false,
+  taken: {},                   /* ids minted this session (same-ms collision guard) */
+  mem: {},                     /* id -> receipt (the session memory tier) */
+  seq: 0,                      /* id-collision counter */
+  lastError: null,
+};
+
+/* idempotent readiness: every receipts entry point awaits this once per session */
+function avLibReceiptReady() {
+  const st = avLibReceiptState;
+  if (st.bootPromise) return st.bootPromise;
+  try {
+    st.bootPromise = avLibReceiptBootRun().catch(function (e) {
+      st.lastError = "receipts:" + avLibErrMsg(e);
+      st.booted = true;
+      return st.backend;
+    });
+    return st.bootPromise;
+  } catch (e) {
+    st.booted = true;
+    return Promise.resolve(st.backend);
+  }
+}
+
+/* one open attempt per session; a hung open gives up after AV_LIB_OPEN_CAP_MS (no adoption
+   here by design - receipts are small and the LS summaries are a fine home; the next session
+   boots fresh) */
+async function avLibReceiptBootRun() {
+  const st = avLibReceiptState;
+  if (st.booted) return st.backend;
+  const db = await avLibReceiptDbOpen();
+  if (db) {
+    const recs = await avLibReceiptDbAll(db);
+    st.backend = (recs === null) ? (avLibReceiptLsOk() ? "ls" : "mem") : "idb";
+  } else {
+    st.backend = avLibReceiptLsOk() ? "ls" : "mem";
+  }
+  st.booted = true;
+  return st.backend;
+}
+
+/* the receipts IndexedDB (promise-wrapped, never throws - the library's own plumbing, own
+   names; store "runs" created if missing, keyPath "id") */
+function avLibReceiptDbOpen() {
+  return new Promise(function (res) {
+    try {
+      const st = avLibReceiptState;
+      if (st.db) return res(st.db);
+      if (st.dbGaveUp) return res(null);
+      const idb = avLibIdb();
+      if (!idb) return res(null);
+      let settled = false;
+      const give = function (v) { if (!settled) { settled = true; res(v); } };
+      const timer = avLibTimer(function () { st.dbGaveUp = true; give(null); }, AV_LIB_OPEN_CAP_MS);
+      const rq = idb.open(AV_LIB_RECEIPT_DB, AV_LIB_RECEIPT_DB_VER);
+      rq.onupgradeneeded = function () {
+        try { const db = rq.result; if (!db.objectStoreNames || !db.objectStoreNames.contains(AV_LIB_RECEIPT_OS)) db.createObjectStore(AV_LIB_RECEIPT_OS, { keyPath: "id" }); }
+        catch (e) { /* upgrade raced */ }
+      };
+      rq.onsuccess = function () {
+        avLibClear(timer);
+        if (st.dbGaveUp) { try { rq.result.close(); } catch (e) { /* ignore */ } return give(null); }
+        const db = rq.result;
+        st.db = db;
+        try { db.onclose = function () { if (avLibReceiptState.db === db) avLibReceiptState.db = null; }; } catch (e) { /* fine */ }
+        give(db);
+      };
+      rq.onerror = function () { avLibClear(timer); give(null); };
+      rq.onblocked = function () { avLibClear(timer); give(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+function avLibReceiptDbAll(db) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_LIB_RECEIPT_OS, "readonly");
+      const rq = tx.objectStore(AV_LIB_RECEIPT_OS).getAll();
+      rq.onsuccess = function () { res(rq.result || []); };
+      rq.onerror = function () { res(null); };
+      tx.onerror = function () { res(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+function avLibReceiptDbWrite(db, rec) {
+  return new Promise(function (res, rej) {
+    try {
+      const tx = db.transaction(AV_LIB_RECEIPT_OS, "readwrite");
+      tx.objectStore(AV_LIB_RECEIPT_OS).put(rec);
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { rej((tx.error) || new Error("idb write failed")); };
+      tx.onabort = function () { rej((tx.error) || new Error("idb write aborted")); };
+    } catch (e) { rej(e); }
+  });
+}
+
+function avLibReceiptDbRemove(db, id) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_LIB_RECEIPT_OS, "readwrite");
+      tx.objectStore(AV_LIB_RECEIPT_OS).delete(id);
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { res(false); };
+      tx.onabort = function () { res(false); };
+    } catch (e) { res(false); }
+  });
+}
+
+function avLibReceiptDbClear(db) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_LIB_RECEIPT_OS, "readwrite");
+      tx.objectStore(AV_LIB_RECEIPT_OS).clear();
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { res(false); };
+      tx.onabort = function () { res(false); };
+    } catch (e) { res(false); }
+  });
+}
+
+/* the av-receipts-ls fallback (validated summary map; {} on any failure) */
+function avLibReceiptLsOk() {
+  try { return avLibLs() != null; } catch (e) { return false; }
+}
+
+function avLibReceiptLsLoad() {
+  const out = {};
+  try {
+    const ls = avLibLs();
+    if (!ls) return out;
+    const raw = ls.getItem(AV_LIB_RECEIPT_LS);
+    if (raw == null) return out;
+    let obj = null;
+    try { obj = JSON.parse(raw); } catch (e) { obj = null; }
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) return out;
+    const keys = Object.keys(obj);
+    for (let i = 0; i < keys.length; i++) {
+      const k = keys[i];
+      if (!AV_LIB_REC_ID_RE.test(k)) continue;
+      const pay = obj[k];
+      if (!pay || typeof pay !== "object" || Array.isArray(pay)) continue;
+      out[k] = pay;
+    }
+  } catch (e) { /* storage blocked: memory only */ }
+  return out;
+}
+
+/* ---------- receipt shapes (section 3: {id, v:1, at, title, counts, errors, items}) ---------- */
+
+/* id = "r" + Date.now().toString(36); a same-millisecond save gains a "-<seq>" suffix so two
+   runs in one tick can never collapse into one store row */
+function avLibReceiptId() {
+  const st = avLibReceiptState;
+  const base = "r" + Date.now().toString(36);
+  let id = base;
+  try {
+    while (st.taken[id]) {
+      st.seq += 1;
+      id = base + "-" + st.seq;
+      if (st.seq > 100000) break;
+    }
+  } catch (e) { /* base id stands */ }
+  try { st.taken[id] = 1; } catch (e) { /* the guard is best-effort */ }
+  return id;
+}
+
+/* the counts subset the stored run keeps (missing / garbage -> 0) */
+function avLibReceiptCountsNorm(v) {
+  const out = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0 };
+  try {
+    if (!v || typeof v !== "object") return out;
+    const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs", "bundles"];
+    for (let i = 0; i < keys.length; i++) out[keys[i]] = Math.round(avLibNum(v[keys[i]], 0, 0, 1e9));
+  } catch (e) { /* defaults stand */ }
+  return out;
+}
+
+/* error lines: strings only, each capped AV_LIB_REC_NOTE_MAX, at most AV_LIB_REC_ERR_MAX */
+function avLibReceiptErrsNorm(v) {
+  const out = [];
+  try {
+    if (!Array.isArray(v)) return out;
+    for (let i = 0; i < v.length && out.length < AV_LIB_REC_ERR_MAX; i++) {
+      if (typeof v[i] !== "string") continue;
+      const s = avLibStr(v[i], "", AV_LIB_REC_NOTE_MAX);
+      if (s) out.push(s);
+    }
+  } catch (e) { /* [] */ }
+  return out;
+}
+
+/* one stored item: {name, format, kind, result, reason, size} (reason cap note-max) */
+function avLibReceiptItemNorm(v) {
+  try {
+    if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+    return {
+      name: avLibStr(v.name, "", AV_LIB_NAME_MAX),
+      format: avLibToken(v.format, "", 12),
+      kind: avLibToken(v.kind, "", 12),
+      result: avLibToken(v.result, "", 16),
+      reason: avLibStr(v.reason, "", AV_LIB_REC_NOTE_MAX),
+      size: avLibNum(v.size, 0, 0, AV_LIB_ITEM_MAX * 8),
+    };
+  } catch (e) { return null; }
+}
+
+/* items capped AV_LIB_REC_ITEMS_MAX (counts.total still carries the honest run total) */
+function avLibReceiptItemsNorm(v) {
+  const out = [];
+  try {
+    if (!Array.isArray(v)) return out;
+    for (let i = 0; i < v.length && out.length < AV_LIB_REC_ITEMS_MAX; i++) {
+      const it = avLibReceiptItemNorm(v[i]);
+      if (it) out.push(it);
+    }
+  } catch (e) { /* [] */ }
+  return out;
+}
+
+/* an incoming receipt -> the stored shape. genId (the Save path) mints an id when none is
+   present; the read path (genId false) drops a record without a valid id. */
+function avLibReceiptNorm(raw, genId) {
+  try {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    let id = (typeof raw.id === "string" && AV_LIB_REC_ID_RE.test(raw.id)) ? raw.id : "";
+    if (!id) {
+      if (!genId) return null;
+      id = avLibReceiptId();
+    }
+    return {
+      id: id,
+      v: 1,
+      at: avLibNum(raw.at, Date.now(), 0, 9e15),
+      title: avLibStr(raw.title, "import", AV_LIB_REC_TITLE_MAX),
+      counts: avLibReceiptCountsNorm(raw.counts),
+      errors: avLibReceiptErrsNorm(raw.errors),
+      items: avLibReceiptItemsNorm(raw.items),
+    };
+  } catch (e) { return null; }
+}
+
+/* the LS-tier payload: a summary - items may be dropped there (section 3) */
+function avLibReceiptSummary(rec) {
+  return { id: rec.id, v: 1, at: rec.at, title: rec.title, counts: rec.counts, errors: rec.errors };
+}
+
+/* the list row: exactly {id, at, title, counts} */
+function avLibReceiptRow(rec) {
+  return { id: rec.id, at: rec.at, title: rec.title, counts: rec.counts };
+}
+
+/* the newest AV_LIB_REC_KEEP ids of an id -> {at} map, newest first (at desc, id desc) */
+function avLibReceiptKeepIds(map) {
+  try {
+    const ids = Object.keys(map);
+    ids.sort(function (a, b) {
+      const A = avLibNum(map[a] && map[a].at, 0, 0, 9e15);
+      const B = avLibNum(map[b] && map[b].at, 0, 0, 9e15);
+      return (B - A) || (a < b ? 1 : (a > b ? -1 : 0));
+    });
+    return ids.slice(0, AV_LIB_REC_KEEP);
+  } catch (e) { return []; }
+}
+
+/* rotation after a DB commit: delete runs beyond the newest AV_LIB_REC_KEEP (best-effort -
+   the commit already stands) */
+async function avLibReceiptRotateDb(db, runs) {
+  let dropped = 0;
+  try {
+    const keep = avLibReceiptKeepIds(runs);
+    const kept = {};
+    for (let i = 0; i < keep.length; i++) kept[keep[i]] = 1;
+    const ids = Object.keys(runs);
+    for (let i = 0; i < ids.length; i++) {
+      if (kept[ids[i]]) continue;
+      try { if (await avLibReceiptDbRemove(db, ids[i])) dropped += 1; } catch (e) { /* best-effort */ }
+    }
+  } catch (e) { /* best-effort */ }
+  return dropped;
+}
+
+/* an LS summary map pruned to the newest AV_LIB_REC_KEEP entries */
+function avLibReceiptPruneMap(map) {
+  try {
+    const keep = avLibReceiptKeepIds(map);
+    const out = {};
+    for (let i = 0; i < keep.length; i++) out[keep[i]] = map[keep[i]];
+    return out;
+  } catch (e) { return map; }
+}
+
+/* the memory tier pruned to the newest AV_LIB_REC_KEEP receipts */
+function avLibReceiptPruneMem() {
+  const st = avLibReceiptState;
+  let dropped = 0;
+  try {
+    const keep = avLibReceiptKeepIds(st.mem);
+    const kept = {};
+    for (let i = 0; i < keep.length; i++) kept[keep[i]] = 1;
+    const ids = Object.keys(st.mem);
+    for (let i = 0; i < ids.length; i++) {
+      if (kept[ids[i]]) continue;
+      delete st.mem[ids[i]];
+      dropped += 1;
+    }
+  } catch (e) { /* best-effort */ }
+  return dropped;
+}
+
+/* ---------- the receipts trio run bodies ---------- */
+
+async function avLibReceiptSaveRun(rec) {
+  const st = avLibReceiptState;
+  await avLibReceiptReady();
+  const r = avLibReceiptNorm(rec, true);
+  if (!r) return { ok: false, id: "", error: "no receipt" };
+  /* 1) the durable home (a quota / DB failure never silently downgrades) */
+  const db = await avLibReceiptDbOpen();
+  if (db) {
+    try {
+      await avLibReceiptDbWrite(db, r);
+    } catch (e) {
+      const name = avLibErrName(e);
+      /* a closed connection (tab churn) may heal on the NEXT call; a quota will not - say which */
+      if (name === "InvalidStateError" || name === "TransactionInactiveError") {
+        st.db = null;
+        try { await avLibReceiptDbOpen(); } catch (e2) { /* stays null */ }
+      }
+      const out = { ok: false, id: r.id, backend: "idb", error: (name === "QuotaExceededError") ? "quota" : ("idb:" + (name || "error")) };
+      st.lastError = out.error;
+      return out;
+    }
+    st.backend = "idb";
+    st.lastError = null;
+    /* rotation: after commit, delete runs beyond the newest AV_LIB_REC_KEEP (by at) */
+    try {
+      const recs = await avLibReceiptDbAll(db);
+      if (Array.isArray(recs)) {
+        const runs = {};
+        for (let i = 0; i < recs.length; i++) {
+          const norm = avLibReceiptNorm(recs[i], false);
+          if (norm) runs[norm.id] = norm;
+        }
+        runs[r.id] = r;
+        await avLibReceiptRotateDb(db, runs);
+      }
+    } catch (e) { /* rotation is best-effort; the commit already stands */ }
+    return { ok: true, id: r.id, backend: "idb" };
+  }
+  /* 2) no IndexedDB: the LS summaries (items may be dropped there) */
+  const ls = avLibLs();
+  if (ls) {
+    const map = Object.assign({}, avLibReceiptLsLoad());
+    map[r.id] = avLibReceiptSummary(r);
+    const pruned = avLibReceiptPruneMap(map);
+    try {
+      const ids = Object.keys(pruned);
+      if (!ids.length) ls.removeItem(AV_LIB_RECEIPT_LS);
+      else ls.setItem(AV_LIB_RECEIPT_LS, JSON.stringify(pruned));
+      if (st.backend === "mem") st.backend = "ls";   /* the tier really is in use now */
+      st.lastError = null;
+      return { ok: true, id: r.id, backend: "ls" };
+    } catch (e) {
+      if (avLibErrName(e) === "QuotaExceededError") {
+        st.lastError = "quota";
+        return { ok: false, id: r.id, backend: "ls", error: "quota" };
+      }
+      /* storage fully unavailable: fall to memory for this session */
+    }
+  }
+  /* 3) memory - volatile, and the receipt says so */
+  st.mem[r.id] = r;
+  avLibReceiptPruneMem();
+  st.lastError = null;
+  return { ok: true, id: r.id, backend: "mem", volatile: true };
+}
+
+async function avLibReceiptListRun() {
+  const st = avLibReceiptState;
+  await avLibReceiptReady();
+  const runs = {};
+  let backend = "mem";
+  /* the durable home first */
+  if (st.db) {
+    const recs = await avLibReceiptDbAll(st.db);
+    if (recs !== null) {
+      backend = "idb";
+      for (let i = 0; i < recs.length; i++) {
+        const norm = avLibReceiptNorm(recs[i], false);
+        if (norm) runs[norm.id] = norm;
+      }
+    }
+  }
+  /* the LS snapshot (summaries) fills in when the database is not serving */
+  if (backend !== "idb") {
+    const map = avLibReceiptLsLoad();
+    const ids = Object.keys(map);
+    for (let i = 0; i < ids.length; i++) {
+      const norm = avLibReceiptNorm(map[ids[i]], false);
+      if (norm) runs[norm.id] = norm;
+    }
+    if (ids.length) backend = "ls";
+  }
+  /* session-held runs join the list (they are the live ones) */
+  const memIds = Object.keys(st.mem);
+  for (let i = 0; i < memIds.length; i++) if (st.mem[memIds[i]]) runs[memIds[i]] = st.mem[memIds[i]];
+  const list = [];
+  const ids2 = Object.keys(runs);
+  for (let i = 0; i < ids2.length; i++) list.push(avLibReceiptRow(runs[ids2[i]]));
+  /* newest-first (at desc, id desc - the av_lib list order) */
+  list.sort(function (a, b) { return (b.at - a.at) || (a.id < b.id ? 1 : (a.id > b.id ? -1 : 0)); });
+  return { ok: true, backend: backend, count: list.length, runs: list };
+}
+
+async function avLibReceiptClearRun() {
+  const st = avLibReceiptState;
+  await avLibReceiptReady();
+  const gone = {};
+  let stuck = false;
+  /* the durable home first (like avLibRemoveRun) */
+  if (st.db) {
+    const recs = await avLibReceiptDbAll(st.db);
+    const list = Array.isArray(recs) ? recs : [];
+    const cleared = await avLibReceiptDbClear(st.db);
+    if (cleared) {
+      for (let i = 0; i < list.length; i++) {
+        const id = (list[i] && typeof list[i].id === "string" && list[i].id) ? list[i].id : "";
+        if (id) gone[id] = 1;
+      }
+    } else stuck = true;
+  }
+  /* the LS snapshot (retire the key when emptied) */
+  const ls = avLibLs();
+  if (ls) {
+    const map = avLibReceiptLsLoad();
+    const ids = Object.keys(map);
+    if (ids.length) {
+      try {
+        ls.removeItem(AV_LIB_RECEIPT_LS);
+        for (let i = 0; i < ids.length; i++) gone[ids[i]] = 1;
+      } catch (e) { stuck = true; }
+    }
+  }
+  /* the memory tier */
+  const memIds = Object.keys(st.mem);
+  for (let i = 0; i < memIds.length; i++) { delete st.mem[memIds[i]]; gone[memIds[i]] = 1; }
+  const removed = Object.keys(gone).length;
+  if (removed > 0) { st.lastError = null; return { ok: true, removed: removed }; }
+  if (stuck) { st.lastError = "removal refused"; return { ok: false, removed: 0, error: "removal refused" }; }
+  return { ok: true, removed: 0 };
 }
 
 /* ---------- load routes (sample by format; pattern via the seq core; R15c kit + refs) ---------- */
@@ -1373,6 +1936,27 @@ function avLibLoad(id) {
   catch (e) { return Promise.resolve({ ok: false, id: (typeof id === "string") ? id : "", kind: "", error: "error" }); }
 }
 
+/* R17: rename + the receipts trio (section 3; every entry point never throws) */
+function avLibRename(id, name) {
+  try { return Promise.resolve(avLibRenameRun(id, name)).catch(function (e) { return { ok: false, id: (typeof id === "string") ? id : "", name: "", error: avLibErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, id: (typeof id === "string") ? id : "", name: "", error: "error" }); }
+}
+
+function avLibReceiptSave(rec) {
+  try { return Promise.resolve(avLibReceiptSaveRun(rec)).catch(function (e) { return { ok: false, id: "", error: avLibErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, id: "", error: "error" }); }
+}
+
+function avLibReceiptList() {
+  try { return Promise.resolve(avLibReceiptListRun()).catch(function (e) { return { ok: false, backend: avLibReceiptState.backend, count: 0, runs: [], error: avLibErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, backend: "mem", count: 0, runs: [], error: "error" }); }
+}
+
+function avLibReceiptClear() {
+  try { return Promise.resolve(avLibReceiptClearRun()).catch(function (e) { return { ok: false, removed: 0, error: avLibErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, removed: 0, error: "error" }); }
+}
+
 /* the honest tier note (mem = session only; ls = base64 fallback with the 1.5 MiB refusal) */
 function avLibNote() {
   try {
@@ -1413,5 +1997,9 @@ if (typeof window !== "undefined") {
     load: avLibLoad,
     remove: avLibRemove,
     add: avLibAddItem,
+    rename: avLibRename,
+    receiptSave: avLibReceiptSave,
+    receiptList: avLibReceiptList,
+    receiptClear: avLibReceiptClear,
   };
 }
