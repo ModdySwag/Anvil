@@ -2028,3 +2028,28 @@ Resume phrase: **"continue anvil"**.
   store/slots, sampler zone v2, store IDB, av_pad/chop) -> dispatch the SAMPLE PACKS card +
   sniffer + canonical bundle + IDB library + WAV/MP3/AIFF/MIDI (REX2 if budget). Resume phrase
   "continue anvil".
+
+## Resume addendum 51 (WIP) - 2026-10-09 (R15b DISPATCHED: SAMPLE PACKS contract staged + 5 children in flight)
+
+- `verify/_r15b_wave.md` AUTHORED (all app-side pins source-verified: sample store/send API,
+  zone v2 laws, store IDB plumbing, chop/grain/seq load flows, card completeness trio, pin
+  sweep). Integration script STAGED: `cache/r1/int_r15b.py` — `--anchors` DRY pass GREEN
+  (8 files, 8 edits; every anchor captured from fresh repr() probes; all targets LF).
+- Contract corrections applied PRE-dispatch: (1) the library load path ROUTES BY FORMAT —
+  AIFF/REX2 cannot go through decodeAudioData (browsers refuse AIFF), so avLib decodes them via
+  AVAIFF/AVRex and builds the AudioBuffer page-side behind the session-cap guard; (2) `.exs` is
+  DEFERRED (adapter planned R15c), not refused — counts read deferred 1 / refused 0; (3) the
+  pattern load flow = avSeqLoad -> avSeqSetPattern(avSeqSnap()) -> avSeqUiSync -> undo "import"
+  (avSeqLoad alone only updates the core model; the scheduler needs the explicit push).
+- DISPATCHED `deleg_2d2c1f1d` (background, 5 parallel children): src/av_aiff.js (clean-room
+  AIFF reader) · src/av_rex.js (BUDGET: REX2 DWOP decoder) · src/av_import.js (sniffer + policy
+  + pipeline) · src/av_lib.js (IDB library) · src/av_import_ui.js (the SAMPLE PACKS card).
+  Every brief: read the contract first; write-file-first; node --check only (aiff/rex get a
+  scratch unit-harness allowance under cache/r15b/).
+- AT LANDING (parent sequence, do not re-derive): artifact guard (marker per child file) ->
+  `python3 cache/r1/int_r15b.py` real pass -> `python3 build.py` -> `node verify/cdp_smoke.mjs`
+  (expect **63**, first-run) -> pins sweep 21 files (`cache/r1/sweep_r15b.py` from sweep_r14) ->
+  battery **24 suites** (adds NEW `verify/cdp_import.mjs` — parent still to author) + bench ->
+  records commit -> deploy index.html + sw.js -> scoped --verify 0 -> live pass (leak 11/11;
+  renders/r15b-live-import.png) -> addendum 51 final. REX2 witness = node harness in
+  cache/r15b/rex/ (fixture scratch only, nothing ships). Resume phrase "continue anvil".
