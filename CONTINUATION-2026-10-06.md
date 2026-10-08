@@ -2066,3 +2066,24 @@ Resume phrase: **"continue anvil"**.
   SXT REFE refs + NKI partial + NBKT metadata — all reuse this wave's pipeline (new adapters
   register in AV_IMPORT_POLICY). Optional follow-ups: REX2 slices -> chop-kit mapping, zip
   reading (drop-folder covers V1), f64-WAV reader. Resume phrase "continue anvil".
+
+## Resume addendum 52 (WIP) - 2026-10-09 (R15c STAGED: STRUCTURED PACKS contract authored + 4 children dispatched)
+
+- `verify/_r15c_wave.md` AUTHORED (source-open pins; the R15b pipeline deltas: item kinds
+  `kit`/`refs`, counts `kits`/`refs`, the route-by-format kit/refs LOAD laws, UI row actions,
+  and the pinned reason strings for pending/unreadable states).
+- SCOPE: R15c = **EXS24** (Logic kits -> sampler kits, ≤4-slot honest cap) + **ADG/ALS**
+  (sample refs + clip->pattern via the avMidToPattern shape) + **SerumPreset** (container +
+  wavetable refs + the embed spike; the PNG premise is DEAD — 0 PNG signatures in 629 real
+  presets). SXT/NKI/NBKT move to R15d; docs/11's wave line gets edited at close.
+- DISPATCHED (4 children, see delegation id in Mnemosyne): `src/av_exs.js` · `src/av_als.js` ·
+  `src/av_serum.js` · the WIRING child (sole writer of `av_import.js` + `av_import_ui.js` +
+  `av_lib.js`).
+- AT LANDING (do not re-derive): artifact guard -> `cache/r1/int_r15c.py` (build.py +3 parts;
+  smoke 63->**66**; cockpit untouched) -> build -> smoke 66 first-run -> `cdp_import` +3
+  (**15->18**; fixtures in cache/r15c/rig-fixtures/ incl. ONE real SerumPreset — verification
+  only, nothing ships) -> pins sweep 20 (`cb1128e2...` OLD) + cdp_import re-pin -> battery
+  **24 suites** + bench (worklet sha `b65160e0` must stay UNCHANGED) -> records commit ->
+  deploy index.html + sw.js -> scoped --verify 0 -> live pass (leak probe DIRECTORY url
+  `https://moddys.net/anvil/`; capture `renders/r15c-live-import.png` inspected) -> addendum
+  52 final + docs/11 wave-line edit. Resume phrase "continue anvil".
