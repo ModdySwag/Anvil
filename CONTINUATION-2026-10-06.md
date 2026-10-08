@@ -1524,3 +1524,62 @@ Resume phrase: **"continue anvil"**.
   a nav edit needs the radio checkers re-run - deliberately NOT done unattended).
 - The whole GOLDEN BUILD is shipped end to end: P0-P7 + platform, battery 22 suites green, deployed,
   live-verified. Resume phrase: "continue anvil".
+## Resume addendum 37 - 2026-10-08 (R1+R2: THE COCKPIT REDESIGN — Serum-2-faithful zones + module chrome)
+
+- Trigger: a professional sound engineer reviewed the live build — "the scrolling is awful", the
+  layout/module GUIs and interactions are not what sound engineers' tools look like; Serum 2 is the
+  right template. Owner directive: develop the complete redesign plan AND build it to completion,
+  rolling, no stops. Plan of record: `docs/10-cockpit-redesign.md`.
+- Evidence base (ingested + correlated): official Serum 2 web manual 33 pages
+  (`research/external/serum2/01-serum2-manual-digest.md` — 33/33 fetched, 96 conventions);
+  "Complete Guide To Master Serum 2" 14-video series subtitles + the EDMProd guide
+  (`02-videos-and-guide-digest.md` — 14/14 subs, 23 consolidated workflow lessons; reference frames
+  + 9 contact sheets under `frames/`, private reference only); the REAL Serum 2 skin inventory on
+  this machine (342 assets: 192 control / 84 panel / 66 overlay — panel_header, osc_headers, mod_tabs,
+  macros, matrix, browser, fx, global, keyboard studied directly); the current-UI audit
+  `03-anvil-current-ui-audit.md` (25 cards, 8 scroll containers, divergence list vs docs/02).
+- **Shipping state: frozen `1ddf7e54` (3,406,861 B)** — R1 cockpit + R2 module chrome, one wave cycle.
+- R1 (cockpit chassis): the page NEVER scrolls (html/body overflow hidden; witnessed
+  docScroll==clientHeight + scrollTo no-op); `nav#av-zones` — 8 tabs in workflow order
+  (Synth · FX · Mod · Seq · Studio · Store · Code · System); 8 `.av-zone` panes, exactly one shown,
+  internal scroll only; every card moved byte-preserved (all ids/classes unchanged; hero + footer
+  into System); `av_shell.js` — zone persistence (`av-zone` LS), `?z=` deep links, Alt+1..8,
+  palette "Zones" group, `window.__avZone` facade, `__avZoneAuto` + the scrollIntoView reveal seam
+  (harness + palette + any flow scrolling into a hidden zone); `#av-proofs`; dock-tax is now BODY
+  padding; a11y tablist/tab/tabpanel + roving tabindex + ArrowLeft/Right; SHELL SELFTEST proof.
+- R2 (module chrome): `av_chrome.js` — a module head on 20 cards (collapse toggle + module menu:
+  Init through the ONE knob commit funnel / Randomize on synth+fm only / collapse; fold persisted
+  `av-fold`); the Synth-zone engine strip (6 jump chips, VA·WT · FM · DRUMS · SAMPLES · CHOP ·
+  WT EDITOR); header BROWSE + undo/redo buttons (avUndo/avRedo); CHROME SELFTEST proof.
+- **BATTERY ALL GREEN - 23 suites:** smoke 38 - cockpit 18 - studio 37 - sessions 41 - comp 41 -
+  mix 46 - knob_feel 18 - keys 27 - midi 33 - sample 29 - rec 29 - fx 27 - seq 31 - store 28 -
+  bounce 32 - deck 35 - s4 37 - s5 36 - code 36 - m1 33 - m2 40 - platform 52 - a11y 32.
+- Triage (all recorded, none loosened): deck 4 red -> rig SPEC fix (the rig never revealed the
+  studio zone before its canvas legs; the app heals on reveal — probe-proven: canvas 328x96 + ink
+  2819 after a reveal+steps; hidden-zone canvases are simply not laid out); m2 2i -> rig predicate
+  fixed to its stated intent (a discrete onset count over ~6 ms RMS sampling was phase luck:
+  1-of-4 hits caught in the golden run, 0 after a 1-sample shift; now step-trace + windowed audio
+  presence at 1.5x the detector threshold); m2 2g -> tail window anchored to the fade completion
+  (the 25 ms look-back re-read the pre-fade ramp and the mean landed at ~0.30 mid by construction —
+  the recorded flake; the final-8 ms window gives 0.003 vs the 0.3x-mid bound with the threshold
+  unchanged); smoke knob-selftest gain flake = cold-boot audio glide under load (attributed by the
+  avMasterApply setTargetAtTime mechanism; green in every later run).
+- PERF GATE: bench full — realtime {light 64 / fat 48}; offline knee 96/128 monotone. The machine was
+  NOT quiet (desktop console active: `query user` = Active, idle none) — the decisive A/B control
+  (offline-only, previous frozen bytes vs the new bytes, back-to-back, same conditions): BOTH read
+  the identical knee 96/128 monotone => ENVIRONMENT, not a regression (worklet sha d7f0ee41 UNCHANGED;
+  byte-identical engine). Stress: asserts-not-met with the same profile (drains PASS - heapGrowth
+  0.8 MB - 0 page errors; underrunDeltas 501 = the noisiest unattended window on record, run on an
+  in-use machine) — recorded as unattended-window noise per the gate law; quiet re-run owed/optional.
+  Records: verify/bench-ab-r2-prev.log / bench-ab-r2-new.log / last-cdp_bench.log / last-cdp_stress.log.
+- Commits: integration `d715cbb` (wave + battery + gate records) - then this close commit (addendum +
+  deploy records).
+- DEPLOY (same night): the R1+R2 set copied to radio-browser/deploy/anvil/ and uploaded via
+  `python3 upload-site.py --only anvil/index.html anvil/sw.js` -> "2 uploaded, 0 already there".
+  `--verify`: anvil/index.html + anvil/sw.js IN SYNC, **0 file(s) not in sync**. Live byte checks:
+  https://moddys.net/anvil/index.html sha256 = 1ddf7e54... (matches the frozen build);
+  https://moddys.net/anvil/sw.js sha256 = 99c9f17b... = local. Manifest/icons/inbox/packs unchanged
+  (byte-compared before the upload).
+- Carried: drag-to-modulate gesture (mod-source chips -> knob assignment + rings), Store as a
+  browser overlay, preset-name header chip, pane scroll-shadow scrims, module-menu Copy/Paste,
+  P·2 minBLEP, PERFECT TUNINGS, owner pass on the live surface. Resume phrase: "continue anvil".
