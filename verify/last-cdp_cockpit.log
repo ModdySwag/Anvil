@@ -1,5 +1,5 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-index.html sha256 (before): 50d6d793bf5a75e550e656b0d181248f6e4ee89921f230c34abfaa6c61addc6c
+index.html sha256 (before): ebc4e9077fab9fddbb1a2739ef185ba7127cfcf60a2b2ece7cf41f988df0736e
  ok   boot: data-av-ready flips
  ok   zones: 8 panels + 8 tabs in workflow order  -> {"zones":8,"tabs":8,"order":"synth,fx,mod,seq,studio,store,code,system"}
  ok   default: exactly one zone rendered (synth) + aria-selected + body[data-av-zone] agree  -> {"zones":8,"tabs":8,"order":"synth,fx,mod,seq,studio,store,code,system","shown":["synth"],"bodyZone":"synth","sel":"synth","vis":"synth"}
@@ -20,6 +20,6 @@ index.html sha256 (before): 50d6d793bf5a75e550e656b0d181248f6e4ee89921f230c34abf
  ok   R3 float: two panels coexist with z-order set; reset() brings everything home  -> {"n":2,"z":"58","after":0,"home":true}
  ok   R3 about: the header About button toggles the phase-notes popover (moved out of the page)  -> {"open":true,"closed":true,"hasH1":true}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned  -> pinned 50d6d793bf5a...
+ ok   freeze: index.html sha256 = pinned  -> pinned ebc4e9077fab...
 
 21 passed, 0 failed

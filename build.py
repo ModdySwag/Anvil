@@ -116,6 +116,7 @@ js_parts = [
     (SRC / "av_serum.js").read_text(encoding="utf-8"),   # R15c: SerumPreset container reader (page module)
     (SRC / "av_sxt.js").read_text(encoding="utf-8"),     # R15d: Reason NN-XT patch reader (page module)
     (SRC / "av_ni.js").read_text(encoding="utf-8"),      # R15d: NI container + legacy NKI/NBKT reader (page module)
+    (SRC / "av_zip.js").read_text(encoding="utf-8"),     # R16: clean-room ZIP reader (page module)
     (SRC / "av_pads.js").read_text(encoding="utf-8"),   # P2 drum pads (page module)
     (SRC / "av_engine.js").read_text(encoding="utf-8"), # the facade: blob→data→spn tier ladder + message protocol
     (SRC / "av_code.js").read_text(encoding="utf-8"),    # S5: CODE engine — user-module facade + persistence

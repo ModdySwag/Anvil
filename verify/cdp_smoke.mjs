@@ -1341,6 +1341,77 @@ async function main() {
     && r15i.errN === 0,
     JSON.stringify(r15i));
 
+  /* 6cr. R16: zip - the packed fixture expands into a bundle row + honest children */
+  const r16aR = await ev(`(async () => {
+    const u8 = Uint8Array.from(atob('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'), c => c.charCodeAt(0));
+    const rc = await avImportFiles([ new File([u8], 'rig-pack.zip') ]);
+    const byName = (n) => rc.items.find(i => i.name === n) || null;
+    const bundle = rc.items[0] || {};
+    const kick = byName('kick.wav'); const snare = byName('snare.wav'); const txt = byName('notes.txt');
+    const load = (kick && kick.id) ? await avLibLoad(kick.id) : null;
+    const ent = (load && load.entryId) ? avSampleStore.byId[load.entryId] : null;
+    return { counts: rc.counts, errN: rc.errors.length,
+      bKind: bundle.kind, bRes: bundle.result, bMeta: bundle.meta || {},
+      kickR: kick ? kick.result : null, snareR: snare ? snare.result : null, snarePath: snare ? snare.path : null,
+      txtR: txt ? txt.result : null, txtWhy: txt ? String(txt.reason || '') : null,
+      entry: ent ? { frames: ent.buffer ? ent.buffer.length : -1, rate: ent.sampleRate } : null };
+  })()`);
+  const r16a = r16aR.value || {};
+  check('R16 zip: bundle row + children import (kick/snare samples, notes.txt refused) + child LOADs',
+    !!r16a.counts && r16a.counts.bundles === 1 && r16a.counts.total === 4 && r16a.counts.imported === 3
+    && r16a.counts.samples === 2 && r16a.counts.refused === 1 && r16a.errN === 0
+    && r16a.bKind === 'bundle' && r16a.bRes === 'imported'
+    && r16a.bMeta.entries === 3 && r16a.bMeta.expanded === 3
+    && r16a.kickR === 'imported' && r16a.snareR === 'imported' && String(r16a.snarePath || '').indexOf('rig-pack.zip/') >= 0
+    && r16a.txtR === 'refused' && !!r16a.entry && r16a.entry.frames === 2400 && r16a.entry.rate === 48000,
+    JSON.stringify(r16a));
+
+  /* 6cs. R16: f64-WAV - tag-3/64-bit imports; LOAD lands through the clean-room route */
+  const r16bR = await ev(`(async () => {
+    const N = 200, sr = 8000;
+    const head = new ArrayBuffer(44); const dv = new DataView(head);
+    const wrS = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+    wrS(0, 'RIFF'); dv.setUint32(4, 36 + N * 16, true); wrS(8, 'WAVE'); wrS(12, 'fmt ');
+    dv.setUint32(16, 16, true); dv.setUint16(20, 3, true); dv.setUint16(22, 2, true);
+    dv.setUint32(24, sr, true); dv.setUint32(28, sr * 16, true); dv.setUint16(32, 16, true); dv.setUint16(34, 64, true);
+    wrS(36, 'data'); dv.setUint32(40, N * 16, true);
+    const data = new DataView(new ArrayBuffer(N * 16));
+    for (let i = 0; i < N; i++) { const v = 0.5 * Math.sin(2 * Math.PI * 440 * i / sr); data.setFloat64(i * 16, v, true); data.setFloat64(i * 16 + 8, v, true); }
+    const rc = await avImportFiles([ new File([head, data.buffer], 'rig64.wav') ]);
+    const it = rc.items[0] || {}; const meta = it.meta || {};
+    const load = it.id ? await avLibLoad(it.id) : null;
+    const ent = (load && load.entryId) ? avSampleStore.byId[load.entryId] : null;
+    return { result: it.result, bits: meta.bits, rate: meta.rate, ch: meta.channels, errN: rc.errors.length,
+             ok: load && load.ok, eid: !!(load && load.entryId),
+             entry: ent ? { frames: ent.buffer ? ent.buffer.length : -1, rate: ent.sampleRate } : null };
+  })()`);
+  const r16b = r16bR.value || {};
+  check('R16 f64-WAV: imports (meta bits 64) + LOAD lands via the clean-room route (200 frames @ 8000)',
+    r16b.result === 'imported' && r16b.bits === 64 && r16b.rate === 8000 && r16b.ch === 2 && r16b.errN === 0
+    && r16b.ok === true && r16b.eid === true
+    && !!r16b.entry && r16b.entry.frames === 200 && r16b.entry.rate === 8000,
+    JSON.stringify(r16b));
+
+  /* 6ct. R16: REX2->chop - a stashed slice table drives detect/kit/apply (via rex2) */
+  const r16cR = await ev(`(async () => {
+    const es = avSampleStore.entries; let ent = null;
+    for (let i = es.length - 1; i >= 0; i--) { const e = es[i]; if (e && e.buffer && e.buffer.length === 200 && e.sampleRate === 8000) { ent = e; break; } }
+    if (!ent) return { missing: true };
+    ent.rexSlices = [ { start: 0, len: 50 }, { start: 50, len: 50 }, { start: 100, len: 100 } ];
+    const det = avChopDetect(ent.id);
+    const kit = (det && det.ok) ? avChopKitNew(ent.id) : null;
+    const apl = (kit && kit.ok) ? avChopApply(kit) : null;
+    const s2 = (det && det.slices && det.slices[2]) ? det.slices[2] : null;
+    return { via: det && det.via, count: det && det.count, s2: s2 ? { s0: s2.s0, s1: s2.s1 } : null,
+             kitOk: kit && kit.ok, kitN: kit && kit.slices ? kit.slices.length : -1,
+             aplOk: apl && apl.ok, slot: apl && apl.slot };
+  })()`);
+  const r16c = r16cR.value || {};
+  check('R16 REX2->chop: slice table drives detect (via rex2) -> kit -> apply',
+    r16c.via === 'rex2' && r16c.count === 3 && r16c.s2 && r16c.s2.s0 === 100 && r16c.s2.s1 === 200
+    && r16c.kitOk === true && r16c.kitN === 3 && r16c.aplOk === true && r16c.slot === 0,
+    JSON.stringify(r16c));
+
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');
   await send('Page.navigate', { url: plainUrl });

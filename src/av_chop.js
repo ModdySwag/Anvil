@@ -35,7 +35,7 @@
 
    API (names EXACT per §2.3; page module — no worklet concat, no DOM at load, never throws):
      avChopDetectFrames(ch1, rate, opts) -> {ok:true, onsets, slices, count, dropped, merged, capped,
-         found, rate, frames, hop, window, opts} | {ok:false, error}
+         found, rate, frames, hop, window, opts, via} | {ok:false, error}    via: "onsets" | "rex2" (R16)
      avChopDetect(id, opts)      entry of avSampleStore → detect on channel 0
      avChopKitNew(srcId, opts?)  -> kit {ok:true, v:1, srcId, slot:0, base:36, slices:[{i, s0, s1,
          trim0, trim1, fadeIn:3, fadeOut:5, gainDb:0, norm:false, on:1} × ≤16]}; opts is an
@@ -334,10 +334,65 @@ function avChopDetectFrames(ch1, rate, opts) {
       hop: H,
       window: W,
       opts: o,
+      via: "onsets",                    /* R16: the transient route's marker (additive) */
     };
   } catch (e) {
     return { ok: false, error: "detector failed" };
   }
+}
+
+/* --------------------------- the rex2 slice route ------------------------ */
+
+/* R16 section 4.3: an entry carrying a REX2 slice table (entry.rexSlices, stashed by av_lib's
+   rex2 load route) uses the table AS its slice map -- the SAME success shape as
+   avChopDetectFrames plus the additive marker via:"rex2"; dropped/merged/capped are 0.
+   Each { start, len } pair maps to [s0, s1) = [round(start), round(start + len)) clamped to the
+   entry's frames; unusable pairs are skipped and a table with nothing usable falls through
+   (null) to the transient path. Deterministic; never throws. */
+function avChopDetectRex2(e, opts) {
+  try {
+    const list = (e && Array.isArray(e.rexSlices)) ? e.rexSlices : null;
+    if (!list || !list.length) return null;
+    const rate = avChopRateOf(e);
+    const frames = avChopFramesOf(e, null);
+    if (!(rate > 0) || !(frames > 0)) return null;
+    const slices = [];
+    for (let i = 0; i < list.length; i++) {
+      const it = list[i];
+      if (!it || typeof it !== "object") continue;
+      const st = Number(it.start);
+      const ln = Number(it.len);
+      if (!isFinite(st) || !isFinite(ln)) continue;
+      let s0 = Math.round(st);
+      let s1 = Math.round(st + ln);
+      if (s0 < 0) s0 = 0;
+      if (s0 > frames) s0 = frames;
+      if (s1 < 0) s1 = 0;
+      if (s1 > frames) s1 = frames;
+      if (!(s1 > s0)) continue;            /* zero/negative range - not a usable slice */
+      slices.push({ s0: s0, s1: s1 });
+    }
+    if (!slices.length) return null;
+    const onsets = [];
+    for (let i = 1; i < slices.length; i++) onsets.push(slices[i].s0);
+    const H = Math.max(AV_CHOP_HOP_MIN, Math.round(rate * AV_CHOP_HOP_MS));
+    return {
+      ok: true,
+      onsets: onsets,
+      slices: slices,
+      count: slices.length,
+      dropped: 0,
+      merged: 0,
+      capped: 0,
+      found: onsets.length,
+      rate: rate,
+      frames: frames,
+      hop: H,
+      window: 2 * H,
+      opts: avChopOpts(opts),
+      via: "rex2",
+    };
+  } catch (err) { return null; }
 }
 
 /* ------------------------- store / entry resolution ---------------------- */
@@ -386,9 +441,14 @@ function avChopDetect(id, opts) {
   try {
     const e = avChopEntry(id);
     if (!e) return { ok: false, error: "unknown sample" };
-    const d = avChopCh1(e);
-    if (!d) return { ok: false, error: "bad sample data" };
-    const r = avChopDetectFrames(d, avChopRateOf(e), opts);
+    /* R16 section 4.3: an entry carrying a REX2 slice table takes the slice route (marker
+       via:"rex2"); a malformed or empty table falls through to the transient detector below */
+    let r = avChopDetectRex2(e, opts);
+    if (!r) {
+      const d = avChopCh1(e);
+      if (!d) return { ok: false, error: "bad sample data" };
+      r = avChopDetectFrames(d, avChopRateOf(e), opts);
+    }
     try {
       if (r && r.ok) {
         r.id = (typeof e.id === "string") ? e.id : ((typeof id === "string") ? id : null);

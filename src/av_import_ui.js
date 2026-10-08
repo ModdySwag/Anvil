@@ -36,7 +36,10 @@
                 rows (ALS/Serum) carry SEQ ONLY when meta.pattern exists (the refs receipt
                 re-returns the meta; the SEQ wire applies the pattern through the ONE seq flow)
                 + DEL; serum refs rows carry no load-type action beyond their meta line; the
-                counts line gains " N kits" / " M refs" when above zero.
+                counts line gains " N kits" / " M refs" when above zero. R16: the counts line
+                also gains " B bundles" when above zero (zip expansion lives in the core);
+                report and library rows stay unchanged -- bundle rows render through the
+                generic path.
      . STATUS   #av-import-status -- every run/action result as one plain line ("imported N .
                 deferred N . refused N . X MB -> library" plus the first refusal reason when
                 any). BUSY: ONE op at a time (import run or library action) -- a second request
@@ -324,8 +327,9 @@ function avImportUiItemsPub(r) {
 
 /* the receipt's counts (numbers only; derived from items when counts is absent) */
 function avImportUiCountsOf(r) {
-  const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs"];
-  const c = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0 };
+  /* R16: + bundles (the core's additive zip-expansion count) */
+  const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs", "bundles"];
+  const c = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0 };
   try {
     const src = r && r.counts;
     if (src && typeof src === "object") {
@@ -345,6 +349,7 @@ function avImportUiCountsOf(r) {
       else if (kind === "pattern") c.patterns += 1;
       else if (kind === "kit") c.kits += 1;
       else if (kind === "refs") c.refs += 1;
+      else if (kind === "bundle" && res === "imported") c.bundles += 1;   /* R16: zip bundles */
     }
   } catch (e) { /* zeros stand */ }
   return c;
@@ -633,6 +638,8 @@ function avImportUiCountsText() {
       " \u00b7 refused " + c.refused + " \u00b7 samples " + c.samples + " \u00b7 patterns " + c.patterns;
     if (c.kits > 0) line += " \u00b7 " + c.kits + " kits";
     if (c.refs > 0) line += " \u00b7 " + c.refs + " refs";
+    /* R16: zip bundles (the core's counts.bundles; shown only above zero) */
+    if (c.bundles > 0) line += " \u00b7 " + c.bundles + " bundles";
     return line;
   } catch (e) { return "no runs yet"; }
 }

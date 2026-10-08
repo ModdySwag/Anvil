@@ -1,6 +1,7 @@
 /* Anvil — WAV byte codec (P6 'DELIVER' wave, sa-2): avWavEncode() writes a stereo RIFF/WAVE file
    at 16-bit PCM, 24-bit PCM or 32-bit IEEE float; avWavInfo() parses the RIFF header of this
-   module's own output AND of foreign 16/24/32f WAVs (rigs/harnesses use it as the decoder).
+   module's own output AND of foreign 16/24/32f/64f WAVs (rigs/harnesses use it as the decoder);
+   avWavDecodeF64() reads 64-bit IEEE-float WAVs (R16 wave - read-only, tag 3, LE doubles).
 
    Pins (verify/_p6_wave.md §2.1):
    - avWavEncode({ l, r, sr, bits = 24, dither = "auto" }) -> ArrayBuffer | null
@@ -13,9 +14,17 @@
      BEFORE rounding for PCM. Invalid input -> null (never throws).
    - avWavInfo(buf) -> { ok, sampleRate, channels, bits, format, formatTag, float, frames,
      dataBytes, bytes, dataOffset, blockAlign, byteRate } | { ok:false, error }
-     format = "pcm" | "float"; bits = the header's bitsPerSample (16/24/32). Refuses honestly
+     format = "pcm" | "float"; bits = the header's bitsPerSample (16/24 pcm; 32/64 float - R16
+     wave: IEEE-float tag 3 at 64 bits is accepted for READ; other float depths stay refused and
+     the encoder never writes them). Refuses honestly
      (ok:false) on non-RIFF/WAVE, missing fmt/data, unsupported tags or bit depths. A data chunk
      claiming more bytes than the buffer holds is clamped to what is actually there.
+   - avWavDecodeF64(buf) -> { ok, channels, sampleRate, frames, bits: 64, float: true,
+     ch1: Float32Array, ch2: Float32Array|null, warnings, error }   (verify/_r16_wave.md 4.2)
+     Reads a 64-bit IEEE-float WAVE: the module's own chunk walk to data, little-endian doubles
+     to planar Float32 (non-finite and f32-overflow doubles -> 0); mono -> ch1 only, ch2 null;
+     a truncated data chunk is clamped to whole frames and warned; error = "" when ok.
+     Never throws.
 
    Byte laws (house discipline, av_rec.js header + writer): little-endian everywhere; 16-bit
    sample law = clamp(round(v * 32767), -32768, 32767) with NaN -> 0; 24-bit scales by 8388607
@@ -208,7 +217,7 @@ function avWavInfo(buf) {
     else if (fmt.tag === 3) format = "float";
     else return { ok: false, error: "unsupported format tag: " + fmt.tag };
     if (format === "pcm" && !(fmt.bits === 16 || fmt.bits === 24)) return { ok: false, error: "unsupported pcm bits: " + fmt.bits };
-    if (format === "float" && fmt.bits !== 32) return { ok: false, error: "unsupported float bits: " + fmt.bits };
+    if (format === "float" && !(fmt.bits === 32 || fmt.bits === 64)) return { ok: false, error: "unsupported float bits: " + fmt.bits };
     if (fmt.sampleRate <= 0) return { ok: false, error: "invalid sample rate: " + fmt.sampleRate };
 
     const bytesPer = fmt.bits >> 3;
@@ -232,4 +241,64 @@ function avWavInfo(buf) {
       byteRate: byteRate,
     };
   } catch (e) { return { ok: false, error: avWavErrMsg(e) }; }
+}
+
+/* ---------- R16 wave: 64-bit IEEE float read, LE doubles -> planar Float32 (never throws) ------ */
+
+function avWavF64To32(v) {                   /* f64 -> f32 value; non-finite / f32 overflow -> 0 */
+  const x = Math.fround(v);
+  return (x >= -3.4028234663852886e38 && x <= 3.4028234663852886e38) ? x : 0;
+}
+
+function avWavDecodeF64(buf) {
+  const res = {
+    ok: false, channels: 0, sampleRate: 0, frames: 0, bits: 64, float: true,
+    ch1: null, ch2: null, warnings: [], error: "",
+  };
+  try {
+    const u8 = avWavBytes(buf);
+    if (!u8) { res.error = "unsupported buffer (ArrayBuffer|view required)"; return res; }
+    const info = avWavInfo(u8);              /* the module's own walker: fmt/data + truncation clamp */
+    if (!info.ok) { res.error = info.error; return res; }
+    if (!(info.float === true && info.bits === 64)) {
+      res.error = "not 64-bit IEEE float (tag " + info.formatTag + ", " + info.bits + " bits)";
+      return res;
+    }
+    const ch = info.channels;
+    const frames = info.frames;
+    const frameBytes = ch * 8;
+    const dv = new DataView(u8.buffer, u8.byteOffset, u8.length);
+    /* truncation honesty: the data chunk's declared size sits just before dataOffset */
+    if (info.dataOffset >= 4) {
+      const declared = dv.getUint32(info.dataOffset - 4, true);
+      const avail = u8.length - info.dataOffset;
+      if (declared > avail) res.warnings.push("data chunk truncated (" + avail + " of " + declared + " bytes)");
+      else if (declared % frameBytes !== 0) res.warnings.push("data chunk ends mid-frame");
+    }
+    const ch1 = new Float32Array(frames);
+    const ch2 = (ch === 2) ? new Float32Array(frames) : null;
+    let pos = info.dataOffset;
+    if (ch2 === null) {
+      for (let i = 0; i < frames; i++) { ch1[i] = avWavF64To32(dv.getFloat64(pos, true)); pos += 8; }
+    } else {
+      for (let i = 0; i < frames; i++) {
+        ch1[i] = avWavF64To32(dv.getFloat64(pos, true));
+        ch2[i] = avWavF64To32(dv.getFloat64(pos + 8, true));
+        pos += 16;
+      }
+    }
+    res.ok = true;
+    res.channels = ch;
+    res.sampleRate = info.sampleRate;
+    res.frames = frames;
+    res.ch1 = ch1;
+    res.ch2 = ch2;
+    return res;
+  } catch (e) {
+    res.ok = false;
+    res.error = "f64 read failed: " + avWavErrMsg(e);
+    res.ch1 = null;
+    res.ch2 = null;
+    return res;
+  }
 }

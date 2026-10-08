@@ -1,5 +1,5 @@
 /* Anvil - sample import core (R15b SAMPLE PACKS wave, child C; R15c STRUCTURED PACKS wiring;
-   R15d NI/SXT wiring):
+   R15d NI/SXT wiring; R16 ZIP BUNDLES):
    magic-byte sniffer + per-format policy table + the canonical-bundle pipeline behind
    avImportFiles() + the R15c adapter dispatch layer (EXS24 kits, ADG/ALS refs, SerumPreset refs).
 
@@ -21,9 +21,31 @@
      are the pinned contract, kept verbatim (the em dashes inside them are \u2014 escapes so this
      source stays ASCII-only). R15d: nki/nbkt/sxt persist true - kind "refs" (the nki legacy
      branch upgrades item.kind to "kit" when the zones build).
+   R16 ZIP BUNDLES (verify/_r16_wave.md sections 2 and 4.4):
+   - zip policy row: kind "bundle", result "imported", reason "", persist false. The R15b line
+     survives as the ABSENT-READER fallback (avImportZipAbsent). Guard avImportHasZip() =
+     typeof AVZIP object + list/extract functions, reached typeof-guarded PER CALL.
+   - The expansion pre-pass in avImportRun (before the per-file loop) stages the run list:
+     each input whose head64 sniffs zip AND avImportHasZip() AND size <= AV_IMPORT_ITEM_MAX is
+     read full, AVZIP.list'd and per non-dir entry extracted (await AVZIP.extract) into a
+     synthesized File child fed right after its zip. Depth guard ctx.zipDepth = 1: a zip ENTRY
+     that itself sniffs zip is NOT expanded (pinned nested line + ctx note). Children are
+     budgeted against AV_IMPORT_MAX_FILES (slots already staged + the zip row + the remaining
+     inputs are reserved); beyond-budget / over-cap / extract-failed entries are skipped with a
+     ctx note. Every pre-pass failure degrades to the honest lines (absent / unreadable / no
+     importable entries), never a throw.
+   - The zip item is CONSTRUCTED in the pre-pass (never via avImportOne): key/name/path/ext as
+     usual, format "zip", kind "bundle", result "imported", reason "", persist false, meta
+     { entries, expanded, skipped } (entries = non-dir count; expanded = child items
+     synthesized; skipped = entries not expanded: budget / cap / extract error / nested
+     archive). Child keys "z" + n per zip; child name = entry leaf; child path = zip leaf +
+     "/" + entry name (cap 200). Zero importable entries -> the zip item defers with
+     avImportZipNoEntries. avImportOne keeps a zip safety branch (absent-reader / too-large /
+     not-expanded defers) for a zip the pre-pass could not stage.
    - avImportFiles(files, opts) -> Promise<receipt> that NEVER rejects:
      receipt = { ok, title, at, version, items, counts, errors } with
-     counts = { total, imported, deferred, refused, samples, patterns, kits, refs } and one item
+     counts = { total, imported, deferred, refused, samples, patterns, kits, refs, bundles }
+     and one item; R16 bundles is incremented for kind bundle && result imported (additive).
      per input file in input order: item = { key, name, path, ext, format, kind, result, reason,
      size, sibling, id, meta }. ok = true when at least one item landed (imported).
      files: an Array, a FileList or any iterable of File-likes (a single File-like is tolerated).
@@ -69,8 +91,8 @@
    Craft laws: "use strict", classic script (no modules/imports), node-loadable (no DOM at load,
    no top-level side effects), one namespace (avImport prefixes + AV_IMPORT_ consts), never
    throw. Every cross-module call is typeof-guarded PER CALL (av_aiff/av_rex/av_lib/av_exs/
-   av_als/av_serum land in the same waves but this file must stay honest standalone and in a
-   partial build). */
+   av_als/av_serum/av_zip land in the same waves but this file must stay honest standalone and
+   in a partial build). */
 "use strict";
 
 const AV_IMPORT_VERSION = "r15b.0";
@@ -118,6 +140,13 @@ const avImportNbktEncrypted = ".nbkt \u2014 encrypted (locked library); import t
 const AV_IMPORT_NI_REF_CAP = 512;
 const AV_IMPORT_SXT_REF_CAP = 512;
 
+/* R16 ZIP BUNDLES pinned lines (sections 2 and 4.4; verbatim -- the em dashes are \u2014
+   escapes exactly like the neighbours above, keeping this source ASCII-only) */
+const avImportZipAbsent = "zip \u2014 unzip and drop the folder (zip import lands later)";
+const avImportZipUnread = "zip \u2014 unreadable (";
+const avImportZipNoEntries = "zip \u2014 no importable entries";
+const avImportZipNested = "zip \u2014 nested archives are not expanded (v1)";
+
 /* ---------- the per-format policy table (pinned verbatim; persist = read + library write) ---------- */
 
 const AV_IMPORT_POLICY = {
@@ -136,7 +165,7 @@ const AV_IMPORT_POLICY = {
   kong:    { kind: "refused", result: "refused",  reason: "Reason Kong kit \u2014 kit mapping is not readable; import the pack's WAVs", persist: false },
   mxgrp:   { kind: "refused", result: "refused",  reason: "NI Maschine group \u2014 not readable; import the pack's WAVs", persist: false },
   serum:   { kind: "refs",    result: "imported", reason: "", persist: true },
-  zip:     { kind: "refused", result: "deferred", reason: "zip \u2014 unzip and drop the folder (zip import lands later)", persist: false },
+  zip:     { kind: "bundle",  result: "imported", reason: "", persist: false },
   gzip:    { kind: "refused", result: "refused",  reason: "unrecognized format", persist: false },
   unknown: { kind: "refused", result: "refused",  reason: "unrecognized format", persist: false }
 };
@@ -327,7 +356,7 @@ function avImportTitle(o) {
 }
 
 function avImportNewCounts() {
-  return { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0 };
+  return { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0 };
 }
 
 function avImportReceipt(opts) {
@@ -413,9 +442,10 @@ function avImportList(files) {
 
 /* ---------- per-file record ---------- */
 
-function avImportBase(f, index) {
+function avImportBase(f, index, key) {
   const item = {
-    key: "i" + (index + 1), name: "", path: "", ext: "", format: "unknown",
+    key: (typeof key === "string" && key) ? key : "i" + (index + 1),
+    name: "", path: "", ext: "", format: "unknown",
     kind: "refused", result: "refused", reason: "", size: 0, sibling: "", id: "", meta: {}
   };
   let nm = "";
@@ -441,12 +471,13 @@ function avImportSet(item, result, reason) {
   return item;
 }
 
-function avImportFallbackItem(f, index) {
+function avImportFallbackItem(f, index, key) {
+  const k = (typeof key === "string" && key) ? key : "i" + (index + 1);
   let base = null;
-  try { base = avImportBase(f, index); } catch (e) { base = null; }
+  try { base = avImportBase(f, index, k); } catch (e) { base = null; }
   if (!base) {
     base = {
-      key: "i" + (index + 1), name: "", path: "", ext: "", format: "unknown",
+      key: k, name: "", path: "", ext: "", format: "unknown",
       kind: "refused", result: "refused", reason: "", size: 0, sibling: "", id: "", meta: {}
     };
   }
@@ -593,6 +624,14 @@ function avImportHasSxt() {
 function avImportHasNi() {
   try { return typeof AVNI === "object" && AVNI !== null && typeof AVNI.parse === "function"; }
   catch (e) { return false; }
+}
+
+/* R16: the zip reader (av_zip.js) -- an AVZIP object carrying list + extract, per call */
+function avImportHasZip() {
+  try {
+    return typeof AVZIP === "object" && AVZIP !== null &&
+      typeof AVZIP.list === "function" && typeof AVZIP.extract === "function";
+  } catch (e) { return false; }
 }
 
 /* a rounded finite number clamped into [lo, hi]; garbage -> dflt */
@@ -863,8 +902,8 @@ async function avImportWrite(item, bytes, ctx) {
 
 /* ---------- per-file pipeline ---------- */
 
-async function avImportOne(f, index, o, ctx) {
-  const item = avImportBase(f, index);
+async function avImportOne(f, index, o, ctx, key) {
+  const item = avImportBase(f, index, key);
   if (!f || typeof f !== "object") return avImportSet(item, "refused", avImportBadFile);
   if (typeof f.slice !== "function") return avImportSet(item, "refused", avImportBadFile);
 
@@ -879,6 +918,14 @@ async function avImportOne(f, index, o, ctx) {
   item.kind = pol.kind;
   item.result = pol.result;
   item.reason = pol.reason;
+  /* R16: top-level zips are expanded by the run's pre-pass and never reach this call site; a
+     zip that does (reader absent, or the pre-pass could not stage it) keeps the honest
+     defers -- the R15b absent-reader line, the size refusal, or the unreadable line */
+  if (item.format === "zip") {
+    if (!avImportHasZip()) return avImportSet(item, "deferred", avImportZipAbsent);
+    if (item.size > AV_IMPORT_ITEM_MAX) return avImportSet(item, "refused", avImportTooLarge);
+    return avImportSet(item, "deferred", avImportUnreadable(avImportZipUnread, "not expanded"));
+  }
   if (!pol.persist) return item;         /* deferred/refused per the pinned table */
 
   /* persist-policy formats: wav, mp3, aiff, mid, rex2, exs, adg, als, serum, nki, nbkt, sxt */
@@ -985,19 +1032,234 @@ async function avImportOne(f, index, o, ctx) {
   return item;
 }
 
+/* ---------- R16 zip expansion pre-pass (section 4.4) ---------- */
+
+/* the plain run list (one entry per input; the pre-pass fallback) */
+function avImportPlainRun(list) {
+  const run = [];
+  try {
+    for (let i = 0; i < list.length; i++) run.push({ file: list[i], index: i, key: "i" + (i + 1) });
+  } catch (e) { /* a partial run stands */ }
+  return run;
+}
+
+/* one nested-archive child row (depth guard ctx.zipDepth = 1: a zip ENTRY that itself sniffs
+   zip is NOT expanded): key "z" + n, name = entry leaf, path = zip leaf + "/" + entry (cap
+   200); the caller sets the pinned deferred nested line on it */
+function avImportZipChildRow(item, entryName, size) {
+  const nm = (typeof entryName === "string") ? entryName : "";
+  const leaf = avImportLeaf(nm) || nm;
+  const zp = (typeof item.name === "string" && item.name) ? item.name : "";
+  const row = {
+    key: "", name: avImportCapStr(leaf, 120),
+    path: avImportCapStr(zp ? (zp + "/" + nm) : nm, 200),
+    ext: avImportExtOf(leaf), format: "zip", kind: "bundle", result: "imported",
+    reason: "", size: 0, sibling: "", id: "", meta: {}
+  };
+  try { if (avImportIsNum(size) && size >= 0) row.size = Math.floor(size); } catch (e) { /* size stays 0 */ }
+  return row;
+}
+
+/* the synthesized File child for one extracted entry: the entry leaf becomes the name and the
+   receipt path rides webkitRelativePath (zip leaf + "/" + entry name, mirroring the
+   folder-walk stamp). No File global (node harness) / construction refused -> null and the
+   entry is skipped honestly by the caller. */
+function avImportZipFile(item, entryName, bytes) {
+  try {
+    if (typeof File !== "function" || !bytes) return null;
+    const nm = (typeof entryName === "string" && entryName) ? entryName : "entry";
+    const leaf = avImportLeaf(nm) || nm;
+    const f = new File([bytes], leaf);
+    const zp = (typeof item.name === "string" && item.name) ? item.name : "";
+    try {
+      if (zp) Object.defineProperty(f, "webkitRelativePath", { value: zp + "/" + nm, writable: true, configurable: true });
+    } catch (e2) { /* the path stamp is a nicety */ }
+    return f;
+  } catch (e) { return null; }
+}
+
+/* expand ONE zip input (its head64 already sniffed zip): construct the bundle row and stage
+   the run entries -- the zip row FIRST, then every expanded entry's child right after it.
+   Budget: children count against AV_IMPORT_MAX_FILES (the pre-pass reserves a slot per
+   remaining input and the zip row itself). Never throws: every failure lands as an honest
+   deferred/refused row. Returns true when the zip row was staged. */
+async function avImportZipExpand(f, i, ctx, run, budget) {
+  const item = avImportBase(f, i);
+  item.format = "zip";
+  item.kind = "bundle";
+  item.result = "imported";
+  item.reason = "";
+  item.meta = { entries: 0, expanded: 0, skipped: 0 };
+  let staged = false;
+  const stage = function () {
+    if (staged) return;
+    staged = true;
+    try { run.push({ item: item }); } catch (e0) { /* the caller falls back */ }
+  };
+  let seen = 0, expanded = 0, skipped = 0;
+  try {
+    if (!avImportHasZip()) {
+      avImportSet(item, "deferred", avImportZipAbsent);          /* the R15b fallback line */
+      stage();
+      return staged;
+    }
+    if (avImportIsNum(item.size) && item.size > AV_IMPORT_ITEM_MAX) {
+      avImportSet(item, "refused", avImportTooLarge);
+      stage();
+      return staged;
+    }
+    let bytes = null;
+    try { bytes = await avImportFull(f); } catch (e1) { bytes = null; }
+    if (!bytes) {
+      avImportSet(item, "deferred", avImportUnreadable(avImportZipUnread, "read failed"));
+      stage();
+      return staged;
+    }
+    const u8 = new Uint8Array(bytes);
+    let lr = null;
+    try { lr = (typeof AVZIP.list === "function") ? AVZIP.list(u8) : null; } catch (e2) { lr = null; }
+    if (!lr || lr.ok !== true) {
+      avImportSet(item, "deferred", avImportUnreadable(avImportZipUnread, lr && lr.error));
+      stage();
+      return staged;
+    }
+    const entries = Array.isArray(lr.entries) ? lr.entries : [];
+    let zN = 0, beyondN = 0, capN = 0, failN = 0, failDetail = "", nestN = 0, nestFirst = "";
+    let left = avImportIsNum(budget) ? budget : 0;
+    ctx.zipDepth = (ctx.zipDepth | 0) + 1;      /* depth guard: only depth-0 zips expand (v1) */
+    stage();                                    /* the zip row lands BEFORE its children */
+    for (let k = 0; k < entries.length; k++) {
+      const en = entries[k];
+      if (!en || typeof en !== "object") continue;
+      if (en.dir === true) continue;            /* directory entries are never children */
+      const enName = avImportCapStr(en.name, 512);
+      if (enName.slice(-1) === "/") continue;   /* belt: a trailing slash is a directory */
+      seen += 1;
+      if (left <= 0) { skipped += 1; beyondN += 1; continue; }
+      if (avImportIsNum(en.size) && en.size > AV_IMPORT_ITEM_MAX) { skipped += 1; capN += 1; continue; }
+      let ex = null;
+      try { ex = (typeof AVZIP.extract === "function") ? await AVZIP.extract(u8, k) : null; } catch (e3) { ex = null; }
+      let eb = null;
+      try {
+        if (ex && ex.ok === true && ex.bytes != null) {
+          if (typeof Uint8Array !== "undefined" && ex.bytes instanceof Uint8Array) eb = ex.bytes;
+          else if (typeof ArrayBuffer !== "undefined" && ex.bytes instanceof ArrayBuffer) eb = new Uint8Array(ex.bytes);
+        }
+      } catch (e4) { eb = null; }
+      if (!eb) {
+        skipped += 1;
+        failN += 1;
+        if (!failDetail) failDetail = avImportCapStr(avImportDetail(ex && ex.error), 60);
+        continue;
+      }
+      let nf = { format: "unknown" };
+      try {
+        nf = avImportSniff((eb.length > 64) ? eb.slice(0, 64) : eb, avImportExtOf(enName));
+      } catch (e5) { nf = { format: "unknown" }; }
+      if (nf && nf.format === "zip") {
+        /* depth guard ctx.zipDepth = 1: a nested archive is NOT expanded -- it lands
+           deferred with the pinned nested line + a ctx note */
+        zN += 1;
+        const row = avImportZipChildRow(item, enName, eb.length);
+        row.key = "z" + zN;
+        avImportSet(row, "deferred", avImportZipNested);
+        run.push({ item: row });
+        skipped += 1;
+        left -= 1;
+        nestN += 1;
+        if (!nestFirst) nestFirst = avImportCapStr(avImportLeaf(enName) || enName, 60);
+        continue;
+      }
+      const zf = avImportZipFile(item, enName, eb);
+      if (!zf) {
+        skipped += 1;
+        failN += 1;
+        if (!failDetail) failDetail = "child file not available";
+        continue;
+      }
+      zN += 1;
+      run.push({ file: zf, index: i, key: "z" + zN });
+      expanded += 1;
+      left -= 1;
+    }
+    ctx.zipDepth = (ctx.zipDepth | 0) - 1;
+    item.meta = { entries: seen, expanded: expanded, skipped: skipped };
+    const znm = avImportCapStr(item.name, 60) || "zip";
+    if (beyondN > 0) ctx.notes.push(znm + ": " + beyondN + " entry(ies) beyond the " + AV_IMPORT_MAX_FILES + "-file budget skipped");
+    if (capN > 0) ctx.notes.push(znm + ": " + capN + " entry(ies) over the 96 MB item cap skipped");
+    if (failN > 0) ctx.notes.push(znm + ": " + failN + " entry(ies) skipped (" + (failDetail || "extract failed") + ")");
+    if (nestN > 0) ctx.notes.push(znm + ": " + nestN + " nested archive(s) not expanded (v1)" + (nestFirst ? ", first: " + nestFirst : ""));
+    if (expanded === 0) avImportSet(item, "deferred", avImportZipNoEntries);
+    return staged;
+  } catch (e6) {
+    try {
+      avImportSet(item, "deferred", avImportUnreadable(avImportZipUnread, avImportDetail(e6)));
+      stage();
+      if (item.meta) item.meta = { entries: seen, expanded: expanded, skipped: skipped };
+    } catch (e7) { /* the degrade is best-effort */ }
+    return staged;
+  }
+}
+
+/* R16: the expansion pre-pass -- stage the whole run. Every input whose head64 sniffs zip
+   (reader present, size within the cap) is expanded in place; everything else passes
+   through. Never throws: on failure the caller retries with the plain inputs. */
+async function avImportZipPrep(list, o, ctx) {
+  const run = [];
+  try {
+    if (!Array.isArray(list) || !avImportHasZip()) return avImportPlainRun(list);
+    for (let i = 0; i < list.length; i++) {
+      const f = list[i];
+      let staged = false;
+      try {
+        if (f && typeof f === "object" && typeof f.slice === "function") {
+          let sizeOk = true;
+          try { const s0 = f.size; if (avImportIsNum(s0) && s0 > AV_IMPORT_ITEM_MAX) sizeOk = false; } catch (e1) { sizeOk = true; }
+          if (sizeOk) {
+            let head = null;
+            try { head = await avImportHead64(f); } catch (e2) { head = null; }
+            if (head) {
+              let ext = "";
+              try { if (typeof f.name === "string") ext = avImportExtOf(f.name); } catch (e3) { ext = ""; }
+              const sn = avImportSniff(head, ext);
+              if (sn && sn.format === "zip") {
+                const budget = Math.max(0, AV_IMPORT_MAX_FILES - run.length - 1 - (list.length - i - 1));
+                staged = (await avImportZipExpand(f, i, ctx, run, budget)) === true;
+              }
+            }
+          }
+        }
+      } catch (e4) { staged = false; }
+      if (!staged) run.push({ file: f, index: i, key: "i" + (i + 1) });
+    }
+    return run;
+  } catch (e) { return null; }                 /* the caller retries with the plain run */
+}
+
 /* ---------- the run ---------- */
 
 async function avImportRun(receipt, list, o) {
   /* R15d ctx fix: `notes` is part of the pinned context -- `if (ctx.notes.length)` below
      always runs, so without the array EVERY run threw there and avImportFiles stamped
      "import run failed" onto receipt.errors (clean runs included). */
-  const ctx = { at: receipt.at, writeFails: 0, notes: [] };
+  const ctx = { at: receipt.at, writeFails: 0, notes: [], zipDepth: 0 };
   try {
-    for (let i = 0; i < list.length; i++) {
+    /* R16: the zip expansion pre-pass stages the run list (constructed bundle rows +
+       synthesized children right after their zip); any pre-pass failure falls back to the
+       plain inputs, where avImportOne's zip branch still defers honestly */
+    let run = null;
+    try { run = await avImportZipPrep(list, o, ctx); } catch (eR16) { run = null; }
+    if (!run || !Array.isArray(run)) run = avImportPlainRun(list);
+    for (let i = 0; i < run.length; i++) {
+      const ent = (run[i] && typeof run[i] === "object") ? run[i] : {};
       let item = null;
-      try { item = await avImportOne(list[i], i, o, ctx); }
-      catch (e) { item = null; }        /* one bad file never sinks the batch */
-      if (!item || typeof item !== "object") item = avImportFallbackItem(list[i], i);
+      if (ent.item && typeof ent.item === "object") {
+        item = ent.item;                /* R16: the zip row constructed by the pre-pass */
+      } else {
+        try { item = await avImportOne(ent.file, ent.index, o, ctx, ent.key); }
+        catch (e) { item = null; }      /* one bad file never sinks the batch */
+        if (!item || typeof item !== "object") item = avImportFallbackItem(ent.file, ent.index, ent.key);
+      }
       receipt.items.push(item);
     }
   } catch (e) {
@@ -1059,6 +1321,7 @@ function avImportCounts(receipt) {
     else if (it.kind === "pattern") counts.patterns++;
     else if (it.kind === "kit" && it.result === "imported") counts.kits++;
     else if (it.kind === "refs" && it.result === "imported") counts.refs++;
+    else if (it.kind === "bundle" && it.result === "imported") counts.bundles++;   /* R16 */
   }
   counts.total = items.length;
   receipt.counts = counts;

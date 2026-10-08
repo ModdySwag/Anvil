@@ -52,6 +52,10 @@
                    (entries.length + pending >= max -> honest "session sample cap reached"),
                    then avSampleStore.makeEntry(name, buf) + avSampleStore.add(entry); the
                    receipt entryId is the entry that was just added.
+                   R16: the decoded slice table rides on that entry as entry.rexSlices (cap 64;
+                   the receipt gains additive slices). A wav probes avWavInfo first: an
+                   IEEE-float 64-bit header takes this route via avWavDecodeF64 (guarded; absent
+                   -> a pinned pending line); every other wav and all mp3 stay native.
      Patterns   -> avMidParse -> avMidToPattern -> avSeqLoad -> avSeqSnap -> avSeqSetPattern
                    (avSeqLoad alone only updates the core model; the scheduler needs the
                    explicit set - mirroring av_bank.js avBankSeqApply) -> avSeqUiSync (repaint
@@ -100,6 +104,9 @@ const AV_LIB_LS_B64_MAX = Math.ceil((AV_LIB_LS_MAX_BYTES * 4) / 3) + 64;
 const AV_LIB_META_MAX = 256 * 1024;
 const AV_LIB_ID_RE = /^l[a-z0-9-]{0,63}$/;   /* "l" + time36 + "-" + slug(40) */
 const AV_LIB_B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+/* R16 section 4.3: the rex2 slice stash (entry.rexSlices) is capped here; beyond it the
+   receipt carries an honest warning (the chop side consumes at most 16 zones anyway) */
+const AV_LIB_REX_SLICE_MAX = 64;
 
 /* ---------- state (the in-memory view the UI renders from) ---------- */
 
@@ -936,7 +943,15 @@ async function avLibLoadRun(id) {
 
 async function avLibLoadSample(rec) {
   const fmt = rec.format;
-  if (fmt === "wav" || fmt === "mp3") return avLibLoadNative(rec);
+  /* R16 section 4.3: a wav probes first - an IEEE-float 64-bit header takes the clean-room
+     f64 route; every other wav (and an unreadable header) stays native like mp3 */
+  if (fmt === "wav") {
+    let info = null;
+    try { if (typeof avWavInfo === "function") info = avWavInfo(rec.bytes); } catch (e) { info = null; }
+    if (info && info.ok === true && info.float === true && info.bits === 64) return avLibLoadWavF64(rec);
+    return avLibLoadNative(rec);
+  }
+  if (fmt === "mp3") return avLibLoadNative(rec);
   if (fmt === "aiff") return avLibLoadCleanRoom(rec, "aiff");
   if (fmt === "rex2") return avLibLoadCleanRoom(rec, "rex2");
   return { ok: false, id: rec.id, kind: "sample", error: "format " + (fmt || "?") + " is not loadable as audio" };
@@ -974,8 +989,9 @@ async function avLibLoadNative(rec) {
   return { ok: true, id: rec.id, kind: "sample", entryId: entryId };
 }
 
-/* aiff / rex2: clean-room decode -> page-side AudioBuffer (pickCtx + createBuffer +
-   copyToChannel) behind the session-cap guard -> makeEntry + add; entryId is that entry. */
+/* aiff / rex2: clean-room decode -> the shared clean-room tail (page-side AudioBuffer behind
+   the session-cap guard, makeEntry + add; entryId is that entry). R16: rex2 also stashes the
+   decoded slice table on the entry as entry.rexSlices (cap 64; the receipt gains slices). */
 async function avLibLoadCleanRoom(rec, tag) {
   let dec = null;
   try {
@@ -996,6 +1012,18 @@ async function avLibLoadCleanRoom(rec, tag) {
   const ch2 = (res.ch2 && typeof res.ch2.length === "number" && res.ch2.length > 0) ? res.ch2 : null;
   const rate = Number((tag === "aiff") ? res.sampleRate : res.rate);
   if (!isFinite(rate) || rate <= 0) return { ok: false, id: rec.id, kind: "sample", error: "bad sample rate" };
+  /* R16 section 4.3: rex2 only - the decoded slice table rides onto the new session entry */
+  const stash = (tag === "rex2") ? avLibRexStash(res) : null;
+  return avLibCleanRoomTail(rec, ch1, ch2, rate, stash);
+}
+
+/* R16 section 4.3: the shared clean-room tail - the page-side AudioBuffer (pickCtx +
+   createBuffer + copyToChannel) behind the session-cap guard, then makeEntry + add; entryId is
+   the entry that was just added. The optional `stash` (rex2, from avLibRexStash) lands on the
+   entry BEFORE add (the store keeps the reference) and is re-applied on store.byId[entryId]
+   after add when the store cloned the object on insert. Receipt { ok, id, kind, entryId } plus
+   the additive { slices, warning? } for rex2. Never throws. */
+function avLibCleanRoomTail(rec, ch1, ch2, rate, stash) {
   const frames = ch1.length;
   const channels = ch2 ? 2 : 1;
   const store = avLibSampleStore();
@@ -1027,11 +1055,76 @@ async function avLibLoadCleanRoom(rec, tag) {
   let entry = null;
   try { entry = store.makeEntry(avLibStr(rec.name, "sample", 120), buf); } catch (e) { entry = null; }
   if (!entry) return { ok: false, id: rec.id, kind: "sample", error: "no sample module" };
+  /* R16: the rex2 slice table lands on the entry BEFORE add (the store keeps the reference) */
+  if (stash) {
+    try { entry.rexSlices = stash.slices; } catch (e) { /* additive stash only */ }
+  }
   let added = null;
   try { added = store.add(entry); } catch (e) { added = null; }
   const entryId = (typeof added === "string" && added) ? added : "";
   if (!entryId) return { ok: false, id: rec.id, kind: "sample", error: "session add failed" };
-  return { ok: true, id: rec.id, kind: "sample", entryId: entryId };
+  if (stash) {
+    /* a store that CLONED the entry on insert gets the stash re-applied here */
+    try {
+      const inStore = (store.byId && store.byId[entryId]) ? store.byId[entryId] : null;
+      if (inStore && inStore !== entry && typeof inStore === "object") inStore.rexSlices = stash.slices;
+    } catch (e) { /* additive stash only */ }
+  }
+  const out = { ok: true, id: rec.id, kind: "sample", entryId: entryId };
+  if (stash) {
+    out.slices = stash.slices.length;
+    if (stash.warning) out.warning = stash.warning;
+  }
+  return out;
+}
+
+/* R16 section 4.3: the rex2 slice stash for the new session entry - sanitized { start, len }
+   number pairs from the decode, capped at AV_LIB_REX_SLICE_MAX (the overflow rides out as the
+   receipt's warning). Null when the decode carried no usable table. Never throws. */
+function avLibRexStash(res) {
+  try {
+    const src = (res && Array.isArray(res.slices)) ? res.slices : null;
+    if (!src || !src.length) return null;
+    const slices = [];
+    let total = 0;
+    for (let i = 0; i < src.length; i++) {
+      const s = src[i];
+      if (!s || typeof s !== "object") continue;
+      const start = Number(s.start);
+      const len = Number(s.len);
+      if (!isFinite(start) || !isFinite(len)) continue;
+      total += 1;
+      if (slices.length < AV_LIB_REX_SLICE_MAX) slices.push({ start: start, len: len });
+    }
+    if (!slices.length) return null;
+    const capped = total - slices.length;
+    return {
+      slices: slices,
+      total: total,
+      warning: capped > 0 ? ("slice cap " + AV_LIB_REX_SLICE_MAX + " reached - extra rex2 slices ignored (" + total + " decoded)") : "",
+    };
+  } catch (e) { return null; }
+}
+
+/* R16 section 4.3: the f64-WAV load route - avLibLoadSample probed avWavInfo as { float: true,
+   bits: 64 }; decode via the sibling avWavDecodeF64 (guarded - absent in an older build -> the
+   pinned pending line) and build the page-side AudioBuffer through the SAME clean-room tail as
+   aiff/rex2 (cap-guarded, entryId from the store). Never throws. */
+async function avLibLoadWavF64(rec) {
+  let dec = null;
+  try { if (typeof avWavDecodeF64 === "function") dec = avWavDecodeF64; } catch (e) { dec = null; }
+  if (!dec) return { ok: false, id: rec.id, kind: "sample", error: "f64 wav decoder pending (this build)" };
+  let res = null;
+  try { res = dec(rec.bytes); } catch (e) { return { ok: false, id: rec.id, kind: "sample", error: avLibErrMsg(e) }; }
+  if (!res || res.ok !== true) {
+    return { ok: false, id: rec.id, kind: "sample", error: (res && res.error) ? String(res.error) : "f64 wav decode failed" };
+  }
+  const ch1 = (res.ch1 && typeof res.ch1.length === "number") ? res.ch1 : null;
+  if (!ch1 || !ch1.length) return { ok: false, id: rec.id, kind: "sample", error: "decode produced no audio" };
+  const ch2 = (res.ch2 && typeof res.ch2.length === "number" && res.ch2.length > 0) ? res.ch2 : null;
+  const rate = Number(res.sampleRate);
+  if (!isFinite(rate) || rate <= 0) return { ok: false, id: rec.id, kind: "sample", error: "bad sample rate" };
+  return avLibCleanRoomTail(rec, ch1, ch2, rate, null);
 }
 
 /* patterns: avMidParse -> avMidToPattern -> avSeqLoad -> avSeqSnap -> avSeqSetPattern ->

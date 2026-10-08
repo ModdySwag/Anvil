@@ -1,6 +1,6 @@
-index.html sha256 (before): 50d6d793bf5a75e550e656b0d181248f6e4ee89921f230c34abfaa6c61addc6c
+index.html sha256 (before): ebc4e9077fab9fddbb1a2739ef185ba7127cfcf60a2b2ece7cf41f988df0736e
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791480823969
+cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791484039227
  ok   boot: data-av-ready flips
  ok   store card mounted: #av-store-host + card root + search + 3 filter chips + both list containers + mode chip
  ok   exports: avStoreUiInit + avStoreUiSync + avStoreUiClasses + window.__avStoreUi (p5.0, ≥40 classes) · host wired  -> {"init":true,"sync":true,"classes":true,"refresh":true,"handle":true,"version":"p5.0","classesN":50,"wired":true}
@@ -28,9 +28,9 @@ cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791480
  ok   sha-mismatch refusal: INSTALL on rig-badsha refused (click) — no badge, count unchanged (1), no client record, honest copy  -> {"badge":false,"cnt":"1","status":"checksum mismatch — the pack was refused (not stored)","client":false}
  ok   zero page errors
  ok   screenshot: renders/p5-store-suite.png (the store card, scale 2)  -> 99006 bytes · clip 1010×424 @2x
-index.html sha256 (after): 50d6d793bf5a75e550e656b0d181248f6e4ee89921f230c34abfaa6c61addc6c
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 50d6d793bf5a75e550e656b0d181248f6e4ee89921f230c34abfaa6c61addc6c
- ok   freeze: index.html sha256 = pinned  -> pinned 50d6d793bf5a…
+index.html sha256 (after): ebc4e9077fab9fddbb1a2739ef185ba7127cfcf60a2b2ece7cf41f988df0736e
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> ebc4e9077fab9fddbb1a2739ef185ba7127cfcf60a2b2ece7cf41f988df0736e
+ ok   freeze: index.html sha256 = pinned  -> pinned ebc4e9077fab…
 
 28 passed, 0 failed
 STORE PASSED

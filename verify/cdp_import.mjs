@@ -27,6 +27,7 @@
 //       the REX2 end-to-end witness the child-B node harness anchors in scratch.
 //   13. a RELOAD to the plain page: the library survives (IndexedDB, count 3), the report
 //       resets (fresh page), and no SELFTEST text leaks on the plain load.
+//   R16: zip expansion + f64-WAV + REX2 slice->chop legs.
 //   R15d: legacy-NKI kit e2e · the real CWM container NKI · synthetic SXT + NBKT legs.
 //   14. zero page errors · screenshot renders/r15b-import-suite.png · freeze sha before === after.
 //
@@ -51,7 +52,7 @@ const shaArg = argv.indexOf('--sha');
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
-const EXPECT_SHA = '50d6d793bf5a75e550e656b0d181248f6e4ee89921f230c34abfaa6c61addc6c';
+const EXPECT_SHA = 'ebc4e9077fab9fddbb1a2739ef185ba7127cfcf60a2b2ece7cf41f988df0736e';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -136,6 +137,22 @@ const nbktPath = path.join(fxDir, 'rig.nbkt');
   copyFileSync(wavPath, nkiWavPath);
   const hex = readFileSync(path.join(r15dSrc, 'sxt', 'card-fixture.hex'), 'utf8').trim().replace(/\s+/g, '');
   writeFileSync(sxtPath, Buffer.from(hex, 'hex'));
+}
+/* R16 fixtures: the parent-built canonical zip + a node-built f64 wav. */
+const zipPath = path.join(fxDir, 'rig-pack.zip');
+const f64Path = path.join(fxDir, 'rig64.wav');
+{
+  const zipSrc = path.join(here, '..', 'cache', 'r16', 'zip', 'rig-pack.zip');
+  if (!existsSync(zipSrc)) { console.error('R16 zip fixture absent: ' + zipSrc); process.exit(2); }
+  copyFileSync(zipSrc, zipPath);
+  const N = 200, sr = 8000;
+  const b = Buffer.alloc(44 + N * 16);
+  b.write('RIFF', 0); b.writeUInt32LE(36 + N * 16, 4); b.write('WAVE', 8); b.write('fmt ', 12);
+  b.writeUInt32LE(16, 16); b.writeUInt16LE(3, 20); b.writeUInt16LE(2, 22); b.writeUInt32LE(sr, 24);
+  b.writeUInt32LE(sr * 16, 28); b.writeUInt16LE(16, 32); b.writeUInt16LE(64, 34);
+  b.write('data', 36); b.writeUInt32LE(N * 16, 40);
+  for (let i = 0; i < N; i++) { const v = 0.5 * Math.sin(2 * Math.PI * 440 * i / sr); b.writeDoubleLE(v, 44 + i * 16); b.writeDoubleLE(v, 52 + i * 16); }
+  writeFileSync(f64Path, b);
 }
 console.log('fixtures staged in ' + fxDir);
 
@@ -489,6 +506,71 @@ async function main() {
       check('R15d rig: synthetic .sxt refs + .nbkt metadata persist through the library',
         !!trioRec && trioRec.sk === 'sxt' && trioRec.sn === 2 && trioRec.nk === 'nbkt' && trioRec.nn === 'Battery Fixture',
         JSON.stringify(trioRec));
+    }
+  }
+
+  /* ── R16 leg: zip · f64-WAV · REX2->chop (fourth import run, same page) ── */
+  {
+    const docR4 = await send('DOM.getDocument', {});
+    const qR4 = (docR4 && docR4.root) ? await send('DOM.querySelector', { nodeId: docR4.root.nodeId, selector: '#av-import-file' }) : null;
+    if (!qR4 || !qR4.nodeId) {
+      check('R16 rig: input missing', false, 'no #av-import-file node');
+    } else {
+      /* leg a: the packed zip expands through the real file input */
+      await send('DOM.setFileInputFiles', { nodeId: qR4.nodeId, files: [zipPath] });
+      await sleep(1500);
+      let rows4 = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 4 ? 4 : 0`, 15000);
+      if (!rows4) {
+        await ev(`(() => { const i = document.getElementById('av-import-file'); if (i) i.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
+        rows4 = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 4 ? 4 : 0`, 20000);
+      }
+      const zipSnap = (await ev(`(window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : null`)).value || {};
+      const zc = zipSnap.last && zipSnap.last.counts ? zipSnap.last.counts : null;
+      const n0 = (await ev(`avSampleStore.entries.length`)).value;
+      const kickId = await rowId('kick.wav');
+      await clickSel(`[data-av-import-lib="${kickId}"] [data-av-import-act="load"]`, 900);
+      const zipLoad = await waitFor(`(() => { const es = avSampleStore.entries; if (es.length <= ${Number(n0) || 0}) return null; const e = es[es.length - 1]; return { frames: e.buffer ? e.buffer.length : -1, rate: e.sampleRate }; })()`, 12000);
+      check('R16 rig: the real zip expands (4 rows; bundles 1 · samples 2 · refused 1) + a child LOADs (native resample: 0.05 s @ 48 kHz)',
+        rows4 === 4 && !!zc && zc.bundles === 1 && zc.samples === 2 && zc.refused === 1
+        && !!zipLoad && zipLoad.frames === 2400 && zipLoad.rate === 48000,
+        JSON.stringify({ rows: rows4, counts: zc, load: zipLoad }));
+
+      /* leg b: the f64 wav LOADs through the clean-room route */
+      await send('DOM.setFileInputFiles', { nodeId: qR4.nodeId, files: [f64Path] });
+      await sleep(1500);
+      let rows4b = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 1 ? 1 : 0`, 15000);
+      if (!rows4b) {
+        await ev(`(() => { const i = document.getElementById('av-import-file'); if (i) i.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
+        rows4b = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 1 ? 1 : 0`, 20000);
+      }
+      const n1 = (await ev(`avSampleStore.entries.length`)).value;
+      const f64Id = await rowId('rig64.wav');
+      await clickSel(`[data-av-import-lib="${f64Id}"] [data-av-import-act="load"]`, 900);
+      const f64Load = await waitFor(`(() => { const es = avSampleStore.entries; if (es.length <= ${Number(n1) || 0}) return null; const e = es[es.length - 1]; return { frames: e.buffer ? e.buffer.length : -1, rate: e.sampleRate }; })()`, 12000);
+      check('R16 rig: f64 wav imports + LOAD lands (clean-room route, 200 frames @ 8000)',
+        rows4b === 1 && !!f64Id && !!f64Load && f64Load.frames === 200 && f64Load.rate === 8000,
+        JSON.stringify({ rows: rows4b, load: f64Load }));
+
+      /* leg c: the REAL rx2 (loaded fresh from the library — the page reloaded since check 12) */
+      const rx2RowId = await rowId('loop.rx2');
+      const n2 = (await ev(`avSampleStore.entries.length`)).value;
+      await clickSel(`[data-av-import-lib="${rx2RowId}"] [data-av-import-act="load"]`, 900);
+      const rxEntry = await waitFor(`(() => { const es = avSampleStore.entries; if (es.length <= ${Number(n2) || 0}) return null; const e = es[es.length - 1]; return { id: e.id }; })()`, 20000);
+      const chopR = (rxEntry && rxEntry.id) ? await ev(`(async () => {
+        const ent = avSampleStore.byId[${JSON.stringify(rxEntry.id)}];
+        if (!ent) return { missing: true };
+        const sl = Array.isArray(ent.rexSlices) ? ent.rexSlices : null;
+        const det = avChopDetect(ent.id);
+        const kit = (det && det.ok) ? avChopKitNew(ent.id) : null;
+        const apl = (kit && kit.ok) ? avChopApply(kit) : null;
+        return { n: sl ? sl.length : -1, via: det && det.via, count: det && det.count,
+                 kitOk: kit && kit.ok, kitN: kit && kit.slices ? kit.slices.length : -1,
+                 aplOk: apl && apl.ok };
+      })()`) : null;
+      const rch = (chopR && chopR.value) || {};
+      check('R16 rig: the real .rx2 loads from the library -> 10 slices -> detect via rex2 -> kit -> apply',
+        rch.n === 10 && rch.via === 'rex2' && rch.count === 10 && rch.kitOk === true && rch.kitN === 10 && rch.aplOk === true,
+        JSON.stringify(rch));
     }
   }
 
