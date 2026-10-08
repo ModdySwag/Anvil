@@ -115,6 +115,7 @@ function avPanelOpen(id, pos) {
     avPanelFocus(panel);
     avPanelsPersist(id, panel);
     if (typeof avA11yAnnounce === "function") { try { avA11yAnnounce("Floating: " + id); } catch (e3) { /* announce best-effort */ } }
+    try { window.dispatchEvent(new CustomEvent("av-panels-changed")); } catch (e4) { /* listeners best-effort */ }
     return true;
   } catch (e) { return false; }
 }
@@ -138,6 +139,7 @@ function avPanelClose(id) {
     const map = avPanelsMap();
     delete map[id];
     avPanelsSave(map);
+    try { window.dispatchEvent(new CustomEvent("av-panels-changed")); } catch (e4) { /* listeners best-effort */ }
     return true;
   } catch (e) { return false; }
 }
@@ -275,6 +277,7 @@ function avPanelMinimize(id, on) {
       panel.style.left = pv.l || "40px";
       panel.style.top = pv.t || "76px";
     }
+    try { window.dispatchEvent(new CustomEvent("av-panels-changed")); } catch (e4) { /* listeners best-effort */ }
     return true;
   } catch (e) { return false; }
 }

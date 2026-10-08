@@ -659,6 +659,47 @@ async function main() {
     r4f2.pin && r4f2.op && r4f2.min && r4f2.max && r4f2.mini === true && r4f2.back === true
     && r4f2.saved === true && r4f2.loaded === true && r4f2.n === 1, JSON.stringify(r4f2));
 
+  /* 6v. R5: the Windows-style menu bar + the rail Panels quick-view */
+  const r5R = await ev(`(() => {
+    const mb = document.getElementById('av-menubar');
+    let proof = null;
+    try { const el = document.getElementById('av-menubartest'); proof = el ? JSON.parse(el.textContent.replace('MENUBAR SELFTEST ', '')) : null; } catch (e) { proof = null; }
+    const api = typeof window.__avMenubar;
+    const opened = api === 'object' ? window.__avMenubar.open('workspace') : false;
+    const pop = document.getElementById('av-menu-pop');
+    const popOpen = !!(pop && pop.classList.contains('open'));
+    const popItems = pop ? pop.querySelectorAll('.av-menu-mi').length : 0;
+    if (api === 'object') window.__avMenubar.close();
+    const closed = !(pop && pop.classList.contains('open'));
+    return { mb: !!mb, items: mb ? mb.querySelectorAll('.av-menu-item').length : 0, api: api,
+             proof: proof, opened: opened, popOpen: popOpen, popItems: popItems, closed: closed };
+  })()`);
+  const r5 = r5R.value || {};
+  check('R5 menu bar: File/Edit/View/Workspace/Help + a dropdown opens with items and closes + MENUBAR SELFTEST',
+    r5.mb === true && r5.items === 5 && r5.api === 'object' && r5.opened === true && r5.popOpen === true
+    && r5.popItems >= 5 && r5.closed === true && !!r5.proof && r5.proof.ready === true, JSON.stringify(r5));
+
+  const r5p = await ev(`(() => {
+    const box = document.getElementById('av-rail-panels');
+    const avail = document.querySelectorAll('#av-rail-avail .av-rail-prow');
+    const info = { box: !!box, avail0: avail.length, draggable: avail.length > 0 ? avail[0].draggable === true : false };
+    window.__avPanels.open('av-fx');
+    info.open1 = document.querySelectorAll('#av-rail-open .av-rail-prow').length;
+    info.avail1 = document.querySelectorAll('#av-rail-avail .av-rail-prow').length;
+    window.__avPanels.minimize('av-fx', true);
+    info.min1 = document.querySelectorAll('#av-rail-min .av-rail-prow').length;
+    window.__avPanels.close('av-fx');
+    info.open0 = document.querySelectorAll('#av-rail-open .av-rail-prow').length;
+    info.avail2 = document.querySelectorAll('#av-rail-avail .av-rail-prow').length;
+    return info;
+  })()`);
+  const r5p2 = r5p.value || {};
+  check('R5 rail quick-view: Available rows (>=20, draggable) + live Open/Minimized reflection on float/min/dock',
+    r5p2.box === true && r5p2.avail0 >= 20 && r5p2.draggable === true
+    && r5p2.open1 === 1 && r5p2.avail1 === r5p2.avail0 - 1 && r5p2.min1 === 1
+    && r5p2.open0 === 0 && r5p2.avail2 === r5p2.avail0, JSON.stringify(r5p2));
+
+
 
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

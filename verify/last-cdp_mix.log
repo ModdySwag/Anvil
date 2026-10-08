@@ -1,6 +1,6 @@
-index.html sha256 (before): 45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
+index.html sha256 (before): 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9620 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-mix-1791452335446
+cdp port 9620 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-mix-1791453975795
 ── 1. boot + card + modules ──
  ok   1 boot: data-av-ready flips + engine ctx found/running/ScriptProcessor-capable/sr 48k  -> {"ready":true,"eng":{"found":true,"state":"running","sampleRate":48000,"scp":true}}
  ok   1b card mounted: #av-mix + #av-mix-host + .av-mix root + wired marker (avMixUiWired=1)  -> {"host":true,"card":true,"root":true,"wired":true}
@@ -13,7 +13,7 @@ cdp port 9620 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-mix-17914523354
  ok   2 comp source: avCompCreate + avCompAddSegment(take B full) + avCompSetSegment + avCompRender ok (frames > 0)  -> {"ok":true,"why":null,"id":"c1","addOk":true,"setOk":true,"render":{"ok":true,"frames":102400,"error":null}}
 ── 3. tracks + render ──
  ok   3a add tracks: rig pattern loaded (RIG MIX PAT) + take-A + comp + engine (loops 1, tail 0.5) all ok · state count 3 · list metas carry name/gainDb  -> {"add":{"t1":{"ok":true,"id":"m1","name":"TAKE-A","error":null},"t2":{"ok":true,"id":"m2","name":"COMP-1","error":null},"t3":{"ok":true,"id":"m3","name":"ENGINE","error":null}},"count":3,"metas":[{"id":"m1","name":"TAKE-A","gainDb":0,"pan":0,"src":"take"},{"id":"m2","name":"COMP-1","gainDb":0,"pan":0,"src":"comp"},{"id":"m3","name":"ENGINE","gainDb":0,"pan":0,"src":"engine"}],"enginePrereq":{"avBounce":true,"snap":true},"patternLoaded":true}
- ok   3b render (tail 0.5): ok · frames > 0 / >= rig-known lower bound · lufs+dbtp finite · rate 48k · l/r length === frames · non-silent  -> {"R":{"ok":true,"frames":144000,"rate":48000,"lufs":-13.097349413013548,"dbtp":2.923379352819171,"peak":1.392607569694519,"rms":0.16300750062325478,"clipped":2990,"ms":133,"rev":3,"err":null,"warn":0,"refusedN":0},"len":{"l":144000,"r":144000},"peak":"1.393","rms":"0.1630","lower":126398,"knownMax":102400}
+ ok   3b render (tail 0.5): ok · frames > 0 / >= rig-known lower bound · lufs+dbtp finite · rate 48k · l/r length === frames · non-silent  -> {"R":{"ok":true,"frames":144000,"rate":48000,"lufs":-13.020596213556649,"dbtp":2.1989796414525378,"peak":1.2852643728256226,"rms":0.1813256559788019,"clipped":3640,"ms":132,"rev":3,"err":null,"warn":0,"refusedN":0},"len":{"l":144000,"r":144000},"peak":"1.285","rms":"0.1813","lower":126398,"knownMax":102400}
  ok   3c determinism: two renders of the same state -> byte-identical l AND r · frames equal · lufs equal (no randomness in the render path)  -> {"ok1":true,"ok2":true,"framesEq":true,"lEq":true,"rEq":true,"lufsEq":true}
  ok   3d offsetFrames latency comp: solo take render == raw take data advanced by offsetFrames (drop leading, clamped) — max|out[i] - raw[i+off]| <= 1e-6  -> {"off":480,"n":65056,"maxDiff":0,"maxDiffUncomp":1.1298022270202637}
 ── 4. gain law ──
@@ -35,7 +35,7 @@ cdp port 9620 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-mix-17914523354
 ── 9. master limiter ──
  ok   9 master limiter: hot fixture (amp 1.5) + master dyn on, ceiling -1 -> max|out| <= 0.910 + 5e-3 and audible (peak > 0.5)  -> {"setOk":true,"peak":0.8913488984107971,"dbtp":-0.9990453582023319}
 ── 10. normalize ──
- ok   10a normalize (on, target -14, ceiling -1): receipt.norm {on,target,ceiling,gainDb} · lufs ≈ -14 ±0.6 (receipt AND a rig-own convention) OR the TP-limited case (lufs < -14 · limited true · dbtp <= -0.95)  -> {"R":{"ok":true,"frames":60000,"rate":48000,"lufs":-13.999999998973161,"dbtp":-13.622180018406706,"peak":0.208396777510643,"rms":0.13180169705493772,"clipped":0,"ms":14,"rev":59,"err":null,"warn":0,"refusedN":0,"norm":{"on":true,"target":-14,"ceiling":-1,"gainDb":-7.601579956895145,"limited":false}},"rigMean":-17.010299955613007,"rigSum":-13.999999998973196,"caseA":true,"caseB":false}
+ ok   10a normalize (on, target -14, ceiling -1): receipt.norm {on,target,ceiling,gainDb} · lufs ≈ -14 ±0.6 (receipt AND a rig-own convention) OR the TP-limited case (lufs < -14 · limited true · dbtp <= -0.95)  -> {"R":{"ok":true,"frames":60000,"rate":48000,"lufs":-13.999999998973161,"dbtp":-13.622180018406706,"peak":0.208396777510643,"rms":0.13180169705493772,"clipped":0,"ms":15,"rev":59,"err":null,"warn":0,"refusedN":0,"norm":{"on":true,"target":-14,"ceiling":-1,"gainDb":-7.601579956895145,"limited":false}},"rigMean":-17.010299955613007,"rigSum":-13.999999998973196,"caseA":true,"caseB":false}
  ok   10b normalize determinism: two normalized renders byte-identical (l AND r · frames equal) — deterministic gain from the deterministic render  -> {"det":true}
 ── 11. LUFS anchors ──
  ok   11a LUFS anchor (SPEC-fixed): 997 Hz amp 0.1 -> single channel -23.0 ±0.2 (av_loud AND rig-own mean); stereo L=R reads -20.0 ±0.25 (BS.1770 channel-sum = single +3.01, the 11b law)  -> {"avSingle":-23.01026452256112,"avStereo":-19.999964565921314,"rigMean":-23.010264522561148,"rigSum":-19.99996456592134,"rigKept":27}
@@ -57,16 +57,16 @@ cdp port 9620 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-mix-17914523354
  ok   16a export 16-bit: wavInfo 16/48k/2ch · frames match · bytes > 44 · blob + blob: url · default name · decode peak > 0.05 · dither receipts {mode,seed,applied} (tpdf/off/24-auto/default-seed)  -> {"e16":{"ok":true,"name":"anvil_mixdown.wav","bits":16,"frames":60000,"bytes":240044,"hasBlob":true,"url":true,"wavInfo":{"ok":true,"bits":16,"sr":48000,"ch":2,"frames":60000},"dither":{"mode":"tpdf","seed":2654435769,"applied":true},"err":null},"decode":{"ok":true,"bits":16,"sr":48000,"ch":2,"frames":60000,"peak":0.5,"nonzero":102092,"rms":0.31621817368982147},"dithers":{"tpdf":{"mode":"tpdf","seed":4242,"applied":true},"off":{"mode":"off","seed":2654435769,"applied":false},"auto24":{"mode":"off","seed":2654435769,"applied":false},"defaultSeed":{"mode":"tpdf","seed":2654435769,"applied":true}}}
  ok   16b export stale-refusal: mutating a track -> export REFUSED (honest error) until re-render -> export ok again  -> {"mut":true,"stale":{"ok":false,"name":null,"bits":null,"frames":0,"bytes":0,"hasBlob":false,"url":false,"wavInfo":null,"dither":null,"err":"render stale — the mix changed since the last render; render the mixdown again"},"rok2":true,"recovered":{"ok":true,"name":"anvil_mixdown.wav","bits":16,"frames":60000,"bytes":240044,"hasBlob":true,"url":true,"wavInfo":{"ok":true,"bits":16,"sr":48000,"ch":2,"frames":60000},"dither":{"mode":"tpdf","seed":2654435769,"applied":true},"err":null}}
 ── 17. e2e engine + take ──
- ok   17a e2e: engine + take mix -> both contribute (each mute leg lowers the energy · both legs non-silent)  -> {"eAll":0.013338899970215978,"eTake":0.0066456641018970445,"eEng":0.006714040693852801}
- ok   17b e2e take leg is pip-structured (fake-device BEEPS, never continuous audio): peak > 0.05 · nonzero fraction < 0.9  -> {"peakTake":1.1298022270202637,"fracTake":0.012944444444444444,"frames":144000}
+ ok   17a e2e: engine + take mix -> both contribute (each mute leg lowers the energy · both legs non-silent)  -> {"eAll":0.016286386896457502,"eTake":0.009968496292280912,"eEng":0.006714040693852801}
+ ok   17b e2e take leg is pip-structured (fake-device BEEPS, never continuous audio): peak > 0.05 · nonzero fraction < 0.9  -> {"peakTake":1.1298022270202637,"fracTake":0.019416666666666665,"frames":144000}
 ── 18. seal ──
- ok   18a screenshot: renders/s3-mix-suite.png (the mix card, scale 2)  -> 302712 bytes · clip 1048×1313 @2x
+ ok   18a screenshot: renders/s3-mix-suite.png (the mix card, scale 2)  -> 295581 bytes · clip 1048×1313 @2x
  ok   18b page left clean: tracks cleared (count 0) · ref cleared (null) · takes + comps deleted · transport stopped · input disabled (node empty)  -> {"compsKilled":1,"takesKilled":2,"before":{"tracks":2,"takes":2,"comps":1},"after":{"count":0,"ref":null,"tracks":0,"takes":0,"comps":0,"recording":false,"armed":false,"playing":false,"inNode":false}}
  ok   18c zero page errors (exceptions · Log errors · console.error)  -> page errors=0
-index.html sha256 (after): 45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
- ok   18d freeze: index.html sha256 before === after (unchanged by the run)  -> 45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
- ok   18e freeze: index.html sha256 = pinned  -> pinned 45734b8a72e0…
+index.html sha256 (after): 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
+ ok   18d freeze: index.html sha256 before === after (unchanged by the run)  -> 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
+ ok   18e freeze: index.html sha256 = pinned  -> pinned 22ea7e52cd7a…
 
 RESULT: 46 passed, 0 failed
-MIX-RESULT {"kind":"anvil-cdp-mix","sha256Before":"45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b","sha256After":"45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b","pinned":"45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b","passed":46,"failed":0,"verdict":"pass"}
+MIX-RESULT {"kind":"anvil-cdp-mix","sha256Before":"22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379","sha256After":"22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379","pinned":"22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379","passed":46,"failed":0,"verdict":"pass"}
 MIX PASSED

@@ -1625,6 +1625,45 @@ body.av-rail-dragging, body.av-rail-dragging * { cursor: ew-resize !important; u
 .av-float-min > .av-card > :not(.av-mod-head) { display: none; }
 .av-float-min .av-float-grip { display: none; }
 
+/* ============================================================================
+   R5 — the Windows-style menu bar + the rail's Panels quick-view (open / minimized / available). */
+.av-menubar {
+  display: flex; align-items: center; gap: 2px; padding: 0 8px;
+  background: #0d1216; border-bottom: 1px solid var(--hair); flex: none;
+}
+.av-menu-item {
+  background: transparent; border: 0; color: var(--text-2);
+  font-family: var(--mono); font-size: 11px; letter-spacing: .04em;
+  padding: 5px 10px; cursor: pointer; border-radius: 4px;
+}
+.av-menu-item:hover, .av-menu-item[aria-expanded="true"] { color: var(--teal); background: var(--raised); }
+.av-menu-item:focus-visible { outline: 1px solid var(--teal); outline-offset: -1px; }
+.av-menu-pop {
+  position: fixed; z-index: 80; min-width: 220px;
+  background: var(--raised); border: 1px solid var(--hair); border-radius: 0 8px 8px 8px;
+  padding: 4px; display: none; box-shadow: 0 16px 40px rgba(0,0,0,.6);
+}
+.av-menu-pop.open { display: block; }
+.av-menu-mi {
+  display: block; width: 100%; text-align: left; background: transparent; border: 0;
+  color: var(--text-2); font-size: 11.5px; padding: 6px 10px; border-radius: 5px; cursor: pointer;
+}
+.av-menu-mi:hover, .av-menu-mi:focus-visible { background: #141b21; color: var(--teal); }
+.av-menu-sep { height: 1px; background: var(--hair); margin: 4px 6px; }
+.av-menu-status { margin-left: auto; font-family: var(--mono); font-size: 9.5px; color: var(--text-3); padding-right: 4px; }
+
+.av-rail-sec { border-bottom: 1px solid var(--hair); padding: 4px 0 8px; }
+.av-rail-sec-head { font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); padding: 4px 12px; }
+.av-rail-sublabel { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-3); padding: 3px 12px 1px; opacity: .85; }
+.av-rail-prow { display: flex; align-items: center; gap: 6px; padding: 3px 8px 3px 12px; }
+.av-rail-prow:hover { background: #12181d; }
+.av-rail-prow-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11.5px; color: var(--text-2); }
+.av-rail-prow[draggable="true"] { cursor: grab; }
+.av-rail-prow .av-btn.mini { height: 18px; min-width: 20px; padding: 0 5px; font-size: 10px; }
+.av-rail-prow-empty { font-size: 10.5px; color: var(--text-3); padding: 2px 12px; font-style: italic; }
+body.av-drag-card, body.av-drag-card * { cursor: grabbing !important; }
+
+
 
 
 </style>
@@ -67852,6 +67891,7 @@ function avPanelOpen(id, pos) {
     avPanelFocus(panel);
     avPanelsPersist(id, panel);
     if (typeof avA11yAnnounce === "function") { try { avA11yAnnounce("Floating: " + id); } catch (e3) { /* announce best-effort */ } }
+    try { window.dispatchEvent(new CustomEvent("av-panels-changed")); } catch (e4) { /* listeners best-effort */ }
     return true;
   } catch (e) { return false; }
 }
@@ -67875,6 +67915,7 @@ function avPanelClose(id) {
     const map = avPanelsMap();
     delete map[id];
     avPanelsSave(map);
+    try { window.dispatchEvent(new CustomEvent("av-panels-changed")); } catch (e4) { /* listeners best-effort */ }
     return true;
   } catch (e) { return false; }
 }
@@ -68012,6 +68053,7 @@ function avPanelMinimize(id, on) {
       panel.style.left = pv.l || "40px";
       panel.style.top = pv.t || "76px";
     }
+    try { window.dispatchEvent(new CustomEvent("av-panels-changed")); } catch (e4) { /* listeners best-effort */ }
     return true;
   } catch (e) { return false; }
 }
@@ -68295,6 +68337,7 @@ function avRailBuild() {
     head.appendChild(title);
     head.appendChild(hide);
     el.appendChild(head);
+    avRailBuildPanels();
     for (let g = 0; g < AV_RAIL_GROUPS.length; g++) {
       const grp = AV_RAIL_GROUPS[g];
       const wrap = document.createElement("div");
@@ -68352,11 +68395,143 @@ function avRailBuild() {
         for (let i = 0; i < groups.length; i++) groups[i].classList.toggle("on", groups[i].getAttribute("data-zone") === zone);
       } catch (e2) { /* highlight is cosmetic */ }
     });
+    avRailWirePanelEvents();
+    avRailPanelsRefresh();
     avRailState.ready = true;
     return true;
   } catch (e) { return false; }
 }
 
+function avRailCardNames() {
+  const m = {};
+  for (let g = 0; g < AV_RAIL_GROUPS.length; g++) {
+    const cards = AV_RAIL_GROUPS[g].cards;
+    for (let c = 0; c < cards.length; c++) m[cards[c][0]] = cards[c][1];
+  }
+  return m;
+}
+function avRailBuildPanels() {
+  try {
+    const el = avRailEl();
+    if (!el || document.getElementById("av-rail-panels")) return true;
+    const sec = document.createElement("div");
+    sec.className = "av-rail-sec";
+    sec.id = "av-rail-panels";
+    const head = document.createElement("div");
+    head.className = "av-rail-sec-head";
+    head.textContent = "Panels";
+    sec.appendChild(head);
+    const mk = function (label, id) {
+      const l = document.createElement("div");
+      l.className = "av-rail-sublabel";
+      l.textContent = label;
+      sec.appendChild(l);
+      const box = document.createElement("div");
+      box.id = id;
+      sec.appendChild(box);
+    };
+    mk("Open", "av-rail-open");
+    mk("Minimized", "av-rail-min");
+    mk("Available", "av-rail-avail");
+    const firstGroup = el.querySelector(".av-rail-group");
+    el.insertBefore(sec, firstGroup || null);
+    return true;
+  } catch (e) { return false; }
+}
+function avRailProw(name, cardId, actions, draggable) {
+  const row = document.createElement("div");
+  row.className = "av-rail-prow";
+  row.setAttribute("data-card", cardId);
+  if (draggable) {
+    row.setAttribute("draggable", "true");
+    row.addEventListener("dragstart", function (e) {
+      try {
+        e.dataTransfer.setData("text/av-card", cardId);
+        e.dataTransfer.effectAllowed = "copy";
+        document.body.classList.add("av-drag-card");
+      } catch (e2) { /* drag best-effort */ }
+    });
+    row.addEventListener("dragend", function () { document.body.classList.remove("av-drag-card"); });
+  }
+  const nm = document.createElement("span");
+  nm.className = "av-rail-prow-name";
+  nm.textContent = name;
+  row.appendChild(nm);
+  for (let a = 0; a < actions.length; a++) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "av-btn mini";
+    b.setAttribute("aria-label", actions[a][1] + ": " + name);
+    b.title = actions[a][1];
+    b.textContent = actions[a][2];
+    b.addEventListener("click", actions[a][0]);
+    row.appendChild(b);
+  }
+  return row;
+}
+function avRailPanelsRefresh() {
+  try {
+    const openBox = document.getElementById("av-rail-open");
+    const minBox = document.getElementById("av-rail-min");
+    const availBox = document.getElementById("av-rail-avail");
+    if (!openBox || !minBox || !availBox) return false;
+    const names = avRailCardNames();
+    const floated = (typeof avPanelsList === "function") ? avPanelsList() : [];
+    const mins = [];
+    for (let i = 0; i < floated.length; i++) {
+      const p = document.getElementById("av-float-" + floated[i]);
+      if (p && p.classList.contains("av-float-min")) mins.push(floated[i]);
+    }
+    const opens = floated.filter(function (id) { return mins.indexOf(id) < 0; });
+    const fill = function (box, ids, mode) {
+      box.innerHTML = "";
+      if (!ids.length) {
+        const em = document.createElement("div");
+        em.className = "av-rail-prow-empty";
+        em.textContent = mode === "open" ? "nothing floating" : (mode === "min" ? "nothing minimized" : "all floated");
+        box.appendChild(em);
+        return;
+      }
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const acts = (mode === "open")
+          ? [[function () { avPanelMinimize(id, true); }, "Minimize", "\u2013"], [function () { avPanelClose(id); }, "Dock back to zone", "\u00D7"]]
+          : (mode === "min")
+          ? [[function () { avPanelMinimize(id, false); }, "Restore", "\u25A1"], [function () { avPanelClose(id); }, "Dock back to zone", "\u00D7"]]
+          : [[function () { avPanelOpen(id); }, "Float into the workspace", "\u29C9"]];
+        box.appendChild(avRailProw(names[id] || id, id, acts, mode === "avail"));
+      }
+    };
+    fill(openBox, opens, "open");
+    fill(minBox, mins, "min");
+    fill(availBox, Object.keys(names).filter(function (id) { return floated.indexOf(id) < 0; }), "avail");
+    return true;
+  } catch (e) { return false; }
+}
+function avRailWirePanelEvents() {
+  try {
+    window.addEventListener("av-panels-changed", function () { avRailPanelsRefresh(); });
+    document.addEventListener("dragover", function (e) {
+      try {
+        if (e.dataTransfer && e.dataTransfer.types && Array.prototype.indexOf.call(e.dataTransfer.types, "text/av-card") >= 0) e.preventDefault();
+      } catch (e2) { /* dragover best-effort */ }
+    });
+    document.addEventListener("drop", function (e) {
+      try {
+        const id = e.dataTransfer ? e.dataTransfer.getData("text/av-card") : "";
+        document.body.classList.remove("av-drag-card");
+        if (!id) return;
+        e.preventDefault();
+        const rail = avRailEl();
+        const rw = rail ? rail.getBoundingClientRect().width : 0;
+        if (e.clientX < rw + 20) { avPanelOpen(id); avPanelMinimize(id, true); return; }
+        avPanelOpen(id);
+        avPanelsMove(id, e.clientX - 60, Math.max(60, e.clientY - 20));
+      } catch (e2) { /* drop best-effort */ }
+    });
+    return true;
+  } catch (e) { return false; }
+}
 function avRailWireDrag(grip) {
   try {
     grip.addEventListener("pointerdown", function (e) {
@@ -68424,6 +68599,208 @@ if (typeof window !== "undefined" && window) {
       show: function (on) { return avRailShow(on !== false); },
       width: function (w) { return (typeof w === "number") ? avRailSetWidth(w) : null; },
       groups: function () { return AV_RAIL_GROUPS.map(function (g) { return g.zone; }); },
+      panels: function () { return avRailPanelsRefresh(); },
+    };
+  } catch (e) { /* no window - nothing to publish */ }
+}
+
+
+/* Anvil — the menu bar (R5): a classic Windows-style menu row — File / Edit / View / Workspace /
+   Help — with every navigation + manipulation command one click from home. All actions route to
+   existing, guarded engine functions (menus never own state of their own). */
+"use strict";
+
+const AV_MENUBAR_VERSION = "r5.0";
+const avMenuState = { ready: false, pop: null, openFor: null };
+
+function avMenuCall(name) {
+  try {
+    if (typeof window[name] === "function") {
+      return window[name].apply(null, Array.prototype.slice.call(arguments, 1));
+    }
+  } catch (e) { /* a menu action can never break the bar */ }
+  return false;
+}
+function avMenuDefs() {
+  const Z = (typeof AV_ZONES !== "undefined" && AV_ZONES) ? AV_ZONES : [];
+  const goto = function (z) { return function () { avMenuCall("avZoneShow", z, { source: "menu" }); }; };
+  return [
+    { id: "file", label: "File", items: [
+      ["Save project (.anvl)", function () { return avMenuCall("avProjSave"); }],
+      ["Open project...", function () { return avMenuCall("avProjOpen"); }],
+      ["Export stems (Deliver)", function () { avMenuCall("avZoneShow", "studio", { source: "menu" }); return avMenuCall("avPaletteDeliverHighlight"); }],
+      ["Load demo groove", function () { return avMenuCall("avLessonAction", "seq.loadDemo"); }],
+    ] },
+    { id: "edit", label: "Edit", items: [
+      ["Undo (Ctrl+Z)", function () { return avMenuCall("avUndo"); }],
+      ["Redo (Ctrl+Y)", function () { return avMenuCall("avRedo"); }],
+      ["A/B: store reference", function () { return avMenuCall("avUndoAStore"); }],
+      ["A/B: recall reference", function () { return avMenuCall("avUndoARecall"); }],
+    ] },
+    { id: "view", label: "View", items: [].concat(
+      Z.map(function (z) { return ["Go: " + z.label, goto(z.id)]; }),
+      [
+        ["sep", null],
+        ["Show / hide piano (Y)", function () { return avMenuCall("avPianoToggle"); }],
+        ["Show / hide module navigator", function () { return avMenuCall("avRailToggle"); }],
+        ["About this build", function () { return avMenuCall("avAboutToggle"); }],
+      ]
+    ) },
+    { id: "workspace", label: "Workspace", items: [
+      ["Reset layout", function () { return avMenuCall("avPanelsReset"); }],
+      ["Sound design desk", function () { return avMenuCall("avPanelsLayout", "sounddesign"); }],
+      ["Mixdown desk", function () { return avMenuCall("avPanelsLayout", "mixdown"); }],
+      ["Save layout...", function () { return avMenuCall("avPanelsSaveNamed", avMenuCall("avPanelsPromptName", "layout")); }],
+      ["Load layout...", function () { return avMenuCall("avPanelsLoadNamed", avMenuCall("avPanelsPromptName", "layout")); }],
+    ] },
+    { id: "help", label: "Help", items: [
+      ["Open help (?)", function () { return avMenuCall("avHelpOpen"); }],
+      ["Start the 60-second tour", function () { return avMenuCall("avPaletteStartTour"); }],
+      ["About this build", function () { return avMenuCall("avAboutToggle"); }],
+    ] },
+  ];
+}
+
+function avMenubarEl() { return document.getElementById("av-menubar"); }
+function avMenuPop() {
+  try {
+    if (avMenuState.pop && document.body.contains(avMenuState.pop)) return avMenuState.pop;
+    let el = document.getElementById("av-menu-pop");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "av-menu-pop";
+      el.className = "av-menu-pop";
+      el.setAttribute("role", "menu");
+      document.body.appendChild(el);
+    }
+    avMenuState.pop = el;
+    return el;
+  } catch (e) { return null; }
+}
+function avMenuClose() {
+  try {
+    const p = avMenuState.pop;
+    if (p) { p.classList.remove("open"); p.innerHTML = ""; }
+    const b = avMenuState.openFor;
+    if (b) { try { b.setAttribute("aria-expanded", "false"); } catch (e) { /* gone */ } }
+    avMenuState.openFor = null;
+    return true;
+  } catch (e) { return false; }
+}
+function avMenuOpenFor(btn) {
+  try {
+    const pop = avMenuPop();
+    if (!pop || !btn) return false;
+    const id = btn.getAttribute("data-menu");
+    const defs = avMenuDefs();
+    let def = null;
+    for (let i = 0; i < defs.length; i++) if (defs[i].id === id) def = defs[i];
+    if (!def) return false;
+    pop.innerHTML = "";
+    for (let i = 0; i < def.items.length; i++) {
+      const it = def.items[i];
+      if (it[0] === "sep") {
+        const s = document.createElement("div");
+        s.className = "av-menu-sep";
+        pop.appendChild(s);
+        continue;
+      }
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "av-menu-mi";
+      b.setAttribute("role", "menuitem");
+      b.textContent = it[0];
+      (function (fn) {
+        b.addEventListener("click", function () { avMenuClose(); try { fn(); } catch (e) { /* guarded */ } });
+      })(it[1]);
+      pop.appendChild(b);
+    }
+    pop.classList.add("open");
+    const r = btn.getBoundingClientRect();
+    pop.style.left = Math.max(4, Math.round(r.left)) + "px";
+    pop.style.top = Math.round(r.bottom) + "px";
+    btn.setAttribute("aria-expanded", "true");
+    avMenuState.openFor = btn;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avMenubarBuild() {
+  try {
+    if (avMenubarEl()) return true;
+    const head = document.querySelector("header.av-head");
+    if (!head || !head.parentNode) return false;
+    const bar = document.createElement("nav");
+    bar.id = "av-menubar";
+    bar.className = "av-menubar";
+    bar.setAttribute("role", "menubar");
+    bar.setAttribute("aria-label", "Menu bar");
+    const defs = avMenuDefs();
+    for (let i = 0; i < defs.length; i++) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "av-menu-item";
+      b.setAttribute("role", "menuitem");
+      b.setAttribute("data-menu", defs[i].id);
+      b.setAttribute("aria-haspopup", "true");
+      b.setAttribute("aria-expanded", "false");
+      b.textContent = defs[i].label;
+      b.addEventListener("click", function (e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        if (avMenuState.openFor === b) { avMenuClose(); return; }
+        avMenuClose();
+        avMenuOpenFor(b);
+      });
+      bar.appendChild(b);
+    }
+    const stat = document.createElement("span");
+    stat.className = "av-menu-status";
+    stat.id = "av-menu-status";
+    stat.textContent = "ANVIL" + (window.ANVIL ? " \u00B7 v" + window.ANVIL.version : "");
+    bar.appendChild(stat);
+    head.parentNode.insertBefore(bar, head);
+    document.addEventListener("pointerdown", function (e) {
+      if (!avMenuState.openFor) return;
+      const pop = avMenuState.pop;
+      if (pop && pop.contains(e.target)) return;
+      if (avMenuState.openFor.contains(e.target)) return;
+      avMenuClose();
+    }, true);
+    document.addEventListener("keydown", function (e) {
+      if (avMenuState.openFor && e && e.key === "Escape") avMenuClose();
+    }, true);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avMenubarInit() {
+  try {
+    if (avMenuState.ready) return true;
+    avMenuPop();
+    const ok = avMenubarBuild();
+    avMenuState.ready = ok === true;
+    return avMenuState.ready;
+  } catch (e) {
+    console.warn("[anvil] menubar init failed", e);
+    return false;
+  }
+}
+function avMenubarProof() {
+  let items = 0;
+  try { items = document.querySelectorAll(".av-menu-item").length; } catch (e) { /* none */ }
+  return "MENUBAR SELFTEST " + JSON.stringify({ v: AV_MENUBAR_VERSION, items: items, ready: avMenuState.ready === true });
+}
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avMenubar = {
+      version: AV_MENUBAR_VERSION,
+      open: function (id) {
+        const b = document.querySelector('.av-menu-item[data-menu="' + String(id) + '"]');
+        return b ? avMenuOpenFor(b) : false;
+      },
+      close: function () { return avMenuClose(); },
+      defs: function () { return avMenuDefs().map(function (d) { return d.id; }); },
     };
   } catch (e) { /* no window - nothing to publish */ }
 }
@@ -68583,6 +68960,9 @@ function avMountLevels() {
   /* R4: the left module rail */
   let railOk = false;
   try { railOk = (typeof avRailInit === "function") ? (avRailInit() !== false) : false; } catch (e) { console.warn("[anvil] rail init failed", e); }
+  /* R5: the menu bar */
+  let menusOk = false;
+  try { menusOk = (typeof avMenubarInit === "function") ? (avMenubarInit() !== false) : false; } catch (e) { console.warn("[anvil] menubar init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -68600,7 +68980,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk + " rail=" + railOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk + " rail=" + railOk + " menus=" + menusOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
@@ -68611,6 +68991,7 @@ function avMountLevels() {
     try { if (typeof avChromeProof === "function") { const _cs = avChromeProof(); if (_cs) avTestLine(_cs, "av-chrometest"); } } catch (e) { console.warn("avtest chrome", e); }
     try { if (typeof avPanelsProof === "function") { const _fs = avPanelsProof(); if (_fs) avTestLine(_fs, "av-panelstest"); } } catch (e) { console.warn("avtest panels", e); }
     try { if (typeof avRailProof === "function") { const _rs = avRailProof(); if (_rs) avTestLine(_rs, "av-railtest"); } } catch (e) { console.warn("avtest rail", e); }
+    try { if (typeof avMenubarProof === "function") { const _ms = avMenubarProof(); if (_ms) avTestLine(_ms, "av-menubartest"); } } catch (e) { console.warn("avtest menubar", e); }
   }
 })();
 

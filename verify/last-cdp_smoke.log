@@ -40,6 +40,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R4 rail: left navigator (8 groups + >=20 card links) + header NAV toggle + RAIL SELFTEST  -> {"rail":true,"groups":8,"links":22,"navBtn":true,"tabBorder":"1px","tabRadius":"6px","railApi":"object","proof":{"v":"r4.0","ready":true,"groups":8,"cards":22,"open":true}}
  ok   R4 toggles: the top tabs are sectioned chips (bordered, rounded)  -> {"border":"1px","radius":"6px"}
  ok   R4 float controls: pin/opacity/min/max buttons + minimize toggle + named layout save/load  -> {"pin":true,"op":true,"min":true,"max":true,"mini":true,"back":true,"saved":true,"loaded":true,"n":1}
+ ok   R5 menu bar: File/Edit/View/Workspace/Help + a dropdown opens with items and closes + MENUBAR SELFTEST  -> {"mb":true,"items":5,"api":"object","proof":{"v":"r5.0","items":5,"ready":true},"opened":true,"popOpen":true,"popItems":5,"closed":true}
+ ok   R5 rail quick-view: Available rows (>=20, draggable) + live Open/Minimized reflection on float/min/dock  -> {"box":true,"avail0":22,"draggable":true,"open1":1,"avail1":21,"min1":1,"open0":0,"avail2":22}
  ok   zero page errors
 
-42 passed, 0 failed
+44 passed, 0 failed

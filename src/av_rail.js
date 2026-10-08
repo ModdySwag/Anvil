@@ -71,6 +71,7 @@ function avRailBuild() {
     head.appendChild(title);
     head.appendChild(hide);
     el.appendChild(head);
+    avRailBuildPanels();
     for (let g = 0; g < AV_RAIL_GROUPS.length; g++) {
       const grp = AV_RAIL_GROUPS[g];
       const wrap = document.createElement("div");
@@ -128,11 +129,143 @@ function avRailBuild() {
         for (let i = 0; i < groups.length; i++) groups[i].classList.toggle("on", groups[i].getAttribute("data-zone") === zone);
       } catch (e2) { /* highlight is cosmetic */ }
     });
+    avRailWirePanelEvents();
+    avRailPanelsRefresh();
     avRailState.ready = true;
     return true;
   } catch (e) { return false; }
 }
 
+function avRailCardNames() {
+  const m = {};
+  for (let g = 0; g < AV_RAIL_GROUPS.length; g++) {
+    const cards = AV_RAIL_GROUPS[g].cards;
+    for (let c = 0; c < cards.length; c++) m[cards[c][0]] = cards[c][1];
+  }
+  return m;
+}
+function avRailBuildPanels() {
+  try {
+    const el = avRailEl();
+    if (!el || document.getElementById("av-rail-panels")) return true;
+    const sec = document.createElement("div");
+    sec.className = "av-rail-sec";
+    sec.id = "av-rail-panels";
+    const head = document.createElement("div");
+    head.className = "av-rail-sec-head";
+    head.textContent = "Panels";
+    sec.appendChild(head);
+    const mk = function (label, id) {
+      const l = document.createElement("div");
+      l.className = "av-rail-sublabel";
+      l.textContent = label;
+      sec.appendChild(l);
+      const box = document.createElement("div");
+      box.id = id;
+      sec.appendChild(box);
+    };
+    mk("Open", "av-rail-open");
+    mk("Minimized", "av-rail-min");
+    mk("Available", "av-rail-avail");
+    const firstGroup = el.querySelector(".av-rail-group");
+    el.insertBefore(sec, firstGroup || null);
+    return true;
+  } catch (e) { return false; }
+}
+function avRailProw(name, cardId, actions, draggable) {
+  const row = document.createElement("div");
+  row.className = "av-rail-prow";
+  row.setAttribute("data-card", cardId);
+  if (draggable) {
+    row.setAttribute("draggable", "true");
+    row.addEventListener("dragstart", function (e) {
+      try {
+        e.dataTransfer.setData("text/av-card", cardId);
+        e.dataTransfer.effectAllowed = "copy";
+        document.body.classList.add("av-drag-card");
+      } catch (e2) { /* drag best-effort */ }
+    });
+    row.addEventListener("dragend", function () { document.body.classList.remove("av-drag-card"); });
+  }
+  const nm = document.createElement("span");
+  nm.className = "av-rail-prow-name";
+  nm.textContent = name;
+  row.appendChild(nm);
+  for (let a = 0; a < actions.length; a++) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "av-btn mini";
+    b.setAttribute("aria-label", actions[a][1] + ": " + name);
+    b.title = actions[a][1];
+    b.textContent = actions[a][2];
+    b.addEventListener("click", actions[a][0]);
+    row.appendChild(b);
+  }
+  return row;
+}
+function avRailPanelsRefresh() {
+  try {
+    const openBox = document.getElementById("av-rail-open");
+    const minBox = document.getElementById("av-rail-min");
+    const availBox = document.getElementById("av-rail-avail");
+    if (!openBox || !minBox || !availBox) return false;
+    const names = avRailCardNames();
+    const floated = (typeof avPanelsList === "function") ? avPanelsList() : [];
+    const mins = [];
+    for (let i = 0; i < floated.length; i++) {
+      const p = document.getElementById("av-float-" + floated[i]);
+      if (p && p.classList.contains("av-float-min")) mins.push(floated[i]);
+    }
+    const opens = floated.filter(function (id) { return mins.indexOf(id) < 0; });
+    const fill = function (box, ids, mode) {
+      box.innerHTML = "";
+      if (!ids.length) {
+        const em = document.createElement("div");
+        em.className = "av-rail-prow-empty";
+        em.textContent = mode === "open" ? "nothing floating" : (mode === "min" ? "nothing minimized" : "all floated");
+        box.appendChild(em);
+        return;
+      }
+      for (let i = 0; i < ids.length; i++) {
+        const id = ids[i];
+        const acts = (mode === "open")
+          ? [[function () { avPanelMinimize(id, true); }, "Minimize", "\u2013"], [function () { avPanelClose(id); }, "Dock back to zone", "\u00D7"]]
+          : (mode === "min")
+          ? [[function () { avPanelMinimize(id, false); }, "Restore", "\u25A1"], [function () { avPanelClose(id); }, "Dock back to zone", "\u00D7"]]
+          : [[function () { avPanelOpen(id); }, "Float into the workspace", "\u29C9"]];
+        box.appendChild(avRailProw(names[id] || id, id, acts, mode === "avail"));
+      }
+    };
+    fill(openBox, opens, "open");
+    fill(minBox, mins, "min");
+    fill(availBox, Object.keys(names).filter(function (id) { return floated.indexOf(id) < 0; }), "avail");
+    return true;
+  } catch (e) { return false; }
+}
+function avRailWirePanelEvents() {
+  try {
+    window.addEventListener("av-panels-changed", function () { avRailPanelsRefresh(); });
+    document.addEventListener("dragover", function (e) {
+      try {
+        if (e.dataTransfer && e.dataTransfer.types && Array.prototype.indexOf.call(e.dataTransfer.types, "text/av-card") >= 0) e.preventDefault();
+      } catch (e2) { /* dragover best-effort */ }
+    });
+    document.addEventListener("drop", function (e) {
+      try {
+        const id = e.dataTransfer ? e.dataTransfer.getData("text/av-card") : "";
+        document.body.classList.remove("av-drag-card");
+        if (!id) return;
+        e.preventDefault();
+        const rail = avRailEl();
+        const rw = rail ? rail.getBoundingClientRect().width : 0;
+        if (e.clientX < rw + 20) { avPanelOpen(id); avPanelMinimize(id, true); return; }
+        avPanelOpen(id);
+        avPanelsMove(id, e.clientX - 60, Math.max(60, e.clientY - 20));
+      } catch (e2) { /* drop best-effort */ }
+    });
+    return true;
+  } catch (e) { return false; }
+}
 function avRailWireDrag(grip) {
   try {
     grip.addEventListener("pointerdown", function (e) {
@@ -200,6 +333,7 @@ if (typeof window !== "undefined" && window) {
       show: function (on) { return avRailShow(on !== false); },
       width: function (w) { return (typeof w === "number") ? avRailSetWidth(w) : null; },
       groups: function () { return AV_RAIL_GROUPS.map(function (g) { return g.zone; }); },
+      panels: function () { return avRailPanelsRefresh(); },
     };
   } catch (e) { /* no window - nothing to publish */ }
 }

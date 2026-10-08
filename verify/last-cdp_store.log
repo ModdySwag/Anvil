@@ -1,6 +1,6 @@
-index.html sha256 (before): 45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
+index.html sha256 (before): 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791452469711
+cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791454111522
  ok   boot: data-av-ready flips
  ok   store card mounted: #av-store-host + card root + search + 3 filter chips + both list containers + mode chip
  ok   exports: avStoreUiInit + avStoreUiSync + avStoreUiClasses + window.__avStoreUi (p5.0, ≥40 classes) · host wired  -> {"init":true,"sync":true,"classes":true,"refresh":true,"handle":true,"version":"p5.0","classesN":50,"wired":true}
@@ -11,7 +11,7 @@ cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791452
  ok   avStoreSetFetch MOCK injected (the ONLY network path — no server, file:// + seam)  -> true
  ok   index loads through the seam: refresh() ok + 3 packs -> 3 available cards  -> {"ok":true,"packs":3,"error":""} · dom cards=3
  ok   cards: name + preset-count tag + size/sha meta + INSTALL button each; chips carry LIVE counts (3/3/0)  -> {"n":3,"ids":"rig-alpha,rig-badsha,rig-beta","tags":["3 presets","2 presets","1 preset"],"meta":["471 B · sha256 6ba99a2bd1…","336 B · sha256 c9fc5e1a77…","262 B · sha256 ffffffffff…"],"names":["RIG ALPHA","RIG BETA","RIG BAD SHA"],"installs":3,"counts":{"all":"3","avail":"3","installed":"0"},"filters":3,"status":"pack index ready — 3 packs"}
- ok   storage chip honest to the reported backend (mem)  -> {"backend":"mem","mode":"storage: memory only — this session only"}
+ ok   storage chip honest to the reported backend (idb)  -> {"backend":"idb","mode":"storage: IndexedDB"}
    · install initial action via click
  ok   install progress affordance: card .busy + disabled button + indeterminate <progress>  -> {"busy":true,"disabled":true,"prog":true,"aria":"true"}
  ok   install (click): badge INSTALLED + counts (0→1 inst, 3→2 avail) + client layer avStoreInstalled() + status copy  -> {"present":true,"chip":"INSTALLED","cnt":"1","nInst":"1","avail":"2","client":true,"status":"installed RIG ALPHA"}
@@ -27,10 +27,10 @@ cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791452
  ok   chip restores to the real backend after the stub is removed  -> {"backend":"idb","text":"storage: IndexedDB"}
  ok   sha-mismatch refusal: INSTALL on rig-badsha refused (click) — no badge, count unchanged (1), no client record, honest copy  -> {"badge":false,"cnt":"1","status":"checksum mismatch — the pack was refused (not stored)","client":false}
  ok   zero page errors
- ok   screenshot: renders/p5-store-suite.png (the store card, scale 2)  -> 98896 bytes · clip 1010×424 @2x
-index.html sha256 (after): 45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
- ok   freeze: index.html sha256 = pinned  -> pinned 45734b8a72e0…
+ ok   screenshot: renders/p5-store-suite.png (the store card, scale 2)  -> 98881 bytes · clip 1010×424 @2x
+index.html sha256 (after): 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
+ ok   freeze: index.html sha256 = pinned  -> pinned 22ea7e52cd7a…
 
 28 passed, 0 failed
 STORE PASSED
