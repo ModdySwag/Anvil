@@ -2184,15 +2184,49 @@ Resume phrase: **"continue anvil"**.
 - Commit: this design commit (docs/12 + _r17_wave.md + docs/11 + README cross-refs + addendum 55).
   R17 integration/build/battery/deploy follow on child return.
 
+## Resume addendum 56 - 2026-10-09 (R17 IMPORT HUB v1 SHIPPED - the Store one-stop shop is LIVE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `b1b02d62` (4,006,193 B), live moddys.net/anvil
+  (scoped --verify = 0 not in sync; live sha = frozen). Owner ask from addendum 55: the STORE
+  zone is now the one-stop import hub (catalog + IMPORT & LIBRARY).
+- SHIPPED: card relocation #av-import synth -> store zone (retitled "Import & Library"; rail
+  "Import & library"; cockpit ZONEMAP; smoke 6ci updated) · File menu entries (Import sounds... /
+  Import folder... / Library...; separators) · drop-anywhere routing with the UNCLAIMED-drop law
+  · library manager v1 (search / sort / kind chips / select-all + delete-selected / inline
+  rename / per-item export via avDeliverDownload) · receipts history (own DB `av-receipts-store`
+  v1 `runs`, last-20 rotation, `av-receipts-ls` fallback; saved after every run) · storage footer
+  (estimate + persist nudge; `avStorePersist`/`avStorePersisted`) · `avLibRename` + record
+  additive `ext` + `__avLib` facade additions · facade pick/pickDir/library/rename/exportItem.
+- GATES: smoke **74/74** · cdp_hub **29/29** (the new rig) · cdp_import **24/24** · cockpit
+  21/21 + sample 29/29 + seq 31/31 (solo) · battery v2 25 suites + bench (cockpit + seq read as
+  their RECORDED load-flake classes; solo re-runs green; bench exit=0: realtime light 64/fat 48,
+  offline knee **128/128 monotone**, invalidReads 0) · pins 22 (two sweeps) · worklet
+  `b65160e0` UNCHANGED · leak 11/11 LIVE · captures renders/r17-live-hub.png + r17-hub-suite.png
+  inspected (hub live on the real site; populated manager/runs/library render clean;
+  picker-button label wrap = cosmetic, recorded).
+- THE DROP REGRESSION (battery v1, caught by cdp_sample - a REAL app fix, not a rig fix): the
+  new doc-drop router also fired on drops consumed by card-level surfaces (the sample card got
+  a hub double-import + a store-zone yank). Fixed: route only UNCLAIMED drops (defaultPrevented
+  contract) + removed av_sample's blanket doc drop claim; cdp_hub leg 25b is the permanent
+  witness. The two first-hub-run failures were rig SPEC fixes (rename DOM via the UI commit
+  path; sort = exact newest-first flip) - strength preserved, never loosened.
+- Commits: f242e4a (checkpoint: integration + build + smoke 74 + hub 28 + pins v1) -> close
+  (this addendum: drop fix + regression leg + sweep v2 + records).
+- NEXT (per docs/12): R18 library intelligence (sha256 identity + dedupe, provenance, missing
+  relink, linked folders via FSA, PWA handler widening) -> R19 `.avpack` user packs -> R20
+  work persistence. Carried cosmetics: picker-button label wrap; counts-line "1 files" grammar.
+  Owner: Ctrl+F5 once for the new SW cache.
+
 ### Session-end verify-state (2026-10-09 - copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -6                                         # HEAD = the R17 design commit (addendum 55)
-    git status --short                                           # `?? cache/` + R17 child edits while the wave runs
-    curl -s https://moddys.net/anvil/index.html | sha256sum      # = ebc4e9077fab... (frozen, live; UNCHANGED until the R17 freeze+deploy)
-    grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (must stay unchanged - page-side wave)
-    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "72 passed, 0 failed" on the frozen bytes (74 after the R17 freeze)
+    git log --oneline -5                                         # HEAD = the R17 close commit
+    git status --short                                           # clean except `?? cache/`
+    curl -s https://moddys.net/anvil/index.html | sha256sum      # = b1b02d62... (frozen, live)
+    grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (unchanged - page-side wave)
+    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "74 passed, 0 failed" before ANY new work
+    node verify/cdp_hub.mjs > verify/last-cdp_hub.log 2>&1       # expect "29 passed, 0 failed" (pinned)
 
-R17 wave state at save: contract `verify/_r17_wave.md`; children A/B/C dispatched at close - verify
-landings by artifacts on disk (search_files + node --check), never by reports; re-dispatch from the
-contract if anything is missing. Nothing else in flight; battery/bench run at the freeze.
+R17 fully closed at this commit (addendum 56): design docs/12 + contract _r17_wave.md + rig
+cdp_hub + all records committed; nothing in flight. Resume phrase "continue anvil" - next per
+docs/12: R18 (library intelligence) or the owner's pick.

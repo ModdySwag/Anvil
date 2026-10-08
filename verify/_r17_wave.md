@@ -241,3 +241,25 @@ Files written (exact paths) · interface list as implemented (names + receipts) 
 NOT done · named conflicts vs pins (if any; source wins — name it) · uncertainties.
 House law: child landings are verified by artifacts on disk (search_files + node --check),
 never by the completion report.
+
+## Amendment 1 — as-built (R17 close, 2026-10-09)
+
+- Frozen `b1b02d62` (4,006,193 B; the first build `a9d67b0e` was superseded by the battery-v1
+  fix below). Smoke 74 · cdp_hub **29** (28 + the battery-v1 regression leg 25b) · cdp_import
+  24 · cockpit 21 / sample 29 / seq 31 (solo) · battery v2 25 suites + bench (cockpit + seq =
+  their recorded load-flake classes; solo re-runs green) · bench knee 128/128 monotone ·
+  pins 22 (two sweeps: ebc4e907 -> a9d67b0e -> b1b02d62).
+- **App fix (battery v1, found by cdp_sample):** the doc-drop router stole drops already
+  consumed by a card-level surface (sample card: hub double-import + store-zone yank; the
+  sample canvas then read cssW 0). Fix: av_import_ui's doc listener routes ONLY unclaimed
+  drops (defaultPrevented captured before its own preventDefault — the DOM contract);
+  av_sample's blanket document drop claim was removed (dragover kept) so the signal stays
+  honest. cdp_hub gained leg 25b as the permanent regression witness.
+- **Rig SPEC fixes (first hub run, strength preserved, never loosened):** (1) the rename DOM
+  witness rides the UI commit path (`__avImport.rename` accepts -> settles async -> refreshes;
+  effect awaited via avLibList; the core refusal witness stays on `__avLib.rename`); (2) the
+  sort leg expects the true newest-first order [zulu, mike, bravo] with `name` = exact reverse
+  and the round-trip byte-identical.
+- Cosmetic notes (recorded, not iterated): picker button labels wrap to two lines at card
+  width (pre-existing presentation, zero functional impact); the counts line keeps its
+  R15b-era "1 files" grammar.

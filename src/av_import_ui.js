@@ -741,10 +741,14 @@ function avImportUiClaimDoc() {
     if (de && de.dataset) de.dataset.avImportDoc = "1";
     d.addEventListener("dragover", function (e) { try { e.preventDefault(); } catch (err) { /* ok */ } });
     d.addEventListener("drop", function (e) {
+      /* R17 fix (battery v1, cdp_sample regression): only an UNCLAIMED drop routes to the hub.
+         A deeper card-level drop surface that handled the drop has already preventDefaulted it
+         (the DOM contract) — e.g. the sample card's host drop. Capture BEFORE our own
+         preventDefault so the routing decision sees the pre-existing state. */
+      let claimed = false;
+      try { claimed = e.defaultPrevented === true; } catch (err) { claimed = false; }
       try { e.preventDefault(); } catch (err) { /* ok */ }
-      /* R17: a drop OUTSIDE the hub host imports through the funnel and reveals the hub; a
-         drop INSIDE it stays the card's own handler (never a double import) */
-      avImportUiDocDrop(e);
+      if (!claimed) avImportUiDocDrop(e);
     });
     return true;
   } catch (e) { return false; }

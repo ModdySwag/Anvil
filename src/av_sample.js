@@ -299,13 +299,16 @@ const avSampleStore = {
     host.dataset.avSampleBound = "1";
 
     /* a stray file drop anywhere else must never navigate the page away (a dropped WAV would
-       replace the app in the tab) — claimed once, document-wide, preventDefault only */
+       replace the app in the tab). R17 fix (battery v1): the document-wide DROP default is
+       owned by av_import_ui's claim (it preventDefaults every drop and routes unclaimed ones
+       to the hub) — this module keeps only the dragover claim, so an unconsumed drop keeps
+       defaultPrevented=false and can route. The per-host drop handler below still consumes
+       drops on THIS card first. */
     try {
       const de = (typeof document !== "undefined") ? document.documentElement : null;
       if (de && de.dataset && de.dataset.avSampleDoc !== "1") {
         de.dataset.avSampleDoc = "1";
         document.addEventListener("dragover", function (e) { try { e.preventDefault(); } catch (err) { /* ok */ } });
-        document.addEventListener("drop", function (e) { try { e.preventDefault(); } catch (err) { /* ok */ } });
       }
     } catch (e) { /* no documentElement — nothing to claim */ }
 

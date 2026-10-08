@@ -29,7 +29,9 @@
 //      never a grant it did not get.
 //   9. drop-anywhere: a synthetic drop (DataTransfer + File) on a NON-hub element routes to the
 //      store pane and imports exactly once; a drop INSIDE the hub drop zone imports exactly once
-//      (the containment-guard witness — no double import).
+//      (the containment-guard witness — no double import). Battery v1 adds the regression leg:
+//      a drop on the SAMPLE CARD's own surface stays the sample card's (no hub receipt, no
+//      store-zone yank) — the unclaimed-drop requirement of the R17 fix.
 //   10. one sample LOAD e2e on the surviving item (the cdp_import style) — the manager did not
 //       break the existing row actions.
 //   11. zero page errors · the EXPECT_SHA freeze pin (null until the R17 freeze — a PINNED run
@@ -60,7 +62,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* freeze pin: the parent sets this to the frozen sha at the R17 freeze (64-hex); null until then.
    Pinned run = +1 check (the freeze check); unpinned run reports one FEWER check — mirroring
    cdp_import's structure with its pin absent. */
-const EXPECT_SHA = 'a9d67b0e67daff9f6db9c4c3bd553f1612e45112153318b8cfcbdcabf6f3996c';
+const EXPECT_SHA = 'b1b02d626f92ef159a8408bb3366bc9f46bf929b291766cbea4dc0de19b30176';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -797,6 +799,49 @@ async function main() {
     && settle25.rep === 1 && settle25.hit === 1
     && after25 === before25 + 1 && before25 >= 0,
     JSON.stringify({ before: before25, settle: settle25, after: after25 }));
+
+  /* ── 25b. regression guard (battery v1, cdp_sample): a drop on the SAMPLE CARD's own drop
+     surface stays the sample card's -- the hub must not run, and the pane must not yank to
+     the store zone (an UNCLAIMED drop still routes: leg 24). ── */
+  const before25b = await receiptsNow();
+  const zon25b = await ev(`(() => {
+    const ok = (typeof avZoneShow === 'function') ? avZoneShow('synth', { source: 'rig' }) : false;
+    const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; });
+    return { ok: ok, zone: shown[0] ? shown[0].getAttribute('data-zone') : null };
+  })()`);
+  await sleep(250);
+  const n25b = (await ev(`avSampleStore.entries.length`)).value;
+  const drop25bR = await ev(`(() => {
+    try {
+      const sr = 8000, n = 200;
+      const lch = new Float32Array(n), rch = new Float32Array(n);
+      for (let i = 0; i < n; i++) { const v = 0.25 * Math.sin(2 * Math.PI * 220 * i / sr); lch[i] = v; rch[i] = v; }
+      const wav = avWavEncode({ l: lch, r: rch, sr: sr, bits: 16, dither: false });
+      const dt = new DataTransfer();
+      dt.items.add(new File([wav], 'card-kept.wav'));
+      const t = document.querySelector('#av-sample-host [data-av-sample-drop]');
+      if (!t) return { missing: true };
+      t.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+      return { ok: true };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const settle25b = await waitFor(`(async () => {
+    try {
+      const es = avSampleStore.entries.length;
+      if (es !== ${Number(n25b) + 1}) return null;
+      const r = await avLibReceiptList();
+      const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; });
+      const zone = shown[0] ? shown[0].getAttribute('data-zone') : null;
+      return { entries: es, receipts: r && r.ok ? r.count : -1, zone: zone };
+    } catch (e) { return null; }
+  })()`, 20000);
+  await sleep(900);
+  const after25b = await receiptsNow();
+  check('drop on the sample card stays the sample card (no hub receipt, no store yank)',
+    !!zon25b.value && zon25b.value.zone === 'synth' && !!drop25bR.value && drop25bR.value.ok === true
+    && !!settle25b && settle25b.receipts === before25b && settle25b.zone === 'synth'
+    && after25b === before25b,
+    JSON.stringify({ before: before25b, settle: settle25b, after: after25b, drop: drop25bR.value && drop25bR.value.err }));
 
   /* screenshot with the manager + runs + storage populated */
   try {
