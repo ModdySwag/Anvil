@@ -94,6 +94,18 @@ function avConsoleBpm() {
   } catch (e) { return 120; }
 }
 
+/* set bpm through the app's OWN funnel (the seq branch: 20..300 + the delay mirror) */
+function avConsoleBpmSet(v) {
+  try {
+    const n = Math.max(20, Math.min(300, Math.round(Number(v))));
+    if (!isFinite(n)) return null;
+    if (typeof avApplyParam === "function") avApplyParam("bpm", n);
+    else if (typeof avParams !== "undefined" && avParams) avParams.bpm = n;
+    avConsoleRefresh();
+    return n;
+  } catch (e) { return null; }
+}
+
 /* one refresh pass: LEDs + readouts. Called by the 400 ms interval + after every action. */
 function avConsoleRefresh() {
   try {
@@ -186,6 +198,30 @@ function avConsoleInit() {
     const bpm = document.createElement("div");
     bpm.className = "avc-window avc-bpm";
     bpm.innerHTML = '<span class="avc-bpm-lab">BPM</span><span id="avc-bpm-val" aria-label="Tempo">120</span>';
+    /* R12: the BPM window is a live control — click top/bottom half to step, wheel, arrow keys */
+    bpm.tabIndex = 0;
+    bpm.setAttribute("role", "slider");
+    bpm.setAttribute("aria-label", "Tempo - click top or bottom half to step, wheel, or arrow keys");
+    bpm.title = "Tempo - click top/bottom half to step, wheel, or arrow keys (Shift = 10)";
+    bpm.addEventListener("wheel", function (e) {
+      try { e.preventDefault(); avConsoleBpmSet(avConsoleBpm() + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 10 : 1)); } catch (e2) { /* ok */ }
+    }, { passive: false });
+    bpm.addEventListener("click", function (e) {
+      try {
+        const r = bpm.getBoundingClientRect();
+        const top = (e.clientY - r.top) < r.height / 2;
+        avConsoleBpmSet(avConsoleBpm() + (top ? 1 : -1));
+      } catch (e2) { /* ok */ }
+    });
+    bpm.addEventListener("keydown", function (e) {
+      try {
+        const k = e.key;
+        if (k !== "ArrowUp" && k !== "ArrowDown" && k !== "ArrowLeft" && k !== "ArrowRight") return;
+        e.preventDefault();
+        const d = (k === "ArrowUp" || k === "ArrowRight") ? 1 : -1;
+        avConsoleBpmSet(avConsoleBpm() + d * (e.shiftKey ? 10 : 1));
+      } catch (e2) { /* ok */ }
+    });
 
     /* the OLED info window: PACK / PRESET + the moved engine/voices chips */
     const oled = document.createElement("div");
@@ -230,9 +266,11 @@ function avConsoleInit() {
       try { avConsoleState.timer = setInterval(avConsoleRefresh, 400); } catch (e) { avConsoleState.timer = 0; }
     }
 
-    /* proof (readable at ?avtest=1 via the house helper when present) */
+    /* proof: ?avtest=1 ONLY, deferred so the host exists (never leaks onto the live page) */
     try {
-      if (typeof avTestLine === "function") { const p = avConsoleProof(); if (p) avTestLine(p, "av-consoletest"); }
+      if (typeof avTestLine === "function" && typeof location !== "undefined" && /[?&]avtest=1/.test(String(location.search))) {
+        setTimeout(function () { try { const p = avConsoleProof(); if (p) avTestLine(p, "av-consoletest"); } catch (e2) { /* ok */ } }, 0);
+      }
     } catch (e) { /* proof is a nicety */ }
 
     avConsoleRefresh();
@@ -264,6 +302,8 @@ if (typeof window !== "undefined" && window) {
       init: function () { return avConsoleInit(); },
       lastAction: function () { return avConsoleState.last; },
       transportToggle: function () { return avConsoleTransportToggle(); },
+      setBpm: function (v) { return avConsoleBpmSet(v); },
+      bpm: function () { return avConsoleBpm(); },
       refresh: function () { return avConsoleRefresh(); },
     };
   } catch (e) { /* no window - nothing to publish */ }

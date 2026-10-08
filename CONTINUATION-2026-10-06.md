@@ -1884,3 +1884,29 @@ Resume phrase: **"continue anvil"**.
   kind-specific drop paths, Store as a browser overlay, module-menu Copy/Paste, page switching,
   P·2 minBLEP, PERFECT TUNINGS, more owner modules (items 2..n), owner pass (Ctrl+F5 once for
   the new service-worker cache).
+
+## Resume addendum 46 - 2026-10-08 (R12 IN PROGRESS - source edits on disk, NOT built/verified)
+
+- Owner report (with screenshot): (1) "CONSOLE SELFTEST {...}" text visible on the LIVE page -
+  MY leak: av_console called avTestLine unconditionally at parse (before the host). FIXED IN
+  SOURCE: the proof call is now gated to `?avtest=1` AND deferred via setTimeout(0) so the host
+  exists; nothing renders on the live page. (2) BPM monitor must be fully interactive with
+  up/down/stepping on the fly - IMPLEMENTED IN SOURCE: the .avc-bpm window is now a control
+  (tabindex/role=slider): click top half +1 / bottom half -1, wheel +-1 (Shift +-10), arrow keys
+  when focused (Shift +-10); writes ride the app's OWN bpm funnel (`avApplyParam("bpm", n)`,
+  20..300 + the delay mirror); facade gains `__avConsole.setBpm/bpm`; CSS cursor + focus ring.
+  (3) "no LFO module" - CONFIRMED: the engine surface already exists (av_dsp cases `lfo.shape`
+  (sine/tri/square/sh per schema ENUMS.LFO_SHAPES), `lfo.rate`, `lfo.toCut`, `lfo.toPitch`;
+  schema paths pinned; only `lfo.rate`/`lfo.toCut` are exposed as knobs in the synth MOD row -
+  no dedicated LFO module/card). NEXT WAVE: an LFO card (rate + shape select + toCut/toPitch
+  depths + a small waveform mini-display) - UI-side only, zero engine work; place it in the Mod
+  zone next to the matrix (rail Mod group gains the card).
+- STATE ON DISK (uncommitted at session end - THIS COMMIT): src/av_console.js (proof gate +
+  BPM interactivity + facade), src/styles.css (.avc-bpm cursor/focus), verify/cdp_smoke.mjs
+  (+1 check "R12 BPM window" - smoke will read **55** on the next run). NOT built, NOT verified.
+- NEXT SESSION MUST: `python3 build.py` -> `node verify/cdp_smoke.mjs` (expect 55/55) -> pins
+  sweep (adapt `cache/r1/sweep_r11.py`: OLD `ff99f482...` -> the new sha) -> battery
+  (`cache/r1/battery_r11.sh` as template) -> commit records -> deploy index.html+sw.js ->
+  scoped --verify -> addendum 46 finalize + LFO card wave.
+- LIVE: still ff99f482 (leak + BPM interactivity not yet on the live site; the leak fix must
+  ship with this wave).

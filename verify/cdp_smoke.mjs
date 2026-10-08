@@ -977,6 +977,26 @@ async function main() {
   check('R11 spacebar: Space toggles the transport (play then stop), the seq reports it',
     r11s.mid === 'play' && r11s.after === 'stop' && r11s.playing === true && r11s.playing2 === false, JSON.stringify(r11s));
 
+  /* 6cc. R12: the BPM window is a live control (click halves / wheel / keys) through the funnel */
+  const r11b = await ev(`(() => {
+    const w = document.querySelector('.avc-bpm');
+    if (!w) return { missing: true };
+    const b0 = avParams.bpm;
+    const r = w.getBoundingClientRect();
+    w.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: r.x + r.width / 2, clientY: r.y + 3 }));
+    const b1 = avParams.bpm;
+    w.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: r.x + r.width / 2, clientY: r.y + r.height - 3 }));
+    const b2 = avParams.bpm;
+    w.dispatchEvent(new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: -120 }));
+    const b3 = avParams.bpm;
+    window.__avConsole.setBpm(b0);
+    return { b0: b0, b1: b1, b2: b2, b3: b3, back: avParams.bpm };
+  })()`);
+  const r11b2 = r11b.value || {};
+  check('R12 BPM window: click top +1 / bottom -1 / wheel up +1 through the bpm funnel, restored exactly',
+    r11b2.b0 !== undefined && r11b2.b1 === r11b2.b0 + 1 && r11b2.b2 === r11b2.b0
+    && r11b2.b3 === r11b2.b0 + 1 && r11b2.back === r11b2.b0, JSON.stringify(r11b2));
+
 
 
   /* 7. zero page errors */
