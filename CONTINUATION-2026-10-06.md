@@ -2456,3 +2456,28 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   THIS deploy.
 - Carried: quiet bench re-run - P.2 minBLEP - P4 follow-ups - PERFECT TUNINGS - README refresh -
   owner-pass items. Nothing else in flight.
+
+## OWNER ASK (2026-10-09) - IMPORT & LIBRARY redesign = wave R21 (STAGED; next after the R19 close)
+
+- Ask (recorded intent): full access to ALL loaded files but STREAMLINED navigation - the hub
+  currently renders every library row inline and the card becomes cluttered/messy once many
+  files are loaded. Wants a SEPARATE FULL INTERACTIVE MODULE for user file interaction; clean,
+  uncluttered GUI. Owner grants full permission for all build stages; decisions at agent
+  discretion (recommended options).
+- Design decisions (recorded, agent discretion):
+  1. The hub card slims: drop zone + pickers + receipts SUMMARY (collapsed by default) + LINKED
+     SOURCES + storage footer + a compact library summary strip (counts + OPEN LIBRARY). The
+     inline full list leaves the card - that is the clutter source.
+  2. NEW `src/av_library_ui.js`: a full-surface LIBRARY overlay module (Esc-close; opens from the
+     hub strip, the File menu and the palette): search-first, facet chips (kind/format/pack),
+     sort, INCREMENTAL rendering (bounded rows + "show more" - never the whole library), multi-
+     select + bulk actions (load/send/chop/seq/export/delete/collect & pack), per-item details
+     inspector (provenance incl. pack<id> + source dir, meta, sizes, waveform preview where
+     cheap). Every action rides the existing funnels.
+  3. Reuse: the import card's selection/busy laws; overlay = full-size sibling of the About
+     popover. Rig impact to audit FIRST: grep cdp_hub/cdp_import/cdp_smoke for `#av-import-lib`
+     row assumptions before moving the list. smoke +1; cdp_hub +N legs (open/close, filter,
+     incremental rows, a bulk-action witness); styles block from its class list.
+  4. Plan: contract verify/_r21_wave.md -> authors (overlay UI core / hub slimming + rig legs /
+     styles) -> integrate -> gates (battery 25 + bench) -> deploy -> live capture.
+- SEQUENCE: finish the R19 close (battery/deploy/live), then R21, then R20 persistence.
