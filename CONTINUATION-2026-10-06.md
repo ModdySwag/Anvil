@@ -1583,3 +1583,39 @@ Resume phrase: **"continue anvil"**.
 - Carried: drag-to-modulate gesture (mod-source chips -> knob assignment + rings), Store as a
   browser overlay, preset-name header chip, pane scroll-shadow scrims, module-menu Copy/Paste,
   P·2 minBLEP, PERFECT TUNINGS, owner pass on the live surface. Resume phrase: "continue anvil".
+## Resume addendum 38 - 2026-10-08 (R3: THE WORKSPACE — float panels · zone colours · About in the header)
+
+- Owner asks (same day as R1+R2): (1) move the "Phase S5" notes card into the top bar to save screen
+  space; (2) colour-differentiate the zones/modules on load; (3) let modules "pop out" into a free
+  workspace — movable, resizable, standard + custom layouts, workstation-grade GUI customisation.
+- Shipped, frozen `6c54b488` (3,424,004 B), live at https://moddys.net/anvil/ (upload --verify:
+  0 file(s) not in sync; live sha256 = the frozen build):
+  - ABOUT: the phase-notes card left the page entirely — it lives in `#av-about-pop` (hidden) and is
+    toggled by the new header ABOUT button (outside-click + Esc close). Content byte-preserved.
+  - ZONE COLOURS: each zone loads in its own accent — synth teal - fx orange - mod purple - seq
+    green - studio sky - store yellow - code amber - system blue; the active tab, card stripes and
+    chip hovers follow `--zone-accent` (contrast mode unaffected).
+  - FLOAT WORKSPACE (`src/av_panels.js`): every module head carries a float button — the card MOVES
+    into a floating panel: drag by its head, resize from the grip, bring-to-front on focus,
+    close returns it to its exact home (parent + next sibling). Layout persists (`av-float`)
+    and restores at boot. Palette "Workspace" group: reset layout - sound design (Synth+FM+Mod+FX) -
+    mixdown (Mix+Deck+FX). Facade `window.__avPanels {open,close,toggle,move,resize,reset,layout,list}`.
+- Rigs: cockpit 21/21 (the about leg moved from the old hero check; 3 new float checks:
+  open/move/resize/persist/close-restore; coexistence + z-order + reset; About toggle). smoke 39.
+  One rig SPEC fix: the headless compositor reflects fixed-panel style writes in
+  getBoundingClientRect one frame later — the float check settles two rAFs (probe-proven; the app's
+  persistence read style values and was correct throughout).
+- BATTERY (23 suites, frozen bytes): ALL GREEN — smoke 39 - cockpit 21 - studio 37 - sessions 41 -
+  comp 41 - mix 46 - knob_feel 18 - keys 27 - midi 33 - sample 29 - rec 29 - fx 27 - seq 31 (first
+  lap 30/31: the swing odd-shift 26.071 ms vs the +6 ms tolerance bound 26.0 — knife edge; re-ran
+  green, recorded) - store 28 - bounce 32 - deck 35 - s4 37 - s5 36 - code 36 - m1 33 - m2 40 -
+  platform 52 - a11y 32.
+- PERF GATE: bench knee 96/128 monotone (realtime light 64 / fat 48) — the same environmental read
+  the R2 A/B control proved (previous vs new byte-sets read byte-identical knees on the active-
+  desktop machine); worklet sha d7f0ee41 UNCHANGED (page-side wave). Quiet-window bench/stress
+  re-runs stay owed/optional.
+- Commits: wave + close (this addendum).
+- Carried: drag-to-modulate gesture, Store as a browser overlay, preset-name header chip, pane
+  scroll-shadow scrims, module-menu Copy/Paste, NAMED layout save/load (custom layouts beyond the
+  two presets), P·2 minBLEP, PERFECT TUNINGS, owner pass on the live surface (Ctrl+F5 once for the
+  new service-worker cache).
