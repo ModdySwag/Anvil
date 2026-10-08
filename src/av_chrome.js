@@ -14,6 +14,7 @@ const AV_CHROME_CARDS = [
   { id: "av-fm", init: true, rnd: true },
   { id: "av-fx", init: true, rnd: false },
   { id: "av-mod", init: true, rnd: false },
+  { id: "av-lfo", init: true, rnd: false },
   { id: "av-drums", init: true, rnd: false },
   { id: "av-sample", init: true, rnd: false },
   { id: "av-chop", init: true, rnd: false },

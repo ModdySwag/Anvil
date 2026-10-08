@@ -115,6 +115,7 @@ js_parts = [
     (SRC / "av_lessons.js").read_text(encoding="utf-8"), # S5: lessons + demo groove + wizards
     (SRC / "av_fx.js").read_text(encoding="utf-8"),     # P3 FX rack card (page module)
     (SRC / "av_mod.js").read_text(encoding="utf-8"),    # P3 mod matrix card (page module)
+    (SRC / "av_lfo.js").read_text(encoding="utf-8"),    # R13: the LFO card (page module)
     (SRC / "av_seq_core.js").read_text(encoding="utf-8"),    # P4 sequencer: model (page module)
     (SRC / "av_seq_sched.js").read_text(encoding="utf-8"),   # P4 sequencer: audio-clock scheduler
     (SRC / "av_plock.js").read_text(encoding="utf-8"),       # P4 p-lock lanes

@@ -999,6 +999,56 @@ async function main() {
 
 
 
+  /* 6ce. R13: the LFO card — mounted, bound, seeded (mod zone reveal first) */
+  const r13aR = await ev(`(() => {
+    window.__avZoneAuto('#av-lfo');
+    const card = document.getElementById('av-lfo');
+    const knobs = card ? [...card.querySelectorAll('.av-knob[data-knob]')] : [];
+    const paths = knobs.map(k => k.dataset.knob).sort().join(',');
+    const sel = document.getElementById('av-lfo-shape');
+    const opts = sel ? [...sel.options].map(o => o.value) : [];
+    return { card: !!card, zone: card && card.closest('.av-zone') ? card.closest('.av-zone').getAttribute('data-zone') : null,
+             knobs: knobs.length, paths: paths, bound: knobs.length > 0 && knobs.every(k => k.dataset.knobBound === '1'),
+             selOpts: opts.join(','), canvas: !!document.getElementById('av-lfo-scope'),
+             facade: typeof window.__avLfo, shape: (typeof avParams === 'object' && avParams) ? avParams['lfo.shape'] : null };
+  })()`);
+  const r13a = r13aR.value || {};
+  check('R13 LFO card: mounted in the mod zone (4-option shape select + 3 bound knobs + scope + facade + seeded shape)',
+    r13a.card === true && r13a.zone === 'mod' && r13a.knobs === 3
+    && r13a.paths === 'lfo.rate,lfo.toCut,lfo.toPitch' && r13a.bound === true
+    && r13a.selOpts === 'sine,tri,square,sh' && r13a.canvas === true && r13a.facade === 'object'
+    && r13a.shape === 'sine', JSON.stringify(r13a));
+
+  /* 6cf. R13: the LFO rides the funnel; the scope repaints per shape */
+  const r13bR = await ev(`(() => {
+    const card = document.getElementById('av-lfo');
+    const k = card.querySelector('.av-knob[data-knob="lfo.toPitch"]');
+    avKnobCommit(k, 0.6);
+    const mirror = avParams['lfo.toPitch'];
+    avKnobCommit(k, 0);
+    const back = avParams['lfo.toPitch'];
+    const canvas = document.getElementById('av-lfo-scope');
+    const sel = document.getElementById('av-lfo-shape');
+    window.__avLfo.redraw();
+    const d0 = canvas.toDataURL();
+    sel.value = 'tri';
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    window.__avLfo.redraw();
+    const d1 = canvas.toDataURL();
+    const shape = avParams['lfo.shape'];
+    const attr = canvas.getAttribute('data-shape');
+    sel.value = 'sine';
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    const eng1 = (window.__avEngine && window.__avEngine.ready) ? window.__avEngine.setParam('lfo.shape', 'tri') : null;
+    const eng2 = (window.__avEngine && window.__avEngine.ready) ? window.__avEngine.setParam('lfo.shape', 'sine') : null;
+    return { mirror: mirror, back: back, diff: d0 !== d1, shape: shape, attr: attr,
+             restored: avParams['lfo.shape'], eng1: eng1, eng2: eng2 };
+  })()`);
+  const r13b = r13bR.value || {};
+  check('R13 LFO: commit + select ride the funnel, the scope repaints per shape, the engine accepts the schema path',
+    r13b.mirror === 0.6 && r13b.back === 0 && r13b.diff === true && r13b.shape === 'tri' && r13b.attr === 'tri'
+    && r13b.restored === 'sine' && r13b.eng1 === true && r13b.eng2 === true, JSON.stringify(r13b));
+
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');
   await send('Page.navigate', { url: plainUrl });

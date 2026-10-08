@@ -14,7 +14,7 @@ const AV_RAIL_SEC_KEY = "av-rail-sections";
 const AV_RAIL_GROUPS = [
   { zone: "synth", label: "Synth", cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-wt", "Wavetable editor"]] },
   { zone: "fx", label: "FX", cards: [["av-fx", "FX rack"]] },
-  { zone: "mod", label: "Mod", cards: [["av-mod", "Mod matrix"]] },
+  { zone: "mod", label: "Mod", cards: [["av-mod", "Mod matrix"], ["av-lfo", "LFO"]] },
   { zone: "seq", label: "Seq", cards: [["av-seq", "Sequencer"]] },
   { zone: "studio", label: "Studio", cards: [["av-rec", "Recorder"], ["av-studio", "Studio"], ["av-sessions", "Sessions"], ["av-comp", "Takes & comping"], ["av-mix", "Mix & master"], ["av-deck", "Deck"], ["av-deliver", "Deliver"]] },
   { zone: "store", label: "Store", cards: [["av-store", "Packs"]] },

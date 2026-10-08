@@ -19,7 +19,7 @@ const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || exist
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* freeze pin: set to the frozen sha after the R1 build; null = unpinned report */
-const EXPECT_SHA = '3172a17ebc8ea11f06d342ff6a7eb77e576fe8a81a7a403c571cbb3cafe68a3e';
+const EXPECT_SHA = '24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d';
 
 const candidates = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -148,7 +148,7 @@ async function main() {
   /* 4. card -> zone map (every id lands in its zone) */
   const ZONEMAP = {
     synth: ['av-levels', 'av-synth', 'av-fm', 'av-drums', 'av-sample', 'av-chop', 'av-wt'],
-    fx: ['av-fx'], mod: ['av-mod'], seq: ['av-seq'],
+    fx: ['av-fx'], mod: ['av-mod', 'av-lfo'], seq: ['av-seq'],
     studio: ['av-rec', 'av-studio', 'av-sessions', 'av-comp', 'av-mix', 'av-deck', 'av-deliver'],
     store: ['av-store'], code: ['av-code'],
     system: ['av-midi-card', 'av-files', 'av-family'],
@@ -171,7 +171,7 @@ async function main() {
              aboutHost: !!(document.getElementById('av-about-pop') && document.getElementById('av-about-pop').hidden === true && document.getElementById('av-about-pop').querySelector('h1') && document.getElementById('av-head-about')) };
   })()`);
   const mp = mapR.value || {};
-  check('card map: every card id sits in its pinned zone (22/22)', mp.n === 22 && (mp.bad || []).length === 0, JSON.stringify({ n: mp.n, bad: mp.bad }));
+  check('card map: every card id sits in its pinned zone (23/23)', mp.n === 23 && (mp.bad || []).length === 0, JSON.stringify({ n: mp.n, bad: mp.bad }));
   check('special: first-run strip lives in synth; the about notes live in the header popover (hidden at rest)',
     (mp.firstrun === 'synth') && mp.aboutHost === true, JSON.stringify({ firstrun: mp.firstrun, about: mp.aboutHost }));
 

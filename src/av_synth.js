@@ -68,6 +68,8 @@ function avSynthDefaults() {
     "voice.glide": 0,
     "lfo.rate": 5,
     "lfo.toCut": 0,
+    "lfo.shape": "sine",
+    "lfo.toPitch": 0,
     /* engine + kind panels (§3.1–3.3) */
     "engine.kind": "va",
     "acid.wave": 0,
@@ -163,8 +165,6 @@ const AV_SYNTH_ROWS = [
   ] },
   { cls: "av-synth-mod", knobs: [
     { path: "voice.glide", label: "GLIDE", opts: { min: 0, max: 2, step: 0.001, def: 0, fmt: "ms" } },
-    { path: "lfo.rate", label: "LFO RATE", opts: { min: 0.05, max: 20, step: 0.01, def: 5, curve: "log", fmt: "hz" } },
-    { path: "lfo.toCut", label: "LFO→CUT", opts: { min: -1, max: 1, step: 0.01, def: 0, fmt: "pct" } },
   ] },
 ];
 

@@ -1804,5 +1804,10 @@ header.av-head.av-console #av-a11y-host .av-btn {
 }
 header.av-head.av-console > .av-btn:hover { border-color: var(--teal-deep); }
 
-
-
+/* R13: the LFO card */
+.av-lfo-picks { display: flex; align-items: center; gap: 14px; margin: 4px 0 10px; }
+.av-lfo-pick { display: inline-flex; align-items: center; gap: 8px; }
+.av-lfo-pick-lbl { font-size: 10px; letter-spacing: 0.08em; color: var(--text-3); }
+.av-lfo-knobs { margin: 2px 0 12px; }
+.av-lfo-scope-wrap { border: 1px solid var(--hair); border-radius: 8px; background: rgba(6, 9, 12, 0.6); padding: 10px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04); }
+#av-lfo-scope { width: 100%; height: auto; display: block; }
