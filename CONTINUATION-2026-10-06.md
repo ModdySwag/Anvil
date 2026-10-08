@@ -2217,12 +2217,37 @@ Resume phrase: **"continue anvil"**.
   work persistence. Carried cosmetics: picker-button label wrap; counts-line "1 files" grammar.
   Owner: Ctrl+F5 once for the new SW cache.
 
+## Resume addendum 57 - 2026-10-09 (R17b hotfix: picker-button overlap FIXED + LIVE - owner clip)
+
+- OWNER REPORT (clip 06:44): the hub's PICK FILES / PICK FOLDER buttons overlapped - their
+  labels wrapped inside the .av-btn 26x26 ICON box (they never carried the .mini wide variant),
+  so the two labels collided and the click boxes were unusable. NOTE: my R17 close had
+  under-called this as "cosmetic wrap" during the capture inspections - it was a REAL layout
+  defect; the owner's zoom caught it. (The cosmetic note in Amendment 1 is superseded by this
+  addendum.)
+- FIX: src/styles.css - `.av-import-btns .av-btn { height:24px; width:auto; min-width:24px;
+  padding:0 12px; font-size:11px; white-space:nowrap; }` scoped to the picker row only; no
+  markup change; nothing else touched.
+- GATES on the fixed freeze `3f87b4d3` (4,006,598 B): smoke **74/74** · cdp_hub **29/29** ·
+  battery v3 **ALL 25 SUITES GREEN first-lap** (cockpit + seq read clean this window) + bench
+  exit=0 (realtime light 64/fat 48; offline knee **96/128 monotone** = the recorded loaded-
+  window class - owner machine active + post-battery; worklet `b65160e0` byte-identical; the
+  solo quiet re-run was launched detached - its BENCH-RESULT lands in
+  `verify/last-cdp_bench_solo.log`, read it on resume). Pins swept v3 (b1b02d62 -> 3f87b4d3,
+  22 files).
+- LIVE: deployed (uploaded; scoped --verify = **0 not in sync**; live sha = frozen) + live
+  capture `renders/r17b-live-fix.png` INSPECTED: the two buttons now read "PICK FILES" |
+  "PICK FOLDER" as clean single-line boxes side by side, clear gap, no overlap - fix confirmed
+  on the real site. Owner: Ctrl+F5 once for the new SW cache.
+- Commit: this close commit (styles.css + index.html + sw.js + pins v3 + logs + capture +
+  this addendum). R18 (library intelligence, docs/12) remains the next wave.
+
 ### Session-end verify-state (2026-10-09 - copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -5                                         # HEAD = the R17 close commit
+    git log --oneline -5                                         # HEAD = the R17b hotfix commit
     git status --short                                           # clean except `?? cache/`
-    curl -s https://moddys.net/anvil/index.html | sha256sum      # = b1b02d62... (frozen, live)
+    curl -s https://moddys.net/anvil/index.html | sha256sum      # = 3f87b4d3... (frozen, live)
     grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (unchanged - page-side wave)
     node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "74 passed, 0 failed" before ANY new work
     node verify/cdp_hub.mjs > verify/last-cdp_hub.log 2>&1       # expect "29 passed, 0 failed" (pinned)

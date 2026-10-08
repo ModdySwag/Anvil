@@ -1841,6 +1841,10 @@ header.av-head.av-console > .av-btn:hover { border-color: var(--teal-deep); }
 .av-import-msg { font-size: 12px; color: var(--text-2); }
 .av-import-file { display: none; }
 .av-import-btn { padding: 3px 9px; }
+/* R17b fix (owner clip 2026-10-09): the picker buttons must override the .av-btn 26x26 icon
+   box -- as built, "PICK FILES" / "PICK FOLDER" wrapped inside it and the two labels collided
+   (click boxes unusable). Wide text buttons, one line, scoped to the picker row only. */
+.av-import-btns .av-btn { height: 24px; width: auto; min-width: 24px; padding: 0 12px; font-size: 11px; white-space: nowrap; }
 .av-import-fmt, .av-import-size { font-family: var(--mono); font-size: 10px; color: var(--text-3); flex: none; }
 .av-import-reason { flex-basis: 100%; font-size: 11px; color: var(--text-3); }
 .av-import-row-imported .av-import-chip { color: var(--teal); }

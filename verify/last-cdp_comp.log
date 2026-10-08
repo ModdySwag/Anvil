@@ -1,6 +1,6 @@
-index.html sha256 (before): b1b02d626f92ef159a8408bb3366bc9f46bf929b291766cbea4dc0de19b30176
+index.html sha256 (before): 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9600 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-comp-1791489156623
+cdp port 9600 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-comp-1791490819549
 ── 1. boot + card ──
  ok   1 boot: data-av-ready flips
  ok   1 engine ctx: found · running · ScriptProcessor-capable · sr 48 k  -> {"found":true,"state":"running","sampleRate":48000,"scp":true}
@@ -23,7 +23,7 @@ cdp port 9600 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-comp-1791489156
  ok   3 comp create + add + set: fresh comp · segment index 0 · take A full range [0, N] · avCompSegments length 1  -> {"id":"c1","add":{"ok":true,"index":0},"set":{"ok":true,"seg":{"takeId":"t1","fromFrame":0,"toFrame":65536,"fadeIn":240,"fadeOut":240}},"segs":[{"takeId":"t1","fromFrame":0,"toFrame":65536,"fadeIn":240,"fadeOut":240}],"why":null}
  ok   3 render: frames === take A frames EXACTLY (delta 0) · comp list out mirrors the render  -> {"render":{"ok":true,"frames":65536,"peak":1.1298022270202637,"rms":0.12083993249913239,"clipped":936,"rate":48000,"channels":2,"skipped":0,"error":null},"metaOut":{"frames":65536,"rate":48000,"channels":2},"takeAFrames":65536}
  ok   3 export: ok · avWavInfo 16-bit / 48 kHz stereo · frames === render · blob + blob: url · bytes > 44 · name anvil_comp*.wav  -> {"ok":true,"id":"c1","name":"anvil_comp1.wav","frames":65536,"rate":48000,"seconds":1.3653333333333333,"bytes":262188,"hasBlob":true,"url":true,"wavInfo":{"ok":true,"bits":16,"sampleRate":48000,"channels":2,"frames":65536},"error":null}
- ok   3 in-page WAV decode: NON-SILENT (fake-device beeps) — peak > 0.05 · nonzero > 0  -> {"ok":true,"peak":"1.000","nonzero":35592,"frames":65536}
+ ok   3 in-page WAV decode: NON-SILENT (fake-device beeps) — peak > 0.05 · nonzero > 0  -> {"ok":true,"peak":"1.000","nonzero":35664,"frames":65536}
 ── 4. multi-segment + trims ──
  ok   4 multi-segment: segments [A 0..N/2, B 0..N/2] -> render ~ N (2 halves minus the 240-frame seam)  -> {"frames":65296,"expected":65296,"N":65536,"segs":[{"takeId":"t1","fromFrame":0,"toFrame":32768,"fadeIn":240,"fadeOut":240},{"takeId":"t2","fromFrame":0,"toFrame":32768,"fadeIn":240,"fadeOut":240}],"why":null}
  ok   4 trim: shrinking segment 0 (fromFrame 0 -> 1000) shrinks the render by EXACTLY 1000 frames  -> {"ren0":65296,"ren1":64296,"delta":1000,"seg":{"takeId":"t1","fromFrame":1000,"toFrame":32768,"fadeIn":240,"fadeOut":240}}
@@ -48,9 +48,9 @@ cdp port 9600 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-comp-1791489156
  ok   7 screenshot: renders/s2b-comp-suite.png (the comp card, scale 2 — taken while the card carries the run lanes/segments)  -> 114788 bytes · clip 1048×468 @2x
  ok   7 page left clean: comps deleted (>= 3) · takes deleted · not recording/armed · transport stopped · input disabled (node empty)  -> {"compsKilled":["c1","c2","c3"],"takesKilled":["t3","t4","t5"],"before":{"comps":3,"takes":3,"recording":false},"after":{"comps":0,"takes":0,"recording":false,"armed":false,"wired":false,"playing":false,"inNode":false,"compCount":0}}
  ok   7 zero page errors (exceptions · Log errors · console.error)  -> page errors=0
-index.html sha256 (after): b1b02d626f92ef159a8408bb3366bc9f46bf929b291766cbea4dc0de19b30176
- ok   7 freeze: index.html sha256 before === after (unchanged by the run)  -> b1b02d626f92ef159a8408bb3366bc9f46bf929b291766cbea4dc0de19b30176
- ok   7 freeze: index.html sha256 = pinned  -> pinned b1b02d626f92...
+index.html sha256 (after): 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
+ ok   7 freeze: index.html sha256 before === after (unchanged by the run)  -> 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
+ ok   7 freeze: index.html sha256 = pinned  -> pinned 3f87b4d31171...
 
 41 passed, 0 failed
 COMP PASSED

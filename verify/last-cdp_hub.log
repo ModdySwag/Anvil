@@ -1,6 +1,6 @@
-index.html sha256 (before): b1b02d626f92ef159a8408bb3366bc9f46bf929b291766cbea4dc0de19b30176
+index.html sha256 (before): 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9580 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-hub-1791489095043
+cdp port 9580 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-hub-1791490758364
 fixtures: synthesized in-page (avWavEncode WAVs + hand-built SMF + one unknown file)
  ok   hub boot: card in the store zone + h2 "Import & Library"  -> {"card":true,"zone":"store","h2":"Import & Library"}
  ok   hub boot: legacy ids intact (drop/file/dir/pick/pickdir/status/counts/report/lib/slot/note/empty)  -> {"drop":true,"file":true,"dir":true,"pick":true,"pickdir":true,"status":true,"counts":true,"report":true,"lib":true,"slot":true,"note":true,"empty":true}
@@ -11,12 +11,12 @@ fixtures: synthesized in-page (avWavEncode WAVs + hand-built SMF + one unknown f
  ok   library jump: File > Library... and avImportUiLibrary() switch to the store pane (returns true)  -> {"menu":{"clicked":true,"afterMenu":"store"},"fn":{"okSynth":true,"mid":"synth","ret":true,"end":"store"}}
  ok   import run 1: three files land (2 imported + 1 unknown honest) via the change handler  -> {"filesN":3,"counts":{"total":3,"imported":2,"deferred":0,"refused":1,"samples":1,"patterns":1,"kits":0,"refs":0,"bundles":0},"alpha":"imported","mike":"imported","unk":{"result":"refused","reason":"unrecognized format"}}
  ok   import run 1: library gains the 2 imports (unknown not persisted) + DOM rows match  -> {"count":2,"names":"hub-alpha.wav,hub-mike.mid","dom":2}
- ok   import run 1: receipt persisted (avLibReceiptList 1 + #av-import-runs 1 row, empty line hidden)  -> {"count":1,"backend":"idb","rows":1,"snapRuns":1,"emptyHidden":true,"rowText":"06:21 · imported 2 · deferred 0 · refused 1 · import 2026-10-09 06:21"}
+ ok   import run 1: receipt persisted (avLibReceiptList 1 + #av-import-runs 1 row, empty line hidden)  -> {"count":1,"backend":"idb","rows":1,"snapRuns":1,"emptyHidden":true,"rowText":"06:49 · imported 2 · deferred 0 · refused 1 · import 2026-10-09 06:49"}
  ok   import run 2: a second run -> receipt count 2 + #av-import-runs 2 rows  -> {"count":2,"rows":2,"rep":1,"zulu":true,"c0":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0}}
    · reloaded (plain page) — ready=true
  ok   reload: receipts survive fresh (count 2 + the stored counts intact + runs rows reborn)  -> {"count":2,"rows":2,"a":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0},"b":{"total":3,"imported":2,"deferred":0,"refused":1,"samples":1,"patterns":1,"kits":0,"refs":0,"bundles":0}}
  ok   reload: the library loads fresh (3 items + DOM rows 3)  -> {"count":3,"names":"hub-alpha.wav,hub-mike.mid,hub-zulu.wav","dom":3}
- ok   rename: avLibRename applies via the UI commit (avLibList + manager DOM); empty name refused  -> {"ren":{"id":"lmuzycp6h-hub-alpha-wav","acc":true,"nowName":"hub-bravo.wav","r2":{"ok":false,"name":"","err":"no name"},"stillName":"hub-bravo.wav"},"dom":{"hit":true}}
+ ok   rename: avLibRename applies via the UI commit (avLibList + manager DOM); empty name refused  -> {"ren":{"id":"lmuzzcclp-hub-alpha-wav","acc":true,"nowName":"hub-bravo.wav","r2":{"ok":false,"name":"","err":"no name"},"stillName":"hub-bravo.wav"},"dom":{"hit":true}}
    · reloaded again — ready=true
  ok   reload: the renamed item persists (hub-bravo.wav present, hub-alpha.wav gone)  -> {"bravo":true,"alpha":false,"receipts":2}
  ok   manager search: "mike" narrows 3 items -> 1 hit (snap manager.search)  -> {"rows":1,"hit":true,"search":"mike"}
@@ -33,6 +33,6 @@ fixtures: synthesized in-page (avWavEncode WAVs + hand-built SMF + one unknown f
    · screenshot: C:\Users\Moddy\anvil\renders\r17-hub-suite.png
  ok   row action: the surviving sample LOADs end-to-end (48 kHz native, 0.05 s preserved)  -> {"n":2,"rate":48000,"frames":2400,"secs":0.05}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned (before === after)  -> pinned b1b02d626f92… · before b1b02d626f92… · after b1b02d626f92…
+ ok   freeze: index.html sha256 = pinned (before === after)  -> pinned 3f87b4d31171… · before 3f87b4d31171… · after 3f87b4d31171…
 
 29 passed, 0 failed
