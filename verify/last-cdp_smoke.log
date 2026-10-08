@@ -6,7 +6,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
  ok   KNOB SELFTEST ok  -> {"ok":true,"knobFound":true,"keysBound":true,"committed":true,"params":true,"state":true,"aria":true,"readout":true,"ctxState":"running","gain":0.55,"gainOk":true}
  ok   ENGINE SELFTEST ok (tier + allocation)  -> {"ok":true,"tier":"worklet","url":"data","sr":48000,"maxVoices":64,"allocated":true,"released":true,"voices":[0,1,0],"kinds":{"va":true,"acid":true,"string":true,"drum":true,"grain":true,"sampler":true,"fm":true},"fx":true,"mod":true,"drumNote":true,"kindsOk":true,"mpe":{"on":true,"expr":true,"voice":true,"off":true}}
- ok   layout: no horizontal overflow at 1440  -> scrollWidth 1425 vs innerWidth 1440 | offenders: av-a11y-live [-1..0]
+ ok   layout: no horizontal overflow at 1440  -> scrollWidth 1440 vs innerWidth 1440 | offenders: av-a11y-live [-1..0]
  ok   keyboard dock: 61 keys, snap handle, MIDI deck mounted  -> {"keys":61,"dock":true,"kbsnap":"function","midi":"object","midiBody":true}
  ok   synth card: knobs + selects mounted + bound (85 knobs)  -> {"host":true,"knobs":85,"bound":true,"sels":7,"engOpts":["va","acid","string","drum","grain","sampler","fm"]}
  ok   synth card: ENGINE select offers all seven kinds  -> ["va","acid","string","drum","grain","sampler","fm"]
@@ -31,6 +31,11 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   PLATFORM pwa: file:// guard (module live, unsupported here, manifest link NOT injected)  -> {"famCard":true,"host":true,"rows":3,"hub":true,"loopSel":true,"res":true,"resSel":true,"rad":true,"famApi":"object","famInitApi":"function","pwaApi":"object","pwaSupported":false,"manifest":false}
  ok   P7 a11y: module live + skip link -> #av-main + aria-pressed toggles  -> {"api":"object","s":{"skip":true,"live":true,"sliders":187,"unnamed":0},"skipHref":"#av-main","mainId":true,"toggles":true,"pressed":"false"}
  ok   P7 a11y: knobs decorated (>= 85 sliders) + zero unnamed buttons  -> {"skip":true,"live":true,"sliders":187,"unnamed":0}
+ ok   R1 cockpit: 8 zones + 8 tabs (workflow order), exactly one shown (synth default), page cannot scroll  -> {"zones":8,"tabs":8,"shown":1,"active":"synth","doc":"900/900","overflow":"hidden"}
+ ok   R1 cockpit: SHELL SELFTEST ok (?avtest=1)  -> {"v":"r1.0","ready":true,"zones":8,"active":"synth"}
+ ok   R2 chrome: module heads + menu buttons on every chrome card, engine strip (6 chips in Synth), header BROWSE/undo/redo  -> {"heads":8,"toggles":20,"menus":20,"chips":6,"stripInSynth":true,"browse":true,"undo":true,"redo":true,"menuHost":true,"chromeApi":"object","proof":{"v":"r2.0","heads":20,"cards":20,"strip":true,"browse":true}}
+ ok   R2 chrome: CHROME SELFTEST ok (?avtest=1)  -> {"v":"r2.0","heads":20,"cards":20,"strip":true,"browse":true}
+ ok   R2 chrome: collapse toggles fold on/off; Init restores the first knob to its data-def via the one commit funnel  -> {"folded":true,"unfolded":true,"initN":85,"restored":true,"before":1}
  ok   zero page errors
 
-33 passed, 0 failed
+38 passed, 0 failed

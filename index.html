@@ -199,8 +199,6 @@ body.knob-dragging, body.knob-dragging * { cursor: ns-resize !important; }
    Layout math: --dock-tax lifts the page content while the dock is out. */
 :root { --dock-h: 136px; --dock-tax: 0px; }
 body:not(.piano-closed) { --dock-tax: var(--dock-h, 136px); }
-body:not(.piano-closed) .av-main { padding-bottom: calc(20px + var(--dock-tax)); }
-body:not(.piano-closed) .av-foot { margin-bottom: var(--dock-tax); }
 #piano-dock {
   position: fixed; left: 16px; right: 16px; bottom: 0; z-index: 41;
   height: var(--dock-h, 136px);
@@ -1430,9 +1428,94 @@ body.av-contrast .av-card { border-color: var(--hair); }
   }
 }
 
+/* ============================================================================
+   R1 COCKPIT — the fixed-window chassis (Serum-2-faithful zones).
+   The page never scrolls: header + zone tabs stay put, ONE zone pane is shown and scrolls
+   internally; the piano dock stays fixed at the bottom (the dock-tax is now BODY padding with
+   border-box sizing, so the content area shrinks by the dock height). */
+html, body { overflow: hidden; }
+.av-zones {
+  border-bottom: 1px solid var(--hair);
+  background: var(--panel);
+  flex: none;
+}
+.av-zones-in {
+  display: flex; gap: 2px;
+  padding: 0 10px;
+  max-width: 1080px; margin: 0 auto; width: 100%;
+  overflow-x: auto; scrollbar-width: none;
+}
+.av-zones-in::-webkit-scrollbar { display: none; }
+.av-zone-tab {
+  appearance: none; -webkit-appearance: none;
+  background: transparent; border: 0; border-bottom: 2px solid transparent;
+  color: var(--text-3);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  padding: 9px 12px 7px; cursor: pointer; white-space: nowrap;
+}
+.av-zone-tab:hover { color: var(--text-2); }
+.av-zone-tab:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
+.av-zone-tab[aria-selected="true"] {
+  color: var(--teal); border-bottom-color: var(--teal);
+  text-shadow: 0 0 8px rgba(46,216,201,.35);
+}
+body.av-contrast .av-zone-tab[aria-selected="true"] { text-shadow: none; }
+
+.av-main { padding: 0; max-width: none; margin: 0; min-height: 0; overflow: hidden; }
+.av-zone { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.av-zone-box {
+  max-width: 1080px; width: 100%; margin: 0 auto;
+  padding: 16px 16px 26px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.av-zone::-webkit-scrollbar { width: 10px; }
+.av-zone::-webkit-scrollbar-track { background: transparent; }
+.av-zone::-webkit-scrollbar-thumb { background: #22303a; border-radius: 6px; border: 2px solid var(--bg); }
+.av-zone::-webkit-scrollbar-thumb:hover { background: #2f4351; }
+
+/* the dock-tax pads the BODY now (the page itself cannot scroll) */
+body:not(.piano-closed) { padding-bottom: var(--dock-tax); }
+
+@media (max-width: 1180px) {
+  .av-zone-box { padding: 12px 12px 22px; }
+}
+
+/* ============================================================================
+   R2 MODULE CHROME — Serum-2-style module heads (collapse + module menu on every card),
+   the Synth-zone engine strip and the header utilities (BROWSE, undo, redo). */
+.av-mod-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.av-mod-head h2 { margin: 0; flex: 0 1 auto; }
+.av-mod-gap { flex: 1 1 auto; }
+.av-mod-toggle, .av-mod-menu-btn { font-size: 11px; line-height: 1; padding: 0 6px; }
+.av-mod-toggle { min-width: 24px; }
+.av-mod-fold > :not(.av-mod-head) { display: none; }
+.av-mod-fold { padding-bottom: 12px; }
+.av-mod-menu {
+  position: fixed; z-index: 70; min-width: 190px;
+  background: var(--raised); border: 1px solid var(--hair); border-radius: 8px;
+  padding: 4px; display: none; box-shadow: 0 12px 30px rgba(0,0,0,.55);
+}
+.av-mod-menu.open { display: block; }
+.av-mod-menu-item {
+  display: block; width: 100%; text-align: left;
+  background: transparent; border: 0; color: var(--text-2);
+  font-size: 11.5px; padding: 6px 9px; border-radius: 5px; cursor: pointer;
+}
+.av-mod-menu-item:hover, .av-mod-menu-item:focus-visible { background: #141b21; color: var(--teal); }
+.av-engine-strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.av-engine-chip {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-2); background: var(--raised); border: 1px solid var(--hair); border-radius: 5px;
+  padding: 4px 10px; cursor: pointer;
+}
+.av-engine-chip:hover { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-engine-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+body.av-contrast .av-engine-chip { border-width: 2px; }
+
 </style>
 </head>
 
+<body>
 <body>
 <header class="av-head">
   <span class="av-word">Anvil</span>
@@ -1443,127 +1526,145 @@ body.av-contrast .av-card { border-color: var(--hair); }
   <button class="av-btn" id="btn-piano" title="Piano dock — 61 keys at the bottom (Y)" aria-label="Piano dock">&#127929;</button>
   <button class="av-btn" id="av-help" title="Help &mdash; shortcuts, the tour and the guides (?)" aria-label="Help">?</button>
 </header>
-
+<nav class="av-zones" id="av-zones" role="tablist" aria-label="Zones">
+  <div class="av-zones-in">
+    <button class="av-zone-tab" id="av-tab-synth" data-zone="synth" role="tab" aria-selected="true" aria-controls="av-zone-synth" title="Synth zone">Synth</button>
+    <button class="av-zone-tab" id="av-tab-fx" data-zone="fx" role="tab" aria-selected="false" aria-controls="av-zone-fx" title="FX zone">FX</button>
+    <button class="av-zone-tab" id="av-tab-mod" data-zone="mod" role="tab" aria-selected="false" aria-controls="av-zone-mod" title="Mod zone">Mod</button>
+    <button class="av-zone-tab" id="av-tab-seq" data-zone="seq" role="tab" aria-selected="false" aria-controls="av-zone-seq" title="Seq zone">Seq</button>
+    <button class="av-zone-tab" id="av-tab-studio" data-zone="studio" role="tab" aria-selected="false" aria-controls="av-zone-studio" title="Studio zone">Studio</button>
+    <button class="av-zone-tab" id="av-tab-store" data-zone="store" role="tab" aria-selected="false" aria-controls="av-zone-store" title="Store zone">Store</button>
+    <button class="av-zone-tab" id="av-tab-code" data-zone="code" role="tab" aria-selected="false" aria-controls="av-zone-code" title="Code zone">Code</button>
+    <button class="av-zone-tab" id="av-tab-system" data-zone="system" role="tab" aria-selected="false" aria-controls="av-zone-system" title="System zone">System</button>
+  </div>
+</nav>
 <main class="av-main">
-  <section class="av-card">
-    <h1>Phase S5 &mdash; CODE: write your own modules &middot; popout keyboard &middot; help</h1>
-    <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in), plus the S5 layer (the CODE section &mdash; a documented sandboxed DSP module API where your own code runs live in the engine &mdash; the popout keyboard, the Ctrl-K command palette, a 60-second tour, and the lesson ladder). Plus the M2 layer &mdash; MPE per-note expression from MPE controllers (bend, slide, pressure, pan), the sample CHOP card, the generative toolkit (euclidean, mutate, humanize, fills, per-track clock divide and swing) and the song arranger (song rows, quantised scene transitions, arrangement MIDI export).</p>
-  </section>
-
+  <section class="av-zone" id="av-zone-synth" data-zone="synth" role="tabpanel" aria-labelledby="av-tab-synth">
+    <div class="av-zone-box">
   <section class="av-card" id="av-levels">
     <h2>Levels</h2>
     <div id="av-levels-knobs"></div>
     <p class="av-note av-dim">Both knobs ride the master tap: <b>Instrument</b> sets the keys bus (what the instrument plays), <b>Master</b> is the final out. Drag or twist the rim &middot; wheel steps &middot; arrow keys when focused &middot; double-click resets.</p>
   </section>
-
   <section class="av-card" id="av-synth">
     <h2>Synth</h2>
     <div id="av-synth-bank-host"></div>
     <div id="av-synth-knobs"></div>
     <p class="av-note av-dim">Play it from the piano dock below or your MIDI keys.</p>
   </section>
-
   <section class="av-card" id="av-fm">
     <h2>FM</h2>
     <div id="av-fm-host"><p class="av-note av-dim">The FM engine lands here &mdash; six operators, eight algorithms and DX-style envelopes. Set the ENGINE select to fm and program the grid.</p></div>
   </section>
-
-  <section class="av-card" id="av-fx">
-    <h2>FX Rack</h2>
-    <div id="av-fx-host"><p class="av-note av-dim">The rack lands here &mdash; seven modules inside the mixer worklet: drive &rarr; flavour &rarr; mod &rarr; delay &rarr; verb &rarr; conv &rarr; dyn. All off = bit-identical bypass.</p></div>
-  </section>
-
-  <section class="av-card" id="av-mod">
-    <h2>Mod Matrix</h2>
-    <div id="av-mod-host"><p class="av-note av-dim">The matrix lands here &mdash; 8 macro knobs and up to 32 routing slots (env / LFO / velocity / key / rand &rarr; cutoff, reso, pitch, osc levels, pan).</p></div>
-  </section>
-
-  <section class="av-card" id="av-midi-card">
-    <h2>MIDI</h2>
-    <div id="av-midi-body"><p class="av-note av-dim">The hardware deck lands here — enable Web MIDI and your keys play Anvil through the same note path as the piano dock.</p></div>
-  </section>
-
   <section class="av-card" id="av-drums">
     <h2>Drums</h2>
     <div id="av-pads-host"><p class="av-note av-dim">Kit pads land here &mdash; set the ENGINE select to DRUM and play the pads, the dock, or MIDI (notes below the split go to the kit).</p></div>
   </section>
-
   <section class="av-card" id="av-sample">
     <h2>Samples</h2>
     <div id="av-sample-host"><p class="av-note av-dim">The sample core lands here &mdash; import WAVs, see the waveform, preview through the master tap.</p></div>
   </section>
-
   <section class="av-card" id="av-chop">
     <h2>Chop</h2>
     <div id="av-chop-host"><p class="av-note av-dim">The chop card lands here &mdash; detect transients, trim, fade and normalise the slices, map them to 16 pads and push the kit into the sampler.</p></div>
   </section>
-
   <section class="av-card" id="av-wt">
     <h2>Wavetable Editor</h2>
     <div id="av-wt-host"><p class="av-note av-dim">The wavetable editor lands here &mdash; draw or import a table, morph frames with spectral tools, and send it into the OSC2 wavetable oscillator. Your tables stay on this machine.</p></div>
   </section>
-
-  <section class="av-card" id="av-rec">
-    <h2>Recorder</h2>
-    <div id="av-rec-host"><p class="av-note av-dim">Record the master output and grab a WAV.</p></div>
+    </div>
   </section>
-
+  <section class="av-zone" id="av-zone-fx" data-zone="fx" role="tabpanel" aria-labelledby="av-tab-fx" hidden>
+    <div class="av-zone-box">
+  <section class="av-card" id="av-fx">
+    <h2>FX Rack</h2>
+    <div id="av-fx-host"><p class="av-note av-dim">The rack lands here &mdash; seven modules inside the mixer worklet: drive &rarr; flavour &rarr; mod &rarr; delay &rarr; verb &rarr; conv &rarr; dyn. All off = bit-identical bypass.</p></div>
+  </section>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-mod" data-zone="mod" role="tabpanel" aria-labelledby="av-tab-mod" hidden>
+    <div class="av-zone-box">
+  <section class="av-card" id="av-mod">
+    <h2>Mod Matrix</h2>
+    <div id="av-mod-host"><p class="av-note av-dim">The matrix lands here &mdash; 8 macro knobs and up to 32 routing slots (env / LFO / velocity / key / rand &rarr; cutoff, reso, pitch, osc levels, pan).</p></div>
+  </section>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-seq" data-zone="seq" role="tabpanel" aria-labelledby="av-tab-seq" hidden>
+    <div class="av-zone-box">
   <section class="av-card" id="av-seq">
     <h2>Sequencer</h2>
     <div id="av-seq-host"><p class="av-note av-dim">The step sequencer lands here &mdash; 4 tracks, swing, probability, p-locks, chains and scenes, driving the synth through the one note bus.</p></div>
   </section>
-
-  <section class="av-card" id="av-store">
-    <h2>Store</h2>
-    <div id="av-store-host"><p class="av-note av-dim">The pack store lands here &mdash; factory packs download once, verify sha-256 before they are stored, and stay available offline.</p></div>
+    </div>
   </section>
-
-  <section class="av-card" id="av-deliver">
-    <h2>Deliver</h2>
-    <div id="av-deliver-host"><p class="av-note av-dim">The Deliver card lands here &mdash; one press renders the pattern offline (stems &middot; master &middot; MIDI &middot; README) into a DAW-ready zip. Nothing plays live, nothing is uploaded.</p></div>
+  <section class="av-zone" id="av-zone-studio" data-zone="studio" role="tabpanel" aria-labelledby="av-tab-studio" hidden>
+    <div class="av-zone-box">
+  <section class="av-card" id="av-rec">
+    <h2>Recorder</h2>
+    <div id="av-rec-host"><p class="av-note av-dim">Record the master output and grab a WAV.</p></div>
   </section>
-
   <section class="av-card" id="av-studio">
     <h2>Studio</h2>
     <div id="av-studio-host"><p class="av-note av-dim">The studio record core lands here &mdash; mic/line input riding the engine's own context, a count-in metronome, and lap takes that split at sequencer cycle boundaries. Nothing is uploaded.</p></div>
   </section>
-
   <section class="av-card" id="av-sessions">
     <h2>Sessions</h2>
     <div id="av-sessions-host"><p class="av-note av-dim">The sessions card lands here &mdash; versioned snapshots of the working state, autosave with crash recovery, and a one-press backup zip. Everything stays local.</p></div>
   </section>
-
   <section class="av-card" id="av-comp">
     <h2>Takes &amp; Comping</h2>
     <div id="av-comp-host"><p class="av-note av-dim">The comp card lands here &mdash; take lanes from the studio's takes, pick-best comping with trims and equal-power crossfades, and a one-press WAV export. Nothing is uploaded.</p></div>
   </section>
-
   <section class="av-card" id="av-mix">
     <h2>Mix &amp; Master</h2>
     <div id="av-mix-host"><p class="av-note av-dim">The mix desk lands here &mdash; per-track gain, pan, sends, ducking and insert FX; a verb + delay send pair; bus glue; and a master chain with LUFS / true-peak normalize targets and export dither. Render the mixdown offline, A/B it against a reference, and export the WAV. Nothing is uploaded.</p></div>
   </section>
-
   <section class="av-card" id="av-deck">
     <h2>Deck</h2>
     <div id="av-deck-host"><p class="av-note av-dim">The deck lands here &mdash; a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS / true-peak meters, engine voice + CPU readouts and a note ticker. Display only &mdash; nothing is uploaded.</p></div>
   </section>
-
-  <section class="av-card" id="av-files">
-    <h2>Project &amp; Share</h2>
-    <div id="av-files-host"><p class="av-note av-dim">The project &amp; share card lands here &mdash; save and open .anvl projects straight to disk (File System Access, with a download fallback), import samples from your drive, build a shareable patch card (PNG + offline QR link), and render a video clip of the deck with the mix printed in. Nothing is uploaded.</p></div>
+  <section class="av-card" id="av-deliver">
+    <h2>Deliver</h2>
+    <div id="av-deliver-host"><p class="av-note av-dim">The Deliver card lands here &mdash; one press renders the pattern offline (stems &middot; master &middot; MIDI &middot; README) into a DAW-ready zip. Nothing plays live, nothing is uploaded.</p></div>
   </section>
-
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-store" data-zone="store" role="tabpanel" aria-labelledby="av-tab-store" hidden>
+    <div class="av-zone-box">
+  <section class="av-card" id="av-store">
+    <h2>Store</h2>
+    <div id="av-store-host"><p class="av-note av-dim">The pack store lands here &mdash; factory packs download once, verify sha-256 before they are stored, and stay available offline.</p></div>
+  </section>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-code" data-zone="code" role="tabpanel" aria-labelledby="av-tab-code" hidden>
+    <div class="av-zone-box">
   <section class="av-card" id="av-code">
     <h2>CODE &mdash; write your own modules</h2>
     <div id="av-code-host"><p class="av-note av-dim">The CODE card lands here &mdash; write a sandboxed DSP module (an FX or a whole voice engine), run it live in the audio engine, and keep it in your own local library. Everything stays on this machine.</p></div>
   </section>
-
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-system" data-zone="system" role="tabpanel" aria-labelledby="av-tab-system" hidden>
+    <div class="av-zone-box">
+  <section class="av-card">
+    <h1>Phase S5 &mdash; CODE: write your own modules &middot; popout keyboard &middot; help</h1>
+    <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in), plus the S5 layer (the CODE section &mdash; a documented sandboxed DSP module API where your own code runs live in the engine &mdash; the popout keyboard, the Ctrl-K command palette, a 60-second tour, and the lesson ladder). Plus the M2 layer &mdash; MPE per-note expression from MPE controllers (bend, slide, pressure, pan), the sample CHOP card, the generative toolkit (euclidean, mutate, humanize, fills, per-track clock divide and swing) and the song arranger (song rows, quantised scene transitions, arrangement MIDI export).</p>
+  </section>
+  <section class="av-card" id="av-midi-card">
+    <h2>MIDI</h2>
+    <div id="av-midi-body"><p class="av-note av-dim">The hardware deck lands here — enable Web MIDI and your keys play Anvil through the same note path as the piano dock.</p></div>
+  </section>
+  <section class="av-card" id="av-files">
+    <h2>Project &amp; Share</h2>
+    <div id="av-files-host"><p class="av-note av-dim">The project &amp; share card lands here &mdash; save and open .anvl projects straight to disk (File System Access, with a download fallback), import samples from your drive, build a shareable patch card (PNG + offline QR link), and render a video clip of the deck with the mix printed in. Nothing is uploaded.</p></div>
+  </section>
   <section class="av-card" id="av-family">
     <h2>FAMILY &mdash; the MODDYS suite bridges</h2>
     <div id="av-family-host"><p class="av-note av-dim">The suite bridges land here &mdash; bounce a loop into the Music Hub inbox, import Resonance session packs, and jump to World Radio. Everything local; nothing is uploaded.</p></div>
   </section>
-
   <section class="av-card">
     <h2>Roadmap &mdash; from the plan</h2>
     <ul class="av-list">
@@ -1575,11 +1676,12 @@ body.av-contrast .av-card { border-color: var(--hair); }
       <li><b>P6&ndash;P7</b> &mdash; share links, cloud + community, polish, launch</li>
     </ul>
   </section>
-</main>
-
 <footer class="av-foot">
   <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; S5 &middot; code + keys + help &middot; AGPL-3.0-or-later</span>
 </footer>
+    </div>
+  </section>
+</main>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">
     <div id="piano-rail">
@@ -24219,6 +24321,7 @@ function avPaletteCardGo(elId) {
     if (typeof document === "undefined" || !document) return false;
     const el = document.getElementById(elId);
     if (!el || typeof el.scrollIntoView !== "function") return false;
+    if (typeof avZoneReveal === "function") { try { avZoneReveal(el); } catch (e1) { /* reveal is best-effort */ } }
     el.scrollIntoView({ block: "start" });
     return true;
   } catch (e) { return false; }
@@ -24358,6 +24461,17 @@ function avPaletteCoreCommands() {
       hint: "Halt and rewind the transport",
       run: () => { if (typeof avSeqStop === "function") { avSeqStop(); return true; } return false; } },
   ];
+  /* R1: the cockpit zones — one command per station (Alt+1..8 in the same order) */
+  if (typeof AV_ZONES !== "undefined" && AV_ZONES && AV_ZONES.length) {
+    for (let zi = 0; zi < AV_ZONES.length; zi++) {
+      const z = AV_ZONES[zi];
+      cmds.push({
+        id: "zone." + z.id, label: "Go: " + z.label, group: "Zones", keys: "Alt+" + (zi + 1),
+        hint: z.hint || ("Switch to the " + z.label + " zone"),
+        run: () => (typeof avZoneShow === "function" ? avZoneShow(z.id, { source: "palette" }) : false),
+      });
+    }
+  }
   for (let i = 0; i < AV_PALETTE_CARDS.length; i++) {
     const c = AV_PALETTE_CARDS[i];
     cmds.push({
@@ -66883,6 +66997,592 @@ if (typeof window !== "undefined") {
 }
 
 
+/* Anvil — the cockpit shell (R1): the fixed-window chassis.
+   Zones are the app's workflow stations, Serum-2 style: one visible at a time, tabs at the top,
+   internal pane scroll only — the page itself can never scroll. The header and the piano dock
+   stay put; the dock-tax lifts the BODY, not the content.
+   Deep link: ?z=<zone> · persistence: localStorage "av-zone" · shortcuts: Alt+1..8 ·
+   palette group "Zones". Harness seams: window.__avZoneAuto(sel) and a scrollIntoView wrapper
+   reveal the hidden zone that holds a target before scrolling to it (used by the suites). */
+"use strict";
+
+const AV_SHELL_VERSION = "r1.0";
+const AV_ZONE_DEFAULT = "synth";
+const AV_ZONE_LS_KEY = "av-zone";
+
+/* tab order = workflow order (pins: verify/_r1_wave.md §Zone map) */
+const AV_ZONES = [
+  { id: "synth",  label: "Synth",  hint: "Engines - levels, synth, FM, drums, samples, chop, wavetable editor" },
+  { id: "fx",     label: "FX",     hint: "The FX rack - drive / flavour / mod / delay / verb / conv / dyn" },
+  { id: "mod",    label: "Mod",    hint: "The mod matrix - macros and routing slots" },
+  { id: "seq",    label: "Seq",    hint: "The groovebox - patterns, p-locks, chains, scenes, song" },
+  { id: "studio", label: "Studio", hint: "Record, sessions, comping, mix & master, deck, deliver" },
+  { id: "store",  label: "Store",  hint: "Factory packs and banks - install once, play offline" },
+  { id: "code",   label: "Code",   hint: "Write your own DSP modules - they run live in the engine" },
+  { id: "system", label: "System", hint: "MIDI, project & share, family bridges, about" },
+];
+
+const avShellState = { ready: false, zone: null, why: "boot" };
+
+function avZoneTabEl(id) { return document.getElementById("av-tab-" + id); }
+function avZonePanelEl(id) { return document.getElementById("av-zone-" + id); }
+function avZoneList() { return AV_ZONES.map(z => z.id); }
+function avZoneInfo(id) { for (let i = 0; i < AV_ZONES.length; i++) if (AV_ZONES[i].id === id) return AV_ZONES[i]; return null; }
+function avZoneCurrent() { return avShellState.zone; }
+
+/* ---------- show a zone (the ONE state transition) ---------- */
+function avZoneShow(id, opts) {
+  try {
+    if (!avZoneInfo(id)) return false;
+    const o = opts || {};
+    const first = avShellState.zone === null;
+    const changed = avShellState.zone !== id;
+    for (let i = 0; i < AV_ZONES.length; i++) {
+      const zid = AV_ZONES[i].id;
+      const panel = avZonePanelEl(zid);
+      const tab = avZoneTabEl(zid);
+      const on = zid === id;
+      if (panel && !!panel.hidden === on) panel.hidden = !on;   /* toggle only when needed */
+      if (tab) {
+        tab.setAttribute("aria-selected", on ? "true" : "false");
+        tab.tabIndex = on ? 0 : -1;
+      }
+    }
+    avShellState.zone = id;
+    avShellState.why = o.source || "api";
+    try { document.body.setAttribute("data-av-zone", id); } catch (e2) { /* body attr is cosmetic */ }
+    try { localStorage.setItem(AV_ZONE_LS_KEY, id); } catch (e3) { /* private mode - session only */ }
+    if (changed && !first && !o.silent && typeof avA11yAnnounce === "function") {
+      const inf = avZoneInfo(id);
+      try { avA11yAnnounce("Zone: " + (inf ? inf.label : id)); } catch (e4) { /* announce is best-effort */ }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- reveal the zone that holds an element (harness + palette seam) ---------- */
+function avZoneReveal(el) {
+  try {
+    if (!el || !el.closest) return false;
+    const zone = el.closest(".av-zone");
+    if (zone && zone.hidden) {
+      const zid = zone.getAttribute("data-zone");
+      if (zid) return avZoneShow(zid, { source: "reveal", silent: true });
+    }
+    return !!(zone && !zone.hidden);
+  } catch (e) { return false; }
+}
+function avZoneAuto(selOrEl) {
+  try {
+    const el = (typeof selOrEl === "string") ? document.querySelector(selOrEl) : selOrEl;
+    if (!el) return false;
+    return avZoneReveal(el);
+  } catch (e) { return false; }
+}
+window.__avZoneAuto = function (sel) { return avZoneAuto(sel); };
+
+/* ---------- the scrollIntoView seam ----------
+   A suite (or any flow) scrolling to an element inside a hidden zone must first reveal that zone.
+   Wrapping the prototype keeps every call shape working without touching the callers; every guard
+   is try/catch so scrolling can never break. */
+function avShellInstallScrollSeam() {
+  try {
+    if (typeof Element === "undefined" || !Element.prototype) return false;
+    if (Element.prototype.__avZoneSeam === true) return true;
+    const orig = Element.prototype.scrollIntoView;
+    if (typeof orig !== "function") return false;
+    function seam(opts) {
+      try {
+        const el = this;
+        if (el && el.closest) {
+          const zone = el.closest(".av-zone");
+          if (zone && zone.hidden) {
+            const zid = zone.getAttribute("data-zone");
+            if (zid) avZoneShow(zid, { source: "seam", silent: true });
+          }
+        }
+      } catch (e) { /* never break a scroll */ }
+      return orig.call(this, opts);
+    }
+    seam.__avZoneSeam = true;
+    seam.__avZoneOrig = orig;
+    Element.prototype.scrollIntoView = seam;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- tab interactions ---------- */
+function avShellWireTabs() {
+  const nav = document.getElementById("av-zones");
+  if (!nav) return false;
+  let wired = 0;
+  for (let i = 0; i < AV_ZONES.length; i++) {
+    const tab = avZoneTabEl(AV_ZONES[i].id);
+    if (!tab) continue;
+    (function (zid) {
+      tab.addEventListener("click", function () { avZoneShow(zid, { source: "tab" }); });
+    })(AV_ZONES[i].id);
+    wired++;
+  }
+  /* ArrowLeft / ArrowRight move within the tablist (roving tabindex law) */
+  nav.addEventListener("keydown", function (e) {
+    if (!e || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    const cur = avShellState.zone;
+    const idx = avZoneList().indexOf(cur);
+    if (idx < 0) return;
+    const n = AV_ZONES.length;
+    const next = avZoneList()[(idx + (e.key === "ArrowRight" ? 1 : n - 1)) % n];
+    avZoneShow(next, { source: "tab-key" });
+    const t = avZoneTabEl(next);
+    if (t && typeof t.focus === "function") { try { t.focus(); } catch (e2) { /* focus is best-effort */ } }
+    e.preventDefault();
+  }, true);
+  return wired === AV_ZONES.length;
+}
+
+/* Alt+1..8 switches zones (workflow muscle memory; registered on capture so it wins early) */
+function avShellWireKeys() {
+  try {
+    document.addEventListener("keydown", function (e) {
+      try {
+        if (!e || !e.altKey || e.ctrlKey || e.metaKey) return;
+        if (!/^[1-8]$/.test(e.key || "")) return;
+        const idx = Number(e.key) - 1;
+        if (idx < 0 || idx >= AV_ZONES.length) return;
+        avZoneShow(AV_ZONES[idx].id, { source: "key" });
+        e.preventDefault();
+      } catch (e2) { /* a shortcut can never break typing */ }
+    }, true);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the proof host (avTestLine writes here, never into .av-main) ---------- */
+function avShellEnsureProofHost() {
+  try {
+    if (!document.getElementById("av-proofs")) {
+      const d = document.createElement("div");
+      d.id = "av-proofs";
+      d.setAttribute("aria-hidden", "true");
+      d.style.display = "none";
+      document.body.appendChild(d);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- boot ---------- */
+function avShellInit() {
+  try {
+    if (avShellState.ready) return true;
+    /* every zone panel must exist (the static restructure ships them) */
+    let have = 0;
+    for (let i = 0; i < AV_ZONES.length; i++) {
+      if (avZonePanelEl(AV_ZONES[i].id)) have++;
+    }
+    if (have !== AV_ZONES.length) {
+      console.warn("[anvil] shell: zones missing (" + have + "/" + AV_ZONES.length + ") - staying a plain page");
+      return false;
+    }
+    avShellWireTabs();
+    avShellWireKeys();
+    avShellInstallScrollSeam();
+    avShellEnsureProofHost();
+    /* default zone: ?z= > localStorage > synth */
+    let def = AV_ZONE_DEFAULT;
+    try {
+      const q = (typeof URLSearchParams === "function") ? new URLSearchParams(location.search).get("z") : null;
+      if (q && avZoneInfo(q)) def = q;
+      else {
+        const ls = localStorage.getItem(AV_ZONE_LS_KEY);
+        if (ls && avZoneInfo(ls)) def = ls;
+      }
+    } catch (e2) { /* boot default stands */ }
+    avShellState.zone = null;
+    if (!avZoneShow(def, { source: "boot", silent: true })) return false;
+    avShellState.ready = true;
+    return true;
+  } catch (e) {
+    console.warn("[anvil] shell init failed", e);
+    return false;
+  }
+}
+
+function avShellProof() {
+  return "SHELL SELFTEST " + JSON.stringify({
+    v: AV_SHELL_VERSION,
+    ready: avShellState.ready === true,
+    zones: AV_ZONES.length,
+    active: avZoneCurrent(),
+  });
+}
+
+/* the public facade (suites + palette + anything else) */
+window.__avZone = {
+  show: function (id, opts) { return avZoneShow(id, opts); },
+  current: function () { return avZoneCurrent(); },
+  list: function () { return avZoneList(); },
+  auto: function (sel) { return avZoneAuto(sel); },
+  version: AV_SHELL_VERSION,
+};
+
+
+/* Anvil — the module chrome (R2): every card gets a Serum-2-style module head — collapse toggle,
+   module menu (Init / Randomize / Collapse), plus the Synth-zone engine strip and the header
+   utilities (BROWSE, undo, redo). All writes ride existing funnels: knobs return to their defaults
+   through avKnobCommit (the one commit path); nothing here touches the engine directly. */
+"use strict";
+
+const AV_CHROME_VERSION = "r2.0";
+const AV_CHROME_FOLD_KEY = "av-fold";
+
+/* id -> capabilities: init = first knob of the card resets to data-def; rnd = randomize allowed */
+const AV_CHROME_CARDS = [
+  { id: "av-synth", init: true, rnd: true },
+  { id: "av-fm", init: true, rnd: true },
+  { id: "av-fx", init: true, rnd: false },
+  { id: "av-mod", init: true, rnd: false },
+  { id: "av-drums", init: true, rnd: false },
+  { id: "av-sample", init: true, rnd: false },
+  { id: "av-chop", init: true, rnd: false },
+  { id: "av-wt", init: true, rnd: false },
+  { id: "av-seq", init: false, rnd: false },
+  { id: "av-mix", init: false, rnd: false },
+  { id: "av-deck", init: false, rnd: false },
+  { id: "av-rec", init: false, rnd: false },
+  { id: "av-studio", init: false, rnd: false },
+  { id: "av-sessions", init: false, rnd: false },
+  { id: "av-comp", init: false, rnd: false },
+  { id: "av-deliver", init: false, rnd: false },
+  { id: "av-store", init: false, rnd: false },
+  { id: "av-code", init: false, rnd: false },
+  { id: "av-files", init: false, rnd: false },
+  { id: "av-midi-card", init: false, rnd: false },
+];
+
+const avChromeState = { ready: false, menu: null, menuCard: null, menuOpenFor: null };
+
+function avChromeInfo(id) {
+  for (let i = 0; i < AV_CHROME_CARDS.length; i++) if (AV_CHROME_CARDS[i].id === id) return AV_CHROME_CARDS[i];
+  return null;
+}
+
+/* ---------- fold (collapse) ---------- */
+function avChromeFoldMap() {
+  try {
+    const raw = localStorage.getItem(AV_CHROME_FOLD_KEY);
+    if (!raw) return {};
+    const o = JSON.parse(raw);
+    return (o && typeof o === "object") ? o : {};
+  } catch (e) { return {}; }
+}
+function avChromeFoldSave(map) {
+  try { localStorage.setItem(AV_CHROME_FOLD_KEY, JSON.stringify(map)); } catch (e) { /* session only */ }
+}
+function avChromeSetFold(card, fold, persist) {
+  if (!card) return false;
+  card.classList.toggle("av-mod-fold", fold === true);
+  const tg = card.querySelector(":scope > .av-mod-head .av-mod-toggle");
+  if (tg) {
+    tg.textContent = fold === true ? "\u25B8" : "\u25BE";
+    tg.setAttribute("aria-expanded", fold === true ? "false" : "true");
+    tg.setAttribute("aria-label", fold === true ? "Expand module" : "Collapse module");
+    tg.title = fold === true ? "Expand module" : "Collapse module";
+  }
+  if (persist) {
+    const map = avChromeFoldMap();
+    if (fold === true) map[card.id] = true; else delete map[card.id];
+    avChromeFoldSave(map);
+  }
+  return true;
+}
+
+/* ---------- Init / Randomize (through the ONE knob commit funnel) ---------- */
+function avChromeCardKnobs(card) {
+  if (!card) return [];
+  return Array.prototype.slice.call(card.querySelectorAll(".av-knob[data-knob]"));
+}
+function avChromeInitCard(id) {
+  try {
+    const card = document.getElementById(id);
+    const info = avChromeInfo(id);
+    if (!card || !info || !info.init) return 0;
+    if (typeof avKnobCommit !== "function") return 0;
+    const knobs = avChromeCardKnobs(card);
+    let n = 0;
+    for (let i = 0; i < knobs.length; i++) {
+      const el = knobs[i];
+      const def = parseFloat(el.dataset.def);
+      if (!isFinite(def)) continue;
+      try { avKnobCommit(el, def); n++; } catch (e) { /* one knob must not stop the sweep */ }
+    }
+    return n;
+  } catch (e) { return 0; }
+}
+function avChromeRandomizeCard(id) {
+  try {
+    const card = document.getElementById(id);
+    const info = avChromeInfo(id);
+    if (!card || !info || !info.rnd) return 0;
+    if (typeof avKnobCommit !== "function") return 0;
+    const knobs = avChromeCardKnobs(card);
+    let n = 0;
+    for (let i = 0; i < knobs.length; i++) {
+      const el = knobs[i];
+      const min = parseFloat(el.dataset.min), max = parseFloat(el.dataset.max), step = parseFloat(el.dataset.step);
+      if (!isFinite(min) || !isFinite(max) || max <= min) continue;
+      let v = min + Math.random() * (max - min);
+      if (isFinite(step) && step > 0) v = min + Math.round((v - min) / step) * step;
+      v = Math.max(min, Math.min(max, v));
+      try { avKnobCommit(el, v); n++; } catch (e) { /* one knob must not stop the sweep */ }
+    }
+    return n;
+  } catch (e) { return 0; }
+}
+
+/* ---------- the module menu popover ---------- */
+function avChromeMenuEl() {
+  try {
+    if (avChromeState.menu && document.body.contains(avChromeState.menu)) return avChromeState.menu;
+    let el = document.getElementById("av-mod-menu");
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "av-mod-menu";
+      el.className = "av-mod-menu";
+      el.setAttribute("role", "menu");
+      el.setAttribute("aria-label", "Module menu");
+      document.body.appendChild(el);
+    }
+    avChromeState.menu = el;
+    return el;
+  } catch (e) { return null; }
+}
+function avChromeMenuClose() {
+  const el = avChromeState.menu;
+  if (el) { el.classList.remove("open"); el.innerHTML = ""; }
+  const btn = avChromeState.menuOpenFor;
+  if (btn) { try { btn.setAttribute("aria-expanded", "false"); } catch (e) { /* gone */ } }
+  avChromeState.menuOpenFor = null;
+  avChromeState.menuCard = null;
+}
+function avChromeMenuOpen(btn, card) {
+  try {
+    const el = avChromeMenuEl();
+    if (!el || !card) return false;
+    const info = avChromeInfo(card.id) || { init: false, rnd: false };
+    const items = [];
+    if (info.init) items.push({ label: "Init module (knobs to defaults)", run: function () { avChromeInitCard(card.id); } });
+    if (info.rnd) items.push({ label: "Randomize module", run: function () { avChromeRandomizeCard(card.id); } });
+    items.push({ label: "Collapse / expand", run: function () { avChromeSetFold(card, !card.classList.contains("av-mod-fold"), true); } });
+    el.innerHTML = "";
+    for (let i = 0; i < items.length; i++) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "av-mod-menu-item";
+      b.setAttribute("role", "menuitem");
+      b.textContent = items[i].label;
+      (function (fn) { b.addEventListener("click", function () { avChromeMenuClose(); try { fn(); } catch (e) { /* action guards itself */ } }); })(items[i].run);
+      el.appendChild(b);
+    }
+    el.classList.add("open");
+    const r = btn.getBoundingClientRect();
+    const w = el.offsetWidth || 180, h = el.offsetHeight || 90;
+    let x = Math.min(Math.max(8, r.right - w), Math.max(8, window.innerWidth - w - 8));
+    let y = r.bottom + 4;
+    if (y + h > window.innerHeight - 8) y = Math.max(8, r.top - h - 4);
+    el.style.left = x + "px";
+    el.style.top = y + "px";
+    try { btn.setAttribute("aria-expanded", "true"); } catch (e2) { /* gone */ }
+    avChromeState.menuOpenFor = btn;
+    avChromeState.menuCard = card.id;
+    return true;
+  } catch (e) { return false; }
+}
+function avChromeMenuWireAway() {
+  try {
+    document.addEventListener("pointerdown", function (e) {
+      if (!avChromeState.menuOpenFor) return;
+      const el = avChromeState.menu;
+      if (el && el.contains(e.target)) return;
+      if (avChromeState.menuOpenFor.contains && avChromeState.menuOpenFor.contains(e.target)) return;
+      avChromeMenuClose();
+    }, true);
+    document.addEventListener("keydown", function (e) {
+      if (avChromeState.menuOpenFor && e && e.key === "Escape") avChromeMenuClose();
+    }, true);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the module heads ---------- */
+function avChromeBuildHead(card) {
+  try {
+    if (!card || card.querySelector(":scope > .av-mod-head")) return false;
+    let h2 = null;
+    const kids = card.children;
+    for (let i = 0; i < kids.length; i++) { if (kids[i].tagName === "H2") { h2 = kids[i]; break; } }
+    if (!h2) return false;
+    const head = document.createElement("div");
+    head.className = "av-mod-head";
+    const tg = document.createElement("button");
+    tg.type = "button";
+    tg.className = "av-mod-toggle av-btn mini";
+    tg.setAttribute("aria-label", "Collapse module");
+    tg.setAttribute("aria-expanded", "true");
+    tg.title = "Collapse module";
+    tg.textContent = "\u25BE";
+    const menu = document.createElement("button");
+    menu.type = "button";
+    menu.className = "av-mod-menu-btn av-btn mini";
+    menu.setAttribute("aria-haspopup", "menu");
+    menu.setAttribute("aria-expanded", "false");
+    menu.setAttribute("aria-label", "Module menu");
+    menu.title = "Module menu";
+    menu.textContent = "\u22EF";
+    const gap = document.createElement("span");
+    gap.className = "av-mod-gap";
+    card.insertBefore(head, h2);
+    head.appendChild(tg);
+    head.appendChild(h2);          /* the ORIGINAL h2 moves in, text preserved */
+    head.appendChild(gap);
+    head.appendChild(menu);
+    tg.addEventListener("click", function () { avChromeSetFold(card, !card.classList.contains("av-mod-fold"), true); });
+    menu.addEventListener("click", function () { avChromeMenuOpen(menu, card); });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the Synth-zone engine strip (jumps row, OSC-A/B/C style) ---------- */
+function avChromeBuildEngineStrip() {
+  try {
+    if (document.getElementById("av-engine-strip")) return true;
+    const box = document.querySelector("#av-zone-synth .av-zone-box");
+    if (!box) return false;
+    const strip = document.createElement("div");
+    strip.id = "av-engine-strip";
+    strip.className = "av-engine-strip";
+    strip.setAttribute("role", "toolbar");
+    strip.setAttribute("aria-label", "Engines");
+    const chips = [
+      ["VA \u00B7 WT", "av-synth"],
+      ["FM", "av-fm"],
+      ["DRUMS", "av-drums"],
+      ["SAMPLES", "av-sample"],
+      ["CHOP", "av-chop"],
+      ["WT EDITOR", "av-wt"],
+    ];
+    for (let i = 0; i < chips.length; i++) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "av-engine-chip";
+      b.setAttribute("data-target", chips[i][1]);
+      b.textContent = chips[i][0];
+      b.title = "Jump to the " + chips[i][0] + " module";
+      (function (target) {
+        b.addEventListener("click", function () {
+          try {
+            const el = document.getElementById(target);
+            if (el && el.scrollIntoView) el.scrollIntoView({ block: "start" });
+          } catch (e) { /* jump is best-effort */ }
+        });
+      })(chips[i][1]);
+      strip.appendChild(b);
+    }
+    /* after the first-run strip when present, else first */
+    const firstrun = box.querySelector("#av-firstrun");
+    if (firstrun && firstrun.nextSibling) box.insertBefore(strip, firstrun.nextSibling);
+    else if (firstrun) box.appendChild(strip);
+    else box.insertBefore(strip, box.firstChild);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the header utilities ---------- */
+function avChromeHeaderButton(id, label, title, onClick) {
+  try {
+    if (document.getElementById(id)) return true;
+    const head = document.querySelector("header.av-head");
+    if (!head) return false;
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "av-btn mini";
+    b.id = id;
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute("aria-label", title);
+    b.addEventListener("click", onClick);
+    const help = document.getElementById("av-help");
+    if (help && help.parentNode === head) head.insertBefore(b, help);
+    else head.appendChild(b);
+    return true;
+  } catch (e) { return false; }
+}
+function avChromeBuildHeader() {
+  avChromeHeaderButton("av-head-browse", "BROWSE", "Browse packs and presets (the Store zone)", function () {
+    try {
+      if (typeof avZoneShow === "function") avZoneShow("store", { source: "browse" });
+      const s = document.querySelector("#av-store-host .av-store-search");
+      if (s && s.focus) { try { s.focus(); } catch (e) { /* focus is best-effort */ } }
+    } catch (e) { /* browse stays clickable */ }
+  });
+  avChromeHeaderButton("av-head-undo", "\u21B6", "Undo (Ctrl+Z)", function () { try { if (typeof avUndo === "function") avUndo(); } catch (e) { /* guard */ } });
+  avChromeHeaderButton("av-head-redo", "\u21B7", "Redo (Ctrl+Y)", function () { try { if (typeof avRedo === "function") avRedo(); } catch (e) { /* guard */ } });
+  return true;
+}
+
+/* ---------- boot ---------- */
+function avChromeInit() {
+  try {
+    if (avChromeState.ready) return true;
+    avChromeMenuEl();              /* materialize the menu host up front (the R2 contract pins it) */
+    let heads = 0;
+    for (let i = 0; i < AV_CHROME_CARDS.length; i++) {
+      const card = document.getElementById(AV_CHROME_CARDS[i].id);
+      if (card && avChromeBuildHead(card)) heads++;
+    }
+    avChromeBuildEngineStrip();
+    avChromeBuildHeader();
+    avChromeMenuWireAway();
+    /* apply persisted folds */
+    const map = avChromeFoldMap();
+    for (let i = 0; i < AV_CHROME_CARDS.length; i++) {
+      const card = document.getElementById(AV_CHROME_CARDS[i].id);
+      if (card && map[card.id]) avChromeSetFold(card, true, false);
+    }
+    avChromeState.ready = heads > 0;
+    return avChromeState.ready;
+  } catch (e) {
+    console.warn("[anvil] chrome init failed", e);
+    return false;
+  }
+}
+
+function avChromeProof() {
+  let heads = 0;
+  for (let i = 0; i < AV_CHROME_CARDS.length; i++) if (document.querySelector("#" + AV_CHROME_CARDS[i].id + " > .av-mod-head")) heads++;
+  return "CHROME SELFTEST " + JSON.stringify({
+    v: AV_CHROME_VERSION,
+    heads: heads,
+    cards: AV_CHROME_CARDS.length,
+    strip: !!document.getElementById("av-engine-strip"),
+    browse: !!document.getElementById("av-head-browse"),
+  });
+}
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avChrome = {
+      version: AV_CHROME_VERSION,
+      init: function () { return avChromeInit(); },
+      initCard: function (id) { return avChromeInitCard(id); },
+      randomizeCard: function (id) { return avChromeRandomizeCard(id); },
+      fold: function (id, on) { const c = document.getElementById(id); return c ? avChromeSetFold(c, on === true, true) : false; },
+      cards: function () { return AV_CHROME_CARDS.map(function (c) { return c.id; }); },
+    };
+  } catch (e) { /* no window - nothing to publish */ }
+}
+
+
 /* Anvil — core shell (Phase 0). Boot contract: arm the master tap FIRST, then mount the knob
    framework on the LEVELS card and fill the header chips last; `data-av-ready` flips when all
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
@@ -67025,6 +67725,12 @@ function avMountLevels() {
   /* P7: the accessibility layer */
   let a11yOk = false;
   try { a11yOk = (typeof avA11yInit === "function") ? (avA11yInit() !== false) : false; } catch (e) { console.warn("[anvil] a11y init failed", e); }
+  /* R1: the cockpit shell — zones, tabs + the never-scrolling chassis (runs after the cards mount) */
+  let shellOk = false;
+  try { shellOk = (typeof avShellInit === "function") ? (avShellInit() !== false) : false; } catch (e) { console.warn("[anvil] shell init failed", e); }
+  /* R2: the module chrome — heads + menu on every card, the engine strip, header utilities */
+  let chromeOk = false;
+  try { chromeOk = (typeof avChromeInit === "function") ? (avChromeInit() !== false) : false; } catch (e) { console.warn("[anvil] chrome init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -67042,13 +67748,15 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
     try { avEngineSelfTest(); } catch (e) { console.warn("avtest engine", e); }
     try { if (typeof avPwaProof === "function") { const _ps = avPwaProof(); if (_ps) avTestLine(_ps, "av-pwatest"); } } catch (e) { console.warn("avtest pwa", e); }
     try { if (typeof avA11yProof === "function") { const _as = avA11yProof(); if (_as) avTestLine(_as, "av-a11ytest"); } } catch (e) { console.warn("avtest a11y", e); }
+    try { if (typeof avShellProof === "function") { const _ss = avShellProof(); if (_ss) avTestLine(_ss, "av-shelltest"); } } catch (e) { console.warn("avtest shell", e); }
+    try { if (typeof avChromeProof === "function") { const _cs = avChromeProof(); if (_cs) avTestLine(_cs, "av-chrometest"); } } catch (e) { console.warn("avtest chrome", e); }
   }
 })();
 
@@ -67058,7 +67766,7 @@ function avTestLine(text, id) {
   p.className = "av-mono";
   if (id) p.id = id;
   p.textContent = text;
-  const main = document.querySelector(".av-main");
+  const main = document.getElementById("av-proofs") || document.querySelector(".av-main");
   if (main) main.appendChild(p);
   return p;
 }

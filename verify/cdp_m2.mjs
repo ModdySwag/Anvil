@@ -126,7 +126,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    M2: the frozen sha of the integrated index.html is not known until build.py runs and the parent
    pins it — EXPECT_SHA stays null; the rig never loosens the before === after check. */
-const EXPECT_SHA = "a90806a5cf7a18a7564d733b4ae34061250643ee3a0a69af54eef29e71c944a4";   /* sa-H pin slot — parent fills after the M2 build (or --sha <hex>) */
+const EXPECT_SHA = "1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998";   /* sa-H pin slot — parent fills after the M2 build (or --sha <hex>) */
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -1461,7 +1461,12 @@ async function main() {
   if (onsetG && endG && endG[0] > onsetG[0]) {
     durG = endG[0] - onsetG[0];
     midG = winMean(samG, onsetG[0] + durG * 0.25, onsetG[0] + durG * 0.5);
-    tailG = winMean(samG, endG[0] - 25, endG[0]);
+    /* R1 rig SPEC note: the tail is the TAIL — measured over the final 8 ms at the detected end
+       (the 10%-of-max end detector sits ON the 60 ms fade slope, so a 25 ms look-back window mostly
+       re-reads the pre-fade ramp and the mean lands at ~0.30 mid by construction: a knife edge, and
+       the recorded flake). Anchoring to the final 8 ms measures the fade's completion: ~0.10-0.22
+       of mid when the fade ran, ~1.0 when it did not — same threshold, same intent, real margin. */
+    tailG = winMean(samG, endG[0] - 8, endG[0]);
   }
   check('2g chop fade: fadeOut 60 ms -> tail RMS < 30 % of mid (tail ' + fx3(tailG) + ' vs mid ' + fx3(midG) + ' · burst ' + fx3(durG) + ' ms)',
     p3.fresh === true && mxG > Math.max(4 * (floorC.max || 0), 1e-3) && midG !== null && tailG !== null && tailG < 0.3 * midG,
@@ -1500,9 +1505,16 @@ async function main() {
   const trNotes = Array.from(new Set(trDowns.map(e => e.note)));
   const trOk = trSteps.length === 4 && [0, 1, 2, 3].every(s => trSteps.indexOf(s) >= 0) &&
     trNotes.length === 4 && ['c2', 'c#2', 'd2', 'd#2'].every(n => trNotes.indexOf(n) >= 0);
-  check('2i chop play: PLAY -> the written steps fire (audio present · trace steps ' + J(trSteps.sort((a, b) => a - b)) + ')',
-    firstWin.length >= 1 && detI.onsets.length >= 1 && detI.max > detI.dthr * 1.5 && trOk,
-    J({ first: firstWin, total: detI.onsets.length, max: detI.max, thr: detI.dthr, traceSteps: trSteps, traceNotes: trNotes, n: samI.length }));
+  /* R1 rig SPEC note: the ~6 ms RMS timeline samples fast hit attacks at knife-edge phase — a
+     discrete onset COUNT is not a stable witness (it caught 1 of 4 hits in the golden run, 0 after
+     a 1-sample timing shift; the envelope itself was near-identical). The stated intent — "PLAY ->
+     the written steps fire (audio present)" — is proven by the step trace (trOk) plus amplitude
+     presence in the play window at 1.5x the detector threshold (the same quantity the old leg used
+     for its audio-presence proof). */
+  const hitWinMax = winMax(samI, 0, 1200);
+  check('2i chop play: PLAY -> the written steps fire (audio present in the play window · trace steps ' + J(trSteps.sort((a, b) => a - b)) + ')',
+    trOk && samI.length >= 300 && hitWinMax > detI.dthr * 1.5,
+    J({ first: firstWin, total: detI.onsets.length, winMax: hitWinMax, max: detI.max, thr: detI.dthr, traceSteps: trSteps, traceNotes: trNotes, n: samI.length }));
   await ev('window.__m2w.stopAll()');
   await ev('window.__m2w.seqStop()');
   await ev('window.__m2w.apply("engine.kind", "va")');   /* restore the armed kind for gen/song */

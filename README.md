@@ -22,8 +22,9 @@ seq 31 · store 28 · bounce 32 · deck 35 · s4 37 · s5 36 · code 36 · m1 33
 unchanged (128 · monotone) and the stress window read quieter than the previous record (no control
 needed); the worklet sha changed by design (FM + FLAVOUR + CONV joined the worklet concat; all off by
 default). The FM card renders every operator's knobs so share links stay compact.
-Frozen `a90806a5` — battery 22 suites green (P7 accessibility closed 2026-10-08). Deploy + live verify + owner pass remaining (see addendum 36).
-Resume at `CONTINUATION-2026-10-06.md` addendum 32.
+Frozen `1ddf7e54` (3,406,861 B) — **battery ALL GREEN: 23 suites** (smoke 38 · cockpit 18 · studio 37 · sessions 41 · comp 41 · mix 46 · feel 18 · keys 27 · midi 33 · sample 29 · rec 29 · fx 27 · seq 31 · store 28 · bounce 32 · deck 35 · s4 37 · s5 36 · code 36 · m1 33 · m2 40 · platform 52 · a11y 32).
+**R1+R2 cockpit redesign (2026-10-08):** a professional sound engineer's review ("the scrolling is awful", module GUIs/interactions must follow what engineers' tools do — Serum 2's template) drove a full GUI/workflow redesign: the page never scrolls any more — a fixed-window chassis with 8 workflow zones (Synth · FX · Mod · Seq · Studio · Store · Code · System), a tab bar, in-pane scrolling only, Serum-style module heads (collapse + Init/Randomize menu) on every card, an engine jump-strip, and header BROWSE/undo/redo. Evidence ingested under `research/external/serum2/` (official manual digest · 14-video series digest + frames · the real Serum 2 skin inventory · the current-UI audit); plan of record `docs/10-cockpit-redesign.md`. Perf gate + deploy + live verify: addendum 37.
+Resume at `CONTINUATION-2026-10-06.md` addendum 37.
 
 ## Build
     python3 build.py    # src/ → index.html (explicit js_parts order; node --check guard; sha printed)
@@ -42,6 +43,7 @@ Resume at `CONTINUATION-2026-10-06.md` addendum 32.
 - `research/acid/T2` · `groovebox/T3` · `matrix/T4` · `engine/T5` · `multiuser/T6` · `ui/T7` ·
   `packs/T8` · `reuse/T9` (Pattern Forge inventory)
 - `research/github/` — G1–G3 GitHub scouting (goldmine addendum: `docs/06`)
+- `research/external/serum2/` — the Serum-2-faithful redesign evidence (official manual digest · video-series + guide digest with reference frames · the current-UI audit; plan: `docs/10`)
 - `research/WAVE-LOG.md` — verification log + decisions + Phase-0 kickoff
 
 ## Laws (see docs for detail)

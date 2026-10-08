@@ -1,7 +1,7 @@
-index.html sha256 (before): a90806a5cf7a18a7564d733b4ae34061250643ee3a0a69af54eef29e71c944a4
+index.html sha256 (before): 1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9680 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-s5-1791407288978
-download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s5-dl-1791407288978
+cdp port 9680 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-s5-1791446585528
+download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s5-dl-1791446585528
 -- 1. boot + new globals + rail --
  ok   1a boot: data-av-ready flips + engine ctx found/running/ScriptProcessor-capable/sr 48k  -> {"ready":true,"eng":{"found":true,"state":"running","sampleRate":48000,"scp":true}}
  ok   1b rig helpers injected (__s5w v1: popout + CDP-popup seam · help/tour/tip/palette/lessons/wizard legs · page-side param diffs · cleanup)  -> {"v":1,"miss":[]}
@@ -9,7 +9,7 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s5-dl-1791407288978
  ok   1d rail + help markup: #pk-pop (rail button, visible while docked) + #pk-return + #av-help button present (help wiring proven by the 6a click)  -> {"pkPop":{"tag":"BUTTON","cls":"av-btn mini","vis":true,"label":"⧉","title":"Pop the keys out into their own window (always-on-top where "},"pkReturn":{"tag":"BUTTON","vis":false,"label":"⧉ BACK"},"helpBtn":{"tag":"BUTTON","text":"?"}}
    · baseline armed: {"mode":"studio","closed":false}
 -- 2. popout via avKbPopOpen({pip:false}) + CDP target + key forward --
- ok   2a popout open: avKbPopOpen({pip:false}) -> via "window" · body.piano-pop · app #piano-keys empty (bed left the app document) · avKbPopIsOut  -> {"open":{"opts":{"pip":false},"via":"window","error":null,"thrown":null,"ms":54,"timedOut":false,"raw":{"via":"window"}},"state":{"popped":true,"appKeys":0,"docked":false,"keys61":0,"out":true}}
+ ok   2a popout open: avKbPopOpen({pip:false}) -> via "window" · body.piano-pop · app #piano-keys empty (bed left the app document) · avKbPopIsOut  -> {"open":{"opts":{"pip":false},"via":"window","error":null,"thrown":null,"ms":67,"timedOut":false,"raw":{"via":"window"}},"state":{"popped":true,"appKeys":0,"docked":false,"keys61":0,"out":true}}
  ok   2b popout target: about:blank page target found via CDP enumeration, bed #piano-keys with 61 keys inside it, bar carries BACK / ARM / OCT  -> {"bound":true,"box":true,"keys":61,"bar":true,"barBtns":["⧉ BACK","ARM","−","+"],"backOk":true,"armOk":true,"octOk":true,"styles":2}
  ok   2c key forward: keydown "a" dispatched in the popout realm -> opener __lastNotePreview "c4" + __lastFwd advanced (app computed "c4")  -> {"pop":true,"before":{"modeSet":true,"fwd":0,"preview":null,"held":0,"mode":"keys","armed":true},"after":{"preview":"c4","fwd":1,"held":1,"kbHeld":1}}
  ok   2d keyup: forwarded keyup releases the note — avNote bus held 0 + avHeldByKey map empty  -> {"up":{"preview":"c4","fwd":2,"held":0,"kbHeld":0}}
@@ -19,7 +19,7 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s5-dl-1791407288978
 -- 4. blocked popup honesty --
  ok   4a blocked popup: window.open stubbed to null, pip:false -> via null + error string, NO piano-pop half state, 61 keys stay; window.open restored  -> {"restored":true,"stubbed":true,"r":{"opts":{"pip":false},"via":null,"error":"the browser blocked the keyboard window — allow popups for this page and try ⧉ again","thrown":null,"ms":0,"timedOut":false,"raw":{"via":null,"error":"the browser blocked the keyboard window — allow popups for this "}},"state":{"popped":false,"appKeys":61,"docked":true,"keys61":61,"out":false}}
 -- 5. document PiP path-or-skip --
- ok   5a DPIP path: no-opts open rides document Picture-in-Picture (via "dpip" or a real #pk-pop click) — bed live in the PiP window + avKbPopHome returns  -> {"probe":{"avail":true,"haveWindow":false,"liveWindow":false},"evalOpen":{"opts":null,"via":"dpip","error":null,"thrown":null,"ms":38,"timedOut":false,"raw":{"via":"dpip"}},"state":{"popped":true,"appKeys":0,"pipWin":true,"pipKeys":61,"pipBar":true},"home":{"ret":true,"state":{"popped":false,"appKeys":61,"docked":true,"keys61":61,"out":false}}}
+ ok   5a DPIP path: no-opts open rides document Picture-in-Picture (via "dpip" or a real #pk-pop click) — bed live in the PiP window + avKbPopHome returns  -> {"probe":{"avail":true,"haveWindow":false,"liveWindow":false},"evalOpen":{"opts":null,"via":"dpip","error":null,"thrown":null,"ms":40,"timedOut":false,"raw":{"via":"dpip"}},"state":{"popped":true,"appKeys":0,"pipWin":true,"pipKeys":61,"pipBar":true},"home":{"ret":true,"state":{"popped":false,"appKeys":61,"docked":true,"keys61":61,"out":false}}}
 -- 6. help overlay --
  ok   6a help open: #av-help click -> overlay visible, side panel rect width <= 480 ("help never covers the instrument")  -> {"open":true,"overlay":true,"vis":true,"w":400,"h":688}
  ok   6b SHORTCUTS tab lists Ctrl+Alt+1/2/3 and Ctrl+K  -> {"tabFound":true,"norm":"helpshortcutstourguidestipsinputworksfrominsideatextfieldctrl+alt+1studiothetypinglettersstayquietplaythedockwiththepointerctrl+alt+2keysthetypingkeysplaythedocka-rowwhitew-rowblackzxhopoctavesctrl+alt+3midiyourhardwareplayspclettersstayquietctrl+kopenthecommandpaletteeverycardandcommandonesearchaway+konamacopenorcloseth","ctrlAlt1":true,"ctrlAlt2":true,"ctrlAlt3":true,"ctrlK":true,"text":"HELP✕SHORTCUTSTOURGUIDESTIPSINPUT — works from inside a text fieldCtrl+Alt+1STUDIO — the typing letters stay quiet; play the dock with the pointerCtrl+Alt+2KEYS — the typing keys play the dock: A-row white, W-row black, Z / X hop octavesCtrl+Alt+3MIDI — your hardware plays; PC letters stay quietCtrl"}
@@ -33,7 +33,7 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s5-dl-1791407288978
 -- 8. tips --
  ok   8a tips: pointerover a curated control shows #av-tip with text (#btn-piano) · pointerout hides it  -> {"probe":{"tried":[{"sel":"#btn-piano","found":true,"tipEl":true,"vis":true,"txt":"Piano dock — 61 keys at the bottom; Y shows or hides it"}],"winner":"#btn-piano","text":"Piano dock — 61 keys at the bottom; Y shows or hides it"},"before":true,"after":false}
 -- 9. command palette --
- ok   9a Ctrl+K opens the palette (plain AND from a focused textarea: av-code-src) · Esc closes  -> {"plain":{"field":null,"temp":false,"activeBefore":false,"pre":{"handle":true,"open":false,"ov":true,"vis":false},"prevented":true,"post":{"handle":true,"open":true,"ov":true,"vis":true}},"esc":{"prevented":true,"state":{"handle":true,"open":false,"ov":true,"vis":false}},"field":{"field":"av-code-src","temp":false,"activeBefore":true,"pre":{"handle":true,"open":false,"ov":true,"vis":false},"prevented":true,"post":{"handle":true,"open":true,"ov":true,"vis":true}}}
+ ok   9a Ctrl+K opens the palette (plain AND from a focused textarea: av-code-src) · Esc closes  -> {"plain":{"field":null,"temp":false,"activeBefore":false,"pre":{"handle":true,"open":false,"ov":true,"vis":false},"prevented":true,"post":{"handle":true,"open":true,"ov":true,"vis":true}},"esc":{"prevented":true,"state":{"handle":true,"open":false,"ov":true,"vis":false}},"field":{"field":"av-code-src","temp":false,"activeBefore":false,"pre":{"handle":true,"open":false,"ov":true,"vis":false},"prevented":true,"post":{"handle":true,"open":true,"ov":true,"vis":true}}}
  ok   9b type "pian" -> first row is Toggle piano  -> {"n":1,"rows":["Toggle pianoY"],"first":"Toggle pianoY"}
  ok   9c Enter runs the first row (piano-closed flips) · reopen via Ctrl+K · Esc closes  -> {"enter":{"closedBefore":false,"prevented":true,"closedAfter":true,"pal":{"handle":true,"open":false,"ov":true,"vis":false}},"reopen":{"field":null,"temp":false,"activeBefore":false,"pre":{"handle":true,"open":false,"ov":true,"vis":false},"prevented":true,"post":{"handle":true,"open":true,"ov":true,"vis":true}},"esc":{"prevented":true,"state":{"handle":true,"open":false,"ov":true,"vis":false}}}
 -- 10. lessons + first-run strip --
@@ -49,13 +49,13 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-s5-dl-1791407288978
  ok   11c AUDITION fires notes (witness __lastNotePreview transitions: ["c2","d#2","g2"])  -> {"audition":{"pre":{"preview":"a2","taken":0,"held":0},"clicked":true},"trail":["c2","d#2","g2"],"last":{"preview":"g2","taken":0,"held":0}}
  ok   11d KEEP closes the wizard and the curated params stay (diff vs the pre-wizard mirror still >= 1)  -> {"keep":{"clicked":true},"panel":{"panel":true,"vis":false},"diff":{"changed":[{"k":"osc2.level","a":"0.5","b":"0.2"},{"k":"sub.level","a":"0","b":"0.9"},{"k":"filter.cutoff","a":"800","b":"260"},{"k":"filter.reso","a":"0.3","b":"0.2"},{"k":"filter.envAmt","a":"2","b":"1"},{"k":"env1.d","a":"0.3","b":"0.25"},{"k":"env1.s","a":"0.8","b":"0.5"},{"k":"acid.cutoff","a":"800","b":"260"},{"k":"acid.reso","a":"0.5","b":"0.45"}],"count":9,"total":206,"err":null}}
 -- 12. seal --
- ok   12a screenshot: renders/s5-suite.png (the instrument with the S5 wave live)  -> 168112 bytes · viewport 1440x900
+ ok   12a screenshot: renders/s5-suite.png (the instrument with the S5 wave live)  -> 152921 bytes · viewport 1440x900
  ok   12b cleanup: popout home · overlays closed · mode/piano restored to baseline · notes released · window.open intact  -> {"cleanup":{"steps":["notes:ok","seq:ok","tourClose:ok","help:ok","palette:ok","wiz:ok","mode:ok","piano:ok","notes2:ok"],"final":{"mode":"studio","armed":false,"closed":false,"held":0,"popped":false,"keys61":61,"helpOpen":false,"palOpen":false,"winOpenType":"function","flag":"1","tour":{"active":false,"step":0,"total":0}},"orig":{"mode":"studio","closed":false}},"arm":{"mode":"studio","closed":false}}
  ok   12c zero page errors (exceptions · Log errors · console.error)  -> page errors=0
-index.html sha256 (after): a90806a5cf7a18a7564d733b4ae34061250643ee3a0a69af54eef29e71c944a4
- ok   12d freeze: index.html sha256 before === after (unchanged by the run)  -> a90806a5cf7a18a7564d733b4ae34061250643ee3a0a69af54eef29e71c944a4
- ok   13 freeze pin leg: index.html sha256 = pinned  -> pinned a90806a5cf7a...
+index.html sha256 (after): 1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998
+ ok   12d freeze: index.html sha256 before === after (unchanged by the run)  -> 1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998
+ ok   13 freeze pin leg: index.html sha256 = pinned  -> pinned 1ddf7e54fdfa...
 
 RESULT: 36 passed, 0 failed
-S5-RESULT {"kind":"anvil-cdp-s5","sha256Before":"a90806a5cf7a18a7564d733b4ae34061250643ee3a0a69af54eef29e71c944a4","sha256After":"a90806a5cf7a18a7564d733b4ae34061250643ee3a0a69af54eef29e71c944a4","pinned":"a90806a5cf7a18a7564d733b4ae34061250643ee3a0a69af54eef29e71c944a4","passed":36,"failed":0,"checks":36,"verdict":"pass"}
+S5-RESULT {"kind":"anvil-cdp-s5","sha256Before":"1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998","sha256After":"1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998","pinned":"1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998","passed":36,"failed":0,"checks":36,"verdict":"pass"}
 S5 PASSED

@@ -140,6 +140,12 @@ function avMountLevels() {
   /* P7: the accessibility layer */
   let a11yOk = false;
   try { a11yOk = (typeof avA11yInit === "function") ? (avA11yInit() !== false) : false; } catch (e) { console.warn("[anvil] a11y init failed", e); }
+  /* R1: the cockpit shell — zones, tabs + the never-scrolling chassis (runs after the cards mount) */
+  let shellOk = false;
+  try { shellOk = (typeof avShellInit === "function") ? (avShellInit() !== false) : false; } catch (e) { console.warn("[anvil] shell init failed", e); }
+  /* R2: the module chrome — heads + menu on every card, the engine strip, header utilities */
+  let chromeOk = false;
+  try { chromeOk = (typeof avChromeInit === "function") ? (avChromeInit() !== false) : false; } catch (e) { console.warn("[anvil] chrome init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -157,13 +163,15 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
     try { avEngineSelfTest(); } catch (e) { console.warn("avtest engine", e); }
     try { if (typeof avPwaProof === "function") { const _ps = avPwaProof(); if (_ps) avTestLine(_ps, "av-pwatest"); } } catch (e) { console.warn("avtest pwa", e); }
     try { if (typeof avA11yProof === "function") { const _as = avA11yProof(); if (_as) avTestLine(_as, "av-a11ytest"); } } catch (e) { console.warn("avtest a11y", e); }
+    try { if (typeof avShellProof === "function") { const _ss = avShellProof(); if (_ss) avTestLine(_ss, "av-shelltest"); } } catch (e) { console.warn("avtest shell", e); }
+    try { if (typeof avChromeProof === "function") { const _cs = avChromeProof(); if (_cs) avTestLine(_cs, "av-chrometest"); } } catch (e) { console.warn("avtest chrome", e); }
   }
 })();
 
@@ -173,7 +181,7 @@ function avTestLine(text, id) {
   p.className = "av-mono";
   if (id) p.id = id;
   p.textContent = text;
-  const main = document.querySelector(".av-main");
+  const main = document.getElementById("av-proofs") || document.querySelector(".av-main");
   if (main) main.appendChild(p);
   return p;
 }

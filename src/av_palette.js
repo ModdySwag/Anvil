@@ -246,6 +246,7 @@ function avPaletteCardGo(elId) {
     if (typeof document === "undefined" || !document) return false;
     const el = document.getElementById(elId);
     if (!el || typeof el.scrollIntoView !== "function") return false;
+    if (typeof avZoneReveal === "function") { try { avZoneReveal(el); } catch (e1) { /* reveal is best-effort */ } }
     el.scrollIntoView({ block: "start" });
     return true;
   } catch (e) { return false; }
@@ -385,6 +386,17 @@ function avPaletteCoreCommands() {
       hint: "Halt and rewind the transport",
       run: () => { if (typeof avSeqStop === "function") { avSeqStop(); return true; } return false; } },
   ];
+  /* R1: the cockpit zones — one command per station (Alt+1..8 in the same order) */
+  if (typeof AV_ZONES !== "undefined" && AV_ZONES && AV_ZONES.length) {
+    for (let zi = 0; zi < AV_ZONES.length; zi++) {
+      const z = AV_ZONES[zi];
+      cmds.push({
+        id: "zone." + z.id, label: "Go: " + z.label, group: "Zones", keys: "Alt+" + (zi + 1),
+        hint: z.hint || ("Switch to the " + z.label + " zone"),
+        run: () => (typeof avZoneShow === "function" ? avZoneShow(z.id, { source: "palette" }) : false),
+      });
+    }
+  }
   for (let i = 0; i < AV_PALETTE_CARDS.length; i++) {
     const c = AV_PALETTE_CARDS[i];
     cmds.push({

@@ -532,6 +532,79 @@ async function main() {
   check('P7 a11y: knobs decorated (>= 85 sliders) + zero unnamed buttons',
     p7S.s && typeof p7S.s.sliders === 'number' && p7S.s.sliders >= 85 && p7S.s.unnamed === 0, JSON.stringify(p7S.s));
 
+  /* 6p. the R1 cockpit shell: zones + tabs, one zone shown, the page cannot scroll */
+  const ckR = await ev(`(() => {
+    const zones = [...document.querySelectorAll('.av-zone')];
+    const tabs = [...document.querySelectorAll('.av-zone-tab')];
+    const shown = zones.filter(z => !z.hidden);
+    const d = document.scrollingElement || document.documentElement;
+    const cs = getComputedStyle(document.body);
+    let proof = null;
+    try { const el = document.getElementById('av-shelltest'); proof = el ? JSON.parse(el.textContent.replace('SHELL SELFTEST ', '')) : null; } catch (e) { proof = null; }
+    return { zones: zones.length, tabs: tabs.length, shown: shown.length,
+             active: shown[0] ? shown[0].getAttribute('data-zone') : null,
+             order: tabs.map(t => t.getAttribute('data-zone')).join(','),
+             bodyZone: document.body.getAttribute('data-av-zone'),
+             docScroll: d.scrollHeight, docClient: d.clientHeight, overflowY: cs.overflowY,
+             facade: typeof window.__avZone, auto: typeof window.__avZoneAuto, proof: proof };
+  })()`);
+  const ck = ckR.value || {};
+  check('R1 cockpit: 8 zones + 8 tabs (workflow order), exactly one shown (synth default), page cannot scroll',
+    ck.zones === 8 && ck.tabs === 8 && ck.shown === 1 && ck.active === 'synth'
+    && ck.order === 'synth,fx,mod,seq,studio,store,code,system' && ck.bodyZone === 'synth'
+    && ck.docScroll <= ck.docClient + 2 && ck.overflowY === 'hidden'
+    && ck.facade === 'object' && ck.auto === 'function', JSON.stringify({ zones: ck.zones, tabs: ck.tabs, shown: ck.shown, active: ck.active, doc: ck.docScroll + '/' + ck.docClient, overflow: ck.overflowY }));
+  check('R1 cockpit: SHELL SELFTEST ok (?avtest=1)',
+    !!ck.proof && ck.proof.ready === true && ck.proof.zones === 8 && ck.proof.active === 'synth', JSON.stringify(ck.proof));
+
+  /* 6q. the R2 module chrome: heads + menu on every card, engine strip, header utilities */
+  const chR = await ev(`(() => {
+    const cards = ['av-synth','av-fm','av-fx','av-mod','av-seq','av-mix','av-store','av-code'];
+    const heads = cards.filter(id => { const c = document.getElementById(id); return !!(c && c.querySelector(':scope > .av-mod-head')); }).length;
+    const strip = document.getElementById('av-engine-strip');
+    let proof = null;
+    try { const el = document.getElementById('av-chrometest'); proof = el ? JSON.parse(el.textContent.replace('CHROME SELFTEST ', '')) : null; } catch (e) { proof = null; }
+    return { heads: heads,
+             toggles: document.querySelectorAll('.av-mod-toggle').length,
+             menus: document.querySelectorAll('.av-mod-menu-btn').length,
+             chips: strip ? strip.querySelectorAll('.av-engine-chip').length : 0,
+             stripInSynth: !!(strip && strip.closest('#av-zone-synth')),
+             browse: !!document.getElementById('av-head-browse'),
+             undo: !!document.getElementById('av-head-undo'), redo: !!document.getElementById('av-head-redo'),
+             menuHost: !!document.getElementById('av-mod-menu'),
+             chromeApi: typeof window.__avChrome, proof: proof };
+  })()`);
+  const ch = chR.value || {};
+  check('R2 chrome: module heads + menu buttons on every chrome card, engine strip (6 chips in Synth), header BROWSE/undo/redo',
+    ch.heads === 8 && ch.toggles >= 20 && ch.menus >= 20 && ch.chips === 6 && ch.stripInSynth === true
+    && ch.browse === true && ch.undo === true && ch.redo === true && ch.menuHost === true && ch.chromeApi === 'object', JSON.stringify(ch));
+  check('R2 chrome: CHROME SELFTEST ok (?avtest=1)',
+    !!ch.proof && ch.proof.heads >= 20 && ch.proof.cards >= 20 && ch.proof.strip === true && ch.proof.browse === true, JSON.stringify(ch.proof));
+
+  /* 6r. R2 chrome works: fold toggles; Init returns a knob to its default through the funnel */
+  const fnR2 = await ev(`(() => {
+    const card = document.getElementById('av-synth');
+    const tg = card && card.querySelector(':scope > .av-mod-head .av-mod-toggle');
+    if (!tg) return { err: 'no toggle' };
+    tg.click();
+    const folded = card.classList.contains('av-mod-fold');
+    tg.click();
+    const unfolded = !card.classList.contains('av-mod-fold');
+    let initN = null;
+    try {
+      const knob = card.querySelector('.av-knob[data-knob]');
+      const def = parseFloat(knob.dataset.def);
+      const before = parseFloat(knob.getAttribute('aria-valuenow'));
+      avKnobCommit(knob, def === 0 ? 1 : 0);
+      initN = window.__avChrome.initCard('av-synth');
+      const after = parseFloat(knob.getAttribute('aria-valuenow'));
+      return { folded: folded, unfolded: unfolded, initN: initN, restored: Math.abs(after - def) < 1e-9, before: before };
+    } catch (e) { return { folded: folded, unfolded: unfolded, err: String((e && e.message) || e) }; }
+  })()`);
+  const fn2 = fnR2.value || {};
+  check('R2 chrome: collapse toggles fold on/off; Init restores the first knob to its data-def via the one commit funnel',
+    fn2.folded === true && fn2.unfolded === true && typeof fn2.initN === 'number' && fn2.initN > 0 && fn2.restored === true, JSON.stringify(fn2));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

@@ -1,4 +1,5 @@
 <body>
+<body>
 <header class="av-head">
   <span class="av-word">Anvil</span>
   <span class="av-chip av-hot" id="av-version">v0.1.0</span>
@@ -8,127 +9,145 @@
   <button class="av-btn" id="btn-piano" title="Piano dock — 61 keys at the bottom (Y)" aria-label="Piano dock">&#127929;</button>
   <button class="av-btn" id="av-help" title="Help &mdash; shortcuts, the tour and the guides (?)" aria-label="Help">?</button>
 </header>
-
+<nav class="av-zones" id="av-zones" role="tablist" aria-label="Zones">
+  <div class="av-zones-in">
+    <button class="av-zone-tab" id="av-tab-synth" data-zone="synth" role="tab" aria-selected="true" aria-controls="av-zone-synth" title="Synth zone">Synth</button>
+    <button class="av-zone-tab" id="av-tab-fx" data-zone="fx" role="tab" aria-selected="false" aria-controls="av-zone-fx" title="FX zone">FX</button>
+    <button class="av-zone-tab" id="av-tab-mod" data-zone="mod" role="tab" aria-selected="false" aria-controls="av-zone-mod" title="Mod zone">Mod</button>
+    <button class="av-zone-tab" id="av-tab-seq" data-zone="seq" role="tab" aria-selected="false" aria-controls="av-zone-seq" title="Seq zone">Seq</button>
+    <button class="av-zone-tab" id="av-tab-studio" data-zone="studio" role="tab" aria-selected="false" aria-controls="av-zone-studio" title="Studio zone">Studio</button>
+    <button class="av-zone-tab" id="av-tab-store" data-zone="store" role="tab" aria-selected="false" aria-controls="av-zone-store" title="Store zone">Store</button>
+    <button class="av-zone-tab" id="av-tab-code" data-zone="code" role="tab" aria-selected="false" aria-controls="av-zone-code" title="Code zone">Code</button>
+    <button class="av-zone-tab" id="av-tab-system" data-zone="system" role="tab" aria-selected="false" aria-controls="av-zone-system" title="System zone">System</button>
+  </div>
+</nav>
 <main class="av-main">
-  <section class="av-card">
-    <h1>Phase S5 &mdash; CODE: write your own modules &middot; popout keyboard &middot; help</h1>
-    <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in), plus the S5 layer (the CODE section &mdash; a documented sandboxed DSP module API where your own code runs live in the engine &mdash; the popout keyboard, the Ctrl-K command palette, a 60-second tour, and the lesson ladder). Plus the M2 layer &mdash; MPE per-note expression from MPE controllers (bend, slide, pressure, pan), the sample CHOP card, the generative toolkit (euclidean, mutate, humanize, fills, per-track clock divide and swing) and the song arranger (song rows, quantised scene transitions, arrangement MIDI export).</p>
-  </section>
-
+  <section class="av-zone" id="av-zone-synth" data-zone="synth" role="tabpanel" aria-labelledby="av-tab-synth">
+    <div class="av-zone-box">
   <section class="av-card" id="av-levels">
     <h2>Levels</h2>
     <div id="av-levels-knobs"></div>
     <p class="av-note av-dim">Both knobs ride the master tap: <b>Instrument</b> sets the keys bus (what the instrument plays), <b>Master</b> is the final out. Drag or twist the rim &middot; wheel steps &middot; arrow keys when focused &middot; double-click resets.</p>
   </section>
-
   <section class="av-card" id="av-synth">
     <h2>Synth</h2>
     <div id="av-synth-bank-host"></div>
     <div id="av-synth-knobs"></div>
     <p class="av-note av-dim">Play it from the piano dock below or your MIDI keys.</p>
   </section>
-
   <section class="av-card" id="av-fm">
     <h2>FM</h2>
     <div id="av-fm-host"><p class="av-note av-dim">The FM engine lands here &mdash; six operators, eight algorithms and DX-style envelopes. Set the ENGINE select to fm and program the grid.</p></div>
   </section>
-
-  <section class="av-card" id="av-fx">
-    <h2>FX Rack</h2>
-    <div id="av-fx-host"><p class="av-note av-dim">The rack lands here &mdash; seven modules inside the mixer worklet: drive &rarr; flavour &rarr; mod &rarr; delay &rarr; verb &rarr; conv &rarr; dyn. All off = bit-identical bypass.</p></div>
-  </section>
-
-  <section class="av-card" id="av-mod">
-    <h2>Mod Matrix</h2>
-    <div id="av-mod-host"><p class="av-note av-dim">The matrix lands here &mdash; 8 macro knobs and up to 32 routing slots (env / LFO / velocity / key / rand &rarr; cutoff, reso, pitch, osc levels, pan).</p></div>
-  </section>
-
-  <section class="av-card" id="av-midi-card">
-    <h2>MIDI</h2>
-    <div id="av-midi-body"><p class="av-note av-dim">The hardware deck lands here — enable Web MIDI and your keys play Anvil through the same note path as the piano dock.</p></div>
-  </section>
-
   <section class="av-card" id="av-drums">
     <h2>Drums</h2>
     <div id="av-pads-host"><p class="av-note av-dim">Kit pads land here &mdash; set the ENGINE select to DRUM and play the pads, the dock, or MIDI (notes below the split go to the kit).</p></div>
   </section>
-
   <section class="av-card" id="av-sample">
     <h2>Samples</h2>
     <div id="av-sample-host"><p class="av-note av-dim">The sample core lands here &mdash; import WAVs, see the waveform, preview through the master tap.</p></div>
   </section>
-
   <section class="av-card" id="av-chop">
     <h2>Chop</h2>
     <div id="av-chop-host"><p class="av-note av-dim">The chop card lands here &mdash; detect transients, trim, fade and normalise the slices, map them to 16 pads and push the kit into the sampler.</p></div>
   </section>
-
   <section class="av-card" id="av-wt">
     <h2>Wavetable Editor</h2>
     <div id="av-wt-host"><p class="av-note av-dim">The wavetable editor lands here &mdash; draw or import a table, morph frames with spectral tools, and send it into the OSC2 wavetable oscillator. Your tables stay on this machine.</p></div>
   </section>
-
-  <section class="av-card" id="av-rec">
-    <h2>Recorder</h2>
-    <div id="av-rec-host"><p class="av-note av-dim">Record the master output and grab a WAV.</p></div>
+    </div>
   </section>
-
+  <section class="av-zone" id="av-zone-fx" data-zone="fx" role="tabpanel" aria-labelledby="av-tab-fx" hidden>
+    <div class="av-zone-box">
+  <section class="av-card" id="av-fx">
+    <h2>FX Rack</h2>
+    <div id="av-fx-host"><p class="av-note av-dim">The rack lands here &mdash; seven modules inside the mixer worklet: drive &rarr; flavour &rarr; mod &rarr; delay &rarr; verb &rarr; conv &rarr; dyn. All off = bit-identical bypass.</p></div>
+  </section>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-mod" data-zone="mod" role="tabpanel" aria-labelledby="av-tab-mod" hidden>
+    <div class="av-zone-box">
+  <section class="av-card" id="av-mod">
+    <h2>Mod Matrix</h2>
+    <div id="av-mod-host"><p class="av-note av-dim">The matrix lands here &mdash; 8 macro knobs and up to 32 routing slots (env / LFO / velocity / key / rand &rarr; cutoff, reso, pitch, osc levels, pan).</p></div>
+  </section>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-seq" data-zone="seq" role="tabpanel" aria-labelledby="av-tab-seq" hidden>
+    <div class="av-zone-box">
   <section class="av-card" id="av-seq">
     <h2>Sequencer</h2>
     <div id="av-seq-host"><p class="av-note av-dim">The step sequencer lands here &mdash; 4 tracks, swing, probability, p-locks, chains and scenes, driving the synth through the one note bus.</p></div>
   </section>
-
-  <section class="av-card" id="av-store">
-    <h2>Store</h2>
-    <div id="av-store-host"><p class="av-note av-dim">The pack store lands here &mdash; factory packs download once, verify sha-256 before they are stored, and stay available offline.</p></div>
+    </div>
   </section>
-
-  <section class="av-card" id="av-deliver">
-    <h2>Deliver</h2>
-    <div id="av-deliver-host"><p class="av-note av-dim">The Deliver card lands here &mdash; one press renders the pattern offline (stems &middot; master &middot; MIDI &middot; README) into a DAW-ready zip. Nothing plays live, nothing is uploaded.</p></div>
+  <section class="av-zone" id="av-zone-studio" data-zone="studio" role="tabpanel" aria-labelledby="av-tab-studio" hidden>
+    <div class="av-zone-box">
+  <section class="av-card" id="av-rec">
+    <h2>Recorder</h2>
+    <div id="av-rec-host"><p class="av-note av-dim">Record the master output and grab a WAV.</p></div>
   </section>
-
   <section class="av-card" id="av-studio">
     <h2>Studio</h2>
     <div id="av-studio-host"><p class="av-note av-dim">The studio record core lands here &mdash; mic/line input riding the engine's own context, a count-in metronome, and lap takes that split at sequencer cycle boundaries. Nothing is uploaded.</p></div>
   </section>
-
   <section class="av-card" id="av-sessions">
     <h2>Sessions</h2>
     <div id="av-sessions-host"><p class="av-note av-dim">The sessions card lands here &mdash; versioned snapshots of the working state, autosave with crash recovery, and a one-press backup zip. Everything stays local.</p></div>
   </section>
-
   <section class="av-card" id="av-comp">
     <h2>Takes &amp; Comping</h2>
     <div id="av-comp-host"><p class="av-note av-dim">The comp card lands here &mdash; take lanes from the studio's takes, pick-best comping with trims and equal-power crossfades, and a one-press WAV export. Nothing is uploaded.</p></div>
   </section>
-
   <section class="av-card" id="av-mix">
     <h2>Mix &amp; Master</h2>
     <div id="av-mix-host"><p class="av-note av-dim">The mix desk lands here &mdash; per-track gain, pan, sends, ducking and insert FX; a verb + delay send pair; bus glue; and a master chain with LUFS / true-peak normalize targets and export dither. Render the mixdown offline, A/B it against a reference, and export the WAV. Nothing is uploaded.</p></div>
   </section>
-
   <section class="av-card" id="av-deck">
     <h2>Deck</h2>
     <div id="av-deck-host"><p class="av-note av-dim">The deck lands here &mdash; a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS / true-peak meters, engine voice + CPU readouts and a note ticker. Display only &mdash; nothing is uploaded.</p></div>
   </section>
-
-  <section class="av-card" id="av-files">
-    <h2>Project &amp; Share</h2>
-    <div id="av-files-host"><p class="av-note av-dim">The project &amp; share card lands here &mdash; save and open .anvl projects straight to disk (File System Access, with a download fallback), import samples from your drive, build a shareable patch card (PNG + offline QR link), and render a video clip of the deck with the mix printed in. Nothing is uploaded.</p></div>
+  <section class="av-card" id="av-deliver">
+    <h2>Deliver</h2>
+    <div id="av-deliver-host"><p class="av-note av-dim">The Deliver card lands here &mdash; one press renders the pattern offline (stems &middot; master &middot; MIDI &middot; README) into a DAW-ready zip. Nothing plays live, nothing is uploaded.</p></div>
   </section>
-
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-store" data-zone="store" role="tabpanel" aria-labelledby="av-tab-store" hidden>
+    <div class="av-zone-box">
+  <section class="av-card" id="av-store">
+    <h2>Store</h2>
+    <div id="av-store-host"><p class="av-note av-dim">The pack store lands here &mdash; factory packs download once, verify sha-256 before they are stored, and stay available offline.</p></div>
+  </section>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-code" data-zone="code" role="tabpanel" aria-labelledby="av-tab-code" hidden>
+    <div class="av-zone-box">
   <section class="av-card" id="av-code">
     <h2>CODE &mdash; write your own modules</h2>
     <div id="av-code-host"><p class="av-note av-dim">The CODE card lands here &mdash; write a sandboxed DSP module (an FX or a whole voice engine), run it live in the audio engine, and keep it in your own local library. Everything stays on this machine.</p></div>
   </section>
-
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-system" data-zone="system" role="tabpanel" aria-labelledby="av-tab-system" hidden>
+    <div class="av-zone-box">
+  <section class="av-card">
+    <h1>Phase S5 &mdash; CODE: write your own modules &middot; popout keyboard &middot; help</h1>
+    <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in), plus the S5 layer (the CODE section &mdash; a documented sandboxed DSP module API where your own code runs live in the engine &mdash; the popout keyboard, the Ctrl-K command palette, a 60-second tour, and the lesson ladder). Plus the M2 layer &mdash; MPE per-note expression from MPE controllers (bend, slide, pressure, pan), the sample CHOP card, the generative toolkit (euclidean, mutate, humanize, fills, per-track clock divide and swing) and the song arranger (song rows, quantised scene transitions, arrangement MIDI export).</p>
+  </section>
+  <section class="av-card" id="av-midi-card">
+    <h2>MIDI</h2>
+    <div id="av-midi-body"><p class="av-note av-dim">The hardware deck lands here — enable Web MIDI and your keys play Anvil through the same note path as the piano dock.</p></div>
+  </section>
+  <section class="av-card" id="av-files">
+    <h2>Project &amp; Share</h2>
+    <div id="av-files-host"><p class="av-note av-dim">The project &amp; share card lands here &mdash; save and open .anvl projects straight to disk (File System Access, with a download fallback), import samples from your drive, build a shareable patch card (PNG + offline QR link), and render a video clip of the deck with the mix printed in. Nothing is uploaded.</p></div>
+  </section>
   <section class="av-card" id="av-family">
     <h2>FAMILY &mdash; the MODDYS suite bridges</h2>
     <div id="av-family-host"><p class="av-note av-dim">The suite bridges land here &mdash; bounce a loop into the Music Hub inbox, import Resonance session packs, and jump to World Radio. Everything local; nothing is uploaded.</p></div>
   </section>
-
   <section class="av-card">
     <h2>Roadmap &mdash; from the plan</h2>
     <ul class="av-list">
@@ -140,11 +159,12 @@
       <li><b>P6&ndash;P7</b> &mdash; share links, cloud + community, polish, launch</li>
     </ul>
   </section>
-</main>
-
 <footer class="av-foot">
   <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; S5 &middot; code + keys + help &middot; AGPL-3.0-or-later</span>
 </footer>
+    </div>
+  </section>
+</main>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">
     <div id="piano-rail">

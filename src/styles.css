@@ -177,8 +177,6 @@ body.knob-dragging, body.knob-dragging * { cursor: ns-resize !important; }
    Layout math: --dock-tax lifts the page content while the dock is out. */
 :root { --dock-h: 136px; --dock-tax: 0px; }
 body:not(.piano-closed) { --dock-tax: var(--dock-h, 136px); }
-body:not(.piano-closed) .av-main { padding-bottom: calc(20px + var(--dock-tax)); }
-body:not(.piano-closed) .av-foot { margin-bottom: var(--dock-tax); }
 #piano-dock {
   position: fixed; left: 16px; right: 16px; bottom: 0; z-index: 41;
   height: var(--dock-h, 136px);
@@ -1407,3 +1405,87 @@ body.av-contrast .av-card { border-color: var(--hair); }
     scroll-behavior: auto !important;
   }
 }
+
+/* ============================================================================
+   R1 COCKPIT — the fixed-window chassis (Serum-2-faithful zones).
+   The page never scrolls: header + zone tabs stay put, ONE zone pane is shown and scrolls
+   internally; the piano dock stays fixed at the bottom (the dock-tax is now BODY padding with
+   border-box sizing, so the content area shrinks by the dock height). */
+html, body { overflow: hidden; }
+.av-zones {
+  border-bottom: 1px solid var(--hair);
+  background: var(--panel);
+  flex: none;
+}
+.av-zones-in {
+  display: flex; gap: 2px;
+  padding: 0 10px;
+  max-width: 1080px; margin: 0 auto; width: 100%;
+  overflow-x: auto; scrollbar-width: none;
+}
+.av-zones-in::-webkit-scrollbar { display: none; }
+.av-zone-tab {
+  appearance: none; -webkit-appearance: none;
+  background: transparent; border: 0; border-bottom: 2px solid transparent;
+  color: var(--text-3);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  padding: 9px 12px 7px; cursor: pointer; white-space: nowrap;
+}
+.av-zone-tab:hover { color: var(--text-2); }
+.av-zone-tab:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
+.av-zone-tab[aria-selected="true"] {
+  color: var(--teal); border-bottom-color: var(--teal);
+  text-shadow: 0 0 8px rgba(46,216,201,.35);
+}
+body.av-contrast .av-zone-tab[aria-selected="true"] { text-shadow: none; }
+
+.av-main { padding: 0; max-width: none; margin: 0; min-height: 0; overflow: hidden; }
+.av-zone { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.av-zone-box {
+  max-width: 1080px; width: 100%; margin: 0 auto;
+  padding: 16px 16px 26px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.av-zone::-webkit-scrollbar { width: 10px; }
+.av-zone::-webkit-scrollbar-track { background: transparent; }
+.av-zone::-webkit-scrollbar-thumb { background: #22303a; border-radius: 6px; border: 2px solid var(--bg); }
+.av-zone::-webkit-scrollbar-thumb:hover { background: #2f4351; }
+
+/* the dock-tax pads the BODY now (the page itself cannot scroll) */
+body:not(.piano-closed) { padding-bottom: var(--dock-tax); }
+
+@media (max-width: 1180px) {
+  .av-zone-box { padding: 12px 12px 22px; }
+}
+
+/* ============================================================================
+   R2 MODULE CHROME — Serum-2-style module heads (collapse + module menu on every card),
+   the Synth-zone engine strip and the header utilities (BROWSE, undo, redo). */
+.av-mod-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.av-mod-head h2 { margin: 0; flex: 0 1 auto; }
+.av-mod-gap { flex: 1 1 auto; }
+.av-mod-toggle, .av-mod-menu-btn { font-size: 11px; line-height: 1; padding: 0 6px; }
+.av-mod-toggle { min-width: 24px; }
+.av-mod-fold > :not(.av-mod-head) { display: none; }
+.av-mod-fold { padding-bottom: 12px; }
+.av-mod-menu {
+  position: fixed; z-index: 70; min-width: 190px;
+  background: var(--raised); border: 1px solid var(--hair); border-radius: 8px;
+  padding: 4px; display: none; box-shadow: 0 12px 30px rgba(0,0,0,.55);
+}
+.av-mod-menu.open { display: block; }
+.av-mod-menu-item {
+  display: block; width: 100%; text-align: left;
+  background: transparent; border: 0; color: var(--text-2);
+  font-size: 11.5px; padding: 6px 9px; border-radius: 5px; cursor: pointer;
+}
+.av-mod-menu-item:hover, .av-mod-menu-item:focus-visible { background: #141b21; color: var(--teal); }
+.av-engine-strip { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.av-engine-chip {
+  font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text-2); background: var(--raised); border: 1px solid var(--hair); border-radius: 5px;
+  padding: 4px 10px; cursor: pointer;
+}
+.av-engine-chip:hover { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
+.av-engine-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+body.av-contrast .av-engine-chip { border-width: 2px; }
