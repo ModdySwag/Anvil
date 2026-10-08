@@ -2162,15 +2162,37 @@ Resume phrase: **"continue anvil"**.
   field, re-verified this session) · MXGPR real bytes / KONG depth (blocked on real files) ·
   NKI modern zone maps (long-term). Resume phrase "continue anvil".
 
-### R16 session-end verify-state (2026-10-09 ~05:15 AEST — copy-paste block for the next session)
+## Resume addendum 55 - 2026-10-09 (R17 DESIGN LANDED + WAVE OPENED: import control & work persistence plan of record; the R17 hub dispatched)
+
+- OWNER ASK (2026-10-09, out-of-band): a robust schema design + integration plan for user
+  importing of sound packs / loops / custom formats - maximum import control, industry-standard
+  methods, "the STORE or relevant sections must be a one stop shop for ALL the user importing" -
+  PLUS a robust saving method for work and sessions "for later use and referral" (web app).
+- DELIVERED as design + staged plan:
+  - `docs/12-import-and-persistence.md` = the plan of record (D1-D11: one canonical model /
+    lossless-or-labeled; STORE zone hub = catalog + IMPORT & LIBRARY; reach paths = File menu +
+    drop-anywhere + open-from-OS; library manager v1; linked folders; missing-content relink;
+    `.avpack` user packs; three-layer work persistence = autosave / `.anvl` projects / Song
+    Bundle; sessions browser v2; storage honesty). Waves R17-R20 staged.
+  - `verify/_r17_wave.md` = the R17 contract (hub v1; file ownership; exact pins; new rig
+    `cdp_hub`; gates). R17 children dispatched at this session's close (A: `av_lib.js` +
+    `av_store.js`; B: `av_import_ui.js`; C: `verify/cdp_hub.mjs`).
+  - Recon evidence (scratch, parent spot-verified vs source): `cache/r17/recon-import.md` ·
+    `recon-sessions.md` · `research-industry.md`.
+- SESSION-START RE-PROOF: HEAD 4bb9978 -> this design commit; frozen = live `ebc4e9077fab`
+  (3,928,027 B); worklet `b65160e0`; smoke **72/0** re-run green BEFORE any work.
+- Commit: this design commit (docs/12 + _r17_wave.md + docs/11 + README cross-refs + addendum 55).
+  R17 integration/build/battery/deploy follow on child return.
+
+### Session-end verify-state (2026-10-09 - copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -3                                       # HEAD = the R16-handoff commit on top of 930e0c4
-    git status --short                                         # clean except `?? cache/` (untracked scratch)
-    curl -s https://moddys.net/anvil/index.html | sha256sum    # = ebc4e9077fab... (frozen, live)
-    grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (worklet concat unchanged)
-    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "72 passed, 0 failed" before ANY new work
+    git log --oneline -6                                         # HEAD = the R17 design commit (addendum 55)
+    git status --short                                           # `?? cache/` + R17 child edits while the wave runs
+    curl -s https://moddys.net/anvil/index.html | sha256sum      # = ebc4e9077fab... (frozen, live; UNCHANGED until the R17 freeze+deploy)
+    grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (must stay unchanged - page-side wave)
+    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "72 passed, 0 failed" on the frozen bytes (74 after the R17 freeze)
 
-Nothing in flight at session end: no subagents, no background jobs (battery/bench/solo scripts all
-exited with their DONE markers; their browsers were killed by each rig's exit handler). Everything
-below was committed and live-verified by commit 930e0c4 + the handoff commit.
+R17 wave state at save: contract `verify/_r17_wave.md`; children A/B/C dispatched at close - verify
+landings by artifacts on disk (search_files + node --check), never by reports; re-dispatch from the
+contract if anything is missing. Nothing else in flight; battery/bench run at the freeze.

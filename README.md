@@ -36,7 +36,10 @@ Resume at `CONTINUATION-2026-10-06.md` addendum 37.
 
 ## The docs
 `docs/00-idea-capture.md` · `01-design-doc.md` · `02-ui-design-brief.md` ·
-`03-implementation-spec.md` · `04-agent-build-handoff.md` · `05-spec-review.md`
+`03-implementation-spec.md` · `04-agent-build-handoff.md` · `05-spec-review.md` ·
+`06-github-goldmine.md` · `07-creative-ideas.md` · `08-studio-mandate.md` ·
+`09-code-module-api.md` · `10-cockpit-redesign.md` · `11-sample-import.md` ·
+`12-import-and-persistence.md`
 
 ## The research (evidence tree — all parent-verified)
 - `research/tabs/` — T0 tab digest (the seed) + raw ditty sources · T1 dittytoy deep-dive

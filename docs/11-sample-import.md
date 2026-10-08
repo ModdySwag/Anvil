@@ -63,6 +63,8 @@ assignment surfaces: the 4 engine sample slots, drum pads, chop, grain, OSC2, se
 - **R16** - the recorded follow-ups: zip reading (a dropped .zip expands its entries through the same import pipeline as a bundle row + honest children) + REX2 slices -> chop kits (the decoded slice table drives the chop card's DETECT via rex2) + f64-WAV reader (tag-3/64-bit: clean-room decode + load route) - SHIPPED 2026-10-09 (`ebc4e907`); `embeddedWTData` decode + MXGPR/KONG stay open.
 - Owner-visible acceptance: drop a mixed pack folder → formats recognized honestly → content
   usable in sampler / pads / chop.
+- Import CONTROL (the user-facing hub, library management, user packs, work persistence) is its own
+  plan of record: `docs/12-import-and-persistence.md` (waves R17-R20).
 
 ## Open items (verify before promising)
 
