@@ -999,6 +999,29 @@ async function main() {
 
 
 
+  /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
+  const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');
+  await send('Page.navigate', { url: plainUrl });
+  let plainReady = false;
+  for (let i = 0; i < 120 && !plainReady; i++) {
+    const r = await ev(`document.documentElement.getAttribute('data-av-ready') === '1'`);
+    if (r.value === true) plainReady = true;
+    else await sleep(300);
+  }
+  await sleep(600);
+  const leakR = await ev(`(() => {
+    const host = document.getElementById('av-proofs');
+    return {
+      hits: ((document.body.innerText || '').match(/SELFTEST/g) || []).length,
+      hostText: host ? String(host.textContent || '').trim() : null,
+      consoleEl: !!document.getElementById('av-consoletest'),
+    };
+  })()`);
+  const leak = leakR.value || {};
+  check('R12 proof gate: a plain load (no ?avtest=1) renders zero SELFTEST text + an empty proof host',
+    plainReady === true && leak.hits === 0 && (leak.hostText === null || leak.hostText === '') && leak.consoleEl === false,
+    JSON.stringify({ plainReady: plainReady, leak: leak }));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

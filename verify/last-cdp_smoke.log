@@ -52,6 +52,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R10 no-select: body + card prose are user-select:none while text surfaces (textarea/input) stay selectable  -> {"body":"none","note":"none","ta":"text","inp":"text"}
  ok   R11 console: transport deck + BPM segment + OLED (pack/preset/sys) in the header, every legacy id intact, BPM live  -> {"cls":true,"play":true,"stop":true,"song":true,"rec":true,"bpm":true,"pack":true,"preset":true,"power":true,"api":"object","bpmText":"120","bpmVal":120,"leg":{"version":true,"tier":true,"voices":true,"browse":true,"undo":true,"about":true,"rail":true,"help":true,"piano":true},"tierInOled":true}
  ok   R11 spacebar: Space toggles the transport (play then stop), the seq reports it  -> {"before":"","mid":"play","after":"stop","playing":true,"playing2":false}
+ ok   R12 BPM window: click top +1 / bottom -1 / wheel up +1 through the bpm funnel, restored exactly  -> {"b0":120,"b1":121,"b2":120,"b3":121,"back":120}
+ ok   R12 proof gate: a plain load (no ?avtest=1) renders zero SELFTEST text + an empty proof host  -> {"plainReady":true,"leak":{"hits":0,"hostText":"","consoleEl":false}}
  ok   zero page errors
 
-54 passed, 0 failed
+56 passed, 0 failed
