@@ -1937,3 +1937,36 @@ Resume phrase: **"continue anvil"**.
   synth MOD row; smoke -> 58; no new suite; pins stay 20 files). Child authors `src/av_lfo.js`;
   parent integration (counted-assert) -> build -> smoke 58 -> sweep -> battery 23+bench ->
   deploy -> live pass -> addendum 48. Resume phrase "continue anvil".
+
+## Resume addendum 48 - 2026-10-09 (R13: THE LFO CARD - SHIPPED + DEPLOYED)
+
+- Owner ask (addendum 46 item 3) DELIVERED: a dedicated LFO module in the Mod zone next to the
+  matrix — SHAPE select (sine/tri/square/sh), RATE / TO CUT / TO PITCH knobs (the three engine
+  schema paths) and a deterministic 480x120 waveform scope. UI-only: ZERO engine work; the two
+  lfo knobs MOVE out of the synth MOD row (single source of truth — no duplicated knob paths,
+  since a knob commit repaints only the committing element).
+- Frozen `24ab19b3` (3,518,383 B; sw `2c50cbdb`), DEPLOYED live: upload (`--only
+  anvil/index.html anvil/sw.js` -> "2 uploaded"), scoped `--verify` = **0 not in sync**, live
+  sha = frozen.
+- Surfaces: `src/av_lfo.js` (NEW; avLfoInit / avLfoRedraw / avLfoProof / avLfoSetShape +
+  `window.__avLfo`; proof `LFO SELFTEST` gated `?avtest=1` + deferred — the R12 leak law) ·
+  card `#av-lfo` in body.html after #av-mod · AV_CHROME_CARDS + AV_RAIL_GROUPS Mod group (the
+  single rail edit also feeds the Panels quick-view) · styles.css R13 block · app_core boot
+  `lfoOk` + boot-log flag.
+- Smoke **58** first-run (2 new R13 checks: mount/select/knobs/scope/facade/seeded + funnel
+  commit + scope repaint digest + engine schema-path accept); cockpit **21/21** (card map
+  **23/23**). Integration fix on the wave: the child pre-joined the knob HTML —
+  `avKnobRowHTML(items, cls)` expects the ARRAY (it joins internally); the first smoke run
+  caught it, fixed module-side, check strength preserved. Battery **23 suites ALL GREEN
+  first-lap** + bench exit=0 (realtime light 64 / fat 48; offline knee 96/128 monotone,
+  invalidReads 0).
+- LIVE PASS: leak differential **11/11** (plain page clean + avtest proof + BPM click witness);
+  LFO live capture `renders/r13-live-lfo.png` + local `renders/r13-lfo.png` — both inspected:
+  SHAPE=sine, three knobs, crisp two-period teal sine on the scope plate, rail link present,
+  no defects.
+- Commits: 1da9a5b (checkpoint) -> 7652146 (records) -> close commit (this addendum).
+- NEXT (carried): console step-and-apply preset keys · console VU meters · chip keyboard assign
+  path (a11y) · animated mod rings (needs an engine->page mod stream) · widen AV_MOD_TARGETS
+  (wire v2) · kind-specific drop paths · Store browser overlay · module-menu Copy/Paste · page
+  switching · P·2 minBLEP · PERFECT TUNINGS · more owner modules · owner pass (Ctrl+F5 once for
+  the new service-worker cache). Resume phrase "continue anvil".
