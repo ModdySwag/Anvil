@@ -2388,3 +2388,25 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   (collect & pack export / import route / CLI verifier) -> R20 work persistence. Carried: quiet
   bench re-run (owed/optional) - P.2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - README status
   refresh (offered) - owner-pass items (real launchQueue arrival + real FSA dir-picker click).
+
+## Resume addendum 64 - 2026-10-09 (R19 OPENED: user packs .avpack - contract + authors dispatched)
+
+- Session-start ritual re-proven: HEAD a45bd17, tree clean (`?? cache/`), smoke **76/76**.
+- R19 = docs/12 §3.6 (`.avpack` = ZIP with manifest.json + verbatim item bytes; kinds
+  sample/kit/refs/pattern/wt/module; sha256 verified BEFORE commit; provenance pack:<id>; one
+  receipt) + §3.7 ("Collect & Pack" in the hub manager - the hub is THE surface). Contract
+  `verify/_r19_wave.md` (commit with this addendum) - incl. the BOTH-SIDES rule table (the
+  in-page validator and the node schema module implement the same §2 spec table).
+- Authors dispatched (background): A `src/av_pack.js` (NEW: validate/detect/build/importBytes +
+  `__avPack` facade) + `src/av_lib.js` (source.pack additive) - B `src/av_import.js` (zip
+  pre-pass pack-detect route; generic zips byte-stable) - C `src/av_import_ui.js` (manager
+  #av-import-pack "COLLECT & PACK (N)" + FSA-save/download + pack chips) - D
+  `verify/avpack_schema.mjs` + `verify/avpack_check.mjs` (strict CLI + --selftest) - E
+  `verify/cdp_hub.mjs` (+3 R19 legs; 39 -> 42 pinned at freeze).
+- ON CHILD RETURN: verify artifacts -> styles (C's classes) -> parent integration (build.py
+  js_parts gains av_pack.js - the R18b lesson; smoke +1 = 77) -> rebuild -> cdp_hub 42 triage ->
+  cdp_import 24 -> avpack_check --selftest -> sweep -> battery 25 + bench -> deploy (index+sw) ->
+  live capture -> close addendum 65.
+- Carried: quiet bench re-run (owed/optional) - P.2 minBLEP pass - P4 follow-ups - PERFECT
+  TUNINGS - README status refresh (offered) - owner-pass items (launch arrival + dir-picker
+  click). Nothing else in flight.
