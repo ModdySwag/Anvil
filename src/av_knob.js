@@ -210,7 +210,7 @@ function avKnobBind(root) {
         startR: Math.hypot(e.clientX - cx, e.clientY - cy),   /* a twist needs a hand on the rim */
         disp: n0, target: n0, lin: 0, rot: 0, travel: 0, mode: null,
         ang: Math.atan2(e.clientY - cy, e.clientX - cx),
-        last: performance.now(), gen: dragGen,
+        last: performance.now(), gen: dragGen, raf: 0,
       };
       el.classList.add("dragging");
       try { el.setPointerCapture(e.pointerId); } catch (err) { /* capture unsupported */ }
@@ -257,21 +257,32 @@ function avKnobBind(root) {
       /* the weight: the model (and so the sound) glides to the new target instead of jumping */
       drag.disp += (drag.target - drag.disp) * (1 - Math.exp(-dt / 60));
       if (Math.abs(drag.disp - drag.target) < 0.0004) drag.disp = drag.target;
-      avKnobCommit(el, drag.disp, { norm: true });
-      if (drag.target <= 0.0001 || drag.target >= 0.9999) {   /* the mechanical stop */
-        el.classList.remove("at-stop");
-        void el.offsetWidth;
-        el.classList.add("at-stop");
+      /* R9 fluidity: the model advances per event, but the DOM/engine write is coalesced to ONE
+         commit per animation frame — a 120 Hz mouse or a busy frame can't stack writes. */
+      if (!drag.raf) {
+        drag.raf = requestAnimationFrame(() => {
+          if (!drag) return;
+          drag.raf = 0;
+          avKnobCommit(el, drag.disp, { norm: true });
+          if (drag.target <= 0.0001 || drag.target >= 0.9999) {   /* the mechanical stop */
+            el.classList.remove("at-stop");
+            void el.offsetWidth;
+            el.classList.add("at-stop");
+          }
+        });
       }
     });
     const endDrag = (e) => {
       if (!drag) return;
       const d = drag;
       drag = null;
+      if (d.raf) { try { cancelAnimationFrame(d.raf); } catch (err) { /* done */ } }
       el.classList.remove("dragging");
       el.style.cursor = "";
       document.body.classList.remove("knob-dragging");
       try { el.releasePointerCapture(e.pointerId); } catch (err) { /* already released */ }
+      /* R9: flush the last frame's value at release so a release between frames never loses it */
+      avKnobCommit(el, d.disp, { norm: true });
       if (d.travel > 2) {
         el._supClick = true;                    /* a drag is not also a step-click */
         setTimeout(() => { el._supClick = false; }, 80);

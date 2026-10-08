@@ -9,6 +9,7 @@ const AV_CHROME_FOLD_KEY = "av-fold";
 
 /* id -> capabilities: init = first knob of the card resets to data-def; rnd = randomize allowed */
 const AV_CHROME_CARDS = [
+  { id: "av-levels", init: true, rnd: false },
   { id: "av-synth", init: true, rnd: true },
   { id: "av-fm", init: true, rnd: true },
   { id: "av-fx", init: true, rnd: false },
@@ -28,6 +29,8 @@ const AV_CHROME_CARDS = [
   { id: "av-store", init: false, rnd: false },
   { id: "av-code", init: false, rnd: false },
   { id: "av-files", init: false, rnd: false },
+  { id: "av-family", init: false, rnd: false },
+  { id: "av-roadmap", init: false, rnd: false },
   { id: "av-midi-card", init: false, rnd: false },
 ];
 

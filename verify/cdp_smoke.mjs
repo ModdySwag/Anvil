@@ -853,6 +853,70 @@ async function main() {
     && r8m2.pol0 === '+' && r8m2.amtPol === -0.5 && r8m2.pol1 === '\u00B1'
     && r8m2.out === '42%' && r8m2.ringCleared === true && r8m2.slotsEnd === 0 && r8m2.rowsEnd === 0, JSON.stringify(r8m2));
 
+  /* 6bb. R9: module chrome on EVERY zone card (LEVELS + FAMILY were missing it) */
+  const r9cR = await ev(`(() => {
+    const cards = document.querySelectorAll('.av-zone .av-card');
+    let withHead = 0, withFloat = 0;
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].querySelector(':scope > .av-mod-head')) withHead++;
+      if (cards[i].querySelector(':scope > .av-mod-head .av-mod-float-btn')) withFloat++;
+    }
+    const lv = document.getElementById('av-levels');
+    const fam = document.getElementById('av-family');
+    const rd = document.getElementById('av-roadmap');
+    return { cards: cards.length, withHead: withHead, withFloat: withFloat,
+             lvMenu: !!(lv && lv.querySelector(':scope > .av-mod-head .av-mod-menu-btn')),
+             lvFloat: !!(lv && lv.querySelector(':scope > .av-mod-head .av-mod-float-btn')),
+             famToggle: !!(fam && fam.querySelector(':scope > .av-mod-head .av-mod-toggle')),
+             rdMenu: !!(rd && rd.querySelector(':scope > .av-mod-head .av-mod-menu-btn')),
+             rdFloat: !!(rd && rd.querySelector(':scope > .av-mod-head .av-mod-float-btn')) };
+  })()`);
+  const r9c = r9cR.value || {};
+  check('R9 chrome: every zone card carries the module head + float button - LEVELS, FAMILY and ROADMAP included',
+    r9c.cards >= 23 && r9c.withHead === r9c.cards && r9c.withFloat === r9c.cards
+    && r9c.lvMenu === true && r9c.lvFloat === true && r9c.famToggle === true
+    && r9c.rdMenu === true && r9c.rdFloat === true, JSON.stringify(r9c));
+
+  /* 6bc. R9: osc PITCH/FINE knobs + funnel mirror + frame-coalesced drag lands on release */
+  const r9pR = await ev(`(() => {
+    const info = {};
+    const paths = ['osc1.tune', 'osc1.fine', 'osc2.tune', 'osc2.fine'];
+    info.knobs = paths.map(p => !!document.querySelector('#av-synth .av-knob[data-knob="' + p + '"]'));
+    info.bound = paths.map(p => { const k = document.querySelector('#av-synth .av-knob[data-knob="' + p + '"]'); return !!(k && k.dataset.knobBound === '1'); });
+    const fin = document.querySelector('#av-synth .av-knob[data-knob="osc1.fine"]');
+    avKnobCommit(fin, 25);
+    info.mirror = avParams['osc1.fine'];
+    avKnobCommit(fin, 0);
+    info.back = avParams['osc1.fine'];
+    const cut = document.querySelector('#av-synth .av-knob[data-knob="filter.cutoff"]');
+    window.__r9cut0 = avParams['filter.cutoff'];
+    const r = cut.getBoundingClientRect();
+    const n0 = parseFloat(cut.dataset.norm);
+    info.n0 = n0;
+    cut.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, cancelable: true, button: 0, pointerId: 7, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }));
+    for (let i = 1; i <= 4; i++) cut.dispatchEvent(new PointerEvent('pointermove', { bubbles: true, cancelable: true, pointerId: 7, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 - i * 14 }));
+    info.mid = parseFloat(cut.dataset.norm);
+    cut.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, cancelable: true, pointerId: 7, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 - 56 }));
+    info.end = parseFloat(cut.dataset.norm);
+    return info;
+  })()`);
+  const r9p = r9pR.value || {};
+  await sleep(320);
+  const r9rR = await ev(`(() => {
+    const cut = document.querySelector('#av-synth .av-knob[data-knob="filter.cutoff"]');
+    const settled = parseFloat(cut.dataset.norm);
+    const dragging = cut.classList.contains('dragging');
+    avKnobCommit(cut, window.__r9cut0 === undefined ? 800 : window.__r9cut0);
+    return { settled: settled, dragging: dragging, restored: parseFloat(cut.dataset.norm) };
+  })()`);
+  const r9r = r9rR.value || {};
+  check('R9 pitch+fluidity: PITCH/FINE knobs bound + commit funnel mirrors + drag defers to rAF and lands on release',
+    r9p.knobs && r9p.knobs.every(v => v === true) && r9p.bound && r9p.bound.every(v => v === true)
+    && r9p.mirror === 25 && r9p.back === 0
+    && r9p.mid === r9p.n0 && r9p.end > r9p.n0
+    && r9r.dragging === false && Math.abs(r9r.settled - r9p.end) < 0.2 && Math.abs(r9r.restored - r9p.n0) < 0.03,
+    JSON.stringify({ p: r9p, r: r9r }));
+
 
 
   /* 7. zero page errors */

@@ -404,8 +404,8 @@ const AVDSP = (function () {
       tEnvAmt: 2, cEnvAmt: 2,
       tOutScale: 0.25, cOutScale: 0.25,
       /* plain params */
-      osc1Tune: 0, tune1F: 1, osc1Uni: 1, osc1Spread: 12,
-      osc2Tune: 0, tune2F: 1, osc2Uni: 1, osc2Spread: 12,
+      osc1Tune: 0, osc1Fine: 0, tune1F: 1, osc1Uni: 1, osc1Spread: 12,
+      osc2Tune: 0, osc2Fine: 0, tune2F: 1, osc2Uni: 1, osc2Spread: 12,
       ktrk: 0.5,
       e1a: 0.002, e1d: 0.3, e1s: 0.8, e1r: 0.2,
       e2a: 0.001, e2d: 0.5, e2s: 0.5, e2r: 0.3,
@@ -473,7 +473,15 @@ const AVDSP = (function () {
       case "osc1.tune": {
         const n = Number(value); if (!isFinite(n)) return false;
         eng.osc1Tune = cl(n, -24, 24);
-        eng.tune1F = Math.pow(2, eng.osc1Tune / 12);
+        eng.tune1F = Math.pow(2, (eng.osc1Tune + eng.osc1Fine / 100) / 12);
+        eng.pitchGen++;
+        return true;
+      }
+      /* R9: oscillator fine tune, ±100 cents, folded into the same tune factor */
+      case "osc1.fine": {
+        const n = Number(value); if (!isFinite(n)) return false;
+        eng.osc1Fine = cl(n, -100, 100);
+        eng.tune1F = Math.pow(2, (eng.osc1Tune + eng.osc1Fine / 100) / 12);
         eng.pitchGen++;
         return true;
       }
@@ -492,7 +500,15 @@ const AVDSP = (function () {
       case "osc2.tune": {
         const n = Number(value); if (!isFinite(n)) return false;
         eng.osc2Tune = cl(n, -24, 24);
-        eng.tune2F = Math.pow(2, eng.osc2Tune / 12);
+        eng.tune2F = Math.pow(2, (eng.osc2Tune + eng.osc2Fine / 100) / 12);
+        eng.pitchGen++;
+        return true;
+      }
+      /* R9: oscillator fine tune, ±100 cents, folded into the same tune factor */
+      case "osc2.fine": {
+        const n = Number(value); if (!isFinite(n)) return false;
+        eng.osc2Fine = cl(n, -100, 100);
+        eng.tune2F = Math.pow(2, (eng.osc2Tune + eng.osc2Fine / 100) / 12);
         eng.pitchGen++;
         return true;
       }

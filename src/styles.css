@@ -1716,5 +1716,9 @@ body.av-drag-modsrc, body.av-drag-modsrc * { cursor: grabbing !important; }
 }
 .av-knob.av-mod-shown .av-knob-mod { display: block; }
 
+/* R9 — interaction fluidity: range sliders keep direct-manipulation drags without scroll steal;
+   knob commits are frame-coalesced in av_knob.js. */
+input[type="range"] { touch-action: none; }
+
 
 

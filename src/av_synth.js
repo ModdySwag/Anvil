@@ -50,8 +50,12 @@ function avSynthDefaults() {
     "osc1.level": 1.0,
     "osc1.uni": 1,
     "osc1.spread": 12,
+    "osc1.tune": 0,
+    "osc1.fine": 0,
     "osc2.type": "wt.saw",
     "osc2.level": 0.5,
+    "osc2.tune": 0,
+    "osc2.fine": 0,
     "sub.level": 0,
     "filter.mode": "lp24",
     "filter.cutoff": 800,
@@ -138,6 +142,13 @@ const AV_SYNTH_ROWS = [
     { path: "osc1.uni", label: "UNISON", opts: { min: 1, max: 7, step: 1, def: 1, fmt: "int" } },
     { path: "osc1.spread", label: "SPREAD", opts: { min: 0, max: 50, step: 0.5, def: 12, fmt: "ct" } },
     { path: "sub.level", label: "SUB", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct" } },
+  ] },
+  /* R9: per-oscillator pitch — coarse (±24 st) + fine (±100 ct), the industry-standard pair */
+  { cls: "av-synth-tune", knobs: [
+    { path: "osc1.tune", label: "OSC1 PITCH", opts: { min: -24, max: 24, step: 1, def: 0, unit: "st" } },
+    { path: "osc1.fine", label: "OSC1 FINE", opts: { min: -100, max: 100, step: 1, def: 0, fmt: "ct" } },
+    { path: "osc2.tune", label: "OSC2 PITCH", opts: { min: -24, max: 24, step: 1, def: 0, unit: "st" } },
+    { path: "osc2.fine", label: "OSC2 FINE", opts: { min: -100, max: 100, step: 1, def: 0, fmt: "ct" } },
   ] },
   { cls: "av-synth-filter", knobs: [
     { path: "filter.cutoff", label: "CUTOFF", opts: { min: 20, max: 20000, step: 1, def: 800, curve: "log", fmt: "hz" } },

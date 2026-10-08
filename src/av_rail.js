@@ -19,7 +19,7 @@ const AV_RAIL_GROUPS = [
   { zone: "studio", label: "Studio", cards: [["av-rec", "Recorder"], ["av-studio", "Studio"], ["av-sessions", "Sessions"], ["av-comp", "Takes & comping"], ["av-mix", "Mix & master"], ["av-deck", "Deck"], ["av-deliver", "Deliver"]] },
   { zone: "store", label: "Store", cards: [["av-store", "Packs"]] },
   { zone: "code", label: "Code", cards: [["av-code", "CODE"]] },
-  { zone: "system", label: "System", cards: [["av-midi-card", "MIDI"], ["av-files", "Project & share"], ["av-family", "Family bridges"]] },
+  { zone: "system", label: "System", cards: [["av-midi-card", "MIDI"], ["av-files", "Project & share"], ["av-family", "Family bridges"], ["av-roadmap", "Roadmap"]] },
 ];
 
 const avRailState = { ready: false, el: null, grip: null, drag: null };
