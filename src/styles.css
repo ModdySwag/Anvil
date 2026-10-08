@@ -1425,6 +1425,7 @@ html, body { overflow: hidden; }
 }
 .av-zones-in {
   display: flex; gap: 2px;
+  justify-content: safe center;   /* R19 owner clip: the tab group centres; 'safe' keeps overflow reachable */
   padding: 0 10px;
   max-width: 1080px; margin: 0 auto; width: 100%;
   overflow-x: auto; scrollbar-width: none;
@@ -1916,3 +1917,11 @@ header.av-head.av-console > .av-btn:hover { border-color: var(--teal-deep); }
 .av-sources-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .av-sources-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
 .av-sources-reconnect { color: #d9b45f; border-color: #6b5a2a; }
+
+/* R19 owner clip (2026-10-09): the console centrepiece (BPM + OLED, wrapped in .avc-center)
+   sits dead-centre in the header at wide viewports; below 1520px it falls back to the flow
+   position so it can never collide with the transport / right cluster. */
+header.av-head.av-console .avc-center { display: flex; align-items: center; gap: 8px; }
+@media (min-width: 1520px) {
+  header.av-head.av-console .avc-center { position: absolute; left: 50%; transform: translateX(-50%); top: 0; bottom: 0; }
+}

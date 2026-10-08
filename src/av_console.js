@@ -374,13 +374,19 @@ function avConsoleInit() {
     if (word && word.parentNode !== head) { try { head.insertBefore(word, head.firstChild); } catch (e) { /* ok */ } }
     const spacer = head.querySelector(".av-spacer");
     const anchor = (spacer && spacer.parentNode === head) ? spacer : null;
+    /* R19 owner clip (2026-10-09): the BPM + OLED pair rides in ONE centred console block
+       ("centre this section") -- absolutely centred in the header at wide viewports so it never
+       drifts with the side clusters (falls back to the flow position below 1520px). */
+    const center = document.createElement("div");
+    center.className = "avc-center";
+    center.appendChild(bpm);
+    center.appendChild(oled);
     if (anchor) {
       head.insertBefore(deck, anchor);
       head.insertBefore(vu, anchor);
-      head.insertBefore(bpm, anchor);
-      head.insertBefore(oled, anchor);
+      head.insertBefore(center, anchor);
     } else {
-      head.appendChild(deck); head.appendChild(vu); head.appendChild(bpm); head.appendChild(oled);
+      head.appendChild(deck); head.appendChild(vu); head.appendChild(center);
     }
     if (word) { try { head.insertBefore(power, word.nextSibling); } catch (e) { head.insertBefore(power, head.firstChild); } }
     else head.insertBefore(power, head.firstChild);
