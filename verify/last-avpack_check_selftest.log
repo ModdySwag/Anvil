@@ -1,0 +1,30 @@
+== avpack_check --selftest - in-memory mini pack (verify/_r19_wave.md section 2) ==
+repo C:\Users\Moddy\anvil | node v26.7.0
+
+  PASS  selftest builder deterministic (two builds byte-identical)  ::  809 bytes
+  PASS  mini pack: file sha256 + byte count recorded
+  PASS  mini pack: manifest valid (v1, id selftest-mini, items 2)
+  PASS  mini pack: 2/2 items sha256 verified | refused 0 | container 0 | extras 0
+
+pack: selftest-mini.avpack (in-memory) | 809 bytes | sha256 7c332c192320217a...
+manifest: v1 | id "selftest-mini" | name "Selftest Mini" | author "avpack_check" | license "" | tags 1 | items 2
+items:
+  PASS    [ 1/ 2] sample   items/kick.wav             Kick 01.wav              size     108  sha 34b818c6298b
+  PASS    [ 2/ 2] pattern  items/bassline.avpat       Bassline.avpat           size      47  sha 7b7eaf37a1d1
+counts: items 2 | verified 2 | refused 0 | extras 0 | container errors 0 | manifest errors 0
+
+negative controls (the checker must catch what the table refuses):
+  PASS  control: 1-byte tamper -> kick REFUSED (named sha256, crc note), bassline PASS  ::  kick :: sha256 mismatch (want 34b818c6298b7e5843793eb7f97d0522919acbd00c7940c67b6d51bafea4297b, go
+  PASS  control: manifest sha deliberately wrong -> 1 REFUSED / 1 PASS (item named)  ::  sha256 mismatch (want 0000000000000000000000000000000000000000000000000000000000000000, go
+  PASS  control: manifest lists 3, zip holds 2 -> row 3 REFUSED (member missing), rows 1-2 PASS
+  PASS  control: duplicate keys -> manifest invalid, no rows evaluated
+  PASS  control: corrupt manifest.json -> JSON parse failed (manifest invalid)
+  PASS  control: extra member tolerated but reported (ok stays true)
+  PASS  control: foreign zip method -> container error (method 12 named) + row REFUSED
+  PASS  control: unsafe member name ("/evil.wav") -> container error (unsafe relative path)
+  PASS  control: zip without manifest.json -> required member error
+  PASS  control: junk bytes -> not a zip (never throws)
+  PASS  sha256 vector: sha256("abc") = ba7816bf... (known digest)
+  PASS  crc32 vector: crc32("123456789") = cbf43926
+
+AVPACK CHECK SELFTEST: PASS (strict exit 0)

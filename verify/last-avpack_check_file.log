@@ -1,0 +1,12 @@
+== avpack_check - R19 user pack verifier (verify/_r19_wave.md section 2) ==
+repo C:\Users\Moddy\anvil | node v26.7.0
+file: cache/r19/selftest-mini.avpack
+
+pack: cache/r19/selftest-mini.avpack | 809 bytes | sha256 7c332c192320217a...
+manifest: v1 | id "selftest-mini" | name "Selftest Mini" | author "avpack_check" | license "" | tags 1 | items 2
+items:
+  PASS    [ 1/ 2] sample   items/kick.wav             Kick 01.wav              size     108  sha 34b818c6298b
+  PASS    [ 2/ 2] pattern  items/bassline.avpat       Bassline.avpat           size      47  sha 7b7eaf37a1d1
+counts: items 2 | verified 2 | refused 0 | extras 0 | container errors 0 | manifest errors 0
+
+AVPACK CHECK: PASS (strict exit 0)

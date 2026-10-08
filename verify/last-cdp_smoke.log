@@ -1,6 +1,6 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v1.8.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.8.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v1.9.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.9.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":2,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
@@ -71,9 +71,10 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R16 REX2->chop: slice table drives detect (via rex2) -> kit -> apply  -> {"via":"rex2","count":3,"s2":{"s0":100,"s1":200},"kitOk":true,"kitN":3,"aplOk":true,"slot":0}
  ok   R17 hub: manager ids + runs + storage footer + facade pick/pickDir/library/rename/exportItem  -> {"search":true,"sort":true,"filters":true,"selall":true,"delsel":true,"runs":true,"runsclear":true,"storage":true,"persist":true,"pick":"function","pickDir":"function","library":"function","rename":"function","exportItem":"function"}
  ok   R17 hub: File menu carries Import sounds / Import folder / Library  -> ["Save project (.anvl)","Open project...","Import sounds...","Import folder...","Link source folder...","Library...","Export stems (Deliver)","Load demo groove"]
+ ok   R19 user packs: #av-import-pack in the manager + __avPack facade complete  -> {"btn":true,"label":"COLLECT & PACK (0)","version":"r19.0","fns":4}
  ok   R18b linked sources: section mounted in the hub card + __avSources facade complete  -> {"host":true,"sec":true,"version":"r18b.0","fns":7,"fsKind":"window"}
  ok   R18a layout guard: no button label overflows its box (all zones swept)  -> []
  ok   R12 proof gate: a plain load (no ?avtest=1) renders zero SELFTEST text + an empty proof host  -> {"plainReady":true,"leak":{"hits":0,"hostText":"","consoleEl":false}}
  ok   zero page errors
 
-76 passed, 0 failed
+77 passed, 0 failed

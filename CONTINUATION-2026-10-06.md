@@ -2438,3 +2438,21 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
 - Carried: quiet bench re-run (owed/optional) - P.2 minBLEP pass - P4 follow-ups - PERFECT
   TUNINGS - README status refresh (offered) - owner-pass items (launch arrival + dir-picker
   click). Nothing else in flight.
+
+## Resume addendum 66 - 2026-10-09 (R19 INTEGRATED + triaged green + swept; battery running)
+
+- INTEGRATED (cache/r19/integrate/_r19_integrate.py): build.py js_parts gained av_pack.js
+  (checked FIRST - the R18b lesson); app_core 1.9.0 "R19 user packs"; cdp_smoke +1. Rebuild =
+  **095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085** (4,179,606 B; worklet
+  b65160e0 unchanged).
+- TRIAGE ALL GREEN FIRST-RUN (cache/r19/triage_r19_chain.log): smoke 77/77 - hub 42/42 (3 new
+  R19 legs) - platform 52 - import 24/24 - avpack_check selftest + file PASS. PINS: 22 swept ->
+  095b7e5d. BATTERY LAUNCHED 09:25:08 detached (cache/r19/battery_r19_chain.log; marker
+  "BATTERY-R19 DONE").
+- NEXT (finish the close): poll the marker -> deploy (index + sw: copy to
+  radio-browser/deploy/anvil/, upload-site.py --only anvil/index.html anvil/sw.js, scoped
+  --verify 0, live sha) -> live capture (console centring + COLLECT & PACK) + leak 11/11 ->
+  close addendum 67 + commit + Mnemosyne + skill. The 09:00 centring clip (b8d47bd) ships in
+  THIS deploy.
+- Carried: quiet bench re-run - P.2 minBLEP - P4 follow-ups - PERFECT TUNINGS - README refresh -
+  owner-pass items. Nothing else in flight.

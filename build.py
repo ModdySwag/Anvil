@@ -173,6 +173,7 @@ js_parts = [
     (SRC / "av_rail.js").read_text(encoding="utf-8"),     # R4: the left module rail (page module)
     (SRC / "av_menubar.js").read_text(encoding="utf-8"),
     (SRC / "av_console.js").read_text(encoding="utf-8"),  # R11: the LED/OLED transport console (page module)  # R5: the Windows-style menu bar (page module)   # R2: module chrome — heads + menu, engine strip, header utilities (page module)
+    (SRC / "av_pack.js").read_text(encoding="utf-8"),      # R19: user packs -- .avpack build/import (page module)
     (SRC / "av_sources.js").read_text(encoding="utf-8"),  # R18b: linked source folders -- FSA seam + av-sources-store (page module)
     (SRC / "av_sources_ui.js").read_text(encoding="utf-8"), # R18b: the LINKED SOURCES section (page module)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report

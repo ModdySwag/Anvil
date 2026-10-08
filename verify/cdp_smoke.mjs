@@ -1451,6 +1451,19 @@ async function main() {
     && r17b.labels.indexOf('Import folder...') >= 0 && r17b.labels.indexOf('Library...') >= 0,
     JSON.stringify(r17b.labels));
 
+  /* R19: user packs - the manager button + the __avPack facade shape */
+  const r19R = await ev(`(() => {
+    try { if (typeof window.__avZoneAuto === 'function') window.__avZoneAuto('#av-import'); } catch (e) {}
+    const btn = document.getElementById('av-import-pack');
+    const f = window.__avPack || {};
+    const fns = ['validate', 'detect', 'build', 'importBytes'].filter(k => typeof f[k] === 'function');
+    return { btn: !!btn, label: btn ? String(btn.textContent || '').trim() : '', version: String(f.version || ''), fns: fns.length };
+  })()`);
+  const r19 = r19R.value || {};
+  check('R19 user packs: #av-import-pack in the manager + __avPack facade complete',
+    r19.btn === true && /^COLLECT & PACK/.test(r19.label) && r19.version === 'r19.0' && r19.fns === 4,
+    JSON.stringify(r19));
+
   /* R18b: linked source folders - the section mounts in the hub card + the facade shape */
   const r18bR = await ev(`(() => {
     try { if (typeof window.__avZoneAuto === 'function') window.__avZoneAuto('#av-import'); } catch (e) {}
