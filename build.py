@@ -176,6 +176,7 @@ js_parts = [
     (SRC / "av_pack.js").read_text(encoding="utf-8"),      # R19: user packs -- .avpack build/import (page module)
     (SRC / "av_sources.js").read_text(encoding="utf-8"),  # R18b: linked source folders -- FSA seam + av-sources-store (page module)
     (SRC / "av_sources_ui.js").read_text(encoding="utf-8"), # R18b: the LINKED SOURCES section (page module)
+    (SRC / "av_library_ui.js").read_text(encoding="utf-8"), # R21: the LIBRARY overlay (page module)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]
 

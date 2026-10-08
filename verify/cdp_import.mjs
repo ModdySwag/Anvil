@@ -52,7 +52,7 @@ const shaArg = argv.indexOf('--sha');
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
-const EXPECT_SHA = '095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085';
+const EXPECT_SHA = '1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -258,6 +258,15 @@ async function main() {
     return true;
   };
   const waitReady = async () => { for (let i = 0; i < 120; i++) { const r = await ev(`!!(document.documentElement && document.documentElement.getAttribute('data-av-ready') === '1')`); if (r.value === true) return true; await sleep(300); } return false; };
+  /* R21: the library manager lives in the #av-library-pop overlay - manager/row clicks must run
+     on the OPEN surface first (the strip/open-button ids and the rows still resolve document-wide,
+     but hidden rows cannot be clicked). Facade open() is idempotent (true when already open); a
+     page reload closes the overlay, so every manager leg re-opens it - a no-op when still open. */
+  const openLib = async () => {
+    await ev(`(window.__avLibrary && typeof window.__avLibrary.open === 'function') ? window.__avLibrary.open() : false`);
+    await waitFor(`(() => { const p = document.getElementById('av-library-pop'); return !!(p && p.hidden === false); })()`, 5000);
+    await sleep(150);
+  };
 
   /* ── 1. boot + card ── */
   const ready = await waitReady();
@@ -351,12 +360,14 @@ async function main() {
      AIFF witness, 8 frames @ 8000 Hz) ── */
   const wavId = await rowId('tone.wav');
   const n0 = (await ev(`avSampleStore.entries.length`)).value;
+  await openLib(); /* R21: the row lives in the #av-library-pop overlay - open it before clicking */
   await clickSel(`[data-av-import-lib="${wavId}"] [data-av-import-act="load"]`, 900);
   const loadedR = await waitFor(`(() => { const n = avSampleStore.entries.length; if (n <= ${Number(n0) || 0}) return null; const e = avSampleStore.entries[n - 1]; return { n: n, rate: e.sampleRate, frames: e.buffer ? e.buffer.length : -1, secs: (e.buffer && isFinite(e.buffer.duration)) ? e.buffer.duration : -1 }; })()`, 12000);
   check('LOAD (wav): decodes into the session at 48 kHz native (0.05 s preserved)',
     !!loadedR && loadedR.rate === 48000 && loadedR.frames === 2400 && Math.abs(loadedR.secs - 0.05) < 0.002, JSON.stringify(loadedR));
 
   /* ── 9. SLOT 2 + SEND ── */
+  await openLib();
   await ev(`(() => { const s = document.getElementById('av-import-slot'); if (s) { s.value = '2'; s.dispatchEvent(new Event('change', { bubbles: true })); } return true; })()`);
   await clickSel(`[data-av-import-lib="${wavId}"] [data-av-import-act="send"]`, 1200);
   const sentR = await waitFor(`(() => { const r = avSampleStore.sent && avSampleStore.sent[1]; return r ? { name: r.name, slot: r.slot, frames: r.frames } : null; })()`, 12000);
@@ -364,6 +375,7 @@ async function main() {
     !!sentR && sentR.slot === 1 && String(sentR.name).indexOf('tone.wav') >= 0, JSON.stringify(sentR));
 
   /* ── 10. CHOP wiring ── */
+  await openLib();
   await clickSel(`[data-av-import-lib="${wavId}"] [data-av-import-act="chop"]`, 900);
   const chopR = await ev(`(() => {
     const sel = document.getElementById('av-chop-src');
@@ -380,6 +392,7 @@ async function main() {
 
   /* ── 11. SEQ on the mid row ── */
   const midId = await rowId('note.mid');
+  await openLib();
   await clickSel(`[data-av-import-lib="${midId}"] [data-av-import-act="seq"]`, 900);
   const seqR = await waitFor(`(() => { let notes = 0; try { const sn = avSeqSnap(); for (const t of sn.tracks) for (const s of t.steps) if (s.on === 1) notes++; } catch (e) { return null; } const undo = (window.__avUndo && typeof window.__avUndo.label === 'string') ? window.__avUndo.label : null; return (notes >= 1 && undo === 'import') ? { notes: notes, undo: undo } : null; })()`, 12000);
   check('SEQ (mid): pattern loaded (notes >= 1) + undo label "import"',
@@ -388,6 +401,7 @@ async function main() {
   /* ── 12. rx2 LOAD -> session (the REX2 decode witness) ── */
   const rx2Id = await rowId('loop.rx2');
   const m0 = (await ev(`avSampleStore.entries.length`)).value;
+  await openLib();
   await clickSel(`[data-av-import-lib="${rx2Id}"] [data-av-import-act="load"]`, 900);
   const rxLoadR = await waitFor(`(() => { const n = avSampleStore.entries.length; if (n <= ${Number(m0) || 0}) return null; const e = avSampleStore.entries[n - 1]; return { rate: e.sampleRate, frames: e.buffer ? e.buffer.length : -1 }; })()`, 20000);
   check('LOAD (rx2): decodes in-browser — session entry 117760 frames @ 44100 Hz',
@@ -428,6 +442,7 @@ async function main() {
       const kit2 = items2.find(i => i && i.format === 'exs') || null;
       const als2 = items2.find(i => i && i.format === 'als') || null;
       const kitId = await rowId('rig-kit.exs');
+      await openLib();
       await clickSel(`[data-av-import-lib="${kitId}"] [data-av-import-act="kit"]`, 1500);
       const kitSent = await waitFor(`(() => { const r = avSampleStore.sent && avSampleStore.sent[0]; return (r && String(r.name).indexOf('kit-tone.wav') >= 0) ? { name: r.name, slot: r.slot } : null; })()`, 15000);
       const kitKind = (await ev(`(typeof avParams === 'object' && avParams) ? avParams['engine.kind'] : null`)).value;
@@ -435,6 +450,7 @@ async function main() {
         rows2 === 4 && !!kit2 && kit2.result === 'imported' && !!kitSent && kitSent.slot === 0 && kitKind === 'sampler',
         JSON.stringify({ rows: rows2, kit: kit2 && kit2.result, sent: kitSent, kind: kitKind }));
       const alsId = await rowId('rig.als');
+      await openLib();
       await clickSel(`[data-av-import-lib="${alsId}"] [data-av-import-act="seq"]`, 1200);
       const seq2 = await waitFor(`(() => { let n = 0; try { const sn = avSeqSnap(); for (const t of sn.tracks) for (const s of t.steps) if (s.on === 1) n++; } catch (e) { return null; } const u = (window.__avUndo && typeof window.__avUndo.label === 'string') ? window.__avUndo.label : null; return (n >= 1 && u === 'import') ? { notes: n, undo: u } : null; })()`, 15000);
       check('R15c rig: real .als -> refs row -> the SEQ button runs the pattern (undo import)',
@@ -474,6 +490,7 @@ async function main() {
         rows3 = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 2 ? 2 : 0`, 20000);
       }
       const nkiId = await rowId('rig.nki');
+      await openLib();
       await clickSel(`[data-av-import-lib="${nkiId}"] [data-av-import-act="kit"]`, 1500);
       const nkiSent = await waitFor(`(() => { const r = avSampleStore.sent && avSampleStore.sent[0]; return (r && String(r.name).indexOf('sample_A.wav') >= 0) ? { name: r.name, slot: r.slot } : null; })()`, 15000);
       const nkiKind = (await ev(`(typeof avParams === 'object' && avParams) ? avParams['engine.kind'] : null`)).value;
@@ -528,6 +545,7 @@ async function main() {
       const zc = zipSnap.last && zipSnap.last.counts ? zipSnap.last.counts : null;
       const n0 = (await ev(`avSampleStore.entries.length`)).value;
       const kickId = await rowId('kick.wav');
+      await openLib();
       await clickSel(`[data-av-import-lib="${kickId}"] [data-av-import-act="load"]`, 900);
       const zipLoad = await waitFor(`(() => { const es = avSampleStore.entries; if (es.length <= ${Number(n0) || 0}) return null; const e = es[es.length - 1]; return { frames: e.buffer ? e.buffer.length : -1, rate: e.sampleRate }; })()`, 12000);
       check('R16 rig: the real zip expands (4 rows; bundles 1 · samples 2 · refused 1) + a child LOADs (native resample: 0.05 s @ 48 kHz)',
@@ -545,6 +563,7 @@ async function main() {
       }
       const n1 = (await ev(`avSampleStore.entries.length`)).value;
       const f64Id = await rowId('rig64.wav');
+      await openLib();
       await clickSel(`[data-av-import-lib="${f64Id}"] [data-av-import-act="load"]`, 900);
       const f64Load = await waitFor(`(() => { const es = avSampleStore.entries; if (es.length <= ${Number(n1) || 0}) return null; const e = es[es.length - 1]; return { frames: e.buffer ? e.buffer.length : -1, rate: e.sampleRate }; })()`, 12000);
       check('R16 rig: f64 wav imports + LOAD lands (clean-room route, 200 frames @ 8000)',
@@ -554,6 +573,7 @@ async function main() {
       /* leg c: the REAL rx2 (loaded fresh from the library — the page reloaded since check 12) */
       const rx2RowId = await rowId('loop.rx2');
       const n2 = (await ev(`avSampleStore.entries.length`)).value;
+      await openLib();
       await clickSel(`[data-av-import-lib="${rx2RowId}"] [data-av-import-act="load"]`, 900);
       const rxEntry = await waitFor(`(() => { const es = avSampleStore.entries; if (es.length <= ${Number(n2) || 0}) return null; const e = es[es.length - 1]; return { id: e.id }; })()`, 20000);
       const chopR = (rxEntry && rxEntry.id) ? await ev(`(async () => {

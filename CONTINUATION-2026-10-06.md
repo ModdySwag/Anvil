@@ -2503,6 +2503,39 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
 - Carried: quiet bench re-run - P.2 minBLEP - P4 follow-ups - PERFECT TUNINGS - README refresh -
   owner-pass items. Nothing else in flight.
 
+## Resume addendum 69 - 2026-10-09 (R21 INTEGRATED + triaged green + swept; battery running)
+
+- LANDED + VERIFIED ON DISK (parents re-verified: node --check x5 + marker greps + count deltas):
+  `src/av_library_ui.js` (NEW, 18,005 B; overlay shell r21.0; facade `__avLibrary`; palette cmd
+  lib.open; Esc/away close; focus return; z 1610 one below the palette) - `src/av_import_ui.js`
+  (strip `#av-import-libsum`/`#av-import-libopen`; `avImportUiManagerMount`/`avImportUiMgrEl`;
+  fmt/pack facets; incremental (step 60 / ceiling 400) + `#av-import-more`; inspector
+  `#av-import-detail`; bulk bar (cap 50; export = ONE zip via avZipBuild); `avLibraryUiNote`
+  bridge; `avImportUiLibrary()` opens the overlay; version stays r15b.0) - rigs (cdp_hub 42 -> 49,
+  7 new legs + overlay open steps; cdp_smoke 78 (+1); cdp_import open steps only, 24 unchanged).
+  Authors A/B/D1/D2 (deleg_b96639f7). Managers contracts: avLibGet item.bytes; avZipBuild entries
+  {name, data}; avImportUiSnap().manager + fmt/pack/limit/shown/insp.
+- INTEGRATED - ONE counted-assert script (cache/r21/integrate/_r21_integrate.py; --anchors dry-passed
+  BEFORE landing): build.py js_parts += `av_library_ui.js` (after av_sources_ui.js); app_core:
+  + `libraryOk` avLibraryUiInit block after sourcesUiOk; ANVIL 1.9.0 -> 1.10.0 "R21 - library
+  overlay". Styles appended (cache/r21/integrate/_r21_styles.py; +2,722 B; classes reconciled
+  against the emitted lists - av-import-detail-line/-key/-val/-meta). Rebuild = **1bbfe2cf**
+  (4,238,455 B; sw `8cd2c52e`; worklet `b65160e0` unchanged; manifest 7cb76e43 unchanged).
+- TRIAGE: smoke **78/78** - hub **49/49** - cockpit **21/21** - platform **52/52** - import
+  **24/24** - avpack selftest + file PASS. RIGFIXES (rig-side, to intent, never loosened): N2
+  asserts the avAboutToggle STATE semantics (toggle(false) returns false = the off state, not
+  op-success truthiness); N6 witnesses via the bare lexical `avSampleStore` (`window.avSampleStore`
+  is undefined for a top-level const). FLAKE RECORDED: one solo hub lap had the two reload-wait
+  legs fail (data counts fine, DOM rows 0 after reload; the next reload leg + the following solo
+  run green) = the addendum-58 reload-wait class; solo re-run green.
+- PINS: 22 swept 095b7e5d -> 1bbfe2cf (cache/r21/sweep_r21.py; set + exactly-1 + post-check OK).
+- BATTERY LAUNCHED detached (cache/r21/battery_r21_chain.log; marker "BATTERY-R21 DONE"). NEXT:
+  battery verdict -> deploy (index+sw) -> live capture (cache/r21/live_probe_r21.mjs: real strip
+  open / Esc / focus + renders/r21-live-hub.png + r21-live-library.png) -> close addendum 70 +
+  commit. THEN **R20 work persistence**.
+- Carried: quiet bench re-run - P.2 minBLEP - P4 follow-ups - PERFECT TUNINGS - README refresh -
+  owner-pass items. Nothing else in flight.
+
 ## OWNER ASK (2026-10-09) - IMPORT & LIBRARY redesign = wave R21 (STAGED; next after the R19 close)
 
 - Ask (recorded intent): full access to ALL loaded files but STREAMLINED navigation - the hub

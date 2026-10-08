@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.9.0", phase: "R19 · user packs", built: "2026-10-09" });
+const ANVIL = Object.freeze({ version: "1.10.0", phase: "R21 · library overlay", built: "2026-10-09" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -79,6 +79,9 @@ function avMountLevels() {
   try { importOk = (typeof avImportUiInit === "function") ? (avImportUiInit() !== false) : false; } catch (e) { console.warn("[anvil] import card init failed", e); }
   let sourcesUiOk = false;
   try { sourcesUiOk = (typeof avSourcesUiInit === "function") ? (avSourcesUiInit() !== false) : false; } catch (e) { console.warn("[anvil] sources ui init failed", e); }
+  /* R21: the LIBRARY overlay (contract verify/_r21_wave.md) */
+  let libraryOk = false;
+  try { libraryOk = (typeof avLibraryUiInit === "function") ? (avLibraryUiInit() !== false) : false; } catch (e) { console.warn("[anvil] library overlay init failed", e); }
   let fxOk = false, modOk = false;
   try { fxOk = (typeof avFxInit === "function") ? (avFxInit() !== false) : false; } catch (e) { console.warn("[anvil] fx rack init failed", e); }
   try { modOk = (typeof avModInit === "function") ? (avModInit() !== false) : false; } catch (e) { console.warn("[anvil] mod matrix init failed", e); }

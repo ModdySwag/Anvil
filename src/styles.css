@@ -1925,3 +1925,31 @@ header.av-head.av-console .avc-center { display: flex; align-items: center; gap:
 @media (min-width: 1520px) {
   header.av-head.av-console .avc-center { position: absolute; left: 50%; transform: translateX(-50%); top: 0; bottom: 0; }
 }
+
+/* R21: the LIBRARY overlay (av_library_ui.js) + hub card slimming (av_import_ui.js) --
+   classes per verify/_r21_wave.md s.3/s.4. Appended to src/styles.css at integration. */
+.av-library-pop { position: fixed; inset: 0; z-index: 1610; display: flex; align-items: stretch; justify-content: center; background: rgba(4, 8, 10, .55); padding: 30px min(4vw, 48px); }
+.av-library-pop[hidden] { display: none; }
+.av-library-box { display: flex; flex-direction: column; gap: 10px; width: min(1200px, 100%); min-width: 0; background: var(--panel); border: 1px solid var(--hair); border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.6); padding: 12px 14px; overflow: hidden; }
+.av-library-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.av-library-title { font-family: var(--mono); font-size: 12px; letter-spacing: .14em; text-transform: uppercase; color: var(--text); }
+.av-library-status { font-family: var(--mono); font-size: 10.5px; color: var(--text-3); overflow-wrap: anywhere; }
+.av-library-msg { color: var(--text-2); }
+.av-library-err { color: #ff8f6e; }
+.av-library-body { display: flex; flex-direction: column; gap: 8px; overflow-y: auto; min-height: 0; flex: 1 1 auto; }
+
+/* card-side strip */
+.av-import-libsum-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.av-import-libsum { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 0; overflow-wrap: anywhere; }
+
+/* manager additions (live wherever the manager is mounted) */
+.av-import-facets { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; max-width: 100%; overflow-x: auto; }
+.av-import-bulk { display: inline-flex; align-items: center; gap: 4px; }
+.av-import-more { align-self: flex-start; }
+.av-import-more[hidden] { display: none; }
+.av-import-detail { display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--hair); border-radius: 6px; background: rgba(6, 9, 12, .35); padding: 8px 10px; font-family: var(--mono); font-size: 10.5px; color: var(--text-2); max-height: 220px; overflow-y: auto; }
+.av-import-detail[hidden] { display: none; }
+.av-import-detail-line { display: flex; gap: 8px; min-width: 0; }
+.av-import-detail-key { color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; font-size: 9px; min-width: 64px; padding-top: 1px; }
+.av-import-detail-val { color: var(--text-2); min-width: 0; overflow-wrap: anywhere; }
+.av-import-detail-meta { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 96px; overflow-y: auto; background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px; padding: 5px 7px; }

@@ -37,6 +37,12 @@
 //   11. zero page errors · the EXPECT_SHA freeze pin (null until the R17 freeze — a PINNED run
 //       reports ONE more check than an unpinned run) · screenshot renders/r17-hub-suite.png.
 //
+//   12. (R21) the library manager now lives inside the #av-library-pop overlay (ids preserved):
+//       manager/row legs run with the overlay OPEN, the library-jump leg asserts the overlay
+//       opens, and N1-N7 witness the strip + open focus + containment, Esc close + focus return,
+//       the format + pack facets, incremental rows (65 synthetic WAVs, cleaned up), bulk load
+//       and the inspector.
+//
 // Launch skeleton follows cdp_import.mjs / cdp_smoke.mjs VERBATIM (candidates Chrome/Edge/Brave,
 // free-port scan, fresh temp --user-data-dir, 1440x900 metrics override, autoplay allowed, ONE
 // browser, explicit exit, process.on('exit') kills ONLY processes whose command line carries OUR
@@ -62,7 +68,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* freeze pin: the parent sets this to the frozen sha at the R17 freeze (64-hex); null until then.
    Pinned run = +1 check (the freeze check); unpinned run reports one FEWER check — mirroring
    cdp_import's structure with its pin absent. */
-const EXPECT_SHA = '095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085';
+const EXPECT_SHA = '1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -177,6 +183,36 @@ async function main() {
   /* helper: the receipt count right now (guard = -1 when the surface is absent) */
   const receiptsNow = async () => (await ev(`(async () => { try { if (typeof avLibReceiptList !== 'function') return -1; const r = await avLibReceiptList(); return (r && r.ok) ? r.count : -1; } catch (e) { return -1; } })()`)).value;
 
+  /* R21 overlay helpers (verify/_r21_wave.md section 5): the library manager now lives INSIDE
+     the #av-library-pop overlay (ids preserved), so every manager/row-touching leg runs with
+     the overlay OPEN (the user path — not a hidden click). Facade returns accept true or a
+     receipt object (house law); open/close wait until the root reflects the requested state. */
+  const openLibrary = async () => {
+    const r = await ev(`(async () => {
+      try {
+        const L = window.__avLibrary;
+        if (!L || typeof L.open !== 'function') return { missing: true };
+        const b = L.open();
+        const ok = (String(b) === 'true') || !!(b && b.ok === true);
+        return { open: ok, isOpen: (typeof L.isOpen === 'function') ? (L.isOpen() === true) : null };
+      } catch (e) { return { err: String((e && e.message) || e) }; }
+    })()`);
+    const vis = await waitFor(`(() => { const p = document.getElementById('av-library-pop'); return (p && p.hidden !== true) ? true : false; })()`, 12000);
+    return { call: (r && r.value) || null, visible: vis === true };
+  };
+  const closeLibrary = async () => {
+    const r = await ev(`(async () => {
+      try {
+        const L = window.__avLibrary;
+        if (!L || typeof L.close !== 'function') return { missing: true };
+        const b = L.close();
+        return { close: (String(b) === 'true') || !!(b && b.ok === true) };
+      } catch (e) { return { err: String((e && e.message) || e) }; }
+    })()`);
+    const hid = await waitFor(`(() => { const p = document.getElementById('av-library-pop'); return (p && p.hidden === true) ? true : false; })()`, 8000);
+    return { call: (r && r.value) || null, hidden: hid === true };
+  };
+
   /* ── 1. boot: the hub card in the store zone ── */
   const ready = await waitReady();
   const bootR = await ev(`(() => {
@@ -271,6 +307,10 @@ async function main() {
     return { clicked: clicked, afterMenu: visible() };
   })()`);
   const jm = jumpR.value || {};
+  /* R21: the File menu path must ALSO open the overlay (the manager moved in there); witness it,
+     then close so the fn path below opens it from closed (attribution) */
+  const jumpOv1 = await waitFor(`(() => { const p = document.getElementById('av-library-pop'); return (p && p.hidden !== true) ? true : null; })()`, 8000);
+  const jumpClose = await closeLibrary();
   const jump2R = await ev(`(() => {
     const visible = () => { const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; }); return shown[0] ? shown[0].getAttribute('data-zone') : null; };
     const okSynth = (typeof avZoneShow === 'function') ? avZoneShow('synth', { source: 'rig' }) : false;
@@ -279,9 +319,12 @@ async function main() {
     return { okSynth: okSynth, mid: mid, ret: ret, end: visible() };
   })()`);
   const j2 = jump2R.value || {};
-  check('library jump: File > Library... and avImportUiLibrary() switch to the store pane (returns true)',
-    jm.clicked === true && jm.afterMenu === 'store' && j2.okSynth === true && j2.mid === 'synth'
-    && j2.ret === true && j2.end === 'store', JSON.stringify({ menu: jm, fn: j2 }));
+  const jumpOv2 = await waitFor(`(() => { const p = document.getElementById('av-library-pop'); return (p && p.hidden !== true) ? true : null; })()`, 8000);
+  check('library jump: File > Library... and avImportUiLibrary() switch to the store pane (returns true) + open the overlay',
+    jm.clicked === true && jm.afterMenu === 'store' && jumpOv1 === true && jumpClose.hidden === true
+    && j2.okSynth === true && j2.mid === 'synth'
+    && j2.ret === true && j2.end === 'store' && jumpOv2 === true,
+    JSON.stringify({ menu: jm, menuOv: jumpOv1, close: jumpClose, fn: j2, fnOv: jumpOv2 }));
 
   /* ── 8. import run 1: WAV + SMF + unknown through the card change handler ── */
   const run1R = await ev(`(() => {
@@ -456,6 +499,12 @@ async function main() {
     !!libFront && libFront.count === 3 && libFront.names === 'hub-alpha.wav,hub-mike.mid,hub-zulu.wav'
     && libFront.dom === 3, JSON.stringify(libFront));
 
+  /* R21: the manager subsystem now lives inside #av-library-pop — the manager-touching legs
+     below run with the overlay OPEN (the user path). The reload above left a fresh page
+     (overlay closed again): open it via the facade before the rename leg. */
+  const mgrOpen1 = await openLibrary();
+  note('R21 manager-section overlay open: ' + JSON.stringify(mgrOpen1));
+
   /* ── 14. rename via the facade: applies + refuses an empty name ── */
   const renR = await ev(`(async () => {
     try {
@@ -516,6 +565,11 @@ async function main() {
   check('reload: the renamed item persists (hub-bravo.wav present, hub-alpha.wav gone)',
     !!persRen && persRen.bravo === true && persRen.alpha === false && persRen.receipts === 2,
     JSON.stringify(persRen));
+
+  /* R21: the rename reload left a fresh page (overlay closed again) — re-open the overlay
+     before the manager legs (search/filter/sort/select/delete/export read manager rows). */
+  const mgrOpen2 = await openLibrary();
+  note('R21 post-reload overlay re-open: ' + JSON.stringify(mgrOpen2));
 
   /* ── 16. manager search: 3 items -> 1 hit ── */
   await ev(`(() => {
@@ -706,6 +760,11 @@ async function main() {
     } catch (e) { return { threw: String((e && e.message) || e) }; }
   })()`);
   const pr = prR.value || {};
+  /* R21: #av-import-persist is a CARD control under the full-surface overlay — close the overlay
+     first so the real click reaches the button (an open backdrop would take the hit and the
+     away-click would close instead); the manager legs resume right after this leg. */
+  const persClose = await closeLibrary();
+  note('R21 persist: overlay closed for the card click: ' + JSON.stringify(persClose));
   await clickSel('#av-import-persist', 500);
   const pstText = await waitFor(`(() => {
     const t = String((document.getElementById('av-import-status') || {}).textContent || '');
@@ -717,6 +776,11 @@ async function main() {
   check('persist: avStorePersist() resolves {ok,persisted} honestly + the button writes the honest result',
     !!pr && pr.ok === true && pr.persisted === true && !pr.threw && !pr.missing
     && !!pstText && persistHonest, JSON.stringify({ res: pr.val || pr, status: pstText && pstText.slice(0, 90), claimsGrant: claimsGrant }));
+
+  /* R21: the manager legs resume — re-open the overlay (the R18a/R19 legs below read manager
+     rows: dedupe/missing chips + the round-trip DOM count). */
+  const mgrOpen3 = await openLibrary();
+  note('R21 overlay re-open after persist: ' + JSON.stringify(mgrOpen3));
 
   /* ── 23b. R18a library intelligence: dedupe · replace · missing · relink (contract:
      verify/_r18_wave.md §5; 4 checks). Every probe is guarded per call — a not-yet-landed
@@ -1663,6 +1727,412 @@ async function main() {
     && !!r19GenR.counts && r19GenR.counts.bundles === 1 && r19GenR.counts.total === 3,
     JSON.stringify(r19GenR));
 
+  /* ===== R21 section 5: N1-N7 — the library OVERLAY surface (verify/_r21_wave.md section 5).
+     The manager moved into #av-library-pop (ids preserved): strip + open focus + containment
+     (N1), Esc close + focus return + facade shapes (N2), format facet (N3), pack facet (N4),
+     incremental rows (N5), bulk load (N6), inspector (N7). N5 synthesizes 65 tiny WAVs
+     in-page, imports them through the facade, then DELETES them again (select + delete) so
+     the drop/row legs and the zero-error leg stay pristine. ===== */
+
+  /* ── N1. strip: #av-import-libsum carries the count + the REAL OPEN LIBRARY button opens the
+     overlay (focus lands in #av-import-search; the manager is contained by the overlay) ── */
+  const n1Close = await closeLibrary();   /* the overlay is open (mgrOpen3) — start from closed */
+  const n1Zone = await ev(`(() => {
+    try {
+      const ok = (typeof avZoneShow === 'function') ? avZoneShow('store', { source: 'rig' }) : false;
+      const btn = document.getElementById('av-import-libopen');
+      if (btn && typeof btn.focus === 'function') btn.focus();   /* deterministic opener for N2 */
+      const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; });
+      return { ok: ok, zone: shown[0] ? shown[0].getAttribute('data-zone') : null, btn: !!btn };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  await sleep(250);
+  const n1Stat = await waitFor(`(async () => {
+    try {
+      const el = document.getElementById('av-import-libsum');
+      const t = el ? String(el.textContent || '') : '';
+      const ix = t.indexOf(' item');
+      let n = null;
+      if (ix > 0) { let j = ix; while (j > 0 && t.charAt(j - 1) >= '0' && t.charAt(j - 1) <= '9') j--; if (j < ix) n = Number(t.slice(j, ix)); }
+      let count = -1;
+      try { const l = await avLibList(); count = (l && l.ok === true && typeof l.count === 'number') ? l.count : -1; } catch (e0) { count = -1; }
+      const p = document.getElementById('av-library-pop');
+      if (n === null || count < 1 || n !== count) return null;
+      if (p && p.hidden !== true) return null;
+      return { text: t, n: n, count: count, closed: !p || p.hidden === true };
+    } catch (e) { return null; }
+  })()`, 10000);
+  let n1StatRaw = null;
+  if (!n1Stat) n1StatRaw = (await ev(`(() => { const el = document.getElementById('av-import-libsum'); const p = document.getElementById('av-library-pop'); return { text: el ? String(el.textContent || '') : null, hidden: p ? p.hidden === true : null }; })()`)).value;
+  const n1Click = await clickSel('#av-import-libopen', 400);
+  const n1Open = await waitFor(`(() => {
+    const p = document.getElementById('av-library-pop');
+    if (!p || p.hidden === true) return null;
+    const s = document.getElementById('av-import-search');
+    if (!s || document.activeElement !== s) return null;
+    return { open: true, focus: 'av-import-search' };
+  })()`, 10000);
+  const n1Cont = await ev(`(() => {
+    const p = document.getElementById('av-library-pop');
+    const s = document.getElementById('av-import-search');
+    const l = document.getElementById('av-import-lib');
+    return { hasSearch: !!(p && s && p.contains(s)), hasLib: !!(p && l && p.contains(l)) };
+  })()`);
+  const n1c = n1Cont.value || {};
+  check('R21 N1 strip: #av-import-libsum carries the count + the REAL OPEN LIBRARY button opens the overlay (focus in search, manager contained)',
+    !!n1Stat && n1Stat.n === n1Stat.count && n1Stat.count >= 1
+    && !!n1Zone.value && n1Zone.value.zone === 'store' && n1Zone.value.btn === true
+    && n1Click === true && !!n1Open && n1Open.focus === 'av-import-search'
+    && n1c.hasSearch === true && n1c.hasLib === true,
+    JSON.stringify({ closed: n1Close, stat: n1Stat || n1StatRaw, zone: n1Zone.value || null, click: n1Click, open: n1Open || null, cont: n1c }));
+
+  /* ── N2. close: Esc closes (hidden back) + focus returns to the strip button; facade
+     isOpen() false; open/close/toggle shapes true ── */
+  const n2Esc = await ev(`(() => {
+    try {
+      const p = document.getElementById('av-library-pop');
+      const before = { open: !!(p && p.hidden !== true) };
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true }));
+      return before;
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const n2Closed = await waitFor(`(() => { const p = document.getElementById('av-library-pop'); return (p && p.hidden === true) ? true : null; })()`, 8000);
+  const n2Focus = await waitFor(`(() => { const a = document.activeElement; const b = document.getElementById('av-import-libopen'); return (a && b && a === b) ? { onStrip: true, id: String(a.id || '') } : null; })()`, 5000);
+  let n2FocusRaw = null;
+  if (!n2Focus) n2FocusRaw = (await ev(`(() => { const a = document.activeElement; return { id: a ? String(a.id || a.tagName || '') : null }; })()`)).value;
+  const n2Shapes = await ev(`(async () => {
+    try {
+      const L = window.__avLibrary || {};
+      const T = function (x) { return (String(x) === 'true') || !!(x && x.ok === true); };
+      const isOpen = function () { return (typeof L.isOpen === 'function') ? (L.isOpen() === true) : null; };
+      const r = { isOpen0: isOpen() };
+      r.open = (typeof L.open === 'function') ? T(L.open()) : null; r.openSt = isOpen();
+      r.close = (typeof L.close === 'function') ? T(L.close()) : null; r.closeSt = isOpen();
+      /* R21 rigfix: avLibraryUiToggle returns the NEW STATE (avAboutToggle shape) — true when
+         asked on, false when asked off; assert the STATE equality, not op-success truthiness. */
+      r.toggleOn = (typeof L.toggle === "function") ? (L.toggle(true) === true) : null; r.toggleOnSt = isOpen();
+      r.toggleOff = (typeof L.toggle === "function") ? (L.toggle(false) === false) : null; r.toggleOffSt = isOpen();
+      return r;
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const n2s = n2Shapes.value || {};
+  check('R21 N2 close: Esc closes + focus returns to the strip button + facade open/close/toggle shapes true (isOpen false)',
+    !!n2Esc.value && n2Esc.value.open === true && n2Closed === true
+    && !!n2Focus && n2Focus.onStrip === true
+    && n2s.isOpen0 === false && n2s.open === true && n2s.openSt === true && n2s.close === true
+    && n2s.closeSt === false && n2s.toggleOn === true && n2s.toggleOnSt === true
+    && n2s.toggleOff === true && n2s.toggleOffSt === false,
+    JSON.stringify({ esc: n2Esc.value || null, closed: n2Closed, focus: n2Focus || n2FocusRaw, shapes: n2s }));
+
+  /* ── N3. format facet: data-fmt="wav" narrows to the wav count, "all" restores ── */
+  const n3Open = await openLibrary();
+  const n3Info = await ev(`(async () => {
+    try {
+      const l = await avLibList();
+      const items = (l && l.items) || [];
+      const isWav = function (it) {
+        if (typeof avImportUiExtOf === 'function') { try { return String(avImportUiExtOf(it) || '').toLowerCase() === 'wav'; } catch (e0) { /* fall through */ } }
+        const nm = String((it && it.name) || '').toLowerCase();
+        return nm.slice(-4) === '.wav';
+      };
+      const wavs = items.filter(isWav).map(function (it) { return String(it.name); });
+      return { total: items.length, wavs: wavs };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const n3v = n3Info.value || {};
+  await ev(`(() => { const c = document.querySelector('#av-import-formats [data-fmt="wav"]'); if (!c) return { missing: true }; c.click(); return { ok: true }; })()`);
+  const n3Wav = await waitFor(`(() => {
+    const rows = Array.prototype.slice.call(document.querySelectorAll('#av-import-lib [data-av-import-lib]'));
+    const want = ${JSON.stringify(Array.isArray(n3v.wavs) ? n3v.wavs : [])};
+    if (!want.length || rows.length !== Math.min(want.length, 60)) return null;
+    const texts = rows.map(function (r) { return String(r.textContent || ''); });
+    if (!texts.every(function (t) { return want.some(function (n) { return t.indexOf(n) >= 0; }); })) return null;
+    const snap = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+    const m = snap.manager || {};
+    if (m.fmt !== 'wav') return null;
+    return { rows: rows.length, want: want.length, fmt: m.fmt };
+  })()`, 10000);
+  await ev(`(() => { const c = document.querySelector('#av-import-formats [data-fmt="all"]'); if (!c) return { missing: true }; c.click(); return { ok: true }; })()`);
+  const n3All = await waitFor(`(() => {
+    const rows = document.querySelectorAll('#av-import-lib [data-av-import-lib]').length;
+    const total = ${Number(n3v.total) || 0};
+    if (total < 1 || rows !== Math.min(total, 60)) return null;
+    const snap = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+    const m = snap.manager || {};
+    if (m.fmt !== 'all') return null;
+    return { rows: rows, total: total, fmt: m.fmt };
+  })()`, 10000);
+  check('R21 N3 format facet: data-fmt="wav" narrows to the wav count, "all" restores (snap manager.fmt mirrors)',
+    Array.isArray(n3v.wavs) && n3v.wavs.length >= 1 && !!n3Wav && n3Wav.rows === Math.min(n3v.wavs.length, 60)
+    && !!n3All && n3All.rows === Math.min(n3v.total, 60) && n3All.fmt === 'all',
+    JSON.stringify({ open: n3Open, total: n3v.total, wavs: Array.isArray(n3v.wavs) ? n3v.wavs.length : null, wav: n3Wav || null, all: n3All || null }));
+
+  /* ── N4. pack facet: the R19 pack's chip narrows to its items; __none present when unpacked
+     items exist ── */
+  const n4Info = await ev(`(async () => {
+    try {
+      const l = await avLibList();
+      const items = (l && l.items) || [];
+      const packOf = function (it) { return (it && it.source && typeof it.source === 'object' && it.source.pack) ? String(it.source.pack) : ''; };
+      const packed = items.filter(function (it) { return packOf(it) !== ''; });
+      const ids = [];
+      packed.forEach(function (it) { const p = packOf(it); if (ids.indexOf(p) < 0) ids.push(p); });
+      const id = ids.length ? ids[0] : '';
+      const mine = packed.filter(function (it) { return packOf(it) === id; });
+      const unpacked = items.filter(function (it) { return packOf(it) === ''; }).length;
+      return { id: id, n: mine.length, names: mine.map(function (it) { return String(it.name); }),
+               unpacked: unpacked, total: items.length,
+               chip: id ? !!document.querySelector('#av-import-packs [data-pack="' + id + '"]') : false,
+               noneChip: !!document.querySelector('#av-import-packs [data-pack="__none"]') };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const n4v = n4Info.value || {};
+  await ev(`(() => { const id = ${JSON.stringify(String(n4v.id || ''))}; if (!id) return { missing: true }; const c = document.querySelector('#av-import-packs [data-pack="' + id + '"]'); if (!c) return { missing: true }; c.click(); return { ok: true }; })()`);
+  const n4Pack = await waitFor(`(() => {
+    const rows = Array.prototype.slice.call(document.querySelectorAll('#av-import-lib [data-av-import-lib]'));
+    const want = ${JSON.stringify(Array.isArray(n4v.names) ? n4v.names : [])};
+    const id = ${JSON.stringify(String(n4v.id || ''))};
+    if (!want.length || !id || rows.length !== Math.min(want.length, 60)) return null;
+    const texts = rows.map(function (r) { return String(r.textContent || ''); });
+    if (!texts.every(function (t) { return want.some(function (n) { return t.indexOf(n) >= 0; }); })) return null;
+    const snap = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+    const m = snap.manager || {};
+    if (m.pack !== id) return null;
+    return { rows: rows.length, want: want.length, pack: m.pack };
+  })()`, 10000);
+  await ev(`(() => { const c = document.querySelector('#av-import-packs [data-pack="all"]'); if (!c) return { missing: true }; c.click(); return { ok: true }; })()`);
+  const n4All = await waitFor(`(() => {
+    const rows = document.querySelectorAll('#av-import-lib [data-av-import-lib]').length;
+    const total = ${Number(n4v.total) || 0};
+    if (total < 1 || rows !== Math.min(total, 60)) return null;
+    const snap = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+    const m = snap.manager || {};
+    if (m.pack !== 'all') return null;
+    return { rows: rows, total: total, pack: m.pack };
+  })()`, 10000);
+  check('R21 N4 pack facet: data-pack="<packid>" narrows to the pack items + __none present when unpacked items exist (snap manager.pack mirrors)',
+    !!n4v.id && n4v.n >= 1 && n4v.chip === true && n4v.unpacked >= 1 && n4v.noneChip === true
+    && !!n4Pack && n4Pack.rows === Math.min(n4v.n, 60)
+    && !!n4All && n4All.rows === Math.min(n4v.total, 60) && n4All.pack === 'all',
+    JSON.stringify({ pack: n4v, narrowed: n4Pack || null, all: n4All || null }));
+
+  /* ── N5. incremental: 65 synthetic WAVs -> 60 rows + "show more (60 of M)" -> one click ->
+     all rows + button hidden; the synthetic items are deleted again (select + delete = cleanup) ── */
+  const n5Imp = await ev(`(async () => {
+    try {
+      if (typeof avWavEncode !== 'function') return { err: 'avWavEncode absent' };
+      const l0 = (typeof avLibList === 'function') ? await avLibList() : null;
+      const before = (l0 && typeof l0.count === 'number') ? l0.count : -1;
+      if (before < 0) return { err: 'no avLibList count' };
+      const files = [];
+      for (let i = 0; i < 65; i++) {
+        const sr = 8000, n = 400;
+        const lch = new Float32Array(n), rch = new Float32Array(n);
+        const freq = 220 + i * 3;
+        for (let k = 0; k < n; k++) { const v2 = 0.4 * Math.sin(2 * Math.PI * freq * k / sr); lch[k] = v2; rch[k] = v2; }
+        const wav = avWavEncode({ l: lch, r: rch, sr: sr, bits: 16, dither: false });
+        if (!wav) return { err: 'encode null at ' + i };
+        files.push(new File([wav], 'r21-n5-' + ('0' + i).slice(-2) + '.wav'));
+      }
+      window.__n5Names = files.map(function (x) { return x.name; });
+      const f = window.__avImport;
+      if (!f || typeof f.importFiles !== 'function') return { err: 'importFiles absent' };
+      const r = await f.importFiles(files);
+      return { ok: true, before: before, n: files.length, ret: (r && typeof r === 'object') ? (r.ok === true) : (String(r) === 'true') };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const n5Want = (n5Imp.value && n5Imp.value.ok === true && typeof n5Imp.value.before === 'number' && n5Imp.value.before >= 0) ? n5Imp.value.before + 65 : -1;
+  const n5Count = (n5Want > 0) ? await waitFor(`(async () => {
+    try {
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      if (!l || l.ok !== true || l.count !== ${n5Want}) return null;
+      const names = window.__n5Names || [];
+      const got = (l.items || []).filter(function (i) { return names.indexOf(String(i.name)) >= 0; }).length;
+      return (got === names.length && names.length === 65) ? { count: l.count, got: got } : null;
+    } catch (e) { return null; }
+  })()`, 45000) : null;
+  const n5Paint = await waitFor(`(async () => {
+    try {
+      const rows = document.querySelectorAll('#av-import-lib [data-av-import-lib]').length;
+      if (rows !== 60) return null;
+      const more = document.getElementById('av-import-more');
+      if (!more || more.hidden === true) return null;
+      const t = String(more.textContent || '').trim();
+      const a = t.indexOf('('), b2 = t.indexOf(' of '), c2 = t.indexOf(')', b2 + 1);
+      if (a < 0 || b2 < 0 || c2 < 0 || t.slice(0, 9).toLowerCase() !== 'show more') return null;
+      const p = Number(t.slice(a + 1, b2));
+      const ms = t.slice(b2 + 4);
+      let di = 0; while (di < ms.length && ms.charAt(di) >= '0' && ms.charAt(di) <= '9') di++;
+      const M = di > 0 ? Number(ms.slice(0, di)) : NaN;
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      if (!l || l.ok !== true || p !== 60 || M !== l.count) return null;
+      return { rows: rows, label: t, p: p, M: M };
+    } catch (e) { return null; }
+  })()`, 25000);
+  await ev(`(() => { const b2 = document.getElementById('av-import-more'); if (!b2) return { missing: true }; b2.click(); return { ok: true }; })()`);
+  const n5All = await waitFor(`(async () => {
+    try {
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      if (!l || l.ok !== true) return null;
+      const rows = document.querySelectorAll('#av-import-lib [data-av-import-lib]').length;
+      const more = document.getElementById('av-import-more');
+      if (l.count <= 60 || rows !== l.count || !more || more.hidden !== true) return null;
+      return { rows: rows, count: l.count, hidden: more.hidden === true };
+    } catch (e) { return null; }
+  })()`, 15000);
+  const n5SelR = await ev(`(async () => {
+    try {
+      const names = window.__n5Names || [];
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      const items = (l && l.items) || [];
+      const mine = items.filter(function (i) { return names.indexOf(String(i.name)) >= 0; });
+      if (mine.length !== names.length) return { missingItems: mine.length, names: names.length };
+      const on = function (el) { return !!(el && (el.checked === true || el.getAttribute('aria-checked') === 'true' || (el.classList && el.classList.contains('on')))); };
+      for (let i = 0; i < mine.length; i++) {
+        const box = document.querySelector('#av-import-lib [data-av-import-lib="' + String(mine[i].id) + '"] [data-av-import-check]');
+        if (!box) return { missingBox: String(mine[i].id) };
+        if (!on(box)) box.click();
+        await new Promise(function (r) { setTimeout(r, 30); });
+      }
+      let checked = 0;
+      for (let k = 0; k < 60; k++) {
+        checked = Array.prototype.filter.call(document.querySelectorAll('#av-import-lib [data-av-import-check]'), on).length;
+        if (checked >= mine.length) break;
+        await new Promise(function (r) { setTimeout(r, 250); });
+      }
+      return { want: mine.length, checked: checked };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  await ev(`(() => { const b2 = document.getElementById('av-import-delsel'); if (!b2) return { missing: true }; b2.click(); return { ok: true }; })()`);
+  const n5Clean = await waitFor(`(async () => {
+    try {
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      if (!l || l.ok !== true) return null;
+      const names = window.__n5Names || [];
+      if ((l.items || []).some(function (i) { return names.indexOf(String(i.name)) >= 0; })) return null;
+      if (l.count !== ${n5Want > 0 ? n5Want - 65 : -1}) return null;
+      const rows = document.querySelectorAll('#av-import-lib [data-av-import-lib]').length;
+      return { count: l.count, rows: rows };
+    } catch (e) { return null; }
+  })()`, 45000);
+  check('R21 N5 incremental: 65 synthetic WAVs -> 60 rows + "show more (60 of M)" -> one click -> all rows + button hidden; synthetic deleted (cleanup)',
+    !!n5Imp.value && n5Imp.value.ok === true && n5Imp.value.n === 65 && !!n5Count && n5Count.got === 65
+    && !!n5Paint && n5Paint.p === 60 && n5Paint.M > 60 && n5Paint.rows === 60
+    && !!n5All && n5All.rows === n5All.count && n5All.hidden === true
+    && !!n5SelR.value && n5SelR.value.want === 65 && n5SelR.value.checked === 65
+    && !!n5Clean && n5Clean.count === (n5Want - 65) && n5Clean.rows === n5Clean.count,
+    JSON.stringify({ imp: n5Imp.value || null, count: n5Count || null, paint: n5Paint || null, all: n5All || null, sel: n5SelR.value || null, clean: n5Clean || null }));
+
+  /* ── N6. bulk: select 2 sample rows -> [data-av-import-bulk="load"] -> both load
+     sequentially (session entries +2, 48 kHz native); the button is disabled at zero ── */
+  const n6Zero = await ev(`(() => {
+    const on = function (el) { return !!(el && (el.checked === true || el.getAttribute('aria-checked') === 'true' || (el.classList && el.classList.contains('on')))); };
+    const checked = Array.prototype.filter.call(document.querySelectorAll('#av-import-lib [data-av-import-check]'), on);
+    for (let i = 0; i < checked.length; i++) checked[i].click();
+    return { unchecked: checked.length };
+  })()`);
+  const n6Dis = await waitFor(`(() => {
+    const b2 = document.querySelector('#av-import-bulk [data-av-import-bulk="load"]');
+    if (!b2) return null;
+    return ((b2.disabled === true) || (b2.getAttribute('aria-disabled') === 'true')) ? { disabled: true } : null;
+  })()`, 8000);
+  const n6Pick = await ev(`(async () => {
+    try {
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      const items = (l && l.items) || [];
+      const samples = items.filter(function (i) { return i && String(i.kind) === 'sample'; });
+      let a = null, b2 = null;
+      for (let i = 0; i < samples.length; i++) if (String(samples[i].name) === 'x.wav') a = samples[i];
+      for (let i = 0; i < samples.length; i++) if (String(samples[i].name) === 'kick.wav') b2 = samples[i];
+      if (!a) a = samples[0] || null;
+      if (!b2) b2 = samples.filter(function (i) { return !a || String(i.id) !== String(a.id); })[0] || null;
+      if (!a || !b2) return { missing: true, samples: samples.length };
+      return { a: String(a.id), b: String(b2.id), n0: (typeof avSampleStore !== "undefined" && avSampleStore.entries) ? avSampleStore.entries.length : -1 };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const n6p = n6Pick.value || {};
+  const n6Sel = await ev(`(async () => {
+    try {
+      const ids = [${JSON.stringify(String(n6p.a || ''))}, ${JSON.stringify(String(n6p.b || ''))}];
+      for (let i = 0; i < ids.length; i++) {
+        if (!ids[i]) return { missingId: i };
+        const box = document.querySelector('#av-import-lib [data-av-import-lib="' + ids[i] + '"] [data-av-import-check]');
+        if (!box) return { missingBox: ids[i] };
+        box.click();
+        await new Promise(function (r) { setTimeout(r, 250); });
+      }
+      return { ok: true };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const n6Arm = await waitFor(`(() => {
+    const b2 = document.querySelector('#av-import-bulk [data-av-import-bulk="load"]');
+    if (!b2) return null;
+    if ((b2.disabled === true) || (b2.getAttribute('aria-disabled') === 'true')) return null;
+    const snap = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+    const m = snap.manager || {};
+    return { label: String(b2.textContent || '').trim(), selected: m.selected };
+  })()`, 8000);
+  const n6ArmOk = !!n6Arm && ((typeof n6Arm.selected === 'number' && n6Arm.selected === 2) || (Array.isArray(n6Arm.selected) && n6Arm.selected.length === 2));
+  await ev(`(() => { const b2 = document.querySelector('#av-import-bulk [data-av-import-bulk="load"]'); if (!b2) return { missing: true }; b2.click(); return { ok: true }; })()`);
+  const n6Load = await waitFor(`(() => {
+    const es = (typeof avSampleStore !== "undefined" && avSampleStore.entries) ? avSampleStore.entries : null;
+    if (!es || es.length < ${Number(n6p.n0) + 2}) return null;
+    const e0 = es[es.length - 2], e1 = es[es.length - 1];
+    const ok1 = !!e0 && e0.sampleRate === 48000 && e0.buffer && e0.buffer.length > 0 && isFinite(e0.buffer.duration) && e0.buffer.duration > 0;
+    const ok2 = !!e1 && e1.sampleRate === 48000 && e1.buffer && e1.buffer.length > 0 && isFinite(e1.buffer.duration) && e1.buffer.duration > 0;
+    if (!ok1 || !ok2) return null;
+    return { n: es.length, a: { rate: e0.sampleRate, frames: e0.buffer.length, secs: e0.buffer.duration },
+             b: { rate: e1.sampleRate, frames: e1.buffer.length, secs: e1.buffer.duration } };
+  })()`, 30000);
+  check('R21 N6 bulk: 2 selected sample rows load via [data-av-import-bulk=load] (session entries +2, 48 kHz native) · disabled at zero selection',
+    !!n6Pick.value && !!n6p.a && !!n6p.b && n6p.n0 >= 0
+    && !!n6Sel.value && n6Sel.value.ok === true
+    && !!n6Dis && n6Dis.disabled === true && n6ArmOk
+    && !!n6Load && n6Load.n === n6p.n0 + 2,
+    JSON.stringify({ zero: n6Dis || null, pick: n6p, sel: n6Sel.value || null, arm: n6Arm || null, load: n6Load || null }));
+
+  /* ── N7. inspector: a row info button -> #av-import-detail (name/id/sha/source lines) ->
+     close hides it ── */
+  const n7Pick = await ev(`(async () => {
+    try {
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      const items = (l && l.items) || [];
+      const withPack = items.filter(function (i) { return i && i.source && typeof i.source === 'object' && i.source.pack; })[0] || null;
+      const it = items.filter(function (i) { return i && String(i.name) === 'r19-beta.wav'; })[0] || withPack || items[0] || null;
+      if (!it) return { missing: true };
+      return { id: String(it.id), name: String(it.name), sha: String(it.sha256 || ''),
+               pack: (it.source && it.source.pack) ? String(it.source.pack) : '',
+               srcName: (it.source && it.source.name) ? String(it.source.name) : '' };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const n7p = n7Pick.value || {};
+  const n7Click = await ev(`(() => {
+    const row = document.querySelector('#av-import-lib [data-av-import-lib="' + ${JSON.stringify(String(n7p.id || ''))} + '"]');
+    if (!row) return { missingRow: true };
+    const b2 = row.querySelector('[data-av-import-act="info"]');
+    if (!b2) return { missingBtn: true };
+    b2.click();
+    return { ok: true };
+  })()`);
+  const n7Open = await waitFor(`(() => {
+    const d = document.getElementById('av-import-detail');
+    if (!d || d.hidden === true) return null;
+    let titles = '';
+    try { titles = Array.prototype.map.call(d.querySelectorAll('[title]'), function (e2) { return String(e2.getAttribute('title') || ''); }).join('|'); } catch (e0) { titles = ''; }
+    return { text: String(d.textContent || '').slice(0, 4000), titles: titles.slice(0, 4000) };
+  })()`, 8000);
+  const n7Ok = !!n7Open && !!n7p.id && n7Open.text.indexOf(String(n7p.name)) >= 0 && n7Open.text.indexOf(String(n7p.id)) >= 0
+    && (n7p.sha ? (n7Open.text.indexOf(String(n7p.sha).slice(0, 16)) >= 0 || n7Open.titles.indexOf(String(n7p.sha)) >= 0) : true)
+    && (n7p.pack ? n7Open.text.indexOf(String(n7p.pack)) >= 0 : true)
+    && (n7p.srcName ? n7Open.text.indexOf(String(n7p.srcName)) >= 0 : true);
+  const n7Close = await ev(`(() => { const b2 = document.getElementById('av-import-detail-close'); if (!b2) return { missing: true }; b2.click(); return { ok: true }; })()`);
+  const n7Hid = await waitFor(`(() => { const d = document.getElementById('av-import-detail'); return (d && d.hidden === true) ? true : null; })()`, 8000);
+  check('R21 N7 inspector: row info -> #av-import-detail (name/id/sha/source lines) -> close hides it',
+    !!n7p.id && !!n7Click.value && n7Click.value.ok === true && n7Ok
+    && !!n7Close.value && n7Close.value.ok === true && n7Hid === true,
+    JSON.stringify({ item: { id: n7p.id, name: n7p.name, sha: String(n7p.sha || '').slice(0, 16), pack: n7p.pack, srcName: n7p.srcName },
+                     click: n7Click.value || null, open: n7Open ? { text: n7Open.text.slice(0, 200) } : null, ok: n7Ok, hid: n7Hid }));
+
   /* ── 24. drop-anywhere: a non-hub drop routes to the store pane and imports exactly once ── */
   const before24 = await receiptsNow();
   const zon24 = await ev(`(() => {
@@ -1794,6 +2264,11 @@ async function main() {
     writeFileSync(shotPath, Buffer.from(shot.data, 'base64'));
     note('screenshot: ' + shotPath);
   } catch (e) { note('screenshot failed: ' + String((e && e.message) || e)); }
+
+  /* R21: the row-action buttons live inside the overlay — ensure it is OPEN (idempotent) so the
+     real click below lands on the row's LOAD button. */
+  const open26 = await openLibrary();
+  note('R21 row-action overlay open: ' + JSON.stringify(open26));
 
   /* ── 26. row-action sanity: one sample LOAD e2e (the cdp_import style) ── */
   const loadId = (await ev(`(async () => { const l = await avLibList(); const it = (l.items || []).find(i => i.name === 'hub-bravo.wav'); return it ? it.id : null; })()`)).value;

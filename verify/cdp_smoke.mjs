@@ -1432,6 +1432,29 @@ async function main() {
     && r17a.library === 'function' && r17a.rename === 'function' && r17a.exportItem === 'function',
     JSON.stringify(r17a));
 
+  /* R21: the library overlay shell - present + hidden at boot, hosts the manager (containment),
+     the card strip + open ids resolve, the __avLibrary facade shape is pinned. Read-only: the
+     smoke run never opens the overlay, so hidden === true holds at this point. */
+  const r21aR = await ev(`(() => {
+    const pop = document.getElementById('av-library-pop');
+    const f = window.__avLibrary || {};
+    return { pop: !!pop, hidden: pop ? pop.hidden === true : null,
+             containsLib: !!(pop && pop.contains(document.getElementById('av-import-lib'))),
+             containsSearch: !!(pop && pop.contains(document.getElementById('av-import-search'))),
+             libsum: !!document.getElementById('av-import-libsum'),
+             libopen: !!document.getElementById('av-import-libopen'),
+             open: typeof f.open, close: typeof f.close, toggle: typeof f.toggle,
+             isOpen: typeof f.isOpen, note: typeof f.note, version: String(f.version || '') };
+  })()`);
+  const r21a = r21aR.value || {};
+  check('R21 library overlay: #av-library-pop exists hidden at boot + contains #av-import-lib and #av-import-search; #av-import-libsum + #av-import-libopen present; __avLibrary facade open/close/toggle/isOpen/note + version r21.0',
+    r21a.pop === true && r21a.hidden === true
+    && r21a.containsLib === true && r21a.containsSearch === true
+    && r21a.libsum === true && r21a.libopen === true
+    && r21a.open === 'function' && r21a.close === 'function' && r21a.toggle === 'function'
+    && r21a.isOpen === 'function' && r21a.note === 'function' && r21a.version === 'r21.0',
+    JSON.stringify(r21a));
+
   /* 6cv. R17: the File menu carries the import + library entries */
   const r17bR = await ev(`(() => {
     let labels = [];
