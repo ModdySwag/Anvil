@@ -1761,3 +1761,41 @@ Resume phrase: **"continue anvil"**.
   preset-name header chip, Store as a browser overlay, module-menu Copy/Paste, page switching for
   advanced module sets, P·2 minBLEP, PERFECT TUNINGS, owner pass (Ctrl+F5 once for the new
   service-worker cache).
+
+## Resume addendum 43 - 2026-10-08 (R9: CHROME COMPLETE · KNOB FLUIDITY · OSC PITCH/FINE)
+
+- Owner asks (three-part): LEVELS has no module chrome (no close/menu options) + audit every
+  area; smooth knobs/sliders a little for fluidity; add industry-standard options - 1. pitch
+  oscillator, integrated. Contract (as-built): `verify/_r9_wave.md`.
+- Shipped, frozen `65b90976` (3,486,084 B), live at https://moddys.net/anvil/ (scoped --verify:
+  IN SYNC, **0 file(s) not in sync**; live sha256 = the frozen build):
+  - CHROME AUDIT + FIX: the audit found THREE cards outside the chrome list - LEVELS (owner
+    report), FAMILY BRIDGES and the ROADMAP card (no id at all). All three now carry the full
+    module head: collapse toggle + [menu] + float, wired into every existing funnel. Roadmap got
+    `id="av-roadmap"` and joined the rail's System group. The hidden about-popover section is a
+    popover surface, deliberately NOT chmoded as a module. Smoke now ENFORCES completeness:
+    every zone card (23) must carry head + float.
+  - FLUIDITY: knob drags commit ONCE per animation frame (the model still advances per pointer
+    event; the release flushes the last value synchronously; the settle animation is unchanged) -
+    a 120 Hz mouse or a busy frame can no longer stack DOM/engine writes. Range sliders get
+    `touch-action:none`. Feel mapping/weight/stop untouched (knob_feel 18/18 on the frozen bytes).
+  - PITCH OSC: VA osc1/osc2 PITCH (+-24 st) + FINE (+-100 ct) knobs (new `av-synth-tune` row,
+    labels OSC1/2 PITCH/FINE). Engine fold law `tuneNF = 2^((tune + fine/100)/12)`; schema paths
+    `osc1.fine`/`osc2.fine` added; defaults seeded. WORKLET SHA deliberately changed
+    `d7f0ee41` -> `b65160e0` (av_dsp.js is worklet source) and re-gated.
+- Evidence: smoke **51** first-run (2 new R9 checks). Analytic pitch witness
+  `cache/r1/r9_pitch_node.mjs` **8/8** - the fold law exact + A4 rendered through the engine and
+  measured by crossing count: 437.3 / 880.0 / 466.7 / 853.3 Hz (the first autocorrelation build
+  hit a lag-floor octave error above 800 Hz; recorded as a rig SPEC fix). Visual pass inspected:
+  `renders/r9-levels.png` (full chrome on the LEVELS head) + `renders/r9-tune.png` (the new row).
+- PERF GATE: bench exit=0 - offline knee 96/128 monotone (the publishable metric, unchanged);
+  realtime light 64 / fat 24 (loaded-window read; the fat cell has ranged 24-48 under load in
+  this class).
+- Commits: wave + close (this addendum).
+- Deploy: `python3 upload-site.py --only anvil/index.html anvil/sw.js` -> scoped --verify = 0 not
+  in sync; live sha256 = 65b90976... = local.
+- Carried: chip keyboard assign path (a11y), animated rings (needs an engine->page mod value
+  stream), widen AV_MOD_TARGETS (wire v2), kind-specific drop paths, preset-name header chip,
+  Store as a browser overlay, module-menu Copy/Paste, page switching for advanced module sets,
+  P·2 minBLEP, PERFECT TUNINGS, more industry-standard modules (owner list item 1 done; await
+  items 2..n), owner pass (Ctrl+F5 once for the new service-worker cache).
