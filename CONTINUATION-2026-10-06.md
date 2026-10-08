@@ -1648,3 +1648,27 @@ Resume phrase: **"continue anvil"**.
 - Carried: drag-to-modulate gesture, Store browser overlay, preset-name header chip, pane
   scroll-shadow scrims, module-menu Copy/Paste, page-switching for advanced module sets,
   P·2 minBLEP, PERFECT TUNINGS, owner pass (Ctrl+F5 once for the new service-worker cache).
+## Resume addendum 40 - 2026-10-08 (R5: THE MENU BAR + PANELS QUICK-VIEW)
+
+- Owner asks (fourth same-day round): a Windows-style top menu bar with every navigation /
+  manipulation option; a left-hand quick view of what is open / minimized / available with
+  drag-and-drop in and out of the workspace and delete/restore at will.
+- Shipped, frozen `22ea7e52` (3,461,072 B), live at https://moddys.net/anvil/ (upload --verify:
+  0 file(s) not in sync; live sha256 = the frozen build):
+  - MENU BAR (`src/av_menubar.js`): File (save/open project, stems, demo groove) - Edit (undo,
+    redo, A/B store + recall) - View (the 8 zone jumps + piano + navigator + about) - Workspace
+    (reset, sound-design + mixdown desks, save/load layout) - Help (help, tour, about). Click-away
+    + Esc close; every action routes to an existing guarded engine function; `__avMenubar` facade
+    + MENUBAR SELFTEST proof.
+  - PANELS QUICK-VIEW (rail): an OPEN group (Minimize / Dock buttons per floated panel), a
+    MINIMIZED group (Restore / Dock), an AVAILABLE group (all 22 cards, float button, and rows are
+    DRAGGABLE: drop anywhere on the workspace floats the panel at the drop point; drop on the rail
+    floats it stacked-minimized). Live refresh via the `av-panels-changed` event (open/close/
+    minimize dispatches).
+- Rigs: smoke 44 (menubar + rail quick-view checks; first run green). Battery 23 suites ALL GREEN
+  on the frozen bytes, zero exit=1. Bench exit=0; knee 96/128 monotone, realtime light 64 / fat 48
+  — the same environmental class as the R2 A/B-proven read (worklet d7f0ee41 UNCHANGED).
+- Commits: wave + close (this addendum).
+- Carried: drag-to-modulate gesture, Store as a browser overlay, preset-name header chip, pane
+  scroll-shadow scrims, module-menu Copy/Paste, page switching for advanced module sets, P·2 minBLEP,
+  PERFECT TUNINGS, owner pass (Ctrl+F5 once for the new service-worker cache).
