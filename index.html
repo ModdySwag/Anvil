@@ -1920,6 +1920,24 @@ header.av-head.av-console > .av-btn:hover { border-color: var(--teal-deep); }
 .av-mod-add { height: 24px; width: auto; min-width: 24px; padding: 0 12px; font-size: 11px; white-space: nowrap; }
 .av-rec-btn, .av-deliver-go { height: 24px; width: auto; min-width: 24px; padding: 0 12px; font-size: 11px; white-space: nowrap; }
 
+/* R18b: linked source folders (av_sources_ui.js) */
+/* R18b: the LINKED SOURCES section (av_sources_ui.js) -- classes per verify/_r18b_wave.md s.4.
+   The section's buttons (.av-sources-link/-scan/-import/-unlink) ride the .av-btn.mini wide-
+   button pattern and carry no extra rules; -reconnect gets the warn tint (a permission action). */
+.av-sources { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; border-top: 1px solid var(--hair); padding-top: 9px; }
+.av-sources-head { display: flex; align-items: baseline; gap: 10px; }
+.av-sources-title { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
+.av-sources-status { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sources-msg { color: var(--text-2); }
+.av-sources-err { color: #ff8f6e; }
+.av-sources-empty { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin: 2px 0; }
+.av-sources-list { display: flex; flex-direction: column; gap: 4px; }
+.av-sources-more { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sources-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 5px 8px; border: 1px solid var(--hair); border-radius: 6px; background: rgba(6, 9, 12, 0.35); font-size: 12px; min-width: 0; }
+.av-sources-row[data-busy="1"] { opacity: 0.7; }
+.av-sources-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.av-sources-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sources-reconnect { color: #d9b45f; border-color: #6b5a2a; }
 
 </style>
 </head>
@@ -27964,6 +27982,7 @@ function avImportUiBodyHTML() {
     '<span class="av-import-storage av-dim" id="av-import-storage">storage: checking\u2026</span>' +
     '<button type="button" class="av-btn mini av-import-btn" id="av-import-persist" title="ask the browser for persistent storage (best-effort)">make storage persistent</button>' +
     "</div>" +
+    '<div id="av-sources-host"></div>' +
     "</div>";
 }
 
@@ -77277,9 +77296,11 @@ async function avGnRender(session, opts) {
        shows when the page is not already standalone.
      - OFFLINE: online/offline events plus navigator.onLine drive body class av-pwa-offline and
        the chip #av-pwa-offline ("OFFLINE - everything is local, keep going").
-     - FILE HANDLING: when window.launchQueue exists, its consumer reads the launched file and
-       hands the text to avProjOpenText(name, text) when that seam exists (av_proj.js), else
-       dispatches a window CustomEvent "av-launch-file" with detail { name, text }.
+     - FILE HANDLING: when window.launchQueue exists, its consumer reads the launched file:
+       .anvl (case-insensitive) is decoded as text, handed to avProjOpenText(name, text) when
+       that seam exists (av_proj.js), else dispatched as a window CustomEvent "av-launch-file"
+       with detail { name, text }; EVERY other extension keeps the File INTACT and routes to the
+       import funnel avImportFiles([file]) (av_import.js) - never decoded as text (R18b D7).
      - PROOF: avPwaProof() RETURNS one line - PWA SELFTEST {"supported":...,"installPath":...}
        (app_core appends it under ?avtest=1; this module never prints and never calls avTestLine).
 
@@ -77336,7 +77357,7 @@ const avPwa = {
   iosHint: false,
   launchQueue: false,        /* a launchQueue consumer was installed */
   launchCount: 0,
-  lastLaunch: null,          /* { name, chars, via } */
+  lastLaunch: null,          /* { name, chars, via } or { name, ext, via:"import" } (R18b) */
   launchNote: "",
   updateNote: "",
   reloadWanted: false,       /* set by the update chip click - the only reload path */
@@ -77852,6 +77873,20 @@ function avPwaLaunchHandoff(name, text) {
   return "none";
 }
 
+/* the lowercased extension of a launched file name ("" when there is none) - R18b */
+function avPwaExtOf(name) {
+  try {
+    const n = (name == null) ? "" : String(name);
+    const i = n.lastIndexOf(".");
+    if (i < 0 || i >= n.length - 1) return "";
+    return n.slice(i + 1).toLowerCase();
+  } catch (e) { return ""; }
+}
+
+/* R18b (D7): .anvl (case-insensitive) keeps the text route; EVERY other extension - known or
+   unknown - keeps the File INTACT and routes to the import funnel avImportFiles([file])
+   (av_import.js, which sniffs and refuses honestly); a non-anvl file is NEVER decoded as text,
+   and an absent funnel is an honest launchNote, never a throw. */
 async function avPwaLaunchHandle(params) {
   const s = avPwa;
   try {
@@ -77860,6 +77895,26 @@ async function avPwaLaunchHandle(params) {
     let file = h0;
     if (typeof h0.getFile === "function") file = await h0.getFile();
     const name = (file && file.name != null && String(file.name)) ? String(file.name) : "launched.anvl";
+    const ext = avPwaExtOf(name);
+    if (ext !== "anvl") {
+      s.launchCount += 1;
+      s.launchNote = "";
+      let fn = null;
+      try { if (typeof avImportFiles === "function") fn = avImportFiles; } catch (e) { fn = null; }
+      if (fn) {
+        try {
+          const r = fn([file]);
+          if (r && typeof r.then === "function") {
+            try { r.then(null, function (e) { avPwaErr("avImportFiles rejected: " + avPwaErrText(e)); }); } catch (e2) { /* ok */ }
+          }
+        } catch (e) { s.launchNote = "the launched file could not be imported"; avPwaErr("launch import threw: " + avPwaErrText(e)); }
+      } else {
+        s.launchNote = "the import module is not loaded";
+      }
+      s.lastLaunch = { name: name, ext: ext, via: "import" };
+      avPwaSync();
+      return true;
+    }
     let text = "";
     if (file && typeof file.text === "function") text = await file.text();
     else if (file && typeof file.arrayBuffer === "function") text = avPwaDecodeUtf8(await file.arrayBuffer());
@@ -77991,7 +78046,7 @@ function avPwaState() {
       iosHint: s.iosHint === true,
       launchQueue: s.launchQueue === true,
       launchCount: s.launchCount,
-      lastLaunch: s.lastLaunch ? { name: s.lastLaunch.name, chars: s.lastLaunch.chars, via: s.lastLaunch.via } : null,
+      lastLaunch: s.lastLaunch ? { name: s.lastLaunch.name, chars: s.lastLaunch.chars, ext: s.lastLaunch.ext, via: s.lastLaunch.via } : null,
       launchNote: s.launchNote,
       updateNote: s.updateNote,
       reloading: s.reloading === true,
@@ -81860,6 +81915,7 @@ function avMenuDefs() {
       ["sep", null],
       ["Import sounds...", function () { return avMenuCall("avImportUiPick"); }],
       ["Import folder...", function () { return avMenuCall("avImportUiPickDir"); }],
+      ["Link source folder...", function () { return avMenuCall("avSourcesLink"); }],
       ["Library...", function () { return avMenuCall("avImportUiLibrary"); }],
       ["sep", null],
       ["Export stems (Deliver)", function () { avMenuCall("avZoneShow", "studio", { source: "menu" }); return avMenuCall("avPaletteDeliverHighlight"); }],
@@ -82498,12 +82554,1737 @@ if (typeof window !== "undefined" && window) {
 try { avConsoleInit(); } catch (e) { /* console boots best-effort */ }
 
 
+/* av_sources.js -- Anvil R18b linked source folders (child A; verify/_r18b_wave.md sections 1-3):
+   the linked source-folder CORE -- persisted FSA directory handles, the directory-picker seam, the
+   bounded walk, the NEW/CHANGED/SAME/GONE diff against the library, import-new, unlink and
+   reconnect. This module owns NO DOM (the LINKED SOURCES card section lives in av_sources_ui.js).
+
+   THE PIECES:
+     seam      avSrcFs / avSrcFsKind / avSrcDirPicker / avSrcSetFs -- the av_proj.js pattern:
+               resolved per call; injected when fsInjected, else window; the picker is called
+               fn.call(fs, opts) so receivers stay intact; never merged.
+     store     IndexedDB "av-sources-store" v1, store "sources", keyPath "id",
+               create-if-missing only (NO version bump). Record {id, v:1, name, handle,
+               linkedAt, lastScanAt, mode:"linked"}. No LS mirror (handles are not JSON) -- the
+               folded backend is reported honestly ("idb" | "mem"); a handle that cannot be
+               structured-cloned is persisted as null (the row then lists as reconnect) and a
+               record that never reaches the DB is session-only. Absence of a handle = the row
+               lists with status "reconnect" and scans refuse honestly (no fake success).
+     walk      the MINIMAL handle surface (D3): dir {kind:"directory", name, values() -> async
+               iterator of [name, childHandle], queryPermission?(opts), requestPermission?(opts)};
+               child dirs recurse; file handles {kind:"file", name, getFile() -> Promise<File>}.
+               Depth cap 4, file cap 500, extension filter AV_SOURCES_EXTS; never throws
+               outward; capped:true when a cap clipped the walk.
+     diff      D5: walked file vs the library (the R18a source field): NEW (no library item
+               with the same leaf name AND size), SAME (name + size), CHANGED (same name,
+               different size); GONE = library items whose source.path starts with
+               "<folder>/" and whose leaf is no longer on disk. All lists sorted by name.
+     ops       avSourcesLink / avSourcesList / avSourcesScan / avSourcesImportNew /
+               avSourcesUnlink / avSourcesReconnect / avSourcesState / avSourcesSnap.
+
+   PUBLIC SURFACE (classic-script globals, ONE family avSources* / avSrc* / AV_SRC*):
+     avSourcesVersion  the version pin "r18b.0"
+     AV_SOURCES_EXTS   the walk extension filter (frozen)
+     avSourcesLink() -> Promise<{ok, id?, name?, scan?, error?, perm, backend, note, scanError}>
+                        picker cancel = {ok:false, error:"cancelled"} -- calm, no error state
+     avSourcesList() -> Promise<{ok, count, items:[{id, name, linkedAt, lastScanAt, mode, perm,
+                        new, changed, gone, note}]}>   (per-row counts from the LAST scan memo)
+     avSourcesScan(id) -> Promise<{ok, id, scan:{new:[{name, relPath, size, mtime}],
+                        changed:[...], gone:[{id, name, path}], same:N, capped:bool}, perm, error?}>
+     avSourcesImportNew(id) -> Promise<{ok, id, count, receipt?, scan?, error?}>
+                        re-wraps each NEW file as File([inner], folder + "/" + relPath) and feeds
+                        them through the ONE funnel avImportFiles (guarded); then re-scans
+     avSourcesUnlink(id) -> Promise<{ok, id, removed}>
+     avSourcesReconnect(id) -> Promise<{ok, id, perm, error?}>   (requestPermission, D8)
+     avSourcesState() / avSourcesSnap() -> {ok, fsKind, backend, count, items:[...], note}
+     avSourcesClasses() -> []          mounts nothing
+     window.__avSources = {version, status, list, link, scan, importNew, unlink, reconnect,
+                           setFs, fsKind}
+
+   LAWS (verify/_r18b_wave.md sections 1-3, 9): 'use strict'; classic script; DOM-free at load
+   (every browser reach typeof-guarded inside functions); NEVER throws outward (honest refusals,
+   counted skips); no console noise; no randomness; bound arrays (depth 4 / files 500); ASCII
+   source. avImportFiles is a global in av_import.js -- typeof-guarded everywhere. ONE writer
+   (child A). */
+
+"use strict";
+
+/* ---------- pins (sections 2-3) ---------- */
+
+const avSourcesVersion = "r18b.0";
+const AV_SOURCES_EXTS = Object.freeze(["wav", "mp3", "aiff", "mid", "rex2", "adg", "als", "exs", "nki", "nbkt", "sxt", "serum", "zip"]);
+const AV_SRC_DB = "av-sources-store";        /* pinned IDB name (D2) */
+const AV_SRC_DB_VER = 1;                     /* create-if-missing only; NO version bump */
+const AV_SRC_OS = "sources";                 /* object store, keyPath "id" */
+const AV_SRC_MODE = "linked";
+const AV_SRC_ID_RE = /^s[a-z0-9-]{0,63}$/;   /* "s" + time36 + "-" + slug(40) (+ "-<seq>") */
+const AV_SRC_NAME_MAX = 64;
+const AV_SRC_MSG_MAX = 120;
+const AV_SRC_DEPTH_MAX = 4;                  /* walk depth cap (D3) */
+const AV_SRC_FILE_MAX = 500;                 /* walk file cap (D3) */
+const AV_SRC_OPEN_CAP_MS = 1800;             /* hung IDB open give-up (mirrors av_lib) */
+const AV_SRC_CLASSES = Object.freeze([]);    /* this module mounts nothing */
+
+/* ---------- module state (no DOM nodes anywhere) ---------- */
+
+const avSrc = {
+  loaded: false,
+  loadP: null,
+  fs: null,               /* the injected seam (null = window default) */
+  fsInjected: false,
+  backend: "mem",         /* "idb" | "mem" -- kept honest, promoted never demoted */
+  backendNote: null,
+  db: null,
+  dbGaveUp: false,
+  records: {},            /* id -> rec {id, v, name, handle, linkedAt, lastScanAt, mode, perm, sessionOnly, note} */
+  memos: {},              /* id -> {new:[rows], changed:[rows], gone:[rows], same, capped, at} (rows keep handles) */
+  seq: 0,                 /* id-collision counter */
+};
+
+/* ---------- guarded environment reaches (plain node has none of these) ---------- */
+
+function avSrcWin() {
+  try {
+    const w = (typeof window !== "undefined") ? window : null;
+    if (w && typeof w === "object") return w;
+  } catch (e) { /* no window */ }
+  return null;
+}
+
+function avSrcNow() {
+  try { return Date.now(); } catch (e) { return 0; }
+}
+
+function avSrcTimer(fn, ms) {
+  try { if (typeof setTimeout === "function") return setTimeout(fn, ms); } catch (e) { /* no timers */ }
+  return null;
+}
+
+function avSrcClear(t) {
+  try { if (t != null && typeof clearTimeout === "function") clearTimeout(t); } catch (e) { /* no timers */ }
+}
+
+function avSrcIdb() {
+  try { if (typeof indexedDB !== "undefined" && indexedDB) return indexedDB; } catch (e) { /* none */ }
+  try { const w = avSrcWin(); if (w && w.indexedDB) return w.indexedDB; } catch (e) { /* none */ }
+  return null;
+}
+
+/* ---------- tiny value laws (garbage in, sane value out -- never throw) ---------- */
+
+function avSrcErrName(e) {
+  try { return (e && e.name) ? String(e.name).slice(0, 40) : ""; } catch (e2) { return ""; }
+}
+
+function avSrcErrMsg(e) {
+  try { const s = (e && e.message) ? String(e.message) : String(e); return s.slice(0, AV_SRC_MSG_MAX); } catch (e2) { return "error"; }
+}
+
+function avSrcStr(v, dflt, cap) {
+  try {
+    if (typeof v !== "string") return dflt;
+    const s = v.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, cap || 80);
+    return s || dflt;
+  } catch (e) { return dflt; }
+}
+
+function avSrcNum(v, dflt, lo, hi) {
+  try {
+    const n = Number(v);
+    if (typeof n === "number" && isFinite(n)) {
+      if (n < lo) return lo;
+      if (n > hi) return hi;
+      return n;
+    }
+  } catch (e) { /* dflt */ }
+  return dflt;
+}
+
+function avSrcIdStr(id) {
+  return (typeof id === "string") ? id : "";
+}
+
+/* ---------- ids (house style: prefix + time36 + "-" + slug) ---------- */
+
+function avSrcSlug(name) {
+  try {
+    const s = String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+    return s || "source";
+  } catch (e) { return "source"; }
+}
+
+function avSrcMakeId(name) {
+  const st = avSrc;
+  const base = "s" + Date.now().toString(36) + "-" + avSrcSlug(name);
+  let id = base;
+  try {
+    while (st.records[id]) {
+      st.seq += 1;
+      id = base + "-" + st.seq;
+      if (st.seq > 100000) break;
+    }
+  } catch (e) { /* base id stands */ }
+  return id;
+}
+
+/* ---------- the FSA seam (the ONLY picker reach; resolved per call -- D1) ---------- */
+
+function avSrcFs() {
+  try { if (avSrc.fsInjected && avSrc.fs && typeof avSrc.fs === "object") return avSrc.fs; } catch (e) { /* read refused */ }
+  return avSrcWin();
+}
+
+function avSrcFsKind() {
+  try {
+    if (avSrc.fsInjected && avSrc.fs) return "injected";
+    const w = avSrcWin();
+    if (w && typeof w.showDirectoryPicker === "function") return "window";
+  } catch (e) { /* none */ }
+  return "none";
+}
+
+/* resolved dir picker: { fs, fn } (called as fn.call(fs, opts) -- receivers stay intact) or null */
+function avSrcDirPicker() {
+  const fs = avSrcFs();
+  if (!fs) return null;
+  try {
+    const fn = fs.showDirectoryPicker;
+    if (typeof fn === "function") return { fs: fs, fn: fn };
+  } catch (e) { /* property read refused */ }
+  return null;
+}
+
+function avSrcSetFs(fs) {
+  try {
+    const st = avSrc;
+    if (fs === null || fs === undefined) { st.fs = null; st.fsInjected = false; return true; }
+    if (typeof fs !== "object") return false;
+    if (typeof fs.showDirectoryPicker !== "function") return false;
+    st.fs = fs;
+    st.fsInjected = true;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- sibling-module resolvers (binding, then window property) ---------- */
+
+function avSrcImportFn() {
+  try { if (typeof avImportFiles === "function") return avImportFiles; } catch (e) { /* not injected */ }
+  try { const w = avSrcWin(); if (w && typeof w.avImportFiles === "function") return w.avImportFiles; } catch (e) { /* no window */ }
+  return null;
+}
+
+function avSrcLibListFn() {
+  try { if (typeof avLibList === "function") return avLibList; } catch (e) { /* not injected */ }
+  try { const w = avSrcWin(); if (w && typeof w.avLibList === "function") return w.avLibList; } catch (e) { /* no window */ }
+  return null;
+}
+
+/* ---------- permission probes (D8; absent fn = "unknown" = the LS-tier case) ---------- */
+
+function avSrcPermNorm(p) {
+  try {
+    if (p === "granted" || p === "prompt" || p === "denied") return p;
+  } catch (e) { /* none */ }
+  return "unknown";
+}
+
+async function avSrcQueryPerm(handle) {
+  try {
+    if (!handle || typeof handle !== "object") return "unknown";
+    const fn = handle.queryPermission;
+    if (typeof fn === "function") return avSrcPermNorm(await fn.call(handle, { mode: "read" }));
+    if (typeof fn === "string") return avSrcPermNorm(fn);   /* a stubbed state value */
+  } catch (e) { /* unknown */ }
+  return "unknown";
+}
+
+async function avSrcRequestPerm(handle) {
+  try {
+    if (!handle || typeof handle !== "object") return "unknown";
+    const fn = handle.requestPermission;
+    if (typeof fn === "function") return avSrcPermNorm(await fn.call(handle, { mode: "read" }));
+    if (typeof fn === "string") return avSrcPermNorm(fn);   /* a stubbed state value */
+  } catch (e) { /* unknown */ }
+  return "unknown";
+}
+
+/* ---------- record normalisation ---------- */
+
+function avSrcHandleNorm(h) {
+  try {
+    if (h && typeof h === "object" && !Array.isArray(h)) return h;
+  } catch (e) { /* none */ }
+  return null;
+}
+
+function avSrcRecNorm(raw) {
+  try {
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+    const id = (typeof raw.id === "string" && AV_SRC_ID_RE.test(raw.id)) ? raw.id : "";
+    if (!id) return null;
+    return {
+      id: id, v: 1,
+      name: avSrcStr(raw.name, "source", AV_SRC_NAME_MAX),
+      handle: avSrcHandleNorm(raw.handle),
+      linkedAt: avSrcNum(raw.linkedAt, 0, 0, 9e15),
+      lastScanAt: avSrcNum(raw.lastScanAt, 0, 0, 9e15),
+      mode: AV_SRC_MODE,
+      perm: "unknown",
+      sessionOnly: false,
+      note: null,
+    };
+  } catch (e) { return null; }
+}
+
+function avSrcRecPayload(rec, handle) {
+  return {
+    id: rec.id, v: 1, name: rec.name, handle: handle,
+    linkedAt: rec.linkedAt, lastScanAt: rec.lastScanAt, mode: AV_SRC_MODE,
+  };
+}
+
+/* ---------- IndexedDB plumbing (promise-wrapped, never throws -- av_lib.js pattern) ---------- */
+
+function avSrcDbOpen() {
+  return new Promise(function (res) {
+    try {
+      const st = avSrc;
+      if (st.db) return res(st.db);
+      if (st.dbGaveUp) return res(null);
+      const idb = avSrcIdb();
+      if (!idb) return res(null);
+      let settled = false;
+      const give = function (v) { if (!settled) { settled = true; res(v); } };
+      /* a hung open (blocked upgrade in another tab) must not wedge the module: give up after
+         AV_SRC_OPEN_CAP_MS; a late success closes its handle and stays honest */
+      const timer = avSrcTimer(function () { st.dbGaveUp = true; give(null); }, AV_SRC_OPEN_CAP_MS);
+      const rq = idb.open(AV_SRC_DB, AV_SRC_DB_VER);
+      rq.onupgradeneeded = function () {
+        try { const db = rq.result; if (!db.objectStoreNames || !db.objectStoreNames.contains(AV_SRC_OS)) db.createObjectStore(AV_SRC_OS, { keyPath: "id" }); }
+        catch (e) { /* upgrade raced */ }
+      };
+      rq.onsuccess = function () {
+        avSrcClear(timer);
+        if (st.dbGaveUp) { try { rq.result.close(); } catch (e) { /* ignore */ } return give(null); }
+        const db = rq.result;
+        st.db = db;
+        try { db.onclose = function () { if (avSrc.db === db) avSrc.db = null; }; } catch (e) { /* fine */ }
+        give(db);
+      };
+      rq.onerror = function () { avSrcClear(timer); give(null); };
+      rq.onblocked = function () { avSrcClear(timer); give(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+function avSrcDbAll(db) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_SRC_OS, "readonly");
+      const rq = tx.objectStore(AV_SRC_OS).getAll();
+      rq.onsuccess = function () { res(Array.isArray(rq.result) ? rq.result : []); };
+      rq.onerror = function () { res(null); };
+      tx.onerror = function () { res(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+/* put one record; resolves false when the value cannot be structured-cloned (stub handles) */
+function avSrcDbPut(db, rec) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_SRC_OS, "readwrite");
+      let settled = false;
+      const done = function (v) { if (!settled) { settled = true; res(v); } };
+      try { tx.objectStore(AV_SRC_OS).put(rec); }
+      catch (ePut) { done(false); try { tx.abort(); } catch (e2) { /* ignore */ } return; }
+      tx.oncomplete = function () { done(true); };
+      tx.onerror = function () { done(false); };
+      tx.onabort = function () { done(false); };
+    } catch (e) { res(false); }
+  });
+}
+
+function avSrcDbDel(db, id) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(AV_SRC_OS, "readwrite");
+      tx.objectStore(AV_SRC_OS).delete(id);
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { res(false); };
+      tx.onabort = function () { res(false); };
+    } catch (e) { res(false); }
+  });
+}
+
+/* persist one record: full first (handle incl.), then handle:null so the record at least lists
+   as reconnect next session; "mem" = never reached the DB (session-only, reported honestly) */
+async function avSrcPersistRec(rec) {
+  try {
+    if (!rec || !rec.id) return { tier: "mem", handleSaved: false };
+    const db = await avSrcDbOpen();
+    if (!db) {
+      if (!avSrc.backendNote) avSrc.backendNote = "IndexedDB unavailable - records are session-only";
+      return { tier: "mem", handleSaved: false };
+    }
+    avSrc.backend = "idb";               /* promoted never demoted */
+    const handle = avSrcHandleNorm(rec.handle);
+    if (handle) {
+      const okFull = await avSrcDbPut(db, avSrcRecPayload(rec, handle));
+      if (okFull) return { tier: "idb", handleSaved: true };
+    }
+    const okBare = await avSrcDbPut(db, avSrcRecPayload(rec, null));
+    if (okBare) return { tier: "idb", handleSaved: false };
+    return { tier: "mem", handleSaved: false };
+  } catch (e) { return { tier: "mem", handleSaved: false }; }
+}
+
+/* ---------- lazy load (hydrate once; every op ensures it) ---------- */
+
+async function avSrcLoadRun() {
+  const st = avSrc;
+  const db = await avSrcDbOpen();
+  if (db) {
+    st.backend = "idb";
+    const raws = await avSrcDbAll(db);
+    if (raws && Array.isArray(raws)) {
+      for (let i = 0; i < raws.length; i++) {
+        const rec = avSrcRecNorm(raws[i]);
+        if (rec && !st.records[rec.id]) st.records[rec.id] = rec;
+      }
+    }
+  }
+  st.loaded = true;
+  return true;
+}
+
+function avSrcEnsureLoad() {
+  const st = avSrc;
+  if (st.loaded) return Promise.resolve(true);
+  if (st.loadP) return st.loadP;
+  st.loadP = Promise.resolve(avSrcLoadRun()).catch(function () { st.loadP = null; return false; });
+  return st.loadP;
+}
+
+function avSrcFind(id) {
+  try {
+    if (typeof id !== "string" || !id) return null;
+    const rec = avSrc.records[id];
+    return (rec && typeof rec === "object") ? rec : null;
+  } catch (e) { return null; }
+}
+
+/* ---------- the walk (D3: depth 4, file cap 500, the extension filter) ---------- */
+
+function avSrcExtOf(name) {
+  try {
+    if (typeof name !== "string") return "";
+    const slash = Math.max(name.lastIndexOf("/"), name.lastIndexOf("\\"));
+    const leaf = (slash >= 0) ? name.slice(slash + 1) : name;
+    const dot = leaf.lastIndexOf(".");
+    if (dot <= 0 || dot === leaf.length - 1) return "";
+    return leaf.slice(dot + 1).toLowerCase();
+  } catch (e) { return ""; }
+}
+
+function avSrcExtWanted(name) {
+  try {
+    const ext = avSrcExtOf(name);
+    if (!ext) return false;
+    for (let i = 0; i < AV_SOURCES_EXTS.length; i++) if (AV_SOURCES_EXTS[i] === ext) return true;
+  } catch (e) { /* none */ }
+  return false;
+}
+
+function avSrcValuesIt(handle) {
+  try {
+    if (!handle || typeof handle !== "object") return null;
+    if (typeof handle.values !== "function") return null;
+    const it = handle.values();
+    if (!it || typeof it.next !== "function") return null;
+    return it;
+  } catch (e) { return null; }
+}
+
+async function avSrcWalkDir(handle, depth, prefix, ctx) {
+  const it = avSrcValuesIt(handle);
+  if (!it) {
+    if (depth === 0) ctx.badRoot = true;
+    return;
+  }
+  let seen = 0;
+  for (;;) {
+    if (ctx.abort) return;
+    let step = null;
+    try { step = await it.next(); }
+    catch (e) {
+      if (depth === 0 && seen === 0) ctx.badRoot = true;   /* nothing readable at the root */
+      break;                                               /* a mid-iteration failure ends THIS dir */
+    }
+    if (!step || step.done === true) break;
+    const ent = step.value;
+    let nm = "";
+    let child = null;
+    try {
+      if (Array.isArray(ent)) { nm = ent[0]; child = ent[1]; }
+      else if (ent && typeof ent === "object") {
+        nm = (typeof ent.name === "string") ? ent.name : "";
+        child = (ent.handle && typeof ent.handle === "object") ? ent.handle : ent[1];
+        if (!child && ent.value && typeof ent.value === "object") child = ent.value;
+      }
+    } catch (e) { continue; }
+    if (typeof nm !== "string") nm = "";
+    if (!nm && child && typeof child.name === "string") nm = child.name;
+    if (!nm || !child || typeof child !== "object") continue;
+    seen += 1;
+    const kind = (typeof child.kind === "string") ? child.kind : "";
+    const isDir = (kind === "directory") || (!kind && typeof child.values === "function");
+    const isFile = (kind === "file") || (!kind && typeof child.getFile === "function");
+    if (isDir) {
+      if (depth + 1 > AV_SRC_DEPTH_MAX) { ctx.capped = true; continue; }
+      await avSrcWalkDir(child, depth + 1, prefix ? (prefix + "/" + nm) : nm, ctx);
+      continue;
+    }
+    if (!isFile) continue;
+    if (!avSrcExtWanted(nm)) continue;
+    if (ctx.files.length >= AV_SRC_FILE_MAX) { ctx.capped = true; ctx.abort = true; return; }
+    let file = null;
+    try { file = await child.getFile(); } catch (e) { file = null; }
+    if (!file) continue;                    /* unreadable file: skipped honestly, not listed */
+    let size = 0;
+    let mtime = 0;
+    try { const s = file.size; if (typeof s === "number" && isFinite(s) && s >= 0) size = Math.floor(s); } catch (e) { /* 0 */ }
+    try { const m = file.lastModified; if (typeof m === "number" && isFinite(m) && m >= 0) mtime = Math.floor(m); } catch (e) { /* 0 */ }
+    const leaf = (typeof child.name === "string" && child.name) ? child.name : nm;
+    ctx.files.push({ name: leaf, relPath: prefix ? (prefix + "/" + nm) : nm, size: size, mtime: mtime, handle: child });
+  }
+}
+
+async function avSrcWalk(handle) {
+  const ctx = { files: [], capped: false, abort: false, badRoot: false };
+  try { await avSrcWalkDir(handle, 0, "", ctx); }
+  catch (e) { /* never outward */ }
+  if (ctx.badRoot) return { ok: false, files: ctx.files, capped: ctx.capped, error: "folder handle unreadable - reconnect" };
+  return { ok: true, files: ctx.files, capped: ctx.capped };
+}
+
+/* ---------- the diff vs the library (D5) ---------- */
+
+function avSrcSortRows(rows, k1, k2) {
+  try {
+    rows.sort(function (a, b) {
+      const a1 = (typeof a[k1] === "string") ? a[k1] : "";
+      const b1 = (typeof b[k1] === "string") ? b[k1] : "";
+      if (a1 < b1) return -1;
+      if (a1 > b1) return 1;
+      const a2 = (typeof a[k2] === "string") ? a[k2] : "";
+      const b2 = (typeof b[k2] === "string") ? b[k2] : "";
+      if (a2 < b2) return -1;
+      if (a2 > b2) return 1;
+      return 0;
+    });
+  } catch (e) { /* the previous order stands */ }
+}
+
+function avSrcDiff(files, libItems, folderName, capped) {
+  const scan = { new: [], changed: [], gone: [], same: 0, capped: capped === true };
+  try {
+    /* library leaf (case-insensitive) -> sizes */
+    const libByLeaf = Object.create(null);
+    for (let i = 0; i < libItems.length; i++) {
+      const it = libItems[i];
+      if (!it || typeof it !== "object") continue;
+      const nm = (typeof it.name === "string" && it.name) ? it.name : "";
+      if (!nm) continue;
+      const key = nm.toLowerCase();
+      const arr = libByLeaf[key] || (libByLeaf[key] = []);
+      const sz = it.size;
+      arr.push((typeof sz === "number" && isFinite(sz)) ? sz : -1);
+    }
+    const onDisk = Object.create(null);
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const key = f.name.toLowerCase();
+      onDisk[key] = true;
+      const sizes = libByLeaf[key];
+      let cls = "new";
+      if (sizes && sizes.length) {
+        cls = "changed";
+        for (let j = 0; j < sizes.length; j++) { if (sizes[j] === f.size) { cls = "same"; break; } }
+      }
+      if (cls === "same") scan.same += 1;
+      else if (cls === "changed") scan.changed.push(f);
+      else scan.new.push(f);
+    }
+    /* GONE = this folder's library items (source.path prefix "<folder>/") whose leaf is not on disk */
+    const prefix = folderName + "/";
+    for (let i = 0; i < libItems.length; i++) {
+      const it = libItems[i];
+      if (!it || typeof it !== "object") continue;
+      const src = it.source;
+      const path = (src && typeof src.path === "string") ? src.path : "";
+      if (!path || path.indexOf(prefix) !== 0) continue;
+      let nm = (typeof it.name === "string" && it.name) ? it.name : "";
+      if (!nm) { const parts = path.split("/"); nm = parts[parts.length - 1] || ""; }
+      if (nm && onDisk[nm.toLowerCase()]) continue;
+      scan.gone.push({ id: (typeof it.id === "string") ? it.id : "", name: nm, path: path });
+    }
+    avSrcSortRows(scan.new, "name", "relPath");
+    avSrcSortRows(scan.changed, "name", "relPath");
+    avSrcSortRows(scan.gone, "name", "path");
+  } catch (e) { /* the partial diff stands */ }
+  return scan;
+}
+
+/* the JSON-safe projection of a scan (handles stay internal) */
+function avSrcScanPub(scan) {
+  const out = { new: [], changed: [], gone: [], same: 0, capped: false };
+  try {
+    if (!scan || typeof scan !== "object") return out;
+    out.same = (typeof scan.same === "number") ? scan.same : 0;
+    out.capped = scan.capped === true;
+    const arr = scan.new;
+    if (Array.isArray(arr)) {
+      for (let i = 0; i < arr.length; i++) {
+        const r = arr[i];
+        out.new.push({ name: r.name, relPath: r.relPath, size: r.size, mtime: r.mtime });
+      }
+    }
+    const arrC = scan.changed;
+    if (Array.isArray(arrC)) {
+      for (let i = 0; i < arrC.length; i++) {
+        const r = arrC[i];
+        out.changed.push({ name: r.name, relPath: r.relPath, size: r.size, mtime: r.mtime });
+      }
+    }
+    const arrG = scan.gone;
+    if (Array.isArray(arrG)) {
+      for (let i = 0; i < arrG.length; i++) {
+        const r = arrG[i];
+        out.gone.push({ id: r.id, name: r.name, path: r.path });
+      }
+    }
+  } catch (e) { /* out stands */ }
+  return out;
+}
+
+/* ---------- the scan core (memo + lastScanAt update; calm refusals) ---------- */
+
+async function avSrcScanRec(rec) {
+  try {
+    if (!rec) return { ok: false, error: "no such source", perm: "unknown" };
+    const handle = avSrcHandleNorm(rec.handle);
+    if (!handle) return { ok: false, error: "handle missing - reconnect required", perm: "unknown" };
+    const perm = await avSrcQueryPerm(handle);
+    rec.perm = perm;
+    if (perm === "prompt" || perm === "denied") {
+      return { ok: false, error: "permission " + perm + " - reconnect required", perm: perm };
+    }
+    const walked = await avSrcWalk(handle);
+    if (!walked || walked.ok !== true) {
+      return { ok: false, error: (walked && walked.error) ? walked.error : "walk failed", perm: perm };
+    }
+    const libFn = avSrcLibListFn();
+    if (!libFn) return { ok: false, error: "library module unavailable - cannot diff", perm: perm };
+    let lib = null;
+    try { lib = await libFn(); } catch (e) { lib = null; }
+    if (!lib || lib.ok !== true || !Array.isArray(lib.items)) {
+      return { ok: false, error: "library list failed", perm: perm };
+    }
+    const scan = avSrcDiff(walked.files, lib.items, rec.name, walked.capped);
+    avSrc.memos[rec.id] = { new: scan.new, changed: scan.changed, gone: scan.gone, same: scan.same, capped: scan.capped, at: avSrcNow() };
+    rec.lastScanAt = avSrcNow();
+    await avSrcPersistRec(rec);
+    return { ok: true, perm: perm, scan: scan };
+  } catch (e) {
+    return { ok: false, error: avSrcErrMsg(e), perm: "unknown" };
+  }
+}
+
+/* ---------- public ops (guarded, never throw outward) ---------- */
+
+async function avSourcesLinkRun() {
+  await avSrcEnsureLoad();
+  const pick = avSrcDirPicker();
+  if (!pick) return { ok: false, error: "linking needs the File System Access API" };
+  let handle = null;
+  try {
+    handle = await pick.fn.call(pick.fs, { mode: "read" });
+  } catch (e) {
+    if (avSrcErrName(e) === "AbortError") return { ok: false, error: "cancelled" };
+    return { ok: false, error: avSrcErrMsg(e) };
+  }
+  if (!handle || typeof handle !== "object") return { ok: false, error: "picker returned no directory" };
+  const name = avSrcStr(handle.name, "source", AV_SRC_NAME_MAX);
+  const id = avSrcMakeId(name);
+  const rec = {
+    id: id, v: 1, name: name, handle: handle,
+    linkedAt: avSrcNow(), lastScanAt: 0, mode: AV_SRC_MODE,
+    perm: "unknown", sessionOnly: false, note: null,
+  };
+  avSrc.records[id] = rec;
+  const persisted = await avSrcPersistRec(rec);
+  let note = null;
+  if (persisted.tier !== "idb") {
+    note = "record is session-only (IndexedDB unavailable)";
+    rec.sessionOnly = true;
+  } else if (!persisted.handleSaved) {
+    note = "handle not persistable - reconnect after reload";
+  }
+  rec.note = note;
+  const sr = await avSrcScanRec(rec);       /* first scan (pin 2) */
+  const out = {
+    ok: true, id: id, name: name, scan: null,
+    perm: rec.perm, backend: avSrc.backend, note: note, scanError: null,
+  };
+  if (sr && sr.ok === true) out.scan = avSrcScanPub(sr.scan);
+  else {
+    out.scanError = (sr && sr.error) ? sr.error : "scan failed";
+    out.perm = (sr && sr.perm) ? sr.perm : rec.perm;
+  }
+  return out;
+}
+
+function avSourcesLink() {
+  try { return Promise.resolve(avSourcesLinkRun()).catch(function (e) { return { ok: false, error: avSrcErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, error: "error" }); }
+}
+
+async function avSourcesListRun() {
+  await avSrcEnsureLoad();
+  const st = avSrc;
+  const ids = Object.keys(st.records);
+  const rows = [];
+  for (let i = 0; i < ids.length; i++) {
+    const rec = st.records[ids[i]];
+    if (!rec) continue;
+    const handle = avSrcHandleNorm(rec.handle);
+    let perm = "unknown";
+    if (handle) perm = await avSrcQueryPerm(handle);
+    rec.perm = perm;
+    const memo = st.memos[rec.id];
+    let note = rec.note || null;
+    if (!handle && !note) note = "handle missing - reconnect";
+    rows.push({
+      id: rec.id, name: rec.name, linkedAt: rec.linkedAt, lastScanAt: rec.lastScanAt,
+      mode: rec.mode, perm: perm,
+      new: (memo && Array.isArray(memo.new)) ? memo.new.length : 0,
+      changed: (memo && Array.isArray(memo.changed)) ? memo.changed.length : 0,
+      gone: (memo && Array.isArray(memo.gone)) ? memo.gone.length : 0,
+      note: note,
+    });
+  }
+  rows.sort(function (a, b) { return (b.linkedAt - a.linkedAt) || (a.id < b.id ? -1 : (a.id > b.id ? 1 : 0)); });
+  return { ok: true, count: rows.length, items: rows };
+}
+
+function avSourcesList() {
+  try { return Promise.resolve(avSourcesListRun()).catch(function (e) { return { ok: false, count: 0, items: [], error: avSrcErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, count: 0, items: [], error: "error" }); }
+}
+
+async function avSourcesScanRun(id) {
+  await avSrcEnsureLoad();
+  const rec = avSrcFind(id);
+  if (!rec) return { ok: false, id: avSrcIdStr(id), perm: "unknown", error: "no such source" };
+  const r = await avSrcScanRec(rec);
+  if (r && r.ok === true) return { ok: true, id: rec.id, name: rec.name, scan: avSrcScanPub(r.scan), perm: r.perm };
+  return { ok: false, id: rec.id, name: rec.name, perm: (r && r.perm) ? r.perm : "unknown", error: (r && r.error) ? r.error : "scan failed" };
+}
+
+function avSourcesScan(id) {
+  try { return Promise.resolve(avSourcesScanRun(id)).catch(function (e) { return { ok: false, id: avSrcIdStr(id), perm: "unknown", error: avSrcErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, id: avSrcIdStr(id), perm: "unknown", error: "error" }); }
+}
+
+async function avSourcesImportNewRun(id) {
+  await avSrcEnsureLoad();
+  const rec = avSrcFind(id);
+  if (!rec) return { ok: false, id: avSrcIdStr(id), count: 0, error: "no such source" };
+  const fn = avSrcImportFn();
+  if (!fn) return { ok: false, id: rec.id, count: 0, error: "import module unavailable" };
+  const sr = await avSrcScanRec(rec);       /* a fresh scan decides what is NEW right now */
+  if (!sr || sr.ok !== true) return { ok: false, id: rec.id, count: 0, error: (sr && sr.error) ? sr.error : "scan failed" };
+  const news = (sr.scan && Array.isArray(sr.scan.new)) ? sr.scan.new : [];
+  let wrapped = [];
+  if (news.length) {
+    if (typeof File !== "function") return { ok: false, id: rec.id, count: 0, error: "File constructor unavailable" };
+    for (let i = 0; i < news.length; i++) {
+      const row = news[i];
+      try {
+        if (!row || !row.handle || typeof row.handle.getFile !== "function") continue;
+        const inner = await row.handle.getFile();
+        if (!inner) continue;
+        /* D6: the re-wrapped name carries the folder so source.path self-describes the folder
+           ("MySamples/sub/kick.wav"); av_import takes the leaf for name/kit logic */
+        wrapped.push(new File([inner], rec.name + "/" + row.relPath));
+      } catch (e) { /* skip this file honestly */ }
+    }
+  }
+  let receipt = null;
+  if (wrapped.length) {
+    try { receipt = await fn(wrapped); } catch (e) { receipt = null; }
+  }
+  /* refresh the memo (a fresh scan after the import) */
+  let fresh = null;
+  try {
+    const fr = await avSrcScanRec(rec);
+    if (fr && fr.ok === true) fresh = avSrcScanPub(fr.scan);
+  } catch (e2) { fresh = null; }
+  return { ok: true, id: rec.id, name: rec.name, count: wrapped.length, receipt: receipt, scan: fresh };
+}
+
+function avSourcesImportNew(id) {
+  try { return Promise.resolve(avSourcesImportNewRun(id)).catch(function (e) { return { ok: false, id: avSrcIdStr(id), count: 0, error: avSrcErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, id: avSrcIdStr(id), count: 0, error: "error" }); }
+}
+
+async function avSourcesUnlinkRun(id) {
+  await avSrcEnsureLoad();
+  const rec = avSrcFind(id);
+  if (!rec) return { ok: true, id: avSrcIdStr(id), removed: false };
+  delete avSrc.records[rec.id];
+  delete avSrc.memos[rec.id];
+  try {
+    const db = await avSrcDbOpen();
+    if (db) await avSrcDbDel(db, rec.id);
+  } catch (e) { /* the in-memory removal stands */ }
+  return { ok: true, id: rec.id, removed: true };
+}
+
+function avSourcesUnlink(id) {
+  try { return Promise.resolve(avSourcesUnlinkRun(id)).catch(function (e) { return { ok: false, id: avSrcIdStr(id), removed: false, error: avSrcErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, id: avSrcIdStr(id), removed: false, error: "error" }); }
+}
+
+async function avSourcesReconnectRun(id) {
+  await avSrcEnsureLoad();
+  const rec = avSrcFind(id);
+  if (!rec) return { ok: false, id: avSrcIdStr(id), perm: "unknown", error: "no such source" };
+  const handle = avSrcHandleNorm(rec.handle);
+  if (!handle) return { ok: false, id: rec.id, perm: "unknown", error: "handle missing - relink the folder" };
+  const perm = await avSrcRequestPerm(handle);
+  rec.perm = perm;
+  if (perm === "granted") return { ok: true, id: rec.id, perm: perm };
+  return { ok: false, id: rec.id, perm: perm, error: "permission not granted" };
+}
+
+function avSourcesReconnect(id) {
+  try { return Promise.resolve(avSourcesReconnectRun(id)).catch(function (e) { return { ok: false, id: avSrcIdStr(id), perm: "unknown", error: avSrcErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, id: avSrcIdStr(id), perm: "unknown", error: "error" }); }
+}
+
+/* ---------- state / snap / classes (synchronous reads of the live view) ---------- */
+
+function avSrcStateRows() {
+  const st = avSrc;
+  const ids = Object.keys(st.records);
+  const rows = [];
+  for (let i = 0; i < ids.length; i++) {
+    const rec = st.records[ids[i]];
+    if (!rec) continue;
+    const handle = avSrcHandleNorm(rec.handle);
+    const memo = st.memos[rec.id];
+    let note = rec.note || null;
+    if (!handle && !note) note = "handle missing - reconnect";
+    rows.push({
+      id: rec.id, name: rec.name, linkedAt: rec.linkedAt, lastScanAt: rec.lastScanAt,
+      mode: rec.mode, perm: rec.perm || "unknown",
+      new: (memo && Array.isArray(memo.new)) ? memo.new.length : 0,
+      changed: (memo && Array.isArray(memo.changed)) ? memo.changed.length : 0,
+      gone: (memo && Array.isArray(memo.gone)) ? memo.gone.length : 0,
+      note: note,
+    });
+  }
+  try { rows.sort(function (a, b) { return (b.linkedAt - a.linkedAt) || (a.id < b.id ? -1 : (a.id > b.id ? 1 : 0)); }); }
+  catch (e) { /* order stands */ }
+  return rows;
+}
+
+function avSrcStateNote() {
+  const parts = [];
+  try {
+    if (!avSrc.loaded) parts.push("records not loaded yet");
+    if (avSrc.backendNote) parts.push(avSrc.backendNote);
+  } catch (e) { /* none */ }
+  return parts.length ? parts.join(" - ") : null;
+}
+
+function avSourcesState() {
+  try {
+    const rows = avSrcStateRows();
+    return {
+      ok: true,
+      fsKind: avSrcFsKind(),
+      backend: avSrc.backend,
+      count: rows.length,
+      items: rows,
+      note: avSrcStateNote(),
+    };
+  } catch (e) {
+    return { ok: false, fsKind: "none", backend: "mem", count: 0, items: [], note: "state" };
+  }
+}
+
+function avSourcesSnap() {
+  return avSourcesState();
+}
+
+function avSourcesClasses() {
+  return AV_SRC_CLASSES.slice();   /* this module mounts nothing -- the UI section owns markup */
+}
+
+/* ---------- debug handle (rigs + parent call these; names are the contract) ---------- */
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avSources = {
+      version: avSourcesVersion,
+      status: avSourcesState,
+      list: avSourcesList,
+      link: avSourcesLink,
+      scan: avSourcesScan,
+      importNew: avSourcesImportNew,
+      unlink: avSourcesUnlink,
+      reconnect: avSourcesReconnect,
+      setFs: avSrcSetFs,
+      fsKind: avSrcFsKind,
+    };
+  } catch (e) { /* no window -- node harness only */ }
+}
+
+
+/* Anvil -- LINKED SOURCES section (R18b wave, child B): the hub-card section that lists the
+   folders linked through the File System Access seam and drives their ops -- link . re-scan .
+   import-new . reconnect . unlink. Per verify/_r18b_wave.md section 4 (Child B pins). The core
+   (`src/av_sources.js`, child A) owns the store, the walk, the diff and the facade
+   `window.__avSources`; THIS module fills the parent-owned host `#av-sources-host` (child C
+   inserts the bare div in the import card body, after the storage foot) and routes every op
+   through the facade GUARDED PER CALL -- the core may load after this file, or not at all:
+   the section still mounts and every action refuses honestly on the status line, never a throw.
+   The WALK SURFACE is the core's (wave D3); the ROW STATES are this module's (busy attr .
+   perm-driven RECONNECT . IMPORT disabled at 0 . counts . notes).
+
+   WHAT THIS SECTION IS -- one header + one row per linked folder:
+     . HEAD    .av-sources-head -- `LINKED SOURCES` title + the status span `#av-sources-status`
+               (role=status, aria-live=polite) + the LINK button `#av-sources-link`
+               (`av-btn mini`, label "LINK FOLDER") -> __avSources.link().
+     . EMPTY   .av-sources-empty -- one honest empty state; it says WHICH state it is: the core
+               absent, the folder list refused, no File System Access API in this browser, or
+               the pinned "no linked folders -- link one to re-scan and diff it against the
+               library". Respects the hidden attribute (never display-forced) while rows exist.
+     . ROWS    .av-sources-row[data-id] (data-perm = the last permission read) -- name
+               .av-sources-name + meta .av-sources-meta ("linked . last scan HH:MM . new N .
+               changed N . gone N", plus the record's own note when it carries one) + buttons:
+               RECONNECT (.av-sources-reconnect, only when perm !== "granted") .
+               RE-SCAN (.av-sources-scan) . IMPORT NEW (N) (.av-sources-import, disabled when
+               N = 0) . UNLINK (.av-sources-unlink). Every button is `av-btn mini` (the
+               icon-box law: wide text labels ride the mini auto-width pattern; labels stay
+               single-line).
+     . BUSY    ONE op at a time: the row running an op carries data-busy="1" (+ aria-busy), the
+               section root carries aria-busy, every button in the section disables; a second
+               request refuses honestly on the status line. No timers, no polling -- ops
+               self-refresh through avSourcesUiRefresh().
+     . STATUS  ops report through the existing card status span `#av-import-status` when
+               reachable, else this section's own `#av-sources-status`; the pin's cancel case
+               (D4: AbortError -> error "cancelled") is a calm message, no error state.
+
+   DOM CONTRACT (exact -- the wave pins these):
+     host      #av-sources-host         parent-owned (child C); absent -> avSourcesUiInit()
+                                        returns false and stays re-init safe (idempotent via
+                                        host.dataset.avSourcesUi; re-mountable after a wipe)
+     section   .av-sources
+     head      .av-sources-head .av-sources-title .av-sources-status (#av-sources-status,
+               role=status aria-live=polite)
+     link      #av-sources-link (label "LINK FOLDER")
+     empty     .av-sources-empty (respects the hidden attribute -- never display-forced)
+     list      .av-sources-list (the rows container)
+     rows      .av-sources-row[data-id] .av-sources-name .av-sources-meta
+     buttons   .av-sources-reconnect .av-sources-scan .av-sources-import .av-sources-unlink
+     state     data-busy="1" (+ aria-busy) on the row running an op; aria-busy on the section
+               root; dataset avSourcesWired on the host (delegation bound once); dataset
+               avSourcesUi on the host (mount flag, the idempotence gate)
+
+   OBSERVABLES: avSourcesUiInit() -> bool (false without #av-sources-host; idempotent;
+   re-mountable) . avSourcesUiRefresh() -> Promise<bool> (never rejects; one guarded
+   __avSources.list() read -> rows repaint; ops self-refresh through it) . avSourcesUiClasses()
+   -> string[] (every NEW css class this section emits). Facade additions NONE -- the core's
+   window.__avSources is the single rig surface; this module publishes nothing on window.
+
+   CONSTANTS this module owns: AV_SOURCES_UI_VERSION ("r18b.0") . AV_SOURCES_UI_ROWS_MAX 500
+   (rows painted) . AV_SOURCES_UI_CLASSES (below).
+
+   CSS CLASSES THIS MODULE NEEDS (the parent authors styles.css from this list; av-btn / mini /
+   av-note / av-dim are existing house classes; #av-sources-host is parent-owned):
+     .av-sources          the section root
+     .av-sources-head .av-sources-title .av-sources-status (+ .av-sources-msg base /
+                          .av-sources-err toggled)   the header row + status line
+     .av-sources-link     the LINK FOLDER button
+     .av-sources-empty    the empty state (respects the hidden attribute)
+     .av-sources-list     the rows container
+     .av-sources-more     the "showing the first N" truncation note
+     .av-sources-row      one folder row (.av-sources-name . .av-sources-meta)
+     .av-sources-reconnect .av-sources-scan .av-sources-import .av-sources-unlink
+                          the row buttons (wide text labels: style with white-space:nowrap --
+                          the wide-button law for text .av-btn)
+
+   LAWS (house): "use strict"; classic script; ONE namespace avSourcesUi* / AV_SOURCES_UI_*;
+   NO DOM at top level (node-loadable); every listener and every cross-module reach wrapped
+   (never throws outward); no console noise; no timers; deterministic; ASCII-only source;
+   ONE writer (child B, R18b). */
+
+"use strict";
+
+const AV_SOURCES_UI_VERSION = "r18b.0";
+const AV_SOURCES_UI_ROWS_MAX = 500;      /* folder rows painted (the house cap law)           */
+
+/* the NEW css classes this section emits (the parent styles them from avSourcesUiClasses();
+   av-btn / mini / av-note / av-dim are existing house classes and are NOT listed;
+   #av-sources-host is the parent-owned host). Dynamic/state classes are listed all the same. */
+const AV_SOURCES_UI_CLASSES = [
+  "av-sources", "av-sources-head", "av-sources-title",
+  "av-sources-status", "av-sources-msg", "av-sources-err",
+  "av-sources-link", "av-sources-empty", "av-sources-list", "av-sources-more",
+  "av-sources-row", "av-sources-name", "av-sources-meta",
+  "av-sources-reconnect", "av-sources-scan", "av-sources-import", "av-sources-unlink",
+];
+
+/* UI-local state only -- every core fact is read through window.__avSources per call */
+const avSourcesUiState = {
+  inited: false,
+  mounts: 0,
+  busy: false,                 /* ONE op at a time (the card busy law)                */
+  op: null,                    /* {id, label} of the op in flight ("" id = the link)  */
+  items: [],                   /* the latest list mirror (JSON-safe rows)             */
+  byId: {},
+  listOk: false, listErr: "", listAbsent: false,
+  fsKind: "",                  /* "injected" | "window" | "none" | ""                 */
+  status: "", statusKind: "msg",
+  lastError: "",
+  rowsHTML: "\u0000",          /* rows paint memo (write-on-change)                   */
+};
+
+/* ---------- small pure helpers (no DOM; harness-covered) ---------- */
+
+const avSourcesUiEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* a capped string (never throws; null/undefined -> "") */
+function avSourcesUiStr(v, cap) {
+  try {
+    const t = String(v == null ? "" : v);
+    return (cap && t.length > cap) ? t.slice(0, cap) : t;
+  } catch (e) { return ""; }
+}
+
+function avSourcesUiNumOr(v, d) {
+  const n = Number(v);
+  return isFinite(n) ? n : d;
+}
+
+/* a truncating display slice ("abcdef" 4 -> "abc\u2026"); never throws */
+function avSourcesUiShort(s, max) {
+  try {
+    const t = String(s == null ? "" : s);
+    const m = (typeof max === "number" && max > 4) ? Math.floor(max) : 96;
+    return t.length <= m ? t : t.slice(0, m - 1) + "\u2026";
+  } catch (e) { return ""; }
+}
+
+/* "HH:MM" out of an epoch ms (or "--:--" when unusable) -- the row meta uses it */
+function avSourcesUiClock(at) {
+  try {
+    const n = Number(at);
+    if (!isFinite(n) || n <= 0) return "--:--";
+    const d = new Date(n);
+    if (!isFinite(d.getTime())) return "--:--";
+    const h = d.getHours(), m = d.getMinutes();
+    return (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+  } catch (e) { return "--:--"; }
+}
+
+/* the count of a scan list: an array -> its length; a number -> the rounded number; else 0 */
+function avSourcesUiLen(v) {
+  try {
+    if (v && typeof v.length === "number") return Math.max(0, v.length | 0);
+    const n = Number(v);
+    return isFinite(n) ? Math.max(0, Math.round(n)) : 0;
+  } catch (e) { return 0; }
+}
+
+/* an error/refusal line out of anything (receipts carry .error strings) */
+function avSourcesUiErrText(e, fallback) {
+  try {
+    if (e && typeof e === "object") {
+      if (typeof e.error === "string" && e.error) return e.error;
+      if (typeof e.message === "string" && e.message) return e.message;
+    }
+    if (typeof e === "string" && e) return e;
+  } catch (e2) { /* fall through */ }
+  return fallback || "refused";
+}
+
+/* tolerant receipt normalizer -- a receipt is ALWAYS an object after this */
+function avSourcesUiReceipt(r) {
+  try {
+    if (r === true) return { ok: true };
+    if (r && typeof r === "object") return r;
+    if (typeof r === "string" && r) return { ok: false, error: r };
+    if (r === false) return { ok: false, error: "refused" };
+  } catch (e) { /* fall through */ }
+  return { ok: false, error: "no receipt" };
+}
+
+/* async settle: receipts may be promises or sync values; the callback runs EXACTLY once,
+   never throws, and a rejection becomes an honest {ok:false, error} receipt */
+function avSourcesUiSettle(p, cb) {
+  const done = { v: false };
+  const once = function (r) {
+    if (done.v) return;
+    done.v = true;
+    try { cb(r); } catch (e) { /* settle never throws */ }
+  };
+  try {
+    if (p && typeof p.then === "function") {
+      p.then(once, function (e) { once({ ok: false, error: avSourcesUiErrText(e, "failed") }); });
+      return true;
+    }
+    once(p);
+    return true;
+  } catch (e) {
+    once({ ok: false, error: avSourcesUiErrText(e, "failed") });
+    return false;
+  }
+}
+
+/* ---------- guarded DOM + facade access (no throw, no noise) ---------- */
+
+function avSourcesUiWin() {
+  try { if (typeof window !== "undefined") return window; } catch (e) { /* none */ }
+  return null;
+}
+
+function avSourcesUiDoc() {
+  try { if (typeof document !== "undefined") return document; } catch (e) { /* none */ }
+  return null;
+}
+
+/* the parent-owned host; absent -> every mount/paint path refuses safely */
+function avSourcesUiHost() {
+  try {
+    const d = avSourcesUiDoc();
+    if (d && typeof d.getElementById === "function") return d.getElementById("av-sources-host");
+  } catch (e) { /* no document */ }
+  return null;
+}
+
+/* this module's own section element, when mounted */
+function avSourcesUiSection() {
+  try {
+    const host = avSourcesUiHost();
+    if (host && typeof host.querySelector === "function") return host.querySelector(".av-sources");
+  } catch (e) { /* none */ }
+  return null;
+}
+
+/* the core facade (child A's window.__avSources) -- guarded; null when absent */
+function avSourcesUiFacade() {
+  try {
+    const w = avSourcesUiWin();
+    const f = (w && w.__avSources) ? w.__avSources : null;
+    if (f && typeof f === "object") return f;
+  } catch (e) { /* no window */ }
+  return null;
+}
+
+/* the core's fs kind, read tolerantly (function or value; unknown -> "") */
+function avSourcesUiFsKind(f) {
+  try {
+    if (f) {
+      const raw = (typeof f.fsKind === "function") ? f.fsKind() : f.fsKind;
+      const t = String(raw == null ? "" : raw);
+      if (t) return t;
+    }
+  } catch (e) { /* the kind read is a nicety */ }
+  return "";
+}
+
+/* the shared op gate: the facade must carry the named function, else the honest note */
+function avSourcesUiNeed(fn) {
+  const f = avSourcesUiFacade();
+  if (!f || typeof f[fn] !== "function") {
+    avSourcesUiSetStatus("linked sources unavailable \u2014 the core (av_sources.js) is not present", "err");
+    return null;
+  }
+  return f;
+}
+
+/* ---------- the status line (card span first when reachable; own span otherwise) ---------- */
+
+/* paint the current status text; preferCard = move through #av-import-status when it exists,
+   else this section's own #av-sources-status (the pin's routing). The err class is managed
+   only on our own span -- the card span's class memos stay the card's business. */
+function avSourcesUiPaintStatus(preferCard) {
+  const s = avSourcesUiState;
+  let el = null;
+  let own = false;
+  try {
+    const d = avSourcesUiDoc();
+    if (preferCard && d && typeof d.getElementById === "function") {
+      el = d.getElementById("av-import-status");
+    }
+    if (!el) {
+      const host = avSourcesUiHost();
+      el = (host && typeof host.querySelector === "function") ? host.querySelector("#av-sources-status") : null;
+      if (!el && d && typeof d.getElementById === "function") el = d.getElementById("av-sources-status");
+      own = !!el;
+    }
+  } catch (e) { el = null; }
+  if (!el) return false;
+  try {
+    if (el.textContent !== s.status) el.textContent = s.status;
+    if (own && el.classList && typeof el.classList.add === "function") {
+      const err = (s.statusKind === "err");
+      if (err && !el.classList.contains("av-sources-err")) el.classList.add("av-sources-err");
+      else if (!err && el.classList.contains("av-sources-err")) el.classList.remove("av-sources-err");
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSourcesUiSetStatus(msg, kind) {
+  try {
+    const s = avSourcesUiState;
+    s.status = String(msg == null ? "" : msg);
+    s.statusKind = (kind === "err") ? "err" : "msg";
+    return avSourcesUiPaintStatus(true);
+  } catch (e) { return false; }
+}
+
+/* ---------- busy discipline (ONE op at a time -- the card busy law) ---------- */
+
+function avSourcesUiBusyRefuse() {
+  avSourcesUiSetStatus("an op is already in progress \u2014 one op at a time", "err");
+  return false;
+}
+
+function avSourcesUiBeginOp(id, label) {
+  const s = avSourcesUiState;
+  try {
+    if (s.busy) return avSourcesUiBusyRefuse();
+    s.busy = true;
+    s.op = { id: id == null ? "" : String(id), label: String(label == null ? "working" : label) };
+    avSourcesUiSetStatus(s.op.label + "\u2026", "msg");
+    avSourcesUiPaintBusy();
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSourcesUiEndOp() {
+  const s = avSourcesUiState;
+  try {
+    s.busy = false;
+    s.op = null;
+    avSourcesUiPaintBusy();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the display name of a row id from the mirror (falls back to the raw id) */
+function avSourcesUiNameOf(id) {
+  try {
+    const s = avSourcesUiState;
+    const it = s.byId[String(id == null ? "" : id)];
+    if (it && it.name) return it.name;
+  } catch (e) { /* the raw id stands */ }
+  return String(id == null ? "" : id);
+}
+
+/* ---------- list mirror + row/empty paint ---------- */
+
+/* one core list item (wave section 3.3 shape) -> a JSON-safe UI row; null when unusable */
+function avSourcesUiItemPub(it) {
+  const id = avSourcesUiStr(it && it.id, 80);
+  if (!id) return null;
+  const name = avSourcesUiStr(it && it.name, 120) || id;
+  let perm = avSourcesUiStr(it && it.perm, 16);
+  if (!perm) perm = "unknown";
+  return {
+    id: id,
+    name: name,
+    linkedAt: avSourcesUiNumOr(it && it.linkedAt, 0),
+    lastScanAt: avSourcesUiNumOr(it && it.lastScanAt, 0),
+    mode: avSourcesUiStr(it && it.mode, 16) || "linked",
+    perm: perm,
+    newN: avSourcesUiLen(it && it.new),
+    changedN: avSourcesUiLen(it && it.changed),
+    goneN: avSourcesUiLen(it && it.gone),
+    note: avSourcesUiStr(it && it.note, 120),
+  };
+}
+
+/* the pinned meta line: "linked . last scan HH:MM . new N . changed N . gone N" (+ a note) */
+function avSourcesUiRowMeta(it) {
+  const last = (Number(it.lastScanAt) > 0) ? avSourcesUiClock(it.lastScanAt) : "never";
+  let m = "linked \u00b7 last scan " + last + " \u00b7 new " + it.newN +
+    " \u00b7 changed " + it.changedN + " \u00b7 gone " + it.goneN;
+  if (it.note) m += " \u00b7 " + avSourcesUiShort(it.note, 90);
+  return m;
+}
+
+/* one folder row -- the pinned row attrs + cells + the four buttons (RECONNECT only when the
+   permission is not granted; IMPORT disabled at N = 0) */
+function avSourcesUiRowHTML(it) {
+  let html = '<div class="av-sources-row" data-id="' + avSourcesUiEsc(it.id) +
+    '" data-perm="' + avSourcesUiEsc(it.perm) + '">';
+  html += '<span class="av-sources-name" title="' + avSourcesUiEsc(it.name) + '">' + avSourcesUiEsc(it.name) + "</span>";
+  html += '<span class="av-sources-meta av-dim">' + avSourcesUiEsc(avSourcesUiRowMeta(it)) + "</span>";
+  if (it.perm !== "granted") {
+    html += '<button type="button" class="av-btn mini av-sources-reconnect" title="' +
+      avSourcesUiEsc("re-ask the browser for read permission on " + it.name) + '">RECONNECT</button>';
+  }
+  html += '<button type="button" class="av-btn mini av-sources-scan" title="' +
+    avSourcesUiEsc("re-scan " + it.name + " and diff it against the library") + '">RE-SCAN</button>';
+  html += '<button type="button" class="av-btn mini av-sources-import"' + (it.newN === 0 ? " disabled" : "") +
+    ' title="' + avSourcesUiEsc("import the " + it.newN + " new file" + (it.newN === 1 ? "" : "s") +
+    " through the import funnel") + '">IMPORT NEW (' + it.newN + ")</button>";
+  html += '<button type="button" class="av-btn mini av-sources-unlink" title="' +
+    avSourcesUiEsc("forget this folder \u2014 the items it already imported stay in the library") + '">UNLINK</button>';
+  html += "</div>";
+  return html;
+}
+
+/* the one honest empty-state line for the current state of the world */
+function avSourcesUiEmptyMsg() {
+  const s = avSourcesUiState;
+  if (s.listAbsent) return "linked sources unavailable \u2014 the core (av_sources.js) is not present";
+  if (!s.listOk) return "linked folders unavailable \u2014 " + (s.listErr || "the folder list could not be read");
+  if (s.fsKind === "none") return "no linked folders \u2014 linking needs the File System Access API (this browser does not offer it)";
+  return "no linked folders \u2014 link one to re-scan and diff it against the library";
+}
+
+/* repaint the rows container + the empty state from the mirror (write-on-change) */
+function avSourcesUiPaint() {
+  const host = avSourcesUiHost();
+  if (!host || typeof host.querySelector !== "function") return false;
+  try {
+    const s = avSourcesUiState;
+    const box = host.querySelector(".av-sources-list");
+    if (!box) return false;
+    const items = s.items || [];
+    const n = Math.min(items.length, AV_SOURCES_UI_ROWS_MAX);
+    let html = "";
+    for (let i = 0; i < n; i++) html += avSourcesUiRowHTML(items[i]);
+    if (items.length > n) {
+      html += '<p class="av-note av-dim av-sources-more">' +
+        avSourcesUiEsc("showing the first " + n + " of " + items.length + " linked folders") + "</p>";
+    }
+    if (html !== s.rowsHTML) {
+      box.innerHTML = html;
+      s.rowsHTML = html;
+    }
+    const empty = host.querySelector(".av-sources-empty");
+    if (empty) {
+      const msg = avSourcesUiEmptyMsg();
+      if (empty.textContent !== msg) empty.textContent = msg;
+      const hid = items.length > 0;
+      if (empty.hidden !== hid) empty.hidden = hid;
+    }
+    avSourcesUiPaintBusy();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the busy paint: the running op's row carries data-busy="1" (+ aria-busy); the section root
+   carries aria-busy; every button disables while busy (the IMPORT button stays disabled at
+   N = 0 once the op clears) */
+function avSourcesUiPaintBusy() {
+  const host = avSourcesUiHost();
+  if (!host || typeof host.querySelector !== "function") return false;
+  try {
+    const s = avSourcesUiState;
+    const busy = !!s.busy;
+    const sec = host.querySelector(".av-sources");
+    if (sec && typeof sec.setAttribute === "function") {
+      const av = busy ? "true" : "false";
+      if (!sec.getAttribute || sec.getAttribute("aria-busy") !== av) sec.setAttribute("aria-busy", av);
+    }
+    const linkBtn = host.querySelector("#av-sources-link");
+    if (linkBtn && linkBtn.disabled !== busy) linkBtn.disabled = busy;
+    let rows = null;
+    try { rows = host.querySelectorAll(".av-sources-row"); } catch (e2) { rows = null; }
+    if (!rows) return true;
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const rid = String((row.getAttribute && row.getAttribute("data-id")) || "");
+      const lit = !!(busy && rid && s.op && s.op.id === rid);
+      if (typeof row.setAttribute === "function") {
+        if (lit) {
+          if (row.getAttribute("data-busy") !== "1") row.setAttribute("data-busy", "1");
+          if (row.getAttribute("aria-busy") !== "true") row.setAttribute("aria-busy", "true");
+        } else {
+          if (row.getAttribute("data-busy") != null) row.removeAttribute("data-busy");
+          if (row.getAttribute("aria-busy") != null) row.removeAttribute("aria-busy");
+        }
+      }
+      let btns = null;
+      try { btns = row.querySelectorAll("button"); } catch (e3) { btns = null; }
+      if (!btns) continue;
+      const it = rid ? s.byId[rid] : null;
+      for (let k = 0; k < btns.length; k++) {
+        const b = btns[k];
+        let dis = busy;
+        if (!dis && it && it.newN === 0 && b.classList && typeof b.classList.contains === "function" &&
+            b.classList.contains("av-sources-import")) {
+          dis = true;
+        }
+        if (b.disabled !== dis) b.disabled = dis;
+      }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* write one __avSources.list() receipt into the mirror + repaint */
+function avSourcesUiApplyList(r0) {
+  const s = avSourcesUiState;
+  try {
+    const r = avSourcesUiReceipt(r0);
+    if (r.absent === true) {
+      s.listOk = false;
+      s.listAbsent = true;
+      s.listErr = avSourcesUiErrText(r, "the core (av_sources.js) is not present");
+      s.items = [];
+      s.byId = {};
+    } else if (r.ok !== true) {
+      s.listOk = false;
+      s.listAbsent = false;
+      s.listErr = avSourcesUiErrText(r, "the folder list could not be read");
+      s.items = [];
+      s.byId = {};
+    } else {
+      s.listOk = true;
+      s.listAbsent = false;
+      s.listErr = "";
+      const src = (r.items && typeof r.items.length === "number") ? r.items : [];
+      const out = [];
+      const byId = {};
+      const n = Math.min(src.length, AV_SOURCES_UI_ROWS_MAX);
+      for (let i = 0; i < n; i++) {
+        const pub = avSourcesUiItemPub(src[i]);
+        if (!pub) continue;
+        out.push(pub);
+        byId[pub.id] = pub;
+      }
+      s.items = out;
+      s.byId = byId;
+    }
+    avSourcesUiPaint();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the public refresh: one guarded __avSources.list() read -> mirror -> repaint;
+   Promise<bool>, never rejects. Ops self-refresh through this. */
+function avSourcesUiRefresh() {
+  const s = avSourcesUiState;
+  return new Promise(function (resolve) {
+    let done = false;
+    const finish = function (v) { if (!done) { done = true; resolve(v); } };
+    try {
+      if (!s.inited) { try { avSourcesUiInit(); } catch (e0) { /* never throws */ } }
+      const f = avSourcesUiFacade();
+      s.fsKind = avSourcesUiFsKind(f);
+      if (!f || typeof f.list !== "function") {
+        avSourcesUiApplyList({ ok: false, absent: true, error: "the core (av_sources.js) is not present" });
+        finish(false);
+        return;
+      }
+      let out = null;
+      try { out = f.list(); } catch (e) { out = { ok: false, error: avSourcesUiErrText(e, "the folder list could not be read") }; }
+      avSourcesUiSettle(out, function (r) {
+        try { avSourcesUiApplyList(r); } catch (e) { /* apply never throws */ }
+        finish(true);
+      });
+    } catch (e) { finish(false); }
+  });
+}
+
+/* ---------- the scan line (head + the D5 counts + the cap note) ---------- */
+
+function avSourcesUiScanLine(head, scan) {
+  try {
+    if (!scan || typeof scan !== "object") return head;
+    let line = head + " \u2014 new " + avSourcesUiLen(scan.new) + " \u00b7 changed " + avSourcesUiLen(scan.changed) +
+      " \u00b7 gone " + avSourcesUiLen(scan.gone) + " \u00b7 same " + avSourcesUiLen(scan.same);
+    if (scan.capped === true) line += " \u00b7 walk capped";
+    return line;
+  } catch (e) { return head; }
+}
+
+/* ---------- the ops (every facade reach guarded; one op at a time; ops self-refresh) ------ */
+
+/* LINK -> __avSources.link(); D4: a cancel is a calm message, never an error state */
+function avSourcesUiLink() {
+  try {
+    const f = avSourcesUiNeed("link");
+    if (!f) return false;
+    if (!avSourcesUiBeginOp("", "linking a source folder")) return false;
+    let out = null;
+    try { out = f.link(); } catch (e) { out = { ok: false, error: avSourcesUiErrText(e, "the link failed") }; }
+    avSourcesUiSettle(out, function (r0) {
+      const r = avSourcesUiReceipt(r0);
+      avSourcesUiEndOp();
+      if (r.ok === true) {
+        const nm = avSourcesUiStr(r.name, 120) || "folder";
+        avSourcesUiSetStatus(avSourcesUiScanLine("linked " + avSourcesUiShort(nm, 60), r.scan), "msg");
+      } else if (String(r.error) === "cancelled") {
+        avSourcesUiSetStatus("link cancelled \u2014 nothing was linked", "msg");
+      } else {
+        avSourcesUiSetStatus("link refused \u2014 " + avSourcesUiErrText(r, "the core refused"), "err");
+      }
+      avSourcesUiRefresh();
+    });
+    return true;
+  } catch (e) {
+    avSourcesUiEndOp();
+    avSourcesUiSetStatus("link failed \u2014 " + avSourcesUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* RE-SCAN -> __avSources.scan(id); the row meta + counts refresh from the memo after */
+function avSourcesUiScan(id) {
+  const name = avSourcesUiNameOf(id);
+  try {
+    const f = avSourcesUiNeed("scan");
+    if (!f) return false;
+    if (!avSourcesUiBeginOp(id, "scanning " + name)) return false;
+    let out = null;
+    try { out = f.scan(id); } catch (e) { out = { ok: false, error: avSourcesUiErrText(e, "the scan failed") }; }
+    avSourcesUiSettle(out, function (r0) {
+      const r = avSourcesUiReceipt(r0);
+      avSourcesUiEndOp();
+      if (r.ok === true) {
+        const nm = avSourcesUiStr(r.name, 120) || name;
+        avSourcesUiSetStatus(avSourcesUiScanLine("scanned " + avSourcesUiShort(nm, 60), r.scan), "msg");
+      } else {
+        avSourcesUiSetStatus("scan refused \u2014 " + avSourcesUiErrText(r, "the core refused"), "err");
+      }
+      avSourcesUiRefresh();
+    });
+    return true;
+  } catch (e) {
+    avSourcesUiEndOp();
+    avSourcesUiSetStatus("scan failed \u2014 " + avSourcesUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* IMPORT NEW -> __avSources.importNew(id) (the core feeds avImportFiles, D6); on a landed
+   import the card's library list is nudged to repaint (guarded, best-effort) */
+function avSourcesUiImportNew(id) {
+  const name = avSourcesUiNameOf(id);
+  try {
+    const f = avSourcesUiNeed("importNew");
+    if (!f) return false;
+    if (!avSourcesUiBeginOp(id, "importing new files from " + name)) return false;
+    let out = null;
+    try { out = f.importNew(id); } catch (e) { out = { ok: false, error: avSourcesUiErrText(e, "the import failed") }; }
+    avSourcesUiSettle(out, function (r0) {
+      const r = avSourcesUiReceipt(r0);
+      avSourcesUiEndOp();
+      if (r.ok === true) {
+        const c = Math.max(0, Math.round(avSourcesUiNumOr(r.count, 0)));
+        const nm = avSourcesUiStr(r.name, 120) || name;
+        if (c > 0) {
+          avSourcesUiSetStatus("imported " + c + " new file" + (c === 1 ? "" : "s") + " from " + avSourcesUiShort(nm, 60), "msg");
+          avSourcesUiNudgeCard();
+        } else {
+          avSourcesUiSetStatus("no new files in " + avSourcesUiShort(nm, 60) + " \u2014 nothing to import", "msg");
+        }
+      } else {
+        avSourcesUiSetStatus("import refused \u2014 " + avSourcesUiErrText(r, "the core refused"), "err");
+      }
+      avSourcesUiRefresh();
+    });
+    return true;
+  } catch (e) {
+    avSourcesUiEndOp();
+    avSourcesUiSetStatus("import failed \u2014 " + avSourcesUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* UNLINK -> __avSources.unlink(id); the record + handle release (library items stay) */
+function avSourcesUiUnlink(id) {
+  const name = avSourcesUiNameOf(id);
+  try {
+    const f = avSourcesUiNeed("unlink");
+    if (!f) return false;
+    if (!avSourcesUiBeginOp(id, "unlinking " + name)) return false;
+    let out = null;
+    try { out = f.unlink(id); } catch (e) { out = { ok: false, error: avSourcesUiErrText(e, "the unlink failed") }; }
+    avSourcesUiSettle(out, function (r0) {
+      const r = avSourcesUiReceipt(r0);
+      avSourcesUiEndOp();
+      if (r.ok === true) {
+        if (r.removed === true) avSourcesUiSetStatus("unlinked " + avSourcesUiShort(name, 60), "msg");
+        else avSourcesUiSetStatus("nothing to unlink for " + avSourcesUiShort(name, 60), "msg");
+      } else {
+        avSourcesUiSetStatus("unlink refused \u2014 " + avSourcesUiErrText(r, "the core refused"), "err");
+      }
+      avSourcesUiRefresh();
+    });
+    return true;
+  } catch (e) {
+    avSourcesUiEndOp();
+    avSourcesUiSetStatus("unlink failed \u2014 " + avSourcesUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* RECONNECT -> __avSources.reconnect(id) (D8; gesture-bound requestPermission); the row's
+   RECONNECT state clears only when the core reports perm "granted" */
+function avSourcesUiReconnect(id) {
+  const name = avSourcesUiNameOf(id);
+  try {
+    const f = avSourcesUiNeed("reconnect");
+    if (!f) return false;
+    if (!avSourcesUiBeginOp(id, "reconnecting " + name)) return false;
+    let out = null;
+    try { out = f.reconnect(id); } catch (e) { out = { ok: false, error: avSourcesUiErrText(e, "the reconnect failed") }; }
+    avSourcesUiSettle(out, function (r0) {
+      const r = avSourcesUiReceipt(r0);
+      avSourcesUiEndOp();
+      if (r.ok !== true) {
+        avSourcesUiSetStatus("reconnect refused \u2014 " + avSourcesUiErrText(r, "the core refused"), "err");
+      } else {
+        const perm = avSourcesUiStr(r.perm, 16) || "unknown";
+        if (perm === "granted") avSourcesUiSetStatus("reconnected " + avSourcesUiShort(name, 60), "msg");
+        else avSourcesUiSetStatus("reconnect \u2014 permission " + perm + " (the row stays in reconnect)", "err");
+      }
+      avSourcesUiRefresh();
+    });
+    return true;
+  } catch (e) {
+    avSourcesUiEndOp();
+    avSourcesUiSetStatus("reconnect failed \u2014 " + avSourcesUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* the guarded card nudge: after a landed import the hub's library list repaints (best-effort;
+   the card may not be present -- then this is a no-op, never a throw) */
+function avSourcesUiNudgeCard() {
+  try {
+    const w = avSourcesUiWin();
+    const imp = (w && w.__avImport) ? w.__avImport : null;
+    if (imp && typeof imp.refresh === "function") {
+      imp.refresh();
+      return true;
+    }
+  } catch (e) { /* best-effort */ }
+  return false;
+}
+
+/* ---------- markup (pure string builders) ---------- */
+
+function avSourcesUiBodyHTML() {
+  return '<div class="av-sources">' +
+    '<div class="av-sources-head">' +
+    '<span class="av-sources-title">LINKED SOURCES</span>' +
+    '<span class="av-sources-status av-sources-msg" id="av-sources-status" role="status" aria-live="polite">linked folders idle</span>' +
+    '<button type="button" class="av-btn mini av-sources-link" id="av-sources-link" title="link a local folder (File System Access) \u2014 its files are scanned and diffed against the library">LINK FOLDER</button>' +
+    "</div>" +
+    '<p class="av-note av-dim av-sources-empty">no linked folders \u2014 link one to re-scan and diff it against the library</p>' +
+    '<div class="av-sources-list"></div>' +
+    "</div>";
+}
+
+/* ---------- event wiring (one delegation set per host) ---------- */
+
+function avSourcesUiWire(host) {
+  if (!host || typeof host.addEventListener !== "function") return false;
+  try {
+    if (host.dataset && host.dataset.avSourcesWired === "1") return true;
+    if (host.dataset) host.dataset.avSourcesWired = "1";
+    host.addEventListener("click", avSourcesUiOnClick);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSourcesUiOnClick(ev) {
+  try {
+    const t = ev && ev.target;
+    if (!t || typeof t.closest !== "function") return;
+    if (t.closest("#av-sources-link")) { avSourcesUiLink(); return; }
+    const row = t.closest(".av-sources-row");
+    if (!row) return;
+    const rid = String((row.getAttribute && row.getAttribute("data-id")) || "");
+    if (!rid) return;
+    if (t.closest(".av-sources-reconnect")) { avSourcesUiReconnect(rid); return; }
+    if (t.closest(".av-sources-scan")) { avSourcesUiScan(rid); return; }
+    if (t.closest(".av-sources-import")) { avSourcesUiImportNew(rid); return; }
+    if (t.closest(".av-sources-unlink")) { avSourcesUiUnlink(rid); return; }
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* ---------- init / classes ---------- */
+
+/* mount the section into #av-sources-host; false when the host is absent (child C's edit may
+   not have landed) -- stays re-init safe: the second call mounts, later calls are idempotent */
+function avSourcesUiInit() {
+  const host = avSourcesUiHost();
+  if (!host || typeof host.querySelector !== "function") return false;   /* host absent -> false */
+  try {
+    const s = avSourcesUiState;
+    let sec = null;
+    try { sec = host.querySelector(".av-sources"); } catch (e) { sec = null; }
+    const flagged = !!(host.dataset && host.dataset.avSourcesUi === "1");
+    if (flagged && sec && s.inited) return true;      /* idempotent via the host dataset flag */
+    if (!sec) {
+      s.rowsHTML = "\u0000";                          /* fresh markup needs its first paint */
+      host.innerHTML = avSourcesUiBodyHTML();
+      try { sec = host.querySelector(".av-sources"); } catch (e2) { sec = null; }
+    }
+    avSourcesUiWire(host);
+    s.inited = true;
+    s.mounts += 1;
+    if (host.dataset) host.dataset.avSourcesUi = "1";
+    if (!s.status) {
+      const f = avSourcesUiFacade();
+      if (!f) {
+        s.status = "linked sources unavailable \u2014 the core (av_sources.js) is not present";
+        s.statusKind = "err";
+      } else if (avSourcesUiFsKind(f) === "none") {
+        s.status = "linking needs the File System Access API (this browser does not offer it)";
+        s.statusKind = "msg";
+      } else {
+        s.status = "linked folders idle \u2014 link one to diff it against the library";
+        s.statusKind = "msg";
+      }
+    }
+    avSourcesUiPaintStatus(false);                    /* the boot line stays OURS (own span) */
+    avSourcesUiRefresh();
+    return true;
+  } catch (e) {
+    try { avSourcesUiState.lastError = String((e && e.message) || e); } catch (e2) { /* ok */ }
+    return false;
+  }
+}
+
+function avSourcesUiClasses() {
+  return AV_SOURCES_UI_CLASSES.slice();
+}
+
+
 /* Anvil — core shell (Phase 0). Boot contract: arm the master tap FIRST, then mount the knob
    framework on the LEVELS card and fill the header chips last; `data-av-ready` flips when all
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.7.0", phase: "P7 · accessibility", built: "2026-10-08" });
+const ANVIL = Object.freeze({ version: "1.8.0", phase: "R18b · linked folders", built: "2026-10-09" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -82577,6 +84358,8 @@ function avMountLevels() {
   /* R15b: the SAMPLE PACKS card (contract verify/_r15b_wave.md) */
   let importOk = false;
   try { importOk = (typeof avImportUiInit === "function") ? (avImportUiInit() !== false) : false; } catch (e) { console.warn("[anvil] import card init failed", e); }
+  let sourcesUiOk = false;
+  try { sourcesUiOk = (typeof avSourcesUiInit === "function") ? (avSourcesUiInit() !== false) : false; } catch (e) { console.warn("[anvil] sources ui init failed", e); }
   let fxOk = false, modOk = false;
   try { fxOk = (typeof avFxInit === "function") ? (avFxInit() !== false) : false; } catch (e) { console.warn("[anvil] fx rack init failed", e); }
   try { modOk = (typeof avModInit === "function") ? (avModInit() !== false) : false; } catch (e) { console.warn("[anvil] mod matrix init failed", e); }
@@ -82678,7 +84461,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " import=" + importOk + " fx=" + fxOk + " mod=" + modOk + " lfo=" + lfoOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk + " rail=" + railOk + " menus=" + menusOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " import=" + importOk + " sourcesUi=" + sourcesUiOk + " fx=" + fxOk + " mod=" + modOk + " lfo=" + lfoOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk + " rail=" + railOk + " menus=" + menusOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

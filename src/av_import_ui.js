@@ -3120,6 +3120,7 @@ function avImportUiBodyHTML() {
     '<span class="av-import-storage av-dim" id="av-import-storage">storage: checking\u2026</span>' +
     '<button type="button" class="av-btn mini av-import-btn" id="av-import-persist" title="ask the browser for persistent storage (best-effort)">make storage persistent</button>' +
     "</div>" +
+    '<div id="av-sources-host"></div>' +
     "</div>";
 }
 

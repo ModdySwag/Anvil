@@ -181,3 +181,26 @@ freeze). Fixtures synthesized in-page via `avWavEncode`; no disk files.
 
 Per child: files written · interface list as implemented · not-done · conflicts · uncertainties.
 Parent verifies landings by artifacts on disk (search_files + node --check), never by report.
+
+## §11 Close amendments - 2026-10-09 (as-built)
+
+- **Integration miss (named):** the parent integration script's first pass added the app_core
+  boots but NOT the two build.py `js_parts` entries -- caught by the first triage chain (smoke
+  75/76 + hub 33/39: the R18b surface absent from the bundle). Fixed (js_parts gains av_sources +
+  av_sources_ui before app_core); re-run green.
+- **Close gates (frozen `4614fbe1d5cbd5e64be456343d26cdcacc103288388852b5a90e9aec715bd7775`,
+  4,120,547 B; worklet `b65160e0` unchanged; sw `b1f02503`; manifest `7cb76e43`):** smoke **76** ·
+  cdp_hub **39** · cdp_platform **52** (widened P1d) · cdp_import **24** · battery **25 suites**
+  + bench exit=0 (realtime {light 64, fat 48}; offline knee 96/128 monotone, invalidReads 0 --
+  the recorded loaded-window class). Pins 22 -> `4614fbe1` full literals.
+- **Battery-lap flake (recorded):** cdp_hub's two reload-wait legs missed once under battery load
+  ("receipts survive fresh" + "library loads fresh") -- solo re-run **39/39 green** (the
+  addendum-58 reload-wait flake class).
+- **Rig SPEC notes:** none -- the six new legs passed first-run after the js_parts fix. The
+  children's named uncertainties all resolved by the green runs (scan refusal under "prompt"
+  matches the rig's leg 5; leaf-name sort matches; avMenuCall resolves the function declaration).
+- Deployed: index.html + sw.js + **manifest.webmanifest** (the widened accept) -- scoped --verify
+  0 not in sync; live shas = frozen; live probe: __avSources r18b.0 · 7 fns · fsKind "window" ·
+  the five-key accept served live; leak 11/11 LIVE. Capture `renders/r18b-live-hub.png` inspected.
+- Owed to the owner pass: the real launchQueue arrival test for the widened handler set (headless
+  cannot launch files from the OS); a real FSA directory-picker click (gesture-gated; stubbed in rigs).

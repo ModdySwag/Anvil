@@ -19,9 +19,11 @@
        shows when the page is not already standalone.
      - OFFLINE: online/offline events plus navigator.onLine drive body class av-pwa-offline and
        the chip #av-pwa-offline ("OFFLINE - everything is local, keep going").
-     - FILE HANDLING: when window.launchQueue exists, its consumer reads the launched file and
-       hands the text to avProjOpenText(name, text) when that seam exists (av_proj.js), else
-       dispatches a window CustomEvent "av-launch-file" with detail { name, text }.
+     - FILE HANDLING: when window.launchQueue exists, its consumer reads the launched file:
+       .anvl (case-insensitive) is decoded as text, handed to avProjOpenText(name, text) when
+       that seam exists (av_proj.js), else dispatched as a window CustomEvent "av-launch-file"
+       with detail { name, text }; EVERY other extension keeps the File INTACT and routes to the
+       import funnel avImportFiles([file]) (av_import.js) - never decoded as text (R18b D7).
      - PROOF: avPwaProof() RETURNS one line - PWA SELFTEST {"supported":...,"installPath":...}
        (app_core appends it under ?avtest=1; this module never prints and never calls avTestLine).
 
@@ -78,7 +80,7 @@ const avPwa = {
   iosHint: false,
   launchQueue: false,        /* a launchQueue consumer was installed */
   launchCount: 0,
-  lastLaunch: null,          /* { name, chars, via } */
+  lastLaunch: null,          /* { name, chars, via } or { name, ext, via:"import" } (R18b) */
   launchNote: "",
   updateNote: "",
   reloadWanted: false,       /* set by the update chip click - the only reload path */
@@ -594,6 +596,20 @@ function avPwaLaunchHandoff(name, text) {
   return "none";
 }
 
+/* the lowercased extension of a launched file name ("" when there is none) - R18b */
+function avPwaExtOf(name) {
+  try {
+    const n = (name == null) ? "" : String(name);
+    const i = n.lastIndexOf(".");
+    if (i < 0 || i >= n.length - 1) return "";
+    return n.slice(i + 1).toLowerCase();
+  } catch (e) { return ""; }
+}
+
+/* R18b (D7): .anvl (case-insensitive) keeps the text route; EVERY other extension - known or
+   unknown - keeps the File INTACT and routes to the import funnel avImportFiles([file])
+   (av_import.js, which sniffs and refuses honestly); a non-anvl file is NEVER decoded as text,
+   and an absent funnel is an honest launchNote, never a throw. */
 async function avPwaLaunchHandle(params) {
   const s = avPwa;
   try {
@@ -602,6 +618,26 @@ async function avPwaLaunchHandle(params) {
     let file = h0;
     if (typeof h0.getFile === "function") file = await h0.getFile();
     const name = (file && file.name != null && String(file.name)) ? String(file.name) : "launched.anvl";
+    const ext = avPwaExtOf(name);
+    if (ext !== "anvl") {
+      s.launchCount += 1;
+      s.launchNote = "";
+      let fn = null;
+      try { if (typeof avImportFiles === "function") fn = avImportFiles; } catch (e) { fn = null; }
+      if (fn) {
+        try {
+          const r = fn([file]);
+          if (r && typeof r.then === "function") {
+            try { r.then(null, function (e) { avPwaErr("avImportFiles rejected: " + avPwaErrText(e)); }); } catch (e2) { /* ok */ }
+          }
+        } catch (e) { s.launchNote = "the launched file could not be imported"; avPwaErr("launch import threw: " + avPwaErrText(e)); }
+      } else {
+        s.launchNote = "the import module is not loaded";
+      }
+      s.lastLaunch = { name: name, ext: ext, via: "import" };
+      avPwaSync();
+      return true;
+    }
     let text = "";
     if (file && typeof file.text === "function") text = await file.text();
     else if (file && typeof file.arrayBuffer === "function") text = avPwaDecodeUtf8(await file.arrayBuffer());
@@ -733,7 +769,7 @@ function avPwaState() {
       iosHint: s.iosHint === true,
       launchQueue: s.launchQueue === true,
       launchCount: s.launchCount,
-      lastLaunch: s.lastLaunch ? { name: s.lastLaunch.name, chars: s.lastLaunch.chars, via: s.lastLaunch.via } : null,
+      lastLaunch: s.lastLaunch ? { name: s.lastLaunch.name, chars: s.lastLaunch.chars, ext: s.lastLaunch.ext, via: s.lastLaunch.via } : null,
       launchNote: s.launchNote,
       updateNote: s.updateNote,
       reloading: s.reloading === true,

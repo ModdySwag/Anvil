@@ -39,6 +39,18 @@
       "accept": {
         "application/x-anvil-project": [
           ".anvl"
+        ],
+        "audio/wav": [
+          ".wav"
+        ],
+        "audio/mpeg": [
+          ".mp3"
+        ],
+        "audio/midi": [
+          ".mid"
+        ],
+        "application/zip": [
+          ".zip"
         ]
       }
     }

@@ -1451,6 +1451,20 @@ async function main() {
     && r17b.labels.indexOf('Import folder...') >= 0 && r17b.labels.indexOf('Library...') >= 0,
     JSON.stringify(r17b.labels));
 
+  /* R18b: linked source folders - the section mounts in the hub card + the facade shape */
+  const r18bR = await ev(`(() => {
+    try { if (typeof window.__avZoneAuto === 'function') window.__avZoneAuto('#av-import'); } catch (e) {}
+    const host = document.getElementById('av-sources-host');
+    const sec = host ? !!host.querySelector('.av-sources') : false;
+    const f = window.__avSources || {};
+    const fns = ['link', 'scan', 'importNew', 'unlink', 'reconnect', 'setFs', 'list'].filter(k => typeof f[k] === 'function');
+    return { host: !!host, sec: sec, version: String(f.version || ''), fns: fns.length, fsKind: typeof f.fsKind === 'function' ? f.fsKind() : null };
+  })()`);
+  const r18b = r18bR.value || {};
+  check('R18b linked sources: section mounted in the hub card + __avSources facade complete',
+    r18b.host === true && r18b.sec === true && r18b.version === 'r18b.0' && r18b.fns === 7,
+    JSON.stringify(r18b));
+
   /* R18a layout guard: no text button overflows its box (the owner-clip defect class --
      a text label on the fixed .av-btn 26x26 icon box wraps/spills and collides with its
      neighbour; swept across all zones so the class cannot recur silently). */

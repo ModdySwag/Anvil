@@ -1,6 +1,6 @@
-index.html sha256 (before): a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
+index.html sha256 (before): 4614fbe1d5cbd5e64be456343d26cdcacc10328838852b5a90e9aec715bd7775
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sample-1791495094924
+cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sample-1791497280630
  ok   boot: data-av-ready flips
  ok   sample core mounted: avSampleStore + API + handle + ≤32 cap  -> {"store":true,"api":true,"handle":true,"cap":32,"count":0,"inited":true}
  ok   sample card mounted: #av-sample-host + drop zone + file input + list
@@ -18,9 +18,9 @@ cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sample-17914950
  ok   preview: PREVIEW button click starts the one-shot (lastPreview id match)
  ok   witness: own AnalyserNode armed on the master tap of the preview ctx  -> same ctx as pre-arm
    · one-shot ended (lastPreview duration ≈ 2 s)
- ok   preview WITNESSED on the master tap: NON-SILENT (own AnalyserNode, never panel reads)  -> rmsMax=0.28600073750349403 frames=148 loudFrames=117
+ ok   preview WITNESSED on the master tap: NON-SILENT (own AnalyserNode, never panel reads)  -> rmsMax=0.2852561339744198 frames=148 loudFrames=117
  ok   preview WITNESSED: dominant frequency ≈ 440 Hz (±5%)  -> peakHz=439.453125 (bin 2.93 Hz · fft 16384)
- ok   preview WITNESSED: spectral peak well above the floor  -> peakDB=-21.65426254272461 dB · lit bins=7222
+ ok   preview WITNESSED: spectral peak well above the floor  -> peakDB=-21.654157638549805 dB · lit bins=7225
  ok   preview: one-shot span ≈ 2 s (loud window 1.5–2.6 s)  -> span=1934 ms
  ok   preview: silence after the one-shot ends (control)  -> rmsNow=0
  ok   import B (file-input fallback path): entry added  -> {"ok":true}
@@ -28,11 +28,11 @@ cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sample-17914950
  ok   import C (drop onto #av-sample-host itself): entry added  -> {"ok":true,"path":"drop","err":null}
  ok   import C: entry identity (name kept)  -> {"id":"s3","name":"rig-host-330.wav"}
  ok   registry: ✕ removes entry C from the DOM + the registry (count 3 → 2)  -> {"byId":false,"row":false,"count":2}
-   · final sample snap: {"version":"p2.0","count":2,"max":32,"pending":0,"bytes":460800,"inited":true,"host":true,"active":null,"lastPreview":{"id":"s1","at":3117.599999964237},"ctx":null,"engineReady":true,"lastError":null,"entries":[{"id":"s1","name":"rig-440-noise.wav","duration":2,"sampleRate":48000,"channels":1,"frames":96000,"bytes":384000,"peak":0.5712548494338989,"spread":1.108656406402588},{"id":"s2","name":"rig-input-660.wav","duration":0.4,"sampleRate":48000,"channels":1,"frames":19200,"bytes":76800,"peak":0.39999446272850037,"spread":0.7998921275138855}]}
+   · final sample snap: {"version":"p2.0","count":2,"max":32,"pending":0,"bytes":460800,"inited":true,"host":true,"active":null,"lastPreview":{"id":"s1","at":3034.800000011921},"ctx":null,"engineReady":true,"lastError":null,"entries":[{"id":"s1","name":"rig-440-noise.wav","duration":2,"sampleRate":48000,"channels":1,"frames":96000,"bytes":384000,"peak":0.5712548494338989,"spread":1.108656406402588},{"id":"s2","name":"rig-input-660.wav","duration":0.4,"sampleRate":48000,"channels":1,"frames":19200,"bytes":76800,"peak":0.39999446272850037,"spread":0.7998921275138855}]}
  ok   zero page errors
  ok   screenshot: renders/p2-sample-suite.png (sample card, scale 2)  -> 88656 bytes · clip 1010×236 @2x
-index.html sha256 (after): a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
- ok   freeze: index.html sha256 = pinned  -> pinned a85af992e99e…
+index.html sha256 (after): 4614fbe1d5cbd5e64be456343d26cdcacc10328838852b5a90e9aec715bd7775
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 4614fbe1d5cbd5e64be456343d26cdcacc10328838852b5a90e9aec715bd7775
+ ok   freeze: index.html sha256 = pinned  -> pinned 4614fbe1d5cb…
 
 29 passed, 0 failed

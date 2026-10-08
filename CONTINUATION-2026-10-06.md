@@ -2325,21 +2325,21 @@ Resume phrase: **"continue anvil"**.
   file_handlers) -> R19 `.avpack` -> R20 work persistence. Carried: quiet bench re-run
   (owed/optional) - P.2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS.
 
-### Session-end verify-state (2026-10-09 - R18a CLOSED; copy-paste block for the next session)
+### Session-end verify-state (2026-10-09 - R18b CLOSED; copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -5                                         # HEAD = the R18a close commit (addendum 61)
+    git log --oneline -5                                         # HEAD = the R18b close commit (addendum 63)
     git status --short                                           # clean except `?? cache/`
-    curl -s https://moddys.net/anvil/index.html | sha256sum      # = a85af992... (frozen, live)
+    curl -s https://moddys.net/anvil/index.html | sha256sum      # = 4614fbe1... (frozen, live)
     grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (unchanged - page-side wave)
-    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "75 passed, 0 failed" before ANY new work
-    # cdp_hub is pinned to a85af992 (33 checks incl. the R18a legs) - run it as the hub gate.
+    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "76 passed, 0 failed" before ANY new work
+    # cdp_hub is pinned to 4614fbe1 (39 checks incl. the R18a+R18b legs) - run it as the hub gate.
 
-R18a CLOSED + LIVE (addendum 61): frozen `a85af992` (4,045,196 B) at moddys.net/anvil; smoke 75 -
-hub 33 - import 24 - battery 25 + bench (96/128 monotone, loaded window) - leak 11/11; includes
-the owner-clip chop/pad layout fix + the app-wide .av-btn spill sweep + the new smoke layout
-guard. NEXT (docs/12): R18b (linked folders + PWA handlers) -> R19 `.avpack` -> R20 persistence.
-Resume phrase "continue anvil". Nothing in flight.
+R18b CLOSED + LIVE (addendum 63): frozen `4614fbe1` (4,120,547 B) at moddys.net/anvil (index + sw
++ manifest); smoke 76 - hub 39 - platform 52 - import 24 - battery 25 + bench (96/128 monotone,
+loaded window) - leak 11/11; linked source folders (FSA seam + av-sources-store + the hub section +
+File menu item) + the widened PWA file_handlers (.anvl .wav .mp3 .mid .zip). NEXT (docs/12): **R19
+user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothing in flight.
 
 ## Resume addendum 62 - 2026-10-09 (R18b OPENED: linked source folders + PWA file_handlers - contract + authors dispatched)
 
@@ -2363,3 +2363,28 @@ Resume phrase "continue anvil". Nothing in flight.
 - Carried: quiet bench re-run (owed/optional; not chased while the owner is active - addendum 58
   law) - P.2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - README status refresh (offered,
   awaiting the owner's word). Nothing else in flight.
+
+## Resume addendum 63 - 2026-10-09 (R18b LINKED SOURCE FOLDERS + PWA file_handlers SHIPPED - LIVE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `4614fbe1` (4,120,547 B; sw `b1f02503`; manifest
+  `7cb76e43`), live moddys.net/anvil (upload index+sw+manifest; scoped --verify = 0 not in sync;
+  live sha = frozen). Gates: smoke **76/76** - cdp_hub **39/39** (pinned; the battery lap hit the
+  known reload-wait flake on 2 legs -> solo re-run green, recorded) - cdp_platform **52/52**
+  (widened P1d) - cdp_import **24/24** - battery **25 suites** + bench exit=0 (realtime {light 64 -
+  fat 48}; offline knee 96/128 monotone - the recorded loaded-window class) - leak **11/11 LIVE** -
+  pins 22 swept.
+- SHIPPED: `src/av_sources.js` (FSA dir-picker seam mirroring avProjSetFs; IDB `av-sources-store`
+  v1 records with structured-cloneable handles; link / RE-SCAN / diff NEW-CHANGED-SAME-GONE vs the
+  R18a `source` provenance; import-new re-wraps as "<folder>/<relPath>" through the ONE funnel;
+  unlink; reconnect via requestPermission; facade `window.__avSources` r18b.0) +
+  `src/av_sources_ui.js` (the LINKED SOURCES section in the hub card: LINK FOLDER / rows with
+  RE-SCAN / IMPORT NEW (N) / UNLINK / RECONNECT, busy law) + File menu "Link source folder..." +
+  PWA widening (`avPwaLaunchHandle` routes everything except .anvl to `avImportFiles` with the File
+  intact; manifest accept = .anvl .wav .mp3 .mid .zip - the .zip gate kept per docs/12 s7.4).
+- AUTHORS: A-E (deleg_66d1a8c9) landed clean; parent integration ONE counted-assert script + ONE
+  named miss (the build.py js_parts entries - caught by the first triage chain + fixed); rigs green.
+- Commits: this close commit (sources modules + edits + rigs + pins + logs + manifest + renders +
+  contract s.11 + this addendum). Nothing running. NEXT (docs/12): **R19** - `.avpack` user packs
+  (collect & pack export / import route / CLI verifier) -> R20 work persistence. Carried: quiet
+  bench re-run (owed/optional) - P.2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - README status
+  refresh (offered) - owner-pass items (real launchQueue arrival + real FSA dir-picker click).

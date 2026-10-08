@@ -24,6 +24,7 @@ function avMenuDefs() {
       ["sep", null],
       ["Import sounds...", function () { return avMenuCall("avImportUiPick"); }],
       ["Import folder...", function () { return avMenuCall("avImportUiPickDir"); }],
+      ["Link source folder...", function () { return avMenuCall("avSourcesLink"); }],
       ["Library...", function () { return avMenuCall("avImportUiLibrary"); }],
       ["sep", null],
       ["Export stems (Deliver)", function () { avMenuCall("avZoneShow", "studio", { source: "menu" }); return avMenuCall("avPaletteDeliverHighlight"); }],

@@ -62,7 +62,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* freeze pin: the parent sets this to the frozen sha at the R17 freeze (64-hex); null until then.
    Pinned run = +1 check (the freeze check); unpinned run reports one FEWER check — mirroring
    cdp_import's structure with its pin absent. */
-const EXPECT_SHA = 'a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861';
+const EXPECT_SHA = '4614fbe1d5cbd5e64be456343d26cdcacc10328838852b5a90e9aec715bd7775';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -1043,6 +1043,250 @@ async function main() {
     && !!preRelink && preRelink.via === 'snap' && typeof preRelink.v === 'number' && preRelink.v >= 1
     && !!relinkWait && relinkWait.miss === 0 && relinkWait.name === 'r18-ghost.wav' && relinkWait.id === String(cand.id),
     JSON.stringify({ candidate: candR || cand, preRelink: preRelink, relink: rl.receipt || rl, after: relinkWait || null }));
+
+  /* ── 23c. R18b linked source folders: link · scan diff · import new · change+gone ·
+     reconnect · unlink (contract: verify/_r18b_wave.md §7; 6 checks). Every probe is
+     guarded per call — a not-yet-landed window.__avSources fails its leg honestly (the
+     info shows what was read), never throws. Fixtures are synthesized IN-PAGE: the stub
+     tree follows the D3 walk surface (dir {kind,name,values,queryPermission,
+     requestPermission}; file {kind,name,getFile}); the handle METHODS are defined
+     non-enumerable so the tree stays structured-cloneable when the store puts the record
+     into IDB (an enumerable function would DataCloneError the put). Legs 4-5 mutate the
+     tree through the window.__r18b handle. The drop legs below use relative receipt
+     arithmetic, so the +1 import run from importNew is safe; hub-bravo.wav stays
+     untouched (leg 26 loads it by name). ── */
+  const r18bInit = await ev(`(() => {
+    try {
+      if (typeof avWavEncode !== 'function') return { err: 'avWavEncode absent' };
+      const NE = function (o, k, v) { Object.defineProperty(o, k, { value: v, enumerable: false, configurable: true }); };
+      const mkBytes = function (frames, freq) {
+        const sr = 8000, n = Math.max(8, frames | 0);
+        const l = new Float32Array(n), r = new Float32Array(n);
+        for (let i = 0; i < n; i++) { const v = 0.4 * Math.sin(2 * Math.PI * freq * i / sr); l[i] = v; r[i] = v; }
+        return avWavEncode({ l: l, r: r, sr: sr, bits: 16, dither: false });
+      };
+      const boxes = { 'x.wav': { bytes: mkBytes(400, 523) }, 'sub/y.wav': { bytes: mkBytes(320, 659) }, 'kick.wav': { bytes: mkBytes(240, 131) } };
+      const perm = { v: 'granted' };
+      const mkFile = function (name, box) {
+        const h = { kind: 'file', name: name };
+        NE(h, 'getFile', function () { return Promise.resolve(new File([box.bytes], name)); });
+        return h;
+      };
+      const kids = { root: new Map(), sub: new Map() };
+      const mkDir = function (name, map) {
+        const h = { kind: 'directory', name: name };
+        NE(h, 'values', async function* () { const ent = Array.from(map.entries()); for (let i = 0; i < ent.length; i++) yield [ent[i][0], ent[i][1]]; });
+        NE(h, 'queryPermission', function () { return Promise.resolve(perm.v); });
+        NE(h, 'requestPermission', function () { perm.v = 'granted'; return Promise.resolve('granted'); });
+        return h;
+      };
+      const root = mkDir('RIGSRC', kids.root), sub = mkDir('sub', kids.sub);
+      kids.root.set('sub', sub);
+      kids.root.set('x.wav', mkFile('x.wav', boxes['x.wav']));
+      kids.root.set('kick.wav', mkFile('kick.wav', boxes['kick.wav']));
+      kids.sub.set('y.wav', mkFile('y.wav', boxes['sub/y.wav']));
+      window.__r18b = {
+        dir: root,
+        fs: { showDirectoryPicker: function () { return Promise.resolve(root); } },
+        setBytes: function (key, frames, freq) { try { boxes[key].bytes = mkBytes(frames, freq); return { len: boxes[key].bytes.byteLength }; } catch (e) { return { err: String((e && e.message) || e) }; } },
+        rmSub: function (name) { try { return { had: kids.sub.delete(name) }; } catch (e) { return { err: String((e && e.message) || e) }; } },
+        forcePrompt: function () {
+          try {
+            NE(root, 'queryPermission', function () { return Promise.resolve('prompt'); });
+            NE(root, 'requestPermission', function () {
+              NE(root, 'queryPermission', function () { return Promise.resolve('granted'); });
+              return Promise.resolve('granted');
+            });
+            return { ok: true };
+          } catch (e) { return { err: String((e && e.message) || e) }; }
+        }
+      };
+      return { ok: true, lens: { 'x.wav': boxes['x.wav'].bytes.byteLength, 'sub/y.wav': boxes['sub/y.wav'].bytes.byteLength, 'kick.wav': boxes['kick.wav'].bytes.byteLength } };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const r18bInitV = (r18bInit && r18bInit.value) || {};
+  const r18bLens = (r18bInitV && r18bInitV.lens) ? r18bInitV.lens : {};
+  let r18bId = null;
+  note('R18b fixtures: ' + JSON.stringify(r18bInitV));
+
+  /* the shared scan probe: normalizes a §3.4 receipt for the legs (arrays out; -1/null when
+     a surface is absent, so a failing leg's info shows exactly what was read) */
+  const r18bScanRun = async (idStr) => {
+    const r = await ev(`(async () => {
+      try {
+        const S = window.__avSources;
+        if (!S || typeof S.scan !== 'function') return { missing: true };
+        const rr = await S.scan(${JSON.stringify(String(idStr))});
+        const sc = (rr && rr.scan) || {};
+        const arr = function (x) { return Array.isArray(x) ? x : null; };
+        const nm = function (x) { return String((x && x.name) == null ? '' : x.name); };
+        const rl = function (x) { return String((x && x.relPath) == null ? '' : x.relPath); };
+        const sz = function (x) { return (x && typeof x.size === 'number') ? x.size : -1; };
+        return { ok: !!(rr && rr.ok), error: String((rr && rr.error) || ''),
+                 newN: arr(sc.new) ? sc.new.length : -1, newNames: arr(sc.new) ? sc.new.map(nm) : null,
+                 newRels: arr(sc.new) ? sc.new.map(rl) : null, newSizes: arr(sc.new) ? sc.new.map(sz) : null,
+                 changedN: arr(sc.changed) ? sc.changed.length : -1, changedNames: arr(sc.changed) ? sc.changed.map(nm) : null,
+                 changedSizes: arr(sc.changed) ? sc.changed.map(sz) : null,
+                 goneN: arr(sc.gone) ? sc.gone.length : -1, goneNames: arr(sc.gone) ? sc.gone.map(nm) : null,
+                 gonePaths: arr(sc.gone) ? sc.gone.map(function (x) { return String((x && x.path) == null ? '' : x.path); }) : null,
+                 same: sc.same, capped: sc.capped };
+      } catch (e) { return { err: String((e && e.message) || e) }; }
+    })()`);
+    return (r && r.value) || {};
+  };
+
+  /* 23c.1 link: setFs(stub) + link() -> ok · id · name "RIGSRC" · list shows it · fsKind "injected" */
+  const r18bLinkR = await ev(`(async () => {
+    try {
+      const S = window.__avSources;
+      if (!S || typeof S.setFs !== 'function' || typeof S.link !== 'function') return { missing: true };
+      const fx = window.__r18b && window.__r18b.fs;
+      if (!fx) return { noFixture: true, fixtureInit: window.__r18b ? 'present' : 'absent' };
+      S.setFs(fx);
+      let fk = null;
+      try { fk = (typeof S.fsKind === 'function') ? S.fsKind() : ((S.fsKind !== undefined) ? S.fsKind : null); } catch (e0) { fk = null; }
+      const lk = await S.link();
+      const lst = (typeof S.list === 'function') ? await S.list() : null;
+      const lid = lk ? String(lk.id == null ? '' : lk.id) : '';
+      const it = (lst && Array.isArray(lst.items)) ? (lst.items.find(function (x) { return String(x.id) === lid; }) || null) : null;
+      return { link: lk ? { ok: lk.ok, id: lid, name: String(lk.name == null ? '' : lk.name), error: String(lk.error || ''),
+                             scan: lk.scan ? { newN: (lk.scan.new || []).length, same: lk.scan.same, capped: lk.scan.capped } : null } : null,
+               fsKind: fk,
+               list: lst ? { ok: lst.ok, count: lst.count, n: (lst.items || []).length } : null,
+               it: it ? { id: String(it.id), name: String(it.name == null ? '' : it.name), mode: String(it.mode || ''), perm: String(it.perm == null ? '' : it.perm) } : null };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const r18bLinkV = (r18bLinkR && r18bLinkR.value) || {};
+  r18bId = (r18bLinkV && r18bLinkV.link && r18bLinkV.link.id) ? r18bLinkV.link.id : null;
+  check('R18b link: setFs(stub) + link() -> ok · id · name "RIGSRC" · list shows it · fsKind "injected"',
+    !!r18bId && !!r18bLinkV.link && r18bLinkV.link.ok === true && r18bLinkV.link.name === 'RIGSRC'
+    && r18bLinkV.fsKind === 'injected'
+    && !!r18bLinkV.list && r18bLinkV.list.ok === true && r18bLinkV.list.count >= 1
+    && !!r18bLinkV.it && r18bLinkV.it.id === r18bId && r18bLinkV.it.name === 'RIGSRC',
+    JSON.stringify(r18bLinkV));
+
+  /* 23c.2 scan diff: the fresh stub tree -> new 3 (sorted names · real sizes) · same 0 · gone 0 · capped false */
+  const r18bS2 = r18bId ? await r18bScanRun(r18bId) : {};
+  const r18bS2NamesOk = Array.isArray(r18bS2.newNames) && r18bS2.newNames.join(',') === 'kick.wav,x.wav,y.wav';
+  const r18bS2SizesOk = Array.isArray(r18bS2.newRels) && Array.isArray(r18bS2.newSizes)
+    && ['kick.wav', 'sub/y.wav', 'x.wav'].every(function (rp) {
+      const i = r18bS2.newRels.indexOf(rp);
+      return i >= 0 && r18bS2.newSizes[i] === r18bLens[rp];
+    });
+  check('R18b scan diff: the fresh stub tree -> new 3 (sorted names, real sizes) · same 0 · gone 0 · capped false',
+    !!r18bId && r18bS2.ok === true && r18bS2.newN === 3 && r18bS2NamesOk && r18bS2SizesOk
+    && r18bS2.same === 0 && r18bS2.goneN === 0 && r18bS2.capped === false,
+    JSON.stringify(r18bS2));
+
+  /* 23c.3 import new: importNew(id) -> count 3 · the library gains the three under
+     source.path "RIGSRC/" · re-scan -> new 0 · same 3 */
+  const r18bImpR = r18bId ? await ev(`(async () => {
+    try {
+      const S = window.__avSources;
+      if (!S || typeof S.importNew !== 'function') return { missing: true };
+      const r = await S.importNew(${JSON.stringify(String(r18bId || ''))});
+      return { ok: !!(r && r.ok), count: (r && typeof r.count === 'number') ? r.count : -1,
+               error: String((r && r.error) || ''), hasReceipt: !!(r && r.receipt) };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`) : {};
+  const r18bImpV = (r18bImpR && r18bImpR.value) || {};
+  const r18bLib3 = r18bId ? await waitFor(`(async () => {
+    try {
+      if (typeof avLibList !== 'function') return null;
+      const l = await avLibList();
+      if (!l || l.ok !== true) return null;
+      const items = l.items || [];
+      const hit = function (n) { return items.find(function (i) { return i && String(i.name) === n; }) || null; };
+      const want = ['x.wav', 'y.wav', 'kick.wav'];
+      if (!want.every(function (n) { return !!hit(n); })) return null;
+      const src = want.map(function (n) { const it = hit(n); return (it && it.source) ? String(it.source.path || '') : ''; });
+      return { count: l.count, withSrc: src.filter(function (p) { return p.indexOf('RIGSRC/') === 0; }).length, src: src };
+    } catch (e) { return null; }
+  })()`, 25000) : null;
+  const r18bS3 = r18bId ? await r18bScanRun(r18bId) : {};
+  check('R18b import new: importNew(id) count 3 · library gains the three under source.path "RIGSRC/" · re-scan new 0 · same 3',
+    !!r18bId && r18bImpV.ok === true && r18bImpV.count === 3
+    && !!r18bLib3 && r18bLib3.withSrc >= 1
+    && r18bS3.ok === true && r18bS3.newN === 0 && r18bS3.same === 3,
+    JSON.stringify({ imp: r18bImpV, lib: r18bLib3, scan: r18bS3 }));
+
+  /* 23c.4 change + gone: grow x.wav's bytes (same name · new size) + delete sub/y.wav ->
+     changed >= 1 (x.wav at the new size) · gone >= 1 (y.wav's library item, path under RIGSRC/) */
+  const r18bMutR = r18bId ? await ev(`(() => {
+    try {
+      const B = window.__r18b;
+      if (!B || typeof B.setBytes !== 'function' || typeof B.rmSub !== 'function') return { noFixture: true };
+      return { grow: B.setBytes('x.wav', 500, 523), rm: B.rmSub('y.wav') };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`) : {};
+  const r18bMutV = (r18bMutR && r18bMutR.value) || {};
+  const r18bS4 = r18bId ? await r18bScanRun(r18bId) : {};
+  const r18bChIx = Array.isArray(r18bS4.changedNames) ? r18bS4.changedNames.indexOf('x.wav') : -1;
+  const r18bChSize = (r18bChIx >= 0 && Array.isArray(r18bS4.changedSizes)) ? r18bS4.changedSizes[r18bChIx] : null;
+  const r18bGoIx = Array.isArray(r18bS4.goneNames) ? r18bS4.goneNames.indexOf('y.wav') : -1;
+  const r18bGoPath = (r18bGoIx >= 0 && Array.isArray(r18bS4.gonePaths)) ? r18bS4.gonePaths[r18bGoIx] : null;
+  const r18bGrowLen = (r18bMutV.grow && typeof r18bMutV.grow.len === 'number') ? r18bMutV.grow.len : -1;
+  check('R18b change+gone: grown x.wav -> CHANGED (new size) · deleted y.wav -> GONE (library item under RIGSRC/)',
+    !!r18bId && !!(r18bMutV.grow && r18bMutV.grow.len > 0) && !!(r18bMutV.rm && r18bMutV.rm.had === true)
+    && r18bS4.ok === true && r18bS4.changedN >= 1 && r18bChIx >= 0 && r18bChSize === r18bGrowLen
+    && r18bS4.goneN >= 1 && r18bGoIx >= 0 && String(r18bGoPath || '').indexOf('RIGSRC/') === 0,
+    JSON.stringify({ mut: r18bMutV, scan: r18bS4 }));
+
+  /* 23c.5 reconnect state: swap queryPermission -> "prompt" -> the list surfaces the
+     non-granted perm and a scan makes no fake success (§9) · reconnect(id) with
+     requestPermission -> "granted" -> perm "granted" (receipt + list) */
+  const r18bP5aR = r18bId ? await ev(`(async () => {
+    try {
+      const S = window.__avSources;
+      if (!S || typeof S.list !== 'function' || typeof S.scan !== 'function') return { missing: true };
+      const B = window.__r18b;
+      if (!B || typeof B.forcePrompt !== 'function') return { noFixture: true };
+      const sw = B.forcePrompt();
+      const lst = await S.list();
+      const it = (lst && Array.isArray(lst.items)) ? (lst.items.find(function (x) { return String(x.id) === ${JSON.stringify(String(r18bId || ''))}; }) || null) : null;
+      const scr = await S.scan(${JSON.stringify(String(r18bId || ''))});
+      return { swap: sw, listOk: !!(lst && lst.ok), listPerm: it ? String(it.perm == null ? '' : it.perm) : null,
+               scanOk: scr ? scr.ok : null, scanError: String((scr && scr.error) || ''), scanHasScan: !!(scr && scr.scan) };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`) : {};
+  const r18bP5bR = r18bId ? await ev(`(async () => {
+    try {
+      const S = window.__avSources;
+      if (!S || typeof S.reconnect !== 'function' || typeof S.list !== 'function') return { missing: true };
+      const rc = await S.reconnect(${JSON.stringify(String(r18bId || ''))});
+      const lst = await S.list();
+      const it = (lst && Array.isArray(lst.items)) ? (lst.items.find(function (x) { return String(x.id) === ${JSON.stringify(String(r18bId || ''))}; }) || null) : null;
+      return { ok: !!(rc && rc.ok), perm: String((rc && rc.perm) == null ? '' : (rc && rc.perm)), error: String((rc && rc.error) || ''),
+               listPerm: it ? String(it.perm == null ? '' : it.perm) : null };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`) : {};
+  const r18bP5a = (r18bP5aR && r18bP5aR.value) || {};
+  const r18bP5b = (r18bP5bR && r18bP5bR.value) || {};
+  check('R18b reconnect: "prompt" -> list perm !== "granted" + a scan with no fake success · reconnect() -> perm "granted"',
+    !!r18bId && !!(r18bP5a.swap && r18bP5a.swap.ok === true)
+    && typeof r18bP5a.listPerm === 'string' && r18bP5a.listPerm !== '' && r18bP5a.listPerm !== 'granted'
+    && r18bP5a.scanOk !== true
+    && r18bP5b.ok === true && r18bP5b.perm === 'granted' && r18bP5b.listPerm === 'granted',
+    JSON.stringify({ prompt: r18bP5a, reconnect: r18bP5b }));
+
+  /* 23c.6 unlink: unlink(id) -> removed · list count 0 · a scan of the old id refuses {ok:false} */
+  const r18bP6R = r18bId ? await ev(`(async () => {
+    try {
+      const S = window.__avSources;
+      if (!S || typeof S.unlink !== 'function' || typeof S.list !== 'function') return { missing: true };
+      const un = await S.unlink(${JSON.stringify(String(r18bId || ''))});
+      const lst = await S.list();
+      return { ok: !!(un && un.ok), removed: un ? un.removed : null, error: String((un && un.error) || ''),
+               count: (lst && typeof lst.count === 'number') ? lst.count : -1,
+               n: (lst && Array.isArray(lst.items)) ? lst.items.length : -1 };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`) : {};
+  const r18bP6 = (r18bP6R && r18bP6R.value) || {};
+  const r18bS6 = r18bId ? await r18bScanRun(r18bId) : {};
+  check('R18b unlink: removed · list count 0 · a scan of the old id refuses {ok:false}',
+    !!r18bId && r18bP6.ok === true && r18bP6.removed === true && r18bP6.count === 0
+    && r18bS6.ok === false,
+    JSON.stringify({ unlink: r18bP6, scan: { ok: r18bS6.ok, error: r18bS6.error } }));
 
   /* ── 24. drop-anywhere: a non-hub drop routes to the store pane and imports exactly once ── */
   const before24 = await receiptsNow();

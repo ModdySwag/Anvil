@@ -129,7 +129,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    PLATFORM: the frozen sha of the integrated index.html is not known until build.py runs and the
    parent pins it — EXPECT_SHA stays null; the rig never loosens the before === after check. */
-const EXPECT_SHA = "a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861";   /* sa-E pin slot — parent fills after the platform build (or --sha <hex>) */
+const EXPECT_SHA = "4614fbe1d5cbd5e64be456343d26cdcacc10328838852b5a90e9aec715bd7775";   /* sa-E pin slot — parent fills after the platform build (or --sha <hex>) */
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -881,8 +881,11 @@ async function main() {
     J(man ? { name: man.name, short_name: man.short_name, id: man.id, start_url: man.start_url, scope: man.scope, display: man.display, orientation: man.orientation, bg: man.background_color, theme: man.theme_color, cats: man.categories } : man));
   check('P1c manifest description: exact pin (em dash included)', !!man && man.description === EXPECT_DESC, J(man ? man.description : null));
   const fh = man && Array.isArray(man.file_handlers) ? man.file_handlers[0] : null;
-  check('P1d manifest file_handlers: [{ action ./index.html, accept application/x-anvil-project [.anvl] }]',
-    !!fh && fh.action === './index.html' && !!fh.accept && J(fh.accept['application/x-anvil-project']) === J(['.anvl']), J(man ? man.file_handlers : null));
+  const fhAccept = (fh && fh.accept && typeof fh.accept === 'object') ? fh.accept : null;   /* R18b: widened accept map */
+  const fhWant = { 'application/x-anvil-project': ['.anvl'], 'audio/wav': ['.wav'], 'audio/mpeg': ['.mp3'], 'audio/midi': ['.mid'], 'application/zip': ['.zip'] };
+  const fhKeys = fhAccept ? Object.keys(fhAccept) : [];
+  check('P1d manifest file_handlers: [{ action ./index.html, accept .anvl + .wav + .mp3 + .mid + .zip exact }]',
+    !!fh && fh.action === './index.html' && !!fhAccept && fhKeys.length === 5 && Object.keys(fhWant).every(k => J(fhAccept[k]) === J(fhWant[k])), J(man ? man.file_handlers : null));
   const icons = man && Array.isArray(man.icons) ? man.icons : [];
   const iconExp = [
     { src: './icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
