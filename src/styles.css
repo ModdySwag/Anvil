@@ -1725,5 +1725,83 @@ input[type="range"] { touch-action: none; }
 html, body { user-select: none; -webkit-user-select: none; }
 input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-select: text; }
 
+/* ============================================================================
+   R11 — THE TRANSPORT CONSOLE: the header as a hardware digital console — graphite faceplate,
+   transport key deck with LED dots, segment BPM window, OLED info glass. Pure CSS. */
+header.av-head.av-console {
+  gap: 8px; padding: 5px 10px 6px;
+  background: linear-gradient(180deg, #232a31 0%, #14191e 46%, #0b0f12 100%);
+  border-bottom: 1px solid #000;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), inset 0 -1px 0 rgba(0, 0, 0, .8), 0 2px 6px rgba(0, 0, 0, .5);
+  position: relative;
+}
+header.av-head.av-console::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px);
+}
+header.av-head.av-console .av-word {
+  font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: #eaf6f4; text-shadow: 0 0 10px rgba(46, 216, 201, .45), 0 1px 0 #000;
+}
+header.av-head.av-console #av-version { font-size: 9px; opacity: .85; }
+.avc-ledbig { width: 8px; height: 8px; border-radius: 50%; background: #1a2227; border: 1px solid #05080b; box-shadow: inset 0 1px 2px rgba(0,0,0,.9); flex: none; }
+.avc-ledbig.on { background: var(--teal); box-shadow: 0 0 8px var(--teal), inset 0 0 3px rgba(255,255,255,.6); }
+.avc-transport {
+  display: flex; align-items: center; gap: 6px; flex: none;
+  padding: 4px 7px; border-radius: 10px; border: 1px solid #05080b;
+  background: linear-gradient(180deg, #10151a 0%, #0a0e11 100%);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .85), 0 1px 0 rgba(255, 255, 255, .04);
+}
+.avc-key {
+  position: relative; min-width: 52px; height: 30px; padding: 0 14px 0 10px;
+  border: 1px solid #05080b; border-radius: 7px; cursor: pointer;
+  background: linear-gradient(180deg, #2c353e 0%, #1a2127 55%, #0e1317 100%);
+  color: #cfe7e3; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-align: left;
+  box-shadow: 0 2px 0 #05080b, inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.avc-key:hover { border-color: var(--teal-deep); color: #f2fffd; }
+.avc-key:active { transform: translateY(1px); box-shadow: 0 1px 0 #05080b, inset 0 1px 0 rgba(255, 255, 255, .07); }
+.avc-key::after {
+  content: ""; position: absolute; top: 5px; right: 6px; width: 5px; height: 5px; border-radius: 50%;
+  background: #10161b; box-shadow: inset 0 1px 1px #000;
+}
+.avc-key.on::after { background: var(--teal); box-shadow: 0 0 7px var(--teal), inset 0 0 2px #fff; }
+#avc-rec.on::after { background: #ff5544; box-shadow: 0 0 8px #ff5544, inset 0 0 2px #fff; }
+.avc-window {
+  position: relative; flex: none; border-radius: 8px; border: 1px solid #000;
+  background: radial-gradient(120% 160% at 50% 0%, #0a1417 0%, #04070a 70%);
+  box-shadow: inset 0 3px 9px rgba(0, 0, 0, .9), inset 0 0 18px rgba(46, 216, 201, .07), 0 1px 0 rgba(255, 255, 255, .05);
+  overflow: hidden;
+}
+.avc-window::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(160, 255, 244, .03) 0 1px, transparent 1px 3px);
+}
+.avc-bpm { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 66px; padding: 3px 10px 4px; }
+.avc-bpm-lab { font-family: var(--mono); font-size: 7.5px; letter-spacing: .3em; color: #3f6f68; }
+#avc-bpm-val {
+  font-family: var(--mono); font-size: 21px; line-height: 1.05; color: #6ff0e2;
+  text-shadow: 0 0 9px rgba(46, 216, 201, .85), 0 0 2px #fff; font-variant-numeric: tabular-nums;
+}
+.avc-oled { display: flex; flex-direction: column; gap: 1px; min-width: 250px; max-width: 400px; padding: 4px 10px 5px; }
+.avc-oled-row { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.avc-oled-lbl { font-family: var(--mono); font-size: 7.5px; letter-spacing: .22em; color: #3f6f68; flex: none; }
+.avc-val {
+  font-family: var(--mono); font-size: 10.5px; color: #9ff0e4; text-shadow: 0 0 6px rgba(46, 216, 201, .5);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.avc-oled-sys { display: flex; gap: 12px; flex-wrap: nowrap; overflow: hidden; }
+.avc-oled-sys .av-chip {
+  background: transparent; border: 0; padding: 0; font-family: var(--mono); font-size: 9px;
+  color: #6fc9bd; text-shadow: 0 0 5px rgba(46, 216, 201, .4); white-space: nowrap;
+}
+header.av-head.av-console > .av-btn,
+header.av-head.av-console #av-a11y-host .av-btn {
+  border: 1px solid #05080b; border-radius: 6px;
+  background: linear-gradient(180deg, #262f37 0%, #161c22 60%, #0d1216 100%);
+  box-shadow: 0 2px 0 #05080b, inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+header.av-head.av-console > .av-btn:hover { border-color: var(--teal-deep); }
+
 
 

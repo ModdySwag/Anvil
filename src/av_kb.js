@@ -324,6 +324,21 @@ function avKbHandle(e) {
 
   if (typing) return;   /* PF L1109: nothing single-letter fires from a focused field */
 
+  /* R11: Space = transport play/pause (industry standard; the console mirrors it). Falls through
+     when the target is a control (a focused button keeps native Space) or when typing above. */
+  if (e.key === " " && !mod && !e.altKey && !e.shiftKey) {
+    let onCtl = false;
+    try {
+      const t2 = e.target;
+      onCtl = !!(t2 && typeof t2.closest === "function" && t2.closest("button, select, input, textarea, a, [role=button]"));
+    } catch (e3) { onCtl = false; }
+    if (!onCtl && typeof avConsoleTransportToggle === "function") {
+      e.preventDefault();
+      try { avConsoleTransportToggle(); } catch (e4) { /* the transport never blocks keys */ }
+      return;
+    }
+  }
+
   /* (3) MIDI: the hardware owns the notes. One unmodified PC key must never fire an action
      mid-performance, so every printable key and the navigation cluster is swallowed here; the F-keys
      fall through (PF L1111-1123). ` still hands the piano back. */

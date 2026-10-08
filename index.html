@@ -1747,6 +1747,84 @@ input[type="range"] { touch-action: none; }
 html, body { user-select: none; -webkit-user-select: none; }
 input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-select: text; }
 
+/* ============================================================================
+   R11 — THE TRANSPORT CONSOLE: the header as a hardware digital console — graphite faceplate,
+   transport key deck with LED dots, segment BPM window, OLED info glass. Pure CSS. */
+header.av-head.av-console {
+  gap: 8px; padding: 5px 10px 6px;
+  background: linear-gradient(180deg, #232a31 0%, #14191e 46%, #0b0f12 100%);
+  border-bottom: 1px solid #000;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06), inset 0 -1px 0 rgba(0, 0, 0, .8), 0 2px 6px rgba(0, 0, 0, .5);
+  position: relative;
+}
+header.av-head.av-console::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(90deg, rgba(255,255,255,.014) 0 1px, transparent 1px 3px);
+}
+header.av-head.av-console .av-word {
+  font-weight: 700; letter-spacing: .22em; text-transform: uppercase;
+  color: #eaf6f4; text-shadow: 0 0 10px rgba(46, 216, 201, .45), 0 1px 0 #000;
+}
+header.av-head.av-console #av-version { font-size: 9px; opacity: .85; }
+.avc-ledbig { width: 8px; height: 8px; border-radius: 50%; background: #1a2227; border: 1px solid #05080b; box-shadow: inset 0 1px 2px rgba(0,0,0,.9); flex: none; }
+.avc-ledbig.on { background: var(--teal); box-shadow: 0 0 8px var(--teal), inset 0 0 3px rgba(255,255,255,.6); }
+.avc-transport {
+  display: flex; align-items: center; gap: 6px; flex: none;
+  padding: 4px 7px; border-radius: 10px; border: 1px solid #05080b;
+  background: linear-gradient(180deg, #10151a 0%, #0a0e11 100%);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .85), 0 1px 0 rgba(255, 255, 255, .04);
+}
+.avc-key {
+  position: relative; min-width: 52px; height: 30px; padding: 0 14px 0 10px;
+  border: 1px solid #05080b; border-radius: 7px; cursor: pointer;
+  background: linear-gradient(180deg, #2c353e 0%, #1a2127 55%, #0e1317 100%);
+  color: #cfe7e3; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-align: left;
+  box-shadow: 0 2px 0 #05080b, inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.avc-key:hover { border-color: var(--teal-deep); color: #f2fffd; }
+.avc-key:active { transform: translateY(1px); box-shadow: 0 1px 0 #05080b, inset 0 1px 0 rgba(255, 255, 255, .07); }
+.avc-key::after {
+  content: ""; position: absolute; top: 5px; right: 6px; width: 5px; height: 5px; border-radius: 50%;
+  background: #10161b; box-shadow: inset 0 1px 1px #000;
+}
+.avc-key.on::after { background: var(--teal); box-shadow: 0 0 7px var(--teal), inset 0 0 2px #fff; }
+#avc-rec.on::after { background: #ff5544; box-shadow: 0 0 8px #ff5544, inset 0 0 2px #fff; }
+.avc-window {
+  position: relative; flex: none; border-radius: 8px; border: 1px solid #000;
+  background: radial-gradient(120% 160% at 50% 0%, #0a1417 0%, #04070a 70%);
+  box-shadow: inset 0 3px 9px rgba(0, 0, 0, .9), inset 0 0 18px rgba(46, 216, 201, .07), 0 1px 0 rgba(255, 255, 255, .05);
+  overflow: hidden;
+}
+.avc-window::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(0deg, rgba(160, 255, 244, .03) 0 1px, transparent 1px 3px);
+}
+.avc-bpm { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 66px; padding: 3px 10px 4px; }
+.avc-bpm-lab { font-family: var(--mono); font-size: 7.5px; letter-spacing: .3em; color: #3f6f68; }
+#avc-bpm-val {
+  font-family: var(--mono); font-size: 21px; line-height: 1.05; color: #6ff0e2;
+  text-shadow: 0 0 9px rgba(46, 216, 201, .85), 0 0 2px #fff; font-variant-numeric: tabular-nums;
+}
+.avc-oled { display: flex; flex-direction: column; gap: 1px; min-width: 250px; max-width: 400px; padding: 4px 10px 5px; }
+.avc-oled-row { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+.avc-oled-lbl { font-family: var(--mono); font-size: 7.5px; letter-spacing: .22em; color: #3f6f68; flex: none; }
+.avc-val {
+  font-family: var(--mono); font-size: 10.5px; color: #9ff0e4; text-shadow: 0 0 6px rgba(46, 216, 201, .5);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.avc-oled-sys { display: flex; gap: 12px; flex-wrap: nowrap; overflow: hidden; }
+.avc-oled-sys .av-chip {
+  background: transparent; border: 0; padding: 0; font-family: var(--mono); font-size: 9px;
+  color: #6fc9bd; text-shadow: 0 0 5px rgba(46, 216, 201, .4); white-space: nowrap;
+}
+header.av-head.av-console > .av-btn,
+header.av-head.av-console #av-a11y-host .av-btn {
+  border: 1px solid #05080b; border-radius: 6px;
+  background: linear-gradient(180deg, #262f37 0%, #161c22 60%, #0d1216 100%);
+  box-shadow: 0 2px 0 #05080b, inset 0 1px 0 rgba(255, 255, 255, .1);
+}
+header.av-head.av-console > .av-btn:hover { border-color: var(--teal-deep); }
+
 
 
 
@@ -3192,6 +3270,21 @@ function avKbHandle(e) {
   }
 
   if (typing) return;   /* PF L1109: nothing single-letter fires from a focused field */
+
+  /* R11: Space = transport play/pause (industry standard; the console mirrors it). Falls through
+     when the target is a control (a focused button keeps native Space) or when typing above. */
+  if (e.key === " " && !mod && !e.altKey && !e.shiftKey) {
+    let onCtl = false;
+    try {
+      const t2 = e.target;
+      onCtl = !!(t2 && typeof t2.closest === "function" && t2.closest("button, select, input, textarea, a, [role=button]"));
+    } catch (e3) { onCtl = false; }
+    if (!onCtl && typeof avConsoleTransportToggle === "function") {
+      e.preventDefault();
+      try { avConsoleTransportToggle(); } catch (e4) { /* the transport never blocks keys */ }
+      return;
+    }
+  }
 
   /* (3) MIDI: the hardware owns the notes. One unmodified PC key must never fire an action
      mid-performance, so every printable key and the navigation cluster is swallowed here; the F-keys
@@ -69338,6 +69431,281 @@ if (typeof window !== "undefined" && window) {
     };
   } catch (e) { /* no window - nothing to publish */ }
 }
+
+
+/* Anvil — THE TRANSPORT CONSOLE (R11): the header rebuilt as a hardware-style digital console —
+   brand plate, a transport key deck (PLAY/PAUSE · STOP · SONG · REC with LED dots), a BPM segment
+   readout, and an OLED info window (pack / preset / engine / voices). Every existing header id is
+   preserved (suites query ids, never order): av-word stays the logotype, #av-version moves into the
+   plate, #av-tier + #av-voices MOVE into the OLED (their text updates are by id and keep landing),
+   and every other header button (BROWSE / undo / redo / ABOUT / NAV / a11y / pwa / help / piano) is
+   left exactly where it was — the console styles them as keycaps.
+
+   Wiring rides existing guarded funnels only: avSeqPlay/avSeqStop/avSeqIsPlaying (seq transport),
+   avSongPlay/avSongStop (song runner), avRecStart/avRecStop (the studio recorder). Space toggles
+   the transport globally from av_kb.js (which calls avConsoleTransportToggle). Never throws.
+
+   Public surface: avConsoleInit() -> bool · avConsoleTransportToggle() -> bool|null ·
+   avConsoleRefresh() · avConsoleProof() -> string · window.__avConsole { version, init,
+   lastAction(), transportToggle(), refresh() }. */
+
+"use strict";
+
+const AV_CONSOLE_VERSION = "r11.0";
+
+const avConsoleState = { ready: false, timer: 0, last: "", songOn: false, playOn: false, recOn: false };
+
+function avConsoleEl(id) {
+  try { return document.getElementById(id); } catch (e) { return null; }
+}
+function avConsoleSetLast(a) { try { avConsoleState.last = String(a || ""); } catch (e) { /* ok */ } }
+
+function avConsoleIsPlaying() {
+  try { return (typeof avSeqIsPlaying === "function") ? avSeqIsPlaying() === true : false; } catch (e) { return false; }
+}
+
+/* the Space key + the PLAY key both land here: play what you see / stop */
+function avConsoleTransportToggle() {
+  try {
+    if (avConsoleIsPlaying()) {
+      if (typeof avSeqStop === "function") avSeqStop();
+      avConsoleSetLast("stop");
+      avConsoleRefresh();
+      return false;
+    }
+    if (typeof avSeqPlay === "function") avSeqPlay();
+    avConsoleSetLast("play");
+    avConsoleRefresh();
+    return true;
+  } catch (e) { return null; }
+}
+
+function avConsoleSongToggle() {
+  try {
+    if (avConsoleState.songOn) {
+      if (typeof avSongStop === "function") avSongStop();
+      avConsoleState.songOn = false;
+      avConsoleSetLast("song-stop");
+    } else {
+      if (typeof avSongPlay === "function") avSongPlay();
+      avConsoleState.songOn = true;
+      avConsoleSetLast("song-play");
+    }
+    avConsoleRefresh();
+    return avConsoleState.songOn;
+  } catch (e) { return null; }
+}
+
+function avConsoleRecToggle() {
+  try {
+    if (avConsoleState.recOn) {
+      if (typeof avRecStop === "function") avRecStop();
+      avConsoleSetLast("rec-stop");
+    } else {
+      if (typeof avRecStart === "function") avRecStart();
+      avConsoleSetLast("rec-start");
+    }
+  } catch (e) { /* the recorder card reports its own errors */ }
+  avConsoleRefresh();
+  return avConsoleState.recOn;
+}
+
+/* ---------- the reads (polls) ---------- */
+
+function avConsoleBankText() {
+  try {
+    const ps = document.querySelector("select.av-bank-pack");
+    const pr = document.querySelector("select.av-bank-preset");
+    const pt = (ps && ps.selectedIndex >= 0 && ps.options[ps.selectedIndex]) ? ps.options[ps.selectedIndex].textContent : "";
+    const rt = (pr && pr.selectedIndex >= 0 && pr.options[pr.selectedIndex]) ? pr.options[pr.selectedIndex].textContent : "";
+    return { pack: String(pt || "").trim() || "\u2014", preset: String(rt || "").trim() || "\u2014" };
+  } catch (e) { return { pack: "\u2014", preset: "\u2014" }; }
+}
+
+function avConsoleBpm() {
+  try {
+    const v = (typeof avParams !== "undefined" && avParams) ? Number(avParams.bpm) : 120;
+    return isFinite(v) ? Math.max(20, Math.min(300, Math.round(v))) : 120;
+  } catch (e) { return 120; }
+}
+
+/* one refresh pass: LEDs + readouts. Called by the 400 ms interval + after every action. */
+function avConsoleRefresh() {
+  try {
+    const play = avConsoleEl("avc-play");
+    const rec = avConsoleEl("avc-rec");
+    const song = avConsoleEl("avc-song");
+    const power = avConsoleEl("avc-power");
+    const bpmEl = avConsoleEl("avc-bpm-val");
+    const packEl = avConsoleEl("avc-pack");
+    const presetEl = avConsoleEl("avc-preset");
+    const playing = avConsoleIsPlaying();
+    if (playing !== avConsoleState.playOn) {
+      avConsoleState.playOn = playing;
+      if (play) {
+        play.classList.toggle("on", playing);
+        play.textContent = playing ? "\u275A\u275A PAUSE" : "\u25B6 PLAY";
+        play.setAttribute("aria-label", playing ? "Pause (Space)" : "Play (Space)");
+      }
+    }
+    /* the recorder LED mirrors the REAL recorder state when the card exposes it (.av-rec-on) */
+    let recOn = avConsoleState.recOn;
+    try {
+      const cardRec = document.querySelector(".av-rec-on");
+      if (cardRec) recOn = true;
+      else if (document.querySelector(".av-rec-btn")) recOn = false;
+    } catch (e) { /* card not mounted: keep the local flag */ }
+    if (recOn !== avConsoleState.recOn) {
+      avConsoleState.recOn = recOn;
+      if (rec) rec.classList.toggle("on", recOn);
+    }
+    if (song) song.classList.toggle("on", avConsoleState.songOn === true);
+    if (power) {
+      let engReady = false;
+      try { engReady = !!(window.__avEngine && window.__avEngine.ready); } catch (e2) { engReady = false; }
+      power.classList.toggle("on", engReady);
+    }
+    if (bpmEl) {
+      const b = String(avConsoleBpm());
+      if (bpmEl.textContent !== b) bpmEl.textContent = b;
+    }
+    if (packEl || presetEl) {
+      const bt = avConsoleBankText();
+      if (packEl && packEl.textContent !== bt.pack) packEl.textContent = bt.pack;
+      if (presetEl && presetEl.textContent !== bt.preset) presetEl.textContent = bt.preset;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the build (idempotent; appends into header.av-head, moves nothing but the chips) ---------- */
+
+function avConsoleMkKey(id, label, aria, fn) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.id = id;
+  b.className = "avc-key";
+  b.textContent = label;
+  b.setAttribute("aria-label", aria);
+  b.title = aria;
+  b.addEventListener("click", function () { try { fn(); } catch (e) { /* key never throws */ } });
+  return b;
+}
+
+function avConsoleInit() {
+  try {
+    if (avConsoleState.ready) return true;
+    if (typeof document === "undefined" || !document) return false;
+    const head = document.querySelector("header.av-head");
+    if (!head) return false;
+    if (avConsoleEl("avc-play")) { avConsoleState.ready = true; return true; }
+    head.classList.add("av-console");
+
+    /* the transport deck */
+    const deck = document.createElement("div");
+    deck.className = "avc-transport";
+    deck.setAttribute("role", "group");
+    deck.setAttribute("aria-label", "Transport");
+    deck.appendChild(avConsoleMkKey("avc-play", "\u25B6 PLAY", "Play / pause (Space)", avConsoleTransportToggle));
+    deck.appendChild(avConsoleMkKey("avc-stop", "\u25A0 STOP", "Stop the transport", function () {
+      try { if (typeof avSeqStop === "function") avSeqStop(); } catch (e) { /* ok */ }
+      try { if (typeof avSongStop === "function" && avConsoleState.songOn) avSongStop(); } catch (e) { /* ok */ }
+      avConsoleState.songOn = false;
+      avConsoleSetLast("stop");
+      avConsoleRefresh();
+    }));
+    deck.appendChild(avConsoleMkKey("avc-song", "SONG", "Play / stop the song arrangement", avConsoleSongToggle));
+    deck.appendChild(avConsoleMkKey("avc-rec", "\u25CF REC", "Record (studio recorder)", avConsoleRecToggle));
+
+    /* the BPM segment window */
+    const bpm = document.createElement("div");
+    bpm.className = "avc-window avc-bpm";
+    bpm.innerHTML = '<span class="avc-bpm-lab">BPM</span><span id="avc-bpm-val" aria-label="Tempo">120</span>';
+
+    /* the OLED info window: PACK / PRESET + the moved engine/voices chips */
+    const oled = document.createElement("div");
+    oled.className = "avc-window avc-oled";
+    oled.setAttribute("aria-label", "Console readouts");
+    oled.innerHTML =
+      '<div class="avc-oled-row"><span class="avc-oled-lbl">PACK</span><span class="avc-val" id="avc-pack">\u2014</span></div>' +
+      '<div class="avc-oled-row"><span class="avc-oled-lbl">PRESET</span><span class="avc-val" id="avc-preset">\u2014</span></div>' +
+      '<div class="avc-oled-row avc-oled-sys" id="avc-sys"></div>';
+
+    /* the power LED next to the logotype */
+    const power = document.createElement("span");
+    power.className = "avc-ledbig";
+    power.id = "avc-power";
+    power.setAttribute("aria-hidden", "true");
+
+    const word = head.querySelector(".av-word");
+    if (word && word.parentNode !== head) { try { head.insertBefore(word, head.firstChild); } catch (e) { /* ok */ } }
+    const spacer = head.querySelector(".av-spacer");
+    const anchor = (spacer && spacer.parentNode === head) ? spacer : null;
+    if (anchor) {
+      head.insertBefore(deck, anchor);
+      head.insertBefore(bpm, anchor);
+      head.insertBefore(oled, anchor);
+    } else {
+      head.appendChild(deck); head.appendChild(bpm); head.appendChild(oled);
+    }
+    if (word) { try { head.insertBefore(power, word.nextSibling); } catch (e) { head.insertBefore(power, head.firstChild); } }
+    else head.insertBefore(power, head.firstChild);
+
+    /* move the engine + voices chips into the OLED sys row (ids preserved; text updates by id) */
+    try {
+      const sys = avConsoleEl("avc-sys");
+      const tier = avConsoleEl("av-tier");
+      const voices = avConsoleEl("av-voices");
+      if (sys && tier) sys.appendChild(tier);
+      if (sys && voices) sys.appendChild(voices);
+    } catch (e) { /* chips stay wherever they are — the console still works */ }
+
+    /* one interval for every poll; never duplicated */
+    if (!avConsoleState.timer) {
+      try { avConsoleState.timer = setInterval(avConsoleRefresh, 400); } catch (e) { avConsoleState.timer = 0; }
+    }
+
+    /* proof (readable at ?avtest=1 via the house helper when present) */
+    try {
+      if (typeof avTestLine === "function") { const p = avConsoleProof(); if (p) avTestLine(p, "av-consoletest"); }
+    } catch (e) { /* proof is a nicety */ }
+
+    avConsoleRefresh();
+    avConsoleState.ready = true;
+    return true;
+  } catch (e) {
+    console.warn("[anvil] console init failed", e);
+    return false;
+  }
+}
+
+function avConsoleProof() {
+  let head = false;
+  try { head = document.querySelector("header.av-head.av-console") !== null; } catch (e) { head = false; }
+  return "CONSOLE SELFTEST " + JSON.stringify({
+    v: AV_CONSOLE_VERSION,
+    ready: avConsoleState.ready === true,
+    head: head,
+    play: avConsoleState.playOn === true,
+    rec: avConsoleState.recOn === true,
+    last: avConsoleState.last,
+  });
+}
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avConsole = {
+      version: AV_CONSOLE_VERSION,
+      init: function () { return avConsoleInit(); },
+      lastAction: function () { return avConsoleState.last; },
+      transportToggle: function () { return avConsoleTransportToggle(); },
+      refresh: function () { return avConsoleRefresh(); },
+    };
+  } catch (e) { /* no window - nothing to publish */ }
+}
+
+/* boot: self-init at parse time (the header + chips are already in the DOM above the script) */
+try { avConsoleInit(); } catch (e) { /* console boots best-effort */ }
 
 
 /* Anvil — core shell (Phase 0). Boot contract: arm the master tap FIRST, then mount the knob

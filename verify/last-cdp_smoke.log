@@ -50,6 +50,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R9 chrome: every zone card carries the module head + float button - LEVELS, FAMILY and ROADMAP included  -> {"cards":23,"withHead":23,"withFloat":23,"lvMenu":true,"lvFloat":true,"famToggle":true,"rdMenu":true,"rdFloat":true}
  ok   R9 pitch+fluidity: PITCH/FINE knobs bound + commit funnel mirrors + drag defers to rAF and lands on release  -> {"p":{"knobs":[true,true,true,true],"bound":[true,true,true,true],"mirror":25,"back":0,"n0":0.534,"mid":0.534,"end":0.5945},"r":{"settled":0.7687,"dragging":false,"restored":0.534}}
  ok   R10 no-select: body + card prose are user-select:none while text surfaces (textarea/input) stay selectable  -> {"body":"none","note":"none","ta":"text","inp":"text"}
+ ok   R11 console: transport deck + BPM segment + OLED (pack/preset/sys) in the header, every legacy id intact, BPM live  -> {"cls":true,"play":true,"stop":true,"song":true,"rec":true,"bpm":true,"pack":true,"preset":true,"power":true,"api":"object","bpmText":"120","bpmVal":120,"leg":{"version":true,"tier":true,"voices":true,"browse":true,"undo":true,"about":true,"rail":true,"help":true,"piano":true},"tierInOled":true}
+ ok   R11 spacebar: Space toggles the transport (play then stop), the seq reports it  -> {"before":"","mid":"play","after":"stop","playing":true,"playing2":false}
  ok   zero page errors
 
-52 passed, 0 failed
+54 passed, 0 failed

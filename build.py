@@ -159,7 +159,8 @@ js_parts = [
     (SRC / "av_chrome.js").read_text(encoding="utf-8"),
     (SRC / "av_panels.js").read_text(encoding="utf-8"),  # R3: the float workspace (page module)
     (SRC / "av_rail.js").read_text(encoding="utf-8"),     # R4: the left module rail (page module)
-    (SRC / "av_menubar.js").read_text(encoding="utf-8"),  # R5: the Windows-style menu bar (page module)   # R2: module chrome — heads + menu, engine strip, header utilities (page module)
+    (SRC / "av_menubar.js").read_text(encoding="utf-8"),
+    (SRC / "av_console.js").read_text(encoding="utf-8"),  # R11: the LED/OLED transport console (page module)  # R5: the Windows-style menu bar (page module)   # R2: module chrome — heads + menu, engine strip, header utilities (page module)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]
 

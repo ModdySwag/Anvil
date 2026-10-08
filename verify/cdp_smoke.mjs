@@ -934,6 +934,49 @@ async function main() {
     && (r10.ta === 'text' || r10.ta === 'no-textarea')
     && (r10.inp === 'text' || r10.inp === 'no-text-input'), JSON.stringify(r10));
 
+  /* 6ca. R11: THE TRANSPORT CONSOLE — header rebuilt, every legacy id intact, OLED reads live */
+  const r11R = await ev(`(() => {
+    const gc = (id) => !!document.getElementById(id);
+    const head = document.querySelector('header.av-head');
+    return {
+      cls: !!(head && head.classList.contains('av-console')),
+      play: gc('avc-play'), stop: gc('avc-stop'), song: gc('avc-song'), rec: gc('avc-rec'),
+      bpm: gc('avc-bpm-val'), pack: gc('avc-pack'), preset: gc('avc-preset'), power: gc('avc-power'),
+      api: typeof window.__avConsole,
+      bpmText: (document.getElementById('avc-bpm-val') || {}).textContent || '',
+      bpmVal: (typeof avParams === 'object' && avParams) ? avParams.bpm : null,
+      leg: { version: gc('av-version'), tier: gc('av-tier'), voices: gc('av-voices'),
+             browse: gc('av-head-browse'), undo: gc('av-head-undo'), about: gc('av-head-about'),
+             rail: gc('av-head-rail'), help: gc('av-help'), piano: gc('btn-piano') },
+      tierInOled: !!(document.getElementById('avc-sys') && document.getElementById('avc-sys').contains(document.getElementById('av-tier'))),
+    };
+  })()`);
+  const r11 = r11R.value || {};
+  const r11l = r11.leg || {};
+  check('R11 console: transport deck + BPM segment + OLED (pack/preset/sys) in the header, every legacy id intact, BPM live',
+    r11.cls === true && r11.play === true && r11.stop === true && r11.song === true && r11.rec === true
+    && r11.bpm === true && r11.pack === true && r11.preset === true && r11.power === true && r11.api === 'object'
+    && r11.bpmVal !== null && r11.bpmText === String(Math.round(r11.bpmVal))
+    && r11l.version === true && r11l.tier === true && r11l.voices === true && r11l.browse === true
+    && r11l.undo === true && r11l.about === true && r11l.rail === true && r11l.help === true && r11l.piano === true
+    && r11.tierInOled === true, JSON.stringify(r11));
+
+  /* 6cb. R11: Space = transport (play then stop) through the console toggle */
+  const r11sR = await ev(`(() => {
+    window.__avConsole.refresh();
+    const before = window.__avConsole.lastAction();
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+    const mid = window.__avConsole.lastAction();
+    const playing = (typeof avSeqIsPlaying === 'function') ? avSeqIsPlaying() : null;
+    document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true }));
+    const after = window.__avConsole.lastAction();
+    const playing2 = (typeof avSeqIsPlaying === 'function') ? avSeqIsPlaying() : null;
+    return { before: before, mid: mid, after: after, playing: playing, playing2: playing2 };
+  })()`);
+  const r11s = r11sR.value || {};
+  check('R11 spacebar: Space toggles the transport (play then stop), the seq reports it',
+    r11s.mid === 'play' && r11s.after === 'stop' && r11s.playing === true && r11s.playing2 === false, JSON.stringify(r11s));
+
 
 
   /* 7. zero page errors */
