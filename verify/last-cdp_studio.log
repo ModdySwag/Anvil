@@ -1,6 +1,6 @@
-index.html sha256 (before): 4614fbe1d5cbd5e64be456343d26cdcacc10328838852b5a90e9aec715bd7775
+index.html sha256 (before): 095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-studiui-1791497165494
+cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-studiui-1791500159691
  ok   1 boot: data-av-ready flips
  ok   1 engine ctx: found · running · ScriptProcessor-capable · sr 48 k  -> {"found":true,"state":"running","sampleRate":48000,"scp":true}
  ok   1b card mounted: #av-studio + #av-studio-host + .av-studio root + wired marker (avStudioUiWired=1)
@@ -15,15 +15,15 @@ cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-studiui-1791497
  ok   2 avInputDisable() clean: input node gone (avInputNode() empty)  -> {"live":false}
  ok   2 re-enable works after a clean disable (idempotent enable/disable cycle)  -> {"ok":true,"deviceId":"default","label":"Fake Default Audio Input","channels":2,"sampleRate":48000}
  ok   3 metronome ON: planned-click ring ≥ 4 clicks, consecutive spacing = beat (60/bpm) ± 10 ms  -> {"on":true,"bpm":120,"clicks":5,"diffs":[0.5,0.5,0.5,0.5]}
- ok   3 metronome audible witness: ≥ 4 transients in ~2 bars on avMasterFor(ctx) (rig-owned analyser; peak > 0.02)  -> {"onsets":5,"max":"0.162","dthr":"0.036"}
+ ok   3 metronome audible witness: ≥ 4 transients in ~2 bars on avMasterFor(ctx) (rig-owned analyser; peak > 0.02)  -> {"onsets":5,"max":"0.079","dthr":"0.017"}
  ok   3 metronome OFF: no transients and silence over the next ~1.2 s  -> {"onsets":0,"max":"0.000"}
- ok   4 avMetroCountIn(2) resolves in ~2 bars (4000 ms ± 150 ms page-measured) with ok true  -> {"ms":"4077.100","r":{"ok":true,"bars":2,"seconds":4},"err":null}
+ ok   4 avMetroCountIn(2) resolves in ~2 bars (4000 ms ± 150 ms page-measured) with ok true  -> {"ms":"4076.900","r":{"ok":true,"bars":2,"seconds":4},"err":null}
  ok   4 count-in scheduled ≥ 8 clicks (ring delta ≥ 8 AND planner pushes ≥ 8)  -> ring delta=8 · planned delta=8
    · arm(true) -> true (a start with live input arms implicitly — av_takes.js ARMING note)
  ok   5 avTakesStart({lapSync:false}): ok · sr 48000 · block 4096 · lapSync false · channels ≥ 1 · offsetFrames ≥ 0 (honest)  -> {"ok":true,"sr":48000,"block":4096,"channels":2,"offsetFrames":480}
- ok   5 stop → frames ≈ 1.5·sr [−2 blocks, +settle+2 blocks ≈ 180 ms soak + one block alignment] · stopReason "stop" · exactly 1 take  -> {"frames":77824,"allowed":"63808…92480","wallS":"1.700","takes":[77824]}
- ok   5 take model: frames === receipt.frames · partial false · lap 1 · name "Take N" · rate 48000  -> {"id":"t1","name":"Take 1","frames":77824,"rate":48000,"channels":2,"lap":1,"partial":false,"offsetFrames":480,"startedCtxT":11.952,"seconds":1.6213333333333333}
- ok   5 take is NON-SILENT (beeps): export → avWavInfo ok · 16-bit · 48 k · blob + url · decode peak > 0.05  -> {"name":"anvil_take1_lap1.wav","bytes":311340,"url":true,"wavInfo":{"ok":true,"sampleRate":48000,"channels":2,"bits":16,"frames":77824},"peak":"1.000","nonzero":43155}
+ ok   5 stop → frames ≈ 1.5·sr [−2 blocks, +settle+2 blocks ≈ 180 ms soak + one block alignment] · stopReason "stop" · exactly 1 take  -> {"frames":77824,"allowed":"63808…92480","wallS":"1.696","takes":[77824]}
+ ok   5 take model: frames === receipt.frames · partial false · lap 1 · name "Take N" · rate 48000  -> {"id":"t1","name":"Take 1","frames":77824,"rate":48000,"channels":2,"lap":1,"partial":false,"offsetFrames":480,"startedCtxT":12.032,"seconds":1.6213333333333333}
+ ok   5 take is NON-SILENT (beeps): export → avWavInfo ok · 16-bit · 48 k · blob + url · decode peak > 0.05  -> {"name":"anvil_take1_lap1.wav","bytes":311340,"url":true,"wavInfo":{"ok":true,"sampleRate":48000,"channels":2,"bits":16,"frames":77824},"peak":"1.000","nonzero":43322}
  ok   5 avTakesDelete(id) true → the list empties  -> {"del":true,"list":[]}
  ok   5 two more quick takes recorded → list holds 2  -> {"list":["t2","t3"]}
  ok   5 avTakesKeepLast(1) -> 1; NOT enforced until a stop (list still 2 — the §2.3 law)  -> {"keepLast":1,"list":2}
@@ -37,9 +37,9 @@ cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-studiui-1791497
  ok   7 page left clean: takes disarmed + not recording + branch released · transport stopped · input disabled (node empty)  -> {"rec":false,"armed":false,"playing":false,"inNode":false,"wired":false}
  ok   7 zero page errors (exceptions · Log errors · console.error)  -> page errors=0
  ok   7 screenshot: renders/s1-studio-suite.png (the studio card, scale 2)  -> 110110 bytes · clip 1048×537 @2x
-index.html sha256 (after): 4614fbe1d5cbd5e64be456343d26cdcacc10328838852b5a90e9aec715bd7775
- ok   7 freeze: index.html sha256 before === after (unchanged by the run)  -> 4614fbe1d5cbd5e64be456343d26cdcacc10328838852b5a90e9aec715bd7775
- ok   7 freeze: index.html sha256 = pinned  -> pinned 4614fbe1d5cb…
+index.html sha256 (after): 095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085
+ ok   7 freeze: index.html sha256 before === after (unchanged by the run)  -> 095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085
+ ok   7 freeze: index.html sha256 = pinned  -> pinned 095b7e5d8dc0…
 
 37 passed, 0 failed
 STUDIO PASSED

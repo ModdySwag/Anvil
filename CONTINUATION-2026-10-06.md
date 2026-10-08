@@ -2457,6 +2457,31 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
 - Carried: quiet bench re-run - P.2 minBLEP - P4 follow-ups - PERFECT TUNINGS - README refresh -
   owner-pass items. Nothing else in flight.
 
+## Resume addendum 67 - 2026-10-09 (R19 CLOSED: user packs .avpack SHIPPED + LIVE - battery green, deployed, centring clip live)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085`
+  (4,179,606 B; sw `958f6524`, 7,344 B) at moddys.net/anvil (upload index+sw; scoped --verify = 0 not
+  in sync; live sha256 = frozen on both files). Gates: smoke **77** - cdp_hub **42** (3 new R19 legs) -
+  cdp_platform **52** - cdp_import **24** (unchanged) - avpack_check --selftest + file-mode PASS -
+  battery **25 suites ALL exit=0 + bench exit=0** (realtime {light 64 - fat 48}; offline knee **96/128
+  monotone** - the recorded loaded-window class) - leak **11/11 LIVE** - pins 22 swept -> 095b7e5d -
+  zero page errors.
+- SHIPPED: `src/av_pack.js` (.avpack = zip with manifest.json + verbatim item bytes; validate/detect/
+  build/importBytes + `__avPack` r19.0; real avZipBuild writer store method + AVZIP reader) -
+  `src/av_lib.js` (source.pack additive) - `src/av_import.js` (zip pre-pass pack route; ONE bundle row;
+  generic zips byte-stable) - `src/av_import_ui.js` (COLLECT & PACK (N) + pack:<id> chips) -
+  `verify/avpack_schema.mjs` (79-fixture self-check + drift probe) - `verify/avpack_check.mjs`
+  (strict CLI + --selftest).
+- OWNER CLIP NOW LIVE: the 09:00 centring fix (commit b8d47bd) - LIVE probe at 1920: consoleOff **0** -
+  tabOff **0** (`cache/r19/live_probe_r19.mjs`; renders/r19-live-center-1920.png + r19-live-hub-r19.png);
+  COLLECT & PACK present live; leak screenshot renders/r12-live-noavtest.png.
+- Commits: this close commit (pins + logs + renders + this addendum). NEXT (owner, unattended): **R21
+  IMPORT & LIBRARY redesign** (OWNER ASK below; contract verify/_r21_wave.md -> authors -> integrate ->
+  gates -> battery -> deploy -> live) then **R20 work persistence** to complete the roadmap.
+- Carried: quiet bench re-run (owed/optional - loaded-window class recorded; not chased while the owner
+  is active) - P.2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - README status refresh (offered) -
+  owner-pass items (real launchQueue arrival + real FSA dir-picker click). Nothing else in flight.
+
 ## OWNER ASK (2026-10-09) - IMPORT & LIBRARY redesign = wave R21 (STAGED; next after the R19 close)
 
 - Ask (recorded intent): full access to ALL loaded files but STREAMLINED navigation - the hub
