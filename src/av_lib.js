@@ -1,6 +1,7 @@
-/* av_lib.js - Anvil R15b SAMPLE PACKS: the LOCAL sample library. The ONE durable home for
-   user-imported sample-pack content (audio + MIDI patterns). Everything here is local:
-   nothing in this module touches the network, ever.
+/* av_lib.js - Anvil SAMPLE PACKS: the LOCAL sample library. The ONE durable home for
+   user-imported sample-pack content (audio + MIDI patterns; R15c adds EXS24 kits and
+   ADG/ALS/SerumPreset reference packs). Everything here is local: nothing in this module
+   touches the network, ever.
 
    Pins (verify/_r15b_wave.md section 4.4; receipt/record shapes are the section 2 shared spec,
    kept VERBATIM):
@@ -30,7 +31,8 @@
 
    Record shape: { id, v: 1, name, kind, format, size, at, meta, bytes (ArrayBuffer), via }
      id = "l" + Date.now().toString(36) + "-" + slug(name); slug [a-z0-9-], cap 40.
-     kind = "sample" | "pattern". via = the backend the record was actually written through.
+     kind = "sample" | "pattern" | "kit" | "refs" (R15c). via = the backend the record was
+     actually written through.
 
    Backends "idb" | "ls" | "mem" (always reportable). IndexedDB is the durable home; no
    IndexedDB -> the av-samples-ls localStorage map (records ride base64; a record over
@@ -55,6 +57,18 @@
                    explicit set - mirroring av_bank.js avBankSeqApply) -> avSeqUiSync (repaint
                    nicety) -> avUndoPush("seq", "import") (push AFTER load). Receipt pattern =
                    {name, bpm, notes} summary.
+     kit (R15c) -> resolve each meta.samples name (basename, case-insensitive) against the
+                   LIBRARY list at LOAD time; load the first 4 distinct resolved samples
+                   through the sample routes above; avSampleSendToEngine(entryId, slot i) for
+                   slots 0..3; build the zone v2 F64(144) table (s0/s1 fractions clamped to
+                   the decoded length); avEngineZones(zones) then avApplyParam("engine.kind",
+                   "sampler") (both guarded). Fewer than 1 resolved sample -> ok:false
+                   "no resolvable samples" and the engine is NEVER touched. Receipt
+                   {ok, slots, zones, skipped, error?}.
+     refs (R15c) -> re-return the persisted meta, NO session change: receipt {ok:true, refs,
+                   notes?, pattern?, meta} so the UI can offer the seq action for ALS items
+                   (the seq application itself stays the ONE avMid flow, driven from
+                   meta.pattern by its caller).
 
    Every cross-module call is typeof-guarded PER CALL. Never throws: every public entry point
    resolves a receipt / returns a sane value; try/catch wraps every reach. Promise plumbing
@@ -81,6 +95,9 @@ const AV_LIB_OPEN_CAP_MS = 1800;             /* hung-open give-up (mirrors av_st
 const AV_LIB_ADOPT_MS = 4000;                /* delay of the ONE late adoption attempt */
 const AV_LIB_LS_MAX_BYTES = 1.5 * 1024 * 1024;   /* LS tier refuses items over 1.5 MiB */
 const AV_LIB_LS_B64_MAX = Math.ceil((AV_LIB_LS_MAX_BYTES * 4) / 3) + 64;
+/* R15c: the meta cap must hold kit/refs metas (16 zones + 512 refs + a 4x64 pattern) - the
+   R15b flat-probe 4 KiB cap would drop them whole */
+const AV_LIB_META_MAX = 256 * 1024;
 const AV_LIB_ID_RE = /^l[a-z0-9-]{0,63}$/;   /* "l" + time36 + "-" + slug(40) */
 const AV_LIB_B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -158,12 +175,13 @@ function avLibToken(v, dflt, cap) {
   } catch (e) { return dflt; }
 }
 
-/* JSON-safe shallow meta copy (probes hand in flat objects; circular input -> {}) */
+/* JSON-safe meta copy (flat probe objects; R15c kit/refs metas ride the AV_LIB_META_MAX
+   bound; circular input -> {}) */
 function avLibMetaNorm(m) {
   try {
     if (!m || typeof m !== "object") return {};
     const s = JSON.stringify(m);
-    if (!s || s.length > 4096) return {};
+    if (!s || s.length > AV_LIB_META_MAX) return {};
     const o = JSON.parse(s);
     return (o && typeof o === "object" && !Array.isArray(o)) ? o : {};
   } catch (e) { return {}; }
@@ -192,12 +210,20 @@ function avLibMakeId(name) {
   return id;
 }
 
+/* the record kind vocabulary: sample | pattern | kit | refs ("" = not persistable) */
+function avLibKindNorm(v) {
+  try {
+    if (v === "sample" || v === "pattern" || v === "kit" || v === "refs") return v;
+  } catch (e) { /* none */ }
+  return "";
+}
+
 /* the list-facing view of a record: exactly {id, v, name, kind, format, size, at, meta} */
 function avLibMetaView(rec) {
   return {
     id: rec.id, v: 1,
     name: avLibStr(rec.name, rec.id, 120),
-    kind: (rec.kind === "pattern") ? "pattern" : "sample",
+    kind: (rec.kind === "pattern") ? "pattern" : avLibKindNorm(rec.kind) || "sample",
     format: avLibToken(rec.format, "", 12),
     size: avLibNum(rec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
     at: avLibNum(rec.at, 0, 0, 9e15),
@@ -220,7 +246,7 @@ function avLibRecNorm(rec, needBytes) {
     return {
       id: id, v: 1,
       name: avLibStr(rec.name, id, 120),
-      kind: (rec.kind === "pattern") ? "pattern" : "sample",
+      kind: (rec.kind === "pattern") ? "pattern" : avLibKindNorm(rec.kind) || "sample",
       format: avLibToken(rec.format, "", 12),
       size: avLibNum(rec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
       at: avLibNum(rec.at, 0, 0, 9e15),
@@ -250,7 +276,7 @@ function avLibPayloadView(pay) {
     return {
       id: id, v: 1,
       name: avLibStr(pay.name, id, 120),
-      kind: (pay.kind === "pattern") ? "pattern" : "sample",
+      kind: avLibKindNorm(pay.kind) || "sample",
       format: avLibToken(pay.format, "", 12),
       size: avLibNum(pay.size, 0, 0, AV_LIB_ITEM_MAX * 8),
       at: avLibNum(pay.at, 0, 0, 9e15),
@@ -290,12 +316,13 @@ function avLibExactBuf(u8) {
 }
 
 /* the import item (section 2 shape) -> the record fields this module persists.
-   result != "imported" items are SKIPPED (null); only sample/pattern kinds are material. */
+   result != "imported" items are SKIPPED (null); only sample/pattern/kit/refs kinds are
+   material. */
 function avLibItemNorm(item) {
   try {
     if (!item || typeof item !== "object" || Array.isArray(item)) return null;
     if (item.result !== "imported") return null;
-    const kind = (item.kind === "pattern") ? "pattern" : ((item.kind === "sample") ? "sample" : "");
+    const kind = avLibKindNorm(item.kind);
     if (!kind) return null;
     return {
       name: avLibStr(item.name, "item", 120),
@@ -868,7 +895,7 @@ async function avLibRemoveRun(id) {
   return { ok: false, id: id, error: "no item" };
 }
 
-/* ---------- load routes (sample by format; pattern via the seq core) ---------- */
+/* ---------- load routes (sample by format; pattern via the seq core; R15c kit + refs) ---------- */
 
 /* the session sample module (global first, then the __avSample facade) - null when absent */
 function avLibSampleStore() {
@@ -902,6 +929,8 @@ async function avLibLoadRun(id) {
   const rec = g.item;
   if (rec.kind === "pattern") return avLibLoadPattern(rec);
   if (rec.kind === "sample") return avLibLoadSample(rec);
+  if (rec.kind === "kit") return avLibLoadKit(rec);      /* R15c: EXS24 kits */
+  if (rec.kind === "refs") return avLibLoadRefs(rec);    /* R15c: ALS / Serum refs */
   return { ok: false, id: rec.id, kind: "", error: "unknown kind" };
 }
 
@@ -1038,6 +1067,162 @@ async function avLibLoadPattern(rec) {
   try { if (typeof avSeqUiSync === "function") avSeqUiSync(); } catch (e) { /* repaint is a nicety */ }
   try { if (typeof avUndoPush === "function") avUndoPush("seq", "import"); } catch (e) { /* undo is a nicety */ }
   return { ok: true, id: rec.id, kind: "pattern", pattern: avLibPatternSummary(feed, rec) };
+}
+
+/* ---------- R15c load routes: kits (EXS24) + refs (ALS / Serum) ---------- */
+
+/* the lowercase basename of a name (kit sample matching: basename, case-insensitive) */
+function avLibBaseLower(s) {
+  try {
+    const t = String(s == null ? "" : s);
+    const parts = t.split(/[\\/]+/);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (parts[i]) return parts[i].toLowerCase().replace(/[\u0000-\u001f\u007f]/g, "");
+    }
+  } catch (e) { /* none */ }
+  return "";
+}
+
+/* the decoded frame count of a just-loaded session entry (0 = unknown) */
+function avLibKitFrames(entryId, slot) {
+  try {
+    const store = avLibSampleStore();
+    if (store) {
+      try {
+        const e = (store.byId && store.byId[entryId]) ? store.byId[entryId] : null;
+        if (e && e.buffer && isFinite(e.buffer.length) && e.buffer.length > 0) return e.buffer.length;
+      } catch (e2) { /* try the sent record */ }
+      try {
+        const s = (Array.isArray(store.sent) && store.sent[slot]) ? store.sent[slot] : null;
+        if (s && isFinite(s.frames) && s.frames > 0) return s.frames;
+      } catch (e3) { /* unknown length */ }
+    }
+  } catch (e) { /* unknown */ }
+  return 0;
+}
+
+/* the kit route (section 3): resolve each meta.samples name (basename, case-insensitive)
+   against the LIBRARY list at LOAD time; load the first 4 distinct resolved samples through
+   the existing sample routes; send them to engine slots 0..3; build the zone v2 F64(144)
+   table (buf = the resolved sample's slot; s0/s1 fractions clamped to the decoded length) and
+   push it via avEngineZones; then set engine.kind = "sampler" through the ONE funnel. Zones
+   whose sample did not resolve (or beyond the 4-slot cap) are dropped and counted. Fewer than
+   1 resolved sample -> ok:false "no resolvable samples" and the engine is NEVER touched.
+   Receipt { ok, slots, zones, skipped, error? }. */
+async function avLibLoadKit(rec) {
+  const out = { ok: false, id: rec.id, kind: "kit", slots: 0, zones: 0, skipped: 0 };
+  try {
+    const meta = (rec.meta && typeof rec.meta === "object") ? rec.meta : {};
+    const mSamples = Array.isArray(meta.samples) ? meta.samples : [];
+    const mZones = Array.isArray(meta.zones) ? meta.zones : [];
+    const listR = await avLibListRun();
+    const list = (listR && listR.ok === true && Array.isArray(listR.items)) ? listR.items : [];
+    const chosen = [];
+    const chosenIds = {};
+    for (let i = 0; i < mSamples.length && chosen.length < 4; i++) {
+      const nm = avLibBaseLower(mSamples[i] && mSamples[i].name);
+      if (!nm) continue;
+      let hit = null;
+      for (let j = 0; j < list.length; j++) {
+        const it = list[j];
+        if (!it || it.kind !== "sample" || chosenIds[it.id]) continue;
+        if (avLibBaseLower(it.name) === nm) { hit = it; break; }
+      }
+      if (!hit) continue;
+      chosenIds[hit.id] = 1;
+      chosen.push(hit);
+    }
+    if (!chosen.length) { out.error = "no resolvable samples"; return out; }
+    /* load + send: slot i for the i-th chosen sample (engine slots 0..3) */
+    const slots = new Array(chosen.length);
+    const frames = new Array(chosen.length);
+    for (let i = 0; i < chosen.length; i++) {
+      slots[i] = null;
+      frames[i] = 0;
+      let full = null;
+      try { full = await avLibGetRecRun(chosen[i].id); } catch (e) { full = null; }
+      if (!full || full.ok !== true || !full.item) continue;
+      let loaded = null;
+      try { loaded = await avLibLoadSample(full.item); } catch (e) { loaded = null; }
+      if (!loaded || loaded.ok !== true || typeof loaded.entryId !== "string" || !loaded.entryId) continue;
+      let sent = false;
+      try {
+        if (typeof avSampleSendToEngine === "function") sent = (await avSampleSendToEngine(loaded.entryId, i)) === true;
+      } catch (e) { sent = false; }
+      if (sent !== true) continue;
+      slots[i] = i;
+      frames[i] = avLibKitFrames(loaded.entryId, i);
+    }
+    let used = 0;
+    for (let i = 0; i < slots.length; i++) if (slots[i] !== null) used += 1;
+    out.slots = used;
+    if (used < 1) { out.error = "samples could not be loaded"; return out; }
+    /* zone v2 table: 16 zones x [lo, hi, root, buf, vol, s0, s1, fIn, fOut]; missing fades 0 */
+    const table = new Float64Array(144);
+    let zi = 0, skipped = 0;
+    for (let z = 0; z < mZones.length; z++) {
+      const zn = (mZones[z] && typeof mZones[z] === "object") ? mZones[z] : null;
+      const refI = zn ? Math.round(avLibNum(zn.buf, -1, -1, 0xFFFFFFFF)) : -1;
+      const slot = (refI >= 0 && refI < slots.length && slots[refI] !== null) ? slots[refI] : null;
+      if (!zn || slot === null || zi >= 16) { skipped += 1; continue; }
+      const o = zi * 9;
+      const lo = avLibNum(zn.lo, 0, 0, 127);
+      let hi = avLibNum(zn.hi, lo, 0, 127);
+      if (hi < lo) hi = lo;
+      table[o + 0] = lo;
+      table[o + 1] = hi;
+      table[o + 2] = avLibNum(zn.root, 60, 0, 127);
+      table[o + 3] = slot;
+      table[o + 4] = avLibNum(zn.vol, 0.8, 0, 24);
+      const n = frames[refI] || 0;
+      let s0f = 0, s1f = 1;
+      if (n > 0) {
+        s0f = avLibNum(zn.s0, 0, 0, 0xFFFFFFFF) / n;      /* frames -> fraction */
+        s1f = avLibNum(zn.s1, 0, 0, 0xFFFFFFFF) / n;
+        if (!isFinite(s0f) || s0f < 0) s0f = 0;
+        if (s0f > 1) s0f = 1;                             /* clamped to the decoded length */
+        if (!isFinite(s1f) || s1f < 0) s1f = 0;
+        if (s1f > 1) s1f = 1;
+        if (!(s1f > s0f)) s1f = Math.min(1, s0f + 1 / n);
+      }
+      if (!(s1f > s0f)) s1f = 1;
+      table[o + 5] = s0f;
+      table[o + 6] = s1f;
+      table[o + 7] = avLibNum(zn.fIn, 0, 0, 2);
+      table[o + 8] = avLibNum(zn.fOut, 0, 0, 2);
+      zi += 1;
+    }
+    out.zones = zi;
+    out.skipped = skipped;
+    try { if (typeof avEngineZones === "function") avEngineZones(table); } catch (e) { /* best-effort */ }
+    try { if (typeof avApplyParam === "function") avApplyParam("engine.kind", "sampler"); } catch (e) { /* funnel optional */ }
+    out.ok = true;
+    return out;
+  } catch (e) {
+    out.ok = false;
+    out.error = avLibErrMsg(e);
+    return out;
+  }
+}
+
+/* the refs route (section 3): re-return the persisted meta - NO session change. The receipt
+   carries the refs/notes counts and the pattern (when present) so the UI can offer the seq
+   action for ALS items; the seq application itself is the ONE avMid flow, driven by the
+   caller from meta.pattern. Receipt { ok:true, refs, notes?, pattern?, meta }. */
+function avLibLoadRefs(rec) {
+  try {
+    const meta = (rec.meta && typeof rec.meta === "object") ? rec.meta : {};
+    let refs = 0;
+    if (typeof meta.refCount === "number" && isFinite(meta.refCount)) refs = Math.max(0, Math.round(meta.refCount));
+    else if (Array.isArray(meta.refs)) refs = meta.refs.length;
+    else if (Array.isArray(meta.wtRefs)) refs = meta.wtRefs.length;
+    const out = { ok: true, id: rec.id, kind: "refs", refs: refs, meta: meta };
+    if (typeof meta.noteCount === "number" && isFinite(meta.noteCount)) out.notes = Math.max(0, Math.round(meta.noteCount));
+    if (meta.pattern && typeof meta.pattern === "object" && !Array.isArray(meta.pattern)) out.pattern = meta.pattern;
+    return out;
+  } catch (e) {
+    return { ok: false, id: (rec && rec.id) ? rec.id : "", kind: "refs", refs: 0, error: "meta read failed" };
+  }
 }
 
 /* the {name, bpm, notes} summary for the load receipt (notes = active steps) */

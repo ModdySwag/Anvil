@@ -31,6 +31,12 @@
                           when it exists -- the select state is never faked
                   seq  -> avLibLoad(id) (patterns only; the button is disabled for samples)
                   del  -> avLibRemove(id) + refresh
+                R15c kinds: kit rows carry a KIT action [data-av-import-act=kit] -> avLibLoad(id)
+                ("kit loaded \u2014 N slots \u00b7 M zones" or the honest refusal) + DEL; refs
+                rows (ALS/Serum) carry SEQ ONLY when meta.pattern exists (the refs receipt
+                re-returns the meta; the SEQ wire applies the pattern through the ONE seq flow)
+                + DEL; serum refs rows carry no load-type action beyond their meta line; the
+                counts line gains " N kits" / " M refs" when above zero.
      . STATUS   #av-import-status -- every run/action result as one plain line ("imported N .
                 deferred N . refused N . X MB -> library" plus the first refusal reason when
                 any). BUSY: ONE op at a time (import run or library action) -- a second request
@@ -116,7 +122,7 @@
    NO DOM at top level (node-loadable -- the harness loads this text in a Function scope);
    every listener and every cross-module reach wrapped (never throws outward); no console
    noise; no new AudioContext (this card makes no sound); deterministic; ASCII-only source;
-   ONE writer (child E). */
+   ONE writer (child E; R15c wiring child D adds the KIT wire + the refs SEQ gate). */
 
 "use strict";
 
@@ -318,8 +324,8 @@ function avImportUiItemsPub(r) {
 
 /* the receipt's counts (numbers only; derived from items when counts is absent) */
 function avImportUiCountsOf(r) {
-  const keys = ["total", "imported", "deferred", "refused", "samples", "patterns"];
-  const c = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0 };
+  const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs"];
+  const c = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0 };
   try {
     const src = r && r.counts;
     if (src && typeof src === "object") {
@@ -337,6 +343,8 @@ function avImportUiCountsOf(r) {
       const kind = String(it.kind || "");
       if (kind === "sample") c.samples += 1;
       else if (kind === "pattern") c.patterns += 1;
+      else if (kind === "kit") c.kits += 1;
+      else if (kind === "refs") c.refs += 1;
     }
   } catch (e) { /* zeros stand */ }
   return c;
@@ -621,8 +629,11 @@ function avImportUiCountsText() {
   try {
     if (!s.last) return "no runs yet \u2014 drop a folder or files";
     const c = s.last.counts || {};
-    return c.total + " files \u00b7 imported " + c.imported + " \u00b7 deferred " + c.deferred +
+    let line = c.total + " files \u00b7 imported " + c.imported + " \u00b7 deferred " + c.deferred +
       " \u00b7 refused " + c.refused + " \u00b7 samples " + c.samples + " \u00b7 patterns " + c.patterns;
+    if (c.kits > 0) line += " \u00b7 " + c.kits + " kits";
+    if (c.refs > 0) line += " \u00b7 " + c.refs + " refs";
+    return line;
   } catch (e) { return "no runs yet"; }
 }
 
@@ -681,8 +692,10 @@ function avImportUiPaintReport(host, force) {
 
 /* ---------- the library list ---------- */
 
+/* one library row's JSON-safe view; R15c adds bounded counts (zones/samples/refs/tables) and
+   the hasPattern flag so the new-kind rows render without holding whole metas. */
 function avImportUiLibItemPub(it) {
-  return {
+  const out = {
     id: avImportUiStr(it && it.id, 80),
     name: avImportUiStr(it && it.name, 120),
     kind: avImportUiStr(it && it.kind, 24),
@@ -690,7 +703,19 @@ function avImportUiLibItemPub(it) {
     size: avImportUiNumOr(it && it.size, 0),
     at: avImportUiNumOr(it && it.at, 0),
     meta: avImportUiMetaPub(it && it.meta),
+    counts: { zones: 0, samples: 0, refs: 0, tables: 0 },
+    hasPattern: false,
   };
+  try {
+    const m = (it && it.meta && typeof it.meta === "object") ? it.meta : {};
+    if (Array.isArray(m.zones)) out.counts.zones = m.zones.length;
+    if (Array.isArray(m.samples)) out.counts.samples = m.samples.length;
+    if (typeof m.refCount === "number" && isFinite(m.refCount)) out.counts.refs = Math.max(0, Math.round(m.refCount));
+    else if (Array.isArray(m.refs)) out.counts.refs = m.refs.length;
+    if (Array.isArray(m.wtRefs)) out.counts.tables = m.wtRefs.length;
+    out.hasPattern = !!(m.pattern && typeof m.pattern === "object" && !Array.isArray(m.pattern));
+  } catch (e) { /* zeros stand */ }
+  return out;
 }
 
 function avImportUiActBtnHTML(id, act, label, title, disabled) {
@@ -699,24 +724,45 @@ function avImportUiActBtnHTML(id, act, label, title, disabled) {
     (disabled ? " disabled" : "") + ">" + label + "</button>";
 }
 
-/* one library row -- the five pinned actions; seq is disabled for non-pattern kinds */
+/* one library row -- the five pinned actions on sample/pattern rows; R15c: kit rows show the
+   KIT action + DEL, refs rows show SEQ (only when the meta carries a pattern) + DEL */
 function avImportUiLibRowHTML(it) {
   const id = String(it.id || "");
   const kind = String(it.kind || "");
   const isPattern = (kind === "pattern");
+  const isKit = (kind === "kit");
+  const isRefs = (kind === "refs");
   const name = String(it.name || id);
-  let meta = kind || "item";
-  if (it.format) meta += " \u00b7 " + String(it.format);
-  meta += " \u00b7 " + avImportUiFmtBytes(it.size);
+  const counts = (it.counts && typeof it.counts === "object") ? it.counts : {};
+  let meta;
+  if (isKit) {
+    meta = "kit \u00b7 " + avImportUiNumOr(counts.zones, 0) + " zones \u00b7 " + avImportUiNumOr(counts.samples, 0) + " samples";
+  } else if (isRefs && String(it.format || "") === "serum") {
+    meta = "refs \u00b7 " + avImportUiNumOr(counts.tables, 0) + " tables";
+  } else {
+    meta = kind || "item";
+    if (it.format) meta += " \u00b7 " + String(it.format);
+    meta += " \u00b7 " + avImportUiFmtBytes(it.size);
+  }
   let html = '<div class="av-import-item" data-av-import-lib="' + avImportUiEsc(id) + '" data-kind="' + avImportUiEsc(kind) + '">';
   html += '<span class="av-import-item-name" title="' + avImportUiEsc(name) + '">' + avImportUiEsc(name) + "</span>";
   html += '<span class="av-import-item-meta av-dim">' + avImportUiEsc(meta) + "</span>";
   html += '<span class="av-import-acts">';
-  html += avImportUiActBtnHTML(id, "load", "LOAD", "load this item into the session", false);
-  html += avImportUiActBtnHTML(id, "send", "SEND", "load it and send the session entry to the slot above", false);
-  html += avImportUiActBtnHTML(id, "chop", "CHOP", "load it and aim the chop card at it", false);
-  html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", !isPattern);
-  html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  if (isKit) {
+    html += avImportUiActBtnHTML(id, "kit", "KIT", "load this kit into the sampler engine (slots + zones)", false);
+    html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  } else if (isRefs) {
+    if (it.hasPattern === true) {
+      html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", false);
+    }
+    html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  } else {
+    html += avImportUiActBtnHTML(id, "load", "LOAD", "load this item into the session", false);
+    html += avImportUiActBtnHTML(id, "send", "SEND", "load it and send the session entry to the slot above", false);
+    html += avImportUiActBtnHTML(id, "chop", "CHOP", "load it and aim the chop card at it", false);
+    html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", !isPattern);
+    html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  }
   html += "</span></div>";
   return html;
 }
@@ -1032,6 +1078,12 @@ function avImportUiLoadLine(name, r) {
       if (notes != null) line += " \u00b7 " + notes + " notes";
       return line;
     }
+    if (r.kind === "kit") {
+      return "loaded " + name + " \u00b7 kit \u00b7 " + avImportUiNumOr(r.slots, 0) + " slots \u00b7 " + avImportUiNumOr(r.zones, 0) + " zones";
+    }
+    if (r.kind === "refs") {
+      return "loaded " + name + " \u00b7 refs \u00b7 " + avImportUiNumOr(r.refs, 0) + " refs";
+    }
     const eid = (r.entryId != null && String(r.entryId)) ? String(r.entryId) : "";
     return "loaded " + name + (eid ? " \u00b7 session entry " + avImportUiShort(eid, 40) : " \u00b7 session");
   } catch (e) { return "loaded " + name; }
@@ -1218,6 +1270,24 @@ function avImportUiActSeq(id) {
         avImportUiSetStatus("seq refused \u2014 " + avImportUiErrText(r, "the load was refused"), "err");
         return;
       }
+      /* R15c: an ALS refs item carries its pattern in the receipt (the refs load makes NO
+         session change); the application runs the ONE avMid seq flow, step for step */
+      if (r.kind === "refs") {
+        if (!r.pattern || typeof r.pattern !== "object") {
+          avImportUiEnd();
+          avImportUiSetStatus("seq: no pattern in " + name, "err");
+          return;
+        }
+        const ap = avImportUiSeqApply(r.pattern);
+        avImportUiEnd();
+        if (ap.ok !== true) {
+          avImportUiSetStatus("seq refused \u2014 " + (ap.error || "the sequence core refused"), "err");
+          return;
+        }
+        const k = avImportUiCountNotes(ap.feed);
+        avImportUiSetStatus("seq: " + name + " \u2192 pattern" + (k >= 0 ? " \u00b7 " + k + " notes" : ""), "msg");
+        return;
+      }
       /* the undo law is push-AFTER-load; av_lib owns the push -- this is the belt-and-braces
          nudge (a duplicate push is a no-op by the undo module's no-change rule) */
       try { if (typeof avUndoPush === "function") avUndoPush("seq", "import"); } catch (e) { /* F optional */ }
@@ -1276,6 +1346,73 @@ function avImportUiActDel(id) {
   }
 }
 
+/* R15c: apply an ALS pattern through the ONE seq flow (avSeqLoad -> avSeqSnap ->
+   avSeqSetPattern -> avSeqUiSync -> avUndoPush("seq","import")); every reach guarded. */
+function avImportUiSeqApply(pat) {
+  try {
+    if (typeof avSeqLoad !== "function" || typeof avSeqSetPattern !== "function") {
+      return { ok: false, error: "no sequence module" };
+    }
+    let loaded = false;
+    try { loaded = avSeqLoad(pat) === true; } catch (e) { loaded = false; }
+    if (!loaded) return { ok: false, error: "avSeqLoad refused" };
+    let feed = pat;
+    try { if (typeof avSeqSnap === "function") { const s = avSeqSnap(); if (s && typeof s === "object") feed = s; } } catch (e) { /* raw pattern stands */ }
+    let setOk = false;
+    try { setOk = avSeqSetPattern(feed) !== false; } catch (e) { setOk = false; }
+    if (!setOk) return { ok: false, error: "avSeqSetPattern refused" };
+    try { if (typeof avSeqUiSync === "function") avSeqUiSync(); } catch (e) { /* repaint is a nicety */ }
+    try { if (typeof avUndoPush === "function") avUndoPush("seq", "import"); } catch (e) { /* undo is a nicety */ }
+    return { ok: true, feed: feed };
+  } catch (e) {
+    return { ok: false, error: "seq failed" };
+  }
+}
+
+/* the active-step count of a seq pattern (for the status line; -1 when unreadable) */
+function avImportUiCountNotes(feed) {
+  try {
+    let notes = 0;
+    const tracks = (feed && Array.isArray(feed.tracks)) ? feed.tracks : [];
+    for (let t = 0; t < tracks.length; t++) {
+      const steps = (tracks[t] && Array.isArray(tracks[t].steps)) ? tracks[t].steps : [];
+      for (let x = 0; x < steps.length; x++) { if (steps[x] && steps[x].on) notes += 1; }
+    }
+    return notes;
+  } catch (e) { return -1; }
+}
+
+/* the KIT action (R15c): avLibLoad(id) -> "kit loaded \u2014 N slots \u00b7 M zones" or the
+   honest refusal; one op at a time, never throws */
+function avImportUiActKit(id) {
+  const s = avImportUiState;
+  const name = avImportUiLibName(id);
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avLibLoad !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 kit loading is unavailable", "err");
+      return false;
+    }
+    if (!avImportUiBegin("loading kit " + name)) return false;
+    let out = null;
+    try { out = avLibLoad(id); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the load failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      avImportUiEnd();
+      if (r.ok !== true) {
+        avImportUiSetStatus("kit refused \u2014 " + avImportUiErrText(r, "the load was refused"), "err");
+        return;
+      }
+      avImportUiSetStatus("kit loaded \u2014 " + avImportUiNumOr(r.slots, 0) + " slots \u00b7 " + avImportUiNumOr(r.zones, 0) + " zones", "msg");
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("kit failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
 /* the act dispatcher (used by the delegated click and by the rig/harness directly) */
 function avImportUiAct(act, id) {
   try {
@@ -1283,6 +1420,7 @@ function avImportUiAct(act, id) {
     if (act === "send") return avImportUiActSend(id);
     if (act === "chop") return avImportUiActChop(id);
     if (act === "seq") return avImportUiActSeq(id);
+    if (act === "kit") return avImportUiActKit(id);
     if (act === "del") return avImportUiActDel(id);
   } catch (e) {
     avImportUiSetStatus("the action failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
