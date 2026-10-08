@@ -18,6 +18,7 @@ const AV_CHROME_CARDS = [
   { id: "av-drums", init: true, rnd: false },
   { id: "av-sample", init: true, rnd: false },
   { id: "av-chop", init: true, rnd: false },
+  { id: "av-import", init: true, rnd: false },
   { id: "av-wt", init: true, rnd: false },
   { id: "av-seq", init: false, rnd: false },
   { id: "av-mix", init: false, rnd: false },

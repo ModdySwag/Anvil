@@ -1,0 +1,22 @@
+index.html sha256 (before): cb1128e2e026c79363f2a589022208139fab3001898b75002ae4632c1406ddfc
+fixtures staged in C:\Users\Moddy\anvil\cache\r15b\rig-fixtures
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791474006598
+ ok   boot + card: SAMPLE PACKS mounted in the synth zone (drop, pickers, slot, facade)  -> {"card":true,"zone":"synth","drop":true,"file":true,"dir":true,"slot":true,"facade":"function","ver":"r15b.0"}
+ ok   IMPORT SELFTEST proof: parses on the avtest load (inited, sniff = wav)  -> {"version":"r15b.0","inited":true,"libCount":0,"sniff":"wav"}
+ ok   absent host: avImportUiInit() returns false without throwing; re-attaching restores the card  -> {"r1":false,"threw1":false,"r2":true,"threw2":false,"back":true}
+ ok   real file-input import: 4 rows land (imported 3 · deferred 1 · refused 0)  -> {"total":4,"imported":3,"deferred":1,"refused":0,"samples":2,"patterns":1}
+ ok   rx2 probe meta: slices 10 · 44100 Hz · 16-bit · 117760 frames (pipeline -> library record)  -> {"report":"imported","meta":{"slices":10,"rate":44100,"bits":16,"frames":117760}}
+ ok   exs row: deferred with the honest reason (starts EXS24)  -> {"result":"deferred","reason":"EXS24 (binary) — adapter planned (R15c); the pack's WAVs/AIFFs import now"}
+ ok   library: 3 items persisted (aiff-none · mid · rx2 · wav) + DOM rows match; exs absent  -> {"lib1":{"count":3,"formats":"mid,rex2,wav"},"dom":3}
+ ok   LOAD (wav): decodes into the session at 48 kHz native (0.05 s preserved)  -> {"n":1,"rate":48000,"frames":2400,"secs":0.05}
+ ok   SLOT 2 + SEND: avSampleStore.sent[1] records tone.wav through the engine facade  -> {"name":"tone.wav","slot":1,"frames":2400}
+ ok   CHOP: the new session entry is selected in #av-chop-src (option present, synth zone revealed)  -> {"v":"s3","opt":true,"zone":"synth","entry":true}
+ ok   SEQ (mid): pattern loaded (notes >= 1) + undo label "import"  -> {"notes":1,"undo":"import"}
+ ok   LOAD (rx2): decodes in-browser — session entry 117760 frames @ 44100 Hz  -> {"rate":44100,"frames":117760}
+   · screenshot: C:\Users\Moddy\anvil\renders\r15b-import-suite.png
+ ok   reload: the library persists via IndexedDB (count 3), the report resets, no proof text on the plain page  -> {"persist":{"count":3},"fresh":{"rows":0,"hits":0}}
+ ok   zero page errors
+ ok   freeze: index.html sha256 = pinned (before === after)  -> pinned cb1128e2e026… · before cb1128e2e026… · after cb1128e2e026…
+
+15 passed, 0 failed

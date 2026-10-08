@@ -12,7 +12,7 @@ const AV_RAIL_OPEN_KEY = "av-rail-open";
 const AV_RAIL_SEC_KEY = "av-rail-sections";
 
 const AV_RAIL_GROUPS = [
-  { zone: "synth", label: "Synth", cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-wt", "Wavetable editor"]] },
+  { zone: "synth", label: "Synth", cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-import", "Sample packs"], ["av-wt", "Wavetable editor"]] },
   { zone: "fx", label: "FX", cards: [["av-fx", "FX rack"]] },
   { zone: "mod", label: "Mod", cards: [["av-mod", "Mod matrix"], ["av-lfo", "LFO"]] },
   { zone: "seq", label: "Seq", cards: [["av-seq", "Sequencer"]] },

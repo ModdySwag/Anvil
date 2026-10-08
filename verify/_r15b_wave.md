@@ -266,7 +266,7 @@ DOM ids/attrs (exact — suites pin these):
 - Proof: mirror av_lfo.js L255-275 EXACTLY in shape — at init, gated on the `?avtest=1` check
   av_lfo uses, deferred `setTimeout(..., 0)`, `avTestLine(avImportUiProof(), "av-importtest")`.
   `avImportUiProof()` returns "IMPORT SELFTEST " + JSON.stringify({version, inited, libCount,
-  sniff: avImportSniff result for a fixed 4-byte fixture (e.g. [82,73,70,70] -> "wav")}).
+  sniff: avImportSniff result for a fixed 12-byte RIFF+WAVE fixture -> "wav"}).
 - Header comment MUST carry: constants, the DOM contract, the exact CSS class inventory the card
   needs (parent authors styles.css from it — copy the av_pads.js header style). CSS classes needed
   (reference list, E may extend and MUST enumerate): av-import-drop, av-import-dropmsg,
@@ -306,7 +306,7 @@ DOM ids/attrs (exact — suites pin these):
      8 frames) + SSND; SMF = hand-built MThd (format 0, PPQ 480) + one c4 note.
    - `6ck` library: `avLibLoad` the AIFF item -> session entry appears (frames === 8, sampleRate
      8000 — the AVAIFF decode witness); `avLibLoad` the MID item -> `avSeqSnap()` carries >= 1
-     note + `window.__avUndo.last === "import"` (the push-after-load witness); `avLibRemove` the
+     note + `window.__avUndo.label === "import"` (the push-after-load witness); `avLibRemove` the
      two persisted items -> list count back down by 2; the loaded session entry + pattern stay
      (fresh page each run — the proof-gate leg reloads anyway).
    Counts must read EXACTLY 63/63 (first-run).

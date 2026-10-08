@@ -1088,6 +1088,101 @@ async function main() {
     r14b.painted === true && Math.abs(r14b.l - 0.8) < 0.05 && Math.abs(r14b.r - 0.4) < 0.05
     && !!r14b.vu && Math.abs(r14b.vu.l - 0.8) < 0.05, JSON.stringify(r14b));
 
+  /* 6ci. R15b: the SAMPLE PACKS card - mounted in the synth zone with pickers + facade */
+  const r15aR = await ev(`(() => {
+    window.__avZoneAuto('#av-import');
+    const card = document.getElementById('av-import');
+    const q = (s) => !!document.querySelector(s);
+    const f = window.__avImport || {};
+    return { card: !!card,
+             zone: card && card.closest('.av-zone') ? card.closest('.av-zone').getAttribute('data-zone') : null,
+             drop: q('[data-av-import-drop]'), file: q('#av-import-file'), dir: q('#av-import-dir'),
+             pick: q('#av-import-pick'), pickdir: q('#av-import-pickdir'),
+             status: q('#av-import-status'), report: q('#av-import-report'),
+             lib: q('#av-import-lib'), slot: q('#av-import-slot'), note: q('#av-import-note'),
+             empty: q('#av-import-empty'),
+             facade: typeof f.importFiles, snap: typeof f.snap, ver: f.version || null };
+  })()`);
+  const r15a = r15aR.value || {};
+  check('R15b import card: mounted in the synth zone (drop + pickers + report + lib + facade)',
+    r15a.card === true && r15a.zone === 'synth' && r15a.drop === true && r15a.file === true && r15a.dir === true
+    && r15a.pick === true && r15a.pickdir === true && r15a.status === true && r15a.report === true
+    && r15a.lib === true && r15a.slot === true && r15a.note === true && r15a.empty === true
+    && r15a.facade === 'function' && r15a.snap === 'function' && r15a.ver === 'r15b.0',
+    JSON.stringify(r15a));
+
+  /* 6cj. R15b: the pipeline - a synthetic WAV + AIFF + MIDI + stub run (sniff + policy + persist) */
+  const r15bR = await ev(`(async () => {
+    const sr = 8000, n = 64;
+    const l = new Float32Array(n), r = new Float32Array(n);
+    for (let i = 0; i < n; i++) { l[i] = 0.5 * Math.sin(2 * Math.PI * 440 * i / sr); r[i] = l[i]; }
+    const wav = (typeof avWavEncode === 'function') ? avWavEncode({ l: l, r: r, sr: sr, bits: 16, dither: false }) : null;
+    const bytes = [];
+    const push = (...xs) => { for (const x of xs) bytes.push(x & 255); };
+    const u32 = (v) => push(v >>> 24, v >>> 16, v >>> 8, v);
+    const u16 = (v) => push(v >> 8, v);
+    const tag = (s) => push(s.charCodeAt(0), s.charCodeAt(1), s.charCodeAt(2), s.charCodeAt(3));
+    tag('FORM'); u32(62); tag('AIFF');
+    tag('COMM'); u32(18); u16(1); u32(8); u16(16); push(0x40, 0x0B, 0xFA, 0, 0, 0, 0, 0, 0, 0);
+    tag('SSND'); u32(24); u32(0); u32(0);
+    for (let i = 0; i < 8; i++) u16(i * 0x1000);
+    const aiff = new Uint8Array(bytes);
+    const m = [];
+    const mpush = (...xs) => { for (const x of xs) m.push(x & 255); };
+    const mu32 = (v) => mpush(v >>> 24, v >>> 16, v >>> 8, v);
+    const mu16 = (v) => mpush(v >> 8, v);
+    const mtag = (s) => mpush(s.charCodeAt(0), s.charCodeAt(1), s.charCodeAt(2), s.charCodeAt(3));
+    mtag('MThd'); mu32(6); mu16(0); mu16(1); mu16(480);
+    mtag('MTrk'); mu32(13);
+    mpush(0x00, 0x90, 60, 100, 0x83, 0x5F, 0x80, 60, 0, 0x00, 0xFF, 0x2F, 0x00);
+    const mid = new Uint8Array(m);
+    const files = [ new File([wav], 't.wav'), new File([aiff], 't.aiff'), new File([mid], 't.mid'), new File([new Uint8Array([1, 2, 3, 4])], 'x.exs') ];
+    if (typeof avImportFiles !== 'function') return { missing: true };
+    const rc = await avImportFiles(files);
+    const byFmt = {};
+    for (const it of rc.items) byFmt[it.format] = it.result;
+    const ids = rc.items.filter(i => i.result === 'imported').map(i => i.id ? 1 : 0);
+    return { counts: rc.counts, byFmt: byFmt, ids: ids,
+             exsReason: (rc.items.find(i => i.format === 'exs') || {}).reason || '' };
+  })()`);
+  const r15b = r15bR.value || {};
+  check('R15b import pipeline: WAV+AIFF+MIDI+stub run = 3 imports + 1 deferred refusal (sniffer honest)',
+    !!r15b.counts && r15b.counts.total === 4 && r15b.counts.imported === 3 && r15b.counts.deferred === 1
+    && r15b.counts.refused === 0 && r15b.counts.samples === 2 && r15b.counts.patterns === 1
+    && r15b.byFmt.wav === 'imported' && r15b.byFmt.aiff === 'imported' && r15b.byFmt.mid === 'imported'
+    && r15b.byFmt.exs === 'deferred' && String(r15b.exsReason).indexOf('EXS24') === 0
+    && r15b.ids.length === 3 && r15b.ids.every(x => x === 1), JSON.stringify(r15b));
+
+  /* 6ck. R15b: the local library - list/load/remove round-trip (AIFF decode + MIDI pattern + undo) */
+  const r15cR = await ev(`(async () => {
+    if (typeof avLibList !== 'function' || typeof avLibLoad !== 'function' || typeof avLibRemove !== 'function') return { missing: true };
+    const list0 = await avLibList();
+    const items = (list0 && list0.items) || [];
+    const aiff = items.find(i => i.format === 'aiff') || null;
+    const mid = items.find(i => i.format === 'mid') || null;
+    const n0 = avSampleStore.entries.length;
+    const la = aiff ? await avLibLoad(aiff.id) : null;
+    const entry = (la && la.entryId) ? avSampleStore.byId[la.entryId] : null;
+    const lm = mid ? await avLibLoad(mid.id) : null;
+    let notes = -1;
+    try { const sn = avSeqSnap(); notes = 0; for (const t of sn.tracks) for (const s of t.steps) if (s.on === 1) notes++; } catch (e) { notes = -2; }
+    const undoLabel = (window.__avUndo && typeof window.__avUndo.label === 'string') ? window.__avUndo.label : null;
+    const dr = aiff ? await avLibRemove(aiff.id) : null;
+    const dm = mid ? await avLibRemove(mid.id) : null;
+    const list1 = await avLibList();
+    return { n0: n0, n1: avSampleStore.entries.length,
+             entryFrames: (entry && entry.buffer) ? entry.buffer.length : -1,
+             entryRate: entry ? entry.sampleRate : -1,
+             loadedA: !!(la && la.ok), loadedM: !!(lm && lm.ok), notes: notes, undoLabel: undoLabel,
+             removed: !!(dr && dr.ok) && !!(dm && dm.ok),
+             count0: (list0 && list0.count) || 0, count1: (list1 && list1.count) || 0 };
+  })()`);
+  const r15c = r15cR.value || {};
+  check('R15b library: AIFF loads to the session (8 frames @ 8000 Hz), MIDI to the seq (undo=import), removes land',
+    r15c.loadedA === true && r15c.loadedM === true && r15c.entryFrames === 8 && r15c.entryRate === 8000
+    && r15c.n1 === r15c.n0 + 1 && r15c.notes >= 1 && r15c.undoLabel === 'import'
+    && r15c.removed === true && r15c.count1 === r15c.count0 - 2, JSON.stringify(r15c));
+
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');
   await send('Page.navigate', { url: plainUrl });
