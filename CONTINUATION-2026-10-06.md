@@ -1720,3 +1720,44 @@ Resume phrase: **"continue anvil"**.
 - Carried: drag-to-modulate gesture, Store as a browser overlay, preset-name header chip,
   module-menu Copy/Paste, page switching for advanced module sets, P·2 minBLEP, PERFECT TUNINGS,
   owner pass (Ctrl+F5 once for the new service-worker cache).
+
+## Resume addendum 42 - 2026-10-08 (R8: MOD DRAG-TO-MODULATE - chips · drop map · mod rings · matrix grammar)
+
+- Source: `docs/10-cockpit-redesign.md` §5.4; carried in every R-wave list since R1. Contract:
+  `verify/_r8_wave.md`.
+- Shipped, frozen `56214e71` (3,482,901 B), live at https://moddys.net/anvil/ (scoped --verify:
+  anvil/index.html + anvil/sw.js IN SYNC, **0 file(s) not in sync**; live sha256 = the frozen build):
+  - SOURCE CHIPS (`src/av_mod.js` SOURCES section): 14 draggable chips (env1/env2/lfo1/vel/key/
+    rand/macro1-8) with per-family colours (env green · lfo purple · vel yellow · key sky · rand
+    grey · macros orange), click = drag hint in the status line.
+  - DRAG-TO-MODULATE: document-level drag plumbing (bound once, delegated - floats + re-renders
+    covered): dragstart -> body `av-drag-modsrc` + halos on every mapped knob; dragover ->
+    `.av-mod-droppable`; drop -> `avModAssign(src, path)`. DROP MAP v1 = `filter.cutoff`,
+    `filter.reso`, `osc1.level`, `osc2.level` (the only knob paths that reach pinned engine
+    targets; pitch/pan have no knob - matrix-only). Assign law: ONE slot per (src,dst); re-drop
+    re-defaults +0.5; matrix full refuses via the status line; unmapped knobs refuse honestly
+    ("X is not a v1 mod target").
+  - MOD RINGS (`av_knob.js` + `avModSyncRings` riding avModPost): mapped knobs show a
+    source-coloured ring (|amt| x 270 deg at inset -7, outside the value ring) + `data-mod`
+    "src:amt"; verified visually (`renders/r8-modring.png` - green env1 / orange macro2 /
+    pink lfo1 / yellow vel at 2x zoom).
+  - MATRIX GRAMMAR: header SOURCE · CURVE · AMOUNT · POL · DESTINATION · OUT + row reorder; POL
+    button flips the amt sign; OUT reads the macro mirror ("42%") for macro sources, "-" for
+    per-voice (honest). `.av-mod-slots` gains overflow-x (narrow floats scroll).
+  - Facade: avModAssign/avModDropMap/avModDragBegin/End/avModSyncRings/avModStatus; avModClasses
+    extended; RAIL-equivalent proof untouched.
+- Rigs: smoke **49** first-run (two new R8 checks; the rig simulates DnD with DataTransfer +
+  DragEvent constructors - works headless). Battery 23 suites ALL GREEN on the frozen bytes (seq
+  passed first-lap, zero exit=1). Pins swept 20 files (full 64-hex, `cache/r1/sweep_r8.py`).
+- PERF GATE: bench exit=0 - knee 96/128 monotone; realtime light 64 / fat 48; worklet sha
+  `d7f0ee41` UNCHANGED (page-side wave).
+- Visual pass: probe `cache/r1/r8_shot.mjs` -> `renders/r8-modring.png`; the first render caught
+  the macro-teal rings blending into the teal value ring - fixed BEFORE freeze (macros -> orange).
+- Commits: wave + close (this addendum).
+- Deploy: `python3 upload-site.py --only anvil/index.html anvil/sw.js` -> scoped --verify = 0 not
+  in sync; live sha256 = 56214e71... = local.
+- Carried: chip keyboard assign path (a11y), animated rings (needs an engine->page mod value
+  stream), widen AV_MOD_TARGETS (wire v2), kind-specific drop paths (acid.cutoff etc.),
+  preset-name header chip, Store as a browser overlay, module-menu Copy/Paste, page switching for
+  advanced module sets, P·2 minBLEP, PERFECT TUNINGS, owner pass (Ctrl+F5 once for the new
+  service-worker cache).
