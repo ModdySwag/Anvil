@@ -1049,6 +1049,45 @@ async function main() {
     r13b.mirror === 0.6 && r13b.back === 0 && r13b.diff === true && r13b.shape === 'tri' && r13b.attr === 'tri'
     && r13b.restored === 'sine' && r13b.eng1 === true && r13b.eng2 === true, JSON.stringify(r13b));
 
+  /* 6cg. R14: console step keys + VU bars - structure + the honest no-op with no banks */
+  const r14aR = await ev(`(() => {
+    const gc = (id) => !!document.getElementById(id);
+    const c = window.__avConsole || {};
+    const info = { prev: gc('avc-preset-prev'), next: gc('avc-preset-next'), vuL: gc('avc-vu-l'), vuR: gc('avc-vu-r'),
+                   stepApi: typeof c.stepPreset, vuApi: typeof c.vu, tickApi: typeof c.vuTick };
+    const r = (typeof c.stepPreset === 'function') ? c.stepPreset(1) : null;
+    info.step = r;
+    info.last1 = (typeof c.lastAction === 'function') ? c.lastAction() : null;
+    const pv = document.getElementById('avc-preset-prev');
+    if (pv) pv.click();
+    info.last2 = (typeof c.lastAction === 'function') ? c.lastAction() : null;
+    return info;
+  })()`);
+  const r14a = r14aR.value || {};
+  check('R14 console: step keys + VU bars mounted; the step is an honest no-op with no banks',
+    r14a.prev === true && r14a.next === true && r14a.vuL === true && r14a.vuR === true
+    && r14a.stepApi === 'function' && r14a.vuApi === 'function' && r14a.tickApi === 'function'
+    && !!r14a.step && r14a.step.applied === false && r14a.step.reason === 'no-banks'
+    && r14a.last1 === 'preset-next' && r14a.last2 === 'preset-prev', JSON.stringify(r14a));
+
+  /* 6ch. R14: the VU bars paint from avTap.levels (inject -> paint -> restore) */
+  const r14bR = await ev(`(() => {
+    const c = window.__avConsole || {};
+    const L = document.getElementById('avc-vu-l'), R = document.getElementById('avc-vu-r');
+    const old = { l: avTap.levels.l, r: avTap.levels.r };
+    avTap.levels.l = 0.8; avTap.levels.r = 0.4;
+    const painted = (typeof c.vuTick === 'function') ? c.vuTick() : false;
+    const sc = (el) => { const tx = (el && el.style && el.style.transform) || ''; const i = tx.indexOf('scaleY('); return i >= 0 ? parseFloat(tx.slice(i + 7)) : -1; };
+    const info = { painted: painted === true, l: sc(L), r: sc(R), vu: (typeof c.vu === 'function') ? c.vu() : null };
+    avTap.levels.l = old.l; avTap.levels.r = old.r;
+    if (typeof c.vuTick === 'function') c.vuTick();
+    return info;
+  })()`);
+  const r14b = r14bR.value || {};
+  check('R14 console: VU bars paint from avTap.levels (inject 0.8/0.4 -> scaleY matches, restored)',
+    r14b.painted === true && Math.abs(r14b.l - 0.8) < 0.05 && Math.abs(r14b.r - 0.4) < 0.05
+    && !!r14b.vu && Math.abs(r14b.vu.l - 0.8) < 0.05, JSON.stringify(r14b));
+
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');
   await send('Page.navigate', { url: plainUrl });

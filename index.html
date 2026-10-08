@@ -1834,6 +1834,11 @@ header.av-head.av-console > .av-btn:hover { border-color: var(--teal-deep); }
 .av-lfo-scope-wrap { border: 1px solid var(--hair); border-radius: 8px; background: rgba(6, 9, 12, 0.6); padding: 10px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04); }
 #av-lfo-scope { width: 100%; height: auto; display: block; }
 
+/* R14: console - preset step keys + VU meters */
+.avc-vu { display: inline-flex; align-items: flex-end; gap: 3px; height: 30px; padding: 0 6px 4px; }
+.avc-vu-bar { display: block; position: relative; width: 6px; height: 26px; background: #0b0f12; border: 1px solid #05080b; border-radius: 2px; overflow: hidden; }
+.avc-vu-fill { position: absolute; left: 0; right: 0; bottom: 0; top: 0; display: block; font-style: normal; background: linear-gradient(180deg, #3fd0c9 0%, #2aa39d 100%); transform: scaleY(0); transform-origin: bottom; }
+
 </style>
 </head>
 
@@ -69753,13 +69758,20 @@ if (typeof window !== "undefined" && window) {
 
    Public surface: avConsoleInit() -> bool · avConsoleTransportToggle() -> bool|null ·
    avConsoleRefresh() · avConsoleProof() -> string · window.__avConsole { version, init,
-   lastAction(), transportToggle(), refresh() }. */
+   lastAction(), transportToggle(), refresh(), stepPreset(), vu(), vuTick() }.
+
+   R14 (additions only — the version stays r11.0, the R12 precedent): PRV/NXT keycaps appended to
+   the deck after avc-rec call avConsolePresetStep(dir) — it steps the pack select's preset
+   selection (bubbling 'change', so the existing delegated bank handler mirrors it) and applies
+   the preset through avBankApplyPreset. The two-bar VU meter (.avc-vu, fills avc-vu-l / avc-vu-r)
+   sits between the deck and the BPM window; avConsoleVuTick paints it from avTap.levels, driven
+   by ONE flag-guarded rAF loop (avConsoleMeterStart). The proof object grows vu + step. */
 
 "use strict";
 
 const AV_CONSOLE_VERSION = "r11.0";
 
-const avConsoleState = { ready: false, timer: 0, last: "", songOn: false, playOn: false, recOn: false };
+const avConsoleState = { ready: false, timer: 0, last: "", songOn: false, playOn: false, recOn: false, vuL: -1, vuR: -1, meterOn: false };
 
 function avConsoleEl(id) {
   try { return document.getElementById(id); } catch (e) { return null; }
@@ -69814,6 +69826,119 @@ function avConsoleRecToggle() {
   } catch (e) { /* the recorder card reports its own errors */ }
   avConsoleRefresh();
   return avConsoleState.recOn;
+}
+
+/* ---------- R14: preset step-and-apply (rides the bank API) ---------- */
+
+function avConsolePresetStep(dir) {
+  const d = (Number(dir) === -1) ? -1 : 1;
+  const res = { applied: false, pack: null, index: -1, preset: null, reason: "" };
+  try {
+    if (typeof avBankPacks !== "function" || typeof avBankPresets !== "function" || typeof avBankApplyPreset !== "function") {
+      res.reason = "no-bank-api";
+    } else {
+      const packs = avBankPacks() || [];
+      if (!packs.length) {
+        res.reason = "no-banks";
+      } else {
+        /* the pack: the pack select's pick, clamped into the installed list (else the first) */
+        let pi = 0;
+        try {
+          const psel = document.querySelector("select.av-bank-pack");
+          if (psel && isFinite(psel.selectedIndex)) pi = Math.round(Number(psel.selectedIndex));
+        } catch (e1) { pi = 0; }
+        if (!isFinite(pi) || pi < 0) pi = 0;
+        if (pi >= packs.length) pi = packs.length - 1;
+        const pack = packs[pi];
+        const presets = (pack && pack.id != null) ? (avBankPresets(pack.id) || []) : [];
+        if (!presets.length) {
+          res.reason = "no-presets";
+        } else {
+          /* the current ordinal from the preset select's value; a bad read seeds the wrap edge */
+          const n = presets.length;
+          let sel = null, cur = NaN;
+          try { sel = document.querySelector("select.av-bank-preset"); } catch (e2) { sel = null; }
+          try { if (sel) cur = Math.round(Number(sel.value)); } catch (e3) { cur = NaN; }
+          if (!isFinite(cur) || cur < 0 || cur >= n) cur = (d > 0) ? -1 : 0;
+          const target = (cur + d + n) % n;
+          /* sync the select so the existing delegated bank handler mirrors the step */
+          try {
+            if (sel && sel.value !== String(target)) {
+              try { sel.value = String(target); } catch (e4) { /* value write refused */ }
+              try { sel.dispatchEvent(new Event("change", { bubbles: true })); } catch (e5) { /* dispatch refused */ }
+            }
+          } catch (e6) { /* the sync is a nicety; the apply below rides the object */ }
+          let obj = null;
+          for (let i = 0; i < n; i++) { if (presets[i] && presets[i].i === target) { obj = presets[i]; break; } }
+          if (!obj) obj = presets[target] || null;
+          if (!obj) {
+            res.reason = "no-presets";
+          } else {
+            res.pack = (pack && pack.id != null) ? pack.id : null;
+            res.index = target;
+            res.preset = (typeof obj.name === "string" && obj.name) ? obj.name : null;
+            let ok = false;
+            try { ok = avBankApplyPreset(obj) === true; } catch (e7) { ok = false; }
+            res.applied = ok === true;
+            if (!res.applied) res.reason = "refused";
+          }
+        }
+      }
+    }
+  } catch (e) { /* never throws — the result reports what landed */ }
+  /* ALWAYS: the lastAction + a repaint, refusal or not */
+  avConsoleSetLast(d > 0 ? "preset-next" : "preset-prev");
+  avConsoleRefresh();
+  return res;
+}
+
+/* ---------- R14: the VU meter (fed by the master tap's levels) ---------- */
+
+function avConsoleVuClamp(v) {
+  const n = Number(v);
+  if (!isFinite(n)) return 0;
+  return Math.max(0, Math.min(1, n));
+}
+
+function avConsoleVuTick() {
+  try {
+    if (typeof avTap === "undefined" || !avTap || !avTap.levels) return false;
+    const lv = avConsoleVuClamp(avTap.levels.l);
+    const rv = avConsoleVuClamp(avTap.levels.r);
+    const fl = avConsoleEl("avc-vu-l");
+    const fr = avConsoleEl("avc-vu-r");
+    /* write ONLY when the value moved > 0.01 since the last paint (per bar) */
+    if (fl && Math.abs(lv - avConsoleState.vuL) > 0.01) {
+      fl.style.transform = "scaleY(" + lv.toFixed(3) + ")";
+      avConsoleState.vuL = lv;
+    }
+    if (fr && Math.abs(rv - avConsoleState.vuR) > 0.01) {
+      fr.style.transform = "scaleY(" + rv.toFixed(3) + ")";
+      avConsoleState.vuR = rv;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avConsoleVuRead() {
+  try {
+    if (typeof avTap === "undefined" || !avTap || !avTap.levels) return null;
+    return { l: avConsoleVuClamp(avTap.levels.l), r: avConsoleVuClamp(avTap.levels.r) };
+  } catch (e) { return null; }
+}
+
+function avConsoleMeterStart() {
+  if (avConsoleState.meterOn) return true;
+  avConsoleState.meterOn = true;
+  try {
+    if (typeof requestAnimationFrame !== "function") { avConsoleState.meterOn = false; return false; }
+    const frame = function () {
+      try { avConsoleVuTick(); } catch (e) { /* a frame never throws */ }
+      try { requestAnimationFrame(frame); } catch (e2) { avConsoleState.meterOn = false; }
+    };
+    requestAnimationFrame(frame);
+    return true;
+  } catch (e) { avConsoleState.meterOn = false; return false; }
 }
 
 /* ---------- the reads (polls) ---------- */
@@ -69935,6 +70060,18 @@ function avConsoleInit() {
     deck.appendChild(avConsoleMkKey("avc-song", "SONG", "Play / stop the song arrangement", avConsoleSongToggle));
     deck.appendChild(avConsoleMkKey("avc-rec", "\u25CF REC", "Record (studio recorder)", avConsoleRecToggle));
 
+    /* R14: PRV/NXT step the pack's preset selection and apply it (the bank API) */
+    deck.appendChild(avConsoleMkKey("avc-preset-prev", "PRV", "Previous preset (steps and applies)", function () { avConsolePresetStep(-1); }));
+    deck.appendChild(avConsoleMkKey("avc-preset-next", "NXT", "Next preset (steps and applies)", function () { avConsolePresetStep(1); }));
+
+    /* R14: the two-bar VU meter (built here, painted from avTap.levels by the meter loop) */
+    const vu = document.createElement("div");
+    vu.className = "avc-vu";
+    vu.setAttribute("aria-hidden", "true");
+    vu.innerHTML =
+      '<span class="avc-vu-bar"><i class="avc-vu-fill" id="avc-vu-l"></i></span>' +
+      '<span class="avc-vu-bar"><i class="avc-vu-fill" id="avc-vu-r"></i></span>';
+
     /* the BPM segment window */
     const bpm = document.createElement("div");
     bpm.className = "avc-window avc-bpm";
@@ -69985,10 +70122,11 @@ function avConsoleInit() {
     const anchor = (spacer && spacer.parentNode === head) ? spacer : null;
     if (anchor) {
       head.insertBefore(deck, anchor);
+      head.insertBefore(vu, anchor);
       head.insertBefore(bpm, anchor);
       head.insertBefore(oled, anchor);
     } else {
-      head.appendChild(deck); head.appendChild(bpm); head.appendChild(oled);
+      head.appendChild(deck); head.appendChild(vu); head.appendChild(bpm); head.appendChild(oled);
     }
     if (word) { try { head.insertBefore(power, word.nextSibling); } catch (e) { head.insertBefore(power, head.firstChild); } }
     else head.insertBefore(power, head.firstChild);
@@ -70014,6 +70152,9 @@ function avConsoleInit() {
       }
     } catch (e) { /* proof is a nicety */ }
 
+    /* R14: the VU meter's ONE rAF loop (flag-guarded; a frame never throws) */
+    avConsoleMeterStart();
+
     avConsoleRefresh();
     avConsoleState.ready = true;
     return true;
@@ -70026,6 +70167,8 @@ function avConsoleInit() {
 function avConsoleProof() {
   let head = false;
   try { head = document.querySelector("header.av-head.av-console") !== null; } catch (e) { head = false; }
+  let vu = false;
+  try { vu = !!(avConsoleEl("avc-vu-l") && avConsoleEl("avc-vu-r")); } catch (e) { vu = false; }
   return "CONSOLE SELFTEST " + JSON.stringify({
     v: AV_CONSOLE_VERSION,
     ready: avConsoleState.ready === true,
@@ -70033,6 +70176,8 @@ function avConsoleProof() {
     play: avConsoleState.playOn === true,
     rec: avConsoleState.recOn === true,
     last: avConsoleState.last,
+    vu: vu,
+    step: true,
   });
 }
 
@@ -70046,6 +70191,9 @@ if (typeof window !== "undefined" && window) {
       setBpm: function (v) { return avConsoleBpmSet(v); },
       bpm: function () { return avConsoleBpm(); },
       refresh: function () { return avConsoleRefresh(); },
+      stepPreset: function (dir) { return avConsolePresetStep(dir); },
+      vu: function () { return avConsoleVuRead(); },
+      vuTick: function () { return avConsoleVuTick(); },
     };
   } catch (e) { /* no window - nothing to publish */ }
 }

@@ -55,7 +55,9 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R12 BPM window: click top +1 / bottom -1 / wheel up +1 through the bpm funnel, restored exactly  -> {"b0":120,"b1":121,"b2":120,"b3":121,"back":120}
  ok   R13 LFO card: mounted in the mod zone (4-option shape select + 3 bound knobs + scope + facade + seeded shape)  -> {"card":true,"zone":"mod","knobs":3,"paths":"lfo.rate,lfo.toCut,lfo.toPitch","bound":true,"selOpts":"sine,tri,square,sh","canvas":true,"facade":"object","shape":"sine"}
  ok   R13 LFO: commit + select ride the funnel, the scope repaints per shape, the engine accepts the schema path  -> {"mirror":0.6,"back":0,"diff":true,"shape":"tri","attr":"tri","restored":"sine","eng1":true,"eng2":true}
+ ok   R14 console: step keys + VU bars mounted; the step is an honest no-op with no banks  -> {"prev":true,"next":true,"vuL":true,"vuR":true,"stepApi":"function","vuApi":"function","tickApi":"function","step":{"applied":false,"pack":null,"index":-1,"preset":null,"reason":"no-banks"},"last1":"preset-next","last2":"preset-prev"}
+ ok   R14 console: VU bars paint from avTap.levels (inject 0.8/0.4 -> scaleY matches, restored)  -> {"painted":true,"l":0.8,"r":0.4,"vu":{"l":0.8,"r":0.4}}
  ok   R12 proof gate: a plain load (no ?avtest=1) renders zero SELFTEST text + an empty proof host  -> {"plainReady":true,"leak":{"hits":0,"hostText":"","consoleEl":false}}
  ok   zero page errors
 
-58 passed, 0 failed
+60 passed, 0 failed
