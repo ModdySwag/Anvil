@@ -2340,3 +2340,26 @@ hub 33 - import 24 - battery 25 + bench (96/128 monotone, loaded window) - leak 
 the owner-clip chop/pad layout fix + the app-wide .av-btn spill sweep + the new smoke layout
 guard. NEXT (docs/12): R18b (linked folders + PWA handlers) -> R19 `.avpack` -> R20 persistence.
 Resume phrase "continue anvil". Nothing in flight.
+
+## Resume addendum 62 - 2026-10-09 (R18b OPENED: linked source folders + PWA file_handlers - contract + authors dispatched)
+
+- Session-start ritual re-proven: HEAD 996174d, tree clean (`?? cache/`), smoke **75/75**.
+- R18b = docs/12 §3.4 (linked source folders: av-sources-store, link / RE-SCAN / diff
+  NEW-CHANGED-GONE / import-new / unlink / reconnect; FSA dir-picker seam mirroring avProjSetFs)
+  + §3.1.4 (PWA file_handlers widening `.anvl .zip .wav .mp3 .mid`; the §7.4 .zip verdict = KEEP,
+  owner-pass owed). Contract `verify/_r18b_wave.md` (commit with this addendum), authored from
+  the spot-verified recon (`cache/r18/recon-r18.md` §5/§6/§7/§8).
+- Authors dispatched (background): A `src/av_sources.js` (core + `window.__avSources` facade) -
+  B `src/av_sources_ui.js` (the LINKED SOURCES section into `#av-sources-host`) - C edits
+  `src/av_import_ui.js` (host div) + `src/av_menubar.js` (File > "Link source folder...") -
+  D edits `src/av_pwa.js` (non-anvl launch -> avImportFiles, File kept intact) +
+  `verify/cdp_platform.mjs` P1d (widened accept literal) - E edits `verify/cdp_hub.mjs`
+  (+6 R18b legs; 33 -> 39 pinned at freeze).
+- ON CHILD RETURN: verify artifacts on disk -> styles block (avSourcesUiClasses) -> parent
+  integration (build.py manifest literal per §6D, app_core 1.8.0 "R18b linked folders" +
+  guarded avSourcesUiInit, smoke +1 = 76) -> rebuild -> cdp_hub 39 triage -> cdp_platform 52 ->
+  cdp_import 24 -> sweep -> battery 25 + bench -> deploy (index + sw + **manifest.webmanifest** -
+  new in the set) -> live capture -> close addendum 63.
+- Carried: quiet bench re-run (owed/optional; not chased while the owner is active - addendum 58
+  law) - P.2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - README status refresh (offered,
+  awaiting the owner's word). Nothing else in flight.
