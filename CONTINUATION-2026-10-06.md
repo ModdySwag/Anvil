@@ -1619,3 +1619,32 @@ Resume phrase: **"continue anvil"**.
   scroll-shadow scrims, module-menu Copy/Paste, NAMED layout save/load (custom layouts beyond the
   two presets), P·2 minBLEP, PERFECT TUNINGS, owner pass on the live surface (Ctrl+F5 once for the
   new service-worker cache).
+## Resume addendum 39 - 2026-10-08 (R4: THE WORKSPACE CONTROLS — sectioned toggles · left rail · float window controls · named layouts)
+
+- Owner asks (third same-day round): highlight/section the top toggles for recognition; audit and
+  add missing window-menu options (close/minimise/save-to-workspace/pin/resize/stack/transparency/
+  scroll-wheel); a fully integrated LEFT module menu (hideable/resizable/pinnable like everything
+  else); any other GUI matrix that streamlines workflow.
+- Shipped, frozen `45734b8a` (3,444,443 B), live at https://moddys.net/anvil/ (upload --verify:
+  0 file(s) not in sync; live sha256 = the frozen build):
+  - SECTIONED TOP TOGGLES: each zone tab is now a bordered chip with its own accent dot; the active
+    tab fills with its zone colour (the accent map extends to tabs + rail elements).
+  - LEFT MODULE RAIL (`src/av_rail.js`): 8 accent-dotted zone groups, every card a jump link
+    (switch zone + scroll); hide button + header NAV toggle; right-edge resize grip 150-340px;
+    open/width persisted (`av-rail-open` / `av-rail-w`); auto-hidden under 1100px; `__avRail`
+    facade + RAIL SELFTEST proof.
+  - FLOAT WINDOW CONTROLS (`av_panels.js`): pin (stays on top), opacity cycle (button AND wheel
+    over the title bar), minimize -> collapses to a title-bar row stacked in the left corner
+    ("stacked modules without GUI clutter"), maximize/restore, close (existing). NAMED LAYOUTS:
+    save/load under a name (`av-layouts`), palette "Workspace: save/load layout...".
+  - Header NAV button + module-menu "Float / dock module" item; body.html wraps main in
+    `.av-work` with the rail aside.
+- Rigs: smoke 42 (rail + sectioned tabs + float controls + named layouts — first run green);
+  battery 23 suites ALL GREEN on the frozen bytes, zero exit=1 (cockpit 21, m2 40, platform 52,
+  a11y 32 included).
+- PERF GATE: bench exit=0; knee 96/128 monotone; realtime light 64 / fat 48 — the same
+  environmental class proven by the R2 A/B (worklet sha d7f0ee41 UNCHANGED; page-side wave).
+- Commits: wave + close (this addendum).
+- Carried: drag-to-modulate gesture, Store browser overlay, preset-name header chip, pane
+  scroll-shadow scrims, module-menu Copy/Paste, page-switching for advanced module sets,
+  P·2 minBLEP, PERFECT TUNINGS, owner pass (Ctrl+F5 once for the new service-worker cache).
