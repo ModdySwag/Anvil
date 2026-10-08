@@ -19,7 +19,7 @@ const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || exist
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* freeze pin: set to the frozen sha after the R1 build; null = unpinned report */
-const EXPECT_SHA = '24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72';
+const EXPECT_SHA = '56214e7193106b798349810b0d924b88221688817aff7e07ac37f9ab6a1008e7';
 
 const candidates = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',

@@ -45,6 +45,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R6 panes: scroll-shadow scrims (sticky gradient edges on the zone panes)  -> {"beforeBg":true,"afterBg":true,"sticky":"sticky"}
  ok   R7 rail menu: 9 chevron headers + zone section toggles independently, persists to av-rail-sections, aria tracks it  -> {"glyphs":9,"g":true,"chevBtn":true,"exp0":true,"vis0":"flex","aria0":"true","map0":{"synth":1,"fx":0,"mod":0,"seq":0,"studio":0,"store":0,"code":0,"system":0,"panels":1},"exp1":false,"vis1":"none","aria1":"false","map1":{"synth":0,"fx":0,"mod":0,"seq":0,"studio":0,"store":0,"code":0,"system":0,"panels":1},"exp2":true,"jumped":"synth"}
  ok   R7 panels section: the head collapses/expands the quick-view body and persists (av-rail-sections.panels)  -> {"sec":true,"head":true,"body":true,"pvis0":"block","paria0":"true","pvis1":"none","paria1":"false","pmap":{"synth":1,"fx":0,"mod":0,"seq":0,"studio":0,"store":0,"code":0,"system":0,"panels":0},"pvis2":"block"}
+ ok   R8 mod drag: 14 chips + drag begins (body class, 4 target halos) + drop on filter.cutoff assigns env1->cutoff with the mod ring shown + unmapped knob refused  -> {"chips":14,"knob":true,"slots0":0,"dt":true,"dragging":true,"targets":4,"hover":true,"dragging2":false,"targets2":0,"slots":1,"s1":"env1->cutoff","ringShown":true,"ringDisp":"block","modAttr":"env1:+50%","rows":1,"slotsAfter":1}
+ ok   R8 matrix grammar: header (SOURCE/CURVE/AMOUNT/POL/DESTINATION/OUT) + re-drop re-defaults one instance + POL flips sign + macro OUT tracks 42% + cleanup clears ring  -> {"hdr":"SOURCECURVEAMOUNTPOLDESTINATIONOUT","again":true,"single":true,"amtReset":true,"pol0":"+","amtPol":-0.5,"pol1":"±","out":"42%","ringCleared":true,"slotsEnd":0,"rowsEnd":0}
  ok   zero page errors
 
-47 passed, 0 failed
+49 passed, 0 failed

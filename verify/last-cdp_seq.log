@@ -1,6 +1,6 @@
-index.html sha256 (before): 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
+index.html sha256 (before): 56214e7193106b798349810b0d924b88221688817aff7e07ac37f9ab6a1008e7
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-1791457041007
+cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-1791458711639
  ok   boot: data-av-ready flips
  ok   seq card mounted: #av-seq-host + card root + grid (4 rows)
  ok   grid counts: 4 rows × N cells (N ≥ 4; total ≥ 64), every cell pinned data-track/data-step  -> [16,16,16,16] · total=64
@@ -12,32 +12,32 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-179145704
  ok   timing witness: rig's OWN AnalyserNode armed on the master tap (avMasterFor, ~5 ms RMS sampling)  -> {"ok":true,"sr":48000,"fft":256}
  ok   witness helpers: pattern builder live (H.pattern)  -> ok
  ok   witness patch: engine.kind -> drum accepted (one-shot kick c2 = midi 36; kind restored at the end)  -> {"ok":true,"prev":{"kind":"va","kick":0.4},"mirror":"drum"}
- ok   baseline: silent control window BEFORE the first PLAY (RMS < 0.01)  -> {"max":0,"n":103}
+ ok   baseline: silent control window BEFORE the first PLAY (RMS < 0.01)  -> {"max":0,"n":496}
    · transport run pattern: {"ok":true,"why":"import"}
- ok   real PLAY click: transport runs (avSeqIsPlaying) and the playhead .cur advances  -> playing=true · cur "0:9,1:9,2:9,3:9" -> "0:14,1:14,2:14,3:14" · click window 806 ms
+ ok   real PLAY click: transport runs (avSeqIsPlaying) and the playhead .cur advances  -> playing=true · cur "0:8,1:8,2:8,3:8" -> "0:14,1:14,2:14,3:14" · click window 781 ms
  ok   real STOP click: transport halts and the playhead freezes  -> halted=true · frozen ""
  ok   timing: known 16-step all-on pattern loaded @120 bpm (S=50) via the pinned import path  -> {"ok":true,"why":"import"}
-   · timing capture: samples=3694 · onsets=144 · maxRms=0.091 · slopeThr=0.020
- ok   timing: first onset lands within the PLAY click window (transport actually started)  -> first onset -213 ms after the click reads
+   · timing capture: samples=3692 · onsets=144 · maxRms=0.091 · slopeThr=0.020
+ ok   timing: first onset lands within the PLAY click window (transport actually started)  -> first onset -209 ms after the click reads
  ok   timing: 16 onsets/bar over 8 bars (128 matched grid slots)  -> matched=128/128
- ok   timing: mean |onset − grid| ≤ 8 ms (phase-fitted, jitter witness)  -> mean|Δ|=2.913 ms
- ok   timing: NO cumulative drift — bar 8 within ±6 ms of bar 1  -> bar1=2.687 ms · bar8=2.844 ms · drift=0.156 ms
+ ok   timing: mean |onset − grid| ≤ 8 ms (phase-fitted, jitter witness)  -> mean|Δ|=2.775 ms
+ ok   timing: NO cumulative drift — bar 8 within ±6 ms of bar 1  -> bar1=-0.928 ms · bar8=-2.662 ms · drift=-1.734 ms
    · swing pattern: {"ok":true,"why":"import"}
-   · swing capture: onsets=59 · evenShiftAlt=-23.406 ms · evenSpread=8.906
- ok   swing: S=66 ⇒ odd onsets shift ≈ +20 ms (16 % of stepDur) ±6 ms  -> oddShift=23.406 ms over n=48
+   · swing capture: onsets=59 · evenShiftAlt=-25.142 ms · evenSpread=0.802
+ ok   swing: S=66 ⇒ odd onsets shift ≈ +20 ms (16 % of stepDur) ±6 ms  -> oddShift=25.142 ms over n=48
  ok   probability: prob 0 on the odd steps ⇒ deterministic silence (16 onsets / 2 bars)  -> in2bars=16 · total onsets=22
- ok   probability: prob 100 ⇒ all steps present (32 onsets / 2 bars)  -> in2bars=32 · total onsets=43
+ ok   probability: prob 100 ⇒ all steps present (32 onsets / 2 bars)  -> in2bars=32 · total onsets=42
  ok   pattern round-trip (UI path): real EXPORT writes the pinned JSON → real IMPORT → avSeqSnap() deep-equal  -> exported 29735 chars · import deep-equal
    · p-lock pattern: {"ok":true,"why":"import"}
- ok   p-lock: filter.cutoff 800 witnessed at the locked step (funnel tap + avParams mirror poll)  -> funnel hits=6 · mirror@800 samples=581
+ ok   p-lock: filter.cutoff 800 witnessed at the locked step (funnel tap + avParams mirror poll)  -> funnel hits=6 · mirror@800 samples=583
  ok   p-lock: base value restored after the lock ended (funnel + mirror after stop)  -> base=800 · restore hits=6 · mirror after stop=800
  ok   undo/redo: real cell click edits (snap changes) → avUndo() restores pre-edit → avRedo() reapplies  -> edited=true · undo=true restore=deep-equal · redo=true reapply=deep-equal
  ok   undo: UI repaint after avUndo() (cell .on follows the restored snapshot)  -> cell .on cleared=true
    · witness patch restored: engine.kind="va" kick.decay=0.4
  ok   zero page errors
  ok   screenshot: renders/p4-seq-suite.png (the sequencer card, scale 2)  -> 239950 bytes · clip 1010×813 @2x
-index.html sha256 (after): 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
- ok   freeze: index.html sha256 = pinned  -> pinned 24491eddd20c…
+index.html sha256 (after): 56214e7193106b798349810b0d924b88221688817aff7e07ac37f9ab6a1008e7
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 56214e7193106b798349810b0d924b88221688817aff7e07ac37f9ab6a1008e7
+ ok   freeze: index.html sha256 = pinned  -> pinned 56214e719310…
 
 31 passed, 0 failed

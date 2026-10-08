@@ -35,7 +35,9 @@
      avModLoad(snap) -> bool      sanitising load / round-trip partner of avModSnap
      avModSlotAdd/Remove/Set, avModMacroSet, avModParamHit, avModReplayWhenReady,
      avModEnsureHooks, avModSrcIndex, avModDstIndex, avModSourceNames, avModTargetNames,
-     avModDefaults, AV_MOD_VERSION, AV_MOD_SOURCES, AV_MOD_TARGETS, AV_MOD_CURVES. */
+     avModDefaults, AV_MOD_VERSION, AV_MOD_SOURCES, AV_MOD_TARGETS, AV_MOD_CURVES.
+     R8: avModAssign(src, knobPath) -> bool (the drop-map assign law), avModDropMap(),
+     avModDragBegin/DragEnd, avModSyncRings, avModStatus(msg). */
 
 "use strict";
 
@@ -59,6 +61,23 @@ const AV_MOD_MACRO_COUNT = 8;        /* §4: 8 macros                      */
 const AV_MOD_MAX_SLOTS = 32;         /* §4: up to 32 matrix slots         */
 const AV_MOD_SLOT_STRIDE = 4;        /* [srcIdx, dstIdx, amt, curve]      */
 const AV_MOD_MACRO_PREFIX = "mod.macro";   /* knob path: mod.macro1 .. mod.macro8 */
+
+/* R8 — drag-to-modulate: the knob paths whose drops reach a pinned engine target (v1). A drop
+   anywhere else in the DOM is refused honestly (no engine drain exists for it). */
+const AV_MOD_DROP_MAP = {
+  "filter.cutoff": "cutoff",
+  "filter.reso": "reso",
+  "osc1.level": "osc1.level",
+  "osc2.level": "osc2.level",
+};
+
+/* chip + ring colour per source family (CSS vars resolve page-side) */
+const AV_MOD_SRC_COLORS = {
+  env1: "var(--mod-green)", env2: "var(--mod-green)", lfo1: "var(--mod-purple)",
+  vel: "var(--mod-yellow)", key: "var(--mod-sky)", rand: "#9AA7B0",
+  macro1: "var(--mod-orange)", macro2: "var(--mod-orange)", macro3: "var(--mod-orange)", macro4: "var(--mod-orange)",
+  macro5: "var(--mod-orange)", macro6: "var(--mod-orange)", macro7: "var(--mod-orange)", macro8: "var(--mod-orange)",
+};
 
 /* ---------- the model (single source of truth) ---------- */
 
@@ -158,6 +177,7 @@ function avModFacadeMod() {
 
 /* build + send. false when the parent hook is absent or refuses; never throws. */
 function avModPost() {
+  avModSyncRings();
   const send = avModFacadeMod();
   if (!send) return false;
   const payload = avModPayload();
@@ -213,6 +233,7 @@ function avModParamHit(path, value) {
   st.macros[i].value = v;
   try { if (typeof avParams !== "undefined" && avParams && typeof path === "string") avParams[path] = v; } catch (e) { /* no mirror */ }
   avModPost();
+  avModSyncOutsFor("macro" + (i + 1));
   return true;
 }
 
@@ -296,6 +317,230 @@ function avModSlotSet(i, patch) {
   return true;
 }
 
+/* ---------- R8 drag-to-modulate (chips -> knobs; the drop map is the v1 engine surface) ----------
+
+   A chip drag begins on .av-mod-chip (delegated at the document, so floats and re-renders are
+   covered); every knob whose data-knob maps through AV_MOD_DROP_MAP shows the target halo, a
+   droppable hover marks the drop point, and the drop writes ONE slot per (src, dst) pair with the
+   default depth (+0.5, linear). Un-mapped knobs are refused honestly (status line). avModSyncRings
+   paints the mod ring on mapped knobs (first slot's source colour, |amt| span) and rides
+   avModPost, so every model change repaints it. */
+
+let avModDragSrc = null;      /* source name being dragged; null when idle */
+let avModDropHover = null;    /* the knob currently marked droppable */
+
+function avModDragActive() { return avModDragSrc != null; }
+
+function avModDropMap() {
+  const o = {};
+  const ks = Object.keys(AV_MOD_DROP_MAP);
+  for (let i = 0; i < ks.length; i++) o[ks[i]] = AV_MOD_DROP_MAP[ks[i]];
+  return o;
+}
+
+function avModMappableKnobs() {
+  try {
+    if (typeof document === "undefined" || !document || typeof document.querySelectorAll !== "function") return [];
+    const out = [];
+    const paths = Object.keys(AV_MOD_DROP_MAP);
+    for (let i = 0; i < paths.length; i++) {
+      const els = document.querySelectorAll('.av-knob[data-knob="' + paths[i] + '"]');
+      for (let j = 0; j < els.length; j++) out.push(els[j]);
+    }
+    return out;
+  } catch (e) { return []; }
+}
+
+function avModDragBegin(src) {
+  try {
+    if (avModSrcIndex(src) < 0) return false;
+    avModDragSrc = String(src);
+    if (typeof document !== "undefined" && document && document.body && document.body.classList) {
+      document.body.classList.add("av-drag-modsrc");
+    }
+    const knobs = avModMappableKnobs();
+    for (let i = 0; i < knobs.length; i++) knobs[i].classList.add("av-mod-target");
+    return true;
+  } catch (e) { return false; }
+}
+
+function avModDragEnd() {
+  try {
+    avModDragSrc = null;
+    avModDropHover = null;
+    if (typeof document !== "undefined" && document && document.body && document.body.classList) {
+      document.body.classList.remove("av-drag-modsrc");
+    }
+    if (typeof document !== "undefined" && document && typeof document.querySelectorAll === "function") {
+      const marked = document.querySelectorAll(".av-mod-target, .av-mod-droppable");
+      for (let i = 0; i < marked.length; i++) {
+        marked[i].classList.remove("av-mod-target");
+        marked[i].classList.remove("av-mod-droppable");
+      }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the assignment law: ONE slot per (src, dst); a re-drop re-defaults the depth */
+function avModAssign(src, path) {
+  try {
+    const dst = AV_MOD_DROP_MAP[String(path == null ? "" : path)];
+    if (!dst || avModSrcIndex(src) < 0) return false;
+    const st = avModModelEnsure();
+    let k = -1;
+    for (let i = 0; i < st.slots.length; i++) {
+      if (st.slots[i].src === src && st.slots[i].dst === dst) { k = i; break; }
+    }
+    if (k >= 0) return avModSlotSet(k, { amt: 0.5 });
+    const added = avModSlotAdd(src, dst, 0.5, 0);
+    if (!added) avModStatus("matrix full \u2014 " + AV_MOD_MAX_SLOTS + " slots");
+    return added;
+  } catch (e) { return false; }
+}
+
+/* the mod ring on mapped knobs: first slot's source colour + |amt| span; extra count in data-mod */
+function avModSyncRings() {
+  try {
+    if (typeof document === "undefined" || !document || typeof document.querySelectorAll !== "function") return false;
+    const paths = Object.keys(AV_MOD_DROP_MAP);
+    const st = avModModelEnsure();
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i];
+      const dst = AV_MOD_DROP_MAP[path];
+      let first = null, count = 0;
+      for (let k = 0; k < st.slots.length; k++) {
+        if (st.slots[k].dst === dst) { if (!first) first = st.slots[k]; count++; }
+      }
+      const els = document.querySelectorAll('.av-knob[data-knob="' + path + '"]');
+      for (let j = 0; j < els.length; j++) {
+        const el = els[j];
+        if (first) {
+          const span = Math.max(0, Math.min(270, Math.abs(first.amt) * 270));
+          el.classList.add("av-mod-shown");
+          el.setAttribute("data-mod", first.src + ":" + avModAmtText(first.amt) + (count > 1 ? " +" + (count - 1) : ""));
+          try {
+            el.style.setProperty("--mod-span", span.toFixed(1) + "deg");
+            el.style.setProperty("--mod-color", AV_MOD_SRC_COLORS[first.src] || "var(--teal)");
+          } catch (e2) { /* style best-effort */ }
+        } else if (el.classList.contains("av-mod-shown")) {
+          el.classList.remove("av-mod-shown");
+          el.removeAttribute("data-mod");
+        }
+      }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avModStatus(msg) {
+  try {
+    const el = (typeof document !== "undefined" && document && typeof document.getElementById === "function") ? document.getElementById("av-mod-status") : null;
+    if (el) el.textContent = String(msg == null ? "" : msg);
+    return !!el;
+  } catch (e) { return false; }
+}
+
+/* the OUT column: macro sources read the page model; per-voice sources have no page value */
+function avModOutText(slot) {
+  const m = /^macro([1-8])$/.exec(String(slot && slot.src));
+  if (!m) return "\u2014";
+  const st = avModModelEnsure();
+  const i = Number(m[1]) - 1;
+  return Math.round(avModClamp01(st.macros[i].value) * 100) + "%";
+}
+
+function avModSyncOutsFor(srcName) {
+  try {
+    const host = avModHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const st = avModModelEnsure();
+    for (let i = 0; i < st.slots.length; i++) {
+      if (st.slots[i].src !== srcName) continue;
+      const out = host.querySelector('[data-slot-out="' + i + '"]');
+      if (out) out.textContent = avModOutText(st.slots[i]);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the document-level drag plumbing (bound once) ---------- */
+
+function avModDragKnobFrom(e) {
+  try {
+    const t = e && e.target;
+    const knob = (t && typeof t.closest === "function") ? t.closest(".av-knob[data-knob]") : null;
+    if (!knob) return null;
+    return AV_MOD_DROP_MAP[knob.getAttribute("data-knob")] ? knob : null;
+  } catch (e2) { return null; }
+}
+
+function avModDragStartEvent(e) {
+  try {
+    const t = e && e.target;
+    const chip = (t && typeof t.closest === "function") ? t.closest(".av-mod-chip") : null;
+    if (!chip) return;
+    const src = chip.getAttribute("data-src");
+    if (avModSrcIndex(src) < 0) return;
+    if (e.dataTransfer) {
+      try { e.dataTransfer.setData("text/av-modsrc", src); e.dataTransfer.effectAllowed = "copy"; } catch (e2) { /* dt best-effort */ }
+    }
+    avModDragBegin(src);
+  } catch (e3) { /* drag start best-effort */ }
+}
+
+function avModDragOverEvent(e) {
+  try {
+    const dt = e && e.dataTransfer;
+    const types = dt && dt.types ? dt.types : null;
+    const hasType = types && Array.prototype.indexOf.call(types, "text/av-modsrc") >= 0;
+    if (!avModDragActive() && !hasType) return;
+    const knob = avModDragKnobFrom(e);
+    if (avModDropHover && avModDropHover !== knob) avModDropHover.classList.remove("av-mod-droppable");
+    avModDropHover = knob;
+    if (knob) {
+      knob.classList.add("av-mod-droppable");
+      if (e.preventDefault) e.preventDefault();
+      if (dt) { try { dt.dropEffect = "copy"; } catch (e2) { /* ok */ } }
+    }
+  } catch (e3) { /* hover best-effort */ }
+}
+
+function avModDropEvent(e) {
+  try {
+    const dt = e && e.dataTransfer;
+    let src = avModDragSrc;
+    if (!src && dt && typeof dt.getData === "function") {
+      try { src = dt.getData("text/av-modsrc"); } catch (e2) { src = null; }
+    }
+    if (!src || avModSrcIndex(src) < 0) return;
+    if (e.preventDefault) e.preventDefault();
+    const knob = avModDragKnobFrom(e) || avModDropHover;
+    if (knob) {
+      const path = knob.getAttribute("data-knob");
+      if (avModAssign(src, path)) avModStatus("assigned " + src + " \u2192 " + path);
+    } else {
+      const t = e && e.target;
+      const anyKnob = (t && typeof t.closest === "function") ? t.closest(".av-knob[data-knob]") : null;
+      avModStatus(anyKnob ? (anyKnob.getAttribute("data-knob") + " is not a v1 mod target") : "");
+    }
+    avModDragEnd();
+  } catch (e3) { /* drop best-effort */ }
+}
+
+function avModBindDrag() {
+  try {
+    if (typeof document === "undefined" || !document || typeof document.addEventListener !== "function") return false;
+    if (document.__avModDragBound === true) return true;
+    document.__avModDragBound = true;
+    document.addEventListener("dragstart", avModDragStartEvent);
+    document.addEventListener("dragend", function () { avModDragEnd(); });
+    document.addEventListener("dragover", avModDragOverEvent);
+    document.addEventListener("drop", avModDropEvent);
+    return true;
+  } catch (e) { return false; }
+}
+
 function avModMacroSet(i, value) {
   const st = avModModelEnsure();
   const k = Math.floor(Number(i));
@@ -305,6 +550,7 @@ function avModMacroSet(i, value) {
   const path = AV_MOD_MACRO_PREFIX + (k + 1);
   try { if (typeof avParams !== "undefined" && avParams) avParams[path] = v; } catch (e) { /* no mirror */ }
   avModPost();
+  avModSyncOutsFor("macro" + (k + 1));
   return true;
 }
 
@@ -393,31 +639,50 @@ function avModCurveOptionsHTML(curve) {
   return out;
 }
 
-/* one matrix row: n · src · -> · dst · amt slider (+readout) · curve · remove */
+/* one matrix row in the Serum column grammar: n · source · curve · amount · pol · destination · out · remove */
 function avModSlotRowHTML(slot, idx) {
   const n = idx + 1;
   return '<div class="av-mod-slot" data-slot="' + idx + '">' +
     '<span class="av-mod-slot-n">' + n + "</span>" +
     '<select class="av-select av-mod-src" data-slot-field="src" data-slot-index="' + idx + '" aria-label="Slot ' + n + ' source">' +
     avModOptionsHTML(AV_MOD_SOURCES, slot.src) + "</select>" +
-    '<span class="av-mod-arrow">&rarr;</span>' +
-    '<select class="av-select av-mod-dst" data-slot-field="dst" data-slot-index="' + idx + '" aria-label="Slot ' + n + ' target">' +
-    avModOptionsHTML(AV_MOD_TARGETS, slot.dst) + "</select>" +
+    '<select class="av-select av-mod-curve" data-slot-field="curve" data-slot-index="' + idx + '" aria-label="Slot ' + n + ' curve">' +
+    avModCurveOptionsHTML(slot.curve) + "</select>" +
     '<span class="av-mod-amt-box"><input type="range" class="av-mod-amt" data-slot-field="amt" data-slot-index="' + idx +
     '" min="-1" max="1" step="0.01" value="' + avModNumText(slot.amt) + '" aria-label="Slot ' + n + ' amount">' +
     '<span class="av-mod-amt-val" data-slot-amtval="' + idx + '">' + avModEsc(avModAmtText(slot.amt)) + "</span></span>" +
-    '<select class="av-select av-mod-curve" data-slot-field="curve" data-slot-index="' + idx + '" aria-label="Slot ' + n + ' curve">' +
-    avModCurveOptionsHTML(slot.curve) + "</select>" +
+    '<button type="button" class="av-btn mini av-mod-pol" data-slot-pol="' + idx + '" title="Flip polarity" aria-label="Slot ' + n + ' polarity">' +
+    (slot.amt < 0 ? "&plusmn;" : "+") + "</button>" +
+    '<select class="av-select av-mod-dst" data-slot-field="dst" data-slot-index="' + idx + '" aria-label="Slot ' + n + ' target">' +
+    avModOptionsHTML(AV_MOD_TARGETS, slot.dst) + "</select>" +
+    '<span class="av-mod-out av-dim" data-slot-out="' + idx + '">' + avModEsc(avModOutText(slot)) + "</span>" +
     '<button type="button" class="av-btn mini av-mod-del" data-slot-del="' + idx + '" title="Remove slot ' + n + '" aria-label="Remove slot ' + n + '">&#10005;</button>' +
     "</div>";
+}
+
+function avModHdrHTML() {
+  return '<div class="av-mod-hdr" aria-hidden="true"><span></span><span>SOURCE</span><span>CURVE</span>' +
+    "<span>AMOUNT</span><span>POL</span><span>DESTINATION</span><span>OUT</span><span></span></div>";
+}
+
+function avModSrcStripHTML() {
+  let out = "";
+  for (let i = 0; i < AV_MOD_SOURCES.length; i++) {
+    const n = AV_MOD_SOURCES[i];
+    out += '<button type="button" class="av-mod-chip" data-src="' + avModEsc(n) + '" draggable="true"' +
+      ' style="--chip:' + avModEsc(AV_MOD_SRC_COLORS[n] || "var(--teal)") + '"' +
+      ' title="Drag ' + avModEsc(n) + ' onto a knob to modulate it"' +
+      ' aria-label="Modulation source ' + avModEsc(n) + ' - drag onto a knob">' + avModEsc(n) + "</button>";
+  }
+  return out;
 }
 
 function avModSlotsHTML() {
   const st = avModModelEnsure();
   if (!st.slots.length) {
-    return '<p class="av-mod-empty av-note av-dim">No modulation slots yet &mdash; ADD SLOT wires a source to a target (up to 32).</p>';
+    return '<p class="av-mod-empty av-note av-dim">No modulation slots yet &mdash; drag a source chip onto a target knob, or ADD SLOT (up to 32).</p>';
   }
-  let out = "";
+  let out = avModHdrHTML();
   for (let i = 0; i < st.slots.length; i++) out += avModSlotRowHTML(st.slots[i], i);
   return out;
 }
@@ -426,14 +691,16 @@ function avModBodyHTML() {
   const st = avModModelEnsure();
   return '<div class="av-mod-body">' +
     '<div class="av-mod-sec"><div class="av-mod-sec-lbl">MACROS</div>' + avModMacroRowHTML() + "</div>" +
+    '<div class="av-mod-sec"><div class="av-mod-sec-lbl">SOURCES</div>' + avModSrcStripHTML() +
+    '<div class="av-mod-status av-dim" id="av-mod-status"></div></div>' +
     '<div class="av-mod-sec"><div class="av-mod-sec-lbl">MATRIX</div>' +
     '<div class="av-mod-slots" id="av-mod-slots">' + avModSlotsHTML() + "</div>" +
     '<div class="av-mod-actions"><button type="button" class="av-btn av-mod-add" id="av-mod-add">+ ADD SLOT</button>' +
     '<span class="av-mod-count av-dim" id="av-mod-count">' + st.slots.length + " / " + AV_MOD_MAX_SLOTS + "</span></div>" +
     "</div>" +
     '<p class="av-note av-dim">Sources: env1 &middot; env2 &middot; lfo1 &middot; vel &middot; key &middot; rand (per note) &middot; macro1-8. ' +
-    'Drains: cutoff &plusmn;4 oct &middot; reso &plusmn;0.5 &middot; pitch &plusmn;12 st &middot; osc levels &plusmn;1 &middot; ' +
-    'pan &plusmn;1 (engine-level; the rest per-voice). Curves: linear / exp / S.</p>' +
+    'Drag a chip onto a mapped knob (filter cutoff / reso &middot; osc1 / osc2 level) to write a slot; pitch &amp; pan stay matrix-only. ' +
+    'Drains: cutoff &plusmn;4 oct &middot; reso &plusmn;0.5 &middot; pitch &plusmn;12 st &middot; osc levels &plusmn;1 &middot; pan &plusmn;1. Curves: linear / exp / S.</p>' +
     "</div>";
 }
 
@@ -452,8 +719,15 @@ function avModSyncAmtText(k) {
   const host = avModHost();
   if (!host || typeof host.querySelector !== "function") return false;
   try {
+    const st = avModModelEnsure();
+    const s = st.slots[k];
+    if (!s) return false;
     const el = host.querySelector('[data-slot-amtval="' + k + '"]');
-    if (el) el.textContent = avModAmtText(avModModelEnsure().slots[k].amt);
+    if (el) el.textContent = avModAmtText(s.amt);
+    const pol = host.querySelector('[data-slot-pol="' + k + '"]');
+    if (pol) pol.textContent = (s.amt < 0) ? "\u00B1" : "+";
+    const out = host.querySelector('[data-slot-out="' + k + '"]');
+    if (out) out.textContent = avModOutText(s);
     return true;
   } catch (e) { return false; }
 }
@@ -489,6 +763,15 @@ function avModClick(e) {
   const t = avModEventTarget(e);
   if (!t) return;
   if (t.closest(".av-mod-add")) { avModSlotAdd(); return; }
+  const chip = t.closest(".av-mod-chip");
+  if (chip) { avModStatus("drag " + chip.getAttribute("data-src") + " onto a knob"); return; }
+  const pol = t.closest(".av-mod-pol");
+  if (pol) {
+    const i = Math.floor(Number(pol.getAttribute("data-slot-pol")));
+    const st = avModModelEnsure();
+    if (st.slots[i]) avModSlotSet(i, { amt: -st.slots[i].amt });
+    return;
+  }
   const del = t.closest(".av-mod-del");
   if (del) avModSlotRemove(Number(del.getAttribute("data-slot-del")));
 }
@@ -540,7 +823,9 @@ function avModInit() {
     host.innerHTML = avModBodyHTML();
     avKnobBind(host);
     avModBindCard(host);
+    avModBindDrag();
     avModRenderSlots();
+    avModSyncRings();
     avModReplayWhenReady();
     return true;
   } catch (e) {
@@ -554,8 +839,10 @@ function avModInit() {
 function avModClasses() {
   return [
     "av-mod-body", "av-mod-sec", "av-mod-sec-lbl", "av-mod-macros", "av-mod-slots",
-    "av-mod-slot", "av-mod-slot-n", "av-mod-arrow", "av-mod-src", "av-mod-dst",
+    "av-mod-slot", "av-mod-slot-n", "av-mod-src", "av-mod-dst",
     "av-mod-amt-box", "av-mod-amt", "av-mod-amt-val", "av-mod-curve", "av-mod-del",
     "av-mod-empty", "av-mod-actions", "av-mod-add", "av-mod-count",
+    "av-mod-srcstrip", "av-mod-chip", "av-mod-status", "av-mod-hdr", "av-mod-pol", "av-mod-out",
+    "av-mod-target", "av-mod-droppable", "av-mod-shown", "av-knob-mod",
   ];
 }

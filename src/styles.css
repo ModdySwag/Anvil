@@ -1165,12 +1165,12 @@ body.av-palette-open { }
 .av-mod-body { display: flex; flex-direction: column; gap: 8px; }
 .av-mod-sec { display: flex; flex-direction: column; gap: 6px; }
 .av-mod-sec-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); }
-.av-mod-slots { display: flex; flex-direction: column; gap: 6px; }
-.av-mod-slot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 5px 8px; }
+.av-mod-slots { display: flex; flex-direction: column; gap: 6px; overflow-x: auto; }
+.av-mod-slot { display: grid; grid-template-columns: 18px 76px 62px 104px 28px 96px 44px 24px; gap: 6px; align-items: center; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 5px 8px; }
 .av-mod-slot-n { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 18px; }
 .av-mod-arrow { color: var(--teal-deep); font-family: var(--mono); }
-.av-mod-amt-box { display: inline-flex; align-items: center; gap: 4px; }
-.av-mod-amt { width: 74px; }
+.av-mod-amt-box { display: inline-flex; align-items: center; gap: 4px; min-width: 0; }
+.av-mod-amt { flex: 1 1 auto; width: auto; min-width: 0; }
 .av-mod-amt-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 34px; text-align: right; }
 .av-mod-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .av-mod-count { }
@@ -1679,6 +1679,42 @@ body.av-drag-card, body.av-drag-card * { cursor: grabbing !important; }
   bottom: 0; margin-top: -16px;
   background: linear-gradient(0deg, rgba(10,14,17,.9) 0%, rgba(10,14,17,0) 100%);
 }
+
+/* ============================================================================
+   R8 — mod drag-to-modulate: the source-chip strip, the drag halos, the knob mod ring, and the
+   matrix column grammar (SOURCE · CURVE · AMOUNT · POL · DESTINATION · OUT). The chips begin a
+   drag the mod card delegates at the document; mapped knobs show the halo; the ring rides
+   avModPost (first slot's source colour, |amt| span). */
+.av-mod-srcstrip { display: flex; flex-wrap: wrap; gap: 5px; }
+.av-mod-chip {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+  background: var(--raised); border: 1px solid var(--hair); border-radius: 999px;
+  color: var(--text-2); font-family: var(--mono); font-size: 10.5px; cursor: grab;
+}
+.av-mod-chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--chip, var(--teal)); flex: none; }
+.av-mod-chip:hover { border-color: var(--chip, var(--teal)); color: var(--text); }
+body.av-drag-modsrc, body.av-drag-modsrc * { cursor: grabbing !important; }
+.av-mod-status { font-size: 10.5px; min-height: 14px; }
+.av-mod-hdr { display: grid; grid-template-columns: 18px 76px 62px 104px 28px 96px 44px 24px; gap: 6px; align-items: center; padding: 0 8px; }
+.av-mod-hdr span { font-family: var(--mono); font-size: 8.5px; letter-spacing: .1em; color: var(--text-3); text-transform: uppercase; }
+.av-mod-pol { min-width: 24px; padding: 0 4px; }
+.av-mod-out { font-family: var(--mono); font-size: 10px; color: var(--text-3); text-align: right; }
+.av-knob.av-mod-target::after {
+  content: ""; position: absolute; inset: -9px; border-radius: 50%;
+  border: 1px dashed var(--teal-deep); opacity: .5; pointer-events: none;
+}
+.av-knob.av-mod-droppable::after { border-style: solid; border-color: var(--teal); opacity: 1; }
+.av-knob-mod {
+  position: absolute; inset: -7px; border-radius: 50%; pointer-events: none; display: none;
+  background: conic-gradient(from 225deg,
+    var(--mod-color, var(--teal)) 0deg var(--mod-span, 0deg),
+    rgba(46, 216, 201, 0.10) var(--mod-span, 0deg) 270deg,
+    transparent 270deg 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 64%, #000 65%);
+  mask: radial-gradient(circle, transparent 0 64%, #000 65%);
+  opacity: .95;
+}
+.av-knob.av-mod-shown .av-knob-mod { display: block; }
 
 
 

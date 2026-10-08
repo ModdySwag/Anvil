@@ -113,6 +113,7 @@ function avKnobHTML(path, label, opts = {}) {
     ' aria-valuemin="' + avKnobEsc(min) + '" aria-valuemax="' + avKnobEsc(max) + '" aria-valuenow="' + avKnobEsc(val) + '"' +
     ' aria-label="' + avKnobEsc(label || path) + '" title="' + avKnobEsc(tip) + '">' +
     '<div class="av-knob-ring"></div>' +
+    '<div class="av-knob-mod"></div>' +
     '<div class="av-knob-face"><span class="av-knob-mark"></span></div>' +
     '</div>' +
     '<div class="av-knob-lbl">' + avKnobEsc(label || "") + '</div>' +

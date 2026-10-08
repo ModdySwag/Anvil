@@ -771,6 +771,88 @@ async function main() {
     && r7p2.pvis1 === 'none' && r7p2.paria1 === 'false' && !!r7p2.pmap && r7p2.pmap.panels === 0
     && r7p2.pvis2 === 'block', JSON.stringify(r7p2));
 
+  /* 6y. R8: mod drag-to-modulate — chips strip, drop map, the mod ring, the refusal path */
+  const r8R = await ev(`(() => {
+    const info = { chips: document.querySelectorAll('#av-mod-host .av-mod-chip[data-src]').length };
+    const chip = document.querySelector('#av-mod-host .av-mod-chip[data-src="env1"]');
+    const knob = document.querySelector('.av-knob[data-knob="filter.cutoff"]');
+    info.knob = !!knob;
+    info.slots0 = (typeof avModSnap === 'function') ? avModSnap().slots.length : -1;
+    let dt = null;
+    try { dt = new DataTransfer(); } catch (e) { dt = null; }
+    info.dt = !!dt;
+    if (chip && knob && dt) {
+      chip.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer: dt }));
+      info.dragging = document.body.classList.contains('av-drag-modsrc');
+      info.targets = document.querySelectorAll('.av-mod-target').length;
+      knob.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
+      info.hover = knob.classList.contains('av-mod-droppable');
+      knob.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+    }
+    info.dragging2 = document.body.classList.contains('av-drag-modsrc');
+    info.targets2 = document.querySelectorAll('.av-mod-target').length;
+    const slots = (typeof avModSnap === 'function') ? avModSnap().slots : [];
+    info.slots = slots.length;
+    const s0 = slots.length ? slots[slots.length - 1] : null;
+    info.s1 = s0 ? (s0.src + '->' + s0.dst) : null;
+    const modEl = knob ? knob.querySelector('.av-knob-mod') : null;
+    info.ringShown = knob ? knob.classList.contains('av-mod-shown') : null;
+    info.ringDisp = modEl ? getComputedStyle(modEl).display : null;
+    info.modAttr = knob ? knob.getAttribute('data-mod') : null;
+    info.rows = document.querySelectorAll('#av-mod-slots .av-mod-slot').length;
+    const other = document.querySelector('.av-knob[data-knob="filter.envAmt"]');
+    const chip2 = document.querySelector('#av-mod-host .av-mod-chip[data-src="env2"]');
+    if (other && chip2 && dt) {
+      chip2.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer: dt }));
+      other.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+    }
+    info.slotsAfter = (typeof avModSnap === 'function') ? avModSnap().slots.length : -1;
+    return info;
+  })()`);
+  const r8 = r8R.value || {};
+  check('R8 mod drag: 14 chips + drag begins (body class, 4 target halos) + drop on filter.cutoff assigns env1->cutoff with the mod ring shown + unmapped knob refused',
+    r8.chips === 14 && r8.knob === true && r8.dt === true
+    && r8.dragging === true && r8.targets === 4 && r8.hover === true
+    && r8.dragging2 === false && r8.targets2 === 0
+    && r8.slots === r8.slots0 + 1 && r8.s1 === 'env1->cutoff'
+    && r8.ringShown === true && r8.ringDisp === 'block' && (r8.modAttr || '').indexOf('env1:') === 0
+    && r8.rows === r8.slots && r8.slotsAfter === r8.slots, JSON.stringify(r8));
+
+  /* 6z. R8: matrix grammar — column header · re-drop single-instance · POL · macro OUT · cleanup */
+  const r8m = await ev(`(() => {
+    const info = {};
+    const hdr = document.querySelector('#av-mod-slots .av-mod-hdr');
+    info.hdr = hdr ? hdr.textContent.replace(/\\s+/g, ' ').trim() : null;
+    avModSlotSet(0, { amt: 0.2 });
+    const before = avModSnap().slots.length;
+    info.again = avModAssign('env1', 'filter.cutoff');
+    const slots1 = avModSnap().slots;
+    info.single = (slots1.length === before) && slots1.filter(s => s.src === 'env1' && s.dst === 'cutoff').length === 1;
+    info.amtReset = slots1[0].amt === 0.5;
+    const pol = document.querySelector('#av-mod-slots [data-slot-pol="0"]');
+    info.pol0 = pol ? pol.textContent : null;
+    if (pol) pol.click();
+    info.amtPol = avModSnap().slots[0].amt;
+    info.pol1 = pol ? pol.textContent : null;
+    avModAssign('macro1', 'filter.reso');
+    avModMacroSet(0, 0.42);
+    const out = document.querySelector('#av-mod-slots [data-slot-out="1"]');
+    info.out = out ? out.textContent : null;
+    avModSlotRemove(1); avModSlotRemove(0);
+    avModMacroSet(0, 0);
+    const knob = document.querySelector('.av-knob[data-knob="filter.cutoff"]');
+    info.ringCleared = knob ? !knob.classList.contains('av-mod-shown') : null;
+    info.slotsEnd = avModSnap().slots.length;
+    info.rowsEnd = document.querySelectorAll('#av-mod-slots .av-mod-slot').length;
+    return info;
+  })()`);
+  const r8m2 = r8m.value || {};
+  const r8hdrOk = !!r8m2.hdr && ['SOURCE', 'CURVE', 'AMOUNT', 'POL', 'DESTINATION', 'OUT'].every(w => r8m2.hdr.indexOf(w) >= 0);
+  check('R8 matrix grammar: header (SOURCE/CURVE/AMOUNT/POL/DESTINATION/OUT) + re-drop re-defaults one instance + POL flips sign + macro OUT tracks 42% + cleanup clears ring',
+    r8hdrOk === true && r8m2.again === true && r8m2.single === true && r8m2.amtReset === true
+    && r8m2.pol0 === '+' && r8m2.amtPol === -0.5 && r8m2.pol1 === '\u00B1'
+    && r8m2.out === '42%' && r8m2.ringCleared === true && r8m2.slotsEnd === 0 && r8m2.rowsEnd === 0, JSON.stringify(r8m2));
+
 
 
   /* 7. zero page errors */
