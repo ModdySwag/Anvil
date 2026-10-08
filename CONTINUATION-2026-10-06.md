@@ -2410,3 +2410,31 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
 - Carried: quiet bench re-run (owed/optional) - P.2 minBLEP pass - P4 follow-ups - PERFECT
   TUNINGS - README status refresh (offered) - owner-pass items (launch arrival + dir-picker
   click). Nothing else in flight.
+
+## Resume addendum 65 - 2026-10-09 (R19 children LANDED + verified; integration next session)
+
+- LANDINGS VERIFIED ON DISK (never by report): `src/av_pack.js` (NEW, 35,240 B; validate/detect/
+  build/importBytes + `__avPack` r19.0; real avZipBuild writer (store method) + AVZIP reader;
+  wt/module routes via avWtLibraryLoad/avWtExportJson + avCodeExportText/avCodeImportText) -
+  `src/av_lib.js` (+source.pack additive across the read paths; invalid/absent dropped) -
+  `src/av_import.js` (the zip pre-pass pack route ~L1150-1288; ONE bundle row; generic zips
+  byte-stable - proven by a byte-identical-receipt harness) - `src/av_import_ui.js`
+  (#av-import-pack "COLLECT & PACK (N)" + pack:<id> chips; class list unchanged at 60) -
+  `verify/avpack_schema.mjs` (79-fixture self-check PASS; drift probe vs src/av_pack.js = 0) -
+  `verify/avpack_check.mjs` (--selftest PASS; file-mode PASS on cache/r19/selftest-mini.avpack;
+  real-writer cross-check PASS) - `verify/cdp_hub.mjs` 39 -> **42** checks (23d round-trip /
+  sha-mismatch / generic-zip).
+- node --check x7 green. One triage item ALREADY FIXED: `meta.items` = COUNT (av_import.js L1288
+  now `items: rows.length` + additive `rows` - Child B had chosen the array; the contract s.4.1
+  + the rig expect the number).
+- NEXT SESSION (integration; check FIRST): build.py `js_parts` MUST gain `av_pack.js` (the R18b
+  miss precedent) -> app_core 1.9.0 "R19 user packs" -> cdp_smoke +1 (76 -> 77: #av-import-pack
+  + `__avPack` facade shape) -> rebuild -> triage chain (smoke 77 / hub 42 / platform 52 /
+  import 24 - cdp_import MUST stay UNCHANGED) + `avpack_check --selftest` + file-mode in the
+  chain record -> sweep (22 files, full 64-hex) -> battery 25 + bench -> deploy (index + sw) ->
+  live capture -> close addendum 66.
+- OWNER CLIP: the console/tab centering fix (commit b8d47bd, probe-verified consoleOff/tabOff 0
+  at 1920) is ON DISK + committed but NOT live - it rides this R19 freeze to deploy.
+- Carried: quiet bench re-run (owed/optional) - P.2 minBLEP pass - P4 follow-ups - PERFECT
+  TUNINGS - README status refresh (offered) - owner-pass items (launch arrival + dir-picker
+  click). Nothing else in flight.

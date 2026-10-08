@@ -97,6 +97,18 @@
      (guarded avLibFindSha; keep-both - the write still happens): the rec gains dupOf {id, name}
      and the receipt item gains dup {id, name} + sha. The receipt item base gains sha:"" + dup:
      null; counts gains dups (each flagged item counts once).
+   R19 USER PACKS (verify/_r19_wave.md section 4; additive route):
+   - The zip pre-pass probes each staged zip (the existing AVZIP reader path) for a ROOT
+     `manifest.json` member; when present and avPackValidateManifest (typeof-guarded global,
+     av_pack.js) validates it, the input is a PACK and routes to
+     avPackImportBytes(bytes, leafName) -- never the R16 depth-1 expansion. ONE bundle row:
+     kind "bundle", result "imported" (or "refused" with the pack's first honest error),
+     meta {pack: manifest id, items: [{key,name,kind,result,reason}...], installed, refused}
+     -- the per-item results ride the row's meta (the receipt stays per-FILE, the pack is
+     one file); counts.bundles increments as today. A non-avpack zip keeps the R16 behavior
+     byte-for-byte. Any internal failure -- support absent, a throw, a garbage return --
+     falls back to the generic expansion with a ctx note. Never throws outward.
+
    Craft laws: "use strict", classic script (no modules/imports), node-loadable (no DOM at load,
    no top-level side effects), one namespace (avImport prefixes + AV_IMPORT_ consts), never
    throw. Every cross-module call is typeof-guarded PER CALL (av_aiff/av_rex/av_lib/av_exs/
@@ -1135,6 +1147,152 @@ function avImportZipFile(item, entryName, bytes) {
   } catch (e) { return null; }
 }
 
+/* ---------- R19 user packs: the zip pre-pass route (verify/_r19_wave.md section 4) ---------- */
+
+/* the av_pack.js entry points (typeof-guarded PER CALL; the window.__avPack facade is the
+   belt). An absent module yields null and every zip keeps the R16 path verbatim. */
+function avImportPackValidateFn() {
+  try {
+    if (typeof avPackValidateManifest === "function") return avPackValidateManifest;
+    if (typeof window !== "undefined" && window && window.__avPack &&
+        typeof window.__avPack.validate === "function") return window.__avPack.validate;
+  } catch (e) { /* absent */ }
+  return null;
+}
+
+function avImportPackImportFn() {
+  try {
+    if (typeof avPackImportBytes === "function") return avPackImportBytes;
+    if (typeof window !== "undefined" && window && window.__avPack &&
+        typeof window.__avPack.importBytes === "function") return window.__avPack.importBytes;
+  } catch (e) { /* absent */ }
+  return null;
+}
+
+/* the extracted manifest bytes -> parsed JSON (UTF-8; TextDecoder looked up per call --
+   absent or a decode refusal -> null, and the input is simply not routed as a pack).
+   Never throws. */
+function avImportPackJson(x) {
+  try {
+    let b = null;
+    if (typeof Uint8Array !== "undefined" && x instanceof Uint8Array) b = x;
+    else if (typeof ArrayBuffer !== "undefined" && x instanceof ArrayBuffer) b = new Uint8Array(x);
+    else if (typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView && ArrayBuffer.isView(x)) {
+      b = new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+    }
+    if (!b) return null;
+    let txt = null;
+    try { if (typeof TextDecoder === "function") txt = new TextDecoder("utf-8").decode(b); } catch (e1) { txt = null; }
+    if (typeof txt !== "string") return null;
+    return JSON.parse(txt);
+  } catch (e) { return null; }
+}
+
+/* the pack's per-item results -> the row-meta rows (fixed shape; strings capped) */
+function avImportPackRows(rows) {
+  const out = [];
+  try {
+    if (!Array.isArray(rows)) return out;
+    for (let k = 0; k < rows.length; k++) {
+      const r0 = (rows[k] && typeof rows[k] === "object") ? rows[k] : {};
+      out.push({
+        key: avImportCapStr(r0.key, 64),
+        name: avImportCapStr(r0.name, 120),
+        kind: avImportCapStr(r0.kind, 24),
+        result: avImportCapStr(r0.result, 16),
+        reason: avImportCapStr(r0.reason, 160)
+      });
+    }
+  } catch (e) { /* the partial rows stand */ }
+  return out;
+}
+
+/* the installed/refused tallies of the pack's per-item rows (rows absent -> the pack's own
+   counts object, when it carries the numbers) */
+function avImportPackCounts(rows, counts) {
+  const out = { installed: 0, refused: 0 };
+  try {
+    if (Array.isArray(rows)) {
+      for (let k = 0; k < rows.length; k++) {
+        const rr = rows[k] || {};
+        if (rr.result === "imported") out.installed += 1;
+        else if (rr.result === "refused") out.refused += 1;
+      }
+      return out;
+    }
+    const c = (counts && typeof counts === "object") ? counts : {};
+    if (avImportIsNum(c.installed)) out.installed = Math.max(0, Math.floor(c.installed));
+    if (avImportIsNum(c.refused)) out.refused = Math.max(0, Math.floor(c.refused));
+  } catch (e) { /* zeros stand */ }
+  return out;
+}
+
+/* R19: the pack route. An input that opens as a zip (the existing AVZIP reader; the caller
+   has the listed entries) AND carries a ROOT manifest.json whose manifest validates
+   (avPackValidateManifest) is a PACK: avPackImportBytes installs the items and this ONE
+   bundle row carries the per-item results in its meta {pack, items, installed, refused}.
+   Returns true when the row was staged; false -- untouched, no note -- for a non-pack zip,
+   and false with a ctx note when an identified pack could not be routed (support absent, a
+   throw, a garbage return), so the generic R16 expansion proceeds. Never throws. */
+async function avImportZipPackRoute(item, bytes, u8, entries, ctx, run) {
+  const note = function (msg) {
+    try { if (ctx && Array.isArray(ctx.notes)) ctx.notes.push(avImportCapStr(msg, 160)); } catch (e0) { /* best-effort */ }
+  };
+  try {
+    const validate = avImportPackValidateFn();
+    if (typeof validate !== "function") return false;      /* av_pack.js absent: R16 verbatim */
+    let mi = -1;                                           /* the ROOT manifest.json member */
+    for (let k = 0; k < entries.length; k++) {
+      const en = entries[k];
+      if (!en || typeof en !== "object" || en.dir === true) continue;
+      if (en.name === "manifest.json") { mi = k; break; }
+    }
+    if (mi < 0) return false;                              /* no manifest: a generic zip */
+    let man = null;
+    try {
+      const ex = (typeof AVZIP.extract === "function") ? await AVZIP.extract(u8, mi) : null;
+      if (ex && ex.ok === true) man = avImportPackJson(ex.bytes);
+    } catch (e1) { man = null; }
+    let vd = null;
+    try { vd = man ? validate(man) : null; } catch (e2) { vd = null; }
+    if (!vd || vd.ok !== true) return false;               /* invalid manifest: a generic zip */
+    const nm = avImportCapStr(item.name, 60) || "pack";
+    const imp = avImportPackImportFn();
+    if (typeof imp !== "function") {
+      note(nm + ": .avpack support absent \u2014 expanded generically");
+      return false;
+    }
+    let res = null, failD = "";
+    try { res = await imp(bytes, avImportCapStr(item.name, 120) || "pack.avpack"); }
+    catch (e3) { res = null; failD = avImportDetail(e3); }
+    if (!res || typeof res !== "object") {
+      note(nm + ": pack import failed" + (failD ? " (" + avImportCapStr(failD, 60) + ")" : "") + " \u2014 expanded generically");
+      return false;
+    }
+    const rows = avImportPackRows(res.items);
+    const nums = avImportPackCounts(res.items, res.counts);
+    const pid = (res.pack && typeof res.pack === "object" && typeof res.pack.id === "string") ? res.pack.id : "";
+    let result = "imported", reason = "";
+    if (res.ok !== true) {
+      result = "refused";
+      const errs = Array.isArray(res.errors) ? res.errors : [];
+      let first = "";
+      for (let k = 0; k < errs.length; k++) { if (typeof errs[k] === "string" && errs[k]) { first = errs[k]; break; } }
+      reason = first ? avImportCapStr(first, 160) : "pack import failed";
+    }
+    let pushed = false;
+    try { run.push({ item: item }); pushed = true; } catch (e4) { pushed = false; }
+    if (!pushed) return false;                             /* untouched: the generic R16 path */
+    try {
+      avImportSet(item, result, reason);
+      item.meta = { pack: pid, items: (Array.isArray(rows) ? rows.length : 0), rows: rows, installed: nums.installed, refused: nums.refused };
+    } catch (e5) { /* the row is staged; the creation defaults stand */ }
+    return true;
+  } catch (e6) {
+    return false;                                          /* the caller's belt notes + R16 */
+  }
+}
+
 /* expand ONE zip input (its head64 already sniffed zip): construct the bundle row and stage
    the run entries -- the zip row FIRST, then every expanded entry's child right after it.
    Budget: children count against AV_IMPORT_MAX_FILES (the pre-pass reserves a slot per
@@ -1181,6 +1339,18 @@ async function avImportZipExpand(f, i, ctx, run, budget) {
       return staged;
     }
     const entries = Array.isArray(lr.entries) ? lr.entries : [];
+    /* R19: an .avpack (ROOT manifest.json + a validating manifest) routes to the pack
+       importer -- ONE bundle row, never the R16 expansion below. A non-pack zip proceeds
+       byte-for-byte as R16; any internal failure falls back here with a ctx note. */
+    try {
+      if (await avImportZipPackRoute(item, bytes, u8, entries, ctx, run) === true) return true;
+    } catch (e19) {
+      try {
+        if (ctx && Array.isArray(ctx.notes)) {
+          ctx.notes.push(avImportCapStr((avImportCapStr(item.name, 60) || "zip") + ": pack probe failed (" + avImportCapStr(avImportDetail(e19), 60) + ") \u2014 expanded generically", 160));
+        }
+      } catch (e19b) { /* best-effort */ }
+    }
     let zN = 0, beyondN = 0, capN = 0, failN = 0, failDetail = "", nestN = 0, nestFirst = "";
     let left = avImportIsNum(budget) ? budget : 0;
     ctx.zipDepth = (ctx.zipDepth | 0) + 1;      /* depth guard: only depth-0 zips expand (v1) */

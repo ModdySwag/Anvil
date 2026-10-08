@@ -51,8 +51,10 @@
    R17 -- IMPORT HUB v1 (the card relocates to the Store zone; that move is the PARENT's job --
    this module stays zone-agnostic and only fills its parent-owned host). The card gains the
    library manager (search #av-import-search . sort #av-import-sort . kind chips #av-import-filters
-   > .av-import-fchip[data-f] . select-all #av-import-selall . delete-selected #av-import-delsel,
-   both over the VISIBLE rows . per-row checkbox [data-av-import-check] + REN/EXP actions . inline
+   > .av-import-fchip[data-f] . select-all #av-import-selall . delete-selected #av-import-delsel
+   (both over the VISIBLE rows) . R19 collect-&-pack #av-import-pack "COLLECT & PACK (N)"
+   (the selected rows -> one .avpack) . per-row checkbox [data-av-import-check] + REN/EXP
+   actions . inline
    rename input.av-import-rename . per-item export through the guarded avDeliverDownload), the
    persisted receipts history (#av-import-runs rows button[data-av-import-run] "HH:MM . imported
    N . deferred N . refused N . title" . #av-import-runsclear . #av-import-runs-empty; a click
@@ -84,6 +86,19 @@
    editor at a time, the rename editor's law) and #av-import-libstat appends " M missing refs"
    above zero.
 
+   R19 -- USER PACKS (collect & pack; every reach typeof-guarded PER CALL, so the card mounts
+   without av_pack.js / av_proj.js and refuses honestly): the manager gains #av-import-pack
+   "COLLECT & PACK (N)" directly after #av-import-delsel -- the same disabled law (busy or 0
+   selected) and the live selected count in its label, both painted by avImportUiPaintManager.
+   A click packs the SELECTED rows through the guarded window.__avPack.build({ids}) facade: on
+   ok the bytes go through the guarded avProjPicker("save") seam (suggestedName "<name>.avpack")
+   with an FSA write, else the avDeliverDownload(bytes, name) fallback (the S4 Blob->arrayBuffer
+   law where the build hands back a Blob); AbortError is a calm cancel and never falls back
+   (the av_proj.js law). Status: "packed N items -> <name>.avpack" (+ the route truth when the
+   download carried it); refusals are honest. Library rows whose record carries source.pack
+   gain the provenance chip "pack:<id>" (av-import-chip av-import-chip-sib -- existing classes,
+   no new class list entries).
+
    DOM CONTRACT (exact -- suites pin these):
      host      #av-import-host          parent-owned; absent -> avImportUiInit() returns false
      root      .av-import[data-av-import="1"] (id "av-import" only when no element owns it --
@@ -105,7 +120,8 @@
      note      #av-import-note
      manager   #av-import-search (input search) . #av-import-sort (select newest|name|size|kind) .
                #av-import-filters (.av-import-fchip[data-f=all|sample|kit|refs|pattern], active
-               class on) . #av-import-selall . #av-import-delsel (disabled at 0 selected)
+               class on) . #av-import-selall . #av-import-delsel . #av-import-pack (the last two
+               disabled at 0 selected / while busy; the pack label carries the live count)
      runs      #av-import-runs (rows button[data-av-import-run]) . #av-import-runsclear .
                #av-import-runs-empty (static; hidden while rows exist)
      storage   #av-import-storage . #av-import-persist
@@ -937,9 +953,20 @@ function avImportUiPaintReport(host, force) {
 
 /* ---------- the library list ---------- */
 
+/* the record's provenance pack id (source.pack; the R19 manifest slug, else "") -- the R19
+   chip reads this; never throws */
+function avImportUiSrcPack(it) {
+  try {
+    const src = (it && it.source && typeof it.source === "object") ? it.source : null;
+    const t = String((src && src.pack) == null ? "" : src.pack);
+    return /^[a-z0-9][a-z0-9-]{0,63}$/.test(t) ? t : "";
+  } catch (e) { return ""; }
+}
+
 /* one library row's JSON-safe view; R15c adds bounded counts (zones/samples/refs/tables) and
    the hasPattern flag so the new-kind rows render without holding whole metas. R18 adds dupOf
-   (the flagged original {id, name} or null -- the scan's missing refs live in the memo). */
+   (the flagged original {id, name} or null -- the scan's missing refs live in the memo).
+   R19 adds pack (the record's source.pack slug, else "" -- the provenance chip). */
 function avImportUiLibItemPub(it) {
   const out = {
     id: avImportUiStr(it && it.id, 80),
@@ -952,6 +979,7 @@ function avImportUiLibItemPub(it) {
     counts: { zones: 0, samples: 0, refs: 0, tables: 0 },
     hasPattern: false,
     dupOf: null,
+    pack: "",
   };
   try {
     const m = (it && it.meta && typeof it.meta === "object") ? it.meta : {};
@@ -963,6 +991,7 @@ function avImportUiLibItemPub(it) {
     out.hasPattern = !!(m.pattern && typeof m.pattern === "object" && !Array.isArray(m.pattern));
   } catch (e) { /* zeros stand */ }
   out.dupOf = avImportUiDupPub(it && it.dupOf);
+  out.pack = avImportUiSrcPack(it);
   return out;
 }
 
@@ -1014,6 +1043,12 @@ function avImportUiLibRowHTML(it, sel) {
     html += '<span class="av-import-chip av-import-chip-missing" title="' +
       avImportUiEsc("references " + missName + ", which is not in the library") + '">MISSING ' +
       avImportUiEsc(avImportUiShort(missName, 40)) + "</span>";
+  }
+  /* R19: the pack provenance chip (source.pack on the record; existing chip classes) */
+  const pack = String(it.pack || "");
+  if (pack) {
+    html += '<span class="av-import-chip av-import-chip-sib" title="' +
+      avImportUiEsc("imported from pack " + pack) + '">pack:' + avImportUiEsc(pack) + "</span>";
   }
   html += '<span class="av-import-acts">';
   if (isKit) {
@@ -1909,6 +1944,258 @@ function avImportUiDelSel() {
   }
 }
 
+/* ---------- R19: collect & pack (the selected library rows -> ONE .avpack file) ----------
+   The build half lives in av_pack.js (window.__avPack; authored in parallel -- guarded PER
+   CALL, absent -> honest refusal). The save half mirrors the av_proj.js seam: the guarded
+   avProjPicker("save") reach (binding, then window -- an injected fs stays authoritative),
+   an FSA write, then the avDeliverDownload(bytes, name) fallback (av_deliver_ui.js:930 --
+   BYTES FIRST; the in-file export precedent calls dl(it.bytes, fname)). AbortError is a calm
+   cancel and never falls back (the av_proj.js law); Blob bytes convert via arrayBuffer()
+   (the S4 Blob->arrayBuffer law, av_video.js avVideoDownload's shape). ONE busy window. */
+
+/* the guarded __avPack facade reach (the window facade; its build is the entry) */
+function avImportUiPackFn() {
+  try {
+    const w = avImportUiWin();
+    if (w && w.__avPack && typeof w.__avPack.build === "function") return w.__avPack;
+  } catch (e) { /* no window */ }
+  return null;
+}
+
+/* the guarded avProjPicker("save") reach -- { fs, fn } (call fn.call(fs, opts)), or null */
+function avImportUiPackPicker() {
+  try {
+    if (typeof avProjPicker === "function") {
+      const p = avProjPicker("save");
+      if (p && typeof p.fn === "function") return p;
+    }
+  } catch (e) { /* not loaded */ }
+  try {
+    const w = avImportUiWin();
+    if (w && typeof w.avProjPicker === "function") {
+      const p = w.avProjPicker("save");
+      if (p && typeof p.fn === "function") return p;
+    }
+  } catch (e2) { /* no window */ }
+  return null;
+}
+
+/* the picker options (a fresh object per call); the .avpack rides application/zip */
+function avImportUiPackTypes() {
+  return [{ description: "Anvil user pack", accept: { "application/zip": [".avpack"] } }];
+}
+
+/* the error name out of anything ("AbortError" = the calm cancel) */
+function avImportUiErrName(e) {
+  try { if (e && typeof e.name === "string" && e.name) return e.name; } catch (e2) { /* none */ }
+  return "";
+}
+
+/* the pack filename: the receipt name (or the manifest id), sanitised like the export names,
+   capped at 120, with the .avpack suffix guaranteed */
+function avImportUiPackFileName(r) {
+  let name = "";
+  try {
+    name = String((r && r.name) || "").trim();
+    if (!name) {
+      const m = (r && r.manifest && typeof r.manifest === "object") ? r.manifest : null;
+      name = String((m && m.id) || "").trim();
+    }
+  } catch (e) { name = ""; }
+  if (!name) name = "pack";
+  name = name.replace(/[\\/:*?"<>|\u0000-\u001f]/g, "_");
+  if (name.length > 120) name = name.slice(0, 120);
+  const suffix = ".avpack";
+  if (name.toLowerCase().slice(-suffix.length) === suffix) return name;
+  return name + suffix;
+}
+
+/* the packed-item count (receipt counts.items, then manifest.items, else 0) */
+function avImportUiPackCount(r) {
+  let n = 0;
+  try {
+    if (r && r.counts && typeof r.counts === "object" && typeof r.counts.items === "number") {
+      n = Math.round(r.counts.items);
+    } else if (r && r.manifest && typeof r.manifest === "object" &&
+               r.manifest.items && typeof r.manifest.items.length === "number") {
+      n = r.manifest.items.length;
+    }
+  } catch (e) { n = 0; }
+  return (isFinite(n) && n > 0) ? n : 0;
+}
+
+/* the honest refused count (receipt counts.refused, else 0) */
+function avImportUiPackRefused(r) {
+  let n = 0;
+  try {
+    if (r && r.counts && typeof r.counts === "object") n = Math.round(avImportUiNumOr(r.counts.refused, 0));
+  } catch (e) { n = 0; }
+  return (isFinite(n) && n > 0) ? n : 0;
+}
+
+/* the build's bytes -> a byte source the FSA write / avDeliverDownload accept, or null.
+   Blob -> arrayBuffer (the S4 law; byteLength first, the av_video.js shape). Never throws. */
+function avImportUiPackBytesOf(b) {
+  return new Promise(function (resolve) {
+    try {
+      if (b && typeof b.byteLength === "number" && b.byteLength > 0) { resolve(b); return; }
+      if (b && typeof b.size === "number" && typeof b.arrayBuffer === "function") {
+        const p = b.arrayBuffer();
+        if (p && typeof p.then === "function") {
+          p.then(function (ab) {
+            resolve((ab && typeof ab.byteLength === "number" && ab.byteLength > 0) ? ab : null);
+          }, function () { resolve(null); });
+          return;
+        }
+      }
+    } catch (e) { /* null below */ }
+    resolve(null);
+  });
+}
+
+/* one FSA write attempt through the resolved seam; resolves { ok } | { cancelled } |
+   { fallbackNote } -- never rejects */
+function avImportUiPackFsa(bytes, name, pick) {
+  return new Promise(function (resolve) {
+    let done = false;
+    const fin = function (v) { if (!done) { done = true; resolve(v); } };
+    const writeStep = function (handle) {
+      if (!handle || typeof handle.createWritable !== "function") {
+        fin({ fallbackNote: "the save picker returned nothing" });
+        return;
+      }
+      let stream = null;
+      try { stream = handle.createWritable(); }
+      catch (e2) {
+        if (avImportUiErrName(e2) === "AbortError") { fin({ cancelled: true }); return; }
+        fin({ fallbackNote: "the fsa write failed (" + (avImportUiErrName(e2) || "error") + ")" });
+        return;
+      }
+      let ws = null;
+      Promise.resolve(stream).then(function (s2) {
+        ws = s2;
+        if (!ws || typeof ws.write !== "function") throw new Error("no write");
+        return ws.write(bytes);
+      }).then(function () {
+        if (ws && typeof ws.close === "function") return ws.close();
+        return null;
+      }).then(function () {
+        fin({ ok: true });
+      }, function (e3) {
+        if (avImportUiErrName(e3) === "AbortError") { fin({ cancelled: true }); return; }
+        fin({ fallbackNote: "the fsa write failed (" + (avImportUiErrName(e3) || "error") + ")" });
+      });
+    };
+    let pr = null;
+    try { pr = pick.fn.call(pick.fs, { suggestedName: name, types: avImportUiPackTypes() }); }
+    catch (e) {
+      if (avImportUiErrName(e) === "AbortError") { fin({ cancelled: true }); return; }
+      fin({ fallbackNote: "the save picker refused (" + (avImportUiErrName(e) || "error") + ")" });
+      return;
+    }
+    if (pr && typeof pr.then === "function") {
+      pr.then(function (handle) { writeStep(handle); }, function (e4) {
+        if (avImportUiErrName(e4) === "AbortError") { fin({ cancelled: true }); return; }
+        fin({ fallbackNote: "the save picker refused (" + (avImportUiErrName(e4) || "error") + ")" });
+      });
+      return;
+    }
+    writeStep(pr);
+  });
+}
+
+/* the avDeliverDownload fallback (clean boolean; never throws) */
+function avImportUiPackDeliver(bytes, name) {
+  const dl = avImportUiDeliverFn();
+  if (typeof dl !== "function") return false;
+  let ok = false;
+  try {
+    const x = dl(bytes, name);
+    ok = (x === true) || !!(x && typeof x === "object" && x.ok === true);
+  } catch (e) { ok = false; }
+  return ok;
+}
+
+/* the save half: bytes -> FSA (the seam) or the download fallback; done(line, kind) runs once */
+function avImportUiPackSave(r, done) {
+  const finish = function (line, kind) { try { done(line, kind); } catch (e) { /* never throws outward */ } };
+  const name = avImportUiPackFileName(r);
+  const n = avImportUiPackCount(r);
+  const refused = avImportUiPackRefused(r);
+  const nTxt = (n > 0) ? (n + " item" + (n === 1 ? "" : "s")) : "the selection";
+  let base = "packed " + nTxt + " -> " + name;
+  if (refused > 0) base += " \u00b7 " + refused + " refused";
+  if (n === 0 && refused > 0) {
+    finish("packing refused \u2014 the build refused " + refused + " item" + (refused === 1 ? "" : "s"), "err");
+    return;
+  }
+  avImportUiPackBytesOf(r.bytes).then(function (bytes) {
+    if (!bytes) { finish("packing refused \u2014 the build returned no bytes", "err"); return; }
+    const pick = avImportUiPackPicker();
+    if (!pick) {
+      if (avImportUiPackDeliver(bytes, name)) finish(base + " \u00b7 downloaded", "msg");
+      else finish("packing refused \u2014 the download path (avDeliverDownload) is not present", "err");
+      return;
+    }
+    avImportUiPackFsa(bytes, name, pick).then(function (res) {
+      try {
+        if (res && res.ok === true) { finish(base, "msg"); return; }
+        if (res && res.cancelled === true) { finish("packing cancelled \u2014 nothing saved", "msg"); return; }
+        const note = (res && res.fallbackNote) ? res.fallbackNote : "the save picker refused";
+        if (avImportUiPackDeliver(bytes, name)) finish(base + " \u00b7 " + note + " \u2014 downloaded instead", "msg");
+        else finish("packing refused \u2014 " + note + " and the download path (avDeliverDownload) is not present", "err");
+      } catch (e) { finish("packing failed \u2014 " + avImportUiErrText(e, "unexpected"), "err"); }
+    }, function () {
+      if (avImportUiPackDeliver(bytes, name)) finish(base + " \u00b7 the save picker refused \u2014 downloaded instead", "msg");
+      else finish("packing refused \u2014 the download path (avDeliverDownload) is not present", "err");
+    });
+  });
+}
+
+/* collect & pack: the selected library rows -> ONE .avpack (guarded build + save);
+   ONE busy window; never throws */
+function avImportUiPackSel() {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    const ids = avImportUiSelIds();
+    if (!ids.length) {
+      avImportUiSetStatus("nothing selected \u2014 tick rows first", "err");
+      return false;
+    }
+    const fac = avImportUiPackFn();
+    if (!fac) {
+      avImportUiSetStatus("packing is unavailable \u2014 the pack module (av_pack.js) is not present", "err");
+      return false;
+    }
+    if (!avImportUiBegin("packing " + ids.length + " item" + (ids.length === 1 ? "" : "s"))) return false;
+    let out = null;
+    try { out = fac.build({ ids: ids }); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the build failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      if (r.ok !== true) {
+        avImportUiEnd();
+        avImportUiSetStatus("packing refused \u2014 " + avImportUiErrText(r, "the build refused"), "err");
+        return;
+      }
+      try {
+        avImportUiPackSave(r, function (line, kind) {
+          avImportUiEnd();
+          avImportUiSetStatus(line, kind);
+        });
+      } catch (e2) {
+        avImportUiEnd();
+        avImportUiSetStatus("packing failed \u2014 " + avImportUiErrText(e2, "unexpected"), "err");
+      }
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("packing failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
 /* rename commit: avLibRename (guarded) + refresh; the status line reports the result */
 function avImportUiRename(id, name) {
   const s = avImportUiState;
@@ -2446,6 +2733,13 @@ function avImportUiPaintManager(host) {
     }
     const del = host.querySelector("#av-import-delsel");
     if (del && del.disabled !== (busy || selN === 0)) del.disabled = (busy || selN === 0);
+    /* R19: collect & pack rides the same update path (disabled at 0 selected / while busy;
+       its label carries the live selected count) */
+    const packBtn = host.querySelector("#av-import-pack");
+    if (packBtn) {
+      if (packBtn.disabled !== (busy || selN === 0)) packBtn.disabled = (busy || selN === 0);
+      avImportUiWriteText(host, "#av-import-pack", "COLLECT & PACK (" + selN + ")", "pack");
+    }
     let chips = null;
     try { chips = host.querySelectorAll(".av-import-fchip"); } catch (e2) { chips = null; }
     if (chips) {
@@ -2958,6 +3252,7 @@ function avImportUiOnClick(ev) {
     /* R17: the manager + runs + storage controls */
     if (t.closest("#av-import-selall")) { avImportUiSelAll(); return; }
     if (t.closest("#av-import-delsel")) { avImportUiDelSel(); return; }
+    if (t.closest("#av-import-pack")) { avImportUiPackSel(); return; }
     const chip = t.closest(".av-import-fchip");
     if (chip) { avImportUiSetFilter(String((chip.getAttribute && chip.getAttribute("data-f")) || "")); return; }
     const runBtn = t.closest("[data-av-import-run]");
@@ -3106,6 +3401,8 @@ function avImportUiBodyHTML() {
     "</span>" +
     '<button type="button" class="av-btn mini av-import-btn" id="av-import-selall">select all</button>' +
     '<button type="button" class="av-btn mini av-import-btn" id="av-import-delsel" disabled>delete selected</button>' +
+    /* R19: collect & pack -- directly after delsel; same disabled law; the label carries (N) */
+    '<button type="button" class="av-btn mini av-import-btn" id="av-import-pack" disabled title="collect the selected library items into one .avpack file">COLLECT &amp; PACK (0)</button>' +
     "</div>" +
     '<div class="av-import-libhead">' +
     '<span class="av-import-libtag">LIBRARY</span>' +

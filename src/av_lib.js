@@ -49,6 +49,11 @@
    reports kit/refs names with no library match (relink v1 rides avLibRename). Facade additions:
    findSha, replaceDup, missingScan.
 
+   R19 addition (verify/_r19_wave.md section 3; the same additive law): the `source` object
+   may now carry `pack` (the exporting `.avpack` manifest id - a slug of <=64 chars). It rides
+   every read path through avLibSourceNorm (absent or invalid -> dropped) and survives a
+   replaceDup fold; old records hydrate cleanly, nothing else changes.
+
    Record shape: { id, v: 1, name, kind, format, ext, size, at, meta, bytes (ArrayBuffer), via }
      id = "l" + Date.now().toString(36) + "-" + slug(name); slug [a-z0-9-], cap 40.
      kind = "sample" | "pattern" | "kit" | "refs" (R15c). via = the backend the record was
@@ -146,6 +151,8 @@ const AV_LIB_SHA256_RE = /^[0-9a-f]{64}$/;      /* an accepted content hash (low
 const AV_LIB_PATH_MAX = 200;                    /* source.path cap */
 const AV_LIB_MISSING_WANT_MAX = 32;             /* referencing records listed per missing name */
 const AV_LIB_REC_ID_RE = /^r[a-z0-9-]{0,63}$/;  /* "r" + time36 (+ "-<seq>" on collision) */
+/* R19 section 3: pack provenance rides inside source (additive; the exporting pack's id) */
+const AV_LIB_PACK_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;  /* source.pack slug (cap 64) */
 
 /* ---------- state (the in-memory view the UI renders from) ---------- */
 
@@ -233,8 +240,8 @@ function avLibExtNorm(v) {
 
 /* R18 section 3: the additive record fields. sha256: lowercase 64-hex or "" (old records read
    as "" - nothing is repaired); source: {name <=120, path <=200, size >=0, at finite, plus the
-   replaceDup `replaced` flag} or null; dupOf: {id (AV_LIB_ID_RE), name <=120} or null. Garbage
-   takes the fallback. */
+   replaceDup `replaced` flag and the R19 `pack` slug} or null; dupOf: {id (AV_LIB_ID_RE),
+   name <=120} or null. Garbage takes the fallback. */
 function avLibSha256Norm(v) {
   try { if (typeof v === "string" && AV_LIB_SHA256_RE.test(v)) return v; } catch (e) { /* none */ }
   return "";
@@ -250,6 +257,7 @@ function avLibSourceNorm(v) {
       at: avLibNum(v.at, 0, 0, 9e15),
     };
     if (v.replaced === true) src.replaced = true;   /* the replaceDup provenance note rides through */
+    if (typeof v.pack === "string" && AV_LIB_PACK_RE.test(v.pack)) src.pack = v.pack;   /* R19: pack provenance (absent/invalid -> dropped) */
     return src;
   } catch (e) { return null; }
 }
@@ -1131,10 +1139,11 @@ function avLibReplaceApplyTo(rec, nrec, newSource) {
 /* avLibReplaceDup(id) -> Promise<{ok, id?, removed?, error?}>: the keep-both resolution. The
    row `id` must exist and carry dupOf ({id, name}); its recorded original must still exist
    (else "target gone" - an honest refusal). The TARGET receives the new row's {bytes, size,
-   format, ext, kind, meta, sha256} and source {name, path, size, at: now, replaced: true};
-   dupOf goes null. The durable leg runs first (a refused write answers "replace refused" and
-   nothing is removed); then the new row is removed through the avLibRemoveRun ladder. The
-   target keeps its own id, name and at. Never throws. */
+   format, ext, kind, meta, sha256} and source {name, path, size, at: now, replaced: true,
+   plus the R19 `pack` slug when the folded record carried one}; dupOf goes null. The durable
+   leg runs first (a refused write answers "replace refused" and nothing is removed); then
+   the new row is removed through the avLibRemoveRun ladder. The target keeps its own id,
+   name and at. Never throws. */
 async function avLibReplaceDupRun(newId) {
   const st = avLibState;
   await avLibReady();
@@ -1160,6 +1169,7 @@ async function avLibReplaceDupRun(newId) {
     at: Date.now(),
     replaced: true,
   };
+  if (src && typeof src.pack === "string") newSource.pack = src.pack;   /* R19: pack provenance rides the fold */
   let applied = false, stuck = false;
   /* 1) the durable row when a DB is up: read row, fold the new content in, put */
   if (st.db) {

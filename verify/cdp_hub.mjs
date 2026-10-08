@@ -1288,6 +1288,381 @@ async function main() {
     && r18bS6.ok === false,
     JSON.stringify({ unlink: r18bP6, scan: { ok: r18bS6.ok, error: r18bS6.error } }));
 
+  /* ── 23d. R19 user packs: round-trip · sha-mismatch refusal · generic zip unchanged
+     (contract: verify/_r19_wave.md §7; 3 checks). Every probe is guarded per call — a
+     not-yet-landed window.__avPack fails its leg honestly (the info shows what was read),
+     never throws. Fixtures are synthesized IN-PAGE (avWavEncode bytes; no disk). Leg 1
+     hands the built pack back through the card change handler (the R18a drive); leg 2
+     drives the facade's importFiles so the RAW receipt is captured — the per-item results
+     ride the bundle row's meta, and the UI publication (avImportUiMetaPub) keeps only
+     scalar values, so the facade return is the faithful read. The drop legs below use
+     relative receipt arithmetic, so the +4 runs are safe; hub-bravo.wav stays untouched
+     (leg 26 loads it by name). ── */
+  const r19Init = await ev(`(() => {
+    try {
+      if (typeof avWavEncode !== 'function') return { err: 'avWavEncode absent' };
+      const bytesOf = function (x) {
+        try {
+          if (!x) return null;
+          if (typeof ArrayBuffer !== 'undefined' && x instanceof ArrayBuffer) return new Uint8Array(x);
+          if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView(x)) return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+          return null;
+        } catch (e) { return null; }
+      };
+      /* naive sub-sequence search (typed arrays have no indexOf(needle)); the pack writer is
+         store-method, so the verbatim WAV bytes locate inside the built pack */
+      const findSeq = function (hay, needle) {
+        try {
+          if (!hay || !needle || needle.length < 16 || needle.length > hay.length) return -1;
+          const end = hay.length - needle.length;
+          for (let i = 0; i <= end; i++) {
+            if (hay[i] !== needle[0]) continue;
+            let j = 1;
+            for (; j < needle.length; j++) if (hay[i + j] !== needle[j]) break;
+            if (j === needle.length) return i;
+          }
+          return -1;
+        } catch (e) { return -1; }
+      };
+      window.__r19 = {
+        wa: null, wb: null, packBytes: null, packName: '', manifest: null,
+        badBytes: null, badVia: null, genZip: null, lastReceipt: null,
+        wav: function (freq) {
+          try {
+            const sr = 8000, n = 400;
+            const l = new Float32Array(n), r = new Float32Array(n);
+            for (let i = 0; i < n; i++) { const v = 0.45 * Math.sin(2 * Math.PI * freq * i / sr); l[i] = v; r[i] = v; }
+            return avWavEncode({ l: l, r: r, sr: sr, bits: 16, dither: false });
+          } catch (e) { return null; }
+        },
+        drive: function (files) {
+          try {
+            const dt = new DataTransfer();
+            for (let i = 0; i < files.length; i++) dt.items.add(files[i]);
+            const inp = document.getElementById('av-import-file');
+            if (!inp) return { err: 'no #av-import-file' };
+            inp.files = dt.files;
+            inp.dispatchEvent(new Event('change', { bubbles: true }));
+            return { ok: true, n: dt.files.length };
+          } catch (e) { return { err: String((e && e.message) || e) }; }
+        },
+        /* the corrupted pack: flip ONE payload byte inside the alpha item's bytes (located
+           verbatim in the store-method pack); when locating fails, rebuild a scratch zip
+           whose manifest sha256 for alpha is deliberately wrong (the contract fallback) */
+        buildBad: function () {
+          try {
+            const B = window.__r19;
+            const pack = B.packBytes ? bytesOf(B.packBytes) : null;
+            const a = B.wa ? bytesOf(B.wa) : null;
+            if (!pack || !a || !B.manifest) return { via: null, err: 'no pack fixture' };
+            const at = findSeq(pack, a);
+            if (at >= 0 && a.length > 80) {
+              const copy = pack.slice(0);
+              const pos = at + ((a.length / 2) | 0);
+              copy[pos] = copy[pos] ^ 0x5A;
+              B.badBytes = copy.buffer;
+              B.badVia = 'flip';
+              return { via: 'flip', at: at, pos: pos };
+            }
+            const bad = JSON.parse(JSON.stringify(B.manifest));
+            const rows = Array.isArray(bad.items) ? bad.items : [];
+            const row = rows.filter(function (x) { return x && String(x.name) === 'r19-alpha.wav'; })[0] || rows[0] || null;
+            if (!row) return { via: null, err: 'no manifest row' };
+            row.sha256 = (String(row.sha256 || '').charAt(0) === 'a' ? 'b' : 'a') + String(row.sha256 || '').slice(1);
+            const entries = [{ name: 'manifest.json', data: JSON.stringify(bad) }];
+            for (let i = 0; i < rows.length; i++) {
+              const it = rows[i];
+              const bytes = (String(it.name) === 'r19-alpha.wav') ? B.wa : B.wb;
+              entries.push({ name: String(it.path), data: bytesOf(bytes) });
+            }
+            const z = (typeof avZipBuild === 'function') ? avZipBuild(entries) : null;
+            if (!z) return { via: null, err: 'zip writer absent' };
+            B.badBytes = z;
+            B.badVia = 'rebuild';
+            return { via: 'rebuild', rows: rows.length };
+          } catch (e) { return { via: null, err: String((e && e.message) || e) }; }
+        },
+        makeGeneric: function () {
+          try {
+            const w = window.__r19.wav(700);
+            const z = (typeof avZipBuild === 'function') ? avZipBuild([
+              { name: 'r19-gen.wav', data: w },
+              { name: 'readme.txt', data: 'r19 plain zip payload - no manifest here' },
+            ]) : null;
+            if (!z) return { err: 'zip writer absent' };
+            window.__r19.genZip = z;
+            return { len: z.byteLength };
+          } catch (e) { return { err: String((e && e.message) || e) }; }
+        }
+      };
+      return { ok: true, zipWriter: typeof avZipBuild,
+               avPack: (typeof window.__avPack === 'object' && window.__avPack) ? typeof window.__avPack.build : String(typeof window.__avPack) };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  note('R19 fixtures: ' + JSON.stringify(r19Init.value || {}));
+
+  /* drive files through the card's change handler (the R18a pattern); when no receipt lands
+     in 15 s, fall back to __avImport.importFiles — the run happens either way;
+     {via} names the path that worked (null = neither did) */
+  const r19Import = async (label, filesExpr) => {
+    const before = await receiptsNow();
+    const want = before + 1;
+    const cnt = `(async () => { try { if (typeof avLibReceiptList !== 'function') return 0; const r = await avLibReceiptList(); return (r && r.ok === true && r.count === ${want}) ? r.count : 0; } catch (e) { return 0; } })()`;
+    const drove = await ev(`(() => { try { const fs = ${filesExpr}; return window.__r19.drive(fs); } catch (e) { return { err: String((e && e.message) || e) }; } })()`);
+    let c = await waitFor(cnt, 15000);
+    let via = 'change';
+    if (c !== want) {
+      note('R19 ' + label + ': change handler produced no receipt in 15 s — falling back to __avImport.importFiles');
+      await ev(`(async () => { try { const fs = ${filesExpr}; if (window.__avImport && typeof window.__avImport.importFiles === 'function') { const r = await window.__avImport.importFiles(fs); window.__r19.lastReceipt = r || null; } } catch (e) { /* the wait below reports */ } return true; })()`);
+      c = await waitFor(cnt, 20000);
+      via = 'importFiles';
+    }
+    return { before: before, want: want, count: c, via: (c === want) ? via : null, drive: drove.value || null };
+  };
+
+  /* idempotent remove-by-name (legs 1/2 need the two WAVs gone): resolves {ok:true} once
+     every name is absent; null on timeout/persistence trouble */
+  const r19RemoveNames = async (names) => waitFor(`(async () => {
+    try {
+      if (typeof avLibRemove !== 'function' || typeof avLibList !== 'function') return null;
+      const nms = ${JSON.stringify(names)};
+      const l0 = await avLibList();
+      const items0 = (l0 && l0.items) || [];
+      for (let i = 0; i < nms.length; i++) {
+        const it = items0.filter(function (x) { return x && String(x.name) === nms[i]; })[0] || null;
+        if (it) { const r = await avLibRemove(String(it.id)); if (!(r && r.ok === true)) return null; }
+      }
+      const l1 = await avLibList();
+      const items1 = (l1 && l1.items) || [];
+      for (let i = 0; i < nms.length; i++) { if (items1.some(function (x) { return x && String(x.name) === nms[i]; })) return null; }
+      return { ok: true, gone: nms.length };
+    } catch (e) { return null; }
+  })()`, 15000);
+
+  /* 23d.1 round-trip: 2 fresh WAVs through the change handler -> __avPack.build (zip +
+     manifest rows 2) -> delete both -> the .avpack back through the change handler ->
+     ONE bundle receipt · both land with source.pack === manifest.id */
+  const r19WavA = await ev(`(() => { try { window.__r19.wa = window.__r19.wav(311); return { len: window.__r19.wa ? window.__r19.wa.byteLength : -1 }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`);
+  const r19WavB = await ev(`(() => { try { window.__r19.wb = window.__r19.wav(622); return { len: window.__r19.wb ? window.__r19.wb.byteLength : -1 }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`);
+  const r19Imp1 = (r19WavA.value && r19WavA.value.len > 0 && r19WavB.value && r19WavB.value.len > 0)
+    ? await r19Import('pair import', `[new File([window.__r19.wa], 'r19-alpha.wav'), new File([window.__r19.wb], 'r19-beta.wav')]`)
+    : null;
+  let r19A = null, r19B = null;
+  if (r19Imp1 && r19Imp1.via) {
+    const idR = await waitFor(`(async () => {
+      try {
+        const l = await avLibList();
+        const items = (l && l.items) || [];
+        const a = items.filter(function (i) { return i && String(i.name) === 'r19-alpha.wav'; })[0] || null;
+        const b = items.filter(function (i) { return i && String(i.name) === 'r19-beta.wav'; })[0] || null;
+        return (a && b) ? { a: String(a.id), b: String(b.id) } : null;
+      } catch (e) { return null; }
+    })()`, 15000);
+    r19A = (idR && idR.a) ? idR.a : null;
+    r19B = (idR && idR.b) ? idR.b : null;
+  }
+  const r19BuildV = (r19A && r19B) ? (((await ev(`(async () => {
+    try {
+      const P = window.__avPack;
+      if (!P || typeof P.build !== 'function') return { missing: true, avPack: P ? typeof P : 'absent' };
+      const b = await P.build({ ids: ${JSON.stringify([r19A || '', r19B || ''])} });
+      if (!b || typeof b !== 'object') return { bad: true, got: String(b) };
+      const bytes = b.bytes || null;
+      let u8 = null;
+      try {
+        if (bytes instanceof ArrayBuffer) u8 = new Uint8Array(bytes);
+        else if (bytes && ArrayBuffer.isView(bytes)) u8 = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      } catch (e0) { u8 = null; }
+      const pk = !!u8 && u8.length > 4 && u8[0] === 0x50 && u8[1] === 0x4B;
+      let zOk = null, zNames = null;
+      try {
+        if (u8 && typeof AVZIP !== 'undefined' && AVZIP && typeof AVZIP.list === 'function') {
+          const lr = AVZIP.list(u8);
+          zOk = !!(lr && lr.ok === true);
+          zNames = (lr && Array.isArray(lr.entries)) ? lr.entries.map(function (e2) { return String(e2.name); }).slice(0, 8) : null;
+        }
+      } catch (e1) { /* the names stay null */ }
+      window.__r19.packBytes = bytes;
+      window.__r19.packName = String(b.name == null ? '' : b.name);
+      window.__r19.manifest = (b.manifest && typeof b.manifest === 'object') ? b.manifest : null;
+      const m = window.__r19.manifest || {};
+      const rows = Array.isArray(m.items) ? m.items : [];
+      return { ok: b.ok === true, name: String(b.name == null ? '' : b.name), err: String(b.error || ''),
+               pk: pk, len: u8 ? u8.length : -1, zipOk: zOk, zipNames: zNames,
+               v: m.v, id: String(m.id == null ? '' : m.id), app: String(m.app == null ? '' : m.app),
+               rowsN: rows.length,
+               rows: rows.map(function (x) { return { key: String((x && x.key) == null ? '' : x.key),
+                 name: String((x && x.name) == null ? '' : x.name), path: String((x && x.path) == null ? '' : x.path),
+                 kind: String((x && x.kind) == null ? '' : x.kind), sha: String((x && x.sha256) == null ? '' : x.sha256),
+                 size: (x && typeof x.size === 'number') ? x.size : -1 }; }) };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)).value) || {}) : {};
+  note('R19 build: ' + JSON.stringify({ ok: r19BuildV.ok, id: r19BuildV.id, rows: r19BuildV.rowsN, pk: r19BuildV.pk, zipOk: r19BuildV.zipOk }));
+  const r19NamesOk = Array.isArray(r19BuildV.rows) && r19BuildV.rows.length === 2
+    && r19BuildV.rows.map(function (r) { return String(r.name); }).sort().join(',') === 'r19-alpha.wav,r19-beta.wav';
+  const r19RowsOk = Array.isArray(r19BuildV.rows) && r19BuildV.rows.length === 2
+    && r19BuildV.rows.every(function (r) {
+      return /^[0-9a-f]{64}$/.test(String(r.sha)) && String(r.path) === 'items/' + String(r.key) + '.wav'
+        && String(r.kind) === 'sample' && r.size >= 0
+        && Array.isArray(r19BuildV.zipNames) && r19BuildV.zipNames.indexOf(String(r.path)) >= 0;
+    });
+  const r19ZipManifest = Array.isArray(r19BuildV.zipNames) && r19BuildV.zipNames.indexOf('manifest.json') >= 0;
+  const r19Del = (r19BuildV.ok === true) ? await r19RemoveNames(['r19-alpha.wav', 'r19-beta.wav']) : null;
+  const r19Imp2 = (r19BuildV.ok === true && r19Del && r19Del.ok === true)
+    ? await r19Import('pack round-trip', `[new File([window.__r19.packBytes], 'rig-r19.avpack')]`)
+    : null;
+  const r19Final = (r19Imp2 && r19Imp2.via !== null) ? (((await ev(`(async () => {
+    try {
+      const B = window.__r19 || {};
+      const m = (B.manifest && typeof B.manifest === 'object') ? B.manifest : {};
+      const mid = String(m.id == null ? '' : m.id);
+      const rows = Array.isArray(m.items) ? m.items : [];
+      const rowOf = function (n) { return rows.filter(function (x) { return x && String(x.name) === n; })[0] || null; };
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      const items = (l && l.items) || [];
+      const hit = function (n) { return items.filter(function (i) { return i && String(i.name) === n; })[0] || null; };
+      const a = hit('r19-alpha.wav'), b = hit('r19-beta.wav');
+      const srcOf = function (it) {
+        const s = (it && it.source && typeof it.source === 'object') ? it.source : null;
+        return s ? { pack: String(s.pack == null ? '' : s.pack), name: String(s.name == null ? '' : s.name), path: String(s.path == null ? '' : s.path) } : null;
+      };
+      const ra = rowOf('r19-alpha.wav'), rb = rowOf('r19-beta.wav');
+      const sa = srcOf(a), sb = srcOf(b);
+      const st = (typeof avImportUiState !== 'undefined' && avImportUiState && Array.isArray(avImportUiState.reportItems)) ? avImportUiState.reportItems : [];
+      const bundle = st.filter(function (x) { return x && String(x.kind) === 'bundle'; })[0] || st[0] || null;
+      const bm = (bundle && bundle.meta && typeof bundle.meta === 'object') ? bundle.meta : {};
+      const rl = (typeof avLibReceiptList === 'function') ? await avLibReceiptList() : null;
+      const run0 = (rl && Array.isArray(rl.runs) && rl.runs[0]) ? rl.runs[0] : null;
+      return { mid: mid,
+               lib: { a: !!a, b: !!b, aPack: sa ? sa.pack : null, bPack: sb ? sb.pack : null,
+                      aName: sa ? sa.name : null,
+                      aPath: (sa && ra) ? (sa.path === String(ra.path)) : null,
+                      bPath: (sb && rb) ? (sb.path === String(rb.path)) : null },
+               report: { n: st.length, name: bundle ? String(bundle.name) : '', kind: bundle ? String(bundle.kind) : '',
+                         result: bundle ? String(bundle.result) : '' },
+               meta: { pack: String(bm.pack == null ? '' : bm.pack), items: (typeof bm.items === 'number') ? bm.items : null,
+                       installed: (typeof bm.installed === 'number') ? bm.installed : null, refused: (typeof bm.refused === 'number') ? bm.refused : null },
+               run0: run0 ? { counts: run0.counts || null } : null,
+               dom: document.querySelectorAll('#av-import-lib [data-av-import-lib]').length };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)).value) || {}) : {};
+  check('R19 round-trip: 2 WAVs -> __avPack.build (zip + manifest rows 2) -> delete -> reimport the .avpack: ONE bundle receipt · both land with source.pack',
+    !!r19Imp1 && r19Imp1.via !== null && !!r19A && !!r19B
+    && r19BuildV.ok === true && r19BuildV.pk === true && r19BuildV.zipOk === true && r19ZipManifest
+    && r19BuildV.v === 1 && r19BuildV.app === 'anvil-app' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(String(r19BuildV.id))
+    && r19BuildV.rowsN === 2 && r19NamesOk && r19RowsOk
+    && !!r19Del && r19Del.ok === true
+    && !!r19Imp2 && r19Imp2.via !== null
+    && r19Final.lib && r19Final.lib.a === true && r19Final.lib.b === true
+    && r19Final.lib.aPack === String(r19BuildV.id) && r19Final.lib.bPack === String(r19BuildV.id)
+    && String(r19Final.lib.aName) === 'rig-r19.avpack'
+    && r19Final.lib.aPath === true && r19Final.lib.bPath === true
+    && !!r19Final.report && r19Final.report.n === 1 && r19Final.report.kind === 'bundle'
+    && r19Final.report.result === 'imported' && String(r19Final.report.name) === 'rig-r19.avpack'
+    && !!r19Final.meta && r19Final.meta.pack.length >= 1 && r19Final.meta.pack === String(r19BuildV.id)
+    && r19Final.meta.items === 2 && r19Final.meta.installed === 2 && r19Final.meta.refused === 0
+    && !!r19Final.run0 && !!r19Final.run0.counts
+    && r19Final.run0.counts.bundles === 1 && r19Final.run0.counts.total === 1,
+    JSON.stringify({ imp1: r19Imp1 && { via: r19Imp1.via, count: r19Imp1.count }, ids: { a: !!r19A, b: !!r19B },
+      build: { ok: r19BuildV.ok, pk: r19BuildV.pk, zip: r19BuildV.zipOk, len: r19BuildV.len, id: r19BuildV.id, rows: r19BuildV.rowsN, err: r19BuildV.err || r19BuildV.missing ? (r19BuildV.err || 'missing') : '' },
+      del: r19Del || null, imp2: r19Imp2 && { via: r19Imp2.via, count: r19Imp2.count }, final: r19Final }));
+
+  /* 23d.2 sha-mismatch refusal: delete the pair again -> the corrupted pack (one payload byte
+     flipped; scratch rebuild with a wrong manifest sha when locating fails) -> import ->
+     alpha refuses (named), beta lands; item-level honest results ride the bundle row's meta
+     (read from the RAW receipt — the facade return) */
+  const r19Del2 = (r19Imp2 && r19Imp2.via !== null) ? await r19RemoveNames(['r19-alpha.wav', 'r19-beta.wav']) : null;
+  const r19BadB = (r19BuildV.ok === true) ? await ev(`(() => { try { return window.__r19.buildBad(); } catch (e) { return { via: null, err: String((e && e.message) || e) }; } })()`) : {};
+  let r19BadDrive = null;
+  if (r19BadB.value && r19BadB.value.via && r19Del2 && r19Del2.ok === true) {
+    const badBefore = await receiptsNow();
+    const dR = await ev(`(async () => {
+      try {
+        const B = window.__r19;
+        if (!B || !B.badBytes) return { noFixture: true };
+        if (!window.__avImport || typeof window.__avImport.importFiles !== 'function') return { missing: true };
+        const f = new File([B.badBytes], 'rig-r19-bad.avpack');
+        const r = await window.__avImport.importFiles([f]);
+        window.__r19.lastReceipt = r || null;
+        return { ok: !!(r && r.ok), at: (r && typeof r.at === 'number') ? r.at : null };
+      } catch (e) { return { err: String((e && e.message) || e) }; }
+    })()`);
+    const bc = await waitFor(`(async () => { try { if (typeof avLibReceiptList !== 'function') return 0; const r = await avLibReceiptList(); return (r && r.ok === true && r.count === ${badBefore + 1}) ? r.count : 0; } catch (e) { return 0; } })()`, 25000);
+    r19BadDrive = { dR: dR.value || null, before: badBefore, count: bc };
+  }
+  const r19BadR = r19BadDrive ? (((await ev(`(async () => {
+    try {
+      const B = window.__r19 || {};
+      const raw = B.lastReceipt || null;
+      const m = (B.manifest && typeof B.manifest === 'object') ? B.manifest : {};
+      const mid = String(m.id == null ? '' : m.id);
+      const items = (raw && Array.isArray(raw.items)) ? raw.items : [];
+      const row = items.filter(function (x) { return x && String(x.kind) === 'bundle'; })[0] || items[0] || null;
+      const meta = (row && row.meta && typeof row.meta === 'object') ? row.meta : {};
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      const list = (l && l.items) || [];
+      const aHits = list.filter(function (i) { return i && String(i.name) === 'r19-alpha.wav'; }).length;
+      const bHit = list.filter(function (i) { return i && String(i.name) === 'r19-beta.wav'; })[0] || null;
+      const bPack = (bHit && bHit.source && typeof bHit.source === 'object') ? String(bHit.source.pack == null ? '' : bHit.source.pack) : null;
+      let uiPub = [];
+      try { uiPub = (typeof avImportUiState !== 'undefined' && avImportUiState && Array.isArray(avImportUiState.reportItems)) ? avImportUiState.reportItems : []; } catch (e0) { uiPub = []; }
+      const named = JSON.stringify(meta).indexOf('r19-alpha.wav') >= 0
+        || JSON.stringify(items).indexOf('r19-alpha.wav') >= 0
+        || JSON.stringify((raw && raw.errors) || []).indexOf('r19-alpha.wav') >= 0
+        || JSON.stringify(uiPub).indexOf('r19-alpha.wav') >= 0;
+      const counts = (raw && raw.counts && typeof raw.counts === 'object') ? raw.counts : {};
+      return { mid: mid, hasRaw: !!raw,
+               row: row ? { name: String(row.name || ''), kind: String(row.kind || ''), result: String(row.result || ''), reason: String(row.reason || '') } : null,
+               itemsN: items.length,
+               meta: { pack: String(meta.pack == null ? '' : meta.pack), items: (typeof meta.items === 'number') ? meta.items : null,
+                       installed: (typeof meta.installed === 'number') ? meta.installed : null, refused: (typeof meta.refused === 'number') ? meta.refused : null },
+               named: named, aHits: aHits, bHit: !!bHit, bPack: bPack,
+               counts: { total: counts.total, imported: counts.imported, refused: counts.refused, bundles: counts.bundles },
+               errors: (raw && Array.isArray(raw.errors)) ? raw.errors.slice(0, 4).map(String) : [] };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)).value) || {}) : {};
+  check('R19 sha-mismatch: corrupted pack -> alpha refused (named) · beta lands · item-level results in the receipt row meta',
+    !!(r19BadB.value && r19BadB.value.via) && !!r19BadDrive
+    && !!r19BadDrive.dR && r19BadDrive.dR.ok === true
+    && r19BadDrive.count === r19BadDrive.before + 1
+    && r19BadR.hasRaw === true && r19BadR.itemsN === 1
+    && !!r19BadR.row && r19BadR.row.kind === 'bundle' && r19BadR.row.result === 'imported'
+    && String(r19BadR.row.name) === 'rig-r19-bad.avpack'
+    && r19BadR.mid.length >= 1 && r19BadR.meta.pack === r19BadR.mid
+    && r19BadR.meta.items === 2 && r19BadR.meta.installed === 1 && r19BadR.meta.refused === 1
+    && r19BadR.named === true
+    && r19BadR.aHits === 0 && r19BadR.bHit === true && r19BadR.bPack === r19BadR.mid
+    && r19BadR.counts.bundles === 1 && r19BadR.counts.total === 1,
+    JSON.stringify({ bad: r19BadB.value || null, del2: r19Del2 || null,
+      drive: r19BadDrive ? { before: r19BadDrive.before, count: r19BadDrive.count, ok: r19BadDrive.dR && r19BadDrive.dR.ok } : null,
+      read: r19BadR }));
+
+  /* 23d.3 generic zip unchanged: a plain zip (no manifest.json) still takes the R16
+     expansion (one bundle row + child rows) — guards the route ordering */
+  const r19GenB = await ev(`(() => { try { return window.__r19.makeGeneric(); } catch (e) { return { err: String((e && e.message) || e) }; } })()`);
+  const r19GenImp = (r19GenB.value && r19GenB.value.len > 0)
+    ? await r19Import('generic zip', `[new File([window.__r19.genZip], 'r19-generic.zip')]`)
+    : null;
+  const r19GenR = (r19GenImp && r19GenImp.via !== null) ? (((await ev(`(async () => {
+    try {
+      const rl = (typeof avLibReceiptList === 'function') ? await avLibReceiptList() : null;
+      const run0 = (rl && Array.isArray(rl.runs) && rl.runs[0]) ? rl.runs[0] : null;
+      let st = [];
+      try { st = (typeof avImportUiState !== 'undefined' && avImportUiState && Array.isArray(avImportUiState.reportItems)) ? avImportUiState.reportItems : []; } catch (e0) { st = []; }
+      const rows = st.map(function (x) { return { name: String((x && x.name) || ''), kind: String((x && x.kind) || ''), result: String((x && x.result) || ''), format: String((x && x.format) || '') }; });
+      return { counts: (run0 && run0.counts) ? run0.counts : null, n: rows.length, rows: rows,
+               dom: document.querySelectorAll('#av-import-report [data-av-import-row]').length };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)).value) || {}) : {};
+  check('R19 generic zip: no manifest -> the R16 expansion (bundle row + the 2 children) unchanged',
+    !!r19GenB.value && r19GenB.value.len > 0 && !!r19GenImp && r19GenImp.via !== null
+    && !!r19GenR && r19GenR.n === 3 && r19GenR.dom === 3
+    && r19GenR.rows.length === 3 && r19GenR.rows[0].kind === 'bundle' && r19GenR.rows[0].result === 'imported'
+    && r19GenR.rows.some(function (r) { return r.name === 'r19-gen.wav' && r.result === 'imported' && r.format === 'wav'; })
+    && r19GenR.rows.some(function (r) { return r.name === 'readme.txt'; })
+    && !!r19GenR.counts && r19GenR.counts.bundles === 1 && r19GenR.counts.total === 3,
+    JSON.stringify(r19GenR));
+
   /* ── 24. drop-anywhere: a non-hub drop routes to the store pane and imports exactly once ── */
   const before24 = await receiptsNow();
   const zon24 = await ev(`(() => {
