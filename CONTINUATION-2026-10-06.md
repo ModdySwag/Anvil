@@ -2299,13 +2299,16 @@ Resume phrase: **"continue anvil"**.
 ### Session-end verify-state (2026-10-09 - copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -5                                         # HEAD = the R18a-lands commit (addendum 60)
+    git log --oneline -5                                         # HEAD = the R18a save commit (addendum 60 + this block)
     git status --short                                           # clean except `?? cache/`
     curl -s https://moddys.net/anvil/index.html | sha256sum      # = 3f87b4d3... (frozen, live)
     grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (unchanged - page-side wave)
     node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "74 passed, 0 failed" before ANY new work
-    node verify/cdp_hub.mjs > verify/last-cdp_hub.log 2>&1       # expect "29 passed, 0 failed" (pinned)
+    # NOTE: cdp_hub is mid-wave (33 checks; its EXPECT_SHA still pins the frozen 3f87b4d3 build) -
+    # last green on the FROZEN bytes was 29/29 BEFORE the R18a legs were added; run it only at
+    # the R18a freeze (after the rebuild + re-pin), not as a boot gate.
 
-R17 fully closed at this commit (addendum 56): design docs/12 + contract _r17_wave.md + rig
-cdp_hub + all records committed; nothing in flight. Resume phrase "continue anvil" - next per
-docs/12: R18 (library intelligence) or the owner's pick.
+R18a children landed + verified (commit 1046dd0; addendum 60): core sha256/dedupe/relink +
+UI + cdp_hub 33; build + smoke 74/74 proven on the landed sources. NEXT (integration session):
+styles block -> rebuild -> cdp_hub 33 -> cdp_import 24 -> pins sweep -> battery 25 + bench ->
+deploy -> live capture -> addendum 61. Resume phrase "continue anvil". Nothing in flight.
