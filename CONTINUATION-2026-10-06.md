@@ -1910,3 +1910,30 @@ Resume phrase: **"continue anvil"**.
   scoped --verify -> addendum 46 finalize + LFO card wave.
 - LIVE: still ff99f482 (leak + BPM interactivity not yet on the live site; the leak fix must
   ship with this wave).
+
+## Resume addendum 47 - 2026-10-09 (R12 SHIPPED: console leak fix + BPM window LIVE - addendum 46 closed)
+
+- R12 (the addendum 46 owed sequence) DONE + DEPLOYED + LIVE-VERIFIED: frozen `3172a17e`
+  (3,505,306 B; sw `05b97736`); uploaded via `upload-site.py --only anvil/index.html
+  anvil/sw.js` ("2 uploaded"); scoped `--verify` = **0 not in sync**; live sha = frozen.
+- (1) Console proof leak FIXED (avTestLine gated to `?avtest=1` + `setTimeout(0)` defer) and
+  (2) the BPM window is fully interactive (click top/bottom half +-1, wheel +-1 / Shift +-10,
+  arrows when focused) through the `avApplyParam("bpm")` funnel (20..300 + delay mirror);
+  facade `__avConsole.setBpm/bpm`.
+- EVIDENCE: differential probe `cache/r12/leak_check_live.mjs` — **11/11 local + 11/11 LIVE**
+  (plain load: zero SELFTEST text + empty proof host + zero page errors; `?avtest=1`:
+  CONSOLE SELFTEST line parses; plus a live BPM-click witness 120 -> 121 -> back 120).
+  Screenshots: `renders/r12-noavtest.png` (local), `renders/r12-live-noavtest.png` (LIVE) —
+  both inspected, console intact, no stray text.
+- Smoke **56** first-run — the R12 BPM check + a new "R12 proof gate" leg (loads the PLAIN
+  page and asserts zero proof text — the owner-reported defect class is now permanently
+  guarded). Battery **23 suites ALL GREEN first-lap** (no knife-edge re-run this time: seq
+  swing 31/31 clean) + bench exit=0 (realtime light 64 / fat 32 loaded-window; offline knee
+  96/128 monotone, invalidReads 0).
+- Commits: 0dc7951 (WIP) -> 0b8809b (checkpoint: build + smoke + pins 20/20) -> dd470a0
+  (records: battery + bench) -> close commit (this addendum + close renders).
+- R13 NEXT (STAGED + DISPATCHED): the LFO card — contract `verify/_r13_wave.md` (UI-only; shape
+  select + RATE/TO CUT/TO PITCH knobs + deterministic scope; the lfo knobs MOVE out of the
+  synth MOD row; smoke -> 58; no new suite; pins stay 20 files). Child authors `src/av_lfo.js`;
+  parent integration (counted-assert) -> build -> smoke 58 -> sweep -> battery 23+bench ->
+  deploy -> live pass -> addendum 48. Resume phrase "continue anvil".
