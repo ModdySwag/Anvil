@@ -2263,10 +2263,25 @@ Resume phrase: **"continue anvil"**.
   flight.
 - Commit: this R18-open commit (continuation + bench/log updates + addendum 58).
 
+## Resume addendum 59 - 2026-10-09 (R18a OPENED: library intelligence - contract staged + authors dispatched)
+
+- R18 SPLIT (docs/12 §5 amended): R18a (identity + dedupe + relink v1) = THIS wave; R18b
+  (linked folders + PWA handlers) staged next. Contract `verify/_r18_wave.md` authored from the
+  spot-verified recon digest (`cache/r18/recon-r18.md`); docs/12 §3.2 amended for the
+  NON-BLOCKING dedupe decision (flag + replace + delete-as-skip; no modal dialogs).
+- Authors dispatched (background): A = `src/av_import.js` + `src/av_lib.js` (avImportSha256Hex;
+  item sha/dup; counts.dups; record sha256/source/dupOf; avLibFindSha/avLibReplaceDup/
+  avLibMissingScan; facade) · B = `src/av_import_ui.js` (dup + missing chips; replace/relink
+  actions; relink editor; snap/facade additions) · C = `verify/cdp_hub.mjs` (+4 legs; 29 -> 33).
+- NEXT on child return: verify artifacts (search_files + node --check) -> styles block for the
+  new chips/select -> integration (docs-only, no parent src edits this wave) -> build -> smoke
+  74 -> cdp_hub 33 -> cdp_import 24 -> sweep -> battery + bench -> deploy -> live -> close.
+- Nothing else in flight. Commit: this R18a-open commit.
+
 ### Session-end verify-state (2026-10-09 - copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -5                                         # HEAD = the R18-open commit (addendum 58)
+    git log --oneline -5                                         # HEAD = the R18a-open commit (addendum 59)
     git status --short                                           # clean except `?? cache/`
     curl -s https://moddys.net/anvil/index.html | sha256sum      # = 3f87b4d3... (frozen, live)
     grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (unchanged - page-side wave)

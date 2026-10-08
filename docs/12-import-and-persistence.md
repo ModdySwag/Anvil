@@ -170,9 +170,11 @@ crash recovery (FL Backup folder / Ableton Crash folder), durable-web best pract
 5. **Consumers (unchanged)** — slots 1-4 send, pads, chop, seq, OSC2.
 
 ### 3.2 The import flow (per run)
-drop/pick → sniff (64 B) → policy → adapter → per-item result. Duplicates (R18):
-hash hit → dialog `keep both | replace | skip` (replace = swap + provenance note; skip =
-default). Zip: bundle row + children (depth-1). Sibling chip: same-stem WAV/MP3/AIFF
+drop/pick → sniff (64 B) → policy → adapter → per-item result. Duplicates (R18a, as-built
+NON-BLOCKING): a hash hit imports normally (keep-both) carrying a DUPLICATE flag + chip;
+`replace` (swap payload + provenance note) and `skip` (= delete the new row) are explicit row
+actions — no modal dialogs (the card has none, and the one-shot pipeline never pauses). Zip:
+bundle row + children (depth-1). Sibling chip: same-stem WAV/MP3/AIFF
 detected and served as the fallback suggestion for refs/refusals (already live).
 Receipt: persisted to history (last 20); re-run deferred items button (R18: remembers
 paths where the same folder is linked; otherwise re-drop).
@@ -278,12 +280,13 @@ identity), then persistence depth (largest surface, benefits from everything bef
   `av-receipts-store` v1, `runs` store, last-20 rotation — `av-samples-store` untouched),
   storage meter + persist() call. New rig `verify/cdp_hub.mjs`; smoke additions; pins
   sweep; battery.
-- **R18 — LIBRARY INTELLIGENCE.** sha256 identity on import + dedupe dialog (keep both/
-  replace/skip), provenance `source` field, missing-content relink (refs + candidates +
-  commit), linked source folders (`av-sources-store`, link/rescan/diff/reconnect), PWA
-  `file_handlers` widening (.wav .mp3 .mid .zip routed to the funnel; conditional on the
-  launchQueue probe — §7.4). Rig legs: dedupe replace/skip witnesses; relink commit
-  witness; folder diff from a synthesized tree.
+- **R18 — LIBRARY INTELLIGENCE (split 2026-10-09: R18a + R18b).** R18a (contract
+  `verify/_r18_wave.md`, NOW): sha256 identity on import + provenance `source` +
+  NON-BLOCKING dedupe (flag + replace + delete-as-skip; docs/12 §3.2 amended) + missing-content
+  detection + relink v1 (rename-based). Rig legs: dedupe flag/replace witnesses; missing +
+  relink witnesses (in cdp_hub). R18b (next): linked source folders (`av-sources-store`,
+  link/rescan/diff/reconnect, FSA seam) + PWA `file_handlers` widening (conditional on the
+  launchQueue probe — §7.4); rig legs: folder diff from a synthesized tree.
 - **R19 — USER PACKS.** `verify/avpack_schema.mjs` + export (Collect & Pack) + import
   route (kind `avpack` under the bundle pre-pass) + CLI verifier + docs/09-adjacent doc
   line. Rig legs: pack round-trip (export → wipe → import → byte-equal re-export).
