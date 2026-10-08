@@ -1970,3 +1970,42 @@ Resume phrase: **"continue anvil"**.
   (wire v2) · kind-specific drop paths · Store browser overlay · module-menu Copy/Paste · page
   switching · P·2 minBLEP · PERFECT TUNINGS · more owner modules · owner pass (Ctrl+F5 once for
   the new service-worker cache). Resume phrase "continue anvil".
+
+## Resume addendum 49 - 2026-10-09 (R14: CONSOLE FINISH SHIPPED - preset step keys + VU meters; SAMPLE PACKS wave planned)
+
+- R14 (carried list items 1-2) DONE + DEPLOYED + LIVE-VERIFIED: frozen `baf50ba0`
+  (3,525,599 B; sw `b5aa5f2f`); upload "2 uploaded"; scoped `--verify` = **0 not in sync**;
+  live sha = frozen.
+- Shipped: PRV/NXT keycaps in the transport deck — step-and-apply the current pack's presets
+  through the bank API (`avBankApplyPreset`; a bubbling change syncs the select + `avBankState`;
+  honest refusals `no-bank-api`/`no-banks`/`no-presets`/`refused`; result carries
+  applied/pack/index/preset/reason); a two-bar VU meter fed by `avTap.levels` (rAF loop,
+  per-bar scaleY writes on >0.01 delta); facade `__avConsole` gains stepPreset/vu/vuTick;
+  proof gains `vu`+`step` (v stays r11.0). Styles = styles.css R14 block. UI-only; no engine work.
+- Smoke **60** first-run (2 new R14 checks: structure + honest no-op with no banks; VU
+  inject->paint witness 0.8/0.4 exact, restored); cockpit 21/21 (pinned). Battery **23 suites
+  ALL GREEN first-lap** + bench exit=0 — BEST reading yet: realtime light 64 / fat 48,
+  **offline knee 128 monotone** (firstFailN null), invalidReads 0.
+- LIVE PASS: leak differential **11/11** (the live proof line shows the new vu/step fields);
+  console capture `renders/r14-live-console.png` (+ local `renders/r14-console.png`) — inspected
+  clean. Owner Ctrl+F5 for the new SW cache.
+- Commits: 8faf4de (checkpoint) -> 77b504c (records) -> close commit (this addendum).
+- **SAMPLE PACKS (owner ask, out-of-band 2026-10-09) — PLANNED as R15, research first.** He
+  wants user-importable sample-pack content: ADG, AIF, ALS, EXS, KONG, MXGPR, NBKT, NKI, REX2,
+  SXT, WAV, MIDI, MP3, SerumPreset — a "SAMPLE PACKS" surface usable throughout the app.
+  Triage recorded: straight-in = WAV (native) / MP3 (decodeAudioData) / AIF (clean-room PCM
+  reader; browsers do not decode AIFF) / MIDI (av_mid.js SMF parser exists); adapters = EXS
+  (text zones -> sampler v2 table) / SerumPreset (wavetables are PNG strips inside -> 2048-frame
+  tables for OSC2) / ADG+ALS (gzipped XML: extract sample refs + params; full ALS project
+  import out of scope) / REX2 (known layout, slice decode is real work) / NKI+NBKT (proprietary
+  chunked: best-effort zones or honest refusal); VERIFY-FIRST = KONG (Reason, proprietary),
+  MXGPR + SXT (unidentified — research what they exactly are). Architecture: drop folder/zip ->
+  sniffer -> per-format adapters -> canonical bundle (samples / zones / patterns / wavetables)
+  -> local IDB library (nothing uploads) -> assign to engine slots / drum pads / chop / grain /
+  OSC2 / seq. Clean-room parsers, users import their own files, nothing from the reference rig
+  ships. R15a = format research wave (dispatch next), R15b = the SAMPLE PACKS card + core
+  formats, R15c = EXS + Serum wavetables + best-effort rest.
+- NEXT (carried): a11y chip keyboard assign path · animated mod rings · widen AV_MOD_TARGETS
+  (wire v2) · kind-specific drop paths · Store browser overlay · module-menu Copy/Paste · page
+  switching · P·2 minBLEP · PERFECT TUNINGS · more owner modules · optional cdp_store leg for
+  the console step happy-path (real packs). Resume phrase "continue anvil".
