@@ -1,12 +1,15 @@
-/* Anvil — the left module rail (R4): a pinnable, resizable, hideable navigator down the left edge.
-   Groups = the 8 zones (accent-dotted, the active one highlighted); each group lists its cards as
-   jump links (switch the zone + scroll the card into view). Toggle lives in the header (NAV) and
-   on the rail itself; width + open state persist (av-rail-w / av-rail-open). */
+/* Anvil — the left module rail (R4; R7 standard-menu pass): a pinnable, resizable, hideable
+   navigator down the left edge. Groups = the 8 zones (accent-dotted, the active one highlighted);
+   each group lists its cards as jump links (switch the zone + scroll the card into view) and
+   collapses/expands from its chevron — independent per-section state, persisted
+   (av-rail-sections). The Panels quick-view is collapsible the same way. Toggle lives in the
+   header (NAV) and on the rail itself; width + open state persist (av-rail-w / av-rail-open). */
 "use strict";
 
-const AV_RAIL_VERSION = "r4.0";
+const AV_RAIL_VERSION = "r7.0";
 const AV_RAIL_W_KEY = "av-rail-w";
 const AV_RAIL_OPEN_KEY = "av-rail-open";
+const AV_RAIL_SEC_KEY = "av-rail-sections";
 
 const AV_RAIL_GROUPS = [
   { zone: "synth", label: "Synth", cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-wt", "Wavetable editor"]] },
@@ -51,6 +54,73 @@ function avRailSetWidth(w) {
   } catch (e) { return false; }
 }
 
+/* R7 - standard-menu rail: per-section collapse/expand, independent per section, persisted
+   (av-rail-sections: one 0|1 per zone + "panels"). First run seeds the active zone expanded +
+   Panels expanded; every later change comes only from a chevron / the Panels head. */
+const avRailSecState = { map: null };
+
+function avRailSecInit() {
+  try {
+    let stored = null;
+    try {
+      const raw = localStorage.getItem(AV_RAIL_SEC_KEY);
+      if (raw) { const o = JSON.parse(raw); if (o && typeof o === "object") stored = o; }
+    } catch (e) { stored = null; }
+    const map = {};
+    if (stored) {
+      for (let i = 0; i < AV_RAIL_GROUPS.length; i++) {
+        const k = AV_RAIL_GROUPS[i].zone;
+        map[k] = (stored[k] === 1) ? 1 : 0;
+      }
+      map.panels = (stored.panels === 0) ? 0 : 1;
+    } else {
+      const cur = (window.__avZone && typeof window.__avZone.current === "function") ? window.__avZone.current() : "synth";
+      for (let i = 0; i < AV_RAIL_GROUPS.length; i++) {
+        const k = AV_RAIL_GROUPS[i].zone;
+        map[k] = (k === cur) ? 1 : 0;
+      }
+      map.panels = 1;
+    }
+    avRailSecState.map = map;
+    try { localStorage.setItem(AV_RAIL_SEC_KEY, JSON.stringify(map)); } catch (e2) { /* session only */ }
+    return avRailSecApply();
+  } catch (e) { return false; }
+}
+function avRailSecApply() {
+  try {
+    const map = avRailSecState.map || {};
+    const groups = document.querySelectorAll("#av-rail .av-rail-group");
+    for (let i = 0; i < groups.length; i++) {
+      const z = groups[i].getAttribute("data-zone");
+      const on = map[z] === 1;
+      groups[i].classList.toggle("expanded", on);
+      const chev = groups[i].querySelector(".av-rail-chev");
+      if (chev) chev.setAttribute("aria-expanded", on ? "true" : "false");
+    }
+    const sec = document.getElementById("av-rail-panels");
+    if (sec) {
+      const pon = (avRailSecState.map && avRailSecState.map.panels === 0) ? false : true;
+      sec.classList.toggle("collapsed", !pon);
+      const head = sec.querySelector(".av-rail-sec-head");
+      if (head) head.setAttribute("aria-expanded", pon ? "true" : "false");
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function avRailSecSet(key, on) {
+  try {
+    if (!avRailSecState.map) avRailSecState.map = {};
+    avRailSecState.map[key] = on ? 1 : 0;
+    try { localStorage.setItem(AV_RAIL_SEC_KEY, JSON.stringify(avRailSecState.map)); } catch (e2) { /* session only */ }
+    avRailSecApply();
+    return avRailSecState.map[key] === 1;
+  } catch (e) { return false; }
+}
+function avRailSecToggle(key) {
+  const cur = !!(avRailSecState.map && avRailSecState.map[key] === 1);
+  return avRailSecSet(key, !cur);
+}
+
 function avRailBuild() {
   try {
     const el = avRailEl();
@@ -77,6 +147,26 @@ function avRailBuild() {
       const wrap = document.createElement("div");
       wrap.className = "av-rail-group";
       wrap.setAttribute("data-zone", grp.zone);
+      const zrow = document.createElement("div");
+      zrow.className = "av-rail-zrow";
+      const chev = document.createElement("button");
+      chev.type = "button";
+      chev.className = "av-rail-chev";
+      chev.setAttribute("data-zone", grp.zone);
+      chev.setAttribute("aria-expanded", "false");
+      chev.setAttribute("aria-controls", "av-rail-cards-" + grp.zone);
+      chev.setAttribute("aria-label", "Collapse or expand the " + grp.label + " section");
+      chev.title = "Collapse / expand";
+      const chevGlyph = document.createElement("span");
+      chevGlyph.className = "av-rail-chev-glyph";
+      chevGlyph.textContent = "\u25B8";
+      chev.appendChild(chevGlyph);
+      (function (zone) {
+        chev.addEventListener("click", function (e) {
+          e.stopPropagation();
+          avRailSecToggle(zone);
+        });
+      })(grp.zone);
       const zb = document.createElement("button");
       zb.type = "button";
       zb.className = "av-rail-zone";
@@ -89,10 +179,10 @@ function avRailBuild() {
       zb.appendChild(lbl);
       zb.addEventListener("click", function () {
         if (typeof avZoneShow === "function") avZoneShow(grp.zone, { source: "rail" });
-        wrap.classList.add("open");
       });
       const list = document.createElement("div");
       list.className = "av-rail-cards";
+      list.id = "av-rail-cards-" + grp.zone;
       for (let c = 0; c < grp.cards.length; c++) {
         const cid = grp.cards[c][0], clabel = grp.cards[c][1];
         const cb = document.createElement("button");
@@ -111,7 +201,9 @@ function avRailBuild() {
         })(cid, grp.zone);
         list.appendChild(cb);
       }
-      wrap.appendChild(zb);
+      zrow.appendChild(chev);
+      zrow.appendChild(zb);
+      wrap.appendChild(zrow);
       wrap.appendChild(list);
       el.appendChild(wrap);
     }
@@ -151,18 +243,33 @@ function avRailBuildPanels() {
     const sec = document.createElement("div");
     sec.className = "av-rail-sec";
     sec.id = "av-rail-panels";
-    const head = document.createElement("div");
+    const head = document.createElement("button");
+    head.type = "button";
     head.className = "av-rail-sec-head";
-    head.textContent = "Panels";
+    head.setAttribute("aria-expanded", "true");
+    head.setAttribute("aria-controls", "av-rail-panels-body");
+    head.setAttribute("aria-label", "Collapse or expand the Panels quick-view");
+    const hchev = document.createElement("span");
+    hchev.className = "av-rail-chev-glyph";
+    hchev.textContent = "\u25B8";
+    const hlabel = document.createElement("span");
+    hlabel.textContent = "Panels";
+    head.appendChild(hchev);
+    head.appendChild(hlabel);
+    head.addEventListener("click", function () { avRailSecToggle("panels"); });
     sec.appendChild(head);
+    const body = document.createElement("div");
+    body.className = "av-rail-sec-body";
+    body.id = "av-rail-panels-body";
+    sec.appendChild(body);
     const mk = function (label, id) {
       const l = document.createElement("div");
       l.className = "av-rail-sublabel";
       l.textContent = label;
-      sec.appendChild(l);
+      body.appendChild(l);
       const box = document.createElement("div");
       box.id = id;
-      sec.appendChild(box);
+      body.appendChild(box);
     };
     mk("Open", "av-rail-open");
     mk("Minimized", "av-rail-min");
@@ -296,6 +403,7 @@ function avRailInit() {
     if (avRailState.ready) return true;
     if (!avRailEl()) return false;
     avRailBuild();
+    avRailSecInit();
     try {
       const w = parseFloat(localStorage.getItem(AV_RAIL_W_KEY));
       if (isFinite(w) && w > 0) avRailSetWidth(w);
@@ -313,14 +421,18 @@ function avRailInit() {
 }
 
 function avRailProof() {
-  let cards = 0;
+  let cards = 0, secs = 0, panO = false;
   try { cards = document.querySelectorAll(".av-rail-card").length; } catch (e) { /* none */ }
+  try { secs = document.querySelectorAll("#av-rail .av-rail-group.expanded").length; } catch (e) { /* none */ }
+  try { const sec = document.getElementById("av-rail-panels"); panO = !!(sec && !sec.classList.contains("collapsed")); } catch (e) { /* none */ }
   return "RAIL SELFTEST " + JSON.stringify({
     v: AV_RAIL_VERSION,
     ready: avRailState.ready === true,
     groups: AV_RAIL_GROUPS.length,
     cards: cards,
     open: !document.body.classList.contains("av-rail-closed"),
+    sections: secs,
+    panels: panO,
   });
 }
 
@@ -334,6 +446,15 @@ if (typeof window !== "undefined" && window) {
       width: function (w) { return (typeof w === "number") ? avRailSetWidth(w) : null; },
       groups: function () { return AV_RAIL_GROUPS.map(function (g) { return g.zone; }); },
       panels: function () { return avRailPanelsRefresh(); },
+      sections: function () {
+        const m = avRailSecState.map || {};
+        const o = {};
+        const ks = Object.keys(m);
+        for (let i = 0; i < ks.length; i++) o[ks[i]] = m[ks[i]];
+        return o;
+      },
+      sectionSet: function (key, on) { return avRailSecSet(key, on !== false); },
+      sectionToggle: function (key) { return avRailSecToggle(key); },
     };
   } catch (e) { /* no window - nothing to publish */ }
 }

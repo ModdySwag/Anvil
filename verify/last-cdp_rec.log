@@ -1,7 +1,7 @@
-index.html sha256 (before): 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
+index.html sha256 (before): 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9430 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-rec-1791455277270
- ok   freeze: index.html sha256 before = 37268aca…  -> 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
+cdp port 9430 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-rec-1791456185939
+ ok   freeze: index.html sha256 before = 24491edd…  -> 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
  ok   boot: data-av-ready flips
  ok   engine: ready (tier · sampleRate recorded)  -> {"ready":true,"tier":"worklet","sr":48000}
  ok   engine ctx: running + ScriptProcessor-capable (capture target alive)  -> {"found":true,"state":"running","sampleRate":48000,"scp":true}
@@ -9,10 +9,10 @@ cdp port 9430 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-rec-17914552772
  ok   module: avRecInit() ok + class list (av-rec-row in it) · second call idempotent  -> {"first":{"ok":true,"host":true,"version":"p2.0","classes":["av-rec-row","av-rec-btn","av-rec-time","av-rec-state","av-rec-link","av-rec-on","av-rec-err"]},"second":{"ok":true}}
  ok   tap: armed · master node present · real output known (branch can be pulled)  -> {"installed":true,"masters":1,"real":true}
  ok   control take: avRecStart() starts on the master tap; a duplicate start is refused  -> {"start":{"ok":true,"sampleRate":48000,"block":4096,"capture":"scriptprocessor","version":"p2.0"},"dup":{"ok":false,"error":"already recording"}}
- ok   control take: avRecStats() reports recording while armed (seconds moving)  -> {"first":{"recording":true,"seconds":2.048},"second":{"recording":true,"seconds":2.474666666666667}}
- ok   control take: avRecStop() resolves a take ({ok, seconds, bytes, blob})  -> bytes=573484 · seconds=2.987 · frames=143360
- ok   control take: WAV parses (RIFF/WAVE · PCM fmt · 2ch · 16-bit · header rate === take rate)  -> {"dataOff":44,"dataLen":573440,"bytesPer":2,"frames":143360,"format":1,"channels":2,"sampleRate":48000,"byteRate":192000,"blockAlign":4,"bits":16}
- ok   control take: duration sane (WAV vs take wall clock ±0.5 s)  -> 2.987 s · wall 2.959 s · Δ 0.027 s
+ ok   control take: avRecStats() reports recording while armed (seconds moving)  -> {"first":{"recording":true,"seconds":2.2186666666666666},"second":{"recording":true,"seconds":2.6453333333333333}}
+ ok   control take: avRecStop() resolves a take ({ok, seconds, bytes, blob})  -> bytes=606252 · seconds=3.157 · frames=151552
+ ok   control take: WAV parses (RIFF/WAVE · PCM fmt · 2ch · 16-bit · header rate === take rate)  -> {"dataOff":44,"dataLen":606208,"bytesPer":2,"frames":151552,"format":1,"channels":2,"sampleRate":48000,"byteRate":192000,"blockAlign":4,"bits":16}
+ ok   control take: duration sane (WAV vs take wall clock ±0.5 s)  -> 3.157 s · wall 3.138 s · Δ 0.020 s
  ok   control take: RMS ≈ 0 on both channels (silence when no note)  -> rms [0.00e+0, 0.00e+0] · peak 0.00e+0
  ok   control take: stats cleared after stop (recording false, seconds 0)  -> {"recording":false,"seconds":0}
  ok   note take: avRecStart() starts the second take  -> {"ok":true,"sampleRate":48000,"block":4096,"capture":"scriptprocessor","version":"p2.0"}
@@ -21,15 +21,15 @@ cdp port 9430 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-rec-17914552772
  ok   note take: avNoteUp("c5") releases (held empty)  -> {"held":[]}
  ok   note take: avRecStop() resolves the take  -> bytes=688172 · seconds=3.584 · peak=0.22126483917236328
  ok   note take: WAV parses (RIFF/WAVE · PCM fmt · 2ch · 16-bit · header rate === take rate)  -> {"dataOff":44,"dataLen":688128,"bytesPer":2,"frames":172032,"format":1,"channels":2,"sampleRate":48000,"byteRate":192000,"blockAlign":4,"bits":16}
- ok   note take: data chunk length matches duration ±0.2 s (page clock) + frames math exact  -> seconds=3.584 · dur=3.584 · wall=3.539 · Δwall=0.045 s
- ok   note take: held ~3 s → take spans ~3.4–4.3 s (and within 0.45 s of the rig clock)  -> dur=3.584 s · rigWall=3.661 s · Δ=0.077 s
+ ok   note take: data chunk length matches duration ±0.2 s (page clock) + frames math exact  -> seconds=3.584 · dur=3.584 · wall=3.533 · Δwall=0.051 s
+ ok   note take: held ~3 s → take spans ~3.4–4.3 s (and within 0.45 s of the rig clock)  -> dur=3.584 s · rigWall=3.670 s · Δ=0.086 s
  ok   note take: RMS non-zero (note audible at the master tap)  -> rms [0.0803, 0.0803] · peak 0.2213 · vs control rms 0.00e+0
  ok   note take: first 40 ms silent (note starts after the capture began — in-take control)  -> head rms [0.00e+0, 0.00e+0]
  ok   download handle: blob: URL returned + __avRec snapshot keeps the take (branch released)  -> {"last":{"seconds":3.584,"frames":172032,"bytes":688172,"url":true},"wired":false,"recording":false,"error":null,"host":true}
  ok   avRecStop() when idle: honest refusal (ok:false · "not recording")  -> {"ok":false,"error":"not recording"}
  ok   UI: row mounted under #av-rec-host (av-rec classes · download link armed)  -> {"host":true,"row":true,"btn":true,"time":true,"state":"saving…","link":true,"linkHref":true}
  ok   zero page errors for the whole run (exceptions · Log errors · console.error)  -> page errors=0
-index.html sha256 (after): 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
- ok   freeze: index.html sha256 unchanged by the run  -> 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
+index.html sha256 (after): 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
+ ok   freeze: index.html sha256 unchanged by the run  -> 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
 
 29 passed, 0 failed

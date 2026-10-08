@@ -1,8 +1,7 @@
-index.html sha256 (before): 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
+index.html sha256 (before): 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1791455493834
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1791456404074
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
-   - Page.setDownloadBehavior unavailable
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
    - settle 1400 ms for the decoration pass 2 (module init + 1200 ms)
@@ -24,7 +23,7 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   C5 master knob End (real CDP key): value clamps to max ("1.2") and aria-valuenow matches  -> {"v":1.2,"max":"1.2","aria":"1.2","readout":"120%"}
  ok   C6 master knob restore: start value (0.8) restored through the commit path (readback matches)  -> {"orig":0.8,"restored":0.8,"aria":"0.8"}
 == D. names (visible buttons + counts.unnamed) ==
- ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 211 visible of 439  -> {"total":439,"visible":211,"bad":[]}
+ ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 220 visible of 448  -> {"total":448,"visible":220,"bad":[]}
  ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":397,"counts":{"sliders":187,"knobsTabbed":187,"canvases":5,"liveRegions":4,"roleButtons":1,"labeled":397,"unnamed":0}}
 == E. live regions + announce ==
  ok   E1 live regions: >= 3 pinned-selector elements (.av-fam-status / #av-deliver-status / .av-session-status) carry role=status or aria-live (live 4 of 4)  -> {"found":4,"live":4,"sample":["av-deliver-status","av-fam-hub-status","av-fam-res-status","av-fam-radio-status"]}
@@ -46,11 +45,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 37268aca96ca...
+index.html sha256 (after):  24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 24491eddd20c...
 
 RESULT: 32 passed, 0 failed
 A11Y-RESULT 32/32
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c","sha256After":"37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c","pinned":"37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c","passed":32,"failed":0,"checks":32,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72","sha256After":"24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72","pinned":"24491eddd20c0af68f6e8951d0d90eaa87c9aedbfaccc971739258ce208fbd72","passed":32,"failed":0,"checks":32,"verdict":"pass"}
 A11Y PASSED

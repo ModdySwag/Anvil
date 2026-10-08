@@ -37,12 +37,14 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R2 chrome: CHROME SELFTEST ok (?avtest=1)  -> {"v":"r2.0","heads":20,"cards":20,"strip":true,"browse":true}
  ok   R2 chrome: collapse toggles fold on/off; Init restores the first knob to its data-def via the one commit funnel  -> {"folded":true,"unfolded":true,"initN":85,"restored":true,"before":1}
  ok   R3 workspace: float buttons on every head (>=20), About button + hidden about host, panels facade + proof  -> {"floatBtns":20,"aboutBtn":true,"aboutHost":true,"panelsApi":"object","proof":{"v":"r3.0","open":0,"layouts":["sounddesign","mixdown"],"about":true}}
- ok   R4 rail: left navigator (8 groups + >=20 card links) + header NAV toggle + RAIL SELFTEST  -> {"rail":true,"groups":8,"links":22,"navBtn":true,"tabBorder":"1px","tabRadius":"6px","railApi":"object","proof":{"v":"r4.0","ready":true,"groups":8,"cards":22,"open":true}}
+ ok   R4 rail: left navigator (8 groups + >=20 card links) + header NAV toggle + RAIL SELFTEST  -> {"rail":true,"groups":8,"links":22,"navBtn":true,"tabBorder":"1px","tabRadius":"6px","railApi":"object","proof":{"v":"r7.0","ready":true,"groups":8,"cards":22,"open":true,"sections":1,"panels":true}}
  ok   R4 toggles: the top tabs are sectioned chips (bordered, rounded)  -> {"border":"1px","radius":"6px"}
  ok   R4 float controls: pin/opacity/min/max buttons + minimize toggle + named layout save/load  -> {"pin":true,"op":true,"min":true,"max":true,"mini":true,"back":true,"saved":true,"loaded":true,"n":1}
  ok   R5 menu bar: File/Edit/View/Workspace/Help + a dropdown opens with items and closes + MENUBAR SELFTEST  -> {"mb":true,"items":5,"api":"object","proof":{"v":"r5.0","items":5,"ready":true},"opened":true,"popOpen":true,"popItems":5,"closed":true}
  ok   R5 rail quick-view: Available rows (>=20, draggable) + live Open/Minimized reflection on float/min/dock  -> {"box":true,"avail0":22,"draggable":true,"open1":1,"avail1":21,"min1":1,"open0":0,"avail2":22}
  ok   R6 panes: scroll-shadow scrims (sticky gradient edges on the zone panes)  -> {"beforeBg":true,"afterBg":true,"sticky":"sticky"}
+ ok   R7 rail menu: 9 chevron headers + zone section toggles independently, persists to av-rail-sections, aria tracks it  -> {"glyphs":9,"g":true,"chevBtn":true,"exp0":true,"vis0":"flex","aria0":"true","map0":{"synth":1,"fx":0,"mod":0,"seq":0,"studio":0,"store":0,"code":0,"system":0,"panels":1},"exp1":false,"vis1":"none","aria1":"false","map1":{"synth":0,"fx":0,"mod":0,"seq":0,"studio":0,"store":0,"code":0,"system":0,"panels":1},"exp2":true,"jumped":"synth"}
+ ok   R7 panels section: the head collapses/expands the quick-view body and persists (av-rail-sections.panels)  -> {"sec":true,"head":true,"body":true,"pvis0":"block","paria0":"true","pvis1":"none","paria1":"false","pmap":{"synth":1,"fx":0,"mod":0,"seq":0,"studio":0,"store":0,"code":0,"system":0,"panels":0},"pvis2":"block"}
  ok   zero page errors
 
-45 passed, 0 failed
+47 passed, 0 failed

@@ -712,6 +712,65 @@ async function main() {
   check('R6 panes: scroll-shadow scrims (sticky gradient edges on the zone panes)',
     r6.beforeBg === true && r6.afterBg === true && r6.sticky === 'sticky', JSON.stringify(r6));
 
+  /* 6x. R7: the rail as a standard menu — chevron section headers + independent persisted collapse */
+  const r7R = await ev(`(() => {
+    const info = { glyphs: document.querySelectorAll('#av-rail .av-rail-chev-glyph').length };
+    const g = document.querySelector('.av-rail-group[data-zone="synth"]');
+    const cards = g ? g.querySelector('.av-rail-cards') : null;
+    const chev = g ? g.querySelector('.av-rail-chev') : null;
+    const disp = (el) => (el ? getComputedStyle(el).display : null);
+    info.g = !!g; info.chevBtn = !!chev;
+    info.exp0 = g ? g.classList.contains('expanded') : null;
+    info.vis0 = disp(cards);
+    info.aria0 = chev ? chev.getAttribute('aria-expanded') : null;
+    let map0 = null; try { map0 = JSON.parse(localStorage.getItem('av-rail-sections')); } catch (e) { map0 = null; }
+    info.map0 = map0;
+    if (chev) chev.click();
+    info.exp1 = g.classList.contains('expanded');
+    info.vis1 = disp(cards);
+    info.aria1 = chev.getAttribute('aria-expanded');
+    let map1 = null; try { map1 = JSON.parse(localStorage.getItem('av-rail-sections')); } catch (e) { map1 = null; }
+    info.map1 = map1;
+    if (chev) chev.click();
+    info.exp2 = g.classList.contains('expanded');
+    const zb = g ? g.querySelector('.av-rail-zone') : null;
+    if (zb) zb.click();
+    info.jumped = (window.__avZone && typeof window.__avZone.current === 'function') ? window.__avZone.current() : null;
+    return info;
+  })()`);
+  const r7 = r7R.value || {};
+  const r7Keys = ['synth', 'fx', 'mod', 'seq', 'studio', 'store', 'code', 'system', 'panels'];
+  const r7MapOk = !!(r7.map0 && typeof r7.map0 === 'object' && r7Keys.every(k => k in r7.map0));
+  check('R7 rail menu: 9 chevron headers + zone section toggles independently, persists to av-rail-sections, aria tracks it',
+    r7.glyphs === 9 && r7.g === true && r7.chevBtn === true && r7MapOk
+    && r7.exp1 === !r7.exp0 && r7.vis0 === (r7.exp0 ? 'flex' : 'none') && r7.vis1 === (r7.exp1 ? 'flex' : 'none')
+    && r7.aria1 === String(r7.exp1) && !!r7.map1 && r7.map1.synth === (r7.exp1 ? 1 : 0)
+    && r7.exp2 === r7.exp0 && r7.jumped === 'synth', JSON.stringify(r7));
+
+  const r7p = await ev(`(() => {
+    const sec = document.getElementById('av-rail-panels');
+    const head = sec ? sec.querySelector('.av-rail-sec-head') : null;
+    const body = sec ? sec.querySelector('.av-rail-sec-body') : null;
+    const disp = (el) => (el ? getComputedStyle(el).display : null);
+    const info = { sec: !!sec, head: !!head, body: !!body };
+    info.pvis0 = disp(body);
+    info.paria0 = head ? head.getAttribute('aria-expanded') : null;
+    if (head) head.click();
+    info.pvis1 = disp(body);
+    info.paria1 = head ? head.getAttribute('aria-expanded') : null;
+    let pmap = null; try { pmap = JSON.parse(localStorage.getItem('av-rail-sections')); } catch (e) { pmap = null; }
+    info.pmap = pmap;
+    if (head) head.click();
+    info.pvis2 = disp(body);
+    return info;
+  })()`);
+  const r7p2 = r7p.value || {};
+  check('R7 panels section: the head collapses/expands the quick-view body and persists (av-rail-sections.panels)',
+    r7p2.sec === true && r7p2.head === true && r7p2.body === true
+    && r7p2.pvis0 === 'block' && r7p2.paria0 === 'true'
+    && r7p2.pvis1 === 'none' && r7p2.paria1 === 'false' && !!r7p2.pmap && r7p2.pmap.panels === 0
+    && r7p2.pvis2 === 'block', JSON.stringify(r7p2));
+
 
 
   /* 7. zero page errors */
