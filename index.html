@@ -1557,6 +1557,75 @@ body.av-float-dragging, body.av-float-dragging * { cursor: grabbing !important; 
 }
 .av-float-grip::after { content: "\25E2"; font-size: 13px; line-height: 20px; }
 
+/* ============================================================================
+   R4 WORKSPACE — sectioned top toggles (accent-dotted chips), the left module rail, and the
+   float window controls (pin / opacity / minimize-stack / maximize) + named layouts. */
+.av-zones-in { gap: 6px; padding: 6px 10px; }
+.av-zone-tab {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--hair); border-radius: 6px;
+  background: var(--raised); padding: 5px 12px 5px 9px;
+}
+.av-zone-tab::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--zone-accent, var(--text-3)); margin-right: 7px; opacity: .55;
+}
+.av-zone-tab[aria-selected="true"] {
+  border-color: var(--zone-accent); color: var(--zone-accent);
+  background: color-mix(in srgb, var(--zone-accent) 14%, var(--raised));
+  text-shadow: none;
+}
+.av-zone-tab[aria-selected="true"]::before { opacity: 1; }
+.av-zone-tab:hover { border-color: var(--zone-accent, var(--teal-deep)); }
+body[data-av-zone="synth"], .av-zone-tab[data-zone="synth"], .av-rail-zone[data-zone="synth"] { --zone-accent: var(--teal); }
+body[data-av-zone="fx"], .av-zone-tab[data-zone="fx"], .av-rail-zone[data-zone="fx"] { --zone-accent: var(--mod-orange); }
+body[data-av-zone="mod"], .av-zone-tab[data-zone="mod"], .av-rail-zone[data-zone="mod"] { --zone-accent: var(--mod-purple); }
+body[data-av-zone="seq"], .av-zone-tab[data-zone="seq"], .av-rail-zone[data-zone="seq"] { --zone-accent: var(--mod-green); }
+body[data-av-zone="studio"], .av-zone-tab[data-zone="studio"], .av-rail-zone[data-zone="studio"] { --zone-accent: var(--mod-sky); }
+body[data-av-zone="store"], .av-zone-tab[data-zone="store"], .av-rail-zone[data-zone="store"] { --zone-accent: var(--mod-yellow); }
+body[data-av-zone="code"], .av-zone-tab[data-zone="code"], .av-rail-zone[data-zone="code"] { --zone-accent: #E8794A; }
+body[data-av-zone="system"], .av-zone-tab[data-zone="system"], .av-rail-zone[data-zone="system"] { --zone-accent: #4C9FE0; }
+
+.av-work { display: flex; flex: 1 1 auto; min-height: 0; }
+.av-work .av-main { flex: 1 1 auto; min-width: 0; }
+.av-rail {
+  position: relative; width: var(--rail-w, 208px); flex: none;
+  overflow-y: auto; overflow-x: hidden; border-right: 1px solid var(--hair);
+  background: var(--panel); padding: 0 0 14px;
+}
+body.av-rail-closed .av-rail { display: none; }
+.av-rail-head {
+  display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px;
+  position: sticky; top: 0; background: var(--panel); border-bottom: 1px solid var(--hair); z-index: 2;
+}
+.av-rail-title { flex: 1 1 auto; font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); }
+.av-rail-zone {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  background: transparent; border: 0; border-left: 2px solid transparent;
+  color: var(--text-2); font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+  text-transform: uppercase; padding: 7px 10px; cursor: pointer;
+}
+.av-rail-zone:hover { color: var(--text); background: #12181d; }
+.av-rail-zone.on { color: var(--zone-accent); border-left-color: var(--zone-accent); background: #0f171c; }
+.av-rail-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--zone-accent, var(--text-3)); flex: none; }
+.av-rail-cards { display: none; flex-direction: column; padding: 0 0 6px; }
+.av-rail-group.on .av-rail-cards, .av-rail-group.open .av-rail-cards { display: flex; }
+.av-rail-card {
+  display: block; width: 100%; text-align: left; background: transparent; border: 0;
+  color: var(--text-3); font-size: 11.5px; padding: 4px 10px 4px 34px; cursor: pointer;
+}
+.av-rail-card:hover { color: var(--teal); background: #12181d; }
+.av-rail-grip { position: absolute; top: 0; right: -3px; bottom: 0; width: 6px; cursor: ew-resize; z-index: 3; }
+body.av-rail-dragging, body.av-rail-dragging * { cursor: ew-resize !important; user-select: none !important; }
+@media (max-width: 1100px) { .av-rail { display: none !important; } }
+
+.av-float-btnpin.on { color: var(--zone-accent, var(--teal)); border-color: var(--zone-accent, var(--teal)); }
+.av-float-min { height: auto !important; width: 250px !important; min-height: 0; }
+.av-float-min > .av-card { overflow: hidden; padding: 5px 8px; }
+.av-float-min > .av-card > :not(.av-mod-head) { display: none; }
+.av-float-min .av-float-grip { display: none; }
+
+
 
 </style>
 </head>
@@ -1584,7 +1653,9 @@ body.av-float-dragging, body.av-float-dragging * { cursor: grabbing !important; 
     <button class="av-zone-tab" id="av-tab-system" data-zone="system" role="tab" aria-selected="false" aria-controls="av-zone-system" title="System zone">System</button>
   </div>
 </nav>
-<main class="av-main">
+<div class="av-work">
+  <aside id="av-rail" class="av-rail" aria-label="Module navigator"></aside>
+  <main class="av-main">
   <section class="av-zone" id="av-zone-synth" data-zone="synth" role="tabpanel" aria-labelledby="av-tab-synth">
     <div class="av-zone-box">
   <section class="av-card" id="av-levels">
@@ -1722,7 +1793,8 @@ body.av-float-dragging, body.av-float-dragging * { cursor: grabbing !important; 
 </footer>
     </div>
   </section>
-</main>
+  </main>
+</div>
 
 <div id="av-about-pop" class="av-about-pop" hidden>
   <section class="av-card">
@@ -24531,7 +24603,13 @@ function avPaletteCoreCommands() {
         run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("sounddesign") : false) },
       { id: "panels.mixdown", label: "Workspace: mixdown", group: "Workspace",
         hint: "Float Mix + Deck + FX for a mixdown desk",
-        run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("mixdown") : false) }
+        run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("mixdown") : false) },
+      { id: "panels.save", label: "Workspace: save layout...", group: "Workspace",
+        hint: "Save the current floated layout under a name",
+        run: () => (typeof avPanelsSaveNamed === "function" ? avPanelsSaveNamed(avPanelsPromptName("layout")) : false) },
+      { id: "panels.load", label: "Workspace: load layout...", group: "Workspace",
+        hint: "Restore a saved floated layout",
+        run: () => (typeof avPanelsLoadNamed === "function" ? avPanelsLoadNamed(avPanelsPromptName("layout")) : false) }
     );
   }
   for (let i = 0; i < AV_PALETTE_CARDS.length; i++) {
@@ -67113,6 +67191,7 @@ function avZoneShow(id, opts) {
     avShellState.zone = id;
     avShellState.why = o.source || "api";
     try { document.body.setAttribute("data-av-zone", id); } catch (e2) { /* body attr is cosmetic */ }
+    try { window.dispatchEvent(new CustomEvent("av-zone-shown", { detail: { zone: id } })); } catch (e5) { /* listeners are best-effort */ }
     try { localStorage.setItem(AV_ZONE_LS_KEY, id); } catch (e3) { /* private mode - session only */ }
     if (changed && !first && !o.silent && typeof avA11yAnnounce === "function") {
       const inf = avZoneInfo(id);
@@ -67435,6 +67514,7 @@ function avChromeMenuOpen(btn, card) {
     const items = [];
     if (info.init) items.push({ label: "Init module (knobs to defaults)", run: function () { avChromeInitCard(card.id); } });
     if (info.rnd) items.push({ label: "Randomize module", run: function () { avChromeRandomizeCard(card.id); } });
+    if (typeof avPanelToggle === "function") items.push({ label: "Float / dock module", run: function () { avPanelToggle(card.id); } });
     items.push({ label: "Collapse / expand", run: function () { avChromeSetFold(card, !card.classList.contains("av-mod-fold"), true); } });
     el.innerHTML = "";
     for (let i = 0; i < items.length; i++) {
@@ -67598,6 +67678,7 @@ function avChromeBuildHeader() {
   avChromeHeaderButton("av-head-undo", "\u21B6", "Undo (Ctrl+Z)", function () { try { if (typeof avUndo === "function") avUndo(); } catch (e) { /* guard */ } });
   avChromeHeaderButton("av-head-redo", "\u21B7", "Redo (Ctrl+Y)", function () { try { if (typeof avRedo === "function") avRedo(); } catch (e) { /* guard */ } });
   avChromeHeaderButton("av-head-about", "ABOUT", "About this build - the phase notes (moved out of the page)", function () { try { if (typeof avAboutToggle === "function") avAboutToggle(); } catch (e) { /* guard */ } });
+  avChromeHeaderButton("av-head-rail", "NAV", "Module navigator - show / hide the left rail", function () { try { if (typeof avRailToggle === "function") avRailToggle(); } catch (e) { /* guard */ } });
   return true;
 }
 
@@ -67715,6 +67796,7 @@ function avPanelClampY(y, h) {
 function avPanelFocus(panel) {
   try {
     if (!panel) return false;
+    if (panel.classList.contains("av-float-pin")) { panel.style.zIndex = "900"; return true; }
     avPanelsState.z += 1;
     panel.style.zIndex = String(avPanelsState.z);
     return true;
@@ -67741,6 +67823,8 @@ function avPanelOpen(id, pos) {
     const head = card.querySelector(":scope > .av-mod-head");
     if (head) {
       head.classList.add("av-float-head-drag");
+      const wctl = avPanelHeadControls(id);
+      for (let wi = 0; wi < wctl.length; wi++) head.appendChild(wctl[wi]);
       const x = document.createElement("button");
       x.type = "button";
       x.className = "av-btn mini av-float-btn";
@@ -67764,6 +67848,7 @@ function avPanelOpen(id, pos) {
     panel.style.top = y0 + "px";
     if (typeof saved.w === "number" && saved.w > 0) panel.style.width = saved.w + "px";
     if (typeof saved.h === "number" && saved.h > 0) panel.style.height = saved.h + "px";
+    if (typeof saved.op === "number") panel.style.opacity = String(saved.op);
     avPanelFocus(panel);
     avPanelsPersist(id, panel);
     if (typeof avA11yAnnounce === "function") { try { avA11yAnnounce("Floating: " + id); } catch (e3) { /* announce best-effort */ } }
@@ -67855,6 +67940,139 @@ function avPanelsLayout(name) {
 }
 
 /* ---------- drag + resize wiring (pointer events, capture on window) ---------- */
+
+/* ---------- R4 window controls: pin / opacity / minimize-stack / maximize + named layouts ---------- */
+function avPanelHeadControls(id) {
+  const out = [];
+  try {
+    const mk = function (cls, label, glyph, fn) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "av-btn mini " + cls;
+      b.setAttribute("aria-label", label);
+      b.title = label;
+      b.textContent = glyph;
+      b.addEventListener("click", function (e) { try { fn(id); } catch (e2) { /* guarded */ } if (e && e.stopPropagation) e.stopPropagation(); });
+      return b;
+    };
+    out.push(mk("av-float-btnpin", "Pin panel above others", "\u25C9", function (pid) { avPanelPin(pid); }));
+    out.push(mk("av-float-btnop", "Panel opacity", "\u25D1", function (pid) { avPanelCycleOpacity(pid); }));
+    out.push(mk("av-float-btnmin", "Minimize (stacks in the corner)", "\u2013", function (pid) { avPanelMinimize(pid); }));
+    out.push(mk("av-float-btnmax", "Maximize / restore panel", "\u25A1", function (pid) { avPanelMaxToggle(pid); }));
+  } catch (e) { /* controls optional */ }
+  return out;
+}
+function avPanelPin(id) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const on = !panel.classList.contains("av-float-pin");
+    panel.classList.toggle("av-float-pin", on);
+    const b = panel.querySelector(".av-float-btnpin");
+    if (b) b.classList.toggle("on", on);
+    avPanelFocus(panel);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelCycleOpacity(id) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const steps = [1, 0.85, 0.7];
+    const cur = parseFloat(panel.style.opacity || "1") || 1;
+    let i = 0;
+    for (let k = 0; k < steps.length; k++) if (Math.abs(steps[k] - cur) < 0.01) i = k;
+    const next = steps[(i + 1) % steps.length];
+    panel.style.opacity = String(next);
+    const map = avPanelsMap();
+    map[id] = Object.assign({}, map[id] || {}, { op: next });
+    avPanelsSave(map);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelStackSlot() {
+  try { return document.querySelectorAll(".av-float.av-float-min").length; } catch (e) { return 0; }
+}
+function avPanelMinimize(id, on) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const min = (typeof on === "boolean") ? on : !panel.classList.contains("av-float-min");
+    panel.classList.toggle("av-float-min", min);
+    if (min) {
+      panel.__avPrev = { l: panel.style.left, t: panel.style.top, w: panel.style.width, h: panel.style.height };
+      panel.style.width = "";
+      panel.style.height = "";
+      panel.style.left = "12px";
+      panel.style.top = (90 + avPanelStackSlot() * 34) + "px";
+    } else {
+      const pv = panel.__avPrev || {};
+      if (pv.w) panel.style.width = pv.w;
+      if (pv.h) panel.style.height = pv.h;
+      panel.style.left = pv.l || "40px";
+      panel.style.top = pv.t || "76px";
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelMaxToggle(id) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const on = !panel.classList.contains("av-float-max");
+    panel.classList.toggle("av-float-max", on);
+    if (on) {
+      panel.__avPrevMax = { l: panel.style.left, t: panel.style.top, w: panel.style.width, h: panel.style.height };
+      panel.style.left = "10px";
+      panel.style.top = "10px";
+      panel.style.width = Math.max(320, window.innerWidth - 20) + "px";
+      panel.style.height = Math.max(200, window.innerHeight - 20) + "px";
+    } else {
+      const pv = panel.__avPrevMax || {};
+      panel.style.left = pv.l || "40px";
+      panel.style.top = pv.t || "76px";
+      panel.style.width = pv.w || "";
+      panel.style.height = pv.h || "";
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsNamedMap() {
+  try {
+    const raw = localStorage.getItem("av-layouts");
+    const o = raw ? JSON.parse(raw) : {};
+    return (o && typeof o === "object") ? o : {};
+  } catch (e) { return {}; }
+}
+function avPanelsSaveNamed(name) {
+  try {
+    const nm = String(name || "").trim().slice(0, 40) || "layout";
+    const store = avPanelsNamedMap();
+    store[nm] = avPanelsMap();
+    localStorage.setItem("av-layouts", JSON.stringify(store));
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsLoadNamed(name) {
+  try {
+    const nm = String(name || "").trim().slice(0, 40) || "layout";
+    const store = avPanelsNamedMap();
+    const map = store[nm];
+    if (!map || typeof map !== "object") return false;
+    avPanelsReset();
+    avPanelsSave(map);
+    const ids = Object.keys(map);
+    for (let i = 0; i < ids.length; i++) avPanelOpen(ids[i], map[ids[i]]);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsPromptName(dflt) {
+  try {
+    const r = window.prompt("Layout name", dflt || "layout");
+    return (r && String(r).trim()) ? String(r).trim().slice(0, 40) : (dflt || "layout");
+  } catch (e) { return dflt || "layout"; }
+}
+
 function avPanelsBeginDrag(e, panel, mode) {
   try {
     const id = panel.getAttribute("data-card");
@@ -67895,6 +68113,14 @@ function avPanelsWireDrag() {
         d.panel.style.height = nh + "px";
       }
     });
+    document.addEventListener("wheel", function (e) {
+      const head = e.target && e.target.closest ? e.target.closest(".av-float > .av-card > .av-mod-head") : null;
+      if (!head) return;
+      const panel = head.closest(".av-float");
+      if (!panel) return;
+      avPanelCycleOpacity(panel.getAttribute("data-card"));
+      if (e.preventDefault) e.preventDefault();
+    }, { passive: false });
     window.addEventListener("pointerup", function () {
       const d = avPanelsState.drag;
       if (!d) return;
@@ -67983,8 +68209,221 @@ if (typeof window !== "undefined" && window) {
       resize: function (id, w, h) { return avPanelsResize(id, w, h); },
       reset: function () { return avPanelsReset(); },
       layout: function (n) { return avPanelsLayout(n); },
+      saveNamed: function (n) { return avPanelsSaveNamed(n); },
+      loadNamed: function (n) { return avPanelsLoadNamed(n); },
+      minimize: function (id, on) { return avPanelMinimize(id, on); },
+      maximize: function (id) { return avPanelMaxToggle(id); },
+      pin: function (id) { return avPanelPin(id); },
+      opacity: function (id) { return avPanelCycleOpacity(id); },
       list: function () { return avPanelsList(); },
       about: function (f) { return avAboutToggle(f); },
+    };
+  } catch (e) { /* no window - nothing to publish */ }
+}
+
+
+/* Anvil — the left module rail (R4): a pinnable, resizable, hideable navigator down the left edge.
+   Groups = the 8 zones (accent-dotted, the active one highlighted); each group lists its cards as
+   jump links (switch the zone + scroll the card into view). Toggle lives in the header (NAV) and
+   on the rail itself; width + open state persist (av-rail-w / av-rail-open). */
+"use strict";
+
+const AV_RAIL_VERSION = "r4.0";
+const AV_RAIL_W_KEY = "av-rail-w";
+const AV_RAIL_OPEN_KEY = "av-rail-open";
+
+const AV_RAIL_GROUPS = [
+  { zone: "synth", label: "Synth", cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-wt", "Wavetable editor"]] },
+  { zone: "fx", label: "FX", cards: [["av-fx", "FX rack"]] },
+  { zone: "mod", label: "Mod", cards: [["av-mod", "Mod matrix"]] },
+  { zone: "seq", label: "Seq", cards: [["av-seq", "Sequencer"]] },
+  { zone: "studio", label: "Studio", cards: [["av-rec", "Recorder"], ["av-studio", "Studio"], ["av-sessions", "Sessions"], ["av-comp", "Takes & comping"], ["av-mix", "Mix & master"], ["av-deck", "Deck"], ["av-deliver", "Deliver"]] },
+  { zone: "store", label: "Store", cards: [["av-store", "Packs"]] },
+  { zone: "code", label: "Code", cards: [["av-code", "CODE"]] },
+  { zone: "system", label: "System", cards: [["av-midi-card", "MIDI"], ["av-files", "Project & share"], ["av-family", "Family bridges"]] },
+];
+
+const avRailState = { ready: false, el: null, grip: null, drag: null };
+
+function avRailEl() { return document.getElementById("av-rail"); }
+
+function avRailPersist() {
+  try {
+    const el = avRailEl();
+    if (el) { localStorage.setItem(AV_RAIL_W_KEY, String(Math.round(el.getBoundingClientRect().width))); }
+    localStorage.setItem(AV_RAIL_OPEN_KEY, document.body.classList.contains("av-rail-closed") ? "0" : "1");
+  } catch (e) { /* session only */ }
+}
+function avRailShow(on) {
+  try {
+    document.body.classList.toggle("av-rail-closed", on === false);
+    avRailPersist();
+    return on !== false;
+  } catch (e) { return false; }
+}
+function avRailToggle() {
+  return avRailShow(document.body.classList.contains("av-rail-closed"));
+}
+function avRailSetWidth(w) {
+  try {
+    const el = avRailEl();
+    if (!el) return false;
+    const nw = Math.max(150, Math.min(340, Math.round(w)));
+    el.style.width = nw + "px";
+    avRailPersist();
+    return nw;
+  } catch (e) { return false; }
+}
+
+function avRailBuild() {
+  try {
+    const el = avRailEl();
+    if (!el || avRailState.ready) return false;
+    const head = document.createElement("div");
+    head.className = "av-rail-head";
+    const title = document.createElement("span");
+    title.className = "av-rail-title";
+    title.textContent = "Modules";
+    const hide = document.createElement("button");
+    hide.type = "button";
+    hide.className = "av-btn mini";
+    hide.id = "av-rail-hide";
+    hide.setAttribute("aria-label", "Hide the module navigator");
+    hide.title = "Hide the module navigator";
+    hide.textContent = "\u00AB";
+    hide.addEventListener("click", function () { avRailShow(false); });
+    head.appendChild(title);
+    head.appendChild(hide);
+    el.appendChild(head);
+    for (let g = 0; g < AV_RAIL_GROUPS.length; g++) {
+      const grp = AV_RAIL_GROUPS[g];
+      const wrap = document.createElement("div");
+      wrap.className = "av-rail-group";
+      wrap.setAttribute("data-zone", grp.zone);
+      const zb = document.createElement("button");
+      zb.type = "button";
+      zb.className = "av-rail-zone";
+      zb.setAttribute("data-zone", grp.zone);
+      const dot = document.createElement("span");
+      dot.className = "av-rail-dot";
+      const lbl = document.createElement("span");
+      lbl.textContent = grp.label;
+      zb.appendChild(dot);
+      zb.appendChild(lbl);
+      zb.addEventListener("click", function () {
+        if (typeof avZoneShow === "function") avZoneShow(grp.zone, { source: "rail" });
+        wrap.classList.add("open");
+      });
+      const list = document.createElement("div");
+      list.className = "av-rail-cards";
+      for (let c = 0; c < grp.cards.length; c++) {
+        const cid = grp.cards[c][0], clabel = grp.cards[c][1];
+        const cb = document.createElement("button");
+        cb.type = "button";
+        cb.className = "av-rail-card";
+        cb.setAttribute("data-card", cid);
+        cb.textContent = clabel;
+        (function (id, zone) {
+          cb.addEventListener("click", function () {
+            try {
+              if (typeof avZoneShow === "function") avZoneShow(zone, { source: "rail-card" });
+              const card = document.getElementById(id);
+              if (card && card.scrollIntoView) card.scrollIntoView({ block: "start" });
+            } catch (e) { /* jump best-effort */ }
+          });
+        })(cid, grp.zone);
+        list.appendChild(cb);
+      }
+      wrap.appendChild(zb);
+      wrap.appendChild(list);
+      el.appendChild(wrap);
+    }
+    const grip = document.createElement("div");
+    grip.className = "av-rail-grip";
+    grip.setAttribute("role", "separator");
+    grip.setAttribute("aria-label", "Resize the module navigator");
+    el.appendChild(grip);
+    avRailState.grip = grip;
+    avRailWireDrag(grip);
+    window.addEventListener("av-zone-shown", function (e) {
+      try {
+        const zone = e && e.detail && e.detail.zone;
+        const groups = document.querySelectorAll(".av-rail-group");
+        for (let i = 0; i < groups.length; i++) groups[i].classList.toggle("on", groups[i].getAttribute("data-zone") === zone);
+      } catch (e2) { /* highlight is cosmetic */ }
+    });
+    avRailState.ready = true;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avRailWireDrag(grip) {
+  try {
+    grip.addEventListener("pointerdown", function (e) {
+      try {
+        const el = avRailEl();
+        avRailState.drag = { x0: e.clientX, w0: el.getBoundingClientRect().width };
+        document.body.classList.add("av-rail-dragging");
+        if (e.target.setPointerCapture) { try { e.target.setPointerCapture(e.pointerId); } catch (e2) { /* best-effort */ } }
+        e.preventDefault();
+      } catch (e3) { /* drag best-effort */ }
+    });
+    window.addEventListener("pointermove", function (e) {
+      const d = avRailState.drag;
+      if (!d) return;
+      avRailSetWidth(d.w0 + (e.clientX - d.x0));
+    });
+    window.addEventListener("pointerup", function () {
+      if (!avRailState.drag) return;
+      avRailState.drag = null;
+      document.body.classList.remove("av-rail-dragging");
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+function avRailInit() {
+  try {
+    if (avRailState.ready) return true;
+    if (!avRailEl()) return false;
+    avRailBuild();
+    try {
+      const w = parseFloat(localStorage.getItem(AV_RAIL_W_KEY));
+      if (isFinite(w) && w > 0) avRailSetWidth(w);
+      if (localStorage.getItem(AV_RAIL_OPEN_KEY) === "0") avRailShow(false);
+    } catch (e) { /* defaults stand */ }
+    if (typeof avZoneShow === "function") { try { avZoneShow(window.__avZone ? window.__avZone.current() : "synth", { silent: true, source: "rail-init" }); } catch (e2) { /* sync best-effort */ } }
+    const cur = window.__avZone ? window.__avZone.current() : "synth";
+    const groups = document.querySelectorAll(".av-rail-group");
+    for (let i = 0; i < groups.length; i++) groups[i].classList.toggle("on", groups[i].getAttribute("data-zone") === cur);
+    return true;
+  } catch (e) {
+    console.warn("[anvil] rail init failed", e);
+    return false;
+  }
+}
+
+function avRailProof() {
+  let cards = 0;
+  try { cards = document.querySelectorAll(".av-rail-card").length; } catch (e) { /* none */ }
+  return "RAIL SELFTEST " + JSON.stringify({
+    v: AV_RAIL_VERSION,
+    ready: avRailState.ready === true,
+    groups: AV_RAIL_GROUPS.length,
+    cards: cards,
+    open: !document.body.classList.contains("av-rail-closed"),
+  });
+}
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avRail = {
+      version: AV_RAIL_VERSION,
+      init: function () { return avRailInit(); },
+      toggle: function () { return avRailToggle(); },
+      show: function (on) { return avRailShow(on !== false); },
+      width: function (w) { return (typeof w === "number") ? avRailSetWidth(w) : null; },
+      groups: function () { return AV_RAIL_GROUPS.map(function (g) { return g.zone; }); },
     };
   } catch (e) { /* no window - nothing to publish */ }
 }
@@ -68141,6 +68580,9 @@ function avMountLevels() {
   /* R3: the float workspace + the About popover */
   let panelsOk = false;
   try { panelsOk = (typeof avPanelsInit === "function") ? (avPanelsInit() !== false) : false; } catch (e) { console.warn("[anvil] panels init failed", e); }
+  /* R4: the left module rail */
+  let railOk = false;
+  try { railOk = (typeof avRailInit === "function") ? (avRailInit() !== false) : false; } catch (e) { console.warn("[anvil] rail init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -68158,7 +68600,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk + " rail=" + railOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
@@ -68168,6 +68610,7 @@ function avMountLevels() {
     try { if (typeof avShellProof === "function") { const _ss = avShellProof(); if (_ss) avTestLine(_ss, "av-shelltest"); } } catch (e) { console.warn("avtest shell", e); }
     try { if (typeof avChromeProof === "function") { const _cs = avChromeProof(); if (_cs) avTestLine(_cs, "av-chrometest"); } } catch (e) { console.warn("avtest chrome", e); }
     try { if (typeof avPanelsProof === "function") { const _fs = avPanelsProof(); if (_fs) avTestLine(_fs, "av-panelstest"); } } catch (e) { console.warn("avtest panels", e); }
+    try { if (typeof avRailProof === "function") { const _rs = avRailProof(); if (_rs) avTestLine(_rs, "av-railtest"); } } catch (e) { console.warn("avtest rail", e); }
   }
 })();
 

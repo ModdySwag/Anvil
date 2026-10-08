@@ -52,6 +52,7 @@ function avZoneShow(id, opts) {
     avShellState.zone = id;
     avShellState.why = o.source || "api";
     try { document.body.setAttribute("data-av-zone", id); } catch (e2) { /* body attr is cosmetic */ }
+    try { window.dispatchEvent(new CustomEvent("av-zone-shown", { detail: { zone: id } })); } catch (e5) { /* listeners are best-effort */ }
     try { localStorage.setItem(AV_ZONE_LS_KEY, id); } catch (e3) { /* private mode - session only */ }
     if (changed && !first && !o.silent && typeof avA11yAnnounce === "function") {
       const inf = avZoneInfo(id);

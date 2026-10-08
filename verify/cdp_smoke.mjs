@@ -618,6 +618,47 @@ async function main() {
   check('R3 workspace: float buttons on every head (>=20), About button + hidden about host, panels facade + proof',
     r3.floatBtns >= 20 && r3.aboutBtn === true && r3.aboutHost === true && r3.panelsApi === 'object'
     && !!r3.proof && r3.proof.v && typeof r3.proof.open === 'number', JSON.stringify(r3));
+  /* 6t. R4 workspace: the left rail + sectioned toggles + float window controls + named layouts */
+  const r4R = await ev(`(() => {
+    const rail = document.getElementById('av-rail');
+    const tab = document.getElementById('av-tab-synth');
+    const cs = tab ? getComputedStyle(tab) : null;
+    let proof = null;
+    try { const el = document.getElementById('av-railtest'); proof = el ? JSON.parse(el.textContent.replace('RAIL SELFTEST ', '')) : null; } catch (e) { proof = null; }
+    return { rail: !!rail, groups: rail ? rail.querySelectorAll('.av-rail-group').length : 0,
+             links: rail ? rail.querySelectorAll('.av-rail-card').length : 0,
+             navBtn: !!document.getElementById('av-head-rail'),
+             tabBorder: cs ? cs.borderTopWidth : null, tabRadius: cs ? cs.borderTopLeftRadius : null,
+             railApi: typeof window.__avRail, proof: proof };
+  })()`);
+  const r4 = r4R.value || {};
+  check('R4 rail: left navigator (8 groups + >=20 card links) + header NAV toggle + RAIL SELFTEST',
+    r4.rail === true && r4.groups === 8 && r4.links >= 20 && r4.navBtn === true && r4.railApi === 'object'
+    && !!r4.proof && r4.proof.ready === true && r4.proof.cards >= 20, JSON.stringify(r4));
+  check('R4 toggles: the top tabs are sectioned chips (bordered, rounded)',
+    r4.tabBorder === '1px' && parseFloat(r4.tabRadius) >= 4, JSON.stringify({ border: r4.tabBorder, radius: r4.tabRadius }));
+
+  const r4f = await ev(`(() => {
+    window.__avPanels.open('av-fx');
+    const p = document.getElementById('av-float-av-fx');
+    const btns = { pin: !!p.querySelector('.av-float-btnpin'), op: !!p.querySelector('.av-float-btnop'), min: !!p.querySelector('.av-float-btnmin'), max: !!p.querySelector('.av-float-btnmax') };
+    window.__avPanels.minimize('av-fx', true);
+    const mini = p.classList.contains('av-float-min');
+    window.__avPanels.minimize('av-fx', false);
+    const back = !p.classList.contains('av-float-min');
+    const saved = window.__avPanels.saveNamed('smoke-layout');
+    window.__avPanels.close('av-fx');
+    window.__avPanels.reset();
+    const loaded = window.__avPanels.loadNamed('smoke-layout');
+    const n = window.__avPanels.list().length;
+    window.__avPanels.reset();
+    return { pin: btns.pin, op: btns.op, min: btns.min, max: btns.max, mini: mini, back: back, saved: saved, loaded: loaded, n: n };
+  })()`);
+  const r4f2 = r4f.value || {};
+  check('R4 float controls: pin/opacity/min/max buttons + minimize toggle + named layout save/load',
+    r4f2.pin && r4f2.op && r4f2.min && r4f2.max && r4f2.mini === true && r4f2.back === true
+    && r4f2.saved === true && r4f2.loaded === true && r4f2.n === 1, JSON.stringify(r4f2));
+
 
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

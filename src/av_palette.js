@@ -407,7 +407,13 @@ function avPaletteCoreCommands() {
         run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("sounddesign") : false) },
       { id: "panels.mixdown", label: "Workspace: mixdown", group: "Workspace",
         hint: "Float Mix + Deck + FX for a mixdown desk",
-        run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("mixdown") : false) }
+        run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("mixdown") : false) },
+      { id: "panels.save", label: "Workspace: save layout...", group: "Workspace",
+        hint: "Save the current floated layout under a name",
+        run: () => (typeof avPanelsSaveNamed === "function" ? avPanelsSaveNamed(avPanelsPromptName("layout")) : false) },
+      { id: "panels.load", label: "Workspace: load layout...", group: "Workspace",
+        hint: "Restore a saved floated layout",
+        run: () => (typeof avPanelsLoadNamed === "function" ? avPanelsLoadNamed(avPanelsPromptName("layout")) : false) }
     );
   }
   for (let i = 0; i < AV_PALETTE_CARDS.length; i++) {

@@ -59,6 +59,7 @@ function avPanelClampY(y, h) {
 function avPanelFocus(panel) {
   try {
     if (!panel) return false;
+    if (panel.classList.contains("av-float-pin")) { panel.style.zIndex = "900"; return true; }
     avPanelsState.z += 1;
     panel.style.zIndex = String(avPanelsState.z);
     return true;
@@ -85,6 +86,8 @@ function avPanelOpen(id, pos) {
     const head = card.querySelector(":scope > .av-mod-head");
     if (head) {
       head.classList.add("av-float-head-drag");
+      const wctl = avPanelHeadControls(id);
+      for (let wi = 0; wi < wctl.length; wi++) head.appendChild(wctl[wi]);
       const x = document.createElement("button");
       x.type = "button";
       x.className = "av-btn mini av-float-btn";
@@ -108,6 +111,7 @@ function avPanelOpen(id, pos) {
     panel.style.top = y0 + "px";
     if (typeof saved.w === "number" && saved.w > 0) panel.style.width = saved.w + "px";
     if (typeof saved.h === "number" && saved.h > 0) panel.style.height = saved.h + "px";
+    if (typeof saved.op === "number") panel.style.opacity = String(saved.op);
     avPanelFocus(panel);
     avPanelsPersist(id, panel);
     if (typeof avA11yAnnounce === "function") { try { avA11yAnnounce("Floating: " + id); } catch (e3) { /* announce best-effort */ } }
@@ -199,6 +203,139 @@ function avPanelsLayout(name) {
 }
 
 /* ---------- drag + resize wiring (pointer events, capture on window) ---------- */
+
+/* ---------- R4 window controls: pin / opacity / minimize-stack / maximize + named layouts ---------- */
+function avPanelHeadControls(id) {
+  const out = [];
+  try {
+    const mk = function (cls, label, glyph, fn) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "av-btn mini " + cls;
+      b.setAttribute("aria-label", label);
+      b.title = label;
+      b.textContent = glyph;
+      b.addEventListener("click", function (e) { try { fn(id); } catch (e2) { /* guarded */ } if (e && e.stopPropagation) e.stopPropagation(); });
+      return b;
+    };
+    out.push(mk("av-float-btnpin", "Pin panel above others", "\u25C9", function (pid) { avPanelPin(pid); }));
+    out.push(mk("av-float-btnop", "Panel opacity", "\u25D1", function (pid) { avPanelCycleOpacity(pid); }));
+    out.push(mk("av-float-btnmin", "Minimize (stacks in the corner)", "\u2013", function (pid) { avPanelMinimize(pid); }));
+    out.push(mk("av-float-btnmax", "Maximize / restore panel", "\u25A1", function (pid) { avPanelMaxToggle(pid); }));
+  } catch (e) { /* controls optional */ }
+  return out;
+}
+function avPanelPin(id) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const on = !panel.classList.contains("av-float-pin");
+    panel.classList.toggle("av-float-pin", on);
+    const b = panel.querySelector(".av-float-btnpin");
+    if (b) b.classList.toggle("on", on);
+    avPanelFocus(panel);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelCycleOpacity(id) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const steps = [1, 0.85, 0.7];
+    const cur = parseFloat(panel.style.opacity || "1") || 1;
+    let i = 0;
+    for (let k = 0; k < steps.length; k++) if (Math.abs(steps[k] - cur) < 0.01) i = k;
+    const next = steps[(i + 1) % steps.length];
+    panel.style.opacity = String(next);
+    const map = avPanelsMap();
+    map[id] = Object.assign({}, map[id] || {}, { op: next });
+    avPanelsSave(map);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelStackSlot() {
+  try { return document.querySelectorAll(".av-float.av-float-min").length; } catch (e) { return 0; }
+}
+function avPanelMinimize(id, on) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const min = (typeof on === "boolean") ? on : !panel.classList.contains("av-float-min");
+    panel.classList.toggle("av-float-min", min);
+    if (min) {
+      panel.__avPrev = { l: panel.style.left, t: panel.style.top, w: panel.style.width, h: panel.style.height };
+      panel.style.width = "";
+      panel.style.height = "";
+      panel.style.left = "12px";
+      panel.style.top = (90 + avPanelStackSlot() * 34) + "px";
+    } else {
+      const pv = panel.__avPrev || {};
+      if (pv.w) panel.style.width = pv.w;
+      if (pv.h) panel.style.height = pv.h;
+      panel.style.left = pv.l || "40px";
+      panel.style.top = pv.t || "76px";
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelMaxToggle(id) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const on = !panel.classList.contains("av-float-max");
+    panel.classList.toggle("av-float-max", on);
+    if (on) {
+      panel.__avPrevMax = { l: panel.style.left, t: panel.style.top, w: panel.style.width, h: panel.style.height };
+      panel.style.left = "10px";
+      panel.style.top = "10px";
+      panel.style.width = Math.max(320, window.innerWidth - 20) + "px";
+      panel.style.height = Math.max(200, window.innerHeight - 20) + "px";
+    } else {
+      const pv = panel.__avPrevMax || {};
+      panel.style.left = pv.l || "40px";
+      panel.style.top = pv.t || "76px";
+      panel.style.width = pv.w || "";
+      panel.style.height = pv.h || "";
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsNamedMap() {
+  try {
+    const raw = localStorage.getItem("av-layouts");
+    const o = raw ? JSON.parse(raw) : {};
+    return (o && typeof o === "object") ? o : {};
+  } catch (e) { return {}; }
+}
+function avPanelsSaveNamed(name) {
+  try {
+    const nm = String(name || "").trim().slice(0, 40) || "layout";
+    const store = avPanelsNamedMap();
+    store[nm] = avPanelsMap();
+    localStorage.setItem("av-layouts", JSON.stringify(store));
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsLoadNamed(name) {
+  try {
+    const nm = String(name || "").trim().slice(0, 40) || "layout";
+    const store = avPanelsNamedMap();
+    const map = store[nm];
+    if (!map || typeof map !== "object") return false;
+    avPanelsReset();
+    avPanelsSave(map);
+    const ids = Object.keys(map);
+    for (let i = 0; i < ids.length; i++) avPanelOpen(ids[i], map[ids[i]]);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsPromptName(dflt) {
+  try {
+    const r = window.prompt("Layout name", dflt || "layout");
+    return (r && String(r).trim()) ? String(r).trim().slice(0, 40) : (dflt || "layout");
+  } catch (e) { return dflt || "layout"; }
+}
+
 function avPanelsBeginDrag(e, panel, mode) {
   try {
     const id = panel.getAttribute("data-card");
@@ -239,6 +376,14 @@ function avPanelsWireDrag() {
         d.panel.style.height = nh + "px";
       }
     });
+    document.addEventListener("wheel", function (e) {
+      const head = e.target && e.target.closest ? e.target.closest(".av-float > .av-card > .av-mod-head") : null;
+      if (!head) return;
+      const panel = head.closest(".av-float");
+      if (!panel) return;
+      avPanelCycleOpacity(panel.getAttribute("data-card"));
+      if (e.preventDefault) e.preventDefault();
+    }, { passive: false });
     window.addEventListener("pointerup", function () {
       const d = avPanelsState.drag;
       if (!d) return;
@@ -327,6 +472,12 @@ if (typeof window !== "undefined" && window) {
       resize: function (id, w, h) { return avPanelsResize(id, w, h); },
       reset: function () { return avPanelsReset(); },
       layout: function (n) { return avPanelsLayout(n); },
+      saveNamed: function (n) { return avPanelsSaveNamed(n); },
+      loadNamed: function (n) { return avPanelsLoadNamed(n); },
+      minimize: function (id, on) { return avPanelMinimize(id, on); },
+      maximize: function (id) { return avPanelMaxToggle(id); },
+      pin: function (id) { return avPanelPin(id); },
+      opacity: function (id) { return avPanelCycleOpacity(id); },
       list: function () { return avPanelsList(); },
       about: function (f) { return avAboutToggle(f); },
     };

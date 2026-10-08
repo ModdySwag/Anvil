@@ -1535,3 +1535,72 @@ body.av-float-dragging, body.av-float-dragging * { cursor: grabbing !important; 
 }
 .av-float-grip::after { content: "\25E2"; font-size: 13px; line-height: 20px; }
 
+/* ============================================================================
+   R4 WORKSPACE — sectioned top toggles (accent-dotted chips), the left module rail, and the
+   float window controls (pin / opacity / minimize-stack / maximize) + named layouts. */
+.av-zones-in { gap: 6px; padding: 6px 10px; }
+.av-zone-tab {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--hair); border-radius: 6px;
+  background: var(--raised); padding: 5px 12px 5px 9px;
+}
+.av-zone-tab::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--zone-accent, var(--text-3)); margin-right: 7px; opacity: .55;
+}
+.av-zone-tab[aria-selected="true"] {
+  border-color: var(--zone-accent); color: var(--zone-accent);
+  background: color-mix(in srgb, var(--zone-accent) 14%, var(--raised));
+  text-shadow: none;
+}
+.av-zone-tab[aria-selected="true"]::before { opacity: 1; }
+.av-zone-tab:hover { border-color: var(--zone-accent, var(--teal-deep)); }
+body[data-av-zone="synth"], .av-zone-tab[data-zone="synth"], .av-rail-zone[data-zone="synth"] { --zone-accent: var(--teal); }
+body[data-av-zone="fx"], .av-zone-tab[data-zone="fx"], .av-rail-zone[data-zone="fx"] { --zone-accent: var(--mod-orange); }
+body[data-av-zone="mod"], .av-zone-tab[data-zone="mod"], .av-rail-zone[data-zone="mod"] { --zone-accent: var(--mod-purple); }
+body[data-av-zone="seq"], .av-zone-tab[data-zone="seq"], .av-rail-zone[data-zone="seq"] { --zone-accent: var(--mod-green); }
+body[data-av-zone="studio"], .av-zone-tab[data-zone="studio"], .av-rail-zone[data-zone="studio"] { --zone-accent: var(--mod-sky); }
+body[data-av-zone="store"], .av-zone-tab[data-zone="store"], .av-rail-zone[data-zone="store"] { --zone-accent: var(--mod-yellow); }
+body[data-av-zone="code"], .av-zone-tab[data-zone="code"], .av-rail-zone[data-zone="code"] { --zone-accent: #E8794A; }
+body[data-av-zone="system"], .av-zone-tab[data-zone="system"], .av-rail-zone[data-zone="system"] { --zone-accent: #4C9FE0; }
+
+.av-work { display: flex; flex: 1 1 auto; min-height: 0; }
+.av-work .av-main { flex: 1 1 auto; min-width: 0; }
+.av-rail {
+  position: relative; width: var(--rail-w, 208px); flex: none;
+  overflow-y: auto; overflow-x: hidden; border-right: 1px solid var(--hair);
+  background: var(--panel); padding: 0 0 14px;
+}
+body.av-rail-closed .av-rail { display: none; }
+.av-rail-head {
+  display: flex; align-items: center; gap: 6px; padding: 6px 8px 6px 12px;
+  position: sticky; top: 0; background: var(--panel); border-bottom: 1px solid var(--hair); z-index: 2;
+}
+.av-rail-title { flex: 1 1 auto; font-family: var(--mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-3); }
+.av-rail-zone {
+  display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+  background: transparent; border: 0; border-left: 2px solid transparent;
+  color: var(--text-2); font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em;
+  text-transform: uppercase; padding: 7px 10px; cursor: pointer;
+}
+.av-rail-zone:hover { color: var(--text); background: #12181d; }
+.av-rail-zone.on { color: var(--zone-accent); border-left-color: var(--zone-accent); background: #0f171c; }
+.av-rail-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--zone-accent, var(--text-3)); flex: none; }
+.av-rail-cards { display: none; flex-direction: column; padding: 0 0 6px; }
+.av-rail-group.on .av-rail-cards, .av-rail-group.open .av-rail-cards { display: flex; }
+.av-rail-card {
+  display: block; width: 100%; text-align: left; background: transparent; border: 0;
+  color: var(--text-3); font-size: 11.5px; padding: 4px 10px 4px 34px; cursor: pointer;
+}
+.av-rail-card:hover { color: var(--teal); background: #12181d; }
+.av-rail-grip { position: absolute; top: 0; right: -3px; bottom: 0; width: 6px; cursor: ew-resize; z-index: 3; }
+body.av-rail-dragging, body.av-rail-dragging * { cursor: ew-resize !important; user-select: none !important; }
+@media (max-width: 1100px) { .av-rail { display: none !important; } }
+
+.av-float-btnpin.on { color: var(--zone-accent, var(--teal)); border-color: var(--zone-accent, var(--teal)); }
+.av-float-min { height: auto !important; width: 250px !important; min-height: 0; }
+.av-float-min > .av-card { overflow: hidden; padding: 5px 8px; }
+.av-float-min > .av-card > :not(.av-mod-head) { display: none; }
+.av-float-min .av-float-grip { display: none; }
+
+

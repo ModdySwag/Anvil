@@ -144,6 +144,7 @@ function avChromeMenuOpen(btn, card) {
     const items = [];
     if (info.init) items.push({ label: "Init module (knobs to defaults)", run: function () { avChromeInitCard(card.id); } });
     if (info.rnd) items.push({ label: "Randomize module", run: function () { avChromeRandomizeCard(card.id); } });
+    if (typeof avPanelToggle === "function") items.push({ label: "Float / dock module", run: function () { avPanelToggle(card.id); } });
     items.push({ label: "Collapse / expand", run: function () { avChromeSetFold(card, !card.classList.contains("av-mod-fold"), true); } });
     el.innerHTML = "";
     for (let i = 0; i < items.length; i++) {
@@ -307,6 +308,7 @@ function avChromeBuildHeader() {
   avChromeHeaderButton("av-head-undo", "\u21B6", "Undo (Ctrl+Z)", function () { try { if (typeof avUndo === "function") avUndo(); } catch (e) { /* guard */ } });
   avChromeHeaderButton("av-head-redo", "\u21B7", "Redo (Ctrl+Y)", function () { try { if (typeof avRedo === "function") avRedo(); } catch (e) { /* guard */ } });
   avChromeHeaderButton("av-head-about", "ABOUT", "About this build - the phase notes (moved out of the page)", function () { try { if (typeof avAboutToggle === "function") avAboutToggle(); } catch (e) { /* guard */ } });
+  avChromeHeaderButton("av-head-rail", "NAV", "Module navigator - show / hide the left rail", function () { try { if (typeof avRailToggle === "function") avRailToggle(); } catch (e) { /* guard */ } });
   return true;
 }
 

@@ -157,7 +157,8 @@ js_parts = [
     (SRC / "av_a11y.js").read_text(encoding="utf-8"),     # P7: the accessibility layer (page module)
     (SRC / "av_shell.js").read_text(encoding="utf-8"),    # R1: the cockpit shell — zones + fixed-window chassis (page module)
     (SRC / "av_chrome.js").read_text(encoding="utf-8"),
-    (SRC / "av_panels.js").read_text(encoding="utf-8"),  # R3: the float workspace (page module)   # R2: module chrome — heads + menu, engine strip, header utilities (page module)
+    (SRC / "av_panels.js").read_text(encoding="utf-8"),  # R3: the float workspace (page module)
+    (SRC / "av_rail.js").read_text(encoding="utf-8"),     # R4: the left module rail (page module)   # R2: module chrome — heads + menu, engine strip, header utilities (page module)
     (SRC / "app_core.js").read_text(encoding="utf-8"),  # boots last: wire, mount, report
 ]
 

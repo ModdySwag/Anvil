@@ -37,6 +37,9 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R2 chrome: CHROME SELFTEST ok (?avtest=1)  -> {"v":"r2.0","heads":20,"cards":20,"strip":true,"browse":true}
  ok   R2 chrome: collapse toggles fold on/off; Init restores the first knob to its data-def via the one commit funnel  -> {"folded":true,"unfolded":true,"initN":85,"restored":true,"before":1}
  ok   R3 workspace: float buttons on every head (>=20), About button + hidden about host, panels facade + proof  -> {"floatBtns":20,"aboutBtn":true,"aboutHost":true,"panelsApi":"object","proof":{"v":"r3.0","open":0,"layouts":["sounddesign","mixdown"],"about":true}}
+ ok   R4 rail: left navigator (8 groups + >=20 card links) + header NAV toggle + RAIL SELFTEST  -> {"rail":true,"groups":8,"links":22,"navBtn":true,"tabBorder":"1px","tabRadius":"6px","railApi":"object","proof":{"v":"r4.0","ready":true,"groups":8,"cards":22,"open":true}}
+ ok   R4 toggles: the top tabs are sectioned chips (bordered, rounded)  -> {"border":"1px","radius":"6px"}
+ ok   R4 float controls: pin/opacity/min/max buttons + minimize toggle + named layout save/load  -> {"pin":true,"op":true,"min":true,"max":true,"mini":true,"back":true,"saved":true,"loaded":true,"n":1}
  ok   zero page errors
 
-39 passed, 0 failed
+42 passed, 0 failed

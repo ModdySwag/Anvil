@@ -1,14 +1,13 @@
-index.html sha256 (before): 6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4
+index.html sha256 (before): 45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1791450714775
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1791452611388
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
-   - Page.setDownloadBehavior unavailable
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
    - settle 1400 ms for the decoration pass 2 (module init + 1200 ms)
 == A. a11y module + state() ==
  ok   A1 module: window.__avA11y {version, init, state, setPref, toggle} + avA11yAnnounce fn  -> {"has":true,"version":"1.0.0","init":"function","state":"function","setPref":"function","toggle":"function","announce":"function","proof":"function","classes":"function"}
- ok   A2 state(): inited/skip/live true + counts.sliders === DOM .av-knob[data-knob] total (sliders 187 vs DOM 187)  -> {"inited":true,"skip":true,"live":true,"sliders":187,"domKnobs":187,"counts":{"sliders":187,"knobsTabbed":187,"canvases":5,"liveRegions":4,"roleButtons":1,"labeled":396,"unnamed":0},"errN":0}
+ ok   A2 state(): inited/skip/live true + counts.sliders === DOM .av-knob[data-knob] total (sliders 187 vs DOM 187)  -> {"inited":true,"skip":true,"live":true,"sliders":187,"domKnobs":187,"counts":{"sliders":187,"knobsTabbed":187,"canvases":5,"liveRegions":4,"roleButtons":1,"labeled":397,"unnamed":0},"errN":0}
  ok   A3 fresh-load defaults: contrast false + motion system + no av-contrast / av-reduce-motion on body + stored prefs default-or-absent  -> {"cls":"","contrast":false,"motion":"system","systemReduced":false,"reduceActive":false,"ls":null}
  ok   A4 module UI: #av-a11y-host inside header.av-head + real buttons #av-a11y-contrast / #av-a11y-motion (title + aria-pressed)  -> {"host":true,"inHead":true,"hostCls":"av-a11y","contrast":{"tag":"BUTTON","pressed":"false","title":true,"label":"High contrast"},"motion":{"tag":"BUTTON","pressed":"false","title":true,"label":"Reduce motion"}}
 == B. skip link (real Tab + Enter) ==
@@ -24,8 +23,8 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   C5 master knob End (real CDP key): value clamps to max ("1.2") and aria-valuenow matches  -> {"v":1.2,"max":"1.2","aria":"1.2","readout":"120%"}
  ok   C6 master knob restore: start value (0.8) restored through the commit path (readback matches)  -> {"orig":0.8,"restored":0.8,"aria":"0.8"}
 == D. names (visible buttons + counts.unnamed) ==
- ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 167 visible of 380  -> {"total":380,"visible":167,"bad":[]}
- ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":396,"counts":{"sliders":187,"knobsTabbed":187,"canvases":5,"liveRegions":4,"roleButtons":1,"labeled":396,"unnamed":0}}
+ ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 184 visible of 412  -> {"total":412,"visible":184,"bad":[]}
+ ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":397,"counts":{"sliders":187,"knobsTabbed":187,"canvases":5,"liveRegions":4,"roleButtons":1,"labeled":397,"unnamed":0}}
 == E. live regions + announce ==
  ok   E1 live regions: >= 3 pinned-selector elements (.av-fam-status / #av-deliver-status / .av-session-status) carry role=status or aria-live (live 4 of 4)  -> {"found":4,"live":4,"sample":["av-deliver-status","av-fam-hub-status","av-fam-res-status","av-fam-radio-status"]}
  ok   E2 announce: avA11yAnnounce("a11y-rig-probe") writes #av-a11y-live textContent  -> {"fn":true,"exists":true,"text":"a11y-rig-probe"}
@@ -46,11 +45,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 6c54b4884f10...
+index.html sha256 (after):  45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 45734b8a72e0...
 
 RESULT: 32 passed, 0 failed
 A11Y-RESULT 32/32
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4","sha256After":"6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4","pinned":"6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4","passed":32,"failed":0,"checks":32,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b","sha256After":"45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b","pinned":"45734b8a72e08107feed7cded4bfe35d8f228eb239bf725f775fc3d50cfc8e9b","passed":32,"failed":0,"checks":32,"verdict":"pass"}
 A11Y PASSED
