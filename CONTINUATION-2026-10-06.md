@@ -2161,3 +2161,16 @@ Resume phrase: **"continue anvil"**.
   Serum `embeddedWTData` decode (needs a Serum-saved embed fixture - 0 corpus files carry the
   field, re-verified this session) · MXGPR real bytes / KONG depth (blocked on real files) ·
   NKI modern zone maps (long-term). Resume phrase "continue anvil".
+
+### R16 session-end verify-state (2026-10-09 ~05:15 AEST — copy-paste block for the next session)
+
+    cd /c/Users/Moddy/anvil
+    git log --oneline -3                                       # HEAD = the R16-handoff commit on top of 930e0c4
+    git status --short                                         # clean except `?? cache/` (untracked scratch)
+    curl -s https://moddys.net/anvil/index.html | sha256sum    # = ebc4e9077fab... (frozen, live)
+    grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (worklet concat unchanged)
+    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "72 passed, 0 failed" before ANY new work
+
+Nothing in flight at session end: no subagents, no background jobs (battery/bench/solo scripts all
+exited with their DONE markers; their browsers were killed by each rig's exit handler). Everything
+below was committed and live-verified by commit 930e0c4 + the handoff commit.

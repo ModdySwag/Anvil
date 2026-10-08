@@ -60,11 +60,12 @@ assignment surfaces: the 4 engine sample slots, drum pads, chop, grain, OSC2, se
   V1 formats (WAV/MP3/AIFF/MIDI); REX2 joins if the wave has budget (spec ready, Unlicense).
 - **R15c** - EXS24 (Logic kits -> sampler kits) + ADG/ALS (sample refs + clip->pattern) + SerumPreset (wavetable refs; native zstd gated) - SHIPPED 2026-10-09 (`b1da601b`); the STRUCTURED PACKS trio.
 - **R15d** - SXT REFE refs + NKI partial (legacy zlib-XML zones + modern metadata/refs; encrypted refuse) + NBKT metadata; the R15c pipeline carries them (new adapters register in AV_IMPORT_POLICY). - SHIPPED 2026-10-09 (`50d6d793`); the NI/Reason trio.
+- **R16** - the recorded follow-ups: zip reading (a dropped .zip expands its entries through the same import pipeline as a bundle row + honest children) + REX2 slices -> chop kits (the decoded slice table drives the chop card's DETECT via rex2) + f64-WAV reader (tag-3/64-bit: clean-room decode + load route) - SHIPPED 2026-10-09 (`ebc4e907`); `embeddedWTData` decode + MXGPR/KONG stay open.
 - Owner-visible acceptance: drop a mixed pack folder → formats recognized honestly → content
   usable in sampler / pads / chop.
 
 ## Open items (verify before promising)
 
 MXGPR real bytes · KONG depth (expected refuse) · Serum embeddedWTData decode (needs a Serum-saved
-embed fixture) · f64-WAV reader · NKI modern zone maps (long-term stretch) · REX2 slices -> chop
-kits · zip reading.
+embed fixture — verified 2026-10-09: 0 files in the local corpus carry the field) · NKI modern zone
+maps (long-term stretch).
