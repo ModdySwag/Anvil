@@ -397,6 +397,19 @@ function avPaletteCoreCommands() {
       });
     }
   }
+  /* R3: the float workspace — reset + two curated layouts */
+  if (typeof avPanelsReset === "function") {
+    cmds.push(
+      { id: "panels.reset", label: "Workspace: reset layout", group: "Workspace",
+        hint: "Bring every floated module home", run: () => avPanelsReset() },
+      { id: "panels.sounddesign", label: "Workspace: sound design", group: "Workspace",
+        hint: "Float Synth + FM + Mod + FX for a sound-design desk",
+        run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("sounddesign") : false) },
+      { id: "panels.mixdown", label: "Workspace: mixdown", group: "Workspace",
+        hint: "Float Mix + Deck + FX for a mixdown desk",
+        run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("mixdown") : false) }
+    );
+  }
   for (let i = 0; i < AV_PALETTE_CARDS.length; i++) {
     const c = AV_PALETTE_CARDS[i];
     cmds.push({

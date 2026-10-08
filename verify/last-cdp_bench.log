@@ -1,40 +1,112 @@
-freeze sha256 1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998 (3406861 B)
+freeze sha256 6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4 (3424004 B)
 serving index.html at /index.html
 server: http://127.0.0.1:9400/ (repo root C:\Users\Moddy\anvil)
 devtools port: 9401
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
 url: http://127.0.0.1:9400/index.html?avtest=1
-=== ANVIL bench rig === mode: real [offline-only]
+=== ANVIL bench rig === mode: real
 protocol: variants light+fat · steps [1,2,4,8,16,24,32,48,64] · 3 rep(s) · hold 10 s · stable = p95Us<1333 && underruns==0
 --- sanity ---
-engine: attr=worklet tier=worklet url=blob sr=48000 maxVoices=64 os=2 (boot 668 ms)
-sanity: PASS  state=running  advance=2s / wall 2.004s (ratio 0.998)  baseLatency=0.01  sampleRate=48000
+engine: attr=worklet tier=worklet url=blob sr=48000 maxVoices=64 os=2 (boot 707 ms)
+sanity: PASS  state=running  advance=2s / wall 2.002s (ratio 0.999)  baseLatency=0.01  sampleRate=48000
 console messages: 2
   [log] [anvil] boot — v1.7.0 tap=true knobs=true kb=true midi=true synth=true pads=true sample=true rec=true fx=true mod=true seq=true seqUi=true cap=true undo=true store=true bank=true storeUi=true deliver=true input=true metro=true takes=true studioUi=true session=true backup=true sessionUi=true co
   [log] [anvil] engine ready — worklet:blob · sr 48000 · voices 64
---offline-only: realtime ramps skipped (variants light+fat · steps [1,2,4,8,16,24,32,48,64] · 3 rep(s))
+--- ramp ---
+realtime ring semantics: worklet clock = Date.now (ms lattice) — ring readings resolve to 0/1000/2000 µs and 0 is EXPECTED at this engine speed (sub-1 ms cost); 0 ≠ zero cost — stability stays p95Us<1333 && underruns==0, and the publishable render cost comes from the offline ramp (fresh-context marginal cost).
+variant LIGHT: patch applied (all params accepted)
+  light r1 step  1  voices 1  mean 23.44  p95 0  max 1000  underruns 0  n 3757  -> ok
+  light r1 step  2  voices 2  mean 171.88  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  light r1 step  4  voices 4  mean 144.53  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r1 step  8  voices 8  mean 195.31  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 16  voices 16  mean 234.38  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 24  voices 24  mean 285.16  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 32  voices 32  mean 312.5  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 48  voices 48  mean 578.13  p95 1000  max 1000  underruns 0  n 3757  -> ok
+  light r1 step 64  voices 64  mean 851.56  p95 1000  max 2000  underruns 0  n 3754  -> ok
+  light rep 1 max stable: 64 / 64
+  light r2 step  1  voices 1  mean 7.81  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r2 step  2  voices 2  mean 11.72  p95 0  max 1000  underruns 0  n 3750  -> ok
+  light r2 step  4  voices 4  mean 15.63  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r2 step  8  voices 8  mean 23.44  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r2 step 16  voices 16  mean 101.56  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r2 step 24  voices 24  mean 312.5  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r2 step 32  voices 32  mean 472.66  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  light r2 step 48  voices 48  mean 632.81  p95 1000  max 2000  underruns 0  n 3753  -> ok
+  light r2 step 64  voices 64  mean 730.47  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light rep 2 max stable: 64 / 64
+  light r3 step  1  voices 1  mean 15.63  p95 0  max 1000  underruns 0  n 3750  -> ok
+  light r3 step  2  voices 2  mean 15.63  p95 0  max 1000  underruns 0  n 3758  -> ok
+  light r3 step  4  voices 4  mean 11.72  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r3 step  8  voices 8  mean 195.31  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 16  voices 16  mean 257.81  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 24  voices 24  mean 328.13  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 32  voices 32  mean 343.75  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  light r3 step 48  voices 48  mean 503.91  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r3 step 64  voices 64  mean 652.34  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light rep 3 max stable: 64 / 64
+LIGHT PUBLISHED: 64
+variant FAT: patch applied (all params accepted)
+  fat r1 step  1  voices 1  mean 35.16  p95 0  max 1000  underruns 0  n 3750  -> ok
+  fat r1 step  2  voices 2  mean 132.81  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step  4  voices 4  mean 160.16  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step  8  voices 8  mean 218.75  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat r1 step 16  voices 16  mean 281.25  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  fat r1 step 24  voices 24  mean 363.28  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step 32  voices 32  mean 496.09  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step 48  voices 48  mean 695.31  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r1 step 64  voices 64  mean 1027.34  p95 2000  max 2000  underruns 0  n 3754  -> UNSTABLE (p95 >= 1333)
+  fat rep 1 max stable: 48 / 64
+  fat r2 step  1  voices 1  mean 58.59  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r2 step  2  voices 2  mean 3.91  p95 0  max 1000  underruns 0  n 3754  -> ok
+  fat r2 step  4  voices 4  mean 19.53  p95 0  max 1000  underruns 0  n 3753  -> ok
+  fat r2 step  8  voices 8  mean 89.84  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r2 step 16  voices 16  mean 273.44  p95 1000  max 1000  underruns 0  n 3757  -> ok
+  fat r2 step 24  voices 24  mean 347.66  p95 1000  max 1000  underruns 0  n 3757  -> ok
+  fat r2 step 32  voices 32  mean 562.5  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r2 step 48  voices 48  mean 761.72  p95 1000  max 2000  underruns 0  n 3750  -> ok
+  fat r2 step 64  voices 64  mean 1156.25  p95 2000  max 2000  underruns 0  n 3754  -> UNSTABLE (p95 >= 1333)
+  fat rep 2 max stable: 48 / 64
+  fat r3 step  1  voices 1  mean 0  p95 0  max 0  underruns 0  n 3754  -> ok
+  fat r3 step  2  voices 2  mean 23.44  p95 0  max 1000  underruns 0  n 3750  -> ok
+  fat r3 step  4  voices 4  mean 15.63  p95 0  max 1000  underruns 0  n 3750  -> ok
+  fat r3 step  8  voices 8  mean 144.53  p95 1000  max 1000  underruns 0  n 3758  -> ok
+  fat r3 step 16  voices 16  mean 312.5  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r3 step 24  voices 24  mean 488.28  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  fat r3 step 32  voices 32  mean 523.44  p95 1000  max 1000  underruns 0  n 3753  -> ok
+  fat r3 step 48  voices 48  mean 757.81  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  fat r3 step 64  voices 64  mean 1136.72  p95 2000  max 2000  underruns 1  n 3754  -> UNSTABLE (p95 + underruns)
+  fat rep 3 max stable: 48 / 64
+FAT PUBLISHED: 48
 --- offline ramp (publishable metric; fresh OfflineAudioContexts; T1=1 s / T2=4 s per N) ---
 offline protocol: N = [0 (baseline), 8, 16, 32, 48, 64, 96, 128] · T1 1 s / T2 4 s · fresh context per render · publish ≤ 1333 µs/quantum (~50% budget @ 48 k)
 offline caps: midi-space cap — max measurable N = 128 (notes post as midi = i, i in 0..N-1; the facade rejects midi>127) · sync barrier: await h.stats() and require active === N before startRendering (one fresh-context retry per cell, then STOP)
-  offline n=  0 (baseline) w1=8.9ms w2=23.7ms us/q=13.16 (0.49% budget) tier worklet:blob pool 64 rms1=0 rms2=0 active=0/0 ack=0.3/0.3ms boot 27.4/25.9ms
-  offline n=  8         w1=50ms w2=170ms us/q=106.67 (4% budget) tier worklet:blob pool 8 rms1=0.238 rms2=0.244 active=8/8 ack=1.2/1.7ms boot 25.6/23.9ms
-  offline n= 16         w1=90.2ms w2=272.6ms us/q=162.13 (6.08% budget) tier worklet:blob pool 16 rms1=0.328 rms2=0.33 active=16/16 ack=1.4/1ms boot 27/25ms
-  offline n= 32         w1=144.7ms w2=654.8ms us/q=453.42 (17% budget) tier worklet:blob pool 32 rms1=0.476 rms2=0.477 active=32/32 ack=2.6/2ms boot 26.4/27.7ms
-  offline n= 48         w1=229.6ms w2=913.6ms us/q=608 (22.8% budget) tier worklet:blob pool 48 rms1=0.582 rms2=0.572 active=48/48 ack=3/1.9ms boot 23.3/24.5ms
-  offline n= 64         w1=365ms w2=1125.9ms us/q=676.36 (25.36% budget) tier worklet:blob pool 64 rms1=0.652 rms2=0.648 active=64/64 ack=2.8/2.8ms boot 23.5/25.9ms
-  offline n= 96         w1=438.5ms w2=1662.1ms us/q=1087.64 (40.79% budget) tier worklet:blob pool 96 rms1=0.764 rms2=0.757 active=96/96 ack=4/2.3ms boot 28.5/26.1ms
-  offline n=128         w1=568.6ms w2=2546.5ms us/q=1758.13 (65.93% budget) tier worklet:blob pool 128 rms1=0.859 rms2=0.848 active=128/128 ack=4/2.9ms boot 25.3/27.3ms
+  offline n=  0 (baseline) w1=8.7ms w2=26.6ms us/q=15.91 (0.6% budget) tier worklet:blob pool 64 rms1=0 rms2=0 active=0/0 ack=0.3/0.5ms boot 31.5/27.1ms
+  offline n=  8         w1=49.9ms w2=138.4ms us/q=78.67 (2.95% budget) tier worklet:blob pool 8 rms1=0.238 rms2=0.244 active=8/8 ack=1/1.9ms boot 23.9/22.2ms
+  offline n= 16         w1=78.9ms w2=275.2ms us/q=174.49 (6.54% budget) tier worklet:blob pool 16 rms1=0.328 rms2=0.33 active=16/16 ack=1.9/1.1ms boot 23.2/23.7ms
+  offline n= 32         w1=155.5ms w2=620.1ms us/q=412.98 (15.49% budget) tier worklet:blob pool 32 rms1=0.476 rms2=0.477 active=32/32 ack=1.9/1.6ms boot 25.3/25.1ms
+  offline n= 48         w1=203.5ms w2=766.9ms us/q=500.8 (18.78% budget) tier worklet:blob pool 48 rms1=0.582 rms2=0.572 active=48/48 ack=1.5/1.7ms boot 25/23.8ms
+  offline n= 64         w1=260.8ms w2=1008.9ms us/q=664.98 (24.94% budget) tier worklet:blob pool 64 rms1=0.652 rms2=0.648 active=64/64 ack=2.2/2.6ms boot 27.9/24.9ms
+  offline n= 96         w1=410.7ms w2=1588ms us/q=1046.49 (39.24% budget) tier worklet:blob pool 96 rms1=0.764 rms2=0.757 active=96/96 ack=3/2.1ms boot 22.5/24.3ms
+  offline n=128         w1=632.6ms w2=2184.1ms us/q=1379.11 (51.72% budget) tier worklet:blob pool 128 rms1=0.859 rms2=0.848 active=128/128 ack=3.6/2.4ms boot 28.8/26.8ms
 OFFLINE PUBLISHED: 96 voices (us/q ≤ 1333 µs)
 OFFLINE knee: last-pass n=96 · first-fail n=128 · monotone=true
 OFFLINE PUBLISHED: 96 voices · knee last-pass n=96 first-fail n=128
---offline-only: screenshot + fallback cell skipped — exiting after the offline ramp
+shot: renders/p1-bench.png (135047 B)
+--- fallback cell (file:// load, expect tier spn; no full ramp: single-cell smoke of the degraded tier — the published number comes from the http ramp only) ---
+fallback tier: spn (as expected)
+fallback sanity: PASS  state=running  advance=2s  ratio=1
+fallback 8-voice cell: mean 98.05  p95 125  max 150  underruns 0  -> stable
 ==== BENCH SUMMARY ====
-mode: real (offline-only)
-freeze: sha256 1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998 (3406861 B) [index.html]
+mode: real
+freeze: sha256 6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4 (3424004 B) [index.html]
 tier: worklet (delivery blob)
-sanity: PASS  advance=2s/2s  ratio=0.998  baseLatency=0.01
-published: {}
+sanity: PASS  advance=2s/2s  ratio=0.999  baseLatency=0.01
+published: {"light":64,"fat":48}
 offline: published 96 voices · knee {"lastPassN":96,"firstFailN":128,"monotone":true}
 json: verify/last-cdp_bench.json
 log: verify/last-cdp_bench.log
-BENCH-RESULT {"mode":"real","quick":false,"offlineOnly":true,"tier":"worklet","url":"blob","realtimeRatio":0.998,"published":{},"offlinePublished":96,"offlineKnee":{"lastPassN":96,"firstFailN":128,"monotone":true},"invalidReads":0,"json":"verify/last-cdp_bench.json","log":"verify/last-cdp_bench.log"}
+shot: renders/p1-bench.png
+BENCH-RESULT {"mode":"real","quick":false,"tier":"worklet","url":"blob","realtimeRatio":0.999,"published":{"light":64,"fat":48},"offlinePublished":96,"offlineKnee":{"lastPassN":96,"firstFailN":128,"monotone":true},"invalidReads":0,"json":"verify/last-cdp_bench.json","log":"verify/last-cdp_bench.log"}
+ers/p1-bench.png
+BENCH-RESULT {"mode":"real","quick":false,"tier":"worklet","url":"blob","realtimeRatio":0.999,"published":{"light":64,"fat":48},"offlinePublished":96,"offlineKnee":{"lastPassN":96,"firstFailN":128,"monotone":true},"invalidReads":0,"json":"verify/last-cdp_bench.json","log":"verify/last-cdp_bench.log"}

@@ -605,6 +605,20 @@ async function main() {
   check('R2 chrome: collapse toggles fold on/off; Init restores the first knob to its data-def via the one commit funnel',
     fn2.folded === true && fn2.unfolded === true && typeof fn2.initN === 'number' && fn2.initN > 0 && fn2.restored === true, JSON.stringify(fn2));
 
+  /* 6s. R3 workspace: float buttons on every head + the About popover host + the panels facade */
+  const r3R = await ev(`(() => {
+    let proof = null;
+    try { const el = document.getElementById('av-panelstest'); proof = el ? JSON.parse(el.textContent.replace('PANELS SELFTEST ', '')) : null; } catch (e) { proof = null; }
+    return { floatBtns: document.querySelectorAll('.av-mod-float-btn').length,
+             aboutBtn: !!document.getElementById('av-head-about'),
+             aboutHost: !!(document.getElementById('av-about-pop') && document.getElementById('av-about-pop').hidden === true),
+             panelsApi: typeof window.__avPanels, proof: proof };
+  })()`);
+  const r3 = r3R.value || {};
+  check('R3 workspace: float buttons on every head (>=20), About button + hidden about host, panels facade + proof',
+    r3.floatBtns >= 20 && r3.aboutBtn === true && r3.aboutHost === true && r3.panelsApi === 'object'
+    && !!r3.proof && r3.proof.v && typeof r3.proof.open === 'number', JSON.stringify(r3));
+
   /* 7. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 

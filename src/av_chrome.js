@@ -217,6 +217,14 @@ function avChromeBuildHead(card) {
     head.appendChild(h2);          /* the ORIGINAL h2 moves in, text preserved */
     head.appendChild(gap);
     head.appendChild(menu);
+    const flt = document.createElement("button");
+    flt.type = "button";
+    flt.className = "av-mod-float-btn av-btn mini";
+    flt.setAttribute("aria-label", "Float this module in the workspace");
+    flt.title = "Float this module in the workspace";
+    flt.textContent = "\u29C9";
+    head.appendChild(flt);
+    flt.addEventListener("click", function () { if (typeof avPanelToggle === "function") avPanelToggle(card.id); });
     tg.addEventListener("click", function () { avChromeSetFold(card, !card.classList.contains("av-mod-fold"), true); });
     menu.addEventListener("click", function () { avChromeMenuOpen(menu, card); });
     return true;
@@ -298,6 +306,7 @@ function avChromeBuildHeader() {
   });
   avChromeHeaderButton("av-head-undo", "\u21B6", "Undo (Ctrl+Z)", function () { try { if (typeof avUndo === "function") avUndo(); } catch (e) { /* guard */ } });
   avChromeHeaderButton("av-head-redo", "\u21B7", "Redo (Ctrl+Y)", function () { try { if (typeof avRedo === "function") avRedo(); } catch (e) { /* guard */ } });
+  avChromeHeaderButton("av-head-about", "ABOUT", "About this build - the phase notes (moved out of the page)", function () { try { if (typeof avAboutToggle === "function") avAboutToggle(); } catch (e) { /* guard */ } });
   return true;
 }
 

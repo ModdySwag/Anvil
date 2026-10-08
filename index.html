@@ -1512,6 +1512,52 @@ body:not(.piano-closed) { padding-bottom: var(--dock-tax); }
 .av-engine-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 body.av-contrast .av-engine-chip { border-width: 2px; }
 
+/* ============================================================================
+   R3 WORKSPACE — zone accents (each module loads in its own colour), the About popover and the
+   float panels (drag by the module head, resize from the grip). */
+body { --zone-accent: var(--teal); }
+body[data-av-zone="synth"] { --zone-accent: var(--teal); }
+body[data-av-zone="fx"] { --zone-accent: var(--mod-orange); }
+body[data-av-zone="mod"] { --zone-accent: var(--mod-purple); }
+body[data-av-zone="seq"] { --zone-accent: var(--mod-green); }
+body[data-av-zone="studio"] { --zone-accent: var(--mod-sky); }
+body[data-av-zone="store"] { --zone-accent: var(--mod-yellow); }
+body[data-av-zone="code"] { --zone-accent: #E8794A; }
+body[data-av-zone="system"] { --zone-accent: #4C9FE0; }
+.av-zone-tab[aria-selected="true"] {
+  color: var(--zone-accent);
+  border-bottom-color: var(--zone-accent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--zone-accent) 40%, transparent);
+}
+body.av-contrast .av-zone-tab[aria-selected="true"] { text-shadow: none; }
+.av-zone .av-card::before { background: var(--zone-accent); }
+.av-engine-chip:hover { color: var(--zone-accent); border-color: var(--zone-accent); }
+.av-about-pop {
+  position: fixed; top: 58px; right: 16px; z-index: 66;
+  width: min(760px, calc(100vw - 32px)); max-height: min(66vh, 620px);
+  overflow: auto; background: var(--panel); border: 1px solid var(--hair);
+  border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.6);
+}
+.av-about-pop[hidden] { display: none; }
+.av-about-pop .av-card { border: 0; border-radius: 10px; }
+.av-float {
+  position: fixed; z-index: 56; display: flex; flex-direction: column;
+  min-width: 320px; min-height: 140px; max-width: 94vw; max-height: 88vh;
+  border: 1px solid var(--zone-accent, var(--hair)); border-radius: 10px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.65); background: var(--panel);
+  overflow: hidden;
+}
+.av-float > .av-card { flex: 1 1 auto; min-height: 0; overflow: auto; border: 0; border-radius: 0; background: transparent; }
+.av-float > .av-card::before { display: none; }
+.av-float .av-mod-head { cursor: grab; }
+body.av-float-dragging, body.av-float-dragging * { cursor: grabbing !important; user-select: none !important; }
+.av-float-grip {
+  position: absolute; right: 1px; bottom: 1px; width: 20px; height: 20px;
+  cursor: nwse-resize; color: var(--text-3); z-index: 2;
+}
+.av-float-grip::after { content: "\25E2"; font-size: 13px; line-height: 20px; }
+
+
 </style>
 </head>
 
@@ -1648,11 +1694,6 @@ body.av-contrast .av-engine-chip { border-width: 2px; }
   </section>
   <section class="av-zone" id="av-zone-system" data-zone="system" role="tabpanel" aria-labelledby="av-tab-system" hidden>
     <div class="av-zone-box">
-  <section class="av-card">
-    <h1>Phase S5 &mdash; CODE: write your own modules &middot; popout keyboard &middot; help</h1>
-    <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in), plus the S5 layer (the CODE section &mdash; a documented sandboxed DSP module API where your own code runs live in the engine &mdash; the popout keyboard, the Ctrl-K command palette, a 60-second tour, and the lesson ladder). Plus the M2 layer &mdash; MPE per-note expression from MPE controllers (bend, slide, pressure, pan), the sample CHOP card, the generative toolkit (euclidean, mutate, humanize, fills, per-track clock divide and swing) and the song arranger (song rows, quantised scene transitions, arrangement MIDI export).</p>
-  </section>
   <section class="av-card" id="av-midi-card">
     <h2>MIDI</h2>
     <div id="av-midi-body"><p class="av-note av-dim">The hardware deck lands here — enable Web MIDI and your keys play Anvil through the same note path as the piano dock.</p></div>
@@ -1682,6 +1723,14 @@ body.av-contrast .av-engine-chip { border-width: 2px; }
     </div>
   </section>
 </main>
+
+<div id="av-about-pop" class="av-about-pop" hidden>
+  <section class="av-card">
+    <h1>Phase S5 &mdash; CODE: write your own modules &middot; popout keyboard &middot; help</h1>
+    <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in), plus the S5 layer (the CODE section &mdash; a documented sandboxed DSP module API where your own code runs live in the engine &mdash; the popout keyboard, the Ctrl-K command palette, a 60-second tour, and the lesson ladder). Plus the M2 layer &mdash; MPE per-note expression from MPE controllers (bend, slide, pressure, pan), the sample CHOP card, the generative toolkit (euclidean, mutate, humanize, fills, per-track clock divide and swing) and the song arranger (song rows, quantised scene transitions, arrangement MIDI export).</p>
+  </section>
+</div>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">
     <div id="piano-rail">
@@ -24471,6 +24520,19 @@ function avPaletteCoreCommands() {
         run: () => (typeof avZoneShow === "function" ? avZoneShow(z.id, { source: "palette" }) : false),
       });
     }
+  }
+  /* R3: the float workspace — reset + two curated layouts */
+  if (typeof avPanelsReset === "function") {
+    cmds.push(
+      { id: "panels.reset", label: "Workspace: reset layout", group: "Workspace",
+        hint: "Bring every floated module home", run: () => avPanelsReset() },
+      { id: "panels.sounddesign", label: "Workspace: sound design", group: "Workspace",
+        hint: "Float Synth + FM + Mod + FX for a sound-design desk",
+        run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("sounddesign") : false) },
+      { id: "panels.mixdown", label: "Workspace: mixdown", group: "Workspace",
+        hint: "Float Mix + Deck + FX for a mixdown desk",
+        run: () => (typeof avPanelsLayout === "function" ? avPanelsLayout("mixdown") : false) }
+    );
   }
   for (let i = 0; i < AV_PALETTE_CARDS.length; i++) {
     const c = AV_PALETTE_CARDS[i];
@@ -67446,6 +67508,14 @@ function avChromeBuildHead(card) {
     head.appendChild(h2);          /* the ORIGINAL h2 moves in, text preserved */
     head.appendChild(gap);
     head.appendChild(menu);
+    const flt = document.createElement("button");
+    flt.type = "button";
+    flt.className = "av-mod-float-btn av-btn mini";
+    flt.setAttribute("aria-label", "Float this module in the workspace");
+    flt.title = "Float this module in the workspace";
+    flt.textContent = "\u29C9";
+    head.appendChild(flt);
+    flt.addEventListener("click", function () { if (typeof avPanelToggle === "function") avPanelToggle(card.id); });
     tg.addEventListener("click", function () { avChromeSetFold(card, !card.classList.contains("av-mod-fold"), true); });
     menu.addEventListener("click", function () { avChromeMenuOpen(menu, card); });
     return true;
@@ -67527,6 +67597,7 @@ function avChromeBuildHeader() {
   });
   avChromeHeaderButton("av-head-undo", "\u21B6", "Undo (Ctrl+Z)", function () { try { if (typeof avUndo === "function") avUndo(); } catch (e) { /* guard */ } });
   avChromeHeaderButton("av-head-redo", "\u21B7", "Redo (Ctrl+Y)", function () { try { if (typeof avRedo === "function") avRedo(); } catch (e) { /* guard */ } });
+  avChromeHeaderButton("av-head-about", "ABOUT", "About this build - the phase notes (moved out of the page)", function () { try { if (typeof avAboutToggle === "function") avAboutToggle(); } catch (e) { /* guard */ } });
   return true;
 }
 
@@ -67578,6 +67649,342 @@ if (typeof window !== "undefined" && window) {
       randomizeCard: function (id) { return avChromeRandomizeCard(id); },
       fold: function (id, on) { const c = document.getElementById(id); return c ? avChromeSetFold(c, on === true, true) : false; },
       cards: function () { return AV_CHROME_CARDS.map(function (c) { return c.id; }); },
+    };
+  } catch (e) { /* no window - nothing to publish */ }
+}
+
+
+/* Anvil — the float workspace (R3): pop any module out into a free-floating panel, drag it by its
+   module head, resize from the grip, bring it to front on focus — the FL-Studio-class "move your
+   modules around the desk" workflow. Layouts persist in localStorage "av-float" {cardId:{x,y,w,h}}
+   and restore at boot; curated presets (sound design / mixdown) + reset live in the palette.
+   This module also owns the About popover: the phase-notes card moved out of the page into the
+   header (BROWSE's neighbourhood) to save working screen space. */
+"use strict";
+
+const AV_PANELS_VERSION = "r3.0";
+const AV_PANELS_LS = "av-float";
+const AV_ABOUT_ID = "av-about-pop";
+const AV_PANEL_ACCENTS = {
+  synth: "#2ED8C9", fx: "#E69F00", mod: "#CC79A7", seq: "#009E73",
+  studio: "#56B4E9", store: "#F0E442", code: "#E8794A", system: "#4C9FE0",
+};
+const AV_PANEL_LAYOUTS = {
+  sounddesign: { open: [["av-synth", 40, 84], ["av-fm", 500, 84], ["av-mod", 60, 428], ["av-fx", 560, 428]] },
+  mixdown: { open: [["av-mix", 40, 84], ["av-deck", 540, 84], ["av-fx", 60, 470]] },
+};
+
+const avPanelsState = { ready: false, z: 56, drag: null, seq: 0 };
+
+function avPanelsMap() {
+  try {
+    const raw = localStorage.getItem(AV_PANELS_LS);
+    if (!raw) return {};
+    const o = JSON.parse(raw);
+    return (o && typeof o === "object") ? o : {};
+  } catch (e) { return {}; }
+}
+function avPanelsSave(map) {
+  try { localStorage.setItem(AV_PANELS_LS, JSON.stringify(map)); return true; } catch (e) { return false; }
+}
+function avPanelEl(id) { return document.getElementById("av-float-" + id); }
+function avPanelsList() {
+  const out = [];
+  try {
+    const all = document.querySelectorAll(".av-float[data-card]");
+    for (let i = 0; i < all.length; i++) out.push(all[i].getAttribute("data-card"));
+  } catch (e) { /* none */ }
+  return out;
+}
+function avPanelZoneOf(card) {
+  try {
+    const z = card && card.closest ? card.closest(".av-zone") : null;
+    return z ? z.getAttribute("data-zone") : null;
+  } catch (e) { return null; }
+}
+function avPanelClampX(x, w) {
+  const W = window.innerWidth || 1280;
+  return Math.max(-(w - 90), Math.min(x, W - 90));
+}
+function avPanelClampY(y, h) {
+  const H = window.innerHeight || 800;
+  return Math.max(0, Math.min(y, H - 34));
+}
+
+/* ---------- open / close (MOVE model: the live card relocates; close restores it) ---------- */
+function avPanelFocus(panel) {
+  try {
+    if (!panel) return false;
+    avPanelsState.z += 1;
+    panel.style.zIndex = String(avPanelsState.z);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelOpen(id, pos) {
+  try {
+    if (avPanelEl(id)) { avPanelFocus(avPanelEl(id)); return true; }
+    const card = document.getElementById(String(id || ""));
+    if (!card || !card.closest || !card.closest(".av-zone")) return false;
+    const zone = avPanelZoneOf(card);
+    const panel = document.createElement("div");
+    panel.className = "av-float";
+    panel.id = "av-float-" + id;
+    panel.setAttribute("data-card", id);
+    panel.setAttribute("data-zone", zone || "synth");
+    panel.setAttribute("role", "region");
+    panel.setAttribute("aria-label", "Floating module: " + id);
+    try { panel.style.setProperty("--zone-accent", AV_PANEL_ACCENTS[zone] || AV_PANEL_ACCENTS.synth); } catch (e2) { /* accent cosmetic */ }
+    card.__avFloatHome = { parent: card.parentNode, next: card.nextSibling };
+    document.body.appendChild(panel);
+    panel.appendChild(card);
+    /* the module head becomes the drag bar + gains a close button */
+    const head = card.querySelector(":scope > .av-mod-head");
+    if (head) {
+      head.classList.add("av-float-head-drag");
+      const x = document.createElement("button");
+      x.type = "button";
+      x.className = "av-btn mini av-float-btn";
+      x.setAttribute("aria-label", "Bring this module back to its zone");
+      x.title = "Bring this module back to its zone";
+      x.textContent = "\u00D7";
+      x.addEventListener("click", function () { avPanelClose(id); });
+      head.appendChild(x);
+    }
+    const grip = document.createElement("div");
+    grip.className = "av-float-grip";
+    grip.setAttribute("role", "separator");
+    grip.setAttribute("aria-label", "Resize panel");
+    panel.appendChild(grip);
+    /* position: last saved or a cascade */
+    const saved = avPanelsMap()[id] || {};
+    const n = avPanelsState.seq++;
+    const x0 = (typeof saved.x === "number") ? saved.x : (40 + (n % 5) * 38);
+    const y0 = (typeof saved.y === "number") ? saved.y : (76 + (n % 6) * 34);
+    panel.style.left = x0 + "px";
+    panel.style.top = y0 + "px";
+    if (typeof saved.w === "number" && saved.w > 0) panel.style.width = saved.w + "px";
+    if (typeof saved.h === "number" && saved.h > 0) panel.style.height = saved.h + "px";
+    avPanelFocus(panel);
+    avPanelsPersist(id, panel);
+    if (typeof avA11yAnnounce === "function") { try { avA11yAnnounce("Floating: " + id); } catch (e3) { /* announce best-effort */ } }
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelClose(id) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const card = panel.querySelector(":scope > .av-card");
+    const head = card ? card.querySelector(":scope > .av-mod-head") : null;
+    if (head) {
+      head.classList.remove("av-float-head-drag");
+      const x = head.querySelector(".av-float-btn");
+      if (x && x.parentNode) x.parentNode.removeChild(x);
+    }
+    if (card && card.__avFloatHome) {
+      const home = card.__avFloatHome;
+      try { if (home.parent) home.parent.insertBefore(card, home.next || null); } catch (e2) { /* put back best effort */ }
+      try { delete card.__avFloatHome; } catch (e3) { card.__avFloatHome = null; }
+    }
+    if (panel.parentNode) panel.parentNode.removeChild(panel);
+    const map = avPanelsMap();
+    delete map[id];
+    avPanelsSave(map);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelToggle(id) {
+  return avPanelEl(id) ? avPanelClose(id) : avPanelOpen(id);
+}
+function avPanelsPersist(id, panel) {
+  try {
+    const map = avPanelsMap();
+    const r = panel.getBoundingClientRect();
+    map[id] = {
+      x: Math.round(parseFloat(panel.style.left || r.left) || r.left),
+      y: Math.round(parseFloat(panel.style.top || r.top) || r.top),
+      w: Math.round(r.width), h: Math.round(r.height),
+    };
+    avPanelsSave(map);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsMove(id, x, y) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const r = panel.getBoundingClientRect();
+    panel.style.left = avPanelClampX(x, r.width) + "px";
+    panel.style.top = avPanelClampY(y, r.height) + "px";
+    avPanelsPersist(id, panel);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsResize(id, w, h) {
+  try {
+    const panel = avPanelEl(id);
+    if (!panel) return false;
+    const W = window.innerWidth || 1280, H = window.innerHeight || 800;
+    const nw = Math.max(320, Math.min(w, Math.round(W * 0.94)));
+    const nh = Math.max(140, Math.min(h, Math.round(H * 0.88)));
+    panel.style.width = nw + "px";
+    panel.style.height = nh + "px";
+    avPanelsPersist(id, panel);
+    return true;
+  } catch (e) { return false; }
+}
+function avPanelsReset() {
+  try {
+    const ids = avPanelsList();
+    for (let i = 0; i < ids.length; i++) avPanelClose(ids[i]);
+    return ids.length >= 0;
+  } catch (e) { return false; }
+}
+function avPanelsLayout(name) {
+  try {
+    const L = AV_PANEL_LAYOUTS[name];
+    if (!L) return false;
+    avPanelsReset();
+    let i = 0;
+    for (let k = 0; k < L.open.length; k++) {
+      const [id, x, y] = L.open[k];
+      if (avPanelOpen(id)) { avPanelsMove(id, x + i * 14, y + i * 10); i += 1; }
+    }
+    return i > 0;
+  } catch (e) { return false; }
+}
+
+/* ---------- drag + resize wiring (pointer events, capture on window) ---------- */
+function avPanelsBeginDrag(e, panel, mode) {
+  try {
+    const id = panel.getAttribute("data-card");
+    const r = panel.getBoundingClientRect();
+    avPanelsState.drag = {
+      id: id, mode: mode, sx: e.clientX, sy: e.clientY,
+      x0: r.left, y0: r.top, w0: r.width, h0: r.height, panel: panel,
+    };
+    document.body.classList.add("av-float-dragging");
+    avPanelFocus(panel);
+    if (e.target && e.target.setPointerCapture) { try { e.target.setPointerCapture(e.pointerId); } catch (e2) { /* capture best-effort */ } }
+    e.preventDefault();
+    return true;
+  } catch (e3) { return false; }
+}
+function avPanelsWireDrag() {
+  try {
+    document.addEventListener("pointerdown", function (e) {
+      const panel = e.target && e.target.closest ? e.target.closest(".av-float") : null;
+      if (!panel) return;
+      avPanelFocus(panel);
+      if (e.target.closest(".av-float-grip")) { avPanelsBeginDrag(e, panel, "size"); return; }
+      const head = e.target.closest(".av-float > .av-card > .av-mod-head");
+      if (head && !e.target.closest("button, select, input, textarea, a")) avPanelsBeginDrag(e, panel, "move");
+    }, true);
+    window.addEventListener("pointermove", function (e) {
+      const d = avPanelsState.drag;
+      if (!d) return;
+      const dx = e.clientX - d.sx, dy = e.clientY - d.sy;
+      if (d.mode === "move") {
+        d.panel.style.left = avPanelClampX(d.x0 + dx, d.w0) + "px";
+        d.panel.style.top = avPanelClampY(d.y0 + dy, d.h0) + "px";
+      } else {
+        const W = window.innerWidth || 1280, H = window.innerHeight || 800;
+        const nw = Math.max(320, Math.min(d.w0 + dx, Math.round(W * 0.94)));
+        const nh = Math.max(140, Math.min(d.h0 + dy, Math.round(H * 0.88)));
+        d.panel.style.width = nw + "px";
+        d.panel.style.height = nh + "px";
+      }
+    });
+    window.addEventListener("pointerup", function () {
+      const d = avPanelsState.drag;
+      if (!d) return;
+      avPanelsState.drag = null;
+      document.body.classList.remove("av-float-dragging");
+      avPanelsPersist(d.id, d.panel);
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the About popover (the phase-notes card, in the header now) ---------- */
+function avAboutEl() { return document.getElementById(AV_ABOUT_ID); }
+function avAboutSet(show) {
+  try {
+    const el = avAboutEl();
+    if (!el) return false;
+    el.hidden = !show;
+    const b = document.getElementById("av-head-about");
+    if (b) b.setAttribute("aria-expanded", show ? "true" : "false");
+    return true;
+  } catch (e) { return false; }
+}
+function avAboutToggle(force) {
+  try {
+    const el = avAboutEl();
+    if (!el) return false;
+    const show = (typeof force === "boolean") ? force : el.hidden === true;
+    avAboutSet(show);
+    if (show && typeof avA11yAnnounce === "function") { try { avA11yAnnounce("About this build"); } catch (e2) { /* best-effort */ } }
+    return show;
+  } catch (e) { return false; }
+}
+function avAboutWireAway() {
+  try {
+    document.addEventListener("pointerdown", function (e) {
+      const el = avAboutEl();
+      if (!el || el.hidden) return;
+      if (el.contains(e.target)) return;
+      const b = document.getElementById("av-head-about");
+      if (b && b.contains(e.target)) return;
+      avAboutSet(false);
+    }, true);
+    document.addEventListener("keydown", function (e) {
+      if (!e || e.key !== "Escape") return;
+      const el = avAboutEl();
+      if (el && !el.hidden) avAboutSet(false);
+    }, true);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- boot ---------- */
+function avPanelsInit() {
+  try {
+    if (avPanelsState.ready) return true;
+    avPanelsWireDrag();
+    avAboutWireAway();
+    const map = avPanelsMap();
+    const ids = Object.keys(map);
+    for (let i = 0; i < ids.length; i++) avPanelOpen(ids[i], map[ids[i]]);
+    avPanelsState.ready = true;
+    return true;
+  } catch (e) {
+    console.warn("[anvil] panels init failed", e);
+    return false;
+  }
+}
+function avPanelsProof() {
+  return "PANELS SELFTEST " + JSON.stringify({
+    v: AV_PANELS_VERSION,
+    open: avPanelsList().length,
+    layouts: Object.keys(AV_PANEL_LAYOUTS),
+    about: !!avAboutEl(),
+  });
+}
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avPanels = {
+      version: AV_PANELS_VERSION,
+      open: function (id, pos) { return avPanelOpen(id, pos); },
+      close: function (id) { return avPanelClose(id); },
+      toggle: function (id) { return avPanelToggle(id); },
+      move: function (id, x, y) { return avPanelsMove(id, x, y); },
+      resize: function (id, w, h) { return avPanelsResize(id, w, h); },
+      reset: function () { return avPanelsReset(); },
+      layout: function (n) { return avPanelsLayout(n); },
+      list: function () { return avPanelsList(); },
+      about: function (f) { return avAboutToggle(f); },
     };
   } catch (e) { /* no window - nothing to publish */ }
 }
@@ -67731,6 +68138,9 @@ function avMountLevels() {
   /* R2: the module chrome — heads + menu on every card, the engine strip, header utilities */
   let chromeOk = false;
   try { chromeOk = (typeof avChromeInit === "function") ? (avChromeInit() !== false) : false; } catch (e) { console.warn("[anvil] chrome init failed", e); }
+  /* R3: the float workspace + the About popover */
+  let panelsOk = false;
+  try { panelsOk = (typeof avPanelsInit === "function") ? (avPanelsInit() !== false) : false; } catch (e) { console.warn("[anvil] panels init failed", e); }
   /* the P1 engine boots eagerly: its context starts suspended and the first gesture resumes it;
      once ready, the facade wires the note sink, replays params and takes the header chips over */
   try {
@@ -67748,7 +68158,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " fx=" + fxOk + " mod=" + modOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }
@@ -67757,6 +68167,7 @@ function avMountLevels() {
     try { if (typeof avA11yProof === "function") { const _as = avA11yProof(); if (_as) avTestLine(_as, "av-a11ytest"); } } catch (e) { console.warn("avtest a11y", e); }
     try { if (typeof avShellProof === "function") { const _ss = avShellProof(); if (_ss) avTestLine(_ss, "av-shelltest"); } } catch (e) { console.warn("avtest shell", e); }
     try { if (typeof avChromeProof === "function") { const _cs = avChromeProof(); if (_cs) avTestLine(_cs, "av-chrometest"); } } catch (e) { console.warn("avtest chrome", e); }
+    try { if (typeof avPanelsProof === "function") { const _fs = avPanelsProof(); if (_fs) avTestLine(_fs, "av-panelstest"); } } catch (e) { console.warn("avtest panels", e); }
   }
 })();
 

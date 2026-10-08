@@ -19,7 +19,7 @@ const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || exist
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* freeze pin: set to the frozen sha after the R1 build; null = unpinned report */
-const EXPECT_SHA = '1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998';
+const EXPECT_SHA = '6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4';
 
 const candidates = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -168,12 +168,12 @@ async function main() {
     const fr = document.getElementById('av-firstrun');
     const frZone = fr ? (fr.closest('.av-zone') || {}).getAttribute : null;
     return { n: n, bad: bad, firstrun: fr ? (fr.closest('.av-zone') ? fr.closest('.av-zone').getAttribute('data-zone') : 'nozone') : 'absent',
-             heroZone: (function(){ const h = document.querySelector('#av-zone-system .av-card h1'); return !!h; })() };
+             aboutHost: !!(document.getElementById('av-about-pop') && document.getElementById('av-about-pop').hidden === true && document.getElementById('av-about-pop').querySelector('h1') && document.getElementById('av-head-about')) };
   })()`);
   const mp = mapR.value || {};
   check('card map: every card id sits in its pinned zone (22/22)', mp.n === 22 && (mp.bad || []).length === 0, JSON.stringify({ n: mp.n, bad: mp.bad }));
-  check('special: first-run strip lives in synth; the about hero lives in system',
-    (mp.firstrun === 'synth') && mp.heroZone === true, JSON.stringify({ firstrun: mp.firstrun, hero: mp.heroZone }));
+  check('special: first-run strip lives in synth; the about notes live in the header popover (hidden at rest)',
+    (mp.firstrun === 'synth') && mp.aboutHost === true, JSON.stringify({ firstrun: mp.firstrun, about: mp.aboutHost }));
 
   /* 5. tab click switches (and only one stays shown) */
   const clickR = await ev(`(() => {
@@ -275,6 +275,55 @@ async function main() {
   })()`);
   const inv = invR.value || {};
   check('invariant: exactly one zone + one selected tab at rest', inv.shown === 1 && inv.tabsSel === 1, JSON.stringify(inv));
+
+  /* 14b. R3 workspace: float panels — open, move, resize, persist, restore; About toggle */
+  /* rig SPEC note: style writes to a fixed panel reflect in getBoundingClientRect one frame later
+     in the headless compositor (offsetLeft/style read correctly in-task; the rect needs a frame) —
+     settle two rAFs before reading, then the geometry is exact. */
+  const flR = await ev(`(async () => {
+    const ok1 = window.__avPanels.open('av-mix');
+    const p = document.getElementById('av-float-av-mix');
+    const inPanel = !!(p && p.querySelector('#av-mix'));
+    window.__avPanels.move('av-mix', 120, 150);
+    window.__avPanels.resize('av-mix', 500, 360);
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const r = p.getBoundingClientRect();
+    const saved = JSON.parse(localStorage.getItem('av-float') || '{}');
+    window.__avPanels.close('av-mix');
+    const home = !!document.querySelector('#av-zone-studio #av-mix');
+    const gone = !document.getElementById('av-float-av-mix');
+    return { ok1: ok1, inPanel: inPanel, x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width),
+             saved: !!(saved['av-mix']), home: home, gone: gone, list: window.__avPanels.list().length };
+  })()`);
+  const fl = flR.value || {};
+  check('R3 float: open moves the card into a floating panel; move+resize persist; close restores it to its zone',
+    fl.ok1 === true && fl.inPanel === true && fl.x === 120 && fl.y === 150 && fl.w === 500 && fl.saved === true && fl.home === true && fl.gone === true, JSON.stringify(fl));
+
+  const fl2R = await ev(`(() => {
+    window.__avPanels.open('av-fx'); window.__avPanels.open('av-synth');
+    const n = window.__avPanels.list().length;
+    const fx = document.getElementById('av-float-av-fx');
+    const z = fx ? fx.style.zIndex : null;
+    window.__avPanels.reset();
+    const after = window.__avPanels.list().length;
+    const home = !!document.querySelector('#av-zone-fx #av-fx');
+    return { n: n, z: z, after: after, home: home };
+  })()`);
+  const fl2 = fl2R.value || {};
+  check('R3 float: two panels coexist with z-order set; reset() brings everything home',
+    fl2.n === 2 && fl2.z !== null && fl2.z !== '' && fl2.after === 0 && fl2.home === true, JSON.stringify(fl2));
+
+  const abR = await ev(`(() => {
+    const b = document.getElementById('av-head-about');
+    b.click();
+    const el = document.getElementById('av-about-pop');
+    const open = el.hidden === false;
+    b.click();
+    return { open: open, closed: el.hidden === true, hasH1: !!el.querySelector('h1') };
+  })()`);
+  const ab = abR.value || {};
+  check('R3 about: the header About button toggles the phase-notes popover (moved out of the page)',
+    ab.open === true && ab.closed === true && ab.hasH1 === true, JSON.stringify(ab));
 
   /* 15. zero page errors */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

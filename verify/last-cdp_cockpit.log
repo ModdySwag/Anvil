@@ -1,22 +1,25 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-index.html sha256 (before): 1ddf7e54fdfa46bbc68858be6cebb3075a704a1fe6471f55e3785ceee8b31998
+index.html sha256 (before): 6c54b4884f1052acf4c5f15907c78d50caedeeacd6d3590e7cb8958e2933f2f4
  ok   boot: data-av-ready flips
  ok   zones: 8 panels + 8 tabs in workflow order  -> {"zones":8,"tabs":8,"order":"synth,fx,mod,seq,studio,store,code,system"}
  ok   default: exactly one zone rendered (synth) + aria-selected + body[data-av-zone] agree  -> {"zones":8,"tabs":8,"order":"synth,fx,mod,seq,studio,store,code,system","shown":["synth"],"bodyZone":"synth","sel":"synth","vis":"synth"}
  ok   no page scroll: scrollHeight == clientHeight, html+body overflow hidden, scrollTo is a no-op  -> {"doc":900,"client":900,"before":0,"after":0,"htmlOverflow":"hidden","bodyOverflow":"hidden"}
  ok   card map: every card id sits in its pinned zone (22/22)  -> {"n":22,"bad":[]}
- ok   special: first-run strip lives in synth; the about hero lives in system  -> {"firstrun":"synth","hero":true}
+ ok   special: first-run strip lives in synth; the about notes live in the header popover (hidden at rest)  -> {"firstrun":"synth","about":true}
  ok   tab click: studio comes up alone (synth hides, aria follows, body[data-av-zone] follows)  -> {"shown":["studio"],"sel":["studio"],"bodyZone":"studio","synthHidden":true}
  ok   pane scroll: the zone scrolls internally (scrollTop > 0) while the window stays at 0  -> {"st":140,"win":0,"doc":900}
  ok   shortcut: Alt+3 switches to the mod zone  -> {"zone":"mod","shown":["mod"]}
  ok   seams: __avZoneAuto(#av-mix) reveals studio; scrollIntoView on a hidden-zone element reveals seq  -> {"ok":true,"zone1":"studio","zone2":"seq"}
  ok   facade: list() = the 8 ids; unknown zone refused; missing selector refused without throwing  -> {"list":"synth,fx,mod,seq,studio,store,code,system","bad":false,"autoMissing":false}
- ok   palette: the Zones group is registered (8 zone commands incl. zone.system)  -> {"fn":true,"n":49,"zones":8,"hasSystem":true}
+ ok   palette: the Zones group is registered (8 zone commands incl. zone.system)  -> {"fn":true,"n":52,"zones":8,"hasSystem":true}
  ok   proof: SHELL SELFTEST line present and sane (?avtest=1)  -> {"v":"r1.0","ready":true,"zones":8,"active":"synth"}
  ok   persistence: reload restores the last zone (code)  -> {"zone":"code","ready":"1"}
  ok   deep link: ?z=system boots into the system zone  -> {"zone":"system","shown":"system"}
  ok   invariant: exactly one zone + one selected tab at rest  -> {"shown":1,"tabsSel":1,"zone":"system"}
+ ok   R3 float: open moves the card into a floating panel; move+resize persist; close restores it to its zone  -> {"ok1":true,"inPanel":true,"x":120,"y":150,"w":500,"saved":true,"home":true,"gone":true,"list":0}
+ ok   R3 float: two panels coexist with z-order set; reset() brings everything home  -> {"n":2,"z":"58","after":0,"home":true}
+ ok   R3 about: the header About button toggles the phase-notes popover (moved out of the page)  -> {"open":true,"closed":true,"hasH1":true}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned  -> pinned 1ddf7e54fdfa...
+ ok   freeze: index.html sha256 = pinned  -> pinned 6c54b4884f10...
 
-18 passed, 0 failed
+21 passed, 0 failed

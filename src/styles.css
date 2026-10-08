@@ -1489,3 +1489,49 @@ body:not(.piano-closed) { padding-bottom: var(--dock-tax); }
 .av-engine-chip:hover { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.25); }
 .av-engine-chip:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 body.av-contrast .av-engine-chip { border-width: 2px; }
+
+/* ============================================================================
+   R3 WORKSPACE — zone accents (each module loads in its own colour), the About popover and the
+   float panels (drag by the module head, resize from the grip). */
+body { --zone-accent: var(--teal); }
+body[data-av-zone="synth"] { --zone-accent: var(--teal); }
+body[data-av-zone="fx"] { --zone-accent: var(--mod-orange); }
+body[data-av-zone="mod"] { --zone-accent: var(--mod-purple); }
+body[data-av-zone="seq"] { --zone-accent: var(--mod-green); }
+body[data-av-zone="studio"] { --zone-accent: var(--mod-sky); }
+body[data-av-zone="store"] { --zone-accent: var(--mod-yellow); }
+body[data-av-zone="code"] { --zone-accent: #E8794A; }
+body[data-av-zone="system"] { --zone-accent: #4C9FE0; }
+.av-zone-tab[aria-selected="true"] {
+  color: var(--zone-accent);
+  border-bottom-color: var(--zone-accent);
+  text-shadow: 0 0 8px color-mix(in srgb, var(--zone-accent) 40%, transparent);
+}
+body.av-contrast .av-zone-tab[aria-selected="true"] { text-shadow: none; }
+.av-zone .av-card::before { background: var(--zone-accent); }
+.av-engine-chip:hover { color: var(--zone-accent); border-color: var(--zone-accent); }
+.av-about-pop {
+  position: fixed; top: 58px; right: 16px; z-index: 66;
+  width: min(760px, calc(100vw - 32px)); max-height: min(66vh, 620px);
+  overflow: auto; background: var(--panel); border: 1px solid var(--hair);
+  border-radius: 10px; box-shadow: 0 18px 50px rgba(0,0,0,.6);
+}
+.av-about-pop[hidden] { display: none; }
+.av-about-pop .av-card { border: 0; border-radius: 10px; }
+.av-float {
+  position: fixed; z-index: 56; display: flex; flex-direction: column;
+  min-width: 320px; min-height: 140px; max-width: 94vw; max-height: 88vh;
+  border: 1px solid var(--zone-accent, var(--hair)); border-radius: 10px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.65); background: var(--panel);
+  overflow: hidden;
+}
+.av-float > .av-card { flex: 1 1 auto; min-height: 0; overflow: auto; border: 0; border-radius: 0; background: transparent; }
+.av-float > .av-card::before { display: none; }
+.av-float .av-mod-head { cursor: grab; }
+body.av-float-dragging, body.av-float-dragging * { cursor: grabbing !important; user-select: none !important; }
+.av-float-grip {
+  position: absolute; right: 1px; bottom: 1px; width: 20px; height: 20px;
+  cursor: nwse-resize; color: var(--text-3); z-index: 2;
+}
+.av-float-grip::after { content: "\25E2"; font-size: 13px; line-height: 20px; }
+

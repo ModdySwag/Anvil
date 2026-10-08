@@ -36,6 +36,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R2 chrome: module heads + menu buttons on every chrome card, engine strip (6 chips in Synth), header BROWSE/undo/redo  -> {"heads":8,"toggles":20,"menus":20,"chips":6,"stripInSynth":true,"browse":true,"undo":true,"redo":true,"menuHost":true,"chromeApi":"object","proof":{"v":"r2.0","heads":20,"cards":20,"strip":true,"browse":true}}
  ok   R2 chrome: CHROME SELFTEST ok (?avtest=1)  -> {"v":"r2.0","heads":20,"cards":20,"strip":true,"browse":true}
  ok   R2 chrome: collapse toggles fold on/off; Init restores the first knob to its data-def via the one commit funnel  -> {"folded":true,"unfolded":true,"initN":85,"restored":true,"before":1}
+ ok   R3 workspace: float buttons on every head (>=20), About button + hidden about host, panels facade + proof  -> {"floatBtns":20,"aboutBtn":true,"aboutHost":true,"panelsApi":"object","proof":{"v":"r3.0","open":0,"layouts":["sounddesign","mixdown"],"about":true}}
  ok   zero page errors
 
-38 passed, 0 failed
+39 passed, 0 failed
