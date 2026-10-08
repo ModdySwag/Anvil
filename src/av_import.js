@@ -886,8 +886,8 @@ function avImportCounts(receipt) {
     else if (it.result === "refused") counts.refused++;
     if (it.kind === "sample") counts.samples++;
     else if (it.kind === "pattern") counts.patterns++;
-    else if (it.kind === "kit") counts.kits++;
-    else if (it.kind === "refs") counts.refs++;
+    else if (it.kind === "kit" && it.result === "imported") counts.kits++;
+    else if (it.kind === "refs" && it.result === "imported") counts.refs++;
   }
   counts.total = items.length;
   receipt.counts = counts;

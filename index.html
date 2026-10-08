@@ -21018,9 +21018,10 @@ const AVRex = {
 };
 
 
-/* av_lib.js - Anvil R15b SAMPLE PACKS: the LOCAL sample library. The ONE durable home for
-   user-imported sample-pack content (audio + MIDI patterns). Everything here is local:
-   nothing in this module touches the network, ever.
+/* av_lib.js - Anvil SAMPLE PACKS: the LOCAL sample library. The ONE durable home for
+   user-imported sample-pack content (audio + MIDI patterns; R15c adds EXS24 kits and
+   ADG/ALS/SerumPreset reference packs). Everything here is local: nothing in this module
+   touches the network, ever.
 
    Pins (verify/_r15b_wave.md section 4.4; receipt/record shapes are the section 2 shared spec,
    kept VERBATIM):
@@ -21050,7 +21051,8 @@ const AVRex = {
 
    Record shape: { id, v: 1, name, kind, format, size, at, meta, bytes (ArrayBuffer), via }
      id = "l" + Date.now().toString(36) + "-" + slug(name); slug [a-z0-9-], cap 40.
-     kind = "sample" | "pattern". via = the backend the record was actually written through.
+     kind = "sample" | "pattern" | "kit" | "refs" (R15c). via = the backend the record was
+     actually written through.
 
    Backends "idb" | "ls" | "mem" (always reportable). IndexedDB is the durable home; no
    IndexedDB -> the av-samples-ls localStorage map (records ride base64; a record over
@@ -21075,6 +21077,18 @@ const AVRex = {
                    explicit set - mirroring av_bank.js avBankSeqApply) -> avSeqUiSync (repaint
                    nicety) -> avUndoPush("seq", "import") (push AFTER load). Receipt pattern =
                    {name, bpm, notes} summary.
+     kit (R15c) -> resolve each meta.samples name (basename, case-insensitive) against the
+                   LIBRARY list at LOAD time; load the first 4 distinct resolved samples
+                   through the sample routes above; avSampleSendToEngine(entryId, slot i) for
+                   slots 0..3; build the zone v2 F64(144) table (s0/s1 fractions clamped to
+                   the decoded length); avEngineZones(zones) then avApplyParam("engine.kind",
+                   "sampler") (both guarded). Fewer than 1 resolved sample -> ok:false
+                   "no resolvable samples" and the engine is NEVER touched. Receipt
+                   {ok, slots, zones, skipped, error?}.
+     refs (R15c) -> re-return the persisted meta, NO session change: receipt {ok:true, refs,
+                   notes?, pattern?, meta} so the UI can offer the seq action for ALS items
+                   (the seq application itself stays the ONE avMid flow, driven from
+                   meta.pattern by its caller).
 
    Every cross-module call is typeof-guarded PER CALL. Never throws: every public entry point
    resolves a receipt / returns a sane value; try/catch wraps every reach. Promise plumbing
@@ -21101,6 +21115,9 @@ const AV_LIB_OPEN_CAP_MS = 1800;             /* hung-open give-up (mirrors av_st
 const AV_LIB_ADOPT_MS = 4000;                /* delay of the ONE late adoption attempt */
 const AV_LIB_LS_MAX_BYTES = 1.5 * 1024 * 1024;   /* LS tier refuses items over 1.5 MiB */
 const AV_LIB_LS_B64_MAX = Math.ceil((AV_LIB_LS_MAX_BYTES * 4) / 3) + 64;
+/* R15c: the meta cap must hold kit/refs metas (16 zones + 512 refs + a 4x64 pattern) - the
+   R15b flat-probe 4 KiB cap would drop them whole */
+const AV_LIB_META_MAX = 256 * 1024;
 const AV_LIB_ID_RE = /^l[a-z0-9-]{0,63}$/;   /* "l" + time36 + "-" + slug(40) */
 const AV_LIB_B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -21178,12 +21195,13 @@ function avLibToken(v, dflt, cap) {
   } catch (e) { return dflt; }
 }
 
-/* JSON-safe shallow meta copy (probes hand in flat objects; circular input -> {}) */
+/* JSON-safe meta copy (flat probe objects; R15c kit/refs metas ride the AV_LIB_META_MAX
+   bound; circular input -> {}) */
 function avLibMetaNorm(m) {
   try {
     if (!m || typeof m !== "object") return {};
     const s = JSON.stringify(m);
-    if (!s || s.length > 4096) return {};
+    if (!s || s.length > AV_LIB_META_MAX) return {};
     const o = JSON.parse(s);
     return (o && typeof o === "object" && !Array.isArray(o)) ? o : {};
   } catch (e) { return {}; }
@@ -21212,12 +21230,20 @@ function avLibMakeId(name) {
   return id;
 }
 
+/* the record kind vocabulary: sample | pattern | kit | refs ("" = not persistable) */
+function avLibKindNorm(v) {
+  try {
+    if (v === "sample" || v === "pattern" || v === "kit" || v === "refs") return v;
+  } catch (e) { /* none */ }
+  return "";
+}
+
 /* the list-facing view of a record: exactly {id, v, name, kind, format, size, at, meta} */
 function avLibMetaView(rec) {
   return {
     id: rec.id, v: 1,
     name: avLibStr(rec.name, rec.id, 120),
-    kind: (rec.kind === "pattern") ? "pattern" : "sample",
+    kind: (rec.kind === "pattern") ? "pattern" : avLibKindNorm(rec.kind) || "sample",
     format: avLibToken(rec.format, "", 12),
     size: avLibNum(rec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
     at: avLibNum(rec.at, 0, 0, 9e15),
@@ -21240,7 +21266,7 @@ function avLibRecNorm(rec, needBytes) {
     return {
       id: id, v: 1,
       name: avLibStr(rec.name, id, 120),
-      kind: (rec.kind === "pattern") ? "pattern" : "sample",
+      kind: (rec.kind === "pattern") ? "pattern" : avLibKindNorm(rec.kind) || "sample",
       format: avLibToken(rec.format, "", 12),
       size: avLibNum(rec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
       at: avLibNum(rec.at, 0, 0, 9e15),
@@ -21270,7 +21296,7 @@ function avLibPayloadView(pay) {
     return {
       id: id, v: 1,
       name: avLibStr(pay.name, id, 120),
-      kind: (pay.kind === "pattern") ? "pattern" : "sample",
+      kind: avLibKindNorm(pay.kind) || "sample",
       format: avLibToken(pay.format, "", 12),
       size: avLibNum(pay.size, 0, 0, AV_LIB_ITEM_MAX * 8),
       at: avLibNum(pay.at, 0, 0, 9e15),
@@ -21310,12 +21336,13 @@ function avLibExactBuf(u8) {
 }
 
 /* the import item (section 2 shape) -> the record fields this module persists.
-   result != "imported" items are SKIPPED (null); only sample/pattern kinds are material. */
+   result != "imported" items are SKIPPED (null); only sample/pattern/kit/refs kinds are
+   material. */
 function avLibItemNorm(item) {
   try {
     if (!item || typeof item !== "object" || Array.isArray(item)) return null;
     if (item.result !== "imported") return null;
-    const kind = (item.kind === "pattern") ? "pattern" : ((item.kind === "sample") ? "sample" : "");
+    const kind = avLibKindNorm(item.kind);
     if (!kind) return null;
     return {
       name: avLibStr(item.name, "item", 120),
@@ -21888,7 +21915,7 @@ async function avLibRemoveRun(id) {
   return { ok: false, id: id, error: "no item" };
 }
 
-/* ---------- load routes (sample by format; pattern via the seq core) ---------- */
+/* ---------- load routes (sample by format; pattern via the seq core; R15c kit + refs) ---------- */
 
 /* the session sample module (global first, then the __avSample facade) - null when absent */
 function avLibSampleStore() {
@@ -21922,6 +21949,8 @@ async function avLibLoadRun(id) {
   const rec = g.item;
   if (rec.kind === "pattern") return avLibLoadPattern(rec);
   if (rec.kind === "sample") return avLibLoadSample(rec);
+  if (rec.kind === "kit") return avLibLoadKit(rec);      /* R15c: EXS24 kits */
+  if (rec.kind === "refs") return avLibLoadRefs(rec);    /* R15c: ALS / Serum refs */
   return { ok: false, id: rec.id, kind: "", error: "unknown kind" };
 }
 
@@ -22060,6 +22089,162 @@ async function avLibLoadPattern(rec) {
   return { ok: true, id: rec.id, kind: "pattern", pattern: avLibPatternSummary(feed, rec) };
 }
 
+/* ---------- R15c load routes: kits (EXS24) + refs (ALS / Serum) ---------- */
+
+/* the lowercase basename of a name (kit sample matching: basename, case-insensitive) */
+function avLibBaseLower(s) {
+  try {
+    const t = String(s == null ? "" : s);
+    const parts = t.split(/[\\/]+/);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (parts[i]) return parts[i].toLowerCase().replace(/[\u0000-\u001f\u007f]/g, "");
+    }
+  } catch (e) { /* none */ }
+  return "";
+}
+
+/* the decoded frame count of a just-loaded session entry (0 = unknown) */
+function avLibKitFrames(entryId, slot) {
+  try {
+    const store = avLibSampleStore();
+    if (store) {
+      try {
+        const e = (store.byId && store.byId[entryId]) ? store.byId[entryId] : null;
+        if (e && e.buffer && isFinite(e.buffer.length) && e.buffer.length > 0) return e.buffer.length;
+      } catch (e2) { /* try the sent record */ }
+      try {
+        const s = (Array.isArray(store.sent) && store.sent[slot]) ? store.sent[slot] : null;
+        if (s && isFinite(s.frames) && s.frames > 0) return s.frames;
+      } catch (e3) { /* unknown length */ }
+    }
+  } catch (e) { /* unknown */ }
+  return 0;
+}
+
+/* the kit route (section 3): resolve each meta.samples name (basename, case-insensitive)
+   against the LIBRARY list at LOAD time; load the first 4 distinct resolved samples through
+   the existing sample routes; send them to engine slots 0..3; build the zone v2 F64(144)
+   table (buf = the resolved sample's slot; s0/s1 fractions clamped to the decoded length) and
+   push it via avEngineZones; then set engine.kind = "sampler" through the ONE funnel. Zones
+   whose sample did not resolve (or beyond the 4-slot cap) are dropped and counted. Fewer than
+   1 resolved sample -> ok:false "no resolvable samples" and the engine is NEVER touched.
+   Receipt { ok, slots, zones, skipped, error? }. */
+async function avLibLoadKit(rec) {
+  const out = { ok: false, id: rec.id, kind: "kit", slots: 0, zones: 0, skipped: 0 };
+  try {
+    const meta = (rec.meta && typeof rec.meta === "object") ? rec.meta : {};
+    const mSamples = Array.isArray(meta.samples) ? meta.samples : [];
+    const mZones = Array.isArray(meta.zones) ? meta.zones : [];
+    const listR = await avLibListRun();
+    const list = (listR && listR.ok === true && Array.isArray(listR.items)) ? listR.items : [];
+    const chosen = [];
+    const chosenIds = {};
+    for (let i = 0; i < mSamples.length && chosen.length < 4; i++) {
+      const nm = avLibBaseLower(mSamples[i] && mSamples[i].name);
+      if (!nm) continue;
+      let hit = null;
+      for (let j = 0; j < list.length; j++) {
+        const it = list[j];
+        if (!it || it.kind !== "sample" || chosenIds[it.id]) continue;
+        if (avLibBaseLower(it.name) === nm) { hit = it; break; }
+      }
+      if (!hit) continue;
+      chosenIds[hit.id] = 1;
+      chosen.push(hit);
+    }
+    if (!chosen.length) { out.error = "no resolvable samples"; return out; }
+    /* load + send: slot i for the i-th chosen sample (engine slots 0..3) */
+    const slots = new Array(chosen.length);
+    const frames = new Array(chosen.length);
+    for (let i = 0; i < chosen.length; i++) {
+      slots[i] = null;
+      frames[i] = 0;
+      let full = null;
+      try { full = await avLibGetRecRun(chosen[i].id); } catch (e) { full = null; }
+      if (!full || full.ok !== true || !full.item) continue;
+      let loaded = null;
+      try { loaded = await avLibLoadSample(full.item); } catch (e) { loaded = null; }
+      if (!loaded || loaded.ok !== true || typeof loaded.entryId !== "string" || !loaded.entryId) continue;
+      let sent = false;
+      try {
+        if (typeof avSampleSendToEngine === "function") sent = (await avSampleSendToEngine(loaded.entryId, i)) === true;
+      } catch (e) { sent = false; }
+      if (sent !== true) continue;
+      slots[i] = i;
+      frames[i] = avLibKitFrames(loaded.entryId, i);
+    }
+    let used = 0;
+    for (let i = 0; i < slots.length; i++) if (slots[i] !== null) used += 1;
+    out.slots = used;
+    if (used < 1) { out.error = "samples could not be loaded"; return out; }
+    /* zone v2 table: 16 zones x [lo, hi, root, buf, vol, s0, s1, fIn, fOut]; missing fades 0 */
+    const table = new Float64Array(144);
+    let zi = 0, skipped = 0;
+    for (let z = 0; z < mZones.length; z++) {
+      const zn = (mZones[z] && typeof mZones[z] === "object") ? mZones[z] : null;
+      const refI = zn ? Math.round(avLibNum(zn.buf, -1, -1, 0xFFFFFFFF)) : -1;
+      const slot = (refI >= 0 && refI < slots.length && slots[refI] !== null) ? slots[refI] : null;
+      if (!zn || slot === null || zi >= 16) { skipped += 1; continue; }
+      const o = zi * 9;
+      const lo = avLibNum(zn.lo, 0, 0, 127);
+      let hi = avLibNum(zn.hi, lo, 0, 127);
+      if (hi < lo) hi = lo;
+      table[o + 0] = lo;
+      table[o + 1] = hi;
+      table[o + 2] = avLibNum(zn.root, 60, 0, 127);
+      table[o + 3] = slot;
+      table[o + 4] = avLibNum(zn.vol, 0.8, 0, 24);
+      const n = frames[refI] || 0;
+      let s0f = 0, s1f = 1;
+      if (n > 0) {
+        s0f = avLibNum(zn.s0, 0, 0, 0xFFFFFFFF) / n;      /* frames -> fraction */
+        s1f = avLibNum(zn.s1, 0, 0, 0xFFFFFFFF) / n;
+        if (!isFinite(s0f) || s0f < 0) s0f = 0;
+        if (s0f > 1) s0f = 1;                             /* clamped to the decoded length */
+        if (!isFinite(s1f) || s1f < 0) s1f = 0;
+        if (s1f > 1) s1f = 1;
+        if (!(s1f > s0f)) s1f = Math.min(1, s0f + 1 / n);
+      }
+      if (!(s1f > s0f)) s1f = 1;
+      table[o + 5] = s0f;
+      table[o + 6] = s1f;
+      table[o + 7] = avLibNum(zn.fIn, 0, 0, 2);
+      table[o + 8] = avLibNum(zn.fOut, 0, 0, 2);
+      zi += 1;
+    }
+    out.zones = zi;
+    out.skipped = skipped;
+    try { if (typeof avEngineZones === "function") avEngineZones(table); } catch (e) { /* best-effort */ }
+    try { if (typeof avApplyParam === "function") avApplyParam("engine.kind", "sampler"); } catch (e) { /* funnel optional */ }
+    out.ok = true;
+    return out;
+  } catch (e) {
+    out.ok = false;
+    out.error = avLibErrMsg(e);
+    return out;
+  }
+}
+
+/* the refs route (section 3): re-return the persisted meta - NO session change. The receipt
+   carries the refs/notes counts and the pattern (when present) so the UI can offer the seq
+   action for ALS items; the seq application itself is the ONE avMid flow, driven by the
+   caller from meta.pattern. Receipt { ok:true, refs, notes?, pattern?, meta }. */
+function avLibLoadRefs(rec) {
+  try {
+    const meta = (rec.meta && typeof rec.meta === "object") ? rec.meta : {};
+    let refs = 0;
+    if (typeof meta.refCount === "number" && isFinite(meta.refCount)) refs = Math.max(0, Math.round(meta.refCount));
+    else if (Array.isArray(meta.refs)) refs = meta.refs.length;
+    else if (Array.isArray(meta.wtRefs)) refs = meta.wtRefs.length;
+    const out = { ok: true, id: rec.id, kind: "refs", refs: refs, meta: meta };
+    if (typeof meta.noteCount === "number" && isFinite(meta.noteCount)) out.notes = Math.max(0, Math.round(meta.noteCount));
+    if (meta.pattern && typeof meta.pattern === "object" && !Array.isArray(meta.pattern)) out.pattern = meta.pattern;
+    return out;
+  } catch (e) {
+    return { ok: false, id: (rec && rec.id) ? rec.id : "", kind: "refs", refs: 0, error: "meta read failed" };
+  }
+}
+
 /* the {name, bpm, notes} summary for the load receipt (notes = active steps) */
 function avLibPatternSummary(feed, rec) {
   try {
@@ -22159,11 +22344,13 @@ if (typeof window !== "undefined") {
 }
 
 
-/* Anvil - sample import core (R15b SAMPLE PACKS wave, child C): magic-byte sniffer + per-format
-   policy table + the canonical-bundle pipeline behind avImportFiles().
+/* Anvil - sample import core (R15b SAMPLE PACKS wave, child C; R15c STRUCTURED PACKS wiring):
+   magic-byte sniffer + per-format policy table + the canonical-bundle pipeline behind
+   avImportFiles() + the R15c adapter dispatch layer (EXS24 kits, ADG/ALS refs, SerumPreset refs).
 
-   Pins (verify/_r15b_wave.md sections 2 and 3):
+   Pins (verify/_r15b_wave.md sections 2 and 3; verify/_r15c_wave.md sections 2 and 4.4):
    - AV_IMPORT_VERSION = "r15b.0" | AV_IMPORT_ITEM_MAX = 96 MiB | AV_IMPORT_MAX_FILES = 600.
+     (The version pin stays r15b.0: the R15b checks assert it verbatim.)
    - avImportSniff(u8OrArrayBuffer, ext) -> { format, note }. Recognition, first hit wins:
      wav (RIFF + WAVE) > mp3 ("ID3" or a frame sync) > aiff (FORM + AIFF|AIFC) > mid ("MThd") >
      rex2 ("CAT " + "REX2") > serum ("XferJson" or ext fxp/serumpreset) > zip ("PK" + 0x03 0x04) >
@@ -22171,15 +22358,18 @@ if (typeof window !== "undefined") {
      no adg/als ext) > wt (ext) > exs/nki/nbkt/sxt/kong/mxgrp (ext) > unknown.
      The optional second argument carries the lowercase extension - the ext-driven rules need it
      (the byte rules alone cannot see a name; pipeline call sites pass item.ext).
-   - AV_IMPORT_POLICY: per-format { kind, result, reason, persist }. Only wav/mp3/aiff/rex2/mid
-     are sample/pattern kinds; every other format is kind "refused" while its result still
-     distinguishes deferred vs refused. The reason strings are the pinned contract, kept verbatim
-     (the em dashes inside them are \u2014 escapes so this source stays ASCII-only).
+   - AV_IMPORT_POLICY: per-format { kind, result, reason, persist }. R15c: exs/adg/als/serum
+     persist true - kind "kit" (exs) and "refs" (adg/als/serum); the pinned pending/unreadable
+     reason lines are the FALLBACKS the dispatch layer applies when the reader module is absent
+     or the parse fails. wav/mp3/aiff/rex2/mid keep the R15b shapes; every other format stays
+     kind "refused" while its result still distinguishes deferred vs refused. The reason strings
+     are the pinned contract, kept verbatim (the em dashes inside them are \u2014 escapes so this
+     source stays ASCII-only).
    - avImportFiles(files, opts) -> Promise<receipt> that NEVER rejects:
      receipt = { ok, title, at, version, items, counts, errors } with
-     counts = { total, imported, deferred, refused, samples, patterns } and one item per input
-     file in input order: item = { key, name, path, ext, format, kind, result, reason, size,
-     sibling, id, meta }. ok = true when at least one item landed (imported).
+     counts = { total, imported, deferred, refused, samples, patterns, kits, refs } and one item
+     per input file in input order: item = { key, name, path, ext, format, kind, result, reason,
+     size, sibling, id, meta }. ok = true when at least one item landed (imported).
      files: an Array, a FileList or any iterable of File-likes (a single File-like is tolerated).
      Per-file flow: sniff the FIRST 64 BYTES ONLY (file.slice(0, 64).arrayBuffer()) -> policy;
      full bytes are read only when the policy persists AND size <= AV_IMPORT_ITEM_MAX (larger
@@ -22193,15 +22383,30 @@ if (typeof window !== "undefined") {
      can never decode). A run processes at most 600 files; the rest are reported via errors. An
      empty input resolves ok:false with errors containing "no files". Per-file try/catch - one
      bad file never sinks the batch.
+   - R15c adapter dispatch (section 4.4), EVERY adapter reach typeof-guarded PER CALL:
+     exs     -> AVEXS.parse(bytes) (sync, ms-class) -> kit meta { zones, samples, skipped }
+                (root = key + coarseTuning folded; buf = the sample ref index; s0/s1 from
+                sampleStart/End; fades 0; the 16-zone cap counted in skipped; vol via the
+                av_chop law 10^(dB/20) * scale with the dB clamped 0..24).
+     adg/als -> await avAlsExtract(bytes) -> refs meta { refs, refCount, noteCount, tempoBpm,
+                pattern } (+ avAlsToPattern; the extracted notes are capped at 512 FIRST,
+                first-N wins; refs capped 512).
+     serum   -> await AVSerum.extract(bytes) -> refs meta { wtRefs, presetName, product,
+                version, kind } (wtRefs capped 256).
+     A missing reader module defers with the pinned pending line; a parse failure defers with
+     the pinned unreadable line (detail capped 80 chars). "imported" is claimed only when the
+     reader exists and the parse produced usable content.
    - sibling: for each item - the same-stem (case-insensitive, ext-stripped) sibling inside the
      processed set whose own sniff is wav/mp3/aiff (self excluded), else "".
    - meta from the cheap probes only: sample { rate, channels, frames?, bits? }; pattern
-     { ppq, bpm, trackCount, noteCount }; rex2 { slices, rate, frames, tempo, bits }; else {}.
+     { ppq, bpm, trackCount, noteCount }; rex2 { slices, rate, frames, tempo, bits }; kit/refs
+     per the R15c section 2 shapes; else {}.
 
    Craft laws: "use strict", classic script (no modules/imports), node-loadable (no DOM at load,
    no top-level side effects), one namespace (avImport prefixes + AV_IMPORT_ consts), never
-   throw. Every cross-module call is typeof-guarded PER CALL (av_aiff/av_rex/av_lib land in the
-   same wave but this file must stay honest standalone and in a partial build). */
+   throw. Every cross-module call is typeof-guarded PER CALL (av_aiff/av_rex/av_lib/av_exs/
+   av_als/av_serum land in the same waves but this file must stay honest standalone and in a
+   partial build). */
 "use strict";
 
 const AV_IMPORT_VERSION = "r15b.0";
@@ -22220,6 +22425,20 @@ const avImportNoFiles = "no files";
 const avImportBadFile = "unreadable entry \u2014 not a File";
 const avImportReadFail = "unreadable entry \u2014 read failed";
 
+/* R15c STRUCTURED PACKS pinned adapter lines (verbatim; em dashes as escapes) */
+const avImportExsPending = ".exs \u2014 reader pending (this build)";
+const avImportAlsPending = "Ableton project \u2014 reader pending (this build)";
+const avImportSerumPending = ".SerumPreset \u2014 reader pending (this build)";
+const avImportExsUnread = ".exs \u2014 unreadable (";
+const avImportAlsUnread = "Ableton project \u2014 unreadable (";
+const avImportSerumUnread = ".SerumPreset \u2014 unreadable (";
+
+/* R15c caps (section 2): 16 sampler-v2 zones; 512 als refs / notes; 256 serum wt refs */
+const AV_IMPORT_KIT_ZONES = 16;
+const AV_IMPORT_ALS_REF_CAP = 512;
+const AV_IMPORT_ALS_NOTE_CAP = 512;
+const AV_IMPORT_SERUM_WT_CAP = 256;
+
 /* ---------- the per-format policy table (pinned verbatim; persist = read + library write) ---------- */
 
 const AV_IMPORT_POLICY = {
@@ -22229,15 +22448,15 @@ const AV_IMPORT_POLICY = {
   mid:     { kind: "pattern", result: "imported", reason: "", persist: true },
   rex2:    { kind: "sample",  result: "imported", reason: "", persist: true },
   wt:      { kind: "refused", result: "deferred", reason: "wavetable \u2014 import it in the Wavetable editor (WT IMPORT)", persist: false },
-  adg:     { kind: "refused", result: "deferred", reason: "Ableton project \u2014 reference extraction lands in R15c; drop the pack's audio folder instead", persist: false },
-  als:     { kind: "refused", result: "deferred", reason: "Ableton project \u2014 reference extraction lands in R15c; drop the pack's audio folder instead", persist: false },
-  exs:     { kind: "refused", result: "deferred", reason: "EXS24 (binary) \u2014 adapter planned (R15c); the pack's WAVs/AIFFs import now", persist: false },
+  adg:     { kind: "refs",    result: "imported", reason: "", persist: true },
+  als:     { kind: "refs",    result: "imported", reason: "", persist: true },
+  exs:     { kind: "kit",     result: "imported", reason: "", persist: true },
   nki:     { kind: "refused", result: "deferred", reason: "Kontakt/Battery library \u2014 partial extraction planned (V2); import the Samples folder", persist: false },
   nbkt:    { kind: "refused", result: "deferred", reason: "Kontakt/Battery library \u2014 partial extraction planned (V2); import the Samples folder", persist: false },
   sxt:     { kind: "refused", result: "deferred", reason: "Reason NN-XT patch \u2014 reference extraction planned (V2)", persist: false },
   kong:    { kind: "refused", result: "refused",  reason: "Reason Kong kit \u2014 kit mapping is not readable; import the pack's WAVs", persist: false },
   mxgrp:   { kind: "refused", result: "refused",  reason: "NI Maschine group \u2014 not readable; import the pack's WAVs", persist: false },
-  serum:   { kind: "refused", result: "deferred", reason: "Serum preset \u2014 wavetable import lands in R15c", persist: false },
+  serum:   { kind: "refs",    result: "imported", reason: "", persist: true },
   zip:     { kind: "refused", result: "deferred", reason: "zip \u2014 unzip and drop the folder (zip import lands later)", persist: false },
   gzip:    { kind: "refused", result: "refused",  reason: "unrecognized format", persist: false },
   unknown: { kind: "refused", result: "refused",  reason: "unrecognized format", persist: false }
@@ -22255,6 +22474,16 @@ function avImportOpts(opts) {
 
 function avImportCapStr(s, cap) {
   return (typeof s === "string") ? s.slice(0, cap) : "";
+}
+
+/* a display string: strings pass (capped); finite numbers / booleans stringify; else "" */
+function avImportStrOf(v, cap) {
+  try {
+    if (typeof v === "string") return v.slice(0, cap);
+    if (typeof v === "number" && avImportIsNum(v)) return String(v).slice(0, cap);
+    if (typeof v === "boolean") return String(v);
+  } catch (e) { /* fall through */ }
+  return "";
 }
 
 function avImportLeaf(s) {
@@ -22284,6 +22513,21 @@ function avImportStem(name) {
 
 function avImportErrText(e) {
   try { return String((e && e.message) || e || "unknown error"); } catch (e2) { return "unknown error"; }
+}
+
+/* an honest detail string out of anything (strings, error carriers, values) */
+function avImportDetail(v) {
+  try {
+    if (typeof v === "string" && v) return v;
+    if (v && typeof v.message === "string" && v.message) return v.message;
+    if (v != null) return String(v);
+  } catch (e) { /* fall through */ }
+  return "parse failed";
+}
+
+/* the pinned unreadable line: prefix + detail (capped 80 chars) + ")" */
+function avImportUnreadable(prefix, detail) {
+  return prefix + avImportCapStr(avImportDetail(detail), 80) + ")";
 }
 
 /* ---------- byte input normalisers (sniff/full-read inputs; never throw) ---------- */
@@ -22404,7 +22648,7 @@ function avImportTitle(o) {
 }
 
 function avImportNewCounts() {
-  return { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0 };
+  return { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0 };
 }
 
 function avImportReceipt(opts) {
@@ -22639,6 +22883,196 @@ function avImportMeta(format, bytes) {
   return {};                             /* mp3 (and any future format): no header probe */
 }
 
+/* ---------- R15c adapter dispatch (STRUCTURED PACKS; typeof-guarded PER CALL, never throws) ---------- */
+
+function avImportHasExs() {
+  try { return typeof AVEXS === "object" && AVEXS !== null && typeof AVEXS.parse === "function"; }
+  catch (e) { return false; }
+}
+
+function avImportHasAls() {
+  try { return typeof avAlsExtract === "function"; }
+  catch (e) { return false; }
+}
+
+function avImportHasAlsPattern() {
+  try { return typeof avAlsToPattern === "function"; }
+  catch (e) { return false; }
+}
+
+function avImportHasSerum() {
+  try { return typeof AVSerum === "object" && AVSerum !== null && typeof AVSerum.extract === "function"; }
+  catch (e) { return false; }
+}
+
+/* a rounded finite number clamped into [lo, hi]; garbage -> dflt */
+function avImportKitNum(v, dflt, lo, hi) {
+  const n = Number(v);
+  if (!avImportIsNum(n)) return dflt;
+  const r = Math.round(n);
+  return r < lo ? lo : (r > hi ? hi : r);
+}
+
+/* the av_chop volume law: 10^(dB/20) * AV_CHOP_VOL_SCALE, the dB clamped 0..24 (section 2) */
+function avImportKitVol(db) {
+  let scale = 0.8;
+  try { if (avImportIsNum(AV_CHOP_VOL_SCALE) && AV_CHOP_VOL_SCALE > 0) scale = AV_CHOP_VOL_SCALE; }
+  catch (e) { /* av_chop absent: the pinned default stands */ }
+  const n = Number(db);
+  const d = avImportIsNum(n) ? Math.max(0, Math.min(24, n)) : 0;
+  const vol = Math.pow(10, d / 20) * scale;
+  return avImportIsNum(vol) ? vol : 0;
+}
+
+/* one EXS zone -> the kit meta zone row (section 2: root folds coarseTuning, fades 0) */
+function avImportKitZone(zn, sampleName, ref) {
+  const lo = avImportKitNum(zn && zn.keyLow, 0, 0, 127);
+  const hi0 = avImportKitNum(zn && zn.keyHigh, lo, 0, 127);
+  const key = avImportKitNum(zn && zn.key, 60, 0, 127);
+  const coarse = avImportKitNum(zn && (zn.coarseTuning != null ? zn.coarseTuning : zn.coarse), 0, -127, 127);
+  const root = Math.max(0, Math.min(127, key + coarse));
+  return {
+    lo: lo,
+    hi: (hi0 < lo) ? lo : hi0,
+    root: root,
+    buf: ref,
+    vol: avImportKitVol(zn && zn.volumeAdjust),
+    s0: avImportKitNum(zn && zn.sampleStart, 0, 0, 0xFFFFFFFF),
+    s1: avImportKitNum(zn && zn.sampleEnd, 0, 0, 0xFFFFFFFF),
+    fIn: 0,
+    fOut: 0,
+    velLow: avImportKitNum(zn && zn.velocityLow, 0, 0, 127),
+    velHigh: avImportKitNum(zn && zn.velocityHigh, 127, 0, 127),
+    file: sampleName
+  };
+}
+
+/* AVEXS.parse (sync) -> kit meta { zones, samples, skipped }; { ok, meta } or { ok:false, error }.
+   Zones without a resolvable sampleIndex are dropped (counted in skipped); the 16-zone cap is
+   counted in skipped with a receipt note; oneshot/reverse flags are flattened (note only). */
+function avImportKitMeta(bytes, item, ctx) {
+  try {
+    const pr = AVEXS.parse(bytes);
+    if (!pr || pr.ok !== true) return { ok: false, error: avImportDetail(pr && pr.error) };
+    const srcZones = Array.isArray(pr.zones) ? pr.zones : [];
+    const srcSamples = Array.isArray(pr.samples) ? pr.samples : [];
+    if (!srcZones.length) return { ok: false, error: "no zones found" };
+    const zones = [];
+    const samples = [];
+    const byIdx = {};
+    let skipped = 0, capN = 0, noRef = 0, flagsN = 0;
+    for (let i = 0; i < srcZones.length; i++) {
+      const zn = srcZones[i];
+      if (!zn || typeof zn !== "object") { skipped += 1; noRef += 1; continue; }
+      if (zones.length >= AV_IMPORT_KIT_ZONES) { skipped += 1; capN += 1; continue; }
+      const si = avImportKitNum(zn.sampleIndex, -1, -1, 0xFFFFFFFF);
+      const smp = (si >= 0 && si < srcSamples.length) ? srcSamples[si] : null;
+      if (!smp || typeof smp !== "object") { skipped += 1; noRef += 1; continue; }
+      let ref = byIdx[si];
+      if (ref === undefined) {
+        ref = samples.length;
+        byIdx[si] = ref;
+        const nm = avImportLeaf(avImportStrOf(smp.fileName, 256)) || avImportLeaf(avImportStrOf(smp.filePath, 512));
+        samples.push({ ref: ref, name: avImportCapStr(nm, 120) });
+      }
+      const zrow = avImportKitZone(zn, samples[ref].name, ref);
+      const fl = avImportKitNum(zn.flags, 0, 0, 255);
+      if (((fl & 1) === 1) || ((fl & 4) === 4) || zn.oneshot === true || zn.reverse === true) flagsN += 1;
+      zones.push(zrow);
+    }
+    if (!zones.length) return { ok: false, error: "no usable zones" };
+    if (ctx && Array.isArray(ctx.notes)) {
+      const nm2 = avImportCapStr(item && item.name, 60) || "exs";
+      if (capN > 0) ctx.notes.push(nm2 + ": " + capN + " zone(s) beyond the 16-zone cap skipped");
+      if (noRef > 0) ctx.notes.push(nm2 + ": " + noRef + " zone(s) without a sample reference dropped");
+      if (flagsN > 0) ctx.notes.push(nm2 + ": " + flagsN + " oneshot/reverse zone flag(s) flattened (v1)");
+    }
+    return { ok: true, meta: { zones: zones, samples: samples, skipped: skipped } };
+  } catch (e) {
+    return { ok: false, error: avImportDetail(e) };
+  }
+}
+
+/* avAlsExtract (async) -> refs meta { refs, refCount, noteCount, tempoBpm, pattern }; the
+   extracted notes are capped at 512 FIRST (first-N wins) and the pattern maps from the capped
+   set via avAlsToPattern (guarded per call; absent -> pattern stays null, the refs still land). */
+async function avImportAlsMeta(bytes, item, ctx) {
+  try {
+    const ex = await avAlsExtract(bytes);
+    if (!ex || ex.ok !== true) return { ok: false, error: avImportDetail(ex && ex.error) };
+    const srcRefs = Array.isArray(ex.refs) ? ex.refs : [];
+    const refs = [];
+    const refN = Math.min(srcRefs.length, AV_IMPORT_ALS_REF_CAP);
+    for (let i = 0; i < refN; i++) {
+      const r = srcRefs[i];
+      if (!r || typeof r !== "object") continue;
+      refs.push({ name: avImportStrOf(r.name, 120), path: avImportStrOf(r.path, 200) });
+    }
+    let notes = Array.isArray(ex.notes) ? ex.notes : [];
+    const noteTotal = notes.length;
+    const noteN = Math.min(noteTotal, AV_IMPORT_ALS_NOTE_CAP);
+    if (noteN < noteTotal) notes = notes.slice(0, noteN);          /* first-N wins */
+    let tempo = Number(ex.tempoBpm);
+    if (!avImportIsNum(tempo) || tempo < 0) tempo = 0;
+    const meta = {
+      refs: refs,
+      refCount: refs.length,
+      noteCount: notes.length,
+      tempoBpm: tempo,
+      pattern: null
+    };
+    /* name = the file leaf (avAlsToPattern caps it at 24) */
+    const leaf = (typeof item.name === "string" && item.name) ? item.name : "";
+    if (avImportHasAlsPattern() && notes.length) {
+      try {
+        const src = Object.assign({}, ex, { notes: notes });
+        const mapped = avAlsToPattern(src, { name: leaf });
+        if (mapped && mapped.ok === true && mapped.pattern) meta.pattern = mapped.pattern;
+      } catch (e) { /* the pattern is a nicety; the refs stand */ }
+    }
+    if (ctx && Array.isArray(ctx.notes)) {
+      const nm2 = avImportCapStr(item && item.name, 60) || "als";
+      if (srcRefs.length > AV_IMPORT_ALS_REF_CAP) {
+        ctx.notes.push(nm2 + ": " + (srcRefs.length - AV_IMPORT_ALS_REF_CAP) + " ref(s) beyond the 512-ref cap dropped");
+      }
+      if (noteTotal > AV_IMPORT_ALS_NOTE_CAP) {
+        ctx.notes.push(nm2 + ": " + (noteTotal - AV_IMPORT_ALS_NOTE_CAP) + " note(s) beyond the 512-note cap dropped");
+      }
+    }
+    return { ok: true, meta: meta };
+  } catch (e) {
+    return { ok: false, error: avImportDetail(e) };
+  }
+}
+
+/* AVSerum.extract (async) -> refs meta { wtRefs, presetName, product, version, kind }.
+   wtRefs capped at 256. kind: "serum2" (the pinned label) unless the reader reports "fxp". */
+async function avImportSerumMeta(bytes) {
+  try {
+    const ex = await AVSerum.extract(bytes);
+    if (!ex || ex.ok !== true) return { ok: false, error: avImportDetail(ex && ex.error) };
+    const src = Array.isArray(ex.wtRefs) ? ex.wtRefs : [];
+    const wtRefs = [];
+    const n = Math.min(src.length, AV_IMPORT_SERUM_WT_CAP);
+    for (let i = 0; i < n; i++) {
+      const w = src[i];
+      if (!w || typeof w !== "object") continue;
+      wtRefs.push({ module: avImportStrOf(w.module, 24), path: avImportStrOf(w.path, 200) });
+    }
+    const mj = (ex.meta && typeof ex.meta === "object") ? ex.meta : {};
+    const kind0 = (typeof ex.kind === "string" && ex.kind === "fxp") ? "fxp" : "serum2";
+    return { ok: true, meta: {
+      wtRefs: wtRefs,
+      presetName: avImportStrOf(mj.presetName, 120),
+      product: avImportStrOf(mj.product, 60),
+      version: avImportStrOf(mj.version, 60),
+      kind: kind0
+    } };
+  } catch (e) {
+    return { ok: false, error: avImportDetail(e) };
+  }
+}
+
 /* ---------- persistence (avLibAddItem, guarded per call) ---------- */
 
 async function avImportWrite(item, bytes, ctx) {
@@ -22679,14 +23113,40 @@ async function avImportOne(f, index, o, ctx) {
   item.reason = pol.reason;
   if (!pol.persist) return item;         /* deferred/refused per the pinned table */
 
-  /* persist-policy formats: wav, mp3, aiff, mid, rex2 */
+  /* persist-policy formats: wav, mp3, aiff, mid, rex2, exs, adg, als, serum */
   if (item.size > AV_IMPORT_ITEM_MAX) return avImportSet(item, "refused", avImportTooLarge);
   if (item.format === "aiff" && !avImportHasAiff()) return avImportSet(item, "deferred", avImportAiffDefer);
   if (item.format === "rex2" && !avImportHasRex()) return avImportSet(item, "deferred", avImportRexDefer);
+  /* R15c readers: a missing adapter defers with the pinned pending line BEFORE the full read */
+  if (item.format === "exs" && !avImportHasExs()) return avImportSet(item, "deferred", avImportExsPending);
+  if ((item.format === "adg" || item.format === "als") && !avImportHasAls()) return avImportSet(item, "deferred", avImportAlsPending);
+  if (item.format === "serum" && !avImportHasSerum()) return avImportSet(item, "deferred", avImportSerumPending);
 
   let bytes = null;
   try { bytes = await avImportFull(f); } catch (e) { bytes = null; }
   if (!bytes) return avImportSet(item, "refused", avImportReadFail);
+
+  if (item.format === "exs") {
+    const r = avImportKitMeta(bytes, item, ctx);
+    if (!r.ok) return avImportSet(item, "deferred", avImportUnreadable(avImportExsUnread, r.error));
+    item.meta = r.meta;
+    if (o.persist !== false) item.id = await avImportWrite(item, bytes, ctx);
+    return item;
+  }
+  if (item.format === "adg" || item.format === "als") {
+    const r = await avImportAlsMeta(bytes, item, ctx);
+    if (!r.ok) return avImportSet(item, "deferred", avImportUnreadable(avImportAlsUnread, r.error));
+    item.meta = r.meta;
+    if (o.persist !== false) item.id = await avImportWrite(item, bytes, ctx);
+    return item;
+  }
+  if (item.format === "serum") {
+    const r = await avImportSerumMeta(bytes);
+    if (!r.ok) return avImportSet(item, "deferred", avImportUnreadable(avImportSerumUnread, r.error));
+    item.meta = r.meta;
+    if (o.persist !== false) item.id = await avImportWrite(item, bytes, ctx);
+    return item;
+  }
 
   if (item.format === "rex2") {
     const pr = avImportRexProbe(bytes);
@@ -22722,7 +23182,13 @@ async function avImportRun(receipt, list, o) {
   if (ctx.writeFails > 0) {
     try { receipt.errors.push("library write failed: " + ctx.writeFails + " item(s)"); } catch (e4) { /* ignore */ }
   }
-  try { avImportCounts(receipt); } catch (e5) { /* the caller computes them once more */ }
+  if (ctx.notes.length) {
+    /* R15c: reader notes (zone cap / flag flattening / ref+note caps) ride the errors channel */
+    try {
+      for (let i = 0; i < ctx.notes.length && i < 60; i++) receipt.errors.push(avImportCapStr(String(ctx.notes[i]), 160));
+    } catch (e5) { /* ignore */ }
+  }
+  try { avImportCounts(receipt); } catch (e6) { /* the caller computes them once more */ }
 }
 
 /* sibling rule: same-stem (case-insensitive, ext-stripped) sibling in the processed set whose
@@ -22766,6 +23232,8 @@ function avImportCounts(receipt) {
     else if (it.result === "refused") counts.refused++;
     if (it.kind === "sample") counts.samples++;
     else if (it.kind === "pattern") counts.patterns++;
+    else if (it.kind === "kit" && it.result === "imported") counts.kits++;
+    else if (it.kind === "refs" && it.result === "imported") counts.refs++;
   }
   counts.total = items.length;
   receipt.counts = counts;
@@ -22833,6 +23301,12 @@ async function avImportFiles(files, opts) {
                           when it exists -- the select state is never faked
                   seq  -> avLibLoad(id) (patterns only; the button is disabled for samples)
                   del  -> avLibRemove(id) + refresh
+                R15c kinds: kit rows carry a KIT action [data-av-import-act=kit] -> avLibLoad(id)
+                ("kit loaded \u2014 N slots \u00b7 M zones" or the honest refusal) + DEL; refs
+                rows (ALS/Serum) carry SEQ ONLY when meta.pattern exists (the refs receipt
+                re-returns the meta; the SEQ wire applies the pattern through the ONE seq flow)
+                + DEL; serum refs rows carry no load-type action beyond their meta line; the
+                counts line gains " N kits" / " M refs" when above zero.
      . STATUS   #av-import-status -- every run/action result as one plain line ("imported N .
                 deferred N . refused N . X MB -> library" plus the first refusal reason when
                 any). BUSY: ONE op at a time (import run or library action) -- a second request
@@ -22918,7 +23392,7 @@ async function avImportFiles(files, opts) {
    NO DOM at top level (node-loadable -- the harness loads this text in a Function scope);
    every listener and every cross-module reach wrapped (never throws outward); no console
    noise; no new AudioContext (this card makes no sound); deterministic; ASCII-only source;
-   ONE writer (child E). */
+   ONE writer (child E; R15c wiring child D adds the KIT wire + the refs SEQ gate). */
 
 "use strict";
 
@@ -23120,8 +23594,8 @@ function avImportUiItemsPub(r) {
 
 /* the receipt's counts (numbers only; derived from items when counts is absent) */
 function avImportUiCountsOf(r) {
-  const keys = ["total", "imported", "deferred", "refused", "samples", "patterns"];
-  const c = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0 };
+  const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs"];
+  const c = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0 };
   try {
     const src = r && r.counts;
     if (src && typeof src === "object") {
@@ -23139,6 +23613,8 @@ function avImportUiCountsOf(r) {
       const kind = String(it.kind || "");
       if (kind === "sample") c.samples += 1;
       else if (kind === "pattern") c.patterns += 1;
+      else if (kind === "kit") c.kits += 1;
+      else if (kind === "refs") c.refs += 1;
     }
   } catch (e) { /* zeros stand */ }
   return c;
@@ -23423,8 +23899,11 @@ function avImportUiCountsText() {
   try {
     if (!s.last) return "no runs yet \u2014 drop a folder or files";
     const c = s.last.counts || {};
-    return c.total + " files \u00b7 imported " + c.imported + " \u00b7 deferred " + c.deferred +
+    let line = c.total + " files \u00b7 imported " + c.imported + " \u00b7 deferred " + c.deferred +
       " \u00b7 refused " + c.refused + " \u00b7 samples " + c.samples + " \u00b7 patterns " + c.patterns;
+    if (c.kits > 0) line += " \u00b7 " + c.kits + " kits";
+    if (c.refs > 0) line += " \u00b7 " + c.refs + " refs";
+    return line;
   } catch (e) { return "no runs yet"; }
 }
 
@@ -23483,8 +23962,10 @@ function avImportUiPaintReport(host, force) {
 
 /* ---------- the library list ---------- */
 
+/* one library row's JSON-safe view; R15c adds bounded counts (zones/samples/refs/tables) and
+   the hasPattern flag so the new-kind rows render without holding whole metas. */
 function avImportUiLibItemPub(it) {
-  return {
+  const out = {
     id: avImportUiStr(it && it.id, 80),
     name: avImportUiStr(it && it.name, 120),
     kind: avImportUiStr(it && it.kind, 24),
@@ -23492,7 +23973,19 @@ function avImportUiLibItemPub(it) {
     size: avImportUiNumOr(it && it.size, 0),
     at: avImportUiNumOr(it && it.at, 0),
     meta: avImportUiMetaPub(it && it.meta),
+    counts: { zones: 0, samples: 0, refs: 0, tables: 0 },
+    hasPattern: false,
   };
+  try {
+    const m = (it && it.meta && typeof it.meta === "object") ? it.meta : {};
+    if (Array.isArray(m.zones)) out.counts.zones = m.zones.length;
+    if (Array.isArray(m.samples)) out.counts.samples = m.samples.length;
+    if (typeof m.refCount === "number" && isFinite(m.refCount)) out.counts.refs = Math.max(0, Math.round(m.refCount));
+    else if (Array.isArray(m.refs)) out.counts.refs = m.refs.length;
+    if (Array.isArray(m.wtRefs)) out.counts.tables = m.wtRefs.length;
+    out.hasPattern = !!(m.pattern && typeof m.pattern === "object" && !Array.isArray(m.pattern));
+  } catch (e) { /* zeros stand */ }
+  return out;
 }
 
 function avImportUiActBtnHTML(id, act, label, title, disabled) {
@@ -23501,24 +23994,45 @@ function avImportUiActBtnHTML(id, act, label, title, disabled) {
     (disabled ? " disabled" : "") + ">" + label + "</button>";
 }
 
-/* one library row -- the five pinned actions; seq is disabled for non-pattern kinds */
+/* one library row -- the five pinned actions on sample/pattern rows; R15c: kit rows show the
+   KIT action + DEL, refs rows show SEQ (only when the meta carries a pattern) + DEL */
 function avImportUiLibRowHTML(it) {
   const id = String(it.id || "");
   const kind = String(it.kind || "");
   const isPattern = (kind === "pattern");
+  const isKit = (kind === "kit");
+  const isRefs = (kind === "refs");
   const name = String(it.name || id);
-  let meta = kind || "item";
-  if (it.format) meta += " \u00b7 " + String(it.format);
-  meta += " \u00b7 " + avImportUiFmtBytes(it.size);
+  const counts = (it.counts && typeof it.counts === "object") ? it.counts : {};
+  let meta;
+  if (isKit) {
+    meta = "kit \u00b7 " + avImportUiNumOr(counts.zones, 0) + " zones \u00b7 " + avImportUiNumOr(counts.samples, 0) + " samples";
+  } else if (isRefs && String(it.format || "") === "serum") {
+    meta = "refs \u00b7 " + avImportUiNumOr(counts.tables, 0) + " tables";
+  } else {
+    meta = kind || "item";
+    if (it.format) meta += " \u00b7 " + String(it.format);
+    meta += " \u00b7 " + avImportUiFmtBytes(it.size);
+  }
   let html = '<div class="av-import-item" data-av-import-lib="' + avImportUiEsc(id) + '" data-kind="' + avImportUiEsc(kind) + '">';
   html += '<span class="av-import-item-name" title="' + avImportUiEsc(name) + '">' + avImportUiEsc(name) + "</span>";
   html += '<span class="av-import-item-meta av-dim">' + avImportUiEsc(meta) + "</span>";
   html += '<span class="av-import-acts">';
-  html += avImportUiActBtnHTML(id, "load", "LOAD", "load this item into the session", false);
-  html += avImportUiActBtnHTML(id, "send", "SEND", "load it and send the session entry to the slot above", false);
-  html += avImportUiActBtnHTML(id, "chop", "CHOP", "load it and aim the chop card at it", false);
-  html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", !isPattern);
-  html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  if (isKit) {
+    html += avImportUiActBtnHTML(id, "kit", "KIT", "load this kit into the sampler engine (slots + zones)", false);
+    html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  } else if (isRefs) {
+    if (it.hasPattern === true) {
+      html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", false);
+    }
+    html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  } else {
+    html += avImportUiActBtnHTML(id, "load", "LOAD", "load this item into the session", false);
+    html += avImportUiActBtnHTML(id, "send", "SEND", "load it and send the session entry to the slot above", false);
+    html += avImportUiActBtnHTML(id, "chop", "CHOP", "load it and aim the chop card at it", false);
+    html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", !isPattern);
+    html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  }
   html += "</span></div>";
   return html;
 }
@@ -23834,6 +24348,12 @@ function avImportUiLoadLine(name, r) {
       if (notes != null) line += " \u00b7 " + notes + " notes";
       return line;
     }
+    if (r.kind === "kit") {
+      return "loaded " + name + " \u00b7 kit \u00b7 " + avImportUiNumOr(r.slots, 0) + " slots \u00b7 " + avImportUiNumOr(r.zones, 0) + " zones";
+    }
+    if (r.kind === "refs") {
+      return "loaded " + name + " \u00b7 refs \u00b7 " + avImportUiNumOr(r.refs, 0) + " refs";
+    }
     const eid = (r.entryId != null && String(r.entryId)) ? String(r.entryId) : "";
     return "loaded " + name + (eid ? " \u00b7 session entry " + avImportUiShort(eid, 40) : " \u00b7 session");
   } catch (e) { return "loaded " + name; }
@@ -24020,6 +24540,24 @@ function avImportUiActSeq(id) {
         avImportUiSetStatus("seq refused \u2014 " + avImportUiErrText(r, "the load was refused"), "err");
         return;
       }
+      /* R15c: an ALS refs item carries its pattern in the receipt (the refs load makes NO
+         session change); the application runs the ONE avMid seq flow, step for step */
+      if (r.kind === "refs") {
+        if (!r.pattern || typeof r.pattern !== "object") {
+          avImportUiEnd();
+          avImportUiSetStatus("seq: no pattern in " + name, "err");
+          return;
+        }
+        const ap = avImportUiSeqApply(r.pattern);
+        avImportUiEnd();
+        if (ap.ok !== true) {
+          avImportUiSetStatus("seq refused \u2014 " + (ap.error || "the sequence core refused"), "err");
+          return;
+        }
+        const k = avImportUiCountNotes(ap.feed);
+        avImportUiSetStatus("seq: " + name + " \u2192 pattern" + (k >= 0 ? " \u00b7 " + k + " notes" : ""), "msg");
+        return;
+      }
       /* the undo law is push-AFTER-load; av_lib owns the push -- this is the belt-and-braces
          nudge (a duplicate push is a no-op by the undo module's no-change rule) */
       try { if (typeof avUndoPush === "function") avUndoPush("seq", "import"); } catch (e) { /* F optional */ }
@@ -24078,6 +24616,73 @@ function avImportUiActDel(id) {
   }
 }
 
+/* R15c: apply an ALS pattern through the ONE seq flow (avSeqLoad -> avSeqSnap ->
+   avSeqSetPattern -> avSeqUiSync -> avUndoPush("seq","import")); every reach guarded. */
+function avImportUiSeqApply(pat) {
+  try {
+    if (typeof avSeqLoad !== "function" || typeof avSeqSetPattern !== "function") {
+      return { ok: false, error: "no sequence module" };
+    }
+    let loaded = false;
+    try { loaded = avSeqLoad(pat) === true; } catch (e) { loaded = false; }
+    if (!loaded) return { ok: false, error: "avSeqLoad refused" };
+    let feed = pat;
+    try { if (typeof avSeqSnap === "function") { const s = avSeqSnap(); if (s && typeof s === "object") feed = s; } } catch (e) { /* raw pattern stands */ }
+    let setOk = false;
+    try { setOk = avSeqSetPattern(feed) !== false; } catch (e) { setOk = false; }
+    if (!setOk) return { ok: false, error: "avSeqSetPattern refused" };
+    try { if (typeof avSeqUiSync === "function") avSeqUiSync(); } catch (e) { /* repaint is a nicety */ }
+    try { if (typeof avUndoPush === "function") avUndoPush("seq", "import"); } catch (e) { /* undo is a nicety */ }
+    return { ok: true, feed: feed };
+  } catch (e) {
+    return { ok: false, error: "seq failed" };
+  }
+}
+
+/* the active-step count of a seq pattern (for the status line; -1 when unreadable) */
+function avImportUiCountNotes(feed) {
+  try {
+    let notes = 0;
+    const tracks = (feed && Array.isArray(feed.tracks)) ? feed.tracks : [];
+    for (let t = 0; t < tracks.length; t++) {
+      const steps = (tracks[t] && Array.isArray(tracks[t].steps)) ? tracks[t].steps : [];
+      for (let x = 0; x < steps.length; x++) { if (steps[x] && steps[x].on) notes += 1; }
+    }
+    return notes;
+  } catch (e) { return -1; }
+}
+
+/* the KIT action (R15c): avLibLoad(id) -> "kit loaded \u2014 N slots \u00b7 M zones" or the
+   honest refusal; one op at a time, never throws */
+function avImportUiActKit(id) {
+  const s = avImportUiState;
+  const name = avImportUiLibName(id);
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avLibLoad !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 kit loading is unavailable", "err");
+      return false;
+    }
+    if (!avImportUiBegin("loading kit " + name)) return false;
+    let out = null;
+    try { out = avLibLoad(id); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the load failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      avImportUiEnd();
+      if (r.ok !== true) {
+        avImportUiSetStatus("kit refused \u2014 " + avImportUiErrText(r, "the load was refused"), "err");
+        return;
+      }
+      avImportUiSetStatus("kit loaded \u2014 " + avImportUiNumOr(r.slots, 0) + " slots \u00b7 " + avImportUiNumOr(r.zones, 0) + " zones", "msg");
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("kit failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
 /* the act dispatcher (used by the delegated click and by the rig/harness directly) */
 function avImportUiAct(act, id) {
   try {
@@ -24085,6 +24690,7 @@ function avImportUiAct(act, id) {
     if (act === "send") return avImportUiActSend(id);
     if (act === "chop") return avImportUiActChop(id);
     if (act === "seq") return avImportUiActSeq(id);
+    if (act === "kit") return avImportUiActKit(id);
     if (act === "del") return avImportUiActDel(id);
   } catch (e) {
     avImportUiSetStatus("the action failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
@@ -24417,6 +25023,1705 @@ if (typeof window !== "undefined" && window) {
     };
   } catch (e) { /* no window -- nothing to publish */ }
 }
+
+
+/* Anvil - R15c child A: clean-room EXS24 (Apple Logic Sampler) binary reader (av_exs.js).
+
+   Why this file exists: Logic sample packs arrive as .exs binary sampler instruments that name
+   their audio files (often AIFF - which Chromium cannot decode, see av_aiff.js). Nothing in
+   the import pipeline understood the instrument container, so a dropped Logic pack exposed no
+   kit. This module reads the .exs container page-side in pure JavaScript and hands the importer
+   zones, groups and sample references.
+
+   Authored clean-room against the public format descriptions in
+   research/import/03-serum-exs-native.md section 2, plus the community references it cites,
+   which permit reuse with attribution (ISC / MIT): asatamax/tonverk-elmulti-converter
+   EXS24_FORMAT_SPEC.md (ISC), matt-allan/renoise-exs24 exs.lua (MIT), vonred exs2sfz.py (ISC).
+   No code was copied; every offset below is implemented from the documented layout. The SHA of
+   the reader is what matters to the pipeline, not its internals.
+
+   Interface (pinned by verify/_r15c_wave.md section 4.1):
+     AV_EXS_VERSION = "r15c.0"
+     AVEXS.probe(u8OrArrayBuffer) -> { ok, zones, groups, samples, reversed, note, error }
+     AVEXS.parse(u8OrArrayBuffer) -> { ok, name, zones, groups, samples, warnings, error }
+   probe = cheap block-count walk (84-byte headers) + endianness detection. parse = full read;
+   big-endian files refuse honestly after probe with the pinned error line. error is "" on
+   success and an honest short line on every refusal; warnings is always an array.
+
+   Block layout (all offsets from the start of a block; every block has an 84-byte header):
+     0..1   signature bytes 0x01 0x01
+     2      zero
+     3      marker byte: 0 instrument, 1 zone, 2 group, 3 sample, 4 params, 11 binary plist.
+            New-generation files add 0x40 to the marker (0x40..0x4B).
+     4..7   content size in bytes, excluding the 84-byte header. New-generation files set bit 7
+            of byte 5 as a flag; the low 15 bits carry the size (masked decode). Big-endian
+            files store the u16 swapped (best-effort walk only).
+     8..11  object id
+     16..19 chunk id, ASCII: "TBOS" / "JBOS" little-endian, "SOBT" / "SOBJ" byte-swapped
+            big-endian (a big-endian file's swapped magic always starts with "S")
+     20..83 64-byte NUL-padded name
+   Content sizes: instrument 88, zone 148, group 144, sample 600 bytes.
+
+   Zone content (offsets from the data start): 0 flags (bit0 oneshot, bit1 pitch tracking OFF,
+   bit2 reverse, bit3 velocity range active, bit6 output assigned) / 1 key (root) / 2 fineTuning
+   i8 cents / 3 pan i8 / 4 volumeAdjust i8 dB / 5 volumeScale / 6 keyLow / 7 keyHigh /
+   9 velocityLow / 10 velocityHigh / 12 sampleStart u32 / 16 sampleEnd u32 / 20 loopStart /
+   24 loopEnd / 28 loopCrossfade ms / 32 loopTune / 33 loopOptions (bit0 loop on, bit1 equal
+   power, bit2 play-to-end on release) / 34 loopDirection (0 forward, 1 backward, 2 ping-pong) /
+   80 coarseTuning i8 semitones / 82 output / 88 groupIndex i32 (-1 = none) / 92 sampleIndex u32.
+
+   Sample content: 4 length frames / 8 sampleRate / 12 bitDepth / 16 channels (field 20 is the
+   secondary count and is used only when 16 is zero) / 28 type ASCII ("WAVE", "AIFF", ...) /
+   80 filePath 256 B / 336 fileName 256 B (both NUL-trimmed).
+
+   Sentinels (guarded): sampleStart / sampleEnd are u32 raw. 0 is legal ("from the file start").
+   0xFFFFFFFF is not a usable absolute frame, so an unset sampleStart is guarded down to 0; an
+   unset sampleEnd stays raw and means "play to end" (the kit layer clamps it with min against
+   the decoded length). The reader never guesses beyond these documented sentinels and never
+   throws.
+
+   Craft laws (house discipline): "use strict"; classic script (no modules, no imports, no DOM
+   at load, no top-level side effects beyond building the AVEXS closure); never throws anywhere
+   (every entry point returns a receipt with ok:false + error); ASCII-only source. */
+
+"use strict";
+
+const AV_EXS_VERSION = "r15c.0";
+
+const AVEXS = (function () {
+  /* ---------- constants ---------- */
+
+  var WARN_CAP = 64;        /* bound the warnings array for hostile files */
+  var HDR = 84;             /* every block's fixed header size */
+
+  var KIND_INSTRUMENT = 0;
+  var KIND_ZONE = 1;
+  var KIND_GROUP = 2;
+  var KIND_SAMPLE = 3;
+  var KIND_PARAMS = 4;
+  var KIND_PLIST = 11;
+
+  /* Minimal content spans that can carry the documented fields; anything shorter is skipped. */
+  var ZONE_MIN = 96;        /* through sampleIndex (92..95) */
+  var GROUP_MIN = 92;       /* through enableByArticulationValue (91) */
+  var SAMPLE_MIN = 32;      /* through type (28..31) */
+
+  var MAX_KEEP = 65536;     /* per-type block cap, so a hostile file cannot exhaust memory */
+
+  /* ---------- small helpers (all reads are bounds-guarded by their callers) ---------- */
+
+  function errMsg(e) {
+    try { return String((e && (e.message || e.name)) || e) || "unknown error"; }
+    catch (e2) { return "unknown error"; }
+  }
+
+  function toU8(x) {
+    try {
+      if (x == null) return null;
+      if (typeof ArrayBuffer === "undefined") return null;
+      if (ArrayBuffer.isView && ArrayBuffer.isView(x)) {
+        return new Uint8Array(x.buffer, x.byteOffset, x.byteLength);
+      }
+      if (x instanceof ArrayBuffer) return new Uint8Array(x);
+      return null;
+    } catch (e) { return null; }
+  }
+
+  function u16le(u8, o) { return ((u8[o] & 0xFF) | ((u8[o + 1] & 0xFF) << 8)) & 0xFFFF; }
+
+  function u32le(u8, o) {
+    return (((u8[o] & 0xFF)) | ((u8[o + 1] & 0xFF) << 8) |
+            ((u8[o + 2] & 0xFF) << 16) | ((u8[o + 3] & 0xFF) << 24)) >>> 0;
+  }
+
+  function s32le(u8, o) {
+    var v = u32le(u8, o);
+    return v >= 2147483648 ? v - 4294967296 : v;
+  }
+
+  function s8at(u8, o) {
+    var v = u8[o] & 0xFF;
+    return v >= 128 ? v - 256 : v;
+  }
+
+  function hex2(v) {
+    v = v & 0xFF;
+    return (v < 16 ? "0" : "") + v.toString(16);
+  }
+
+  /* NUL-terminated string; control bytes (except NUL, which ends it) and DEL become "?". */
+  function cstr(u8, o, max, bound) {
+    var end = o + max;
+    if (end > bound) end = bound;
+    var s = "", i, c;
+    for (i = o; i < end; i++) {
+      c = u8[i] & 0xFF;
+      if (c === 0) break;
+      s += (c >= 32 && c !== 127) ? String.fromCharCode(c) : "?";
+    }
+    return s;
+  }
+
+  function ascii4(u8, o) {
+    var s = "", i, c;
+    for (i = 0; i < 4; i++) {
+      c = u8[o + i] & 0xFF;
+      s += (c >= 32 && c <= 126) ? String.fromCharCode(c) : "?";
+    }
+    return s;
+  }
+
+  /* 4-byte ASCII type field ("WAVE", "AIFF", "CAF ", ...), NUL-trimmed, trailing blanks cut. */
+  function typeStr(u8, o) {
+    var s = cstr(u8, o, 4, o + 4);
+    return s.replace(/\s+$/, "");
+  }
+
+  function warnPush(w, msg) {
+    if (w.length < WARN_CAP) { w.push(msg); return; }
+    if (w.length === WARN_CAP) w.push("warning cap reached");
+  }
+
+  /* ---------- size field (header offset 4) ---------- */
+
+  /* Old files: plain u32 LE. New-generation files set bit 7 of byte 5 as a flag, so the size
+     lives in the low 15 bits of the two low bytes. Big-endian files store the u16 swapped. */
+  function decodeSize(u8, off, be) {
+    var b4 = u8[off + 4] & 0xFF, b5 = u8[off + 5] & 0xFF;
+    if (be) return (b4 << 8) | b5;
+    if ((b5 & 0x80) !== 0) return b4 | ((b5 & 0x7F) << 8);
+    return (b4 | (b5 << 8) | ((u8[off + 6] & 0xFF) << 16) | ((u8[off + 7] & 0xFF) << 24)) >>> 0;
+  }
+
+  /* ---------- the shared block walker ---------- */
+
+  /* Walks 84-byte-header blocks from offset 0. Never throws: an unreadable or truncated block
+     ends the walk with a warning (parse mode) and a recorded offset, never an exception.
+     collect=false keeps it a pure count walk for probe (no per-block content parsing). */
+  function walkCore(u8, be, collect) {
+    var len = u8.length;
+    var w = {
+      blocks: 0, instruments: 0, zones: 0, groups: 0, samples: 0, params: 0, unknown: 0, plists: 0,
+      truncatedAt: -1, warnedCap: false,
+      warnings: [],
+      zoneArr: [], groupArr: [], sampleArr: [],
+      instrumentName: "", firstName: ""
+    };
+    var off = 0, guard = 0;
+    var guardMax = Math.ceil(len / HDR) + 8;
+
+    while (off + HDR <= len) {
+      guard++;
+      if (guard > guardMax) {
+        if (collect) warnPush(w.warnings, "block walk safety cap hit at offset " + off);
+        break;
+      }
+
+      var b0 = u8[off] & 0xFF, b1 = u8[off + 1] & 0xFF, b2 = u8[off + 2] & 0xFF;
+      var marker = u8[off + 3] & 0xFF;
+      var size = decodeSize(u8, off, be);
+      var end = off + HDR + size;
+
+      if (end > len) {
+        if (collect) {
+          warnPush(w.warnings, "truncated block at offset " + off +
+            " (needs " + (HDR + size) + " bytes, " + (len - off) + " available) - stopped");
+        }
+        w.truncatedAt = off;
+        break;
+      }
+
+      var kind = -1;
+      if (b0 === 1 && b1 === 1 && b2 === 0) {
+        if (marker <= 0x0B) kind = marker;
+        else if (marker >= 0x40 && marker <= 0x4B) kind = marker - 0x40;
+      }
+
+      w.blocks++;
+
+      if (kind === KIND_INSTRUMENT) {
+        w.instruments++;
+        if (w.instrumentName === "") w.instrumentName = cstr(u8, off + 20, 64, off + HDR);
+      } else if (kind === KIND_ZONE) {
+        w.zones++;
+        if (collect) {
+          if (w.zoneArr.length < MAX_KEEP) parseZone(u8, off, size, len, w);
+          else if (!w.warnedCap) { w.warnedCap = true; warnPush(w.warnings, "zone list capped at " + MAX_KEEP); }
+        }
+      } else if (kind === KIND_GROUP) {
+        w.groups++;
+        if (collect) {
+          if (w.groupArr.length < MAX_KEEP) parseGroup(u8, off, size, len, w);
+          else if (!w.warnedCap) { w.warnedCap = true; warnPush(w.warnings, "group list capped at " + MAX_KEEP); }
+        }
+      } else if (kind === KIND_SAMPLE) {
+        w.samples++;
+        if (collect) {
+          if (w.sampleArr.length < MAX_KEEP) parseSample(u8, off, size, len, w);
+          else if (!w.warnedCap) { w.warnedCap = true; warnPush(w.warnings, "sample list capped at " + MAX_KEEP); }
+        }
+      } else if (kind === KIND_PARAMS) {
+        w.params++;
+      } else if (kind === KIND_PLIST) {
+        w.plists++;                     /* binary plist chunks are expected and skipped quietly */
+      } else {
+        w.unknown++;
+        if (collect) {
+          warnPush(w.warnings, "unknown block at offset " + off +
+            (marker !== 0xFF || b0 !== 0x01 ? " (marker 0x" + hex2(marker) + ")" : "") + " - skipped");
+        }
+      }
+
+      if (off === 0 && w.firstName === "") w.firstName = cstr(u8, off + 20, 64, off + HDR);
+      off = end;
+    }
+
+    if (off < len && w.truncatedAt < 0) {
+      if (collect) warnPush(w.warnings, "truncated block header at offset " + off + " - stopped");
+      w.truncatedAt = off;
+    }
+    return w;
+  }
+
+  /* ---------- per-type content readers ---------- */
+
+  function parseZone(u8, off, size, len, w) {
+    if (size < ZONE_MIN) {
+      warnPush(w.warnings, "zone block at offset " + off + " is " + size +
+        " bytes (need >= " + ZONE_MIN + ") - skipped");
+      return;
+    }
+    var d = off + HDR;
+    var fb = u8[d] & 0xFF;
+    var lo = u8[d + 33] & 0xFF;
+    var sStart = u32le(u8, d + 12);
+    /* Guard the documented sentinels: 0 is legal ("from the file start"); 0xFFFFFFFF is not a
+       usable absolute frame, so an unset start is guarded down to 0. An unset end stays raw -
+       the kit layer clamps it with min against the decoded length, which collapses it to the
+       full length. */
+    if (sStart === 0xFFFFFFFF) sStart = 0;
+    var sEnd = u32le(u8, d + 16);
+    var z = {
+      index: w.zoneArr.length,
+      name: cstr(u8, off + 20, 64, off + HDR),
+      flags: {
+        oneshot: (fb & 1) !== 0,
+        pitchTrackOff: (fb & 2) !== 0,
+        reverse: (fb & 4) !== 0,
+        velocityRange: (fb & 8) !== 0,
+        outputAssigned: (fb & 64) !== 0,
+        raw: fb
+      },
+      flagsByte: fb,
+      oneshot: (fb & 1) !== 0,
+      reverse: (fb & 4) !== 0,
+      key: u8[d + 1] & 0xFF,
+      fineTuning: s8at(u8, d + 2),
+      pan: s8at(u8, d + 3),
+      volumeAdjust: s8at(u8, d + 4),
+      volumeScale: u8[d + 5] & 0xFF,
+      keyLow: u8[d + 6] & 0xFF,
+      keyHigh: u8[d + 7] & 0xFF,
+      velocityLow: u8[d + 9] & 0xFF,
+      velocityHigh: u8[d + 10] & 0xFF,
+      sampleStart: sStart,                /* u32 raw; 0 = from start, guarded from 0xFFFFFFFF */
+      sampleEnd: sEnd,                    /* u32 raw; 0xFFFFFFFF = play to end (clamped downstream) */
+      loopStart: u32le(u8, d + 20),
+      loopEnd: u32le(u8, d + 24),
+      loopCrossfade: u32le(u8, d + 28),
+      loopOptions: {
+        loopOn: (lo & 1) !== 0,
+        equalPower: (lo & 2) !== 0,
+        playToEndOnRelease: (lo & 4) !== 0,
+        raw: lo
+      },
+      loopOptionsByte: lo,
+      loopDirection: u8[d + 34] & 0xFF,
+      coarseTuning: s8at(u8, d + 80),
+      output: u8[d + 82] & 0xFF,
+      groupIndex: s32le(u8, d + 88),
+      sampleIndex: u32le(u8, d + 92)
+    };
+    w.zoneArr.push(z);
+  }
+
+  function parseGroup(u8, off, size, len, w) {
+    if (size < GROUP_MIN) {
+      warnPush(w.warnings, "group block at offset " + off + " is " + size +
+        " bytes (need >= " + GROUP_MIN + ") - skipped");
+      return;
+    }
+    var d = off + HDR;
+    var g = {
+      index: w.groupArr.length,
+      id: u32le(u8, off + 8),
+      name: cstr(u8, off + 20, 64, off + HDR),
+      volume: u8[d] & 0xFF,
+      pan: u8[d + 1] & 0xFF,
+      polyphony: u8[d + 2] & 0xFF,
+      options: u8[d + 3] & 0xFF,
+      exclusive: u8[d + 4] & 0xFF,
+      minVelocity: u8[d + 5] & 0xFF,
+      maxVelocity: u8[d + 6] & 0xFF,
+      releaseTriggerTime: u16le(u8, d + 16),
+      releaseTrigger: u8[d + 73] & 0xFF,
+      output: u8[d + 74] & 0xFF,
+      roundRobinGroupPos: s32le(u8, d + 80),
+      enableByType: u8[d + 84] & 0xFF
+    };
+    w.groupArr.push(g);
+  }
+
+  function parseSample(u8, off, size, len, w) {
+    if (size < SAMPLE_MIN) {
+      warnPush(w.warnings, "sample block at offset " + off + " is " + size +
+        " bytes (need >= " + SAMPLE_MIN + ") - skipped");
+      return;
+    }
+    var d = off + HDR;
+    var bound = off + HDR + size;
+    var ch = 0;
+    if (size >= 24) {
+      ch = u32le(u8, d + 16);
+      if (ch === 0) ch = u32le(u8, d + 20);
+      if (ch < 0 || ch > 32) ch = 0;      /* hostile value - report unknown rather than absurd */
+    }
+    var s = {
+      index: w.sampleArr.length,
+      name: cstr(u8, off + 20, 64, off + HDR),
+      length: u32le(u8, d + 4),
+      rate: u32le(u8, d + 8),
+      bits: u8[d + 12] & 0xFF,
+      channels: ch,
+      type: typeStr(u8, d + 28),
+      filePath: "",
+      fileName: ""
+    };
+    if (size >= 336) s.filePath = cstr(u8, d + 80, 256, bound);
+    else warnPush(w.warnings, "sample block at offset " + off + " has no file path field (" + size + " bytes)");
+    if (size >= 592) s.fileName = cstr(u8, d + 336, 256, bound);
+    w.sampleArr.push(s);
+  }
+
+  /* ---------- public entry points ---------- */
+
+  function probe(x) {
+    var res = { ok: false, zones: 0, groups: 0, samples: 0, reversed: false, note: "", error: "" };
+    try {
+      var u8 = toU8(x);
+      if (!u8) { res.error = "unsupported buffer (ArrayBuffer or typed-array view required)"; return res; }
+      var len = u8.length;
+      if (len < 20) { res.error = "too short for an EXS24 header"; return res; }
+
+      var cid = ascii4(u8, 16);
+      var be;
+      if (cid === "TBOS" || cid === "JBOS") be = false;
+      else if (cid === "SOBT" || cid === "SOBJ") be = true;
+      else { res.error = "not an EXS24 file (chunk id \"" + cid + "\" at offset 16)"; return res; }
+
+      res.reversed = be;
+      var w = walkCore(u8, be, false);
+      res.zones = w.zones;
+      res.groups = w.groups;
+      res.samples = w.samples;
+      res.ok = true;
+
+      res.note = "EXS24 " + (be ? "big-endian (byte-swapped; block counts are best-effort)"
+                                : "little-endian") +
+        ": zones " + w.zones + ", groups " + w.groups + ", samples " + w.samples +
+        ", instruments " + w.instruments;
+      if (w.params > 0) res.note += ", params " + w.params;
+      if (w.unknown > 0) res.note += ", unknown " + w.unknown;
+      if (w.truncatedAt >= 0) res.note += " - stopped at truncated block offset " + w.truncatedAt;
+      return res;
+    } catch (e) {
+      res.ok = false;
+      res.error = "exs probe failed: " + errMsg(e);
+      return res;
+    }
+  }
+
+  function parse(x) {
+    var res = { ok: false, name: "", zones: [], groups: [], samples: [], warnings: [], error: "" };
+    try {
+      var u8 = toU8(x);
+      if (!u8) { res.error = "unsupported buffer (ArrayBuffer or typed-array view required)"; return res; }
+      var len = u8.length;
+      if (len === 0) { res.error = "empty file"; return res; }
+      if (len < 20) { res.error = "too short for an EXS24 header"; return res; }
+
+      var cid = ascii4(u8, 16);
+      if (cid === "SOBT" || cid === "SOBJ") { res.error = "big-endian EXS not supported"; return res; }
+      if (cid !== "TBOS" && cid !== "JBOS") {
+        res.error = "not an EXS24 file (chunk id \"" + cid + "\" at offset 16)";
+        return res;
+      }
+
+      var w = walkCore(u8, false, true);
+      res.zones = w.zoneArr;
+      res.groups = w.groupArr;
+      res.samples = w.sampleArr;
+      res.warnings = w.warnings;
+      res.name = w.instrumentName || w.firstName || "";
+
+      if (w.instruments + w.zones + w.groups + w.samples === 0) {
+        res.error = "no EXS24 blocks found";
+        return res;
+      }
+
+      /* zone -> sample reference check (0xFFFFFFFF counts as out of range, honestly reported) */
+      var i, zi;
+      for (i = 0; i < res.zones.length; i++) {
+        zi = res.zones[i].sampleIndex;
+        if (zi >= res.samples.length) {
+          warnPush(res.warnings, "zone " + i + " sampleIndex " + zi + " out of range (" +
+            res.samples.length + " sample blocks)");
+        }
+      }
+
+      res.ok = true;
+      return res;
+    } catch (e) {
+      res.ok = false;
+      res.error = "exs read failed: " + errMsg(e);
+      return res;
+    }
+  }
+
+  return { version: AV_EXS_VERSION, probe: probe, parse: parse };
+})();
+
+
+/* av_als.js -- Anvil R15c STRUCTURED PACKS (child B): the ADG/ALS gzip-XML extractor + the
+   clip-to-pattern mapper. Contract: verify/_r15c_wave.md sections 2, 4.2, 7. Research:
+   research/import/01-ableton-mystery.md (gzip-XML confirmed first-hand across Live 9-12).
+   Scratch harness: cache/r15c/als/run.mjs (plain node, untracked, verification only).
+
+   WHAT THIS FILE IS
+   - avAlsProbe(u8) -> { ok, kind, error } -- SYNC. Gzip magic 1f 8b; kind "gzip" when clear.
+   - avAlsExtract(arrayBuffer) -> Promise of { ok, kind, creator, refs, notes, tempoBpm,
+     warnings, error }. Decompresses with the native DecompressionStream("gzip") (honest
+     refusal when unavailable) under a 64 MiB decompressed-size guard (AV_ALS_MAX_XML; reading
+     stops at the cap and the pinned warning "XML truncated at 64 MB -- refs may be incomplete"
+     is added), then an INCREMENTAL indexOf/regex scan over the decompressed text -- never a
+     DOM parse. Audio refs come from both Ableton FileRef forms:
+       * Live <=10: <RelativePath><RelativePathElement Dir="..."/> chains + <Name Value="..."/>
+       * Live 11/12: <RelativePath Value="..."/> and <Path Value="..."/> attributes
+     filtered to .wav/.wave/.aif/.aiff/.aifc/.mp3/.flac/.ogg, "../" segments normalized
+     (leading ".." dropped, "x/.." pairs collapsed), deduped by basename case-insensitively
+     (first wins), capped at 512 with a counting warning. Notes come from <MidiNoteEvent
+     Time/Duration/Velocity> attributes, with the enclosing <KeyTrack><MidiKey Value="..."/>
+     taken as pitch context where cheap; capped at 512 (first wins, counted, warned).
+     NOTE TIME UNIT: MidiNoteEvent Time/Duration are the file's own floating-point quarter-note
+     beats -- verified first-hand on real Live 9.7.1 / 10.1.7 / 11.3.21 / 12.2.5 documents
+     (note extents align exactly with clip LoopEnd beats; the doc's "(ticks)" is that unit).
+     Tempo: the first <Tempo> element (Live writes <Tempo><Manual Value="..."/>); number or null.
+   - avAlsToPattern(extracted, opts) -> { ok, pattern, warnings } -- PURE + SYNC. Maps the
+     extracted notes to EXACTLY the avMidToPattern shape (v/name/bpm/grid "16"/swing/tracks
+     4 x 64 steps/plocks []/rng): seconds = ticks * 60 / bpm (tempoBpm default 120), quantize
+     to the 16th grid with the shared quantize law (avMidQuantize when present, otherwise a
+     byte-identical local kernel), first hit wins, gate = duration / step clamped, vel =
+     velocity / 127, name from opts.name (cap 24, "PAT 1" fallback). Source tracks = the
+     KeyTrack ordinal (first 4 note-carrying lanes win, mirroring avMidToPattern).
+
+   LAWS kept: "use strict"; ONE namespace (avAls* / AV_ALS_*); classic script (no imports);
+   no DOM at load (plain-node safe; DecompressionStream / TextDecoder typeof-guarded per
+   call); never throws (honest refusals; the extract promise always RESOLVES); deterministic.
+   No Ableton needed; this module never touches the network. */
+
+"use strict";
+
+/* ---------- pins ---------- */
+
+const AV_ALS_VERSION = "r15c.0";
+const AV_ALS_MAX_XML = 64 * 1024 * 1024;   /* decompressed-size guard (64 MiB), bytes */
+
+const AV_ALS_TRACKS = 4;
+const AV_ALS_STEPS = 64;
+const AV_ALS_REFS_CAP = 512;
+const AV_ALS_NOTES_CAP = 512;
+const AV_ALS_TICK_DIV = 24;                /* micro ticks per step (the shared quantize law) */
+const AV_ALS_MICRO_MAX = 12;
+const AV_ALS_BPM_MIN = 20;
+const AV_ALS_BPM_MAX = 300;
+const AV_ALS_BPM_DEF = 120;
+const AV_ALS_SWING_MIN = 50;
+const AV_ALS_SWING_MAX = 80;
+const AV_ALS_SWING_DEF = 50;
+const AV_ALS_VEL_MIN = 0.05;
+const AV_ALS_VEL_DEF = 0.8;
+const AV_ALS_GATE_MIN = 0.05;
+const AV_ALS_GATE_DEF = 0.95;
+const AV_ALS_LEN_DEF = 16;
+const AV_ALS_PATNAME_CAP = 24;             /* = core AV_SEQ_NAME_CAP */
+const AV_ALS_RNG_DEF = 305419896;          /* = core AV_SEQ_DEF_RNG (0x12345678) */
+const AV_ALS_CREATOR_CAP = 64;
+const AV_ALS_BLOCK_MAX = 16384;            /* bounded window per FileRef / KeyTrack probe */
+const AV_ALS_REF_BLOCKS_MAX = 50000;       /* scan budget; pathological inputs stop + warn */
+const AV_ALS_KEYS_MAX = 16384;             /* MidiKey context lookup budget (cheap path) */
+const AV_ALS_TICKS_PER_BEAT = 1;           /* file note unit = one quarter-note beat (see header) */
+const AV_ALS_VEL7 = 127;                   /* velocity is stored 0..127 in the XML */
+
+const AV_ALS_AUDIO_EXT = ["wav", "wave", "aif", "aiff", "aifc", "mp3", "flac", "ogg"];
+
+const AV_ALS_PC = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+const AV_ALS_PC_NAMES = ["c", "c#", "d", "d#", "e", "f", "f#", "g", "g#", "a", "a#", "b"];
+
+/* ---------- small value laws (never throw) ---------- */
+
+function avAlsIsNum(v) { return typeof v === "number" && isFinite(v); }
+
+function avAlsIsObj(v) { return v != null && typeof v === "object" && !Array.isArray(v); }
+
+function avAlsClampNum(v, dflt, lo, hi) {
+  const n = Number(v);
+  if (v == null || v === "" || !isFinite(n)) return dflt;
+  return n < lo ? lo : (n > hi ? hi : n);
+}
+
+function avAlsClampInt(v, dflt, lo, hi) {
+  const n = Number(v);
+  if (v == null || v === "" || !isFinite(n)) return dflt;
+  const r = Math.round(n);
+  return r < lo ? lo : (r > hi ? hi : r);
+}
+
+function avAlsErrText(e) { return (e && typeof e.message === "string") ? e.message : "internal"; }
+
+/* the refuse shape for the mapper (mirrors avMidFail: warnings always present) */
+function avAlsFail(error, warnings) {
+  return { ok: false, error: String(error || "refused"), warnings: warnings ? warnings.slice() : [] };
+}
+
+/* the full-carrier refuse shape for the extractor (every pinned field present) */
+function avAlsFailExtract(error, kind, warnings) {
+  return {
+    ok: false, kind: kind || "", creator: "", refs: [], notes: [], tempoBpm: null,
+    warnings: warnings ? warnings.slice() : [], error: String(error || "refused"),
+  };
+}
+
+/* ArrayBuffer | Uint8Array (Buffer included) | number[] -> Uint8Array | null */
+function avAlsToU8(x) {
+  try {
+    if (x == null) return null;
+    if (typeof Uint8Array !== "undefined" && x instanceof Uint8Array) return x;
+    if (typeof ArrayBuffer !== "undefined" && x instanceof ArrayBuffer) return new Uint8Array(x);
+    if (Array.isArray(x)) {
+      const u = new Uint8Array(x.length);
+      for (let i = 0; i < x.length; i++) {
+        const b = Number(x[i]);
+        u[i] = (isFinite(b) ? Math.round(b) : 0) & 0xFF;
+      }
+      return u;
+    }
+    return null;
+  } catch (e) { return null; }
+}
+
+/* printable-ASCII text, controls stripped, trimmed, capped (same law as avMidAscii) */
+function avAlsAscii(v, cap) {
+  let s = "";
+  if (typeof v === "string") s = v;
+  else if (avAlsIsNum(v)) s = String(v);
+  else return "";
+  s = s.replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+  let out = "";
+  for (let i = 0; i < s.length && out.length < cap; i++) {
+    const c = s.charCodeAt(i);
+    out += (c >= 0x20 && c <= 0x7e) ? s.charAt(i) : "?";
+  }
+  return out;
+}
+
+/* note names (local mirror of avMidMidiToNote; the planner hands us canonical names) */
+function avAlsMidiToNote(midi) {
+  const m = Math.round(Number(midi));
+  if (!isFinite(m) || m < 0 || m > 127) return "";
+  return AV_ALS_PC_NAMES[m % 12] + (Math.floor(m / 12) - 1);
+}
+
+/* grid -> base step duration (same law as avSeqSchedGridDur) */
+function avAlsGridDur(bpm, grid) {
+  const b = avAlsClampNum(bpm, AV_ALS_BPM_DEF, AV_ALS_BPM_MIN, AV_ALS_BPM_MAX);
+  return (grid === "8t") ? (60 / b / 3) : (60 / b / 4);
+}
+
+/* ---------- core-shaped defaults (key order must match av_seq_core sanitisation) ---------- */
+
+function avAlsStepDefault() {
+  return { on: 0, note: "c4", vel: AV_ALS_VEL_DEF, gate: AV_ALS_GATE_DEF, slide: 0, accent: 0,
+           oct: 0, prob: 100, cond: "", ratchet: 1, micro: 0 };
+}
+
+function avAlsBlankTrack() {
+  const steps = [];
+  for (let i = 0; i < AV_ALS_STEPS; i++) steps.push(avAlsStepDefault());
+  return { len: AV_ALS_LEN_DEF, speed: 1, mute: 0, steps: steps };
+}
+
+/* ---------- the quantize law (identical to avMidQuantizeLocal / avSeqCaptureQuantize q=0) ---------- */
+
+function avAlsQuantizeLocal(t, bpm, grid, swing) {
+  const stepDur = avAlsGridDur(bpm, grid);
+  const shift = stepDur * (swing - 50) / 100;
+  const k0 = Math.round(t / stepDur);
+  let best = k0, bestD = Infinity;
+  for (let k = k0 - 2; k <= k0 + 2; k++) {
+    const g = k * stepDur + ((k % 2 !== 0) ? shift : 0);
+    const d = Math.abs(g - t);
+    if (d < bestD) { bestD = d; best = k; }        /* strict < => ties to the EARLIER step */
+  }
+  if (best < 0) best = 0;
+  const gridT = best * stepDur + ((best % 2 !== 0) ? shift : 0);
+  const residual = t - gridT;
+  const tick = stepDur / AV_ALS_TICK_DIV;
+  let micro = Math.round(residual / tick);
+  if (micro > AV_ALS_MICRO_MAX) micro = AV_ALS_MICRO_MAX;
+  else if (micro < -AV_ALS_MICRO_MAX) micro = -AV_ALS_MICRO_MAX;
+  return { step: best, micro: micro };
+}
+
+/* prefer the module's shared kernel when the bundle provides it (guarded, per call) */
+function avAlsQuantize(t, bpm, grid, swing) {
+  if (typeof avMidQuantize === "function") {
+    try {
+      const q = avMidQuantize(t, bpm, grid, swing);
+      if (q && typeof q === "object" && avAlsIsNum(q.step) && avAlsIsNum(q.micro)) {
+        return { step: Math.round(q.step), micro: Math.round(q.micro) };
+      }
+    } catch (e) { /* fall through to the local kernel */ }
+  }
+  return avAlsQuantizeLocal(t, bpm, grid, swing);
+}
+
+/* ---------- probe ---------- */
+
+function avAlsProbe(u8) {
+  try {
+    const a = avAlsToU8(u8);
+    if (!a || a.length < 2) return { ok: false, kind: "", error: "no data" };
+    if (a[0] !== 0x1F || a[1] !== 0x8B) return { ok: false, kind: "", error: "not gzip (missing 1f 8b magic)" };
+    return { ok: true, kind: "gzip", error: "" };
+  } catch (e) { return { ok: false, kind: "", error: "probe failed (" + avAlsErrText(e) + ")" }; }
+}
+
+/* ---------- gunzip (DecompressionStream, 64 MiB cap, never rejects) ---------- */
+
+function avAlsJoin(parts, total) {
+  try {
+    const out = new Uint8Array(total);
+    let off = 0;
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i];
+      if (!p || !p.length) continue;
+      out.set(p, off);
+      off += p.length;
+    }
+    return out;
+  } catch (e) { return null; }
+}
+
+/* u8 (gzip bytes) -> Promise of { ok:true, text, truncated } | { ok:false, error } */
+function avAlsGunzipText(u8) {
+  return new Promise(function (resolve) {
+    let settled = false;
+    function done(o) { if (!settled) { settled = true; resolve(o); } }
+    try {
+      if (typeof TextDecoder !== "function") { done({ ok: false, error: "text decoder unavailable" }); return; }
+      const ds = new DecompressionStream("gzip");
+      const writer = ds.writable.getWriter();
+      const reader = ds.readable.getReader();
+      const parts = [];
+      let total = 0, truncated = false, feedErr = "";
+
+      const feed = writer.write(u8).then(function () { return writer.close(); });
+      feed.then(function () { /* source fed */ }, function (e) {
+        feedErr = avAlsErrText(e);
+        if (!settled && total === 0) {
+          try { reader.cancel(); } catch (e2) { /* ignore */ }
+          done({ ok: false, error: "gzip decompression failed (" + feedErr + ")" });
+        }
+      });
+
+      function flush() {
+        try {
+          const dec = new TextDecoder("utf-8");
+          let text = "";
+          if (parts.length === 1) text = dec.decode(parts[0]);
+          else if (parts.length > 1) {
+            const joined = avAlsJoin(parts, total);
+            text = joined ? dec.decode(joined) : "";
+          }
+          done({ ok: true, text: text, truncated: truncated });
+        } catch (e) { done({ ok: false, error: "text decode failed (" + avAlsErrText(e) + ")" }); }
+      }
+
+      function step() {
+        reader.read().then(function (r) {
+          try {
+            if (settled) return;
+            if (r.done) { flush(); return; }
+            const ch = r.value;
+            if (ch && ch.length > 0) {
+              const room = AV_ALS_MAX_XML - total;
+              if (ch.length > room) {
+                if (room > 0) {
+                  parts.push(ch.subarray ? ch.subarray(0, room) : ch.slice(0, room));
+                  total += room;
+                }
+                truncated = true;
+                try { reader.cancel(); } catch (e2) { /* ignore */ }
+                try { writer.abort(); } catch (e2) { /* ignore */ }
+                flush();
+                return;
+              }
+              parts.push(ch);
+              total += ch.length;
+            }
+            step();
+          } catch (e) { done({ ok: false, error: "gzip decompression failed (" + avAlsErrText(e) + ")" }); }
+        }, function (e) {
+          done({ ok: false, error: "gzip decompression failed (" + avAlsErrText(e) + ")" });
+        });
+      }
+      step();
+    } catch (e) { done({ ok: false, error: "gzip decompression failed (" + avAlsErrText(e) + ")" }); }
+  });
+}
+
+/* ---------- refs (FileRef scan, both Live path forms) ---------- */
+
+function avAlsNormPath(p) {
+  const parts = String(p == null ? "" : p).replace(/\\/g, "/").split("/");
+  const out = [];
+  for (let i = 0; i < parts.length; i++) {
+    const seg = parts[i];
+    if (seg === "" || seg === ".") continue;
+    if (seg === "..") {
+      if (out.length > 0) out.pop();     /* "x/.." collapses */
+      continue;                          /* leading ".." is dropped (points above the document) */
+    }
+    out.push(seg);
+  }
+  return out.join("/");
+}
+
+function avAlsBaseName(p) {
+  const s = String(p == null ? "" : p);
+  const i = s.lastIndexOf("/");
+  return (i >= 0) ? s.slice(i + 1) : s;
+}
+
+function avAlsIsAudioName(p) {
+  const base = avAlsBaseName(p);
+  const dot = base.lastIndexOf(".");
+  if (dot < 0 || dot === base.length - 1) return false;
+  const ext = base.slice(dot + 1).toLowerCase();
+  for (let i = 0; i < AV_ALS_AUDIO_EXT.length; i++) {
+    if (AV_ALS_AUDIO_EXT[i] === ext) return true;
+  }
+  return false;
+}
+
+/* accept one candidate path: normalize, extension-filter, dedupe by basename (first wins), cap */
+function avAlsAcceptRef(st, raw) {
+  const p0 = String(raw == null ? "" : raw).trim();
+  if (!p0) return;
+  const p = avAlsNormPath(p0);
+  if (!avAlsIsAudioName(p)) return;
+  const base = avAlsBaseName(p);
+  if (!base) return;
+  const key = base.toLowerCase();
+  if (st.seen[key]) return;
+  st.seen[key] = 1;
+  st.refsTotal++;
+  if (st.refs.length < AV_ALS_REFS_CAP) st.refs.push({ name: base, path: p });
+}
+
+/* candidates inside one FileRef window, preference order: relative forms first, then Path, Name */
+function avAlsCollectRef(st, block) {
+  const cands = [];
+  const rv = /<RelativePath\s+Value="([^"]*)"/.exec(block);
+  if (rv && rv[1]) cands.push(rv[1]);
+
+  let name = "";
+  const nm = /<Name\s+Value="([^"]*)"/.exec(block);
+  if (nm) name = nm[1];
+
+  /* Live <=10 form: RelativePathElement Dir chain inside <RelativePath> (Dir may be empty) */
+  const rp = /<RelativePath>([\s\S]*?)<\/RelativePath>/.exec(block);
+  let chain = "";
+  if (rp) {
+    const re = /<RelativePathElement[^>]*\bDir="([^"]*)"/g;
+    let m;
+    while ((m = re.exec(rp[1]))) {
+      const dir = m[1];
+      if (!dir) continue;
+      if (chain && chain.charAt(chain.length - 1) !== "/" && dir.charAt(0) !== "/") chain += "/";
+      chain += dir;
+    }
+  }
+  if (chain) {
+    if (name) cands.push(chain + (chain.charAt(chain.length - 1) === "/" ? "" : "/") + name);
+    cands.push(chain);
+  }
+
+  const pv = /<Path\s+Value="([^"]*)"/.exec(block);
+  if (pv && pv[1]) cands.push(pv[1]);
+  if (name) cands.push(name);
+
+  for (let i = 0; i < cands.length; i++) avAlsAcceptRef(st, cands[i]);
+}
+
+function avAlsScanRefs(text, st) {
+  let pos = 0;
+  while (true) {
+    if (st.blocks >= AV_ALS_REF_BLOCKS_MAX) { st.blockStop = 1; break; }
+    const s = text.indexOf("<FileRef", pos);
+    if (s < 0) break;
+    const c = text.charAt(s + 8);
+    if (c !== ">" && c !== " " && c !== "\n" && c !== "\r" && c !== "\t") { pos = s + 8; continue; }
+    st.blocks++;
+    const winEnd0 = Math.min(text.length, s + AV_ALS_BLOCK_MAX);
+    const win = text.slice(s, winEnd0);
+    const e = win.indexOf("</FileRef>", 8);
+    if (e >= 0) {
+      avAlsCollectRef(st, win.slice(0, e));
+      pos = s + 8;                     /* continue inside: nested FileRef blocks still get a look */
+    } else {
+      avAlsCollectRef(st, win);
+      st.unclosedRefs++;
+      pos = winEnd0;                   /* bounded window processed once */
+    }
+  }
+}
+
+/* ---------- notes (MidiNoteEvent walk + KeyTrack / MidiKey context) ---------- */
+
+/* next occurrence of a tag opener with an XML-name boundary check (skips e.g. <KeyTracks>) */
+function avAlsNextTag(text, from, needle, wantBoundary) {
+  let p = from;
+  while (true) {
+    const i = text.indexOf(needle, p);
+    if (i < 0) return -1;
+    if (!wantBoundary) return i;
+    const c = text.charAt(i + needle.length);
+    if (c === ">" || c === "/" || c === " " || c === "\n" || c === "\r" || c === "\t") return i;
+    p = i + needle.length;
+  }
+}
+
+/* the MidiKey Value of the KeyTrack starting at kt, from a bounded window; null when absent.
+   The real order is <KeyTrack><Notes>...notes...</Notes><MidiKey Value=".."/><KeyTrack>, so the
+   key is searched up to the block's closer inside the window (never past it). */
+function avAlsKeyAt(text, kt) {
+  try {
+    const from = kt + 9;
+    const winEnd0 = Math.min(text.length, from + AV_ALS_BLOCK_MAX);
+    const win = text.slice(from, winEnd0);
+    const close = win.indexOf("</KeyTrack>");
+    const lim = (close >= 0) ? close : win.length;
+    const mk = win.indexOf("<MidiKey");
+    if (mk < 0 || mk >= lim) return null;
+    const mke = win.indexOf(">", mk);
+    if (mke < 0) return null;
+    const mtag = win.slice(mk, mke);
+    const mv = /\bValue="(-?[0-9]{1,3})"/.exec(mtag);
+    if (!mv) return null;
+    const v = parseInt(mv[1], 10);
+    return (v >= 0 && v <= 127) ? v : null;
+  } catch (e) { return null; }
+}
+
+function avAlsScanNotes(text, st) {
+  let pos = 0;
+  let ord = -1;
+  let curKey = null;
+  let keyLookups = 0;
+  while (true) {
+    const nn = avAlsNextTag(text, pos, "<MidiNoteEvent", true);
+    if (nn < 0) break;
+    const kt = avAlsNextTag(text, pos, "<KeyTrack", true);
+    if (kt >= 0 && kt < nn) {
+      ord++;
+      if (keyLookups < AV_ALS_KEYS_MAX) {
+        keyLookups++;
+        curKey = avAlsKeyAt(text, kt);
+      } else {
+        st.keyCapped++;
+        curKey = null;
+      }
+      pos = kt + 9;
+      continue;
+    }
+    const ne = text.indexOf(">", nn);
+    if (ne < 0) break;
+    const tag = text.slice(nn, ne);
+    pos = ne + 1;
+    const ie = /\bIsEnabled="(true|false)"/.exec(tag);
+    if (ie && ie[1] === "false") { st.muted++; continue; }
+    const tm = /\bTime="(-?[0-9.]+)"/.exec(tag);
+    if (!tm) continue;
+    const dm = /\bDuration="(-?[0-9.]+)"/.exec(tag);
+    if (!dm) continue;
+    const tick = parseFloat(tm[1]);
+    const dur = parseFloat(dm[1]);
+    if (!avAlsIsNum(tick) || !avAlsIsNum(dur) || tick < 0 || dur < 0) continue;
+    let vel = null;
+    const vm = /\bVelocity="(-?[0-9.]+)"/.exec(tag);
+    if (vm) { const vv = parseFloat(vm[1]); if (avAlsIsNum(vv)) vel = vv; }
+    st.notesTotal++;
+    if (st.notes.length < AV_ALS_NOTES_CAP) {
+      st.notes.push({ tick: tick, durTicks: dur, vel: vel, midi: curKey, track: (ord < 0 ? 0 : ord) });
+    }
+  }
+}
+
+/* ---------- the text scan (incremental; no DOM) ---------- */
+
+function avAlsScanText(text, truncated) {
+  const warnings = [];
+  if (truncated) warnings.push("XML truncated at 64 MB \u2014 refs may be incomplete");
+  if (typeof text !== "string") return { ok: false, error: "no decompressed text", warnings: warnings };
+
+  const aIdx = text.indexOf("<Ableton");
+  if (aIdx < 0) return { ok: false, error: "not an Ableton document (no root element)", warnings: warnings };
+
+  let creator = "";
+  try {
+    const head = text.slice(aIdx, Math.min(text.length, aIdx + 4096));
+    const cm = /\bCreator="([^"]*)"/.exec(head);
+    if (cm && cm[1]) creator = avAlsAscii(cm[1], AV_ALS_CREATOR_CAP);
+  } catch (e) { /* creator stays "" */ }
+
+  const refState = { refs: [], seen: {}, refsTotal: 0, unclosedRefs: 0, blocks: 0, blockStop: 0 };
+  avAlsScanRefs(text, refState);
+  if (refState.refsTotal > AV_ALS_REFS_CAP) {
+    warnings.push("refs capped at " + AV_ALS_REFS_CAP + " (" + refState.refsTotal + " found)");
+  }
+  if (refState.unclosedRefs > 0) warnings.push(refState.unclosedRefs + " unclosed FileRef block(s) truncated");
+  if (refState.blockStop) warnings.push("FileRef scan stopped after " + AV_ALS_REF_BLOCKS_MAX + " blocks");
+
+  const noteState = { notes: [], notesTotal: 0, muted: 0, keyCapped: 0 };
+  avAlsScanNotes(text, noteState);
+  if (noteState.notesTotal > AV_ALS_NOTES_CAP) {
+    warnings.push("notes capped at " + AV_ALS_NOTES_CAP + " (" + noteState.notesTotal + " found)");
+  }
+  if (noteState.muted > 0) warnings.push(noteState.muted + " muted note(s) skipped");
+  if (noteState.keyCapped > 0) warnings.push("MidiKey context beyond " + AV_ALS_KEYS_MAX + " KeyTrack(s) ignored");
+
+  /* tempo: the first <Tempo> element; Live writes <Tempo><Manual Value=".."/>, older/newer
+     variants may carry a direct Value attribute -- accept both, keep only a sane number */
+  let tempoBpm = null;
+  const ti = text.indexOf("<Tempo");
+  if (ti >= 0) {
+    const te = text.indexOf(">", ti);
+    if (te > ti) {
+      const ttag = text.slice(ti, te);
+      const tv = /\bValue="([0-9.]+)"/.exec(ttag);
+      if (tv) tempoBpm = parseFloat(tv[1]);
+      else {
+        const tEnd0 = text.indexOf("</Tempo>", ti);
+        const tEnd = (tEnd0 < 0) ? Math.min(text.length, ti + 8192) : tEnd0;
+        const mv = /<Manual\s+Value="([0-9.]+)"/.exec(text.slice(ti, tEnd));
+        if (mv) tempoBpm = parseFloat(mv[1]);
+      }
+    }
+  }
+  if (!(avAlsIsNum(tempoBpm) && tempoBpm > 0 && tempoBpm <= 999)) tempoBpm = null;
+
+  return {
+    ok: true, creator: creator, refs: refState.refs, notes: noteState.notes,
+    tempoBpm: tempoBpm, warnings: warnings,
+  };
+}
+
+/* ---------- extract ---------- */
+
+function avAlsExtract(arrayBuffer) {
+  return new Promise(function (resolve) {
+    function finish(o) { try { resolve(o); } catch (e) { /* never throws */ } }
+    try {
+      const u8 = avAlsToU8(arrayBuffer);
+      if (!u8 || u8.length < 2) return finish(avAlsFailExtract("no data", ""));
+      if (u8[0] !== 0x1F || u8[1] !== 0x8B) return finish(avAlsFailExtract("not gzip (missing 1f 8b magic)", ""));
+      if (typeof DecompressionStream !== "function") {
+        return finish(avAlsFailExtract("gzip decompression unavailable in this browser", "gzip"));
+      }
+      avAlsGunzipText(u8).then(function (gz) {
+        try {
+          if (!gz || gz.ok !== true) {
+            return finish(avAlsFailExtract((gz && gz.error) ? gz.error : "gzip decompression failed", "gzip"));
+          }
+          const sc = avAlsScanText(gz.text, gz.truncated);
+          if (!sc.ok) return finish(avAlsFailExtract(sc.error, "gzip", sc.warnings));
+          finish({
+            ok: true, kind: "gzip", creator: sc.creator, refs: sc.refs, notes: sc.notes,
+            tempoBpm: sc.tempoBpm, warnings: sc.warnings, error: "",
+          });
+        } catch (e) { finish(avAlsFailExtract("extract failed (" + avAlsErrText(e) + ")", "gzip")); }
+      }, function (e) {
+        finish(avAlsFailExtract("gzip decompression failed (" + avAlsErrText(e) + ")", "gzip"));
+      });
+    } catch (e) { finish(avAlsFailExtract("extract failed (" + avAlsErrText(e) + ")", "")); }
+  });
+}
+
+/* ---------- pattern mapping (mirrors avMidToPattern) ---------- */
+
+function avAlsToPattern(extracted, opts) {
+  try {
+    const p = avAlsIsObj(extracted) ? extracted : null;
+    if (!p || p.ok === false) return avAlsFail("no extracted result");
+    const o = avAlsIsObj(opts) ? opts : null;
+    const warnings = [];
+
+    const bpmV = avAlsClampNum(p.tempoBpm, AV_ALS_BPM_DEF, AV_ALS_BPM_MIN, AV_ALS_BPM_MAX);
+    const swing = Math.round(avAlsClampNum(o ? o.swing : null, AV_ALS_SWING_DEF, AV_ALS_SWING_MIN, AV_ALS_SWING_MAX));
+    const stepDur = avAlsGridDur(bpmV, "16");
+    const secPerTick = 60 / (bpmV * AV_ALS_TICKS_PER_BEAT);
+
+    const srcNotes = Array.isArray(p.notes) ? p.notes : null;
+    if (!srcNotes) return avAlsFail("no notes in extracted result");
+
+    /* lanes = the KeyTrack ordinal; first 4 note-carrying lanes win (avMidToPattern law) */
+    const laneMap = {};
+    const laneKeys = [];
+    for (let i = 0; i < srcNotes.length; i++) {
+      const nt = srcNotes[i];
+      if (!avAlsIsObj(nt)) continue;
+      const tr = avAlsClampInt(nt.track, 0, 0, 0x7FFFFFFF);
+      if (!laneMap[tr]) { laneMap[tr] = []; laneKeys.push(tr); }
+      laneMap[tr].push(nt);
+    }
+    laneKeys.sort(function (a, b) { return a - b; });
+    let lanes = laneKeys;
+    if (lanes.length > AV_ALS_TRACKS) {
+      warnings.push((lanes.length - AV_ALS_TRACKS) + " track(s) beyond the first 4 dropped");
+      lanes = lanes.slice(0, AV_ALS_TRACKS);
+    }
+
+    const tracks = [];
+    for (let t = 0; t < AV_ALS_TRACKS; t++) tracks.push(avAlsBlankTrack());
+
+    let mapped = 0, dropped = 0, merged = 0;
+    for (let c = 0; c < lanes.length; c++) {
+      const notes = laneMap[lanes[c]];
+      const tr = tracks[c];
+      const used = {};
+      let maxIdx = -1;
+      for (let i = 0; i < notes.length; i++) {
+        const nt = notes[i];
+        const tSec = avAlsIsNum(nt.tSec) ? nt.tSec
+          : (avAlsIsNum(nt.tick) ? nt.tick * secPerTick : null);
+        if (tSec == null) continue;
+        const qz = avAlsQuantize(tSec, bpmV, "16", swing);
+        if (!qz || !avAlsIsNum(qz.step)) continue;
+        if (qz.step < 0 || qz.step >= AV_ALS_STEPS) { dropped++; continue; }
+        if (used[qz.step]) { merged++; continue; }       /* first hit wins (one note per step) */
+        used[qz.step] = 1;
+        const st = tr.steps[qz.step];
+        st.on = 1;
+        st.note = avAlsMidiToNote(nt.midi) || "c4";
+        st.vel = avAlsClampNum(avAlsIsNum(nt.vel) ? nt.vel / AV_ALS_VEL7 : AV_ALS_VEL_DEF,
+                               AV_ALS_VEL_DEF, AV_ALS_VEL_MIN, 1);
+        st.gate = avAlsIsNum(nt.durTicks)
+          ? avAlsClampNum((nt.durTicks * secPerTick) / stepDur, AV_ALS_GATE_DEF, AV_ALS_GATE_MIN, 1)
+          : AV_ALS_GATE_DEF;
+        st.micro = qz.micro;
+        mapped++;
+        if (qz.step > maxIdx) maxIdx = qz.step;
+      }
+      if (maxIdx >= 0) tr.len = Math.min(AV_ALS_STEPS, Math.max(AV_ALS_LEN_DEF, maxIdx + 1));
+    }
+
+    if (dropped > 0) warnings.push(dropped + " note(s) beyond 64 steps dropped");
+    if (merged > 0) warnings.push(merged + " duplicate note(s) merged (first hit wins)");
+    if (mapped === 0) return avAlsFail("no notes", warnings);
+
+    let name = avAlsAscii(o && o.name != null ? o.name : "", AV_ALS_PATNAME_CAP);
+    if (!name) name = "PAT 1";
+
+    const pattern = {
+      v: 1, name: name,
+      bpm: avAlsClampInt(bpmV, AV_ALS_BPM_DEF, AV_ALS_BPM_MIN, AV_ALS_BPM_MAX),
+      grid: "16",
+      swing: swing,
+      tracks: tracks,
+      plocks: [],
+      rng: AV_ALS_RNG_DEF,
+    };
+    return { ok: true, pattern: pattern, warnings: warnings };
+  } catch (e) { return avAlsFail("pattern mapping failed (" + avAlsErrText(e) + ")"); }
+}
+
+
+/* av_serum.js - Anvil R15c child C: Xfer Serum preset container reader (read-only).
+
+   WHAT THIS FILE IS (contract: verify/_r15c_wave.md section 4.3; format facts:
+   research/import/03-serum-exs-native.md section 1)
+   - AV_SERUM_VERSION = "r15c.0"
+   - AVSerum.probe(u8OrArrayBuffer) -> { ok, kind, name, error }
+       Sync sniff. kind "serum2" = header "XferJson" + NUL (9 bytes) + uint64 LE
+       JSON length + JSON metadata block (name = presetName). kind "fxp" = VST2
+       container "CcnK" + big-endian byteSize + "FPCh" + plugin id "XfsX" at
+       offset 16; name = the 28-byte program field at offset 28. error is "" when
+       ok and an honest line on every refusal; never throws.
+   - AVSerum.extract(arrayBuffer) -> Promise of { ok, meta, wtRefs, warnings, error }
+       serum2: JSON block -> uint32 LE CBOR size -> uint32 LE encoding (2 = zstd)
+       -> zstd frame -> native DecompressionStream("zstd") (pinned refusal when the
+       format is unavailable: "zstd decompress unavailable in this browser") ->
+       clean-room CBOR decode -> walk for wavetable references -> wtRefs entries
+       { module, path } capped at 256. meta = the parsed JSON metadata plus
+       meta.moduleCount (the top-level CBOR map member count).
+       fxp: container parse -> DecompressionStream("deflate") over the chunk ->
+       wavetable NAME strings at decompressed offsets 0x3C08 and 0x3E08 (two
+       512-byte NUL-terminated fields; read only when the state covers them,
+       else an honest warning) -> wtRefs entries { module: "fxp", path: name }.
+       Never rejects; never throws. The result object always carries the five
+       keys ok, meta, wtRefs, warnings, error.
+
+   CORPUS NOTES (626 real factory presets, Xfer Serum 2, measured 2026-10-09)
+   - All 626 files: encoding word 2, declared CBOR size equals the decompressed
+     size exactly, JSON metadata 295..580 bytes, top-level CBOR map 174..178
+     members, zstd frame magic 28 B5 2F FD, md5 of the zstd frame equals the
+     JSON "hash" field.
+   - Wavetable references are NESTED: Oscillator0.WTOsc0.relativePathToWT (and
+     Oscillator1/WTOsc1, Oscillator2/WTOsc2). A top-level "WTOsc" key also exists
+     in every preset but it is a GUI list of per-oscillator markers, not a table
+     reference. The walk therefore matches WTOsc followed by digits at ANY depth
+     and reports the container path (example: "Oscillator0/WTOsc0").
+   - Per-preset reference counts across the corpus: 0 (83 files), 1 (88),
+     2 (140), 3 (315). Paths resolve against Serum's Tables folder.
+   - EMBEDDED TABLES EXIST in the corpus: 34 of 1878 WTOsc modules (in 23 files)
+     carry embeddedWTData (a CBOR list) plus embed-family keys interpolateAfterLoad,
+     tableDisplayName, numFrames, numChannels, sampleRate. The known key set below
+     is the non-embedded field union, so any of those keys raises the pinned warning
+     "embedded wavetable present (dash escaped as \u2014) extraction spike pending".
+     The blob itself is NOT decoded and never guessed (no public spec); this reader
+     is read-only metadata plus path references.
+   - The fxp path has NO real fixtures on this machine (no .fxp file exists under
+     Documents/Xfer); it is spec-derived (research 03 section 1.2) and is exercised
+     against synthetic containers in the scratch harness only.
+
+   LAWS (house discipline): "use strict"; classic script (no modules, no imports,
+   no DOM at load, no top-level side effects beyond building the AVSerum closure);
+   every entry point never throws and never rejects (honest refusals); ASCII-only
+   source; block comments contain no close sequence. */
+
+"use strict";
+
+const AV_SERUM_VERSION = "r15c.0";
+
+const AVSerum = (function () {
+  /* ---------- constants ---------- */
+
+  var XFER_HDR = "XferJson\u0000";   /* 9 bytes: 8 ASCII characters + NUL */
+  var JSON_CAP = 16777216;           /* JSON metadata sanity cap: 16 MiB */
+  var CBOR_CAP = 67108864;           /* declared CBOR size cap: 64 MiB */
+  var REF_CAP = 256;                 /* wtRefs cap (contract 4.3) */
+  var FXP_NAME_END = 16392;          /* 0x4008: end of the second name field */
+  var FXP_CHUNK_OFF = 60;            /* chunk data starts after the fxp header */
+  var DECOMP_MS = 30000;             /* decompression watchdog: never hang a UI */
+  var CBOR_ITEMS = 4000000;          /* decode item budget (hostile-input bound) */
+  var WARN_CAP = 64;                 /* bound the warnings array */
+  var WT_RE = /^WTOsc[0-9]+$/;       /* wavetable oscillator module key shape */
+  var WT_KNOWN = {                   /* non-embedded WTOsc field union (626-preset corpus) */
+    relativePathToWT: 1, plainParams: 1, flex: 1,
+    numChannels: 1, numFrames: 1, sampleRate: 1, storedPhasePos: 1
+  };
+  var WARN_EMBED = "embedded wavetable present \u2014 extraction spike pending";
+  var ERR_ZSTD = "zstd decompress unavailable in this browser";
+  var ERR_DEFLATE = "deflate decompress unavailable in this browser";
+
+  var _TD = null;
+  var _td = function () {
+    if (!_TD) { _TD = new TextDecoder("utf-8"); }
+    return _TD;
+  };
+
+  /* ---------- small readers, byte normalisers ---------- */
+
+  function _bytes(input) {
+    if (!input) { return null; }
+    try {
+      if (input instanceof Uint8Array) { return input; }
+      if (input instanceof ArrayBuffer) { return new Uint8Array(input); }
+      var b = input.buffer;
+      if (b && typeof input.byteOffset === "number" && typeof input.byteLength === "number" &&
+          typeof b.byteLength === "number") {
+        return new Uint8Array(b, input.byteOffset, input.byteLength);
+      }
+    } catch (e) { return null; }
+    return null;
+  }
+
+  function _asEq(u8, o, s) {
+    if (o + s.length > u8.length) { return false; }
+    for (var i = 0; i < s.length; i++) {
+      if (u8[o + i] !== s.charCodeAt(i)) { return false; }
+    }
+    return true;
+  }
+
+  function _u32le(u8, o) {
+    if (o + 4 > u8.length) { return -1; }
+    return u8[o] + u8[o + 1] * 256 + u8[o + 2] * 65536 + u8[o + 3] * 16777216;
+  }
+
+  function _u32be(u8, o) {
+    if (o + 4 > u8.length) { return -1; }
+    return u8[o] * 16777216 + u8[o + 1] * 65536 + u8[o + 2] * 256 + u8[o + 3];
+  }
+
+  function _u64le(u8, o) {
+    if (o + 8 > u8.length) { return -1; }
+    var lo = u8[o] + u8[o + 1] * 256 + u8[o + 2] * 65536 + u8[o + 3] * 16777216;
+    var hi = u8[o + 4] + u8[o + 5] * 256 + u8[o + 6] * 65536 + u8[o + 7] * 16777216;
+    return hi * 4294967296 + lo;
+  }
+
+  function _utf8(sub) { return _td().decode(sub); }
+
+  function _msg(e) {
+    var s = (e && e.message) ? String(e.message) : String(e);
+    if (s.length > 120) { s = s.slice(0, 120) + "..."; }
+    return s;
+  }
+
+  function _trim(s) { return String(s).replace(/^\s+/, "").replace(/\s+$/, ""); }
+
+  function _cstr(u8, o, cap) {
+    var end = Math.min(o + cap, u8.length);
+    var z = -1;
+    for (var i = o; i < end; i++) {
+      if (u8[i] === 0) { z = i; break; }
+    }
+    return _trim(_utf8(u8.subarray(o, z >= 0 ? z : end)));
+  }
+
+  function _pushWarn(arr, s) {
+    if (arr.length < WARN_CAP) { arr.push(s); }
+  }
+
+  /* ---------- clean-room CBOR reader (minimal): uint, nint, byte string, text
+     string, array, map, tag pass-through, bool, null, float16/32/64. Indefinite
+     lengths refuse honestly (the Serum writer emits definite lengths only).
+     Map keys are consumed as decoded; nothing is ever re-encoded. ---------- */
+
+  function _need(u8, o, k) {
+    if (o + k > u8.length) { throw new Error("CBOR truncated item"); }
+  }
+
+  function _f16(h) {
+    var s = (h & 32768) ? -1 : 1;
+    var e = (h >> 10) & 31;
+    var f = h & 1023;
+    if (e === 0) { return s * f * 5.9604644775390625e-8; }
+    if (e === 31) { return f !== 0 ? NaN : s * Infinity; }
+    return s * Math.pow(2, e - 15) * (1 + f / 1024);
+  }
+
+  function _cborItem(u8, dv, o, depth, st) {
+    if (depth > 64) { throw new Error("CBOR nesting too deep"); }
+    st.items++;
+    if (st.items > CBOR_ITEMS) { throw new Error("CBOR item budget exceeded"); }
+    if (o >= u8.length) { throw new Error("CBOR truncated item"); }
+    var ib = u8[o];
+    var major = ib >> 5;
+    var ai = ib & 31;
+    var p = o + 1;
+    var n = 0;
+    if (ai < 24) { n = ai; }
+    else if (ai === 24) { _need(u8, o, 2); n = u8[p]; p = o + 2; }
+    else if (ai === 25) { _need(u8, o, 3); n = dv.getUint16(p, false); p = o + 3; }
+    else if (ai === 26) { _need(u8, o, 5); n = dv.getUint32(p, false); p = o + 5; }
+    else if (ai === 27) {
+      _need(u8, o, 9);
+      var hi = dv.getUint32(p, false);
+      var lo = dv.getUint32(p + 4, false);
+      if ((major === 0 || major === 1) && hi > 2097151) { throw new Error("CBOR integer beyond 2^53"); }
+      n = hi * 4294967296 + lo;
+      p = o + 9;
+    } else if (ai === 31) { throw new Error("CBOR indefinite-length item not supported"); }
+    else { throw new Error("CBOR reserved additional info " + ai); }
+
+    if (major === 0) { return { v: n, o: p }; }
+    if (major === 1) { return { v: -1 - n, o: p }; }
+    if (major === 2 || major === 3) {
+      if (n > u8.length - p) { throw new Error("CBOR string length beyond input"); }
+      var sub = u8.subarray(p, p + n);
+      return { v: major === 2 ? sub : _utf8(sub), o: p + n };
+    }
+    if (major === 4) {
+      if (n > u8.length - p) { throw new Error("CBOR array length beyond input"); }
+      var arr = [];
+      for (var i = 0; i < n; i++) {
+        var it = _cborItem(u8, dv, p, depth + 1, st);
+        arr.push(it.v);
+        p = it.o;
+      }
+      return { v: arr, o: p };
+    }
+    if (major === 5) {
+      if (n > u8.length - p) { throw new Error("CBOR map length beyond input"); }
+      var obj = Object.create(null);
+      for (var j = 0; j < n; j++) {
+        var k = _cborItem(u8, dv, p, depth + 1, st);
+        p = k.o;
+        var val = _cborItem(u8, dv, p, depth + 1, st);
+        p = val.o;
+        var kk = k.v;
+        if (typeof kk === "number") { kk = String(kk); }
+        if (typeof kk === "string") { obj[kk] = val.v; }
+      }
+      return { v: obj, o: p };
+    }
+    if (major === 6) {                       /* tag: pass the inner value through */
+      var inner = _cborItem(u8, dv, p, depth + 1, st);
+      return { v: inner.v, o: inner.o };
+    }
+    /* major 7: simple values and floats */
+    if (ai === 20) { return { v: false, o: p }; }
+    if (ai === 21) { return { v: true, o: p }; }
+    if (ai === 22 || ai === 23) { return { v: null, o: p }; }
+    if (ai === 25) { _need(u8, o, 3); return { v: _f16(dv.getUint16(o + 1, false)), o: o + 3 }; }
+    if (ai === 26) { _need(u8, o, 5); return { v: dv.getFloat32(o + 1, false), o: o + 5 }; }
+    if (ai === 27) { _need(u8, o, 9); return { v: dv.getFloat64(o + 1, false), o: o + 9 }; }
+    return { v: n, o: p };                   /* ai 24 simple value, and reserved smalls */
+  }
+
+  function _cborDecode(u8) {
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    var st = { items: 0 };
+    var r = _cborItem(u8, dv, 0, 0, st);
+    return { value: r.v, end: r.o };
+  }
+
+  /* ---------- wavetable reference scan ---------- */
+
+  function _scanNode(node, path, depth, out) {
+    if (depth > 64 || !node || typeof node !== "object") { return; }
+    if (Array.isArray(node)) {
+      for (var a = 0; a < node.length; a++) {
+        _scanNode(node[a], path + "[" + a + "]", depth + 1, out);
+      }
+      return;
+    }
+    if (node instanceof Uint8Array) { return; }
+    var ks = Object.keys(node);
+    for (var i = 0; i < ks.length; i++) {
+      var k = ks[i];
+      var v = node[k];
+      var cp = path ? path + "/" + k : k;
+      if (WT_RE.test(k)) {
+        out.modules++;
+        if (v && typeof v === "object" && !Array.isArray(v) && !(v instanceof Uint8Array)) {
+          var mks = Object.keys(v);
+          var unknown = false;
+          var pth = null;
+          var odd = false;
+          for (var j = 0; j < mks.length; j++) {
+            if (!Object.prototype.hasOwnProperty.call(WT_KNOWN, mks[j])) { unknown = true; }
+            if (mks[j] === "relativePathToWT") {
+              if (typeof v[mks[j]] === "string") { pth = v[mks[j]]; }
+              else { odd = true; }
+            }
+          }
+          if (unknown && !out.embed) { out.embed = true; out.warnings.push(WARN_EMBED); }
+          if (odd) { _pushWarn(out.warnings, "wavetable path is not a string (" + cp + ")"); }
+          if (pth !== null) {
+            if (out.refs.length < REF_CAP) { out.refs.push({ module: cp, path: pth }); }
+            else { out.overflow++; }
+          }
+        }
+      }
+      _scanNode(v, cp, depth + 1, out);
+    }
+  }
+
+  /* ---------- stream decompression via the native Compression Streams API ---------- */
+
+  function _inflate(src, format, maxOut) {
+    return new Promise(function (resolve) {
+      var ds = null;
+      try { ds = new DecompressionStream(format); } catch (e) { ds = null; }
+      if (!ds) { resolve({ ok: false, out: null, bytes: 0, error: "no-format" }); return; }
+      var reader = null;
+      var writer = null;
+      try {
+        reader = ds.readable.getReader();
+        writer = ds.writable.getWriter();
+      } catch (e2) {
+        resolve({ ok: false, out: null, bytes: 0, error: "no-format" });
+        return;
+      }
+      var done = false;
+      var chunks = [];
+      var total = 0;
+      var readErr = "";
+      var timer = setTimeout(function () {
+        try {
+          var cp2 = reader.cancel();
+          if (cp2 && typeof cp2.catch === "function") { cp2.catch(function () { }); }
+          if (writer && typeof writer.abort === "function") {
+            var ap = writer.abort();
+            if (ap && typeof ap.catch === "function") { ap.catch(function () { }); }
+          }
+        } catch (e4) { /* teardown is best-effort */ }
+        resolve({ ok: false, out: null, bytes: 0, error: "decompress timeout" });
+      }, DECOMP_MS);
+      var readLoop = (function () {
+        function step() {
+          return reader.read().then(function (r) {
+            if (r.done) { done = true; return; }
+            if (r.value && r.value.length) {
+              chunks.push(r.value);
+              total += r.value.length;
+            }
+            if (maxOut > 0 && total >= maxOut) {
+              done = true;
+              try {
+                var cp = reader.cancel();
+                if (cp && typeof cp.catch === "function") { cp.catch(function () { }); }
+              } catch (e3) { /* cancel is best-effort */ }
+              return;
+            }
+            return step();
+          });
+        }
+        return step().catch(function (e) { if (!readErr) { readErr = _msg(e); } });
+      })();
+      var writeLoop = (function () {
+        var off = 0;
+        function step() {
+          if (done) { return Promise.resolve(); }
+          if (off >= src.length) {
+            return writer.close().catch(function (e) { if (!readErr && !done) { readErr = _msg(e); } });
+          }
+          var end = Math.min(off + 65536, src.length);
+          var part = src.subarray(off, end);
+          off = end;
+          return writer.write(part).then(step).catch(function (e) { if (!readErr && !done) { readErr = _msg(e); } });
+        }
+        return step();
+      })();
+      Promise.all([readLoop, writeLoop]).then(function () {
+        clearTimeout(timer);
+        if (!total) {
+          resolve({ ok: false, out: null, bytes: 0, error: readErr || "empty output" });
+          return;
+        }
+        var out = null;
+        if (chunks.length === 1) {
+          out = chunks[0];
+        } else {
+          out = new Uint8Array(total);
+          var o = 0;
+          for (var i = 0; i < chunks.length; i++) {
+            out.set(chunks[i], o);
+            o += chunks[i].length;
+          }
+        }
+        resolve({ ok: true, out: out, bytes: total, error: "", readErr: readErr });
+      }).catch(function (e) {
+        clearTimeout(timer);
+        resolve({ ok: false, out: null, bytes: 0, error: _msg(e) });
+      });
+    });
+  }
+
+  /* ---------- receipt helpers ---------- */
+
+  function _fail(error, meta, warnings) {
+    return { ok: false, meta: meta || null, wtRefs: [], warnings: warnings || [], error: error };
+  }
+
+  function _crash(e) {
+    return { ok: false, meta: null, wtRefs: [], warnings: [], error: "reader crash (" + _msg(e) + ")" };
+  }
+
+  /* ---------- serum2 pipeline ---------- */
+
+  async function _serum2(u8) {
+    var warnings = [];
+    if (u8.length < 17 || !_asEq(u8, 0, XFER_HDR)) { return _fail("not a serum2 preset"); }
+    var jlen = _u64le(u8, 9);
+    if (!(jlen > 0) || jlen > JSON_CAP) { return _fail("JSON metadata length out of range"); }
+    if (u8.length < 17 + jlen) { return _fail("truncated JSON metadata block"); }
+    var meta = null;
+    var parseFail = false;
+    try { meta = JSON.parse(_utf8(u8.subarray(17, 17 + jlen))); } catch (e) { parseFail = true; meta = null; }
+    if (parseFail) { return _fail("JSON metadata parse failed"); }
+    if (!meta || typeof meta !== "object" || Array.isArray(meta)) {
+      return _fail("JSON metadata is not an object");
+    }
+    var o = 17 + jlen;
+    if (u8.length < o + 8) { return _fail("truncated CBOR header", meta); }
+    var cborSize = _u32le(u8, o);
+    var enc = _u32le(u8, o + 4);
+    if (enc !== 2) { return _fail("CBOR encoding " + enc + " is not supported (expected 2 = zstd)", meta); }
+    if (!(cborSize > 0) || cborSize > CBOR_CAP) {
+      return _fail("CBOR size word out of range (" + cborSize + ")", meta);
+    }
+    var frame = u8.subarray(o + 8);
+    if (!frame.length) { return _fail("zstd frame missing", meta); }
+
+    var dc = await _inflate(frame, "zstd", cborSize);
+    if (!dc.ok) {
+      if (dc.error === "no-format") { return _fail(ERR_ZSTD, meta, warnings); }
+      return _fail("zstd decompress failed (" + dc.error + ")", meta, warnings);
+    }
+    if (dc.bytes < cborSize) {
+      if (dc.readErr) { return _fail("zstd decompress failed (" + dc.readErr + ")", meta, warnings); }
+      _pushWarn(warnings, "zstd payload short (got " + dc.bytes + " of " + cborSize + " bytes)");
+    } else if (dc.readErr) {
+      _pushWarn(warnings, "trailing bytes after zstd frame ignored");
+    }
+
+    var dec = null;
+    var cborErr = null;
+    try { dec = _cborDecode(dc.out); } catch (e2) { cborErr = e2; dec = null; }
+    if (!dec) { return _fail("CBOR decode failed (" + _msg(cborErr) + ")", meta, warnings); }
+    var val = dec.value;
+    if (!val || typeof val !== "object" || Array.isArray(val)) {
+      return _fail("CBOR top level is not a map", meta, warnings);
+    }
+    if (dec.end < dc.out.length) {
+      _pushWarn(warnings, "trailing bytes after CBOR item (" + (dc.out.length - dec.end) + ")");
+    }
+
+    var out = { refs: [], warnings: warnings, embed: false, overflow: 0, modules: 0 };
+    _scanNode(val, "", 0, out);
+    if (out.overflow > 0) {
+      _pushWarn(warnings, "wavetable refs capped at " + REF_CAP + " (" + out.overflow + " more modules skipped)");
+    }
+    meta.moduleCount = Object.keys(val).length;
+    return { ok: true, meta: meta, wtRefs: out.refs, warnings: warnings, error: "" };
+  }
+
+  /* ---------- fxp pipeline (Serum 1 VST2 chunk preset) ---------- */
+
+  function _fxpNameAt(u8, total, off) {
+    var lim = total - off;
+    if (lim <= 0) { return null; }
+    var avail = Math.min(512, lim);
+    var end = off + avail;
+    var nul = -1;
+    for (var i = off; i < end; i++) {
+      if (u8[i] === 0) { nul = i; break; }
+    }
+    if (nul < 0 && avail < 512) { return null; }   /* cut before a terminator: never guess */
+    return _trim(_utf8(u8.subarray(off, nul >= 0 ? nul : end)));
+  }
+
+  async function _fxp(u8) {
+    var warnings = [];
+    if (u8.length < FXP_CHUNK_OFF || !_asEq(u8, 0, "CcnK") || !_asEq(u8, 8, "FPCh") ||
+        !_asEq(u8, 16, "XfsX")) {
+      return _fail("not a Serum 1 fxp container");
+    }
+    var byteSize = _u32be(u8, 4);
+    var fxVersion = _u32be(u8, 20);
+    var programs = _u32be(u8, 24);
+    var name = _cstr(u8, 28, 28);
+    var chunkSize = _u32be(u8, 56);
+    var meta = {
+      presetName: name, product: "Serum", version: "1", kind: "fxp",
+      fxVersion: fxVersion, programCount: programs, byteSize: byteSize
+    };
+    var avail = u8.length - FXP_CHUNK_OFF;
+    var take = avail;
+    if (chunkSize > 0 && chunkSize < avail) { take = chunkSize; }
+    else if (chunkSize > avail) {
+      _pushWarn(warnings, "fxp chunk truncated (have " + avail + " of " + chunkSize + " bytes)");
+    }
+    if (take <= 0) { return _fail("fxp chunk missing", meta, warnings); }
+    var chunk = u8.subarray(FXP_CHUNK_OFF, FXP_CHUNK_OFF + take);
+
+    var dc = await _inflate(chunk, "deflate", FXP_NAME_END);
+    if (!dc.ok) {
+      if (dc.error === "no-format") { return _fail(ERR_DEFLATE, meta, warnings); }
+      return _fail("fxp chunk decompress failed (" + dc.error + ")", meta, warnings);
+    }
+    var st = dc.out;
+    var L = dc.bytes;
+    var refs = [];
+    if (L <= 0x3C08) {
+      _pushWarn(warnings, "fxp state too small for wavetable names (" + L + " bytes)");
+    } else {
+      var n1 = _fxpNameAt(st, L, 0x3C08);
+      if (n1 === null) { _pushWarn(warnings, "fxp first wavetable name cut before its terminator"); }
+      else if (n1) { refs.push({ module: "fxp", path: n1 }); }
+      if (L > 0x3E08) {
+        var n2 = _fxpNameAt(st, L, 0x3E08);
+        if (n2 === null) { _pushWarn(warnings, "fxp second wavetable name cut before its terminator"); }
+        else if (n2) { refs.push({ module: "fxp", path: n2 }); }
+      } else {
+        _pushWarn(warnings, "fxp state ends before the second wavetable name (" + L + " bytes)");
+      }
+    }
+    return { ok: true, meta: meta, wtRefs: refs, warnings: warnings, error: "" };
+  }
+
+  /* ---------- sync probe ---------- */
+
+  function _probe(input) {
+    try {
+      var u8 = _bytes(input);
+      if (!u8) { return { ok: false, kind: "", name: "", error: "empty or unsupported input" }; }
+      if (!u8.length) { return { ok: false, kind: "", name: "", error: "empty input" }; }
+      if (u8.length >= 9 && _asEq(u8, 0, XFER_HDR)) {
+        if (u8.length < 17) { return { ok: false, kind: "serum2", name: "", error: "truncated XferJson header" }; }
+        var jlen = _u64le(u8, 9);
+        if (!(jlen > 0) || jlen > JSON_CAP) {
+          return { ok: false, kind: "serum2", name: "", error: "JSON metadata length out of range" };
+        }
+        if (u8.length < 17 + jlen) {
+          return { ok: false, kind: "serum2", name: "", error: "truncated JSON metadata block" };
+        }
+        var meta = null;
+        try { meta = JSON.parse(_utf8(u8.subarray(17, 17 + jlen))); } catch (e) { meta = null; }
+        if (!meta || typeof meta !== "object" || Array.isArray(meta)) {
+          return { ok: false, kind: "serum2", name: "", error: "JSON metadata parse failed" };
+        }
+        var nm = (typeof meta.presetName === "string") ? meta.presetName : "";
+        return { ok: true, kind: "serum2", name: nm, error: "" };
+      }
+      if (u8.length >= 20 && _asEq(u8, 0, "CcnK") && _asEq(u8, 8, "FPCh")) {
+        if (!_asEq(u8, 16, "XfsX")) {
+          var pid = _cstr(u8, 16, 4);
+          return { ok: false, kind: "", name: "", error: "fxp plugin id " + pid + " is not Serum (XfsX)" };
+        }
+        var fname = (u8.length >= 56) ? _cstr(u8, 28, 28) : "";
+        return { ok: true, kind: "fxp", name: fname, error: "" };
+      }
+      return { ok: false, kind: "", name: "", error: "unrecognized preset container" };
+    } catch (e) {
+      return { ok: false, kind: "", name: "", error: "probe failed (" + _msg(e) + ")" };
+    }
+  }
+
+  /* ---------- async extract (never rejects) ---------- */
+
+  function _extract(input) {
+    var u8 = null;
+    try { u8 = _bytes(input); } catch (e) { u8 = null; }
+    if (!u8 || !u8.length) {
+      return Promise.resolve({ ok: false, meta: null, wtRefs: [], warnings: [], error: "empty or unsupported input" });
+    }
+    if (u8.length >= 9 && _asEq(u8, 0, XFER_HDR)) {
+      return _serum2(u8).catch(function (e) { return _crash(e); });
+    }
+    if (u8.length >= 20 && _asEq(u8, 0, "CcnK") && _asEq(u8, 8, "FPCh") && _asEq(u8, 16, "XfsX")) {
+      return _fxp(u8).catch(function (e) { return _crash(e); });
+    }
+    return Promise.resolve({ ok: false, meta: null, wtRefs: [], warnings: [], error: "unrecognized preset container" });
+  }
+
+  return { probe: _probe, extract: _extract };
+})();
 
 
 /* av_pads.js — Anvil P2 DRUM pads (page module; ONE top-level name: avPadsInit). Mounts the 4x4

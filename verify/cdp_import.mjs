@@ -35,7 +35,8 @@
 // temp profile). SHA freeze discipline: index.html sha256'd before and after; EXPECT_SHA pinned
 // to the R15b frozen build.
 import { spawn, execSync } from 'node:child_process';
-import { existsSync, readFileSync, writeFileSync, copyFileSync, mkdirSync } from 'node:fs';
+import zlib from 'node:zlib';
+import { existsSync, readFileSync, writeFileSync, copyFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -49,7 +50,7 @@ const shaArg = argv.indexOf('--sha');
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
-const EXPECT_SHA = 'cb1128e2e026c79363f2a589022208139fab3001898b75002ae4632c1406ddfc';
+const EXPECT_SHA = 'b1da601bb3b7e01842c042574931540dfd8655b7f4227e8118f71eb701d25dbc';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -63,6 +64,10 @@ const wavPath = path.join(fxDir, 'tone.wav');
 const midPath = path.join(fxDir, 'note.mid');
 const exsPath = path.join(fxDir, 'stub.exs');
 const rx2Path = path.join(fxDir, 'loop.rx2');
+const exsPath2 = path.join(fxDir, 'rig-kit.exs');
+const kitWavPath = path.join(fxDir, 'kit-tone.wav');
+const alsPath = path.join(fxDir, 'rig.als');
+const serumPath = path.join(fxDir, 'rig.SerumPreset');
 {
   const sr = 8000, n = 400;
   const data = Buffer.alloc(n * 2);
@@ -82,6 +87,32 @@ const rx2Path = path.join(fxDir, 'loop.rx2');
     process.exit(2);
   }
   copyFileSync(rx2Src, rx2Path);
+  /* R15c fixtures: synthetic .exs + its sibling wav, gzip .als, and one REAL SerumPreset (verification only) */
+  {
+    const blk = (marker, size, name) => { const b = Buffer.alloc(84 + size); b[0] = 1; b[1] = 1; b[2] = 0; b[3] = marker; b.writeUInt32LE(size, 4); b.write('TBOS', 16, 'ascii'); b.write(name, 20, 'ascii'); return b; };
+    const d = 84;
+    const inst = blk(0, 88, 'RigKit');
+    const zn = blk(1, 148, 'Z1');
+    zn[d + 1] = 60; zn[d + 6] = 36; zn[d + 7] = 51; zn[d + 9] = 1; zn[d + 10] = 127;
+    zn.writeUInt32LE(0, d + 12); zn.writeUInt32LE(50, d + 16); zn.writeUInt32LE(0, d + 92);
+    const smp = blk(3, 600, 'S1');
+    smp.writeUInt32LE(400, d + 4); smp.writeUInt32LE(8000, d + 8); smp[d + 12] = 16;
+    smp.write('kit-tone.wav', d + 336, 'ascii');
+    writeFileSync(exsPath2, Buffer.concat([inst, zn, smp]));
+    copyFileSync(wavPath, kitWavPath);
+    const doc = '<?xml version="1.0"?><Ableton MajorVersion="12" Creator="Ableton Live 12.1"><LiveSet><Tempo><Manual Value="128"/></Tempo><FileRef><RelativePath Value="../Samples/Drums/Kick 01.WAV"/></FileRef><MidiClip><Notes><KeyTracks><KeyTrack><MidiKey Value="60"/><Notes><MidiNoteEvent Time="0" Duration="0.25" Velocity="100" IsEnabled="true"/></Notes></KeyTrack></KeyTracks></Notes></MidiClip></LiveSet></Ableton>';
+    writeFileSync(alsPath, zlib.gzipSync(Buffer.from(doc, 'utf8')));
+    const corpus = 'C:/Users/Moddy/Documents/Xfer/Serum 2 Presets/Presets';
+    const stack = [corpus]; let found = null;
+    while (stack.length && !found) {
+      const dir = stack.pop();
+      let ents = [];
+      try { ents = readdirSync(dir, { withFileTypes: true }); } catch (e) { continue; }
+      for (const e of ents) { const full = path.join(dir, e.name); if (e.isDirectory()) stack.push(full); else if (/\.SerumPreset$/i.test(e.name)) { found = full; break; } }
+    }
+    if (!found) { console.error('no real .SerumPreset under ' + corpus); process.exit(2); }
+    copyFileSync(found, serumPath);
+  }
 }
 console.log('fixtures staged in ' + fxDir);
 
@@ -263,8 +294,8 @@ async function main() {
 
   /* ── 6. exs honest deferral ── */
   const exRow = (snap1.report || []).find(i => i && i.format === 'exs') || null;
-  check('exs row: deferred with the honest reason (starts EXS24)',
-    !!exRow && exRow.result === 'deferred' && String(exRow.reason || '').indexOf('EXS24') === 0, JSON.stringify(exRow && { result: exRow.result, reason: exRow.reason }));
+  check('exs row: deferred with the honest reason (starts .exs \u2014)',
+    !!exRow && exRow.result === 'deferred' && String(exRow.reason || '').indexOf('.exs \u2014 ') === 0, JSON.stringify(exRow && { result: exRow.result, reason: exRow.reason }));
 
   /* ── 7. library lists 3; deferred exs not persisted ── */
   const lib1 = await waitFor(`(async () => { if (typeof avLibList !== 'function') return null; const l = await avLibList(); return (l && l.count === 3) ? { count: l.count, formats: l.items.map(i => i.format).sort().join(',') } : null; })()`, 15000);
@@ -337,6 +368,54 @@ async function main() {
   const fr = freshR.value || {};
   check('reload: the library persists via IndexedDB (count 3), the report resets, no proof text on the plain page',
     ready2 === true && !!persistR && persistR.count === 3 && fr.rows === 0 && fr.hits === 0, JSON.stringify({ persist: persistR, fresh: fr }));
+
+  /* ── 16-18. R15c: the structured trio on real files (second leg, after the reload) ── */
+  {
+    const docR2 = await send('DOM.getDocument', {});
+    const qR2 = (docR2 && docR2.root) ? await send('DOM.querySelector', { nodeId: docR2.root.nodeId, selector: '#av-import-file' }) : null;
+    if (!qR2 || !qR2.nodeId) {
+      check('R15c rig: second-leg input missing', false, 'no #av-import-file node');
+    } else {
+      await send('DOM.setFileInputFiles', { nodeId: qR2.nodeId, files: [exsPath2, kitWavPath, alsPath, serumPath] });
+      await sleep(1500);
+      let rows2 = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 4 ? 4 : 0`, 15000);
+      if (!rows2) {
+        await ev(`(() => { const i = document.getElementById('av-import-file'); if (i) i.dispatchEvent(new Event('change', { bubbles: true })); return true; })()`);
+        rows2 = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 4 ? 4 : 0`, 20000);
+      }
+      const snap2 = (await ev(`(window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : null`)).value || {};
+      const items2 = snap2.report || [];
+      const kit2 = items2.find(i => i && i.format === 'exs') || null;
+      const als2 = items2.find(i => i && i.format === 'als') || null;
+      const kitId = await rowId('rig-kit.exs');
+      await clickSel(`[data-av-import-lib="${kitId}"] [data-av-import-act="kit"]`, 1500);
+      const kitSent = await waitFor(`(() => { const r = avSampleStore.sent && avSampleStore.sent[0]; return (r && String(r.name).indexOf('kit-tone.wav') >= 0) ? { name: r.name, slot: r.slot } : null; })()`, 15000);
+      const kitKind = (await ev(`(typeof avParams === 'object' && avParams) ? avParams['engine.kind'] : null`)).value;
+      check('R15c rig: real .exs + sibling WAV -> kit row -> KIT loads a slot (engine kind sampler)',
+        rows2 === 4 && !!kit2 && kit2.result === 'imported' && !!kitSent && kitSent.slot === 0 && kitKind === 'sampler',
+        JSON.stringify({ rows: rows2, kit: kit2 && kit2.result, sent: kitSent, kind: kitKind }));
+      const alsId = await rowId('rig.als');
+      await clickSel(`[data-av-import-lib="${alsId}"] [data-av-import-act="seq"]`, 1200);
+      const seq2 = await waitFor(`(() => { let n = 0; try { const sn = avSeqSnap(); for (const t of sn.tracks) for (const s of t.steps) if (s.on === 1) n++; } catch (e) { return null; } const u = (window.__avUndo && typeof window.__avUndo.label === 'string') ? window.__avUndo.label : null; return (n >= 1 && u === 'import') ? { notes: n, undo: u } : null; })()`, 15000);
+      check('R15c rig: real .als -> refs row -> the SEQ button runs the pattern (undo import)',
+        !!als2 && als2.result === 'imported' && !!seq2 && seq2.notes >= 1 && seq2.undo === 'import',
+        JSON.stringify({ als: als2 && als2.result, seq: seq2 }));
+      const zstdOK = (await ev(`(() => { try { new DecompressionStream('zstd'); return true; } catch (e) { return false; } })()`)).value;
+      if (zstdOK) {
+        const serumRec = await waitFor(`(async () => { if (typeof avLibList !== 'function') return null; const l = await avLibList(); const it = (l.items || []).find(i => i.format === 'serum'); return (it && it.meta) ? { kind: it.meta.kind, pn: it.meta.presetName, n: Array.isArray(it.meta.wtRefs) ? it.meta.wtRefs.length : -1 } : null; })()`, 15000);
+        check('R15c rig: a REAL SerumPreset imports as refs (serum2 meta + wtRefs array)',
+          !!serumRec && serumRec.kind === 'serum2' && String(serumRec.pn || '').length > 0 && serumRec.n >= 0 && serumRec.n <= 256,
+          JSON.stringify(serumRec));
+      } else {
+        const serumRow = items2.find(i => i && i.format === 'serum') || null;
+        check('R15c rig: without native zstd the real SerumPreset defers honestly (reason starts .SerumPreset \u2014)',
+          !!serumRow && serumRow.result === 'deferred' && String(serumRow.reason || '').indexOf('.SerumPreset \u2014 ') === 0,
+          JSON.stringify(serumRow && { result: serumRow.result, reason: serumRow.reason }));
+      }
+    }
+  }
+
+  /* ── 14. zero page errors ── */
 
   /* ── 14. zero page errors ── */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

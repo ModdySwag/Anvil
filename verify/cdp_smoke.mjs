@@ -1150,7 +1150,7 @@ async function main() {
     !!r15b.counts && r15b.counts.total === 4 && r15b.counts.imported === 3 && r15b.counts.deferred === 1
     && r15b.counts.refused === 0 && r15b.counts.samples === 2 && r15b.counts.patterns === 1
     && r15b.byFmt.wav === 'imported' && r15b.byFmt.aiff === 'imported' && r15b.byFmt.mid === 'imported'
-    && r15b.byFmt.exs === 'deferred' && String(r15b.exsReason).indexOf('EXS24') === 0
+    && r15b.byFmt.exs === 'deferred' && String(r15b.exsReason).indexOf('.exs \u2014 ') === 0
     && r15b.ids.length === 3 && r15b.ids.every(x => x === 1), JSON.stringify(r15b));
 
   /* 6ck. R15b: the local library - list/load/remove round-trip (AIFF decode + MIDI pattern + undo) */
@@ -1182,6 +1182,102 @@ async function main() {
     r15c.loadedA === true && r15c.loadedM === true && r15c.entryFrames === 8 && r15c.entryRate === 8000
     && r15c.n1 === r15c.n0 + 1 && r15c.notes >= 1 && r15c.undoLabel === 'import'
     && r15c.removed === true && r15c.count1 === r15c.count0 - 2, JSON.stringify(r15c));
+
+  /* 6cl. R15c: EXS24 kit - synthetic .exs + sibling WAV import as a kit, LOAD lands it on the engine */
+  const r15dR = await ev(`(async () => {
+    const blk = (marker, size, name) => { const b = new Uint8Array(84 + size); b[0] = 1; b[1] = 1; b[2] = 0; b[3] = marker;
+      b[4] = size & 255; b[5] = (size >>> 8) & 255; b[6] = 0; b[7] = 0;
+      const cid = 'TBOS'; for (let i = 0; i < 4; i++) b[16 + i] = cid.charCodeAt(i);
+      for (let i = 0; i < name.length && i < 63; i++) b[20 + i] = name.charCodeAt(i); return b; };
+    const wr32 = (b, o, v) => { b[o] = v & 255; b[o + 1] = (v >>> 8) & 255; b[o + 2] = (v >>> 16) & 255; b[o + 3] = (v >>> 24) & 255; };
+    const d = 84;
+    const inst = blk(0, 88, 'RigKit');
+    const zn = blk(1, 148, 'Z1'); zn[d + 1] = 60; zn[d + 6] = 36; zn[d + 7] = 51; zn[d + 9] = 1; zn[d + 10] = 127;
+    wr32(zn, d + 12, 0); wr32(zn, d + 16, 50); wr32(zn, d + 92, 0);
+    const smp = blk(3, 600, 'S1'); wr32(smp, d + 4, 400); wr32(smp, d + 8, 8000); smp[d + 12] = 16;
+    const fn = 'kit-tone.wav'; for (let i = 0; i < fn.length; i++) smp[d + 336 + i] = fn.charCodeAt(i);
+    const cat = (arrs) => { let n = 0; for (const a of arrs) n += a.length; const o = new Uint8Array(n); let off = 0; for (const a of arrs) { o.set(a, off); off += a.length; } return o; };
+    const exs = cat([inst, zn, smp]);
+    const sr = 8000, N = 400; const l = new Float32Array(N), r = new Float32Array(N);
+    for (let i = 0; i < N; i++) { l[i] = 0.5 * Math.sin(2 * Math.PI * 440 * i / sr); r[i] = l[i]; }
+    const wav = avWavEncode({ l: l, r: r, sr: sr, bits: 16, dither: false });
+    const rc = await avImportFiles([ new File([exs], 'rig-kit.exs'), new File([wav], 'kit-tone.wav') ]);
+    const kit = rc.items.find(i => i.format === 'exs') || null;
+    const load = kit ? await avLibLoad(kit.id) : null;
+    const sent = (avSampleStore.sent && avSampleStore.sent[0]) ? { name: avSampleStore.sent[0].name, slot: avSampleStore.sent[0].slot } : null;
+    return { counts: rc.counts,
+             kit: kit && { kind: kit.kind, result: kit.result, zones: (kit.meta && kit.meta.zones) ? kit.meta.zones.length : -1, sname: (kit.meta && kit.meta.samples && kit.meta.samples[0]) ? kit.meta.samples[0].name : null },
+             load: load && { ok: load.ok, slots: load.slots, zones: load.zones }, sent: sent,
+             kind: (typeof avParams === 'object' && avParams) ? avParams['engine.kind'] : null };
+  })()`);
+  const r15d = r15dR.value || {};
+  check('R15c EXS kit: synthetic .exs + sibling WAV import as a kit; LOAD lands 1 zone on 1 slot + engine kind sampler',
+    !!r15d.counts && r15d.counts.kits === 1 && !!r15d.kit && r15d.kit.kind === 'kit' && r15d.kit.result === 'imported'
+    && r15d.kit.zones === 1 && r15d.kit.sname === 'kit-tone.wav' && !!r15d.load && r15d.load.ok === true
+    && r15d.load.zones === 1 && r15d.load.slots === 1 && !!r15d.sent && r15d.sent.slot === 0 && r15d.kind === 'sampler',
+    JSON.stringify(r15d));
+
+  /* 6cm. R15c: ADG/ALS - gzip .als extracts refs + notes; the pattern shape loads into the seq core */
+  const r15eR = await ev(`(async () => {
+    if (typeof CompressionStream === 'undefined' || typeof avAlsExtract !== 'function') return { missing: true };
+    const doc = '<?xml version="1.0"?><Ableton MajorVersion="12" Creator="Ableton Live 12.1"><LiveSet><Tempo><Manual Value="128"/></Tempo>'
+      + '<FileRef><RelativePath Value="../Samples/Drums/Kick 01.WAV"/><Path Value="C:/x/Kick 01.WAV"/></FileRef>'
+      + '<MidiClip><Notes><KeyTracks><KeyTrack><MidiKey Value="60"/><Notes><MidiNoteEvent Time="0" Duration="0.25" Velocity="100" IsEnabled="true"/></Notes></KeyTrack></KeyTracks></Notes></MidiClip></LiveSet></Ableton>';
+    const enc = new TextEncoder().encode(doc);
+    const cs = new CompressionStream('gzip');
+    const w = cs.writable.getWriter(); w.write(enc); w.close();
+    const gz = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    const rc = await avImportFiles([ new File([gz], 'rig.als') ]);
+    const it = rc.items.find(i => i.format === 'als') || null;
+    const p = (it && it.meta) ? it.meta.pattern : null;
+    const loaded = p ? avSeqLoad(p) === true : false;
+    let notes = -1;
+    if (loaded) { try { const sn = avSeqSnap(); notes = 0; for (const t of sn.tracks) for (const s of t.steps) if (s.on === 1) notes++; } catch (e) { notes = -2; } }
+    return { counts: rc.counts, it: it && { kind: it.kind, result: it.result, refs: it.meta ? it.meta.refCount : -1, notes: it.meta ? it.meta.noteCount : -1, tempo: it.meta ? it.meta.tempoBpm : -1 }, loaded: loaded, seqNotes: notes };
+  })()`);
+  const r15e = r15eR.value || {};
+  check('R15c ADG/ALS: gzip .als extracts 1 ref + 1 note @128 bpm; the mapped pattern loads into the seq core',
+    !!r15e.counts && r15e.counts.refs === 1 && !!r15e.it && r15e.it.kind === 'refs' && r15e.it.result === 'imported'
+    && r15e.it.refs === 1 && r15e.it.notes === 1 && r15e.it.tempo === 128 && r15e.loaded === true && r15e.seqNotes >= 1,
+    JSON.stringify(r15e));
+
+  /* 6cn. R15c: SerumPreset - synthetic container (native zstd when available; honest deferral otherwise) */
+  const r15fR = await ev(`(async () => {
+    if (typeof AVSerum !== 'object' || !AVSerum) return { missing: true };
+    const enc = new TextEncoder();
+    const txt = (s) => { const b = enc.encode(s); return [0x60 + b.length].concat(Array.from(b)); };
+    const m = (pairs) => { const out = [0xa0 + pairs.length]; for (const kv of pairs) { out.push.apply(out, kv[0]); out.push.apply(out, kv[1]); } return out; };
+    const inner = m([[txt('relativePathToWT'), txt('wt/table.wav')]]);
+    const cbor = new Uint8Array(m([[txt('WTOsc0'), inner]]));
+    const json = enc.encode(JSON.stringify({ fileType: 'SerumPreset', presetName: 'RIG' }));
+    let payload = null, via = 'zstd';
+    try {
+      const cs = new CompressionStream('zstd');
+      const w = cs.writable.getWriter(); w.write(cbor); w.close();
+      payload = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    } catch (err) { via = 'none'; }
+    const head = new Uint8Array(9 + 8 + json.length + 8);
+    head.set(enc.encode('XferJson\u0000'), 0);
+    const dv = new DataView(head.buffer);
+    dv.setBigUint64(9, BigInt(json.length), true);
+    head.set(json, 17);
+    const off = 17 + json.length;
+    dv.setUint32(off, cbor.length, true); dv.setUint32(off + 4, 2, true);
+    let file = head;
+    if (payload) { file = new Uint8Array(head.length + payload.length); file.set(head, 0); file.set(payload, head.length); }
+    const rc = await avImportFiles([ new File([file], 'rig.SerumPreset') ]);
+    const it = rc.items[0] || {};
+    const wt = (it.meta && it.meta.wtRefs && it.meta.wtRefs[0]) ? it.meta.wtRefs[0].path : null;
+    return { via: via, result: it.result, kind: it.kind, pname: it.meta ? it.meta.presetName : null, wt: wt, reason: String(it.reason || '') };
+  })()`);
+  const r15f = r15fR.value || {};
+  check(r15f.via === 'zstd'
+    ? 'R15c SerumPreset: synthetic container imports as refs (wtRefs[0] path + JSON name extracted)'
+    : 'R15c SerumPreset: without native zstd the container defers honestly (reason starts .SerumPreset)',
+    r15f.via === 'zstd'
+      ? (r15f.result === 'imported' && r15f.kind === 'refs' && r15f.pname === 'RIG' && r15f.wt === 'wt/table.wav')
+      : (r15f.result === 'deferred' && String(r15f.reason).indexOf('.SerumPreset \u2014 ') === 0),
+    JSON.stringify(r15f));
 
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');

@@ -1,13 +1,13 @@
-index.html sha256 (before): cb1128e2e026c79363f2a589022208139fab3001898b75002ae4632c1406ddfc
+index.html sha256 (before): b1da601bb3b7e01842c042574931540dfd8655b7f4227e8118f71eb701d25dbc
 fixtures staged in C:\Users\Moddy\anvil\cache\r15b\rig-fixtures
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791474086292
+cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791477164380
  ok   boot + card: SAMPLE PACKS mounted in the synth zone (drop, pickers, slot, facade)  -> {"card":true,"zone":"synth","drop":true,"file":true,"dir":true,"slot":true,"facade":"function","ver":"r15b.0"}
  ok   IMPORT SELFTEST proof: parses on the avtest load (inited, sniff = wav)  -> {"version":"r15b.0","inited":true,"libCount":0,"sniff":"wav"}
  ok   absent host: avImportUiInit() returns false without throwing; re-attaching restores the card  -> {"r1":false,"threw1":false,"r2":true,"threw2":false,"back":true}
- ok   real file-input import: 4 rows land (imported 3 · deferred 1 · refused 0)  -> {"total":4,"imported":3,"deferred":1,"refused":0,"samples":2,"patterns":1}
+ ok   real file-input import: 4 rows land (imported 3 · deferred 1 · refused 0)  -> {"total":4,"imported":3,"deferred":1,"refused":0,"samples":2,"patterns":1,"kits":0,"refs":0}
  ok   rx2 probe meta: slices 10 · 44100 Hz · 16-bit · 117760 frames (pipeline -> library record)  -> {"report":"imported","meta":{"slices":10,"rate":44100,"bits":16,"frames":117760}}
- ok   exs row: deferred with the honest reason (starts EXS24)  -> {"result":"deferred","reason":"EXS24 (binary) — adapter planned (R15c); the pack's WAVs/AIFFs import now"}
+ ok   exs row: deferred with the honest reason (starts .exs —)  -> {"result":"deferred","reason":".exs — unreadable (too short for an EXS24 header)"}
  ok   library: 3 items persisted (aiff-none · mid · rx2 · wav) + DOM rows match; exs absent  -> {"lib1":{"count":3,"formats":"mid,rex2,wav"},"dom":3}
  ok   LOAD (wav): decodes into the session at 48 kHz native (0.05 s preserved)  -> {"n":1,"rate":48000,"frames":2400,"secs":0.05}
  ok   SLOT 2 + SEND: avSampleStore.sent[1] records tone.wav through the engine facade  -> {"name":"tone.wav","slot":1,"frames":2400}
@@ -16,7 +16,10 @@ cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-17914740
  ok   LOAD (rx2): decodes in-browser — session entry 117760 frames @ 44100 Hz  -> {"rate":44100,"frames":117760}
    · screenshot: C:\Users\Moddy\anvil\renders\r15b-import-suite.png
  ok   reload: the library persists via IndexedDB (count 3), the report resets, no proof text on the plain page  -> {"persist":{"count":3},"fresh":{"rows":0,"hits":0}}
+ ok   R15c rig: real .exs + sibling WAV -> kit row -> KIT loads a slot (engine kind sampler)  -> {"rows":4,"kit":"imported","sent":{"name":"kit-tone.wav","slot":0},"kind":"sampler"}
+ ok   R15c rig: real .als -> refs row -> the SEQ button runs the pattern (undo import)  -> {"als":"imported","seq":{"notes":1,"undo":"import"}}
+ ok   R15c rig: without native zstd the real SerumPreset defers honestly (reason starts .SerumPreset —)  -> {"result":"deferred","reason":".SerumPreset — unreadable (zstd decompress unavailable in this browser)"}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned (before === after)  -> pinned cb1128e2e026… · before cb1128e2e026… · after cb1128e2e026…
+ ok   freeze: index.html sha256 = pinned (before === after)  -> pinned b1da601bb3b7… · before b1da601bb3b7… · after b1da601bb3b7…
 
-15 passed, 0 failed
+18 passed, 0 failed
