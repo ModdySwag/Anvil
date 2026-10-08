@@ -2097,3 +2097,37 @@ Resume phrase: **"continue anvil"**.
   encrypted refuse) + NBKT metadata; same pipeline. Follow-ups: decode `embeddedWTData` when a
   Serum-saved embed fixture exists; REX2 slices -> chop-kit mapping; zip reading; f64-WAV.
   Resume phrase "continue anvil".
+
+## Resume addendum 53 - 2026-10-09 (R15d NI/REASON TRIO SHIPPED: SXT REFE refs + NKI legacy kits/container refs + NBKT metadata LIVE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `50d6d793` (3,886,455 B; sw `cc856925`), live
+  moddys.net/anvil (scoped --verify = 0 not in sync; live sha = frozen). Smoke **69/69**
+  first-run (3 new: 6co SXT refs, 6cp legacy-NKI kit, 6cq container nki/nbkt/encrypted) ·
+  `cdp_import` **21/21** (new: legacy .nki kit e2e -> slot + sampler; the REAL CWM container NKI
+  pinned meta FM8 Jam / Kontakt / 6.7.1.0 / 61 refs; synthetic .sxt + .nbkt persist) · battery
+  24 suites green first-lap + bench exit=0 (offline knee 96/128 monotone, invalidReads 0; the
+  battery-run realtime light cell read 32 - the solo quiet re-run reads light 64 / fat 48 =
+  load, recorded) · leak 11/11 LIVE · capture renders/r15d-live-import.png inspected (card +
+  rail + library copy clean live). Owner Ctrl+F5 for the new SW cache.
+- SHIPPED: `src/av_sxt.js` (clean-room Reason NN-XT reader - REFE sample refs; 458/458 harness
+  incl. a 340-byte port-ready fixture card) · `src/av_ni.js` (legacy K1/K2 zlib-XML -> zones ->
+  kit; modern hsin/DSIN container -> metadata + refs; NBKT; self-authored FastLZ for SUB_TREE
+  descent; 69/69 harness incl. the REAL CWM template) · wiring (`avImportKitMetaFrom` shared
+  builder; per-format dispatch with pending/unreadable/encrypted pinned lines; NI+SXT ref caps
+  512; UI refs meta line) · `verify/cdp_smoke.mjs` 69 · `verify/cdp_import.mjs` 21 · pins 21.
+- LIVE BUG FOUND + FIXED at wave open (reproduced in node against the live source): avImportRun's
+  ctx lacked notes[], so `if (ctx.notes.length)` threw on EVERY run and a clean import appended
+  "import run failed" to receipt.errors - the card status line printed it live. Fix:
+  `ctx = { at, writeFails: 0, notes: [] }`; witnessed by all three new smoke checks (errors 0)
+  and the rig's zero-errors leg.
+- AMENDMENT (as-built; real-file evidence wins): "encrypted" is NOT the mere presence of chunk
+  116 - the real CWM container carries a 116 whose payload is a FastLZ-compressed SUB_TREE that
+  decodes fine. As built: encrypted = a 116 whose payload cannot be read; a decodable subtree
+  extracts (61 refs). Child conflict named; contract amended in place.
+- Fixtures: SXT/NKI/NBKT synthetic (harness-verified; ported into the suites via base64 embeds);
+  the real CWM Kontakt680Template.nki = the container witness; no real .sxt/NBKT reachable
+  (bounded fetches recorded); nothing fetched ships. docs/11 wave line + open items updated.
+- Commits: 1a90181 (contract) -> 0a03a64 (records) -> close (this addendum). NEXT (recorded
+  follow-ups): Serum `embeddedWTData` decode (needs a Serum-saved embed fixture) · REX2 slices ->
+  chop-kit mapping · zip reading · f64-WAV reader; open: MXGPR real bytes / KONG depth.
+  Resume phrase "continue anvil".
