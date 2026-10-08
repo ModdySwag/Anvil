@@ -1720,5 +1720,10 @@ body.av-drag-modsrc, body.av-drag-modsrc * { cursor: grabbing !important; }
    knob commits are frame-coalesced in av_knob.js. */
 input[type="range"] { touch-action: none; }
 
+/* R10 — no accidental text selection: the instrument chrome never highlights on click-hold/drag
+   (desktop-app feel); real text surfaces — the CODE editor, form inputs — opt back in. */
+html, body { user-select: none; -webkit-user-select: none; }
+input, textarea, [contenteditable="true"] { user-select: text; -webkit-user-select: text; }
+
 
 

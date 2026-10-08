@@ -1799,3 +1799,50 @@ Resume phrase: **"continue anvil"**.
   Store as a browser overlay, module-menu Copy/Paste, page switching for advanced module sets,
   P·2 minBLEP, PERFECT TUNINGS, more industry-standard modules (owner list item 1 done; await
   items 2..n), owner pass (Ctrl+F5 once for the new service-worker cache).
+
+## Resume addendum 44 - 2026-10-08 (R10 no-select SHIPPED + R11 STAGED: Spacebar + the LED/OLED transport console)
+
+- R10 (owner: no accidental blue text highlighting on click-hold): SHIPPED, frozen `2292a294`
+  (3,486,432 B), DEPLOYED live (upload 2292a294; scoped --verify 0 not in sync; live sha =
+  frozen). `html, body { user-select: none }` + `input, textarea, [contenteditable] { user-select:
+  text }` (styles.css R10 block). Smoke 52 first-run (new R10 check: body/note 'none',
+  textarea/input 'text'); battery 23 suites + bench ALL GREEN on the frozen bytes.
+- R11 STAGED (owner out-of-band: Spacebar play/pause + a full LED/OLED console at the top,
+  integrated with playback/recording/menu/pack switching, real-digital-console styling, maximum
+  graphical effect). Reconnaissance is COMPLETE; build targets:
+  - SPACEBAR: `src/av_kb.js` keydown dispatcher — ONE early branch right after the
+    `if (typing) return;` guard (~line 325): `e.key === " "` with no mod and target NOT
+    button/select/input/textarea/[role=button] → preventDefault + `avConsoleTransportToggle()`.
+    Leave the two in-mode Space swallows (MIDI ~332, KEYS ~348) as belt. Transport fns exist:
+    `avSeqPlay()` (av_seq_core.js:707) / `avSeqStop()` (:736) / `avSeqIsPlaying()` (:767);
+    `avSongPlay()` (av_song.js:325) / `avSongStop()` (:370).
+  - CONSOLE = NEW `src/av_console.js` — append to build.py js_parts near av_chrome.js
+    (lines ~159-162); init call in app_core.js after `avMenubarInit` (~line 157) as
+    `avConsoleInit()`. Builds idempotently INTO the existing `header.av-head` (add class
+    `av-console`; NEVER move/rename existing ids: av-word/av-version/av-tier/av-voices/btn-piano/
+    av-help + chrome's av-head-browse/undo/redo/av-head-about + a11y toggles + pwa chips must all
+    keep working — suites query ids, not order). Layout: [brand plate: Anvil + v-tag + power LED]
+    [transport deck: ▶ PLAY / ❚❚ PAUSE toggle, ■ STOP, SONG toggle, ● REC toggle — LED dots]
+    [BPM OLED readout: avParams.bpm + 'av-param' listener] [OLED info window: PACK / PRESET names
+    read from `select.av-bank-pack` / `select.av-bank-preset` (options[selectedIndex].text), with
+    `#av-tier` + `#av-voices` chips MOVED into the OLED node (ids preserved — their text updates
+    are by id)] [right: existing buttons restyled as console keycaps]. REC toggles
+    `avRecStart()`/`avRecStop()` (av_rec.js:201/255), LED polls `.av-rec-on` (500 ms); PLAY LED
+    polls `avSeqIsPlaying()` (300 ms). PREV/NEXT preset keys step `select.av-bank-preset`
+    selectedIndex + dispatch 'change' (the card's own delegated handler picks it up; APPLY stays
+    on the card — honest v1, record). Facade `window.__avConsole` + "CONSOLE SELFTEST" proof
+    (v, ready, play, rec, bpm). All guarded, never throws. Styles: console block in styles.css —
+    graphite/brushed plate gradients, OLED windows (black glass + inner shadow + scanline
+    repeating-gradient + teal segment glow), keycap buttons with LED dots, ~64 px bar; pure CSS
+    (no images).
+  - smoke: +2 checks (console present + transport/OLED wired + existing header ids intact; Space
+    dispatch via `document.body.dispatchEvent(new KeyboardEvent('keydown', { key: ' ',
+    bubbles: true, cancelable: true }))` → `__avConsole.lastAction()` flips play→stop). Then
+    build → smoke → pin sweep → battery 23 + bench → commit → deploy → addendum 45.
+  - Ready-made scripts: `cache/r1/sweep_r10.py` (edit OLD to the R10 sha; NEW auto) and
+    `cache/r1/battery_r10.sh`.
+- Carried: R11 above (FIRST ITEM for the next session), chip keyboard assign path (a11y),
+  animated rings (needs an engine->page mod value stream), widen AV_MOD_TARGETS (wire v2),
+  kind-specific drop paths, preset-name header chip, Store as a browser overlay, module-menu
+  Copy/Paste, page switching, P·2 minBLEP, PERFECT TUNINGS, more owner modules (items 2..n),
+  owner pass (Ctrl+F5 once for the new service-worker cache).

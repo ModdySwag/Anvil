@@ -30,7 +30,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const argv = process.argv.slice(2);
 const portArg = argv.indexOf('--port');
 const shaArg = argv.indexOf('--sha');
-const EXPECT_SHA = ((shaArg > -1 ? argv[shaArg + 1] : null) || process.env.AV_REC_SHA || '65b9097663025c66e50ece1e5e9f854da2e64cd4a22e67451978e43901504ecd').toLowerCase() || null;
+const EXPECT_SHA = ((shaArg > -1 ? argv[shaArg + 1] : null) || process.env.AV_REC_SHA || '2292a294252c2eda13a4603157c805dac6b14b67f2c424d77b473abbbb54ad59').toLowerCase() || null;
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 

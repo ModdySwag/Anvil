@@ -917,6 +917,23 @@ async function main() {
     && r9r.dragging === false && Math.abs(r9r.settled - r9p.end) < 0.2 && Math.abs(r9r.restored - r9p.n0) < 0.03,
     JSON.stringify({ p: r9p, r: r9r }));
 
+  /* 6bd. R10: no accidental text selection — chrome locked, text surfaces opt in */
+  const r10R = await ev(`(() => {
+    const cs = (el) => el ? getComputedStyle(el).userSelect : null;
+    const note = document.querySelector('.av-note');
+    const ta = document.querySelector('textarea');
+    const inp = document.querySelector('input:not([type]), input[type="text"]');
+    return { body: getComputedStyle(document.body).userSelect,
+             note: cs(note),
+             ta: ta ? cs(ta) : 'no-textarea',
+             inp: inp ? cs(inp) : 'no-text-input' };
+  })()`);
+  const r10 = r10R.value || {};
+  check('R10 no-select: body + card prose are user-select:none while text surfaces (textarea/input) stay selectable',
+    r10.body === 'none' && r10.note === 'none'
+    && (r10.ta === 'text' || r10.ta === 'no-textarea')
+    && (r10.inp === 'text' || r10.inp === 'no-text-input'), JSON.stringify(r10));
+
 
 
   /* 7. zero page errors */
