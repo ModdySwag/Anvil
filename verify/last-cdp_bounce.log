@@ -1,23 +1,23 @@
-index.html sha256 (before): 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
+index.html sha256 (before): a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-bounce-1791490975459
-download dir C:\Users\Moddy\AppData\Local\Temp\anvil-bounce-dl-1791490975459
+cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-bounce-1791495186017
+download dir C:\Users\Moddy\AppData\Local\Temp\anvil-bounce-dl-1791495186017
  ok   boot: data-av-ready flips
  ok   modules: avWav* · avZip* · avMid* · avBounce* · avDeliver* globals + window.__avDeliverUi(state/run)  -> {"wav":true,"zip":true,"mid":true,"bounce":true,"deliver":true,"handle":true,"host":true,"root":true,"buttons":3,"stemsBtn":true,"masterBtn":true,"selects":2,"checks":4,"status":true}
  ok   deliver card mounted into #av-deliver-host: card root + status line + options (select, checkboxes) + both buttons  -> {"host":true,"root":true,"status":true,"selects":2,"checks":4,"stemsBtn":true,"masterBtn":true}
  ok   known pattern: avSeqLoad (16-step · 4 tracks · notes on ALL tracks · prob 100 · swing 50) + pinned patch (engine.kind va · master 0.8)  -> {"ok":true,"name":"RIG PAT 1"}
  ok   avBouncePlan cross-check: count/positions equal to a direct avSeqPlan merge · frames = ceil((16×0.125 + 1)×48000) = 144000  -> {"ok":true,"direct":56,"plan":56,"frames":144000,"expected":144000,"cycleSteps":16}
- ok   bounce (loops 1, tail 1 s): ok · master + 4 parts · all buffers finite · frames = 144000 (± 1 quantum)  -> {"ok":true,"frames":144000,"finite":true,"stats":{"renders":5,"boundaries":85,"suspends":81,"missed":0,"ons":56,"offs":56,"rows":0,"params":75,"mods":5,"samples":0,"syncs":86,"barrierFail":0,"allOffs":5,"refusals":0,"renderMs":184.0999999642372,"driverTimeout":0},"warnings":[],"refused":[]}
+ ok   bounce (loops 1, tail 1 s): ok · master + 4 parts · all buffers finite · frames = 144000 (± 1 quantum)  -> {"ok":true,"frames":144000,"finite":true,"stats":{"renders":5,"boundaries":85,"suspends":81,"missed":0,"ons":56,"offs":56,"rows":0,"params":75,"mods":5,"samples":0,"syncs":86,"barrierFail":0,"allOffs":5,"refusals":0,"renderMs":176.70000004768372,"driverTimeout":0},"warnings":[],"refused":[]}
  ok   per-part energy > 0 where the track has notes (tracks 0-2 in region A, track 3 in region B)  -> [{"t":0,"rmsA":0.0731,"rmsB":0},{"t":1,"rmsA":0.06476,"rmsB":0},{"t":2,"rmsA":0.06472,"rmsB":0},{"t":3,"rmsA":0,"rmsB":0.07151}]
  ok   stem regions stay below floor where the track is silent (track 3 in A; every stem in the mid gap; master mid silent)  -> {"t3A":0,"mids":[0,0,0,0],"mMid":0}
  ok   onsets in region B: 4 within an attack/phase bound of the 128-frame boundary (each delta 0..96 · spread ≤ 64)  -> {"expected":[72064,77952,83968,89984],"stem3":[72115,78001,83999,90048],"master":[72096,77986,84001,90013],"deltas":[51,49,31,64]}
  ok   stem-vs-master onsets ride the same boundary (same count · each |Δ| ≤ 96 · both within the bound)  -> {"master":[72096,77986,84001,90013],"stem3":[72115,78001,83999,90048]}
- ok   no lost boundary suspensions (stats.missed === 0 · stats.barrierFail === 0 · syncs ≥ suspends) and the schedule was injected  -> {"renders":5,"boundaries":85,"suspends":81,"missed":0,"ons":56,"offs":56,"rows":0,"params":75,"mods":5,"samples":0,"syncs":86,"barrierFail":0,"allOffs":5,"refusals":0,"renderMs":184.0999999642372,"driverTimeout":0}
+ ok   no lost boundary suspensions (stats.missed === 0 · stats.barrierFail === 0 · syncs ≥ suspends) and the schedule was injected  -> {"renders":5,"boundaries":85,"suspends":81,"missed":0,"ons":56,"offs":56,"rows":0,"params":75,"mods":5,"samples":0,"syncs":86,"barrierFail":0,"allOffs":5,"refusals":0,"renderMs":176.70000004768372,"driverTimeout":0}
  ok   region A onsets seen on the stem too (schedule sound, not a fluke)  -> [35,6079,12068,18150,24100,29982,35999,42034]
  ok   isolation: trackMask [t0] renders ONE part (track 0) and the masked master loses region B (track 3 muted)  -> {"ok":true,"parts":1,"track":0,"rmsA":0.07310369521792527,"pkB":0,"part0hash":"520f70449b3a6e619b6980d9ffbd953da53119a4a7cc50649921c13aa3cb405c"}
  ok   isolation: masked master region A energy drops vs the full master (fewer tracks) · the selected part is byte-identical to the full run's same part  -> {"maskedA":0.07310369521792527,"fullA":0.11545814427927827,"p5":"520f70449b3a","p4":"520f70449b3a"}
  ok   determinism: same opts twice ⇒ l/r byte-identical on master + all parts (hash compare)  -> {"identical":true,"h1":"084f1dbfde90680e","h2":"084f1dbfde90680e"}
- ok   P-locks: cutoff 150 locked at steps 0/8 — applyPlocks:true differs measurably at the locked step  -> {"ok":true,"rowsOn":20,"rowsOff":0,"locked":{"a":0.14392224161939932,"b":0.17367990953792295,"rel":0.1713362702554037},"free":{"a":0.14587828818250584,"b":0.14587828818251378,"rel":5.441587452779966e-14},"onStats":{"renders":5,"boundaries":97,"suspends":92,"missed":0,"ons":56,"offs":56,"rows":20,"params":75,"mods":5,"samples":0,"syncs":97,"barrierFail":0,"allOffs":5,"refusals":0,"renderMs":179.49999994039536,"driverTimeout":0},"offStats":{"renders":5,"boundaries":85,"suspends":81,"missed":0,"ons":56,"offs":56,"rows":0,"params":75,"mods":5,"samples":0,"syncs":86,"barrierFail":0,"allOffs":5,"refusals":0,"renderMs":174.5999999642372,"driverTimeout":0},"lanes":0}
+ ok   P-locks: cutoff 150 locked at steps 0/8 — applyPlocks:true differs measurably at the locked step  -> {"ok":true,"rowsOn":20,"rowsOff":0,"locked":{"a":0.14392224161939932,"b":0.17367990953792295,"rel":0.1713362702554037},"free":{"a":0.14587828818250584,"b":0.14587828818251378,"rel":5.441587452779966e-14},"onStats":{"renders":5,"boundaries":97,"suspends":92,"missed":0,"ons":56,"offs":56,"rows":20,"params":75,"mods":5,"samples":0,"syncs":97,"barrierFail":0,"allOffs":5,"refusals":0,"renderMs":177.30000001192093,"driverTimeout":0},"offStats":{"renders":5,"boundaries":85,"suspends":81,"missed":0,"ons":56,"offs":56,"rows":0,"params":75,"mods":5,"samples":0,"syncs":86,"barrierFail":0,"allOffs":5,"refusals":0,"renderMs":174,"driverTimeout":0},"lanes":0}
  ok   P-locks: unlocked region identical (rel < 0.1) · applyPlocks:false emits no rows · lanes cleared after  -> {"free":{"a":0.14587828818250584,"b":0.14587828818251378,"rel":5.441587452779966e-14},"rowsOff":0,"lanes":0}
  ok   WAV: 16/24/32f encode of the master — avWavInfo truth (bits/sr/frames/format) + data-size math  -> {"i16":{"ok":true,"sampleRate":48000,"channels":2,"bits":16,"format":"pcm","formatTag":1,"float":false,"frames":144000,"dataBytes":576000,"bytes":576044,"dataOffset":44,"blockAlign":4,"byteRate":192000},"i24":{"ok":true,"sampleRate":48000,"channels":2,"bits":24,"format":"pcm","formatTag":1,"float":false,"frames":144000,"dataBytes":864000,"bytes":864044,"dataOffset":44,"blockAlign":6,"byteRate":288000},"i32":{"ok":true,"sampleRate":48000,"channels":2,"bits":32,"format":"float","formatTag":3,"float":true,"frames":144000,"dataBytes":1152000,"bytes":1152044,"dataOffset":44,"blockAlign":8,"byteRate":384000}}
  ok   WAV: 16 vs 24 byte sizes differ exactly by frames × 2 · encoding deterministic (dither:false)  -> {"b16":576044,"b24":864044,"det":true}
@@ -26,17 +26,17 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-bounce-dl-1791490975459
  ok   ZIP: avZipBuild (fixed date) → avZipInfo names/sizes · byte-stable across two builds · CRC32("123456789") = 0xCBF43926  -> {"ok":true,"info":{"ok":true,"count":2,"names":["rig-a.txt","rig-b.bin"],"sizes":[11,5],"bytes":226,"crcs":[787726441,1191942644],"offsets":[0,50]},"stable":true,"crc":3421780262}
  ok   deliver e2e: avDeliverRun(loops 1, bits 16, pinned params) → ok · kind zip · name anvil_120bpm_Cmaj_stems.zip  -> {"ok":true,"kind":"zip","name":"anvil_120bpm_Cmaj_stems.zip","bytes":3843881,"warnings":[]}
  ok   deliver zip entry set: master + 4 stems + full.mid + README.txt present (11 entries incl. 4 stem mids)  -> {"missing":[],"names":["anvil_120bpm_Cmaj_master.wav","anvil_120bpm_Cmaj_stem1.wav","anvil_120bpm_Cmaj_stem2.wav","anvil_120bpm_Cmaj_stem3.wav","anvil_120bpm_Cmaj_stem4.wav","anvil_120bpm_Cmaj_full.mid","anvil_120bpm_Cmaj_stem1.mid","anvil_120bpm_Cmaj_stem2.mid","anvil_120bpm_Cmaj_stem3.mid","anvil_120bpm_Cmaj_stem4.mid","README.txt"]}
- ok   deliver: every entries[].sha256 RECOMPUTED from the zip bytes (store-method walk) — equal · sizes equal · CRC32 equal  -> {"n":11,"shasOk":true,"first":{"name":"anvil_120bpm_Cmaj_master.wav","claim":"b33eacb1d5eb","real":"b33eacb1d5eb","crcOk":true}}
+ ok   deliver: every entries[].sha256 RECOMPUTED from the zip bytes (store-method walk) — equal · sizes equal · CRC32 equal  -> {"n":11,"shasOk":true,"first":{"name":"anvil_120bpm_Cmaj_master.wav","claim":"e0f7daa8727c","real":"e0f7daa8727c","crcOk":true}}
  ok   deliver README: carries the bpm, the base/key, file names + Anvil header  -> {"hasBase":true,"head":"Anvil — stem export\n===================\n\nSource : RIG PAT 1 · loops 1 × 16 steps · 120 BPM · grid 16 · swing 50\nKey    :"}
    · download affordance: clicked (BUTTON:DOWNLOAD)
    · download: direct avDeliverDownload fallback -> true
- ok   deliver download lands on disk in the CDP download dir (anvil_120bpm_Cmaj_stems.zip)  -> {"dir":"C:\\Users\\Moddy\\AppData\\Local\\Temp\\anvil-bounce-dl-1791490975459","file":"anvil_120bpm_Cmaj_stems.zip"}
- ok   deliver download: file sha256 === the returned bytes sha256 (the artifact is the artifact)  -> {"file":"anvil_120bpm_Cmaj_stems.zip","fileSha":"b1c65691a3600ef8","retSha":"b1c65691a3600ef8"}
+ ok   deliver download lands on disk in the CDP download dir (anvil_120bpm_Cmaj_stems.zip)  -> {"dir":"C:\\Users\\Moddy\\AppData\\Local\\Temp\\anvil-bounce-dl-1791495186017","file":"anvil_120bpm_Cmaj_stems.zip"}
+ ok   deliver download: file sha256 === the returned bytes sha256 (the artifact is the artifact)  -> {"file":"anvil_120bpm_Cmaj_stems.zip","fileSha":"264f8b159be66302","retSha":"264f8b159be66302"}
  ok   zero page errors
- ok   screenshot: renders/p6-deliver-suite.png (the deliver card, scale 2)  -> 52617 bytes · clip 1010×216 @2x
-index.html sha256 (after): 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
- ok   freeze: index.html sha256 = pinned  -> pinned 3f87b4d31171…
+ ok   screenshot: renders/p6-deliver-suite.png (the deliver card, scale 2)  -> 52167 bytes · clip 1010×214 @2x
+index.html sha256 (after): a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
+ ok   freeze: index.html sha256 = pinned  -> pinned a85af992e99e…
 
 32 passed, 0 failed
 BOUNCE PASSED

@@ -2296,19 +2296,47 @@ Resume phrase: **"continue anvil"**.
   rebuild -> cdp_hub 33 -> cdp_import 24 (expectations UNCHANGED) -> pins sweep -> battery 25 +
   bench -> deploy (index+sw) -> live capture -> close addendum 61. Contract: `verify/_r18_wave.md`.
 
-### Session-end verify-state (2026-10-09 - copy-paste block for the next session)
+## Resume addendum 61 - 2026-10-09 (R18a LIBRARY INTELLIGENCE SHIPPED + owner-clip chop/pad layout fix - LIVE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `a85af992` (4,045,196 B; sw `69b656e6`), live
+  moddys.net/anvil (upload "2 uploaded, 0 already there"; scoped --verify = 0 not in sync; live
+  sha = frozen). Gates: smoke **75/75** - cdp_hub **33/33** (pinned) - cdp_import **24/24** -
+  battery **25 suites** (24 first-lap; cdp_store's transient busy-affordance watch missed under
+  battery load -- solo re-run **28/28 green**, recorded in the chain log) + bench exit=0
+  (realtime {light 64 - fat 48}; offline knee 96/128 monotone, invalidReads 0 - the recorded
+  loaded-window class; worklet `b65160e0` unchanged) - leak probe **11/11 LIVE** - pins 22 swept.
+- R18a INTEGRATED: styles block for the three new classes (.av-import-chip-dup / -missing /
+  .av-import-relink) + rebuild; core/UI/rig from the landed children (commit 1046dd0).
+- OWNER CLIP (07:40 - chop card): "APPLY KIT" wrapped to two lines and "SLICE -> STEPS" spilled
+  across the neighbour inside the fixed .av-btn 26x26 icon box; the pads were 26px stamps in
+  126px grid tracks (never filled the grid). Fixed via scoped CSS; a full-app audit
+  (cache/r18/chop_probe.mjs, all 8 zones) found the SAME spill on .av-mod-add (+ ADD SLOT),
+  .av-rec-btn (REC) and .av-deliver-go (EXPORT STEMS (.zip) / MASTER WAV) -- all fixed in the
+  same pass. Evidence: renders/r18a-chop-{before,after,card}.png + renders/r18a-live-chop*.png.
+- NEW PERMANENT GUARD: cdp_smoke's R18a layout leg (range text-width vs the content box, all
+  zones swept, zero offenders) -- smoke 74 -> 75; the owner-reported defect class can no longer
+  recur silently.
+- Rig SPEC fixes (cdp_hub, strength kept): the replace/relink predicates expected receipt
+  objects; the facade wrappers return the house boolean (true on success) and every semantic
+  witness passed -- the predicates now state their intent (op ok) and keep the receipt-shape
+  asserts only when the object form is returned.
+- Commits: this close commit (styles + index/sw + rigs + pins + logs + renders + contract s.9 +
+  this addendum). Nothing running. NEXT (docs/12): R18b (linked source folders via FSA + PWA
+  file_handlers) -> R19 `.avpack` -> R20 work persistence. Carried: quiet bench re-run
+  (owed/optional) - P.2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS.
+
+### Session-end verify-state (2026-10-09 - R18a CLOSED; copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -5                                         # HEAD = the R18a save commit (addendum 60 + this block)
+    git log --oneline -5                                         # HEAD = the R18a close commit (addendum 61)
     git status --short                                           # clean except `?? cache/`
-    curl -s https://moddys.net/anvil/index.html | sha256sum      # = 3f87b4d3... (frozen, live)
+    curl -s https://moddys.net/anvil/index.html | sha256sum      # = a85af992... (frozen, live)
     grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (unchanged - page-side wave)
-    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "74 passed, 0 failed" before ANY new work
-    # NOTE: cdp_hub is mid-wave (33 checks; its EXPECT_SHA still pins the frozen 3f87b4d3 build) -
-    # last green on the FROZEN bytes was 29/29 BEFORE the R18a legs were added; run it only at
-    # the R18a freeze (after the rebuild + re-pin), not as a boot gate.
+    node verify/cdp_smoke.mjs > verify/last-cdp_smoke.log 2>&1   # expect "75 passed, 0 failed" before ANY new work
+    # cdp_hub is pinned to a85af992 (33 checks incl. the R18a legs) - run it as the hub gate.
 
-R18a children landed + verified (commit 1046dd0; addendum 60): core sha256/dedupe/relink +
-UI + cdp_hub 33; build + smoke 74/74 proven on the landed sources. NEXT (integration session):
-styles block -> rebuild -> cdp_hub 33 -> cdp_import 24 -> pins sweep -> battery 25 + bench ->
-deploy -> live capture -> addendum 61. Resume phrase "continue anvil". Nothing in flight.
+R18a CLOSED + LIVE (addendum 61): frozen `a85af992` (4,045,196 B) at moddys.net/anvil; smoke 75 -
+hub 33 - import 24 - battery 25 + bench (96/128 monotone, loaded window) - leak 11/11; includes
+the owner-clip chop/pad layout fix + the app-wide .av-btn spill sweep + the new smoke layout
+guard. NEXT (docs/12): R18b (linked folders + PWA handlers) -> R19 `.avpack` -> R20 persistence.
+Resume phrase "continue anvil". Nothing in flight.

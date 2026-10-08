@@ -135,3 +135,26 @@ Keep EXPECT_SHA as-is (parent re-pins at freeze). In-page fixtures only (no disk
 
 Per child: files written · interface list as implemented · not-done · conflicts · uncertainties.
 Parent verifies landings by artifacts on disk (search_files + node --check), never by report.
+
+## §9 Close amendments - 2026-10-09 (as-built)
+
+- **Owner clip (chop layout) folded into the freeze:** the CHOP card's text buttons ("APPLY KIT"
+  wrapped; "SLICE -> STEPS" spilled over its neighbour) and its pads (26px stamps inside 126px
+  grid tracks -- the grid never filled) were the SAME .av-btn 26x26 icon-box defect class as the
+  R17b picker fix. Fixed in `src/styles.css` (scoped rules). A full-app audit
+  (`cache/r18/chop_probe.mjs`, range text-width vs the content box, all 8 zones) found the
+  identical spill on `.av-mod-add` (+ ADD SLOT), `.av-rec-btn` (REC) and `.av-deliver-go`
+  (EXPORT STEMS (.zip) / MASTER WAV) -- all fixed in the same pass.
+- **New permanent guard:** `cdp_smoke` gains the R18a layout-guard leg (all zones swept, zero
+  overflowing labels) -- smoke 74 -> **75**.
+- **Rig SPEC fixes (`cdp_hub`, strength kept):** the replace + relink predicates expected receipt
+  objects; the facade wrappers (`__avImport.replace/relink`) return the house boolean (true on
+  success). Every semantic witness passed; the predicates now state their intent (op ok) and keep
+  the receipt-shape asserts only when the object form is returned.
+- **Close gates (frozen `a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861`,
+  4,045,196 B; worklet `b65160e0` unchanged):** smoke **75** . cdp_hub **33** . cdp_import **24** .
+  battery **25 suites** (24 first-lap; cdp_store's transient busy-affordance watch missed under
+  battery load -- solo **28/28** green, recorded) + bench exit=0 (realtime {light 64, fat 48};
+  offline knee 96/128 monotone, invalidReads 0 -- recorded loaded-window class). Pins 22 ->
+  `a85af992` **full 64-hex literals**. Deployed (index + sw; scoped --verify 0 not in sync; live
+  sha = frozen). Leak probe 11/11 LIVE. Evidence: `renders/r18a-chop-*.png` + `r18a-live-chop*`.

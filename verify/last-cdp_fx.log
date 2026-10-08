@@ -1,6 +1,6 @@
-index.html sha256 (before): 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
+index.html sha256 (before): a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791490901827
+cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791495111608
  ok   boot: data-av-ready flips
  ok   fx rack mounted: #av-fx-host + card root + 7 strips
  ok   exports: avFxInit + avFxSnap + avFxClasses + avFxInventory + window.__avFx (p3.0)  -> {"init":true,"snap":true,"classes":true,"inventory":true,"handle":true,"version":"p3.0"}
@@ -13,10 +13,10 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791490901
  ok   engine ready (the live tier is up before the tail witness)  -> worklet
  ok   tail witness: rig's OWN AnalyserNode armed on the master tap (avMasterFor)  -> {"ok":true,"sr":48000,"fft":2048}
  ok   tail witness: silent control window BEFORE the note (RMS < 0.005)  -> control max=0.00000 over 33 samples
- ok   tail: note started through the ONE note path (avNoteDown('c4', 1.0))  -> {"ok":true,"t":4747.400000035763}
- ok   tail: note released (avNoteUp('c4'))  -> {"ok":true,"t":6063.5}
- ok   tail witness: the held note is LOUD on the master tap (RMS > 0.02)  -> hold max=0.1695
- ok   REVERB TAIL WITNESSED: tail RMS after note-off (t+250..t+1000 ms) sits above the silent control window  -> tail max=0.0566 vs control max=0.00000 · tail mean=0.0219 · headless engine, tail table=worklet
+ ok   tail: note started through the ONE note path (avNoteDown('c4', 1.0))  -> {"ok":true,"t":4898.5}
+ ok   tail: note released (avNoteUp('c4'))  -> {"ok":true,"t":6212.600000023842}
+ ok   tail witness: the held note is LOUD on the master tap (RMS > 0.02)  -> hold max=0.1637
+ ok   REVERB TAIL WITNESSED: tail RMS after note-off (t+250..t+1000 ms) sits above the silent control window  -> tail max=0.0702 vs control max=0.00000 · tail mean=0.0226 · headless engine, tail table=worklet
  ok   param round-trip: every mounted module path accepted (40 paths — wheel/change through the bound handler, avApplyParam true, mirror echo, visual repaint, restore)  -> 40/40 ok
    · round-trip sample (first knob): {"path":"fx.drive.mix","kind":"knob","ok":true,"stage":"","wheel":{"from":1,"to":0.99,"dir":"down"},"accept":{"v":0,"returned":true,"echo":true},"restored":true,"visual":true}
  ok   §3 path sweep: unmounted module paths accepted for delivery (12/12 — predelay · spread · duck · bpm · stages · down · eqLo/eqMid/eqHi · comp.att/rel/makeup)  -> 12/12 ok
@@ -28,8 +28,8 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791490901
  ok   wet sanity: verb ON mix 1 CHANGES the render vs dry (maxAbsDiff > 0 — the chain is live, not dead)  -> {"ok":true,"lenEq":true,"lenA":144000,"lenB":144000,"maxAbsDiff":0.6657574027776718,"dL":0.5387839302420616,"dR":0.6657574027776718,"firstDiff":0}
  ok   zero page errors
  ok   screenshot: renders/p3-fx-suite.png (the FX rack card, scale 2)  -> 320201 bytes · clip 1010×1030 @2x
-index.html sha256 (after): 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
- ok   freeze: index.html sha256 = pinned  -> pinned 3f87b4d31171…
+index.html sha256 (after): a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
+ ok   freeze: index.html sha256 = pinned  -> pinned a85af992e99e…
 
 27 passed, 0 failed

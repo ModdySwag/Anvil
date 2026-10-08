@@ -71,7 +71,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R16 REX2->chop: slice table drives detect (via rex2) -> kit -> apply  -> {"via":"rex2","count":3,"s2":{"s0":100,"s1":200},"kitOk":true,"kitN":3,"aplOk":true,"slot":0}
  ok   R17 hub: manager ids + runs + storage footer + facade pick/pickDir/library/rename/exportItem  -> {"search":true,"sort":true,"filters":true,"selall":true,"delsel":true,"runs":true,"runsclear":true,"storage":true,"persist":true,"pick":"function","pickDir":"function","library":"function","rename":"function","exportItem":"function"}
  ok   R17 hub: File menu carries Import sounds / Import folder / Library  -> ["Save project (.anvl)","Open project...","Import sounds...","Import folder...","Library...","Export stems (Deliver)","Load demo groove"]
+ ok   R18a layout guard: no button label overflows its box (all zones swept)  -> []
  ok   R12 proof gate: a plain load (no ?avtest=1) renders zero SELFTEST text + an empty proof host  -> {"plainReady":true,"leak":{"hits":0,"hostText":"","consoleEl":false}}
  ok   zero page errors
 
-74 passed, 0 failed
+75 passed, 0 failed

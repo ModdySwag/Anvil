@@ -1451,6 +1451,43 @@ async function main() {
     && r17b.labels.indexOf('Import folder...') >= 0 && r17b.labels.indexOf('Library...') >= 0,
     JSON.stringify(r17b.labels));
 
+  /* R18a layout guard: no text button overflows its box (the owner-clip defect class --
+     a text label on the fixed .av-btn 26x26 icon box wraps/spills and collides with its
+     neighbour; swept across all zones so the class cannot recur silently). */
+  const ogR = await ev(`(async () => {
+    const zones = ['synth', 'fx', 'mod', 'seq', 'studio', 'store', 'code', 'system'];
+    const bad = [];
+    const sweepBtn = function (zone, el) {
+      try {
+        const r = el.getBoundingClientRect();
+        if (r.width < 2 || r.height < 2) return;
+        const txt = (el.textContent || '').trim();
+        if (txt.length <= 2) return;
+        const rng = document.createRange(); rng.selectNodeContents(el);
+        const textW = rng.getBoundingClientRect().width;
+        const cs = getComputedStyle(el);
+        const contentW = el.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+        const wrapOver = el.scrollHeight - el.clientHeight;
+        if (textW > contentW + 1.5 || wrapOver > 1) bad.push({ zone: zone, id: el.id || String(el.className).slice(0, 32), t: txt.slice(0, 18),
+          textW: Math.round(textW * 10) / 10, contentW: Math.round(contentW * 10) / 10, wrapOver: wrapOver });
+      } catch (e) { /* skip */ }
+    };
+    for (let zi = 0; zi < zones.length; zi++) {
+      const z = zones[zi];
+      try { if (typeof avZoneShow === 'function') avZoneShow(z, { source: 'smoke' }); } catch (e) { /* keeps sweeping */ }
+      await new Promise(function (res) { setTimeout(res, 200); });
+      const pane = document.getElementById('av-zone-' + z);
+      if (!pane) { bad.push({ zone: z, id: 'NO-PANE' }); continue; }
+      const els = pane.querySelectorAll('button');
+      for (let i = 0; i < els.length; i++) sweepBtn(z, els[i]);
+    }
+    return { bad: bad, zones: zones.length };
+  })()`);
+  const og = (ogR && ogR.value) ? ogR.value : {};
+  check('R18a layout guard: no button label overflows its box (all zones swept)',
+    !!og && og.zones === 8 && Array.isArray(og.bad) && og.bad.length === 0,
+    JSON.stringify(og.bad ? og.bad.slice(0, 6) : og));
+
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');
   await send('Page.navigate', { url: plainUrl });

@@ -1,6 +1,6 @@
-index.html sha256 (before): 3f87b4d311716d97ff29cae495d78c9b013a90fdf2a2209b2affd4a70f42bbd2
+index.html sha256 (before): a85af992e99e7ce17dbf2217baba578c2f52882856fa3dd22883db100b74e861
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9580 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-hub-1791492476583
+cdp port 9580 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-hub-1791494967280
 fixtures: synthesized in-page (avWavEncode WAVs + hand-built SMF + one unknown file)
  ok   hub boot: card in the store zone + h2 "Import & Library"  -> {"card":true,"zone":"store","h2":"Import & Library"}
  ok   hub boot: legacy ids intact (drop/file/dir/pick/pickdir/status/counts/report/lib/slot/note/empty)  -> {"drop":true,"file":true,"dir":true,"pick":true,"pickdir":true,"status":true,"counts":true,"report":true,"lib":true,"slot":true,"note":true,"empty":true}
@@ -9,14 +9,14 @@ fixtures: synthesized in-page (avWavEncode WAVs + hand-built SMF + one unknown f
  ok   facade __avLib: rename/receiptSave/receiptList/receiptClear + list/get kept  -> {"pick":"function","pickDir":"function","library":"function","rename":"function","exportItem":"function","importFiles":"function","snap":"function","lrename":"function","recSave":"function","recList":"function","recClear":"function","list":"function","get":"function"}
  ok   menubar File: Import sounds... / Import folder... / Library... present  -> ["Save project (.anvl)","Open project...","Import sounds...","Import folder...","Library...","Export stems (Deliver)","Load demo groove"]
  ok   library jump: File > Library... and avImportUiLibrary() switch to the store pane (returns true)  -> {"menu":{"clicked":true,"afterMenu":"store"},"fn":{"okSynth":true,"mid":"synth","ret":true,"end":"store"}}
- ok   import run 1: three files land (2 imported + 1 unknown honest) via the change handler  -> {"filesN":3,"counts":{"total":3,"imported":2,"deferred":0,"refused":1,"samples":1,"patterns":1,"kits":0,"refs":0,"bundles":0},"alpha":"imported","mike":"imported","unk":{"result":"refused","reason":"unrecognized format"}}
+ ok   import run 1: three files land (2 imported + 1 unknown honest) via the change handler  -> {"filesN":3,"counts":{"total":3,"imported":2,"deferred":0,"refused":1,"samples":1,"patterns":1,"kits":0,"refs":0,"bundles":0,"dups":0},"alpha":"imported","mike":"imported","unk":{"result":"refused","reason":"unrecognized format"}}
  ok   import run 1: library gains the 2 imports (unknown not persisted) + DOM rows match  -> {"count":2,"names":"hub-alpha.wav,hub-mike.mid","dom":2}
- ok   import run 1: receipt persisted (avLibReceiptList 1 + #av-import-runs 1 row, empty line hidden)  -> {"count":1,"backend":"idb","rows":1,"snapRuns":1,"emptyHidden":true,"rowText":"07:17 · imported 2 · deferred 0 · refused 1 · import 2026-10-09 07:17"}
- ok   import run 2: a second run -> receipt count 2 + #av-import-runs 2 rows  -> {"count":2,"rows":2,"rep":1,"zulu":true,"c0":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0}}
+ ok   import run 1: receipt persisted (avLibReceiptList 1 + #av-import-runs 1 row, empty line hidden)  -> {"count":1,"backend":"idb","rows":1,"snapRuns":1,"emptyHidden":true,"rowText":"07:59 · imported 2 · deferred 0 · refused 1 · import 2026-10-09 07:59"}
+ ok   import run 2: a second run -> receipt count 2 + #av-import-runs 2 rows  -> {"count":2,"rows":2,"rep":1,"zulu":true,"c0":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0,"dups":0}}
    · reloaded (plain page) — ready=true
- ok   reload: receipts survive fresh (count 2 + the stored counts intact + runs rows reborn)  -> {"count":2,"rows":2,"a":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0},"b":{"total":3,"imported":2,"deferred":0,"refused":1,"samples":1,"patterns":1,"kits":0,"refs":0,"bundles":0}}
+ ok   reload: receipts survive fresh (count 2 + the stored counts intact + runs rows reborn)  -> {"count":2,"rows":2,"a":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0,"dups":0},"b":{"total":3,"imported":2,"deferred":0,"refused":1,"samples":1,"patterns":1,"kits":0,"refs":0,"bundles":0,"dups":0}}
  ok   reload: the library loads fresh (3 items + DOM rows 3)  -> {"count":3,"names":"hub-alpha.wav,hub-mike.mid,hub-zulu.wav","dom":3}
- ok   rename: avLibRename applies via the UI commit (avLibList + manager DOM); empty name refused  -> {"ren":{"id":"lmv00d6fu-hub-alpha-wav","acc":true,"nowName":"hub-bravo.wav","r2":{"ok":false,"name":"","err":"no name"},"stillName":"hub-bravo.wav"},"dom":{"hit":true}}
+ ok   rename: avLibRename applies via the UI commit (avLibList + manager DOM); empty name refused  -> {"ren":{"id":"lmv01uk7l-hub-alpha-wav","acc":true,"nowName":"hub-bravo.wav","r2":{"ok":false,"name":"","err":"no name"},"stillName":"hub-bravo.wav"},"dom":{"hit":true}}
    · reloaded again — ready=true
  ok   reload: the renamed item persists (hub-bravo.wav present, hub-alpha.wav gone)  -> {"bravo":true,"alpha":false,"receipts":2}
  ok   manager search: "mike" narrows 3 items -> 1 hit (snap manager.search)  -> {"rows":1,"hit":true,"search":"mike"}
@@ -25,14 +25,19 @@ fixtures: synthesized in-page (avWavEncode WAVs + hand-built SMF + one unknown f
  ok   manager select-all: all 3 visible rows check + delete-selected arms (snap selected 3)  -> {"checked":3,"armed":true,"selected":3}
  ok   manager delete selected: the checked rows go, the unchecked row intact (deleted 2)  -> {"count":1,"rows":1,"names":["hub-bravo.wav"],"status":"deleted 2","disarmed":true}
  ok   export: spy got (bytes, filename) — length === stored size + the name carries the ext; original restored  -> {"ex":{"size":1644,"L":1644,"id":true},"got":{"len":1644,"name":"hub-bravo.wav"},"calls":1,"restored":{"restored":true,"isFn":true},"status":"exported hub-bravo.wav"}
- ok   storage: the footer line is honest (storage: <used> of <quota> · <tier> or the unavailable fallback)  -> "storage: 16.5 KB of 10240.0 MB · best-effort"
+ ok   storage: the footer line is honest (storage: <used> of <quota> · <tier> or the unavailable fallback)  -> "storage: 17.3 KB of 10240.0 MB · best-effort"
  ok   persist: avStorePersist() resolves {ok,persisted} honestly + the button writes the honest result  -> {"res":{"ok":true,"persisted":false,"error":""},"status":"persistent storage not granted (best-effort)","claimsGrant":false}
- ok   drop-anywhere: a non-hub drop routes to the store pane and imports exactly once  -> {"before":2,"settle":{"count":3,"zone":"store","rows":3,"rep":1,"hit":1},"after":3}
- ok   drop inside the hub: imports exactly once — containment guard, no double import  -> {"before":3,"settle":{"count":4,"rows":4,"rep":1,"hit":1},"after":4}
- ok   drop on the sample card stays the sample card (no hub receipt, no store yank)  -> {"before":4,"settle":{"entries":1,"receipts":4,"zone":"synth"},"after":4}
+   · R18a entry: receipts 2 · library {"count":1,"names":"hub-bravo.wav"}
+ ok   R18a dedupe: the same WAV twice -> 2nd receipt item.dup = 1st {id,name} · counts.dups 1 · snap.dups 1 · dup chip row  -> {"imp1":{"via":"change","count":3},"imp2":{"via":"change","count":4},"firstId":"lmv01unvz-r18-dup-wav","got":{"count":4,"total":1,"imported":1,"dups":1,"snapDups":1,"chips":1,"dup":{"id":"lmv01unvz-r18-dup-wav","name":"r18-dup.wav"},"dupVia":"snap"},"after":{"count":4,"counts":{"total":1,"imported":1,"dups":1},"snapDups":1,"snapReportN":1,"uiReportN":1,"chips":1,"chipText":"DUPLICATE of r18-dup.wav","subtle":true}}
+ ok   R18a replace: __avImport.replace(newId) -> ONE record kept (old id, source.replaced) · new id gone · op ok  -> {"firstId":"lmv01unvz-r18-dup-wav","newId":"lmv01uo3c-r18-dup-wav","pair":{"count":3,"ids":["lmv01uo3c-r18-dup-wav","lmv01unvz-r18-dup-wav"],"newId":"lmv01uo3c-r18-dup-wav","newDupOf":{"id":"lmv01unvz-r18-dup-wav","name":"r18-dup.wav"}},"receipt":{"val":"true"},"after":{"hits":1,"count":2,"keptId":"lmv01unvz-r18-dup-wav","goneNew":true,"replaced":true,"srcName":"r18-dup.wav","srcAt":1791494973628}}
+ ok   R18a missing: .exs kit with an absent sibling WAV -> pre-scan 0 · snap.missing >= 1 · kit row missing chip  -> {"pre":{"via":"snap","v":0},"kitLen":1088,"imp":{"via":"change","count":5},"wait":{"miss":1,"via":"snap","chips":1},"probe":{"miss":1,"via":"snap","kitId":"lmv01uoqy-r18-kit-exs","kind":"kit","rowKind":"kit","rowHas":true,"chipsAll":1,"rep":{"result":"imported","kind":"kit"}}}
+ ok   R18a relink: __avImport.relink(name, candidateId) -> missing back to 0 · renamed name in avLibList · op ok  -> {"candidate":{"id":"lmv01unvz-r18-dup-wav","kind":"sample","n":1},"preRelink":{"via":"snap","v":1},"relink":{"val":"true"},"after":{"miss":0,"via":"snap","id":"lmv01unvz-r18-dup-wav","name":"r18-ghost.wav","chipsAll":0}}
+ ok   drop-anywhere: a non-hub drop routes to the store pane and imports exactly once  -> {"before":5,"settle":{"count":6,"zone":"store","rows":6,"rep":1,"hit":1},"after":6}
+ ok   drop inside the hub: imports exactly once — containment guard, no double import  -> {"before":6,"settle":{"count":7,"rows":7,"rep":1,"hit":1},"after":7}
+ ok   drop on the sample card stays the sample card (no hub receipt, no store yank)  -> {"before":7,"settle":{"entries":1,"receipts":7,"zone":"synth"},"after":7}
    · screenshot: C:\Users\Moddy\anvil\renders\r17-hub-suite.png
  ok   row action: the surviving sample LOADs end-to-end (48 kHz native, 0.05 s preserved)  -> {"n":2,"rate":48000,"frames":2400,"secs":0.05}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned (before === after)  -> pinned 3f87b4d31171… · before 3f87b4d31171… · after 3f87b4d31171…
+ ok   freeze: index.html sha256 = pinned (before === after)  -> pinned a85af992e99e… · before a85af992e99e… · after a85af992e99e…
 
-29 passed, 0 failed
+33 passed, 0 failed
