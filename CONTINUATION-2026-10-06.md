@@ -1677,3 +1677,46 @@ Resume phrase: **"continue anvil"**.
 
 - R6 shipped: sticky scroll-shadow scrims on the zone panes (styles.css, pure CSS), smoke 45/45 green first-run (new rig check), frozen `37268aca` (3,461,742 B), DEPLOYED live (upload --verify 0 not in sync; live sha256 = the frozen build). Battery-r6 LANDED 2026-10-08 21:01:43: 23 suites ALL GREEN on `37268aca` (0 fails; bench exit=0) - see `verify/last-battery-r6.log`.
 - NEXT ASK (owner, screenshot attached): make the left rail SECTIONS collapsible/expandable ("menu tightenable") - refine the rail section layout to standard menu design: chevron section headers, independent open/closed state (persist it), tighter spacing, the Panels quick-view group collapsible too; keep it fully functional. TOP ITEM for the next session (full context was exhausted mid-wave).
+
+## Resume addendum 41 - 2026-10-08 (R7: THE RAIL STANDARD-MENU PASS - chevron sections · persisted collapse · tighter spacing)
+
+- Owner ask (recorded in 40b + screenshot `clip_20261008_205727_2`): make the left rail SECTIONS
+  collapsible/expandable ("menu tightenable") - standard menu design: chevron section headers,
+  independent open/closed state (persist it), tighter spacing, the Panels quick-view collapsible
+  too; keep it fully functional. Contract: `verify/_r7_wave.md`.
+- Shipped, frozen `24491edd` (3,468,264 B), live at https://moddys.net/anvil/ (scoped --verify:
+  anvil/index.html + anvil/sw.js IN SYNC, **0 file(s) not in sync**; live sha256 = the frozen build):
+  - RAIL (`src/av_rail.js` r7.0): every zone group gets a header row `.av-rail-zrow` = chevron
+    button `.av-rail-chev` (aria-expanded + aria-controls, glyph `.av-rail-chev-glyph` rotated 90°
+    when open) + the existing label button, which is now jump-ONLY (no state side effect). Cards
+    visible iff `.av-rail-group.expanded`; the old `.on`-forces-open coupling is REMOVED (`.on` =
+    active highlight only; the zone accent map moved from `.av-rail-zone[data-zone]` to
+    `.av-rail-group[data-zone]`). State = LS `av-rail-sections` (9 keys: 8 zones + panels, 1|0),
+    seeded first-run (active zone + Panels expanded), materialized + persisted at init; only
+    chevron/head clicks write it after.
+  - PANELS quick-view collapsible: `.av-rail-sec-head` is now a button (aria-expanded/-controls)
+    with its own glyph; sublabels + boxes live in `.av-rail-sec-body#av-rail-panels-body`;
+    `.collapsed` hides the body.
+  - CSS: tighter standard-menu spacing (zone rows 7->5 px vertical, cards 4->3 px + indent 34->32,
+    sec/prow/sublabel tightened); glyph transition .12 s (the global `.av-reduce-motion *` rule
+    covers it). Facade: `__avRail.sections()/sectionSet()/sectionToggle()`; RAIL SELFTEST gains
+    `sections` + `panels`.
+- Rigs: smoke **47** first-run (two new R7 checks: 9 chevron headers + independent toggle/persist/
+  aria/restore + label-jump; panels head collapse/persist). Battery 23 suites on the frozen bytes:
+  22 green first-lap; **seq first-lap 30/31** (swing odd-shift 27.304 ms vs the +6 ms bound - the
+  recorded knife-edge class) **re-ran green 31/31** (23.406 ms, capture spread 8.9 ms - loaded
+  machine; the chain log carries the re-run line). Pins swept 20 files (full 64-hex, counted-assert
+  one-shot script `cache/r1/sweep_r7.py`).
+- PERF GATE (bench run FOR REAL this gate): bench exit=0 - knee 96/128 monotone; realtime light 32 /
+  fat 48. Worklet sha `d7f0ee41` UNCHANGED (verified byte-for-byte in the built index.html vs the
+  previous build). NOTE: the r6 chain's "bench exit=0" line was vacuous (no bench invocation - `$?`
+  after the loop); the r7 chain (`cache/r1/battery_r7.sh`) runs the bench explicitly and this record
+  is real.
+- Commits: wave `12fe52d`; close (this addendum + deploy records).
+- Deploy: frozen bytes copied to radio-browser/deploy/anvil/ + `python3 upload-site.py --only
+  anvil/index.html anvil/sw.js` -> "2 uploaded, 0 already there"; scoped --verify = 0 not in sync;
+  live sha256 = 24491edd... = local. (The FULL --verify walk exceeds the 420 s foreground cap on
+  this tree - the nightly NIGHTVERIFY job covers the full-site walk.)
+- Carried: drag-to-modulate gesture, Store as a browser overlay, preset-name header chip,
+  module-menu Copy/Paste, page switching for advanced module sets, P·2 minBLEP, PERFECT TUNINGS,
+  owner pass (Ctrl+F5 once for the new service-worker cache).
