@@ -2009,3 +2009,22 @@ Resume phrase: **"continue anvil"**.
   (wire v2) · kind-specific drop paths · Store browser overlay · module-menu Copy/Paste · page
   switching · P·2 minBLEP · PERFECT TUNINGS · more owner modules · optional cdp_store leg for
   the console step happy-path (real packs). Resume phrase "continue anvil".
+
+## Resume addendum 50 - 2026-10-09 (R15a recon DONE - SAMPLE PACKS plan of record staged)
+
+- R15a findings landed: `research/import/01-ableton-mystery.md` · `02-ni-rex2.md` ·
+  `03-serum-exs-native.md` (detail + licence tables there). Decisions folded into
+  `docs/11-sample-import.md` (plan of record: per-format verdicts + canonical-bundle
+  architecture + wave split).
+- Corrections vs the first triage: EXS24 is BINARY (TBOS chunks), not text · REX2 = Unlicensed
+  public spec + test vectors = best value/effort (V1.5) · Serum 2 container solved (XferJson +
+  uint64 JSON + zstd->CBOR; verified on 629 presets on this machine) and the PNG-strip claim
+  did NOT verify (0 PNGs in 629 — 30-min spike first) · ADG/ALS extraction green-lit
+  (DecompressionStream('gzip') confirmed on real files; full ALS import out of scope) · AIFF and
+  f64-WAV need clean-room readers (browsers won't decode them) · sibling-WAV fallback = the
+  default UX path · KONG = honest refusal · SXT = Reason NN-XT, REFE chunk carries sample refs
+  (clean-room feasible) · MXGPR ~ `.mxgrp` = NI Maschine 2 Group (confirm at first real file).
+- NEXT: R15b — author `verify/_r15b_wave.md` with the source open (app-side pins: sample
+  store/slots, sampler zone v2, store IDB, av_pad/chop) -> dispatch the SAMPLE PACKS card +
+  sniffer + canonical bundle + IDB library + WAV/MP3/AIFF/MIDI (REX2 if budget). Resume phrase
+  "continue anvil".
