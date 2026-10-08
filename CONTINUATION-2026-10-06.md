@@ -2482,6 +2482,27 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   is active) - P.2 minBLEP pass - P4 follow-ups - PERFECT TUNINGS - README status refresh (offered) -
   owner-pass items (real launchQueue arrival + real FSA dir-picker click). Nothing else in flight.
 
+## Resume addendum 68 - 2026-10-09 (R21 OPENED: IMPORT & LIBRARY redesign - contract + authors dispatched)
+
+- R19 closed first in this session (addendum 67, commit db0ca56; deploy + live verified). R21 = the
+  OWNER ASK below. Contract `verify/_r21_wave.md` (committed with this addendum) - the wave's
+  single source of truth.
+- Design (agent discretion, recorded in the contract): `src/av_library_ui.js` (NEW, child A) = the
+  full-surface LIBRARY overlay shell (Esc/away close, search-first focus, palette + File menu +
+  hub strip entries, status mirror); `src/av_import_ui.js` (child B) = card slimming (strip
+  #av-import-libsum + OPEN LIBRARY #av-import-libopen), manager mount API
+  (avImportUiManagerMount / avImportUiMgrEl; the manager's ids PRESERVED - the contract travels to
+  the overlay), format/pack facets, incremental rows (step 60 / ceiling 400) + show more,
+  per-item inspector, bulk bar (load/send/chop/seq/export - export = ONE zip via avZipBuild),
+  avImportUiLibrary() also opens the overlay. Rigs: D1 cdp_hub 42 -> 49 (7 new legs: strip,
+  close+focus, format facet, pack facet, incremental 65-file witness, bulk load, inspector) +
+  open-steps on the manager legs; D2 smoke 78 (+1) + cdp_import open-steps (24 unchanged).
+- ON CHILD RETURN: verify artifacts -> styles block -> integration (build.py js_parts + app_core
+  init) -> rebuild -> triage -> pins sweep -> battery 25 + bench -> deploy (index+sw) -> live
+  capture -> close addendum 69+.
+- Carried: quiet bench re-run - P.2 minBLEP - P4 follow-ups - PERFECT TUNINGS - README refresh -
+  owner-pass items. Nothing else in flight.
+
 ## OWNER ASK (2026-10-09) - IMPORT & LIBRARY redesign = wave R21 (STAGED; next after the R19 close)
 
 - Ask (recorded intent): full access to ALL loaded files but STREAMLINED navigation - the hub
