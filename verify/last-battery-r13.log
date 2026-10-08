@@ -1,0 +1,26 @@
+battery-r13 start 2026-10-09 00:32:46
+smoke exit=0 ::  58 passed, 0 failed 
+cockpit exit=0 ::  21 passed, 0 failed 
+studio exit=0 :: 37 passed, 0 failed STUDIO PASSED 
+sessions exit=0 :: 41 passed, 0 failed SESSIONS PASSED 
+comp exit=0 :: 41 passed, 0 failed COMP PASSED 
+mix exit=0 :: MIX-RESULT {"kind":"anvil-cdp-mix","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":46,"failed":0,"verdict":"pass"} MIX PASSED 
+knob_feel exit=0 ::  18 passed, 0 failed 
+keys exit=0 ::  27 passed, 0 failed 
+midi exit=0 ::  33 passed, 0 failed 
+sample exit=0 ::  29 passed, 0 failed 
+rec exit=0 ::  29 passed, 0 failed 
+fx exit=0 ::  27 passed, 0 failed 
+seq exit=0 ::  31 passed, 0 failed 
+store exit=0 :: 28 passed, 0 failed STORE PASSED 
+bounce exit=0 :: 32 passed, 0 failed BOUNCE PASSED 
+deck exit=0 :: DECK-RESULT {"kind":"anvil-cdp-deck","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":35,"failed":0,"checks":35,"verdict":"pass"} DECK PASSED 
+s4 exit=0 :: S4-RESULT {"kind":"anvil-cdp-s4","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":37,"failed":0,"checks":37,"verdict":"pass"} S4 PASSED 
+s5 exit=0 :: S5-RESULT {"kind":"anvil-cdp-s5","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":36,"failed":0,"checks":36,"verdict":"pass"} S5 PASSED 
+code exit=0 :: S5-CODE-RESULT {"kind":"anvil-cdp-code","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":36,"failed":0,"checks":36,"verdict":"pass"} S5 CODE PASSED 
+m1 exit=0 :: M1-RESULT {"kind":"anvil-cdp-m1","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":33,"failed":0,"checks":33,"verdict":"pass"} M1 PASSED 
+m2 exit=0 :: M2-RESULT {"kind":"anvil-cdp-m2","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":40,"failed":0,"checks":40,"verdict":"pass"} M2 PASSED 
+platform exit=0 :: PLATFORM-RESULT 52/52 PASSED PLATFORM-RESULT-JSON {"kind":"anvil-cdp-platform","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","servedIndexSha":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":52,"failed":0,"checks":52,"verdict":"pass"} 
+a11y exit=0 :: A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","sha256After":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","pinned":"24ab19b366752f961dc6192b1a5056fefbbc21d066661e4b13815d4722b3653d","passed":32,"failed":0,"checks":32,"verdict":"pass"} A11Y PASSED 
+bench exit=0 :: renders/p1-bench.png BENCH-RESULT {"mode":"real","quick":false,"tier":"worklet","url":"blob","realtimeRatio":1,"published":{"light":64,"fat":48},"offlinePublished":96,"offlineKnee":{"lastPassN":96,"firstFailN":128,"monotone":true},"invalidReads":0,"json":"verify/last-cdp_bench.json","log":"verify/last-cdp_bench.log"} 
+GATE-R13 DONE 2026-10-09 00:48:41
