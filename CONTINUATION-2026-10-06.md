@@ -1675,5 +1675,5 @@ Resume phrase: **"continue anvil"**.
 
 ## Addendum 40b - R6 (pane scroll-shadow scrims) + NEXT ASK
 
-- R6 shipped: sticky scroll-shadow scrims on the zone panes (styles.css, pure CSS), smoke 45/45 green first-run (new rig check), frozen `37268aca` (3,461,742 B), DEPLOYED live (upload --verify 0 not in sync; live sha256 = the frozen build). Battery-r6 re-run was in flight at session close (23-suite chain; record lands in `verify/last-battery-r6.log`).
+- R6 shipped: sticky scroll-shadow scrims on the zone panes (styles.css, pure CSS), smoke 45/45 green first-run (new rig check), frozen `37268aca` (3,461,742 B), DEPLOYED live (upload --verify 0 not in sync; live sha256 = the frozen build). Battery-r6 LANDED 2026-10-08 21:01:43: 23 suites ALL GREEN on `37268aca` (0 fails; bench exit=0) - see `verify/last-battery-r6.log`.
 - NEXT ASK (owner, screenshot attached): make the left rail SECTIONS collapsible/expandable ("menu tightenable") - refine the rail section layout to standard menu design: chevron section headers, independent open/closed state (persist it), tighter spacing, the Panels quick-view group collapsible too; keep it fully functional. TOP ITEM for the next session (full context was exhausted mid-wave).

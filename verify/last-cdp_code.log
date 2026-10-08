@@ -1,7 +1,7 @@
-index.html sha256 (before): 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
+index.html sha256 (before): 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9680 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-code-1791454176637
-download dir C:\Users\Moddy\AppData\Local\Temp\anvil-code-dl-1791454176637
+cdp port 9680 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-code-1791455416277
+download dir C:\Users\Moddy\AppData\Local\Temp\anvil-code-dl-1791455416277
 ── 1. boot + card + API surface ──
  ok   1a boot: data-av-ready flips · engine ctx running/48k · window.__avEngine ready (tier worklet — worklet:data expected on file://) · rig helpers injected (__codeW v1)  -> {"ready":true,"eng":{"found":true,"state":"running","sampleRate":48000,"codeReady":true,"codeTier":"worklet","maxVoices":64}}
  ok   1b card mounted: #av-code + #av-code-host present (parent markup + avCodeUiInit)  -> {"card":true,"host":true}
@@ -9,14 +9,14 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-code-dl-1791454176637
 ── 2. live fx module + audio witness ──
    · baseline armed: {"kind":"va"}
  ok   2a witness law: the rig's OWN AnalyserNode armed on the master tap (avMasterFor — panel reads are never witnesses)  -> {"ok":true,"sr":48000,"fft":2048}
- ok   2b bypass baseline: note 60 via __avEngine.noteOn WITNESSED non-silent on the tap (rig-measured a — no planted literals)  -> {"a":0.09598547429946937,"n":60,"on":true}
+ ok   2b bypass baseline: note 60 via __avEngine.noteOn WITNESSED non-silent on the tap (rig-measured a — no planted literals)  -> {"a":0.09598547429946937,"n":59,"on":true}
  ok   2c avCodeAdd(rig fx: st.oL = inL*0.5 + amt): status ok · kind fx · kindId null · avCodeList row ready · engine running (worklet)  -> {"add":{"ok":true,"id":"rigfx","kind":"fx","kindId":null,"params":{"amt":1,"mix":1},"fxIndex":7},"row":{"id":"rigfx","name":"Rig Half Gain","label":null,"kind":"fx","api":1,"enabled":true,"ready":true,"kindId":null,"fxIndex":7,"poisoned":false,"paramsLen":null},"eng":{"ready":true,"tier":"worklet","sr":48000,"maxVoices":64,"os":2,"ctxState":"running"}}
- ok   2d module RUNS LIVE: amt=1 default RMS ≈ half the bypass RMS — rig-measured ratio in [0.2, 0.8] (expected ≈0.5, printed)  -> {"a":0.09598547429946937,"b":0.047207041989947664,"ratio":0.4918,"n":59}
+ ok   2d module RUNS LIVE: amt=1 default RMS ≈ half the bypass RMS — rig-measured ratio in [0.2, 0.8] (expected ≈0.5, printed)  -> {"a":0.09598547429946937,"b":0.04696086268315064,"ratio":0.4892,"n":60}
  ok   2e param commit: avCodeSetParam('rigfx','amt',0.25) true · avParams mirrors fx.rigfx.amt = 0.25 · avCodeGetParam echo 0.25  -> {"ret":true,"mirror":0.25,"get":0.25}
- ok   2f param takes effect LIVE: amt 0.25 RMS drops FURTHER below amt 1 — rig-measured ratio in [0.05, 0.6] (expected ≈0.25, printed)  -> {"b":0.047207041989947664,"c":0.012142509180847687,"ratio":0.2572,"n":60}
+ ok   2f param takes effect LIVE: amt 0.25 RMS drops FURTHER below amt 1 — rig-measured ratio in [0.05, 0.6] (expected ≈0.25, printed)  -> {"b":0.04696086268315064,"c":0.012133882485015617,"ratio":0.2584,"n":60}
 ── 3. poison (throwing module) ──
- ok   3a poison added WHILE a note plays: add ok · engine keeps rendering — stats() still answers with active >= 1 after the throwing module entered the chain  -> {"add":{"ok":true,"id":"rigpoison","kind":"fx","kindId":null,"params":{"mix":1},"fxIndex":8},"stats":{"active":1,"released":0,"total":1,"maxVoices":64,"sr":48000,"os":2,"stolen":0,"msBoot":5,"uwt":0,"fxChain":"drive aw mod delay verb conv dyn rigfx rigpoison","mpe":{"on":0,"bend":48,"active":0}}}
- ok   3b engine keeps rendering: a FOLLOWING note still sounds — witness tap, relational vs the same run amt-0.25 measurement (same chain state)  -> {"c":0.012142509180847687,"follow":0.01246271853538636,"n":61}
+ ok   3a poison added WHILE a note plays: add ok · engine keeps rendering — stats() still answers with active >= 1 after the throwing module entered the chain  -> {"add":{"ok":true,"id":"rigpoison","kind":"fx","kindId":null,"params":{"mix":1},"fxIndex":8},"stats":{"active":1,"released":0,"total":1,"maxVoices":64,"sr":48000,"os":2,"stolen":0,"msBoot":6,"uwt":0,"fxChain":"drive aw mod delay verb conv dyn rigfx rigpoison","mpe":{"on":0,"bend":48,"active":0}}}
+ ok   3b engine keeps rendering: a FOLLOWING note still sounds — witness tap, relational vs the same run amt-0.25 measurement (same chain state)  -> {"c":0.012133882485015617,"follow":0.012409602037832325,"n":60}
  ok   3c poison reported: avCodeList row poisoned/off · avCodeStatus().poisoned carries rigpoison  -> {"row":{"id":"rigpoison","name":"rigpoison","label":null,"kind":"fx","api":1,"enabled":true,"ready":true,"kindId":null,"fxIndex":8,"poisoned":true,"paramsLen":null},"status":{"has":true,"len":1,"engine":"worklet","engineOk":true,"count":2,"keys":["engine","count","poisoned"],"err":null}}
  ok   3d poison never escapes: zero uncaught page errors across the poison window (count unchanged)  -> before=0 after=0
  ok   3e poison removed cleanly: avCodeRemove(rigpoison) → the row is gone from avCodeList  -> {"pGone":true,"rmv":{"done":true}}
@@ -34,7 +34,7 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-code-dl-1791454176637
 ── 6. user kind module (sine + env) ──
  ok   6a kind add: first free user kindId >= 64 · list row ready · avCodeKinds() lists the entry  -> {"add":{"ok":true,"id":"rigkind","kind":"kind","kindId":64,"params":{"level":0.8}},"row":{"id":"rigkind","name":"rigkind","label":null,"kind":"kind","api":1,"enabled":true,"ready":true,"kindId":64,"fxIndex":null,"poisoned":false,"paramsLen":null},"entry":{"id":null,"name":"rigkind","label":"rigkind","kind":null,"api":null,"enabled":null,"ready":null,"kindId":64,"fxIndex":null,"poisoned":null,"paramsLen":null},"kinds":[{"id":null,"name":"rigkind","label":"rigkind","kind":null,"api":null,"enabled":null,"ready":null,"kindId":64,"fxIndex":null,"poisoned":null,"paramsLen":null}]}
  ok   6b engine.kind accepts the user kind: avApplyParam('engine.kind', "rigkind") true + mirror echo  -> {"kName":"rigkind","ap":{"ret":true,"echo":"rigkind"}}
- ok   6c user kind SOUNDS: note 60 routed to the rig sine+env kind → tap witness non-silent (rig-measured, relational vs amt-0.25 chain)  -> {"c":0.012142509180847687,"kind":0.012804843439392841,"n":60}
+ ok   6c user kind SOUNDS: note 60 routed to the rig sine+env kind → tap witness non-silent (rig-measured, relational vs amt-0.25 chain)  -> {"c":0.012133882485015617,"kind":0.012804948814271244,"n":61}
  ok   6d synth card: #av-synth-engine carries the user kind option (parent-integrated avCodeKinds() append)  -> {"found":true,"match":true,"n":8,"opts":[{"v":"va","t":"va"},{"v":"acid","t":"acid"},{"v":"string","t":"string"},{"v":"drum","t":"drum"},{"v":"grain","t":"grain"},{"v":"sampler","t":"sampler"},{"v":"fm","t":"fm"},{"v":"rigkind","t":"rigkind"}]}
 ── 7. UI path ──
  ok   7a examples: >= 3 buttons in #av-code-examples · avCodeExamples() >= 3 (tremolo/bitcrush/fold) · avCodeExample("tremolo") yields src  -> {"keys":["tremolo","bitcrush","fold"],"btns":3,"tremLen":1531}
@@ -44,13 +44,13 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-code-dl-1791454176637
  ok   7d #av-code-stop click removes the selected module (list no longer contains tremolo)  -> {"stopClicked":true,"removed":true}
  ok   7e #av-code-status truthful: non-empty · no failure wording while run/stop succeeded · no zero-modules claim while rig modules stay loaded  -> {"statusText":"removed tremolo","ids":["rigfx","rigkind"],"rowEls":2}
 ── 8. seal ──
- ok   8a screenshot: renders/code-suite.png (the CODE card, scale 2 — taken while modules are live)  -> 265593 bytes · clip 1048×902 @2x
+ ok   8a screenshot: renders/code-suite.png (the CODE card, scale 2 — taken while modules are live)  -> 272411 bytes · clip 1048×902 @2x
  ok   8b cleanup: all rig modules removed · engine.kind restored to the armed value · notes released · fx rig param mirror dropped · engine still ready  -> {"cl":{"removed":["rigfx","rigkind"],"kindNow":"va","kindWant":"va","held":0,"amtMirror":"absent","errs":{"removed":["rigfx","rigkind"]}},"finalIds":[],"eng":{"ready":true,"tier":"worklet","sr":48000,"maxVoices":64,"os":2,"ctxState":"running"}}
  ok   8c zero page errors across the whole run (exceptions · Log errors · console.error)  -> page errors=0
-index.html sha256 (after): 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
- ok   8d freeze: index.html sha256 before === after (unchanged by the run)  -> 22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379
- ok   pin leg: index.html sha256 = pinned  -> pinned 22ea7e52cd7a...
+index.html sha256 (after): 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
+ ok   8d freeze: index.html sha256 before === after (unchanged by the run)  -> 37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c
+ ok   pin leg: index.html sha256 = pinned  -> pinned 37268aca96ca...
 
 RESULT: 36 passed, 0 failed
-S5-CODE-RESULT {"kind":"anvil-cdp-code","sha256Before":"22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379","sha256After":"22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379","pinned":"22ea7e52cd7a16c688e271d9ca2f5b64015f20ba20b50e9395f0570523ef9379","passed":36,"failed":0,"checks":36,"verdict":"pass"}
+S5-CODE-RESULT {"kind":"anvil-cdp-code","sha256Before":"37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c","sha256After":"37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c","pinned":"37268aca96cae1eef43741221e3e6d7812280fc7e4b5fe672f47d41537a7063c","passed":36,"failed":0,"checks":36,"verdict":"pass"}
 S5 CODE PASSED
