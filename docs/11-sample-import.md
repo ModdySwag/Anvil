@@ -58,7 +58,8 @@ assignment surfaces: the 4 engine sample slots, drum pads, chop, grain, OSC2, se
 
 - **R15b** — the SAMPLE PACKS card + sniffer + canonical bundle + IDB library + assignment +
   V1 formats (WAV/MP3/AIFF/MIDI); REX2 joins if the wave has budget (spec ready, Unlicense).
-- **R15c** — EXS + Serum spike (+ wavetables) + ADG/ALS extraction + SXT refs + NKI partial.
+- **R15c** - EXS24 (Logic kits -> sampler kits) + ADG/ALS (sample refs + clip->pattern) + SerumPreset (wavetable refs; native zstd gated) - SHIPPED 2026-10-09 (`b1da601b`); the STRUCTURED PACKS trio.
+- **R15d** - SXT REFE refs + NKI partial (legacy zlib-XML zones + modern metadata/refs; encrypted refuse) + NBKT metadata; the R15c pipeline carries them (new adapters register in AV_IMPORT_POLICY).
 - Owner-visible acceptance: drop a mixed pack folder → formats recognized honestly → content
   usable in sampler / pads / chop.
 

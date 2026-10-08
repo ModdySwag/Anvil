@@ -2067,23 +2067,33 @@ Resume phrase: **"continue anvil"**.
   register in AV_IMPORT_POLICY). Optional follow-ups: REX2 slices -> chop-kit mapping, zip
   reading (drop-folder covers V1), f64-WAV reader. Resume phrase "continue anvil".
 
-## Resume addendum 52 (WIP) - 2026-10-09 (R15c STAGED: STRUCTURED PACKS contract authored + 4 children dispatched)
+## Resume addendum 52 - 2026-10-09 (R15c STRUCTURED PACKS SHIPPED: EXS24 kits + ADG/ALS extraction + SerumPreset reader LIVE)
 
-- `verify/_r15c_wave.md` AUTHORED (source-open pins; the R15b pipeline deltas: item kinds
-  `kit`/`refs`, counts `kits`/`refs`, the route-by-format kit/refs LOAD laws, UI row actions,
-  and the pinned reason strings for pending/unreadable states).
-- SCOPE: R15c = **EXS24** (Logic kits -> sampler kits, ≤4-slot honest cap) + **ADG/ALS**
-  (sample refs + clip->pattern via the avMidToPattern shape) + **SerumPreset** (container +
-  wavetable refs + the embed spike; the PNG premise is DEAD — 0 PNG signatures in 629 real
-  presets). SXT/NKI/NBKT move to R15d; docs/11's wave line gets edited at close.
-- DISPATCHED (4 children, see delegation id in Mnemosyne): `src/av_exs.js` · `src/av_als.js` ·
-  `src/av_serum.js` · the WIRING child (sole writer of `av_import.js` + `av_import_ui.js` +
-  `av_lib.js`).
-- AT LANDING (do not re-derive): artifact guard -> `cache/r1/int_r15c.py` (build.py +3 parts;
-  smoke 63->**66**; cockpit untouched) -> build -> smoke 66 first-run -> `cdp_import` +3
-  (**15->18**; fixtures in cache/r15c/rig-fixtures/ incl. ONE real SerumPreset — verification
-  only, nothing ships) -> pins sweep 20 (`cb1128e2...` OLD) + cdp_import re-pin -> battery
-  **24 suites** + bench (worklet sha `b65160e0` must stay UNCHANGED) -> records commit ->
-  deploy index.html + sw.js -> scoped --verify 0 -> live pass (leak probe DIRECTORY url
-  `https://moddys.net/anvil/`; capture `renders/r15c-live-import.png` inspected) -> addendum
-  52 final + docs/11 wave-line edit. Resume phrase "continue anvil".
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `b1da601b` (3,815,323 B; sw `94a77feb`), live
+  moddys.net/anvil (scoped --verify = 0 not in sync; live sha = frozen). Smoke **66/66**
+  first-run · `cdp_import` **18/18** (kit load e2e + als SEQ wire + real-SerumPreset leg) ·
+  battery: 23 suites green first-lap + bench exit=0 (realtime light 64/fat 48, offline knee
+  96/128 monotone, worklet sha `b65160e0` unchanged) + `cdp_cockpit` float-list check flaked
+  under load (list:0) with a green solo re-run 21/21 (flake class recorded) · leak 11/11 LIVE ·
+  capture `renders/r15c-live-import.png` saved (card + rail + copy verified live).
+- SHIPPED: `src/av_exs.js` (clean-room EXS24 binary reader; 149/149 harness) · `src/av_als.js`
+  (gzip-XML extractor + clip->pattern, deep-equal to avMidToPattern on shared content; 112/112;
+  real-file verified vs 4 public .als fixtures) · `src/av_serum.js` (SerumPreset container +
+  minimal CBOR walker + fxp name path; 1316/0 harness vs 626 real presets; refs are nested
+  `OscillatorN/WTOscN` in real files - walked at any depth) · wiring (adapter dispatch, kinds
+  `kit`/`refs`, counts, route-by-format kit LOAD -> slots+zones+engine kind sampler, ALS rides
+  the mid seq flow, kit/refs UI rows+actions) · smoke 63->66 · rig 15->18.
+- KEY FINDING: this Chromium has **no native zstd** (`CompressionStream/DecompressionStream
+  ('zstd')` throw) - the Serum reader defers honestly in-browser (`.SerumPreset - unreadable
+  (zstd ...)`); the node harness drives the real decode via `node:zlib.zstdDecompressSync`.
+  Node-verified decode + browser-honest refusal is the shipped contract. The embed case is
+  EMPIRICALLY confirmed to exist (34 embedded modules / 23 corpus files; opaque-warning path
+  asserted) - decoding `embeddedWTData` stays a later spike.
+- Fixes in the landing pass: rig fixture consts hoisted (block-scope ReferenceError); counts
+  kits/refs now require result imported (a deferred .exs no longer counts as a kit).
+- Commits: 10a8ac3 (contract) -> fd65ac4 (children) -> e105a3f (checkpoint) -> 2dc4aaf
+  (records) -> close (this addendum). docs/11 wave line updated (R15d split recorded).
+- NEXT: **R15d** - SXT REFE refs + NKI partial (legacy zlib-XML zones + modern metadata/refs;
+  encrypted refuse) + NBKT metadata; same pipeline. Follow-ups: decode `embeddedWTData` when a
+  Serum-saved embed fixture exists; REX2 slices -> chop-kit mapping; zip reading; f64-WAV.
+  Resume phrase "continue anvil".
