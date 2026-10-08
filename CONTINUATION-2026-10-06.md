@@ -2131,3 +2131,33 @@ Resume phrase: **"continue anvil"**.
   follow-ups): Serum `embeddedWTData` decode (needs a Serum-saved embed fixture) · REX2 slices ->
   chop-kit mapping · zip reading · f64-WAV reader; open: MXGPR real bytes / KONG depth.
   Resume phrase "continue anvil".
+
+## Resume addendum 54 - 2026-10-09 (R16 FOLLOW-UPS SHIPPED: zip reading + REX2->chop kits + f64-WAV reader LIVE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `ebc4e907` (3,928,027 B), live moddys.net/anvil
+  (scoped --verify = 0 not in sync; live sha = frozen). Smoke **72/72** (3 new: 6cr zip expansion,
+  6cs f64-WAV, 6ct REX2->chop) · `cdp_import` **24/24** (new: the real-zip leg, the f64 load leg,
+  the real .rx2 slice->chop leg) · battery 24 suites green first-lap + bench (offline knee
+  **128/128 monotone** - firstFailN null, the best reading on record; realtime light 64/fat 48;
+  invalidReads 0; worklet sha `b65160e0` unchanged) · leak 11/11 LIVE · capture
+  renders/r16-live-import.png (empty-card surface unchanged; R16 deltas sit behind imports).
+  Owner Ctrl+F5 for the new SW cache.
+- SHIPPED: `src/av_zip.js` (clean-room ZIP reader - probe/list/extract; stored + deflate-raw; caps
+  + inflate-bomb guard; 93/93 harness vs the python-zipfile fixture + 20 variant classes) · zip
+  expansion in av_import.js (`avImportZipPrep` pre-pass: a bundle row + children through the same
+  pipeline, keys z1..zN, depth-1 nested guard; counts gains `bundles`; the R15b fallback line
+  stays for the absent reader) · REX2->chop (av_lib stashes `entry.rexSlices` on the rex2 load -
+  before add + post-clone re-check; `avChopDetect` synthesizes the transient shape with `via:
+  "rex2"`; kit/zones/apply untouched) · f64-WAV (`avWavInfo` tag-3/64 accepted; `avWavDecodeF64`;
+  `avLibLoadWavF64` clean-room load route; native decode never touched).
+- RIG SPEC FIXES (recorded, strength kept; both were MY checks misasserting, not app bugs):
+  6cr's zip-child LOAD expected 400f@8k - the native wav route resamples to the live context
+  (0.05 s -> 2400f@48k; the R15b decodeAudioData law) -> expectation corrected to the stated
+  intent (duration preserved). The rig's rx2 leg initially searched the session for the check-12
+  entry - the persistence leg RELOADS the page between them; the leg now loads the .rx2 fresh
+  from the library. `AV_ZIP_VERSION` was already taken (av_zipc.js) - the reader ships
+  `AV_ZIPR_VERSION` (checked all global names before pinning).
+- Commits: 3732ee1 (records: contract + integration) -> close (this addendum). NEXT:
+  Serum `embeddedWTData` decode (needs a Serum-saved embed fixture - 0 corpus files carry the
+  field, re-verified this session) · MXGPR real bytes / KONG depth (blocked on real files) ·
+  NKI modern zone maps (long-term). Resume phrase "continue anvil".
