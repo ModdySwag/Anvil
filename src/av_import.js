@@ -88,6 +88,15 @@
      { ppq, bpm, trackCount, noteCount }; rex2 { slices, rate, frames, tempo, bits }; kit/refs
      per the R15c section 2 shapes; else {}.
 
+   R18a LIBRARY INTELLIGENCE (verify/_r18_wave.md section 3; additive only):
+   - avImportSha256Hex(buf) -> Promise<string>: sha-256 hex of the full bytes, "" when
+     crypto.subtle is absent or refuses (the avBackupSha256Hex '' discipline; av_store.js's
+     lookup style - the import NEVER blocks on a hash).
+   - avImportWrite (the ONE hash site): hashes the full bytes once, stamps the library rec with
+     sha256 + source {name, path, size, at} and resolves a duplicate by sha BEFORE the commit
+     (guarded avLibFindSha; keep-both - the write still happens): the rec gains dupOf {id, name}
+     and the receipt item gains dup {id, name} + sha. The receipt item base gains sha:"" + dup:
+     null; counts gains dups (each flagged item counts once).
    Craft laws: "use strict", classic script (no modules/imports), node-loadable (no DOM at load,
    no top-level side effects), one namespace (avImport prefixes + AV_IMPORT_ consts), never
    throw. Every cross-module call is typeof-guarded PER CALL (av_aiff/av_rex/av_lib/av_exs/
@@ -356,7 +365,7 @@ function avImportTitle(o) {
 }
 
 function avImportNewCounts() {
-  return { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0 };
+  return { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0, dups: 0 };
 }
 
 function avImportReceipt(opts) {
@@ -446,7 +455,7 @@ function avImportBase(f, index, key) {
   const item = {
     key: (typeof key === "string" && key) ? key : "i" + (index + 1),
     name: "", path: "", ext: "", format: "unknown",
-    kind: "refused", result: "refused", reason: "", size: 0, sibling: "", id: "", meta: {}
+    kind: "refused", result: "refused", reason: "", size: 0, sibling: "", id: "", sha: "", dup: null, meta: {}
   };
   let nm = "";
   try { if (typeof f.name === "string") nm = f.name; } catch (e) { nm = ""; }
@@ -478,7 +487,7 @@ function avImportFallbackItem(f, index, key) {
   if (!base) {
     base = {
       key: k, name: "", path: "", ext: "", format: "unknown",
-      kind: "refused", result: "refused", reason: "", size: 0, sibling: "", id: "", meta: {}
+      kind: "refused", result: "refused", reason: "", size: 0, sibling: "", id: "", sha: "", dup: null, meta: {}
     };
   }
   return avImportSet(base, "refused", avImportBadFile);
@@ -880,16 +889,64 @@ async function avImportSerumMeta(bytes) {
   }
 }
 
+/* ---------- R18: content identity (sha-256; "" when crypto.subtle is absent or refuses -
+   the import NEVER blocks on a hash, mirroring avBackupSha256Hex; av_store.js's lookup) ---------- */
+
+function avImportCryptoSrc() {
+  try { if (typeof crypto !== "undefined" && crypto) return crypto; } catch (e) { /* none */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && w.crypto) return w.crypto; } catch (e) { /* no window */ }
+  return null;
+}
+
+/* sha-256 hex of the full bytes; "" on absence/refusal (honest, capped - never throws) */
+async function avImportSha256Hex(buf) {
+  try {
+    const c = avImportCryptoSrc();
+    if (!c || !c.subtle || typeof c.subtle.digest !== "function") return "";
+    const ab = avImportToAB(buf);
+    if (!ab) return "";
+    const d = await c.subtle.digest("SHA-256", ab);
+    const u = new Uint8Array(d);
+    let s = "";
+    for (let i = 0; i < u.length; i++) { const h = u[i].toString(16); s += (h.length < 2 ? "0" : "") + h; }
+    return (/^[0-9a-f]{64}$/.test(s)) ? s : "";
+  } catch (e) { return ""; }
+}
+
 /* ---------- persistence (avLibAddItem, guarded per call) ---------- */
 
 async function avImportWrite(item, bytes, ctx) {
   try {
     if (typeof avLibAddItem !== "function") return "";   /* absent library: id stays "" */
+    /* R18a: the ONE hash site (D2). The sha runs before the write; the duplicate lookup also
+       runs BEFORE the commit so the rec can carry dupOf (keep-both: the write still happens). */
+    let sha = "";
+    try {
+      const bl = (bytes && typeof bytes.byteLength === "number") ? bytes.byteLength : -1;
+      if (bytes && bl !== 0) sha = await avImportSha256Hex(bytes);
+    } catch (e0) { sha = ""; }
+    if (typeof sha !== "string") sha = "";
+    item.sha = sha;
+    let dup = null;
+    if (sha) {
+      try {
+        if (typeof avLibFindSha === "function") {
+          const f = await avLibFindSha(sha);
+          if (f && f.ok === true && f.hit === true && typeof f.id === "string" && f.id) {
+            dup = { id: f.id, name: avImportCapStr(f.name, 120) };
+          }
+        }
+      } catch (e1) { dup = null; }
+    }
+    if (dup) item.dup = { id: dup.id, name: dup.name };
     const rec = {
       key: item.key, name: item.name, path: item.path, ext: item.ext,
       format: item.format, kind: item.kind, result: item.result, reason: item.reason,
-      size: item.size, at: ctx.at, meta: item.meta, bytes: bytes, via: "import"
+      size: item.size, at: ctx.at, meta: item.meta, bytes: bytes, via: "import",
+      sha256: sha,
+      source: { name: item.name, path: item.path, size: item.size, at: ctx.at }
     };
+    if (dup) rec.dupOf = { id: dup.id, name: dup.name };
     const r = await avLibAddItem(rec);
     if (r && r.ok === true) return (typeof r.id === "string" && r.id) ? r.id : "";
     ctx.writeFails++;
@@ -1054,7 +1111,7 @@ function avImportZipChildRow(item, entryName, size) {
     key: "", name: avImportCapStr(leaf, 120),
     path: avImportCapStr(zp ? (zp + "/" + nm) : nm, 200),
     ext: avImportExtOf(leaf), format: "zip", kind: "bundle", result: "imported",
-    reason: "", size: 0, sibling: "", id: "", meta: {}
+    reason: "", size: 0, sibling: "", id: "", sha: "", dup: null, meta: {}
   };
   try { if (avImportIsNum(size) && size >= 0) row.size = Math.floor(size); } catch (e) { /* size stays 0 */ }
   return row;
@@ -1322,6 +1379,7 @@ function avImportCounts(receipt) {
     else if (it.kind === "kit" && it.result === "imported") counts.kits++;
     else if (it.kind === "refs" && it.result === "imported") counts.refs++;
     else if (it.kind === "bundle" && it.result === "imported") counts.bundles++;   /* R16 */
+    if (it.dup) counts.dups += 1;                       /* R18a: keep-both duplicates flagged */
   }
   counts.total = items.length;
   receipt.counts = counts;

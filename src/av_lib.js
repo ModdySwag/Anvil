@@ -40,6 +40,15 @@
    summaries may drop items. The additive record field `ext` (lowercase, dot-stripped, cap
    AV_LIB_EXT_MAX, "" fallback; old records hydrate as "") rides every read path.
 
+   R18a additions (verify/_r18_wave.md section 3; additive only - record v stays 1 and old
+   records hydrate cleanly): the additive record fields `sha256` (lowercase 64-hex, "" fallback),
+   `source` (provenance {name, path, size, at, replaced?} or null) and `dupOf` ({id, name} or
+   null) ride every read path (item/rec/meta/payload views + the list rows). avLibFindSha(sha)
+   scans the loaded list for a content match (newest-first); avLibReplaceDup(id) folds a
+   keep-both duplicate onto its recorded original and removes the newer row; avLibMissingScan()
+   reports kit/refs names with no library match (relink v1 rides avLibRename). Facade additions:
+   findSha, replaceDup, missingScan.
+
    Record shape: { id, v: 1, name, kind, format, ext, size, at, meta, bytes (ArrayBuffer), via }
      id = "l" + Date.now().toString(36) + "-" + slug(name); slug [a-z0-9-], cap 40.
      kind = "sample" | "pattern" | "kit" | "refs" (R15c). via = the backend the record was
@@ -132,6 +141,10 @@ const AV_LIB_REC_TITLE_MAX = 80;                /* receipt title cap (default "i
 const AV_LIB_REC_NOTE_MAX = 160;                /* per error / item-reason line cap */
 const AV_LIB_NAME_MAX = 120;                    /* rename name cap (truncate, not refuse) */
 const AV_LIB_EXT_MAX = 12;                      /* record ext cap */
+/* R18 section 3: the additive identity / provenance laws */
+const AV_LIB_SHA256_RE = /^[0-9a-f]{64}$/;      /* an accepted content hash (lowercase hex) */
+const AV_LIB_PATH_MAX = 200;                    /* source.path cap */
+const AV_LIB_MISSING_WANT_MAX = 32;             /* referencing records listed per missing name */
 const AV_LIB_REC_ID_RE = /^r[a-z0-9-]{0,63}$/;  /* "r" + time36 (+ "-<seq>" on collision) */
 
 /* ---------- state (the in-memory view the UI renders from) ---------- */
@@ -218,6 +231,38 @@ function avLibExtNorm(v) {
   } catch (e) { return ""; }
 }
 
+/* R18 section 3: the additive record fields. sha256: lowercase 64-hex or "" (old records read
+   as "" - nothing is repaired); source: {name <=120, path <=200, size >=0, at finite, plus the
+   replaceDup `replaced` flag} or null; dupOf: {id (AV_LIB_ID_RE), name <=120} or null. Garbage
+   takes the fallback. */
+function avLibSha256Norm(v) {
+  try { if (typeof v === "string" && AV_LIB_SHA256_RE.test(v)) return v; } catch (e) { /* none */ }
+  return "";
+}
+
+function avLibSourceNorm(v) {
+  try {
+    if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+    const src = {
+      name: avLibStr(v.name, "", AV_LIB_NAME_MAX),
+      path: avLibStr(v.path, "", AV_LIB_PATH_MAX),
+      size: avLibNum(v.size, 0, 0, AV_LIB_ITEM_MAX * 8),
+      at: avLibNum(v.at, 0, 0, 9e15),
+    };
+    if (v.replaced === true) src.replaced = true;   /* the replaceDup provenance note rides through */
+    return src;
+  } catch (e) { return null; }
+}
+
+function avLibDupOfNorm(v) {
+  try {
+    if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+    const id = (typeof v.id === "string" && AV_LIB_ID_RE.test(v.id)) ? v.id : "";
+    if (!id) return null;
+    return { id: id, name: avLibStr(v.name, "", AV_LIB_NAME_MAX) };
+  } catch (e) { return null; }
+}
+
 /* JSON-safe meta copy (flat probe objects; R15c kit/refs metas ride the AV_LIB_META_MAX
    bound; circular input -> {}) */
 function avLibMetaNorm(m) {
@@ -261,7 +306,8 @@ function avLibKindNorm(v) {
   return "";
 }
 
-/* the list-facing view of a record: exactly {id, v, name, kind, format, size, at, meta} */
+/* the list-facing view of a record: {id, v, name, kind, format, ext, size, at, meta} plus the
+   R18 additive fields {sha256, source, dupOf} */
 function avLibMetaView(rec) {
   return {
     id: rec.id, v: 1,
@@ -272,6 +318,9 @@ function avLibMetaView(rec) {
     size: avLibNum(rec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
     at: avLibNum(rec.at, 0, 0, 9e15),
     meta: avLibMetaNorm(rec.meta),
+    sha256: avLibSha256Norm(rec.sha256),
+    source: avLibSourceNorm(rec.source),
+    dupOf: avLibDupOfNorm(rec.dupOf),
   };
 }
 
@@ -296,6 +345,9 @@ function avLibRecNorm(rec, needBytes) {
       size: avLibNum(rec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
       at: avLibNum(rec.at, 0, 0, 9e15),
       meta: avLibMetaNorm(rec.meta),
+      sha256: avLibSha256Norm(rec.sha256),
+      source: avLibSourceNorm(rec.source),
+      dupOf: avLibDupOfNorm(rec.dupOf),
       bytes: needBytes ? bytes : undefined,
       via: avLibToken(rec.via, "", 8),
     };
@@ -308,6 +360,7 @@ function avLibLsPayload(rec, b64) {
     id: rec.id, v: 1,
     name: rec.name, kind: rec.kind, format: rec.format, ext: avLibExtNorm(rec.ext),
     size: rec.size, at: rec.at, meta: rec.meta,
+    sha256: avLibSha256Norm(rec.sha256), source: avLibSourceNorm(rec.source), dupOf: avLibDupOfNorm(rec.dupOf),
     via: "ls", bytes: b64,
   };
 }
@@ -327,6 +380,9 @@ function avLibPayloadView(pay) {
       size: avLibNum(pay.size, 0, 0, AV_LIB_ITEM_MAX * 8),
       at: avLibNum(pay.at, 0, 0, 9e15),
       meta: avLibMetaNorm(pay.meta),
+      sha256: avLibSha256Norm(pay.sha256),
+      source: avLibSourceNorm(pay.source),
+      dupOf: avLibDupOfNorm(pay.dupOf),
     };
   } catch (e) { return null; }
 }
@@ -376,6 +432,9 @@ function avLibItemNorm(item) {
       format: avLibToken(item.format, "", 12),
       ext: avLibExtNorm(item.ext),
       meta: avLibMetaNorm(item.meta),
+      sha256: avLibSha256Norm(item.sha256),
+      source: avLibSourceNorm(item.source),
+      dupOf: avLibDupOfNorm(item.dupOf),
     };
   } catch (e) { return null; }
 }
@@ -856,6 +915,7 @@ async function avLibAddItemRun(item, bytesArg) {
   const rec = {
     id: id, v: 1, name: it.name, kind: it.kind, format: it.format, ext: it.ext,
     size: buf.byteLength, at: Date.now(), meta: it.meta, bytes: buf, via: "",
+    sha256: it.sha256, source: it.source, dupOf: it.dupOf,
   };
   const out = await avLibCommit(rec);
   if (out && out.ok === true) {
@@ -882,6 +942,7 @@ async function avLibListRun() {
     out.push({
       id: it.id, name: it.name, kind: it.kind, format: it.format, ext: avLibExtNorm(it.ext),
       size: it.size, at: it.at, meta: avLibMetaNorm(it.meta),
+      sha256: avLibSha256Norm(it.sha256), source: avLibSourceNorm(it.source), dupOf: avLibDupOfNorm(it.dupOf),
     });
   }
   out.sort(function (a, b) { return (b.at - a.at) || (a.id < b.id ? 1 : (a.id > b.id ? -1 : 0)); });
@@ -1000,6 +1061,220 @@ async function avLibRenameRun(id, name) {
   }
   if (stuck) { st.lastError = "rename refused"; return { ok: false, id: id, name: clean, error: "rename refused" }; }
   return { ok: false, id: id, name: clean, error: "no item" };
+}
+
+/* ---------- R18: library intelligence (section 3: identity - dedupe - relink v1; additive
+   only, scan-only - bounded by the loaded list, never a filesystem walk; never throws) ---------- */
+
+/* the case-preserving leaf of a name/path (missing-scan display; avLibBaseLower stays the
+   compare form) */
+function avLibLeafCase(s) {
+  try {
+    const t = String(s == null ? "" : s);
+    const parts = t.split(/[\\/]+/);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (parts[i]) return avLibStr(parts[i], "", AV_LIB_NAME_MAX);
+    }
+  } catch (e) { /* none */ }
+  return "";
+}
+
+/* a kit sample row / refs row / wtRef row -> the referenced name: `.name` when present, else
+   the path leaf (serum wtRefs carry no name). "" = skip (the caller's rule). */
+function avLibRefName(row) {
+  try {
+    if (!row || typeof row !== "object") return "";
+    const nm = avLibStr(row.name, "", AV_LIB_NAME_MAX);
+    if (nm) return nm;
+    return avLibLeafCase(row.path);
+  } catch (e) { return ""; }
+}
+
+/* avLibFindSha(sha) -> Promise<{ok, hit, id?, name?, error?}>: scan the LOADED list (the
+   st.items meta views - no db index, no version bump) for sha256 === sha; the first hit in
+   newest-first order (at desc, id desc - the avLibListRun rule) wins. A malformed/empty sha
+   refuses honestly (the caller skips dedupe). Never throws. */
+async function avLibFindShaRun(sha) {
+  const st = avLibState;
+  await avLibReady();
+  if (typeof sha !== "string" || !AV_LIB_SHA256_RE.test(sha)) {
+    return { ok: false, hit: false, error: "no sha" };
+  }
+  let best = null;
+  const ids = Object.keys(st.items);
+  for (let i = 0; i < ids.length; i++) {
+    const it = st.items[ids[i]];
+    if (!it || it.sha256 !== sha) continue;
+    if (!best || (it.at > best.at) || (it.at === best.at && it.id > best.id)) best = it;
+  }
+  if (!best) return { ok: true, hit: false };
+  return { ok: true, hit: true, id: best.id, name: avLibStr(best.name, best.id, AV_LIB_NAME_MAX) };
+}
+
+/* fold the new record's content onto the target row (the TARGET keeps its own id, name, at) */
+function avLibReplaceApplyTo(rec, nrec, newSource) {
+  try {
+    rec.bytes = nrec.bytes;
+    rec.size = nrec.size;
+    rec.format = nrec.format;
+    rec.ext = nrec.ext;
+    rec.kind = nrec.kind;
+    rec.meta = nrec.meta;
+    rec.sha256 = nrec.sha256;
+    rec.source = newSource;
+    rec.dupOf = null;
+    rec.v = 1;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* avLibReplaceDup(id) -> Promise<{ok, id?, removed?, error?}>: the keep-both resolution. The
+   row `id` must exist and carry dupOf ({id, name}); its recorded original must still exist
+   (else "target gone" - an honest refusal). The TARGET receives the new row's {bytes, size,
+   format, ext, kind, meta, sha256} and source {name, path, size, at: now, replaced: true};
+   dupOf goes null. The durable leg runs first (a refused write answers "replace refused" and
+   nothing is removed); then the new row is removed through the avLibRemoveRun ladder. The
+   target keeps its own id, name and at. Never throws. */
+async function avLibReplaceDupRun(newId) {
+  const st = avLibState;
+  await avLibReady();
+  if (typeof newId !== "string" || !newId || !AV_LIB_ID_RE.test(newId)) {
+    return { ok: false, id: "", error: "no item" };
+  }
+  const g = await avLibGetRecRun(newId);
+  if (!g || g.ok !== true || !g.item) return { ok: false, id: newId, error: "no item" };
+  const nrec = g.item;
+  const dup = avLibDupOfNorm(nrec.dupOf);
+  if (!dup) return { ok: false, id: newId, error: "not a duplicate" };
+  if (dup.id === newId) return { ok: false, id: newId, error: "target gone" };
+  const t = await avLibGetRecRun(dup.id);
+  if (!t || t.ok !== true || !t.item) return { ok: false, id: dup.id, error: "target gone" };
+  const targetId = dup.id;
+  const targetName = avLibStr(t.item.name, targetId, AV_LIB_NAME_MAX);
+  const targetAt = avLibNum(t.item.at, 0, 0, 9e15);
+  const src = avLibSourceNorm(nrec.source);
+  const newSource = {
+    name: (src && src.name) ? src.name : avLibStr(nrec.name, "", AV_LIB_NAME_MAX),
+    path: src ? src.path : "",
+    size: src ? src.size : avLibNum(nrec.size, 0, 0, AV_LIB_ITEM_MAX * 8),
+    at: Date.now(),
+    replaced: true,
+  };
+  let applied = false, stuck = false;
+  /* 1) the durable row when a DB is up: read row, fold the new content in, put */
+  if (st.db) {
+    let row = null;
+    try { row = await avLibDbGet(st.db, targetId); } catch (e) { row = null; }
+    if (row && typeof row === "object") {
+      try {
+        const upd = Object.assign({}, row);
+        if (avLibReplaceApplyTo(upd, nrec, newSource) !== true) throw new Error("apply failed");
+        upd.via = "idb";
+        await avLibDbWrite(st.db, upd);
+        applied = true;
+      } catch (e2) {
+        st.lastError = "replace refused";
+        return { ok: false, id: targetId, error: "replace refused" };
+      }
+    }
+  }
+  /* 2) the memory tier */
+  if (st.memMap[targetId]) {
+    try {
+      const mr = Object.assign({}, st.memMap[targetId]);
+      if (avLibReplaceApplyTo(mr, nrec, newSource) === true) { st.memMap[targetId] = mr; applied = true; }
+    } catch (e3) { /* the durable leg already stands (or the LS leg follows) */ }
+  }
+  /* 3) the LS mirror (base64 write-through; a refusal is stuck) */
+  if (st.lsMirror[targetId]) {
+    try {
+      const b64 = avLibB64Enc(nrec.bytes);
+      if (b64 && b64.length <= AV_LIB_LS_B64_MAX) {
+        const map = Object.assign({}, st.lsMirror);
+        const pay = Object.assign({}, map[targetId]);
+        pay.size = nrec.size; pay.format = nrec.format; pay.ext = nrec.ext; pay.kind = nrec.kind;
+        pay.meta = nrec.meta; pay.sha256 = nrec.sha256; pay.source = newSource; pay.dupOf = null;
+        pay.v = 1; pay.bytes = b64;
+        map[targetId] = pay;
+        if (avLibLsWriteMap(map)) { st.lsMirror = map; applied = true; }
+        else stuck = true;
+      } else {
+        stuck = true;      /* the LS tier cannot hold the new bytes honestly */
+      }
+    } catch (e4) { stuck = true; }
+  }
+  if (!applied) {
+    const err = stuck ? "replace refused" : "no item";
+    st.lastError = err;
+    return { ok: false, id: targetId, error: err };
+  }
+  /* the session view follows the fold (id, name and at stay the TARGET's) */
+  try {
+    st.items[targetId] = avLibMetaView({
+      id: targetId, v: 1, name: targetName, kind: nrec.kind, format: nrec.format, ext: nrec.ext,
+      size: nrec.size, at: targetAt, meta: nrec.meta,
+      sha256: nrec.sha256, source: newSource, dupOf: null,
+    });
+    avLibRecount();
+  } catch (e5) { /* the view is a cache; the next list rebuilds it */ }
+  /* then the new row is removed through the avLibRemoveRun ladder */
+  let rem = null;
+  try { rem = await avLibRemoveRun(newId); } catch (e6) { rem = null; }
+  if (!rem || rem.ok !== true) {
+    return { ok: false, id: targetId, removed: "", error: (rem && rem.error) ? String(rem.error) : "removal refused" };
+  }
+  st.lastError = null;
+  return { ok: true, id: targetId, removed: newId };
+}
+
+/* avLibMissingScan() -> Promise<{ok, missing: [{name, want: [{id, name, kind}]}], error?}>:
+   every kit meta.samples[].name and refs meta.refs[].name / meta.wtRefs[].path leaf (the
+   R15c/R15d/R16 ref shapes) is a referenced name; a name is missing when its lowercase
+   basename (avLibBaseLower) matches NO library item name (same compare form). want = the
+   records that reference the missing name (each {id, name, kind}, capped
+   AV_LIB_MISSING_WANT_MAX = 32); missing is sorted by name. Scan only - bounded by the
+   library list, no filesystem walks. Never throws. */
+async function avLibMissingScanRun() {
+  await avLibReady();
+  const listR = await avLibListRun();
+  const list = (listR && listR.ok === true && Array.isArray(listR.items)) ? listR.items : [];
+  const have = {};
+  for (let i = 0; i < list.length; i++) {
+    const k = avLibBaseLower(list[i] && list[i].name);
+    if (k) have[k] = 1;
+  }
+  const byKey = {};
+  for (let i = 0; i < list.length; i++) {
+    const it = list[i];
+    if (!it || typeof it !== "object") continue;
+    const meta = (it.meta && typeof it.meta === "object") ? it.meta : {};
+    let rows = null;
+    if (it.kind === "kit") {
+      rows = Array.isArray(meta.samples) ? meta.samples : null;
+    } else if (it.kind === "refs") {
+      const a = Array.isArray(meta.refs) ? meta.refs : [];
+      const b = Array.isArray(meta.wtRefs) ? meta.wtRefs : [];
+      rows = (a.length || b.length) ? a.concat(b) : null;
+    }
+    if (!rows || !rows.length) continue;
+    for (let j = 0; j < rows.length; j++) {
+      const nm = avLibRefName(rows[j]);
+      if (!nm) continue;                       /* skip empties */
+      const key = avLibBaseLower(nm);
+      if (!key || have[key]) continue;
+      let grp = byKey[key];
+      if (!grp) { grp = byKey[key] = { name: nm, want: [], seen: {} }; }
+      if (grp.seen[it.id]) continue;
+      if (grp.want.length >= AV_LIB_MISSING_WANT_MAX) continue;
+      grp.want.push({ id: it.id, name: avLibStr(it.name, it.id, AV_LIB_NAME_MAX), kind: avLibKindNorm(it.kind) || "sample" });
+      grp.seen[it.id] = 1;
+    }
+  }
+  const missing = [];
+  const keys = Object.keys(byKey);
+  for (let i = 0; i < keys.length; i++) missing.push({ name: byKey[keys[i]].name, want: byKey[keys[i]].want });
+  missing.sort(function (a, b) { return (a.name < b.name) ? -1 : (a.name > b.name ? 1 : 0); });
+  return { ok: true, missing: missing };
 }
 
 /* ---------- R17: the receipts history (section 3) - OWN database av-receipts-store, store
@@ -1181,10 +1456,10 @@ function avLibReceiptId() {
 
 /* the counts subset the stored run keeps (missing / garbage -> 0) */
 function avLibReceiptCountsNorm(v) {
-  const out = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0 };
+  const out = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0, dups: 0 };
   try {
     if (!v || typeof v !== "object") return out;
-    const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs", "bundles"];
+    const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs", "bundles", "dups"];
     for (let i = 0; i < keys.length; i++) out[keys[i]] = Math.round(avLibNum(v[keys[i]], 0, 0, 1e9));
   } catch (e) { /* defaults stand */ }
   return out;
@@ -1942,6 +2217,22 @@ function avLibRename(id, name) {
   catch (e) { return Promise.resolve({ ok: false, id: (typeof id === "string") ? id : "", name: "", error: "error" }); }
 }
 
+/* R18: identity / dedupe / missing-scan (section 3; every entry point never throws) */
+function avLibFindSha(sha) {
+  try { return Promise.resolve(avLibFindShaRun(sha)).catch(function (e) { return { ok: false, hit: false, error: avLibErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, hit: false, error: "error" }); }
+}
+
+function avLibReplaceDup(id) {
+  try { return Promise.resolve(avLibReplaceDupRun(id)).catch(function (e) { return { ok: false, id: (typeof id === "string") ? id : "", error: avLibErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, id: (typeof id === "string") ? id : "", error: "error" }); }
+}
+
+function avLibMissingScan() {
+  try { return Promise.resolve(avLibMissingScanRun()).catch(function (e) { return { ok: false, missing: [], error: avLibErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, missing: [], error: "error" }); }
+}
+
 function avLibReceiptSave(rec) {
   try { return Promise.resolve(avLibReceiptSaveRun(rec)).catch(function (e) { return { ok: false, id: "", error: avLibErrMsg(e) }; }); }
   catch (e) { return Promise.resolve({ ok: false, id: "", error: "error" }); }
@@ -2001,5 +2292,8 @@ if (typeof window !== "undefined") {
     receiptSave: avLibReceiptSave,
     receiptList: avLibReceiptList,
     receiptClear: avLibReceiptClear,
+    findSha: avLibFindSha,
+    replaceDup: avLibReplaceDup,
+    missingScan: avLibMissingScan,
   };
 }

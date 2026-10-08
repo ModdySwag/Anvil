@@ -718,6 +718,324 @@ async function main() {
     !!pr && pr.ok === true && pr.persisted === true && !pr.threw && !pr.missing
     && !!pstText && persistHonest, JSON.stringify({ res: pr.val || pr, status: pstText && pstText.slice(0, 90), claimsGrant: claimsGrant }));
 
+  /* ── 23b. R18a library intelligence: dedupe · replace · missing · relink (contract:
+     verify/_r18_wave.md §5; 4 checks). Every probe is guarded per call — a not-yet-landed
+     surface fails its leg honestly (the info shows what was read), never throws. The drop
+     legs below use relative receipt arithmetic, so the extra runs (dup x2 + kit) are safe;
+     hub-bravo.wav is left untouched (leg 26 loads it by name). ── */
+  const r18Before = await receiptsNow();
+  const r18Entry = (await ev(`(async () => { try { const l = await avLibList(); return { count: l.count, names: (l.items || []).map(i => String(i.name)).sort().join(',') }; } catch (e) { return null; } })()`)).value;
+  note('R18a entry: receipts ' + r18Before + ' · library ' + JSON.stringify(r18Entry));
+
+  /* page-side helpers for this section (in-page fixtures only; no disk files) */
+  await ev(`(() => {
+    window.__r18wav = null;
+    window.__r18kit = null;
+    window.__r18 = {
+      makeWav: function (freq) {
+        try {
+          const sr = 8000, n = 400;
+          const l = new Float32Array(n), r = new Float32Array(n);
+          for (let i = 0; i < n; i++) { const v = 0.4 * Math.sin(2 * Math.PI * freq * i / sr); l[i] = v; r[i] = v; }
+          return avWavEncode({ l: l, r: r, sr: sr, bits: 16, dither: false });
+        } catch (e) { return null; }
+      },
+      /* the R15c synthetic EXS24 block fixture (cdp_smoke 6cl shape): one zone whose sample
+         name is written at d+336 of the sample block — here a name that is NOT in the library */
+      exsKit: function (refName) {
+        try {
+          const blk = function (marker, size, name) { const b = new Uint8Array(84 + size); b[0] = 1; b[1] = 1; b[2] = 0; b[3] = marker;
+            b[4] = size & 255; b[5] = (size >>> 8) & 255; b[6] = 0; b[7] = 0;
+            const cid = 'TBOS'; for (let i = 0; i < 4; i++) b[16 + i] = cid.charCodeAt(i);
+            for (let i = 0; i < name.length && i < 63; i++) b[20 + i] = name.charCodeAt(i); return b; };
+          const wr32 = function (b, o, v) { b[o] = v & 255; b[o + 1] = (v >>> 8) & 255; b[o + 2] = (v >>> 16) & 255; b[o + 3] = (v >>> 24) & 255; };
+          const d0 = 84;
+          const inst = blk(0, 88, 'R18Kit');
+          const zn = blk(1, 148, 'Z1'); zn[d0 + 1] = 60; zn[d0 + 6] = 36; zn[d0 + 7] = 51; zn[d0 + 9] = 1; zn[d0 + 10] = 127;
+          wr32(zn, d0 + 12, 0); wr32(zn, d0 + 16, 50); wr32(zn, d0 + 92, 0);
+          const smp = blk(3, 600, 'S1'); wr32(smp, d0 + 4, 400); wr32(smp, d0 + 8, 8000); smp[d0 + 12] = 16;
+          const fn = String(refName); for (let i = 0; i < fn.length; i++) smp[d0 + 336 + i] = fn.charCodeAt(i);
+          const o = new Uint8Array(inst.length + zn.length + smp.length);
+          o.set(inst, 0); o.set(zn, inst.length); o.set(smp, inst.length + zn.length);
+          return o;
+        } catch (e) { return null; }
+      },
+      drive: function (files) {
+        try {
+          const dt = new DataTransfer();
+          for (let i = 0; i < files.length; i++) dt.items.add(files[i]);
+          const inp = document.getElementById('av-import-file');
+          if (!inp) return { err: 'no #av-import-file' };
+          inp.files = dt.files;
+          inp.dispatchEvent(new Event('change', { bubbles: true }));
+          return { ok: true, n: dt.files.length };
+        } catch (e) { return { err: String((e && e.message) || e) }; }
+      },
+      /* the missing-count read: the pinned snap().missing first; the facade missing() wrapper
+         (guarded) is a diagnostic fallback only — the legs assert on the snap read (via). */
+      missNow: async function () {
+        try {
+          const sn = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+          if (typeof sn.missing === 'number' && isFinite(sn.missing)) return { via: 'snap', v: sn.missing };
+        } catch (e0) { /* fall through */ }
+        try {
+          const f = window.__avImport || {};
+          if (typeof f.missing === 'function') {
+            const r = await f.missing();
+            let v = null;
+            if (typeof r === 'number') v = r;
+            else if (r && typeof r === 'object') {
+              if (typeof r.missing === 'number') v = r.missing;
+              else if (Array.isArray(r.missing)) v = r.missing.length;
+              else if (typeof r.count === 'number') v = r.count;
+            }
+            if (typeof v === 'number' && isFinite(v)) return { via: 'facade', v: v };
+          }
+        } catch (e1) { /* fall through */ }
+        return { via: null, v: null };
+      }
+    };
+    return true;
+  })()`);
+
+  /* drive one file through the card's change handler (the R15b snapshot-first law); when no
+     receipt lands in 15 s, fall back to __avImport.importFiles — the run happens either way;
+     {via} names the path that worked (null = neither did) */
+  const r18Import = async (label, fileExpr) => {
+    const before = await receiptsNow();
+    const want = before + 1;
+    const cnt = `(async () => { try { if (typeof avLibReceiptList !== 'function') return 0; const r = await avLibReceiptList(); return (r && r.ok === true && r.count === ${want}) ? r.count : 0; } catch (e) { return 0; } })()`;
+    const drove = await ev(`(() => { try { const f = ${fileExpr}; return window.__r18.drive([f]); } catch (e) { return { err: String((e && e.message) || e) }; } })()`);
+    let c = await waitFor(cnt, 15000);
+    let via = 'change';
+    if (c !== want) {
+      note('R18a ' + label + ': change handler produced no receipt in 15 s — falling back to __avImport.importFiles');
+      await ev(`(async () => { try { const f = ${fileExpr}; if (window.__avImport && typeof window.__avImport.importFiles === 'function') await window.__avImport.importFiles([f]); } catch (e) { /* the wait below reports */ } return true; })()`);
+      c = await waitFor(cnt, 20000);
+      via = 'importFiles';
+    }
+    return { before: before, want: want, count: c, via: (c === want) ? via : null, drive: drove.value || null };
+  };
+
+  /* ── 23b.1 dedupe: the SAME WAV imported twice through the change handler ── */
+  const wavR = await ev(`(() => { try { window.__r18wav = window.__r18.makeWav(523); return { len: window.__r18wav ? window.__r18wav.byteLength : -1 }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`);
+  const dupImp1 = (wavR.value && wavR.value.len > 0) ? await r18Import('dup import 1', `new File([window.__r18wav], 'r18-dup.wav')`) : null;
+  let firstId = null;
+  if (dupImp1 && dupImp1.via) {
+    const fR = await waitFor(`(async () => {
+      try {
+        const l = await avLibList();
+        const hits = (l.items || []).filter(i => i && String(i.name) === 'r18-dup.wav');
+        return (hits.length === 1) ? { id: String(hits[0].id) } : null;
+      } catch (e) { return null; }
+    })()`, 15000);
+    firstId = (fR && fR.id) ? fR.id : null;
+  }
+  const dupImp2 = firstId ? await r18Import('dup import 2 (same bytes)', `new File([window.__r18wav], 'r18-dup.wav')`) : null;
+  let dupWait = null;
+  let dupAfter = {};
+  if (dupImp2 && dupImp2.via) {
+    dupWait = await waitFor(`(async () => {
+      try {
+        if (typeof avLibReceiptList !== 'function') return null;
+        const r = await avLibReceiptList();
+        if (!r || r.ok !== true || r.count !== ${r18Before + 2}) return null;
+        const run0 = (r.runs && r.runs[0]) || {};
+        const c = run0.counts || {};
+        const snap = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+        const chips = document.querySelectorAll('#av-import-report .av-import-chip-dup').length;
+        /* the receipt item's dup: the pinned snap projection first, then the module's live
+           report items (the chip is built from those); no carrier -> the leg fails honestly */
+        let uiItems = null;
+        try { uiItems = (typeof avImportUiState !== 'undefined' && avImportUiState) ? avImportUiState.reportItems : null; } catch (e0) { uiItems = null; }
+        const cars = [];
+        if (Array.isArray(snap.report)) cars.push(['snap', snap.report]);
+        if (Array.isArray(uiItems)) cars.push(['ui', uiItems]);
+        let dup = null, via = null;
+        for (let i = 0; i < cars.length && !dup; i++) {
+          const arr = cars[i][1];
+          for (let k = 0; k < arr.length; k++) {
+            const it = arr[k];
+            if (it && String(it.name) === 'r18-dup.wav' && it.dup) { dup = it.dup; via = cars[i][0]; break; }
+          }
+        }
+        const dupId = dup ? String(dup.id == null ? '' : dup.id) : '';
+        const dupName = dup ? String(dup.name == null ? '' : dup.name) : '';
+        const dupsOk = (typeof c.dups === 'number') && c.dups === 1;
+        if (!(dupsOk && snap.dups === 1 && chips >= 1 && dupId === ${JSON.stringify(String(firstId))} && dupName === 'r18-dup.wav')) return null;
+        return { count: r.count, total: (typeof c.total === 'number') ? c.total : null, imported: (typeof c.imported === 'number') ? c.imported : null,
+                 dups: c.dups, snapDups: snap.dups, chips: chips, dup: { id: dupId, name: dupName }, dupVia: via };
+      } catch (e) { return null; }
+    })()`, 25000);
+    await sleep(300);
+    dupAfter = ((await ev(`(async () => {
+      try {
+        const r = (typeof avLibReceiptList === 'function') ? await avLibReceiptList() : null;
+        const run0 = (r && Array.isArray(r.runs) && r.runs[0]) ? r.runs[0] : null;
+        const c = (run0 && run0.counts) ? run0.counts : null;
+        const snap = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+        let uiItems = null;
+        try { uiItems = (typeof avImportUiState !== 'undefined' && avImportUiState) ? avImportUiState.reportItems : null; } catch (e0) { uiItems = null; }
+        const chipEl = document.querySelector('#av-import-report .av-import-chip-dup');
+        return { count: (r && r.ok === true) ? r.count : -1,
+                 counts: c ? { total: c.total, imported: c.imported, dups: (typeof c.dups === 'number') ? c.dups : null } : null,
+                 snapDups: (typeof snap.dups === 'number') ? snap.dups : null,
+                 snapReportN: Array.isArray(snap.report) ? snap.report.length : -1,
+                 uiReportN: Array.isArray(uiItems) ? uiItems.length : -1,
+                 chips: document.querySelectorAll('#av-import-report .av-import-chip-dup').length,
+                 chipText: chipEl ? String(chipEl.textContent || '').trim().slice(0, 80) : '',
+                 subtle: !!(window.crypto && window.crypto.subtle) };
+      } catch (e) { return { err: String((e && e.message) || e) }; }
+    })()`)).value) || {};
+  }
+  check('R18a dedupe: the same WAV twice -> 2nd receipt item.dup = 1st {id,name} · counts.dups 1 · snap.dups 1 · dup chip row',
+    !!firstId && !!dupImp2 && dupImp2.via !== null && !!dupWait
+    && dupWait.dups === 1 && dupWait.snapDups === 1 && dupWait.chips >= 1
+    && !!dupWait.dup && dupWait.dup.id === String(firstId) && dupWait.dup.name === 'r18-dup.wav',
+    JSON.stringify({ imp1: dupImp1 && { via: dupImp1.via, count: dupImp1.count }, imp2: dupImp2 && { via: dupImp2.via, count: dupImp2.count },
+      firstId: firstId, got: dupWait || null, after: dupAfter }));
+
+  /* ── 23b.2 replace: __avImport.replace(newId) -> ONE record kept (the old id) ── */
+  let pairR = null, newId = null;
+  if (firstId && dupImp2 && dupImp2.via) {
+    pairR = await waitFor(`(async () => {
+      try {
+        const l = await avLibList();
+        const hits = (l.items || []).filter(i => i && String(i.name) === 'r18-dup.wav');
+        if (hits.length !== 2) return null;
+        const newOne = hits.find(i => String(i.id) !== ${JSON.stringify(String(firstId))}) || null;
+        return { count: l.count, ids: hits.map(i => String(i.id)), newId: newOne ? String(newOne.id) : null,
+                 newDupOf: (newOne && newOne.dupOf && typeof newOne.dupOf === 'object')
+                   ? { id: String(newOne.dupOf.id == null ? '' : newOne.dupOf.id), name: String(newOne.dupOf.name == null ? '' : newOne.dupOf.name) } : null };
+      } catch (e) { return null; }
+    })()`, 15000);
+  }
+  const pair = pairR || {};
+  newId = pair.newId || null;
+  let repR = null, repDone = null;
+  if (firstId && newId) {
+    repR = await ev(`(async () => {
+      try {
+        const f = window.__avImport || {};
+        if (typeof f.replace !== 'function') return { missing: true };
+        const r = await f.replace(${JSON.stringify(newId)});
+        if (r && typeof r === 'object') return { receipt: { ok: r.ok, id: String(r.id == null ? '' : r.id), removed: String(r.removed == null ? '' : r.removed), error: String(r.error || '') } };
+        return { val: String(r) };
+      } catch (e) { return { err: String((e && e.message) || e) }; }
+    })()`);
+    repDone = await waitFor(`(async () => {
+      try {
+        const l = (typeof avLibList === 'function') ? await avLibList() : null;
+        if (!l || l.ok !== true) return null;
+        const items = l.items || [];
+        const hits = items.filter(i => i && String(i.name) === 'r18-dup.wav');
+        const kept = hits[0] || null;
+        const goneNew = !items.some(i => i && String(i.id) === ${JSON.stringify(newId)});
+        const keptOld = !!kept && String(kept.id) === ${JSON.stringify(String(firstId))};
+        const replaced = !!(kept && kept.source && kept.source.replaced === true);
+        if (hits.length !== 1 || !keptOld || !goneNew || !replaced) return null;
+        return { hits: hits.length, count: l.count, keptId: String(kept.id), goneNew: goneNew, replaced: replaced,
+                 srcName: kept.source ? String(kept.source.name || '') : '', srcAt: (kept.source && typeof kept.source.at === 'number') ? kept.source.at : null };
+      } catch (e) { return null; }
+    })()`, 25000);
+  }
+  const rp = (repR && repR.value) ? repR.value : {};
+  check('R18a replace: __avImport.replace(newId) -> ONE record kept (old id, source.replaced) · new id gone · receipt ok',
+    !!firstId && !!newId && !!rp.receipt && rp.receipt.ok === true
+    && String(rp.receipt.id) === String(firstId) && String(rp.receipt.removed) === String(newId)
+    && !!pair.newDupOf && String(pair.newDupOf.id) === String(firstId)
+    && !!repDone && repDone.hits === 1 && repDone.keptId === String(firstId) && repDone.goneNew === true && repDone.replaced === true,
+    JSON.stringify({ firstId: firstId, newId: newId, pair: pairR || null, receipt: rp.receipt || rp, after: repDone || null }));
+
+  /* ── 23b.3 missing: a synthetic .exs kit whose sibling WAV is NOT in the library ── */
+  const preMiss = await waitFor(`(async () => {
+    try { const m = await window.__r18.missNow(); return (m.via === 'snap' && typeof m.v === 'number' && isFinite(m.v)) ? m : null; }
+    catch (e) { return null; }
+  })()`, 10000);
+  const kitR = await ev(`(() => { try { window.__r18kit = window.__r18.exsKit('r18-ghost.wav'); return { len: window.__r18kit ? window.__r18kit.length : -1 }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`);
+  const kitImp = (kitR.value && kitR.value.len > 0) ? await r18Import('kit import (.exs, sibling absent)', `new File([window.__r18kit], 'r18-kit.exs')`) : null;
+  let kitWait = null, kitProbe = {};
+  if (kitImp && kitImp.via) {
+    kitWait = await waitFor(`(async () => {
+      try {
+        const m = await window.__r18.missNow();
+        if (!(m.via === 'snap' && typeof m.v === 'number' && m.v >= 1)) return null;
+        const chips = document.querySelectorAll('#av-import-lib .av-import-chip-missing').length;
+        if (chips < 1) return null;
+        return { miss: m.v, via: m.via, chips: chips };
+      } catch (e) { return null; }
+    })()`, 25000);
+    kitProbe = ((await ev(`(async () => {
+      try {
+        const m = await window.__r18.missNow();
+        const snap = (window.__avImport && window.__avImport.snap) ? window.__avImport.snap() : {};
+        const l = (typeof avLibList === 'function') ? await avLibList() : null;
+        const items = (l && l.items) ? l.items : [];
+        const kit = items.find(i => i && String(i.name) === 'r18-kit.exs') || items.find(i => i && String(i.format) === 'exs') || null;
+        const kitId = kit ? String(kit.id) : '';
+        let rowHas = false, rowKind = '';
+        if (kitId) {
+          const row = document.querySelector('#av-import-lib [data-av-import-lib="' + kitId + '"]');
+          rowHas = !!(row && row.querySelector('.av-import-chip-missing'));
+          rowKind = row ? String(row.getAttribute('data-kind') || '') : '';
+        }
+        const rep = (snap.report || []).find(x => x && String(x.name) === 'r18-kit.exs') || null;
+        return { miss: m.v, via: m.via, kitId: kitId, kind: kit ? String(kit.kind) : '', rowKind: rowKind, rowHas: rowHas,
+                 chipsAll: document.querySelectorAll('#av-import-lib .av-import-chip-missing').length,
+                 rep: rep ? { result: String(rep.result || ''), kind: String(rep.kind || '') } : null };
+      } catch (e) { return { err: String((e && e.message) || e) }; }
+    })()`)).value) || {};
+  }
+  check('R18a missing: .exs kit with an absent sibling WAV -> pre-scan 0 · snap.missing >= 1 · kit row missing chip',
+    !!preMiss && preMiss.via === 'snap' && preMiss.v === 0 && !!kitImp && kitImp.via !== null
+    && !!kitWait && typeof kitProbe.miss === 'number' && kitProbe.miss >= 1
+    && kitProbe.rowHas === true && kitProbe.kind === 'kit'
+    && !!kitProbe.rep && kitProbe.rep.result === 'imported' && kitProbe.rep.kind === 'kit',
+    JSON.stringify({ pre: preMiss, kitLen: kitR.value && kitR.value.len, imp: kitImp && { via: kitImp.via, count: kitImp.count }, wait: kitWait, probe: kitProbe }));
+
+  /* ── 23b.4 relink: rename an existing sample row to the missing name (rename-based v1) ── */
+  const candR = await waitFor(`(async () => {
+    try {
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      if (!l || l.ok !== true) return null;
+      const items = (l.items || []).filter(i => i && String(i.name) === 'r18-dup.wav');
+      if (!items.length) return null;
+      const sample = items.find(i => String(i.kind) === 'sample') || items[0];
+      return { id: String(sample.id), kind: String(sample.kind), n: items.length };
+    } catch (e) { return null; }
+  })()`, 10000);
+  const cand = candR || {};
+  const preRelink = ((await ev(`(async () => { try { return await window.__r18.missNow(); } catch (e) { return { via: null, v: null }; } })()`)).value) || { via: null, v: null };
+  let relinkR = null, relinkWait = null;
+  if (cand.id) {
+    relinkR = await ev(`(async () => {
+      try {
+        const f = window.__avImport || {};
+        if (typeof f.relink !== 'function') return { missing: true };
+        const r = await f.relink('r18-ghost.wav', ${JSON.stringify(String(cand.id))});
+        if (r && typeof r === 'object') return { receipt: { ok: r.ok, error: String(r.error || ''), name: String(r.name == null ? '' : r.name) } };
+        return { val: String(r) };
+      } catch (e) { return { err: String((e && e.message) || e) }; }
+    })()`);
+    relinkWait = await waitFor(`(async () => {
+      try {
+        const m = await window.__r18.missNow();
+        if (!(m.via === 'snap' && m.v === 0)) return null;
+        const l = (typeof avLibList === 'function') ? await avLibList() : null;
+        const it = l ? (l.items || []).find(x => x && String(x.id) === ${JSON.stringify(String(cand.id))}) : null;
+        if (!it || String(it.name) !== 'r18-ghost.wav') return null;
+        return { miss: m.v, via: m.via, id: String(it.id), name: String(it.name),
+                 chipsAll: document.querySelectorAll('#av-import-lib .av-import-chip-missing').length };
+      } catch (e) { return null; }
+    })()`, 25000);
+  }
+  const rl = (relinkR && relinkR.value) ? relinkR.value : {};
+  check('R18a relink: __avImport.relink(name, candidateId) -> missing back to 0 · renamed name in avLibList',
+    !!cand.id && !!rl.receipt && rl.receipt.ok === true
+    && !!preRelink && preRelink.via === 'snap' && typeof preRelink.v === 'number' && preRelink.v >= 1
+    && !!relinkWait && relinkWait.miss === 0 && relinkWait.name === 'r18-ghost.wav' && relinkWait.id === String(cand.id),
+    JSON.stringify({ candidate: candR || cand, preRelink: preRelink, relink: rl.receipt || rl, after: relinkWait || null }));
+
   /* ── 24. drop-anywhere: a non-hub drop routes to the store pane and imports exactly once ── */
   const before24 = await receiptsNow();
   const zon24 = await ev(`(() => {

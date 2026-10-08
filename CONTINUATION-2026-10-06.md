@@ -2278,10 +2278,28 @@ Resume phrase: **"continue anvil"**.
   74 -> cdp_hub 33 -> cdp_import 24 -> sweep -> battery + bench -> deploy -> live -> close.
 - Nothing else in flight. Commit: this R18a-open commit.
 
+## Resume addendum 60 - 2026-10-09 (R18a children LANDED: artifacts verified + build/smoke green; integration next)
+
+- LANDINGS VERIFIED ON DISK (never by report): A = `src/av_import.js` (1414 ln) + `src/av_lib.js`
+  (2299 ln): avImportSha256Hex + the ONE pre-commit hash site in avImportWrite + item.sha/dup +
+  counts.dups + record sha256/source/dupOf on every read path + avLibFindSha/avLibReplaceDup/
+  avLibMissingScan + facade; B = `src/av_import_ui.js` (3314 ln): dup/missing chips, REPLACE +
+  relink editor (one-editor law), scan memo, snap.dups/missing, facade replace/relink/missing;
+  C = `verify/cdp_hub.mjs`: 33 checks; EXPECT_SHA pin literal untouched.
+- EVIDENCE: node --check x4 green; build.py green (4,043,384 B); **smoke 74/74 on the landed
+  sources** (additive-only confirmed). Build outputs restored (rebuild at freeze).
+- CONTRACT AMENDED (as-built section 3 pin 2): duplicate detection is PRE-commit (post-write
+  would self-match the just-committed row) - child A's ordering is correct; source wins.
+  want semantics (A/B/C agree): want = the records referencing a missing name (the badge set);
+  relink candidates = the ranked library items in the select.
+- NEXT (integration session): styles block (av-import-chip-dup/-missing, av-import-relink) ->
+  rebuild -> cdp_hub 33 -> cdp_import 24 (expectations UNCHANGED) -> pins sweep -> battery 25 +
+  bench -> deploy (index+sw) -> live capture -> close addendum 61. Contract: `verify/_r18_wave.md`.
+
 ### Session-end verify-state (2026-10-09 - copy-paste block for the next session)
 
     cd /c/Users/Moddy/anvil
-    git log --oneline -5                                         # HEAD = the R18a-open commit (addendum 59)
+    git log --oneline -5                                         # HEAD = the R18a-lands commit (addendum 60)
     git status --short                                           # clean except `?? cache/`
     curl -s https://moddys.net/anvil/index.html | sha256sum      # = 3f87b4d3... (frozen, live)
     grep -o 'AV_WORKLET_SHA = "[a-f0-9]*"' index.html | head -1  # b65160e0... (unchanged - page-side wave)

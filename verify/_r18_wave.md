@@ -43,9 +43,11 @@ av_import.js:
    lookup style), resolve '' on absence/throw.
 2. `avImportWrite` (:885): compute `sha` from `bytes` (when bytes non-empty) BEFORE the
    avLibAddItem call; rec literal (:888-892) gains `sha256: sha` + `source: {name: item.name,
-   path: item.path, size: item.size, at: ctx.at}`; after `avLibAddItem`, when `sha !== ''` and
-   `typeof avLibFindSha === "function"`, call it; on hit set the receipt item's `dup =
-   {id, name}` (keep-both; the write still happens).
+   path: item.path, size: item.size, at: ctx.at}`; when `sha !== ''` and
+   `typeof avLibFindSha === "function"`, look the hash up BEFORE the commit (as-built child A;
+   post-write would scan the row just committed and could never name the older record) and on
+   hit set the receipt item's `dup = {id, name}` + `rec.dupOf = {id, name}` (keep-both; the
+   write still happens).
 3. Receipt item base (:446-449) gains `sha: ""` + `dup: null`; `avImportNewCounts`
    (:358-360) gains `dups: 0`; the run increments `counts.dups` when an item's dup is set.
 av_lib.js:

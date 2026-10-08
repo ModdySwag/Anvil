@@ -68,6 +68,22 @@
    the runs list; every manager action obeys the ONE-op busy law (manager controls disabled while
    busy; the busy classes stay av-import-busy + dataset.avImportBusy + aria-busy).
 
+   R18 -- IDENTITY (dedupe . missing refs . relink v1; the sha256 + provenance halves live in
+   av_import.js and av_lib.js and land in the same build -- every reach below is typeof-guarded
+   PER CALL, so the card still mounts without them and refuses honestly): a report item whose
+   receipt carries `dup` gains the DUPLICATE chip (av-import-chip-dup, "DUPLICATE of <name40>")
+   after its result chip, and the counts line gains " N dups" above zero. A library record
+   carrying `dupOf` gains the same chip + a REPLACE action ([data-av-import-act=replace] ->
+   guarded avLibReplaceDup(id) -> refresh; status "replaced with <name>" or the honest refusal).
+   One guarded avLibMissingScan() runs after every completed library refresh (and so after every
+   run and relink) into a memo: rows whose id appears in a scan entry's `want` get
+   av-import-chip-missing + a RELINK action ([data-av-import-act=relink] -> the inline
+   select.av-import-relink inside that row; options = the library items, ranked (same lowercase
+   basename-stem first, then the rest; label "name (kind)"); Enter commits through guarded
+   avLibRename(candidateId, missingName) -> rescan -> "relinked <name>"; Esc/blur cancels; ONE
+   editor at a time, the rename editor's law) and #av-import-libstat appends " M missing refs"
+   above zero.
+
    DOM CONTRACT (exact -- suites pin these):
      host      #av-import-host          parent-owned; absent -> avImportUiInit() returns false
      root      .av-import[data-av-import="1"] (id "av-import" only when no element owns it --
@@ -115,7 +131,12 @@
    hub into view + focus the drop zone) . avImportUiPick(kind) keeps its old contract (no arg or
    "file" = files, "dir" = folder) . snap() gains runs (the stored receipt count) + manager
    {search, sort, filter, selected (the selected count)} . the facade gains pick, pickDir,
-   library, rename, exportItem (every existing key kept).
+   library, rename, exportItem (every existing key kept). R18 observables (additive):
+   avImportUiActReplace(id) (the REPLACE commit) . avImportUiBeginRelink(id) (the row action ->
+   editor) . avImportUiRelink(candidateId, name) (the commit) . avImportUiRefreshMissing() (one
+   guarded scan -> memo) . avImportUiMissingCount() (the scan count) . snap() gains dups (last
+   receipt counts.dups) + missing (the scan count); the facade gains replace(id),
+   relink(name, candidateId), missing() (every existing key kept).
 
    PROOF EMISSION (the console-proof-leak law; mirrors av_lfo.js lines 255-275 EXACTLY in
    shape): at init, gated on the same ?avtest=1 query check the LFO card uses, deferred with
@@ -163,6 +184,8 @@
           button) .av-import-runs-head .av-import-foot (the storage footer row) .
           .av-import-storage (the storage line) .av-import-hist (the root while a stored run
           is being viewed)
+     R18: .av-import-chip-dup .av-import-chip-missing (the identity chips; same slot as the
+          report chips) . .av-import-relink (the inline relink select in a library row)
 
    LAWS (house): "use strict"; classic script; ONE namespace avImportUi* / AV_IMPORT_UI_*;
    NO DOM at top level (node-loadable -- the harness loads this text in a Function scope);
@@ -215,6 +238,8 @@ const AV_IMPORT_UI_CLASSES = [
   "av-import-fchip", "on", "av-import-check", "av-import-rename",
   "av-import-runs", "av-import-run", "av-import-runs-head",
   "av-import-foot", "av-import-storage", "av-import-hist",
+  /* R18: the identity chips + the inline relink select (exactly these three) */
+  "av-import-chip-dup", "av-import-chip-missing", "av-import-relink",
 ];
 
 /* UI-local state only -- every core fact is read through the pinned apis per call */
@@ -236,6 +261,8 @@ const avImportUiState = {
   runsSig: "\u0000",              /* runs rebuild memo (list signature)               */
   hist: null,                     /* {id, at, title, counts, items} of the viewed run */
   storage: { checked: false, est: null, tier: "best-effort", at: 0 },
+  /* R18: the missing-refs memo (one guarded avLibMissingScan per completed lib refresh) */
+  missing: { ok: false, error: "", at: 0, count: 0, list: [], byId: {}, sig: "\u0000" },
   memos: { text: {}, cls: {} },   /* write-on-change memos so idle syncs never touch  */
 };
 
@@ -361,6 +388,18 @@ function avImportUiMetaPub(m) {
   return out;
 }
 
+/* the R18 dup reference out of anything -- the report item's `dup` and a record's `dupOf`
+   share the {id, name} shape; null unless at least a safe id or a name is present */
+function avImportUiDupPub(d) {
+  try {
+    if (!d || typeof d !== "object") return null;
+    const id = avImportUiSelId(d.id);
+    const name = avImportUiStr(d.name, 120);
+    if (!id && !name) return null;
+    return { id: id, name: name };
+  } catch (e) { return null; }
+}
+
 function avImportUiItemsPub(r) {
   const out = [];
   try {
@@ -381,6 +420,9 @@ function avImportUiItemsPub(r) {
         size: avImportUiNumOr(it.size, 0),
         sibling: avImportUiStr(it.sibling, 120),
         id: avImportUiStr(it.id, 80),
+        /* R18: the identity fields (the receipt carries sha + dup additively) */
+        sha: avImportUiStr(it.sha, 64),
+        dup: avImportUiDupPub(it.dup),
         meta: avImportUiMetaPub(it.meta),
       });
     }
@@ -390,9 +432,9 @@ function avImportUiItemsPub(r) {
 
 /* the receipt's counts (numbers only; derived from items when counts is absent) */
 function avImportUiCountsOf(r) {
-  /* R16: + bundles (the core's additive zip-expansion count) */
-  const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs", "bundles"];
-  const c = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0 };
+  /* R16: + bundles (the core's additive zip-expansion count); R18: + dups (identity) */
+  const keys = ["total", "imported", "deferred", "refused", "samples", "patterns", "kits", "refs", "bundles", "dups"];
+  const c = { total: 0, imported: 0, deferred: 0, refused: 0, samples: 0, patterns: 0, kits: 0, refs: 0, bundles: 0, dups: 0 };
   try {
     const src = r && r.counts;
     if (src && typeof src === "object") {
@@ -413,6 +455,8 @@ function avImportUiCountsOf(r) {
       else if (kind === "kit") c.kits += 1;
       else if (kind === "refs") c.refs += 1;
       else if (kind === "bundle" && res === "imported") c.bundles += 1;   /* R16: zip bundles */
+      /* R18: the derived path -- a dup flag on a raw receipt item */
+      if (it.dup) c.dups += 1;
     }
   } catch (e) { /* zeros stand */ }
   return c;
@@ -811,6 +855,8 @@ function avImportUiCountsText(c0) {
     if (c.refs > 0) line += " \u00b7 " + c.refs + " refs";
     /* R16: zip bundles (the core's counts.bundles; shown only above zero) */
     if (c.bundles > 0) line += " \u00b7 " + c.bundles + " bundles";
+    /* R18: duplicate imports (the core's counts.dups; shown only above zero) */
+    if (c.dups > 0) line += " \u00b7 " + c.dups + " dups";
     return line;
   } catch (e) { return "no runs yet"; }
 }
@@ -836,6 +882,13 @@ function avImportUiRowHTML(it) {
   html += '<span class="av-import-fmt">' + avImportUiEsc(String(it.format || "unknown").toUpperCase()) + "</span>";
   html += '<span class="av-import-size av-dim">' + avImportUiEsc(avImportUiFmtBytes(it.size)) + "</span>";
   html += '<span class="av-import-chip av-import-chip-' + result + '" data-result="' + result + '">' + result + "</span>";
+  /* R18: the duplicate chip follows the result chip (item.dup = {id, name} of the original) */
+  if (it.dup && (it.dup.name || it.dup.id)) {
+    const dn = it.dup.name || it.dup.id;
+    html += '<span class="av-import-chip av-import-chip-dup" title="' +
+      avImportUiEsc("a copy of an item already in the library: " + dn) + '">DUPLICATE of ' +
+      avImportUiEsc(avImportUiShort(dn, 40)) + "</span>";
+  }
   if (it.sibling) {
     html += '<span class="av-import-chip av-import-chip-sib" title="' + avImportUiEsc("same-stem sibling in this run: " + it.sibling) + '">+ ' + avImportUiEsc(it.sibling) + "</span>";
   }
@@ -885,7 +938,8 @@ function avImportUiPaintReport(host, force) {
 /* ---------- the library list ---------- */
 
 /* one library row's JSON-safe view; R15c adds bounded counts (zones/samples/refs/tables) and
-   the hasPattern flag so the new-kind rows render without holding whole metas. */
+   the hasPattern flag so the new-kind rows render without holding whole metas. R18 adds dupOf
+   (the flagged original {id, name} or null -- the scan's missing refs live in the memo). */
 function avImportUiLibItemPub(it) {
   const out = {
     id: avImportUiStr(it && it.id, 80),
@@ -897,6 +951,7 @@ function avImportUiLibItemPub(it) {
     meta: avImportUiMetaPub(it && it.meta),
     counts: { zones: 0, samples: 0, refs: 0, tables: 0 },
     hasPattern: false,
+    dupOf: null,
   };
   try {
     const m = (it && it.meta && typeof it.meta === "object") ? it.meta : {};
@@ -907,6 +962,7 @@ function avImportUiLibItemPub(it) {
     if (Array.isArray(m.wtRefs)) out.counts.tables = m.wtRefs.length;
     out.hasPattern = !!(m.pattern && typeof m.pattern === "object" && !Array.isArray(m.pattern));
   } catch (e) { /* zeros stand */ }
+  out.dupOf = avImportUiDupPub(it && it.dupOf);
   return out;
 }
 
@@ -945,6 +1001,20 @@ function avImportUiLibRowHTML(it, sel) {
     '" aria-label="' + avImportUiEsc("select " + name) + '"' + ((sel && sel[id]) ? " checked" : "") + ">";
   html += '<span class="av-import-item-name" title="' + avImportUiEsc(name) + '">' + avImportUiEsc(name) + "</span>";
   html += '<span class="av-import-item-meta av-dim">' + avImportUiEsc(meta) + "</span>";
+  /* R18: the identity chips sit between the meta and the actions (the report chips' slot) */
+  const dupOf = (it.dupOf && typeof it.dupOf === "object") ? it.dupOf : null;
+  if (dupOf && (dupOf.name || dupOf.id)) {
+    const dn = dupOf.name || dupOf.id;
+    html += '<span class="av-import-chip av-import-chip-dup" title="' +
+      avImportUiEsc("a duplicate copy -- replacing folds it into " + dn) + '">DUPLICATE of ' +
+      avImportUiEsc(avImportUiShort(dn, 40)) + "</span>";
+  }
+  const missName = avImportUiMissingNameOf(id);
+  if (missName) {
+    html += '<span class="av-import-chip av-import-chip-missing" title="' +
+      avImportUiEsc("references " + missName + ", which is not in the library") + '">MISSING ' +
+      avImportUiEsc(avImportUiShort(missName, 40)) + "</span>";
+  }
   html += '<span class="av-import-acts">';
   if (isKit) {
     html += avImportUiActBtnHTML(id, "kit", "KIT", "load this kit into the sampler engine (slots + zones)", false);
@@ -964,6 +1034,13 @@ function avImportUiLibRowHTML(it, sel) {
   /* R17 (append-only -- the load-type set above is untouched) */
   html += avImportUiActBtnHTML(id, "rename", "REN", "rename this item inline", false);
   html += avImportUiActBtnHTML(id, "export", "EXP", "export the stored bytes as a download", false);
+  /* R18 (append-only -- the load-type set and the R17 pair above are untouched) */
+  if (dupOf) {
+    html += avImportUiActBtnHTML(id, "replace", "REPLACE", "replace the original with this copy -- this row's bytes move into the original, this row goes", false);
+  }
+  if (missName) {
+    html += avImportUiActBtnHTML(id, "relink", "RELINK", "rename a library item to " + missName + " (the missing reference)", false);
+  }
   html += "</span></div>";
   return html;
 }
@@ -971,7 +1048,11 @@ function avImportUiLibRowHTML(it, sel) {
 function avImportUiLibStatText() {
   const s = avImportUiState;
   if (!s.lib.ok) return s.lib.error ? "library unavailable" : "library idle";
-  return s.lib.count + " item" + (s.lib.count === 1 ? "" : "s") + " \u00b7 " + avImportUiFmtBytes(s.lib.bytes);
+  let line = s.lib.count + " item" + (s.lib.count === 1 ? "" : "s") + " \u00b7 " + avImportUiFmtBytes(s.lib.bytes);
+  /* R18: the missing-refs suffix (the scan count; above zero only) */
+  const missN = avImportUiMissingCount();
+  if (missN > 0) line += " \u00b7 " + missN + " missing refs";
+  return line;
 }
 
 function avImportUiPaintLibStat(host) {
@@ -986,6 +1067,8 @@ function avImportUiPaintLib(host, force) {
     if (s.lib.items.length) sig += "|" + s.lib.items[0].id + "|" + s.lib.items[s.lib.items.length - 1].id;
     /* R17: the manager view is part of the paint key (search . sort . filter . selection) */
     sig += "|" + s.mgr.search + "|" + s.mgr.sort + "|" + s.mgr.filter + "|" + s.mgr.selSeq;
+    /* R18: the identity memo is part of the paint key (the chips ride the rows) */
+    sig += "|" + s.missing.sig;
     if (!force && sig === s.libSig) { avImportUiPaintLibStat(host); avImportUiPaintManager(host); return true; }
     const box = host.querySelector("#av-import-lib");
     if (!box) return false;
@@ -1083,6 +1166,8 @@ function avImportUiRefreshLib() {
         s.lib.items = [];
         s.lib.at = Date.now();
         avImportUiPaintLib(avImportUiHost(), true);
+        /* R18: the identity memo follows the library state (unavailable -> the scan folds it away) */
+        try { avImportUiRefreshMissing(); } catch (e2) { /* the scan never blocks the refresh */ }
         finish(false);
         return;
       }
@@ -1090,6 +1175,9 @@ function avImportUiRefreshLib() {
       try { out = avLibList(); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the library read failed") }; }
       avImportUiSettle(out, function (r) {
         try { avImportUiApplyLib(r); } catch (e) { /* apply never throws */ }
+        /* R18: every completed library read is followed by the guarded missing-refs scan
+           (and so after every run and relink -- they all funnel through this refresh) */
+        try { avImportUiRefreshMissing(); } catch (e2) { /* the scan never blocks the refresh */ }
         finish(true);
       });
     } catch (e) { finish(false); }
@@ -1651,6 +1739,9 @@ function avImportUiAct(act, id) {
     if (act === "del") return avImportUiActDel(id);
     /* R17: the management actions */
     if (act === "rename" || act === "export") return avImportUiActManaged(act, id);
+    /* R18: the identity actions (replace commits; relink opens the inline editor) */
+    if (act === "replace") return avImportUiActReplace(id);
+    if (act === "relink") return avImportUiBeginRelink(id);
   } catch (e) {
     avImportUiSetStatus("the action failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
   }
@@ -1876,7 +1967,7 @@ function avImportUiBeginRename(id) {
     const host = avImportUiHost();
     const d = avImportUiDoc();
     if (!host || typeof host.querySelector !== "function" || !d || typeof d.createElement !== "function") return false;
-    if (host.querySelector(".av-import-rename")) return true;   /* one editor at a time */
+    if (host.querySelector(".av-import-rename") || host.querySelector(".av-import-relink")) return true;   /* one editor at a time (R18: the relink editor counts too) */
     const sid = avImportUiSelId(id);
     if (!sid) return false;
     let row = null;
@@ -1991,6 +2082,326 @@ function avImportUiActManaged(act, id) {
     if (act === "export") return avImportUiExportItem(id);
   } catch (e) { /* the dispatcher's own catch stands */ }
   return false;
+}
+
+/* ---------- R18: identity (duplicates . missing refs . relink) --
+   The av_lib half (avLibReplaceDup / avLibMissingScan / avLibRename) is authored in parallel
+   and lands in the same build; every reach here is typeof-guarded PER CALL, so the card still
+   mounts and refuses honestly without it. One scan per completed library refresh; ONE op at a
+   time (busy law); ONE editor at a time (the rename editor's law). */
+
+/* the scan count (snap.missing . the libstat suffix . the facade missing()) */
+function avImportUiMissingCount() {
+  try { return Math.max(0, Math.round(avImportUiNumOr(avImportUiState.missing.count, 0))); }
+  catch (e) { return 0; }
+}
+
+/* the (first, name-sorted) missing reference that wants this library record; "" when none */
+function avImportUiMissingNameOf(id) {
+  try {
+    const byId = avImportUiState.missing.byId;
+    if (!byId) return "";
+    return avImportUiStr(byId[id], 120);
+  } catch (e) { return ""; }
+}
+
+/* the lowercase basename (a local mirror of av_lib's avLibBaseLower so this card never depends
+   on the library being loaded; the same normal form the kit load matches on) */
+function avImportUiBaseLower(s) {
+  try {
+    const t = String(s == null ? "" : s);
+    const parts = t.split(/[\\/]+/);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (parts[i]) return parts[i].toLowerCase().replace(/[\u0000-\u001f\u007f]/g, "");
+    }
+  } catch (e) { /* none */ }
+  return "";
+}
+
+/* the basename minus the final extension ("Kick.WAV" -> "kick"; "a.b.c" -> "a.b") */
+function avImportUiStem(s) {
+  const b = avImportUiBaseLower(s);
+  const i = b.lastIndexOf(".");
+  return (i > 0 && i < b.length - 1) ? b.slice(0, i) : b;
+}
+
+/* one scan entry's `want` array ({id, name, kind} records asking for the missing name) */
+function avImportUiWantPub(w) {
+  const out = [];
+  try {
+    if (!w || typeof w.length !== "number") return out;
+    const n = Math.min(w.length | 0, 32);
+    for (let i = 0; i < n; i++) {
+      const it = w[i];
+      if (!it || typeof it !== "object") continue;
+      const id = avImportUiSelId(it.id);
+      if (!id) continue;
+      out.push({ id: id, name: avImportUiStr(it.name, 120), kind: avImportUiStr(it.kind, 24) });
+    }
+  } catch (e) { /* partial stands */ }
+  return out;
+}
+
+/* write one avLibMissingScan receipt into the memo + repaint (the chips + the libstat) */
+function avImportUiApplyMissing(r0) {
+  const s = avImportUiState;
+  try {
+    const r = avImportUiReceipt(r0);
+    const m = s.missing;
+    if (r.ok !== true) {
+      m.ok = false;
+      m.error = avImportUiErrText(r, "the missing-refs scan failed");
+      m.count = 0;
+      m.list = [];
+      m.byId = {};
+    } else {
+      const src = (r.missing && typeof r.missing.length === "number") ? r.missing : [];
+      const entries = [];
+      for (let i = 0; i < src.length; i++) {
+        const e = src[i];
+        if (!e || typeof e !== "object") continue;
+        const name = avImportUiStr(e.name, 120);
+        if (!name) continue;
+        entries.push({ name: name, want: avImportUiWantPub(e.want) });
+      }
+      /* name-sorted (the scan pins this; re-sorted defensively for a deterministic paint) */
+      entries.sort(function (a, b) { return a.name < b.name ? -1 : (a.name > b.name ? 1 : 0); });
+      const byId = {};
+      for (let i = 0; i < entries.length; i++) {
+        const want = entries[i].want;
+        for (let k = 0; k < want.length; k++) {
+          if (want[k].id && !byId[want[k].id]) byId[want[k].id] = entries[i].name;
+        }
+      }
+      m.ok = true;
+      m.error = "";
+      m.count = entries.length;
+      m.list = entries;
+      m.byId = byId;
+    }
+    /* the paint key: ok . count . the wanted record ids (bounded by the scan) */
+    let sig = (m.ok ? "1" : "0") + "|" + m.count;
+    try {
+      const ids = [];
+      for (const k in m.byId) ids.push(k);
+      ids.sort();
+      sig += "|" + ids.join(",");
+    } catch (e2) { /* the count stands */ }
+    m.sig = sig;
+    m.at = Date.now();
+    avImportUiPaintLib(avImportUiHost(), false);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the missing scan: avLibMissingScan (guarded) -> memo -> repaint; Promise<bool>, never
+   rejects. Fired after every completed library refresh (and so after runs and relinks). */
+function avImportUiRefreshMissing() {
+  return new Promise(function (resolve) {
+    let done = false;
+    const finish = function (v) { if (!done) { done = true; resolve(v); } };
+    try {
+      if (typeof avLibMissingScan !== "function") {
+        avImportUiApplyMissing({ ok: false, error: "the missing-refs scan (the av_lib.js R18 half) is not present" });
+        finish(false);
+        return;
+      }
+      let out = null;
+      try { out = avLibMissingScan(); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the missing-refs scan failed") }; }
+      avImportUiSettle(out, function (r0) {
+        try { avImportUiApplyMissing(r0); } catch (e) { /* apply never throws */ }
+        finish(true);
+      });
+    } catch (e) { finish(false); }
+  });
+}
+
+/* the REPLACE action (R18): the row being driven is the flagged COPY (it carries dupOf) --
+   guarded avLibReplaceDup(id) folds this copy into the original, then the refresh repaints;
+   status "replaced with <name>" or the honest refusal. ONE op at a time; never throws. */
+function avImportUiActReplace(id) {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avLibReplaceDup !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 replacing is unavailable", "err");
+      return false;
+    }
+    /* the name the status line reports: the original's live name, else its flagged name */
+    let targetName = "";
+    try {
+      const items = s.lib.items || [];
+      for (let i = 0; i < items.length; i++) {
+        if (items[i] && items[i].id === id) {
+          const d = items[i].dupOf;
+          if (d && typeof d === "object") {
+            targetName = avImportUiStr(d.name, 120);
+            const tId = avImportUiSelId(d.id);
+            if (tId) {
+              const live = avImportUiLibName(tId);
+              if (live && live !== tId) targetName = live;
+            }
+          }
+          break;
+        }
+      }
+    } catch (e2) { /* the fallback below stands */ }
+    if (!targetName) targetName = avImportUiLibName(id);
+    if (!avImportUiBegin("replacing " + avImportUiShort(targetName, 48))) return false;
+    let out = null;
+    try { out = avLibReplaceDup(id); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the replace failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      avImportUiEnd();
+      if (r.ok !== true) {
+        avImportUiSetStatus("replace refused \u2014 " + avImportUiErrText(r, "the library refused"), "err");
+      } else {
+        avImportUiSetStatus("replaced with " + avImportUiShort(targetName, 60), "msg");
+      }
+      avImportUiRefreshLib();
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("replace failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* the relink candidates: every library item, ranked -- items whose lowercase basename-stem
+   matches the missing name's stem first, then the rest (mirror order inside each rank, so the
+   newest-first mirror order is the tie-break). Deterministic; never throws. */
+function avImportUiRelinkCandidates(missingName) {
+  const out = [];
+  try {
+    const src = avImportUiState.lib.items || [];
+    const want = avImportUiStem(missingName);
+    const first = [];
+    const rest = [];
+    for (let i = 0; i < src.length; i++) {
+      const it = src[i];
+      if (!it || !it.id) continue;
+      if (want && avImportUiStem(it.name) === want) first.push(it);
+      else rest.push(it);
+    }
+    for (let i = 0; i < first.length; i++) out.push(first[i]);
+    for (let i = 0; i < rest.length; i++) out.push(rest[i]);
+  } catch (e) { return []; }
+  return out;
+}
+
+/* close the relink editor (remove the select; the row keeps exactly what it had) */
+function avImportUiCloseRelink(sel) {
+  try {
+    if (sel && sel.parentNode) sel.parentNode.removeChild(sel);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the relink commit (the facade's relink(name, candidateId) and the editor's Enter route
+   here): guarded avLibRename(candidateId, missingName) -> refresh (which rescans) -> status
+   "relinked <name>" or the honest refusal. ONE op at a time; never throws. */
+function avImportUiRelink(candidateId, name) {
+  const s = avImportUiState;
+  const raw = String(name == null ? "" : name);
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    if (typeof avLibRename !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 relinking is unavailable", "err");
+      return false;
+    }
+    if (!avImportUiBegin("relinking " + avImportUiShort(raw || "item", 48))) return false;
+    let out = null;
+    try { out = avLibRename(candidateId, raw); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the relink failed") }; }
+    avImportUiSettle(out, function (r0) {
+      const r = avImportUiReceipt(r0);
+      avImportUiEnd();
+      if (r.ok !== true) {
+        avImportUiSetStatus("relink refused \u2014 " + avImportUiErrText(r, "the library refused"), "err");
+      } else {
+        const nm = avImportUiStr(r.name, 120) || raw;
+        avImportUiSetStatus("relinked " + avImportUiShort(nm, 60), "msg");
+      }
+      avImportUiRefreshLib();   /* the rescan fires from the refresh */
+    });
+    return true;
+  } catch (e) {
+    avImportUiEnd();
+    avImportUiSetStatus("relink failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
+}
+
+/* the RELINK row action: the inline editor -- select.av-import-relink inside the row, options =
+   the library items (ranked; label "name (kind)"), Enter commits, Esc/blur cancels. ONE editor
+   at a time (the rename editor's law; never over a rename editor, and vice versa). */
+function avImportUiBeginRelink(id) {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();
+    const missingName = avImportUiMissingNameOf(id);
+    if (!missingName) {
+      avImportUiSetStatus("no missing reference is waiting on that item \u2014 refresh the library list", "err");
+      return false;
+    }
+    const host = avImportUiHost();
+    const d = avImportUiDoc();
+    if (!host || typeof host.querySelector !== "function" || !d || typeof d.createElement !== "function") return false;
+    if (host.querySelector(".av-import-relink") || host.querySelector(".av-import-rename")) return true;   /* one editor at a time */
+    const sid = avImportUiSelId(id);
+    if (!sid) return false;
+    let row = null;
+    try { row = host.querySelector('[data-av-import-lib="' + sid + '"]'); } catch (e) { row = null; }
+    if (!row) {
+      avImportUiSetStatus("that row is gone \u2014 refresh the library list", "err");
+      return false;
+    }
+    const cands = avImportUiRelinkCandidates(missingName);
+    if (!cands.length) {
+      avImportUiSetStatus("relink: the library has no items to rename \u2014 import the sample first", "err");
+      return false;
+    }
+    const sel = d.createElement("select");
+    sel.className = "av-select av-import-relink";
+    for (let i = 0; i < cands.length; i++) {
+      const o = d.createElement("option");
+      o.value = String(cands[i].id);
+      o.textContent = avImportUiStr(cands[i].name, 120) + " (" + (avImportUiStr(cands[i].kind, 24) || "item") + ")";
+      sel.appendChild(o);
+    }
+    if (typeof sel.setAttribute === "function") {
+      sel.setAttribute("aria-label", "relink: pick the library item to rename to " + missingName);
+      sel.setAttribute("title", "rename the picked item to " + missingName + " (Enter relinks, Esc cancels)");
+    }
+    const done = { v: false };
+    const commit = function () {
+      if (done.v) return;
+      done.v = true;
+      const cid = String(sel.value || "");
+      avImportUiCloseRelink(sel);
+      avImportUiRelink(cid, missingName);
+    };
+    const cancel = function () {
+      if (done.v) return;
+      done.v = true;
+      avImportUiCloseRelink(sel);
+    };
+    sel.addEventListener("keydown", function (ev) {
+      try {
+        if (ev.key === "Enter") { if (typeof ev.preventDefault === "function") ev.preventDefault(); commit(); }
+        else if (ev.key === "Escape") { if (typeof ev.preventDefault === "function") ev.preventDefault(); cancel(); }
+      } catch (e3) { /* a listener never throws outward */ }
+    });
+    sel.addEventListener("blur", function () { try { cancel(); } catch (e4) { /* ok */ } });
+    let metaEl = null;
+    try { metaEl = row.querySelector(".av-import-item-meta"); } catch (e5) { metaEl = null; }
+    if (metaEl && metaEl.parentNode) metaEl.parentNode.insertBefore(sel, metaEl.nextSibling);
+    else if (row.firstChild) row.insertBefore(sel, row.firstChild);
+    else row.appendChild(sel);
+    try { sel.focus(); } catch (e6) { /* focus is a nicety */ }
+    avImportUiSetStatus("relink \u2014 the missing " + avImportUiShort(missingName, 60) + ": pick the library item to rename to it; Enter relinks, Esc cancels", "msg");
+    return true;
+  } catch (e) { return false; }
 }
 
 /* ---------- R17: the manager paints (write-on-change, like everything else) ---------- */
@@ -2793,6 +3204,9 @@ function avImportUiSnap() {
     report: [],
     lib: { count: 0, bytes: 0, backend: "" },
     runs: 0,
+    /* R18: the identity observables (additive; receipts without the key read 0) */
+    dups: 0,
+    missing: 0,
     manager: { search: "", sort: "newest", filter: "all", selected: 0 },
     lastError: String(s.lastError || ""),
   };
@@ -2822,6 +3236,9 @@ function avImportUiSnap() {
         size: avImportUiNumOr(it.size, 0),
         sibling: String(it.sibling || ""),
         id: String(it.id || ""),
+        /* R18: the identity fields (additive) */
+        sha: String(it.sha || ""),
+        dup: avImportUiDupPub(it.dup),
       });
     }
   } catch (e) { /* report stays empty */ }
@@ -2832,6 +3249,14 @@ function avImportUiSnap() {
   } catch (e) { /* zeros stand */ }
   try {
     out.runs = Math.max(0, Math.round(avImportUiNumOr(s.runs.count, 0)));
+  } catch (e) { /* zero stands */ }
+  /* R18: dups = the last receipt's counts.dups (guarded for receipts without the key);
+     missing = the current scan count */
+  try {
+    out.dups = (s.last && s.last.counts) ? Math.max(0, Math.round(avImportUiNumOr(s.last.counts.dups, 0))) : 0;
+  } catch (e) { /* zero stands */ }
+  try {
+    out.missing = avImportUiMissingCount();
   } catch (e) { /* zero stands */ }
   try {
     out.manager.search = String(s.mgr.search || "");
@@ -2880,6 +3305,10 @@ if (typeof window !== "undefined" && window) {
       library: function () { return avImportUiLibrary(); },
       rename: function (id, name) { return avImportUiRename(id, name); },
       exportItem: function (id) { return avImportUiExportItem(id); },
+      /* R18 additions (every existing key kept) */
+      replace: function (id) { return avImportUiActReplace(id); },
+      relink: function (name, candidateId) { return avImportUiRelink(candidateId, name); },
+      missing: function () { return avImportUiMissingCount(); },
     };
   } catch (e) { /* no window -- nothing to publish */ }
 }
