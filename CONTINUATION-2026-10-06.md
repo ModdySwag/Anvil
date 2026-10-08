@@ -1846,3 +1846,39 @@ Resume phrase: **"continue anvil"**.
   kind-specific drop paths, preset-name header chip, Store as a browser overlay, module-menu
   Copy/Paste, page switching, P·2 minBLEP, PERFECT TUNINGS, more owner modules (items 2..n),
   owner pass (Ctrl+F5 once for the new service-worker cache).
+
+## Resume addendum 45 - 2026-10-08 (R11: SPACEBAR + THE LED/OLED TRANSPORT CONSOLE - SHIPPED)
+
+- Owner asks (out-of-band): Space play/pause (industry standard) + the full LED/OLED console at
+  the top (playback/recording/menu/pack switching, real-digital-console styling).
+- Shipped, frozen `ff99f482` (3,503,242 B), DEPLOYED live (upload ff99f482; scoped --verify 0 not
+  in sync; live sha = frozen):
+  - SPACEBAR: av_kb.js gained ONE early branch after the typing guard — Space (no mods, target
+    not a control) toggles the transport via avConsoleTransportToggle(); the in-mode swallows
+    stay as belt. Works in STUDIO / KEYS / MIDI; never fires while typing or on a focused button.
+  - CONSOLE (`src/av_console.js`, NEW; build.py part after av_menubar; self-inits at parse):
+    header.av-head gains class av-console + the deck: ▶ PLAY/❚❚ PAUSE · ■ STOP · SONG · ● REC
+    (LED dots; REC red) · BPM segment window (avParams.bpm, live) · OLED info window (PACK /
+    PRESET read from the bank selects; #av-tier/#av-voices moved into #avc-sys with ids intact) ·
+    power LED (engine ready). EVERY legacy id intact (av-word/av-version/av-tier/av-voices/
+    btn-piano/av-help/av-head-browse/undo/redo/about/rail/a11y/pwa). Wiring rides existing
+    guarded funnels only: avSeqPlay/Stop/IsPlaying, avSongPlay/Stop, avRecStart/Stop (the rec LED
+    also mirrors the card's real state via .av-rec-on). facade __avConsole {lastAction,
+    transportToggle, refresh} + CONSOLE SELFTEST proof; one 400 ms poll interval.
+  - Styles: pure-CSS console (graphite plate + hairline texture, keycap buttons with pressed
+    travel, OLED glass with scanlines + teal glow). No images.
+- Evidence: smoke **54** first-run (2 new R11 checks: console structure + every legacy id;
+  Space dispatch → lastAction play→stop with avSeqIsPlaying true→false witness). Battery 23
+  suites + bench: 22 green first-lap; seq swing knife-edge re-ran **31/31 GREEN**; bench exit=0
+  (realtime light 32 / fat 48 loaded-window; offline knee monotone - the publishable metric).
+- HONEST OWED: the console's visual pass on the live surface is owed (screenshot probe deferred
+  at the context boundary; owner Ctrl+F5 is the read). Console PREV/NEXT preset stepping is v1 =
+  selection display + card APPLY (recorded; a step-and-apply key pair is a follow-up once the
+  bank API surface is pinned).
+- Commits: checkpoint (console+space, smoke 54 on the frozen bytes) + records (battery/bench)
+  + this close (addendum).
+- Carried (updated): console step-and-apply preset keys, console VU meters (needs a meter
+  accessor), chip keyboard assign path (a11y), animated rings, widen AV_MOD_TARGETS (wire v2),
+  kind-specific drop paths, Store as a browser overlay, module-menu Copy/Paste, page switching,
+  P·2 minBLEP, PERFECT TUNINGS, more owner modules (items 2..n), owner pass (Ctrl+F5 once for
+  the new service-worker cache).
