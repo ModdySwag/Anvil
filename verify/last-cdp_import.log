@@ -1,7 +1,7 @@
 index.html sha256 (before): cb1128e2e026c79363f2a589022208139fab3001898b75002ae4632c1406ddfc
 fixtures staged in C:\Users\Moddy\anvil\cache\r15b\rig-fixtures
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791474006598
+cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791474086292
  ok   boot + card: SAMPLE PACKS mounted in the synth zone (drop, pickers, slot, facade)  -> {"card":true,"zone":"synth","drop":true,"file":true,"dir":true,"slot":true,"facade":"function","ver":"r15b.0"}
  ok   IMPORT SELFTEST proof: parses on the avtest load (inited, sniff = wav)  -> {"version":"r15b.0","inited":true,"libCount":0,"sniff":"wav"}
  ok   absent host: avImportUiInit() returns false without throwing; re-attaching restores the card  -> {"r1":false,"threw1":false,"r2":true,"threw2":false,"back":true}
