@@ -1,0 +1,14 @@
+{
+  "name": "anvil",
+  "productName": "Anvil",
+  "version": "1.15.0",
+  "description": "Anvil - a MODDYS Foundry instrument: acid, wavetable, FM, string, drum, granular and sampler engines in one local-first synth (desktop).",
+  "main": "main.js",
+  "author": {
+    "name": "Modtech (Moddy)",
+    "email": "modtech@gmail.com"
+  },
+  "license": "AGPL-3.0-or-later",
+  "homepage": "https://moddys.net/anvil/",
+  "private": true
+}
