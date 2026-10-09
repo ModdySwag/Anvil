@@ -2846,3 +2846,50 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   (version.json updated at D integration). Public-push prep: secret scan CLEAN (553 files /
   4079 objects); ModdySwag/Anvil name free; owner standing grant: build + publish to the end.
 - Nothing else in flight from R23. Resume phrase "continue anvil".
+
+## Resume addendum 81 - 2026-10-10 (D WAVE PUBLISH COMPLETE - Anvil for Windows shipped)
+
+- The D wave is FINISHED and PUBLISHED. Everything below is live and verified; nothing is in
+  flight.
+- Build: `windows/out/Anvil-1.15.0-Setup.exe` - 100,027,576 B, sha256
+  `2b83ded4c00e6c7d934b8c1a68827a61b29b62ea00ddc83af36c4be064f7a9da` (rcedit-stamped, per-user
+  Inno, AppId DEDBE31C).
+- Gates: desktop rig vs the staged exe GREEN **31/31** (loopback origin, worklet tier, a note
+  with the master-tap witness, MIDI, the R22 library overlay, the EXP download lane, header
+  fit, zero page errors); install journey GREEN **28/28** (silent per-user install -> the
+  INSTALLED app passes the same rig -> upgrade-over -> silent uninstall; %APPDATA%\Anvil
+  kept by design).
+- Rig fixes landed on the way (both rig-side, to intent):
+  (1) the EXP download leg hides `showSaveFilePicker` for the leg - the rig evaluates with
+  userGesture:true, and with activation the FSA picker is ALLOWED to show (Electron 40
+  exposes it; the native dialog pends, nothing lands - probed). Hidden picker -> the app's
+  own anchor fallback -> will-download -> AV_DL_DIR (the cdp_s4 pickHideSave seam).
+  (2) journey display_count now attributes ARP entries to OUR publisher (Modtech) and reads
+  the UNFILTERED reg tree (`reg query /f` strips every non-matching value line, including
+  Publisher). This machine carries a Brave PWA "Anvil" (the web app installed as a Brave
+  app) in HKCU Uninstall - a name-only count read it as a defect the installer never had.
+- Assets (site + GitHub, digests verified on both): `Anvil-1.15.0-Setup.exe.zip` 99,548,415 B
+  sha256 `18da99f75f8ff85dcb60fc0839a9cc566f3580b14a43a625a0da0a2f267bacb7`;
+  `Anvil-1.15.0-source.zip` 16,924,584 B sha256
+  `5dcea21ac5b6403239640bdbb5f27a1d6b8ff1dc44dc34a8682fc3cf0aff1037` (574 files - the tracked
+  tree minus the release notes, screenshots included); the exe itself on the release.
+- GitHub: **ModdySwag/Anvil is PUBLIC** (full repo tree, commit 70ecfc5; secret scan CLEAN -
+  575 tracked files / 4205 history objects). Release **v1.15.0-beta** is a LIVE release (not
+  pre-release - Moddy's preference), 3 assets, digests match the ledger.
+- moddys.net: the downloads page carries the Anvil card (position 3; the "new" pill moved off
+  World Feed DB; "Anvil" added to check-moddys-downloads CARDS); upload-site --only 10 files
+  -> 0 not in sync; served bytes re-hashed over HTTPS = the assets; check-moddys-downloads
+  --only local 58/58 and --only live 58/58; the live card visually confirmed (every image
+  resolves).
+- Screenshots: windows/shots/desktop-0{1,2,3}-*.png captured from the PACKAGED app on a fresh
+  profile (the earlier takes carried rig residue - wiped, re-shot) -> repo
+  `screenshots/anvil-{cockpit,hub,library}.jpg` + deploy `shots/` (+224x140 thumbs) +
+  `anvil-icon.png` (116x116).
+- Repo hygiene: LICENSE = the Anvil AGPL text; README.md = the public README (screenshots/
+  refs); docs/repo-map.md = the dev artifact map; THIRD-PARTY-NOTICES.md added; .gitignore
+  covers cache/ + windows/{out,stage,tmp,shots,tmp-dl-*}.
+- OWNER PASS OWED: (1) download + install the release from the downloads page and eyeball the
+  real installed app (the R22/R23 UI rides it); (2) launchQueue .anvl arrival with the PWA
+  installed; (3) FSA dir-picker folder link (a real click); (4) the real two-tab check.
+- Nothing else in flight. Resume phrase "continue anvil" picks up at the owner-pass results
+  or any new scope.
