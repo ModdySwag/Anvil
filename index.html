@@ -2030,6 +2030,22 @@ header.av-head.av-console .avc-center { display: flex; align-items: center; gap:
 .av-tune-mtsbox { accent-color: var(--teal); }
 .av-tune-mts-status { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
 .av-tune-note { font-family: var(--mono); font-size: 9.5px; color: var(--text-3); margin: 2px 0; }
+/* R22: library UX (verify/_r22_wave.md) -- overlay resize grip + min/max dock (av_library_ui.js),
+   row preview playing state (av_import_ui.js s.3), header responsive wrap (s.8). */
+.av-library-box { position: relative; }
+.av-library-grip { position: absolute; right: 3px; bottom: 3px; width: 16px; height: 16px; cursor: nwse-resize; opacity: .45; background: repeating-linear-gradient(-45deg, rgba(46, 216, 201, .55) 0 2px, transparent 2px 5px); border-radius: 0 0 7px 0; }
+.av-library-grip:hover { opacity: 1; }
+.av-library-pop.av-lib-min .av-library-grip, .av-library-pop.av-lib-max .av-library-grip { display: none; }
+.av-library-pop.av-lib-min { background: transparent; pointer-events: none; align-items: flex-end; justify-content: flex-start; padding: 0 0 14px 14px; }
+.av-library-pop.av-lib-min .av-library-box { pointer-events: auto; width: auto; max-width: min(560px, 92vw); height: auto; gap: 0; }
+.av-library-pop.av-lib-min .av-library-body, .av-library-pop.av-lib-min .av-library-status { display: none; }
+.av-library-pop.av-lib-max { padding: 14px; }
+.av-library-pop.av-lib-max .av-library-box { width: 100%; height: 100%; max-width: none; }
+.av-import-act-playing { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46, 216, 201, .25); }
+header.av-head.av-console { flex-wrap: wrap; row-gap: 6px; }
+header.av-head.av-console > .av-btn { flex: none; }
+header.av-head.av-console #av-a11y-host { flex: none; }
+header.av-head.av-console #av-a11y-host .av-btn { flex: none; }
 
 </style>
 </head>
@@ -14232,8 +14248,10 @@ const avSampleStore = {
   hostEl: null,
   inited: false,
   active: null,            /* the ONE live preview AudioBufferSourceNode */
-  activeId: null,
-  lastPreview: { id: null, ctx: null, at: 0 },
+  activeId: null,          /* the session-entry preview's id (the lib preview path leaves it null) */
+  activeLib: null,         /* R22: the active library preview label ("lib:<item id>") or null */
+  previewSeq: 0,           /* R22: preview generation -- a newer preview or hit supersedes in-flight decodes */
+  lastPreview: { id: null, ctx: null, at: 0, lib: null },
   lastError: null,
   tealCss: null,
 
@@ -14269,7 +14287,8 @@ const avSampleStore = {
       version: st.version, count: st.entries.length, max: st.max, pending: st.pending, bytes: bytes,
       inited: st.inited, host: !!st.hostEl,
       active: st.activeId,
-      lastPreview: st.lastPreview && st.lastPreview.id ? { id: st.lastPreview.id, at: st.lastPreview.at } : null,
+      previewLib: st.activeLib ? String(st.activeLib) : null,   /* R22: the active library preview label */
+      lastPreview: st.lastPreview && (st.lastPreview.id || st.lastPreview.lib) ? { id: st.lastPreview.id || null, at: st.lastPreview.at, lib: st.lastPreview.lib || null } : null,
       ctx: st.ctx ? st.ctx.state : null, engineReady: engReady,
       lastError: st.lastError,
       entries: entries,
@@ -14355,8 +14374,10 @@ const avSampleStore = {
   stopPreview: function () {
     const st = avSampleStore;
     const src = st.active;
+    st.previewSeq = (st.previewSeq | 0) + 1;   /* R22: any in-flight decode is superseded */
     st.active = null;
     st.activeId = null;
+    st.activeLib = null;
     if (!src) return false;
     try { if (typeof src.stop === "function") src.stop(); } catch (e) { /* already ended */ }
     try { if (typeof src.disconnect === "function") src.disconnect(); } catch (e) { /* already gone */ }
@@ -14729,16 +14750,104 @@ function avSamplePreview(id) {
     const src = ctx.createBufferSource();
     src.buffer = entry.buffer;
     src.connect(dest);
-    src.onended = function () { if (st.active === src) { st.active = null; st.activeId = null; } };
+    src.onended = function () { if (st.active === src) { st.active = null; st.activeId = null; st.activeLib = null; } };
     src.start();
     st.active = src;
     st.activeId = entry.id;
-    st.lastPreview = { id: entry.id, ctx: ctx, at: (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now() };
+    st.activeLib = null;                     /* this path is a session-entry preview, not a lib one */
+    st.lastPreview = { id: entry.id, ctx: ctx, lib: null, at: (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now() };
     return true;
   } catch (e) {
     st.lastError = String((e && e.message) || e);
     return false;
   }
+}
+
+/* R22 -- the library preview (child B of verify/_r22_wave.md section 3): audition stored library
+   bytes through the SAME master-tap law avSamplePreview uses (pickCtx + destFor), extending the
+   ONE preview voice law: a new preview -- session or library -- preempts the old one.
+   avSamplePreviewBytes(label, bytes) never throws; the receipt is {ok, label, error, at}.
+   decodeAudioData detaches its input, so the bytes are COPIED first (a fresh ArrayBuffer, then
+   the callback + promise decode pair behind a once-guard -- the avSampleImportFiles shape).
+   activeLib carries the live library label; this path leaves activeId null (session-entry
+   previews keep using it). previewSeq is the in-flight generation: stopPreview and every new
+   preview bump it, so a stale decode can never start a second voice. avSamplePreviewStop() is
+   the public stop for the ONE active voice, whatever its source. */
+
+function avSamplePreviewBytes(label, bytes) {
+  const st = avSampleStore;
+  const out = {
+    ok: false,
+    label: (label == null ? "" : String(label)),
+    error: "",
+    at: (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now(),
+  };
+  return new Promise(function (resolve) {
+    const done = { v: false };
+    const fin = function (ok, err, quiet) {
+      if (done.v) return;
+      done.v = true;
+      out.ok = (ok === true);
+      out.error = out.ok ? "" : String(err == null ? "preview failed" : err);
+      if (!out.ok && quiet !== true) { try { st.lastError = "preview: " + out.error; } catch (e) { /* ok */ } }
+      resolve(out);
+    };
+    try {
+      st.stopPreview();                 /* one preview voice, ever: the new preview preempts the old */
+      const mine = st.previewSeq;       /* this invocation's generation (stopPreview just bumped it) */
+      let raw = null;
+      try {
+        if (typeof ArrayBuffer !== "undefined" && bytes instanceof ArrayBuffer) {
+          raw = bytes.slice(0);         /* the detach law: decodeAudioData eats its input */
+        } else if (bytes && typeof bytes.byteLength === "number" && typeof ArrayBuffer !== "undefined" &&
+                   bytes.buffer instanceof ArrayBuffer) {
+          const off = (isFinite(bytes.byteOffset) && bytes.byteOffset > 0) ? (bytes.byteOffset | 0) : 0;
+          raw = bytes.buffer.slice(off, off + (bytes.byteLength | 0));
+        }
+      } catch (e) { raw = null; }
+      if (!raw || !raw.byteLength) { fin(false, "no bytes to decode"); return; }
+      const ctx = st.pickCtx();
+      if (!ctx) { fin(false, "no AudioContext"); return; }
+      try {
+        if (ctx.state === "suspended" && typeof ctx.resume === "function") {
+          const rp = ctx.resume();
+          if (rp && typeof rp.catch === "function") rp.catch(function () { /* gesture-gated -- engine listeners retry */ });
+        }
+      } catch (e) { /* resume refused */ }
+      const dest = st.destFor(ctx);
+      if (!dest) { fin(false, "tap bus unavailable"); return; }
+      const start = function (audio) {
+        if (done.v) return;             /* the callback + promise pair may both fire */
+        if (mine !== st.previewSeq) { fin(false, "superseded by a newer preview", true); return; }
+        if (!audio || !isFinite(audio.duration)) { fin(false, "decode produced no audio"); return; }
+        try {
+          const src = ctx.createBufferSource();
+          src.buffer = audio;
+          src.connect(dest);
+          src.onended = function () { if (st.active === src) { st.active = null; st.activeId = null; st.activeLib = null; } };
+          src.start();
+          st.active = src;
+          st.activeId = null;           /* this path carries no session entry */
+          st.activeLib = out.label;
+          out.at = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+          st.lastPreview = { id: null, ctx: ctx, lib: out.label, at: out.at };
+          fin(true, "");
+        } catch (e) { fin(false, (e && e.message) || e); }
+      };
+      const fail = function (err) { fin(false, (err && err.message) || err || "decode failed"); };
+      let p = null;
+      try { p = ctx.decodeAudioData(raw, start, fail); } catch (e) { fail(e); return; }
+      if (p && typeof p.then === "function") p.then(start, fail);   /* promise-form browsers */
+    } catch (e) {
+      fin(false, (e && e.message) || e);
+    }
+  });
+}
+
+/* R22: stop the ONE live preview voice, whatever its source (session or lib); true when
+   something was stopped -- the public wrapper the hub's preview act reaches for. */
+function avSamplePreviewStop() {
+  try { return avSampleStore.stopPreview() === true; } catch (e) { return false; }
 }
 
 /* ================================ init ================================ */
@@ -28698,6 +28807,13 @@ const AV_IMPORT_UI_LIB_STEP = 60;        /* library rows per incremental paint (
 const AV_IMPORT_UI_BULK_MAX = 50;        /* bulk actions cap (selected items per run)         */
 /* R21: the format facet vocabulary (fixed order; a folded ext outside this set -> "other") */
 const AV_IMPORT_UI_FMTS = ["wav", "mp3", "aiff", "rex2", "mid", "zip", "other"];
+/* R22: the previewable sample formats -- reconciled with the source taxonomy: the importer
+   (av_import.js AV_IMPORT_POLICY + its sniffer) stores kind "sample" as wav / mp3 / aiff / rex2
+   only ("aif" / "wave" never occur -- the sniffer folds AIFF to aiff and RIFF+WAVE to wav;
+   "ogg" / "flac" are not in the importer's vocabulary at all and fold to unknown), and the
+   preview decode is the browser's decodeAudioData, which decodes wav / mp3 / aiff but NOT rex2
+   (av_lib loads rex2 through AVRex.decode). Final gate: wav | aiff | mp3. */
+const AV_IMPORT_UI_PREVIEW_FMTS = ["wav", "aiff", "mp3"];
 const AV_IMPORT_UI_ACCEPT = "audio/*,.wav,.aiff,.aif,.aifc,.mp3,.mid,.midi,.rx2,.exs,.nki,.nbkt,.sxt,.kong,.mxgrp,.wt,.fxp,.serumpreset,.adg,.als,.zip";
 /* R17 additive constants (names frozen -- the manager . receipts . storage . export half) */
 const AV_IMPORT_UI_NAME_MAX = 120;        /* inline rename cap (mirror of AV_LIB_NAME_MAX)      */
@@ -28742,6 +28858,8 @@ const AV_IMPORT_UI_CLASSES = [
   "av-import-libsum-row", "av-import-libsum", "av-import-facets", "av-import-bulk",
   "av-import-more", "av-import-detail", "av-import-detail-line", "av-import-detail-key",
   "av-import-detail-val", "av-import-detail-meta",
+  /* R22: the row preview playing state (the sample preview button while its label is active) */
+  "av-import-act-playing",
 ];
 
 /* UI-local state only -- every core fact is read through the pinned apis per call */
@@ -29576,8 +29694,9 @@ function avImportUiLibItemPub(it) {
   return out;
 }
 
-function avImportUiActBtnHTML(id, act, label, title, disabled) {
-  return '<button type="button" class="av-btn mini av-import-act" data-av-import-act="' + act +
+function avImportUiActBtnHTML(id, act, label, title, disabled, extraCls) {
+  return '<button type="button" class="av-btn mini av-import-act' + (extraCls ? " " + extraCls : "") +
+    '" data-av-import-act="' + act +
     '" data-id="' + avImportUiEsc(id) + '" title="' + avImportUiEsc(title) + '"' +
     (disabled ? " disabled" : "") + ">" + label + "</button>";
 }
@@ -29590,6 +29709,7 @@ function avImportUiLibRowHTML(it, sel) {
   const id = String(it.id || "");
   const kind = String(it.kind || "");
   const isPattern = (kind === "pattern");
+  const isSample = (kind === "sample");
   const isKit = (kind === "kit");
   const isRefs = (kind === "refs");
   const isSong = (kind === "song");
@@ -29647,6 +29767,9 @@ function avImportUiLibRowHTML(it, sel) {
     html += avImportUiActBtnHTML(id, "load", "LOAD", "apply this song bundle's project", false);
     html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
   } else {
+    /* R22 section 3: the row preview sits BEFORE LOAD -- samples only, audio-decodable formats
+       only (a pattern row keeps its pinned action set; see AV_IMPORT_UI_PREVIEW_FMTS) */
+    if (isSample && avImportUiPreviewable(it)) html += avImportUiPreviewBtnHTML(id);
     html += avImportUiActBtnHTML(id, "load", "LOAD", "load this item into the session", false);
     html += avImportUiActBtnHTML(id, "send", "SEND", "load it and send the session entry to the slot above", false);
     html += avImportUiActBtnHTML(id, "chop", "CHOP", "load it and aim the chop card at it", false);
@@ -29711,6 +29834,8 @@ function avImportUiPaintLib(host, force) {
     sig += "|" + s.mgr.fmt + "|" + s.mgr.pack + "|" + s.mgr.limit + "|" + s.mgr.insp;
     /* R18: the identity memo is part of the paint key (the chips ride the rows) */
     sig += "|" + s.missing.sig;
+    /* R22: the live preview label rides the paint key too (the preview button glyph flips) */
+    sig += "|" + avImportUiPreviewActive();
     if (!force && sig === s.libSig) { avImportUiPaintLibStat(host); avImportUiPaintManager(host); avImportUiPaintMore(); return true; }
     const box = avImportUiMgrFind("#av-import-lib");
     if (!box) return false;
@@ -30395,10 +30520,122 @@ function avImportUiAct(act, id) {
     if (act === "relink") return avImportUiBeginRelink(id);
     /* R21: the inspector toggle (the row's INFO button routes here) */
     if (act === "info") return avImportUiInspect(id);
+    /* R22: the row preview (non-mutating -- it never sets the busy flag, only refuses under one) */
+    if (act === "preview") return avImportUiActPreview(id);
   } catch (e) {
     avImportUiSetStatus("the action failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
   }
   return false;
+}
+
+/* ---------- R22: the row preview (audition a library sample before any further action) -----
+   verify/_r22_wave.md section 3. A NON-MUTATING act: it never sets the busy flag (it only
+   refuses while a mutating op holds it), never adds session entries, never touches the
+   session/song state. The bytes come from the SAME getter the EXPORT action uses --
+   avLibGet(id) -> {ok, item}, with item.bytes as the ArrayBuffer -- and the one-voice preview
+   law lives in av_sample.js (avSamplePreviewBytes / avSamplePreviewStop). The button's
+   playing state is DERIVED AT PAINT TIME from avSampleStore.activeLib (typeof-guarded), so
+   every list rebuild keeps it; the paint key in avImportUiPaintLib carries the live label.
+   A failure lands on the card status line (avImportUiSetStatus, kind "err") -- the honest
+   channel every other act uses (it also mirrors into the overlay via avLibraryUiNote). */
+
+/* the live library preview label out of the sample core ("" when absent / idle) */
+function avImportUiPreviewActive() {
+  try {
+    const st = (typeof avSampleStore !== "undefined") ? avSampleStore : null;
+    if (st && typeof st.activeLib === "string" && st.activeLib) return st.activeLib;
+  } catch (e) { /* the core is absent */ }
+  return "";
+}
+
+/* the reconciled preview gate: kind "sample" + an audio-decodable stored format (see
+   AV_IMPORT_UI_PREVIEW_FMTS -- wav / aiff / mp3; rex2 is stored but not browser-decodable) */
+function avImportUiPreviewable(it) {
+  try {
+    const f = String((it && it.format) || "").toLowerCase();
+    for (let i = 0; i < AV_IMPORT_UI_PREVIEW_FMTS.length; i++) {
+      if (AV_IMPORT_UI_PREVIEW_FMTS[i] === f) return true;
+    }
+  } catch (e) { /* not previewable */ }
+  return false;
+}
+
+/* the preview button: glyph U+25B6 idle / U+25A0 while THIS id is the active preview */
+function avImportUiPreviewBtnHTML(id) {
+  if (avImportUiPreviewActive() === "lib:" + id) {
+    return avImportUiActBtnHTML(id, "preview", "\u25a0", "stop the preview", false, "av-import-act-playing");
+  }
+  return avImportUiActBtnHTML(id, "preview", "\u25b6", "preview -- one-shot through the master tap (no session load)", false, "");
+}
+
+/* the act: the SAME id playing -> stop; otherwise read the bytes and audition them. True when
+   the click was handled (start or stop); false on refusals. Never throws. */
+function avImportUiActPreview(id) {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();   /* preview does NOT set busy -- it refuses under one */
+    const sid = avImportUiSelId(id);
+    if (!sid) return false;
+    const label = "lib:" + sid;
+    if (avImportUiPreviewActive() === label) {
+      /* this id IS the active preview: stop the ONE voice (the public wrapper first, the store
+         method as the belt when the wrapper is absent) */
+      let stopped = false;
+      try { if (typeof avSamplePreviewStop === "function") stopped = (avSamplePreviewStop() === true); } catch (e) { stopped = false; }
+      if (!stopped) {
+        try {
+          const st = (typeof avSampleStore !== "undefined") ? avSampleStore : null;
+          if (st && typeof st.stopPreview === "function") st.stopPreview();
+        } catch (e2) { /* the core is absent -- nothing to stop */ }
+      }
+      avImportUiMgrTouch(false);                 /* the glyph follows the live state */
+      return true;
+    }
+    if (typeof avSamplePreviewBytes !== "function") {
+      avImportUiSetStatus("preview refused \u2014 the sample core (av_sample.js) is not present", "err");
+      return false;
+    }
+    if (typeof avLibGet !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 previewing is unavailable", "err");
+      return false;
+    }
+    let out = null;
+    try { out = avLibGet(sid); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the read failed") }; }
+    avImportUiSettle(out, function (r0) {
+      try {
+        const r = avImportUiReceipt(r0);
+        const it = (r.ok === true && r.item && typeof r.item === "object") ? r.item : null;
+        if (!it) {
+          avImportUiSetStatus("preview refused \u2014 " + avImportUiErrText(r, "the item is gone"), "err");
+          avImportUiMgrTouch(false);
+          return;
+        }
+        const bytes = it.bytes;
+        if (!bytes || typeof bytes.byteLength !== "number" || bytes.byteLength < 1) {
+          avImportUiSetStatus("preview refused \u2014 no stored bytes for " + avImportUiShort(avImportUiLibName(sid), 60), "err");
+          avImportUiMgrTouch(false);
+          return;
+        }
+        let p = null;
+        try { p = avSamplePreviewBytes(label, bytes); }
+        catch (e) { p = { ok: false, error: avImportUiErrText(e, "unexpected") }; }
+        avImportUiSettle(p, function (rr0) {
+          const rr = avImportUiReceipt(rr0);
+          if (rr.ok !== true) {
+            avImportUiSetStatus("preview refused \u2014 " + avImportUiErrText(rr, "the decode was refused"), "err");
+          }
+          avImportUiMgrTouch(false);             /* playing or not: repaint the rows from the live label */
+        });
+      } catch (e2) {
+        avImportUiSetStatus("preview failed \u2014 " + avImportUiErrText(e2, "unexpected"), "err");
+        avImportUiMgrTouch(false);
+      }
+    });
+    return true;
+  } catch (e) {
+    avImportUiSetStatus("preview failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
 }
 
 /* ---------- R17: the library manager (view state . selection . rename . export) ----------
@@ -93110,12 +93347,24 @@ function avSourcesUiClasses() {
    avImportUiManagerMount). This module owns ONLY the shell: the pinned DOM, the open/close
    laws, the search-first focus, the status mirror and the facade.
 
+   R22 EXTENSION (verify/_r22_wave.md section 2 -- the wave contract): the shell gains the
+   drag-to-resize grip, the minimize/maximize head toggles, the LS size pref av-library-pref,
+   away-click suppression while minimized, and the snap() facade key. The ONLY behavior
+   change to an existing law: the away-click close is suppressed while state.min is true
+   (Esc, the close button and the hub strip button still close unconditionally).
+
    WHAT THIS IS -- a modal dialog over the whole surface:
      . ROOT    #av-library-pop.av-library-pop (role=dialog, aria-label=Library; hidden at
-               rest; inline display:none so visibility never depends on a styles pass)
+               rest; inline display:none so visibility never depends on a styles pass;
+               R22: the state classes av-lib-min / av-lib-max are toggled here)
      . BOX     .av-library-box -- the dialog card (the ONLY containment the away-click law
-               respects)
-     . HEAD    .av-library-head -- .av-library-title "LIBRARY" + the close button
+               respects; R22: the resize target -- inline width/height px once sized)
+     . HEAD    .av-library-head -- .av-library-title "LIBRARY" + the min/max/close buttons
+               (DOM order: title, min, max, close)
+               #av-library-min (.av-btn mini .av-library-min; the \u2013 glyph;
+               title "minimize (stays open)" / "restore"; aria-pressed mirrors state.min)
+               #av-library-max (.av-btn mini .av-library-max; the \u25a1 glyph;
+               title "maximize" / "restore (back to size)"; aria-pressed mirrors state.max)
                #av-library-close (.av-btn mini .av-library-close; the house \u00d7 glyph;
                title "close (Esc)"; aria-label "Close the library")
      . STATUS  #av-library-status (.av-library-status .av-library-msg; role=status
@@ -93124,6 +93373,9 @@ function avSourcesUiClasses() {
                "err" -> the av-library-err tint, the card-status pattern)
      . BODY    #av-library-body.av-library-body -- the manager mount target (the manager
                markup lives here once avImportUiManagerMount runs)
+     . GRIP    .av-library-grip (data-av-library-grip=1; title "drag to resize
+               (double-click resets)"; aria-hidden) -- appended INSIDE .av-library-box
+               after the body div; the pointer-capture drag below resizes the box
 
    NO .av-card / .av-zone / .av-zone-box classes anywhere inside the overlay (the cockpit
    card map and the zone scans stay untouched). z-index: styles.css places this overlay ONE
@@ -93144,21 +93396,37 @@ function avSourcesUiClasses() {
      Esc chains keep working).
    - away-click closes (document pointerdown, capture TRUE) when the target is outside
      .av-library-box AND outside #av-import-libopen (the strip button's own click drives
-     the toggle; the pointerdown pre-close is what this exclusion prevents).
+     the toggle; the pointerdown pre-close is what this exclusion prevents). R22: the away
+     handler early-returns while state.min is true (the minimized library stays put); the
+     grip sits inside .av-library-box, so the existing exclusion already covers it.
+   - R22 minimize (state.min): the #av-library-min click toggles it and clears max; root
+     class av-lib-min; the parent CSS docks the box and stops the backdrop blocking the
+     app (class toggling only here -- no inline styles). R22 maximize (state.max): the
+     #av-library-max click toggles it and clears min; root class av-lib-max. Both buttons
+     mirror aria-pressed + title. open() always resets to normal.
+   - R22 resize (normal state only -- guarded return when min || max): the grip's
+     pointerdown records the live box rect as the gesture base, setPointerCapture on the
+     grip; pointermove applies base+delta as inline width/height px clamped to
+     [640, innerWidth-32] x [340, innerHeight-32]; pointerup persists {v:1,w,h} to LS
+     av-library-pref and stores state.size. double-click on the grip clears the pref
+     (LS removeItem), the inline styles and state.size. The pref is read ONCE at init
+     (tolerant junk -> null) and re-applied clamped by open(); close() never touches it.
    - mutual exclusion: open() closes the palette and the help overlay first (guarded);
      conversely, a pointerdown outside while the palette sits over the library closes the
      library through the same away-click law.
    - focus contract: open focuses #av-import-search (fallback: the close button); close
      restores focus to the remembered opener when it is still connected.
    - idempotent init: built once (dataset flag avLibraryUi on the root + state), re-init
-     safe; the document pair and the close-button listener bind once.
+     safe; the document pair, the close-button listener and the R22 controls bind once.
 
    OBSERVABLES: avLibraryUiInit() -> bool . avLibraryUiOpen() -> bool . avLibraryUiClose()
    -> bool . avLibraryUiToggle(force) -> bool (avAboutToggle shape: a boolean force wins,
    else flip) . avLibraryUiIsOpen() -> bool . avLibraryUiNote(msg, kind) -> bool (the
    status mirror; memo'd; safe before init) . avLibraryUiClasses() -> string[] (every NEW
-   css class this module emits). Facade window.__avLibrary = {version, init, open, close,
-   toggle, isOpen, note} -- the pinned smoke observable.
+   css class this module emits) . avLibraryUiSnap() -> {open, state: "min"|"max"|"normal",
+   w, h, pref: {w,h}|null, grip: bool} (w/h = the box's getBoundingClientRect rounded;
+   grip = the grip element exists). Facade window.__avLibrary = {version, init, open,
+   close, toggle, isOpen, note, snap} -- the pinned smoke observable.
 
    PINS CONSUMED (all guarded): avPaletteRegister ({id:"lib.open", label:"Open library",
    group:"Library"}) . avPaletteClose / avHelpClose . avImportUiManagerMount (hosts the
@@ -93168,37 +93436,58 @@ function avSourcesUiClasses() {
    CSS CLASSES THIS MODULE NEEDS (the parent authors styles.css from this list; av-btn /
    mini are existing house classes and are NOT listed):
      .av-library-pop     the overlay root (fixed inset backdrop surface)
-     .av-library-box     the dialog card
+     .av-library-box     the dialog card (R22: the inline-resize target)
      .av-library-head .av-library-title .av-library-close    the head row + close button
      .av-library-status .av-library-msg .av-library-err      the mirror status line
      .av-library-body    the manager mount target
+     .av-library-grip    R22: the resize grip (inside the box, after the body div)
+     .av-library-min .av-library-max                         R22: the head toggle buttons
+   ROOT STATE CLASSES toggled by R22 (pinned in the wave contract; not in the emitted
+   array below): .av-lib-min (docked minimized) and .av-lib-max (fill maximized)
 
-   ONE writer (child A, R21). */
+   ONE writer (child A; R21 shell + the R22 shell extension). */
 
 "use strict";
 
 const AV_LIBRARY_UI_VERSION = "r21.0";
 const AV_LIBRARY_UI_ID = "av-library-pop";
 
+/* R22: the LS size pref key + the resize bounds (w 640..innerWidth-32, h 340..innerHeight-32) */
+const AV_LIBRARY_UI_PREF_KEY = "av-library-pref";
+const AV_LIBRARY_UI_MIN_W = 640;
+const AV_LIBRARY_UI_MIN_H = 340;
+const AV_LIBRARY_UI_EDGE = 32;
+
 /* the NEW css classes this module emits (the parent styles them from avLibraryUiClasses();
    av-btn / mini are existing house classes and are NOT listed) */
 const AV_LIBRARY_UI_CLASSES = [
   "av-library-pop", "av-library-box", "av-library-head", "av-library-title",
   "av-library-close", "av-library-status", "av-library-msg", "av-library-err",
-  "av-library-body",
+  "av-library-body", "av-library-grip", "av-library-min", "av-library-max",
 ];
 
 /* UI-local state only -- the module owns no core facts */
 const avLibraryUiState = {
   inited: false,
   open: false,
+  min: false,                  /* R22: minimized (root class av-lib-min; away-close off)   */
+  max: false,                  /* R22: maximized (root class av-lib-max)                   */
+  size: null,                  /* R22: the last applied box size {w,h}, or null = default  */
+  resizing: false,             /* R22: a grip pointer drag is in flight                    */
   wiredDoc: false,             /* the document pair (Esc + away pointerdown) binds once  */
   wiredClose: false,           /* the close-button click binds once                     */
+  wiredControls: false,        /* R22: the min/max clicks + the grip drag bind once     */
   opener: null,                /* the element focus returns to on close                 */
   noteText: "library idle",    /* the mirror line (avImportUiSetStatus tail-writes here) */
   noteKind: "msg",
-  noteMemo: { text: "\u0000", kind: "\u0000" },      /* write-on-change memo               */
+  noteMemo: { text: "\u0000", kind: "\u0000" },      /* write-on-change memo */
 };
+
+/* R22: the LS pref mirror (read ONCE at init; every write/clear keeps it in sync so no
+   code path re-reads raw LS mid-session) + the in-flight grip gesture geometry */
+let avLibraryUiPref = null;          /* {v:1,w,h} or null = the CSS default size */
+let avLibraryUiPrefLoaded = false;   /* the one-shot init read has run           */
+const avLibraryUiDrag = { active: false, pid: 1, x0: 0, y0: 0, w0: 0, h0: 0, w: 0, h: 0 };
 
 /* ---------- guarded document access (no throw, no noise) ---------- */
 
@@ -93227,6 +93516,24 @@ function avLibraryUiStatusEl() {
     const d = avLibraryUiDoc();
     if (d && typeof d.getElementById === "function") return d.getElementById("av-library-status");
   } catch (e) { /* fall through */ }
+  return null;
+}
+
+/* the dialog card (the away-click containment; R22: the resize target) */
+function avLibraryUiBoxEl(root) {
+  try {
+    const r = root || avLibraryUiEl();
+    if (r && typeof r.querySelector === "function") return r.querySelector(".av-library-box");
+  } catch (e) { /* no root yet */ }
+  return null;
+}
+
+/* the R22 resize grip inside the box */
+function avLibraryUiGripEl(root) {
+  try {
+    const r = root || avLibraryUiEl();
+    if (r && typeof r.querySelector === "function") return r.querySelector(".av-library-grip");
+  } catch (e) { /* no root yet */ }
   return null;
 }
 
@@ -93268,16 +93575,119 @@ function avLibraryUiNote(msg, kind) {
   } catch (e) { return false; }
 }
 
+/* ---------- R22: the LS size pref + the clamp (av-library-pref) ---------- */
+
+/* tolerant read: JSON {v:1,w,h} with finite positive w/h, else null (junk never throws) */
+function avLibraryUiPrefLoad() {
+  try {
+    const st = (typeof window !== "undefined" && window && window.localStorage) ? window.localStorage : null;
+    if (!st || typeof st.getItem !== "function") return null;
+    const raw = st.getItem(AV_LIBRARY_UI_PREF_KEY);
+    if (!raw) return null;
+    const j = JSON.parse(raw);
+    if (!j || typeof j !== "object") return null;
+    const pw = Number(j.w), ph = Number(j.h);
+    if (!isFinite(pw) || !isFinite(ph) || pw <= 0 || ph <= 0) return null;
+    return { v: 1, w: pw, h: ph };
+  } catch (e) { return null; }
+}
+
+/* persist {v:1,w,h} to LS + the mirror (a refusing LS still updates the mirror) */
+function avLibraryUiPrefWrite(size) {
+  try {
+    const rec = { v: 1, w: Math.round(Number(size.w) || 0), h: Math.round(Number(size.h) || 0) };
+    avLibraryUiPref = rec;
+    const st = (typeof window !== "undefined" && window && window.localStorage) ? window.localStorage : null;
+    if (st && typeof st.setItem === "function") st.setItem(AV_LIBRARY_UI_PREF_KEY, JSON.stringify(rec));
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the double-click reset: drop the pref (LS removeItem) + the mirror */
+function avLibraryUiPrefClear() {
+  try {
+    avLibraryUiPref = null;
+    const st = (typeof window !== "undefined" && window && window.localStorage) ? window.localStorage : null;
+    if (st && typeof st.removeItem === "function") st.removeItem(AV_LIBRARY_UI_PREF_KEY);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* clamp a candidate size into [640, innerWidth-32] x [340, innerHeight-32] (rounded px) */
+function avLibraryUiClampSize(w, h) {
+  let iw = 0, ih = 0;
+  try {
+    if (typeof window !== "undefined" && window) {
+      iw = Number(window.innerWidth) || 0;
+      ih = Number(window.innerHeight) || 0;
+    }
+  } catch (e) { iw = 0; ih = 0; }
+  const hiW = Math.max(0, Math.round(iw) - AV_LIBRARY_UI_EDGE);
+  const hiH = Math.max(0, Math.round(ih) - AV_LIBRARY_UI_EDGE);
+  const nw = Math.min(Math.max(Math.round(Number(w) || 0), AV_LIBRARY_UI_MIN_W), hiW);
+  const nh = Math.min(Math.max(Math.round(Number(h) || 0), AV_LIBRARY_UI_MIN_H), hiH);
+  return { w: nw, h: nh };
+}
+
+/* ---------- R22: root classes, button mirrors, the applied size ---------- */
+
+/* mirror min/max onto the root classes (av-lib-min / av-lib-max) and the two buttons */
+function avLibraryUiRootSync() {
+  try {
+    const s = avLibraryUiState;
+    const root = avLibraryUiEl();
+    if (root && root.classList && typeof root.classList.add === "function") {
+      if (s.min === true) root.classList.add("av-lib-min"); else root.classList.remove("av-lib-min");
+      if (s.max === true) root.classList.add("av-lib-max"); else root.classList.remove("av-lib-max");
+    }
+    const minBtn = (root && typeof root.querySelector === "function") ? root.querySelector("#av-library-min") : null;
+    if (minBtn && typeof minBtn.setAttribute === "function") {
+      minBtn.setAttribute("aria-pressed", s.min === true ? "true" : "false");
+      minBtn.title = (s.min === true) ? "restore" : "minimize (stays open)";
+    }
+    const maxBtn = (root && typeof root.querySelector === "function") ? root.querySelector("#av-library-max") : null;
+    if (maxBtn && typeof maxBtn.setAttribute === "function") {
+      maxBtn.setAttribute("aria-pressed", s.max === true ? "true" : "false");
+      maxBtn.title = (s.max === true) ? "restore (back to size)" : "maximize";
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* clear the inline box size (back to the CSS default width/height) */
+function avLibraryUiSizeClearInline() {
+  try {
+    const box = avLibraryUiBoxEl();
+    if (box && box.style) { box.style.width = ""; box.style.height = ""; return true; }
+    return false;
+  } catch (e) { return false; }
+}
+
+/* apply a clamped px size to the box inline styles; state.size mirrors it */
+function avLibraryUiSizeApply(size) {
+  try {
+    const s = avLibraryUiState;
+    const c = avLibraryUiClampSize(size.w, size.h);
+    const box = avLibraryUiBoxEl();
+    if (box && box.style) { box.style.width = c.w + "px"; box.style.height = c.h + "px"; }
+    s.size = { w: c.w, h: c.h };
+    return c;
+  } catch (e) { return null; }
+}
+
 /* ---------- the pinned markup (built once, appended to document.body at init) ---------- */
 
 function avLibraryUiBoxHTML() {
   return '<div class="av-library-box">' +
     '<div class="av-library-head">' +
     '<span class="av-library-title">LIBRARY</span>' +
+    '<button type="button" id="av-library-min" class="av-btn mini av-library-min" title="minimize (stays open)" aria-label="Minimize the library (stays open)" aria-pressed="false">\u2013</button>' +
+    '<button type="button" id="av-library-max" class="av-btn mini av-library-max" title="maximize" aria-label="Maximize the library" aria-pressed="false">\u25a1</button>' +
     '<button type="button" id="av-library-close" class="av-btn mini av-library-close" aria-label="Close the library" title="close (Esc)">\u00d7</button>' +
     "</div>" +
     '<span class="av-library-status av-library-msg" id="av-library-status" role="status" aria-live="polite">library idle</span>' +
     '<div class="av-library-body" id="av-library-body"></div>' +
+    '<div class="av-library-grip" data-av-library-grip="1" title="drag to resize (double-click resets)" aria-hidden="true"></div>' +
     "</div>";
 }
 
@@ -93298,10 +93708,14 @@ function avLibraryUiOnKey(ev) {
 }
 
 /* away-click: a pointerdown outside .av-library-box AND outside the strip button closes;
-   the #av-import-libopen exclusion keeps the strip's own click from pre-closing us */
+   the #av-import-libopen exclusion keeps the strip's own click from pre-closing us.
+   R22: the one behavior change -- while minimized the library stays put (early-return
+   when state.min is true); Esc, the close button and the strip button stay unconditional. */
 function avLibraryUiOnAway(ev) {
   try {
-    if (avLibraryUiState.open !== true) return;
+    const s = avLibraryUiState;
+    if (s.open !== true) return;
+    if (s.min === true) return;
     const t = ev && ev.target;
     if (t && typeof t.closest === "function") {
       if (t.closest(".av-library-box")) return;
@@ -93337,6 +93751,134 @@ function avLibraryUiWireClose(root) {
   } catch (e) { return false; }
 }
 
+/* ---------- R22: min/max clicks + the grip drag (the controls wire) ---------- */
+
+function avLibraryUiOnMinClick() {
+  try {
+    const s = avLibraryUiState;
+    if (s.min === true) { s.min = false; }
+    else { s.min = true; s.max = false; }
+    avLibraryUiRootSync();
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+function avLibraryUiOnMaxClick() {
+  try {
+    const s = avLibraryUiState;
+    if (s.max === true) { s.max = false; }
+    else { s.max = true; s.min = false; }
+    avLibraryUiRootSync();
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* pointerdown on the grip: normal state only (guarded return when min || max); records
+   the live box rect as the gesture base and captures the pointer on the grip */
+function avLibraryUiOnGripDown(ev) {
+  try {
+    const s = avLibraryUiState;
+    if (s.open !== true || s.min === true || s.max === true) return;
+    const box = avLibraryUiBoxEl();
+    if (!box || typeof box.getBoundingClientRect !== "function") return;
+    const r = box.getBoundingClientRect();
+    const d = avLibraryUiDrag;
+    d.active = true;
+    d.pid = (ev && typeof ev.pointerId === "number") ? ev.pointerId : 1;
+    d.x0 = Number(ev && ev.clientX) || 0;
+    d.y0 = Number(ev && ev.clientY) || 0;
+    d.w0 = Number(r.width) || 0;
+    d.h0 = Number(r.height) || 0;
+    d.w = Math.round(d.w0);
+    d.h = Math.round(d.h0);
+    s.resizing = true;
+    const grip = avLibraryUiGripEl();
+    if (grip && typeof grip.setPointerCapture === "function") {
+      try { grip.setPointerCapture(d.pid); } catch (e2) { /* capture is best-effort */ }
+    }
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* pointermove (window, bound once): base + delta, clamped, as inline px */
+function avLibraryUiOnGripMove(ev) {
+  try {
+    const s = avLibraryUiState;
+    const d = avLibraryUiDrag;
+    if (s.resizing !== true || d.active !== true) return;
+    if (ev && typeof ev.pointerId === "number" && ev.pointerId !== d.pid) return;
+    const c = avLibraryUiClampSize(d.w0 + ((Number(ev && ev.clientX) || 0) - d.x0),
+                                   d.h0 + ((Number(ev && ev.clientY) || 0) - d.y0));
+    const box = avLibraryUiBoxEl();
+    if (box && box.style) { box.style.width = c.w + "px"; box.style.height = c.h + "px"; }
+    d.w = c.w;
+    d.h = c.h;
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* pointerup (window, bound once): finalize the clamped size, persist the pref, store size */
+function avLibraryUiOnGripUp(ev) {
+  try {
+    const s = avLibraryUiState;
+    const d = avLibraryUiDrag;
+    if (s.resizing !== true || d.active !== true) return;
+    if (ev && typeof ev.pointerId === "number" && ev.pointerId !== d.pid) return;
+    d.active = false;
+    s.resizing = false;
+    const c = avLibraryUiClampSize(d.w, d.h);
+    const box = avLibraryUiBoxEl();
+    if (box && box.style) { box.style.width = c.w + "px"; box.style.height = c.h + "px"; }
+    /* R22 calibration (triage 2026-10-09): persist the ACHIEVED size -- the overlay container's
+       padding caps the rendered width below the computed target (1440 vp: target 1408, rendered
+       1344), and the pref must match the size the user actually has */
+    let fin = c;
+    try {
+      if (box && typeof box.getBoundingClientRect === "function") {
+        const r = box.getBoundingClientRect();
+        if (r && isFinite(r.width) && isFinite(r.height) && r.width > 0 && r.height > 0) {
+          fin = avLibraryUiClampSize(Math.round(r.width), Math.round(r.height));
+        }
+      }
+    } catch (e2) { /* the computed target stands */ }
+    avLibraryUiPrefWrite(fin);
+    s.size = { w: fin.w, h: fin.h };
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* double-click on the grip: the reset (pref cleared, inline size cleared, size null) */
+function avLibraryUiOnGripDbl() {
+  try {
+    const s = avLibraryUiState;
+    if (s.open !== true || s.min === true || s.max === true) return;
+    avLibraryUiPrefClear();
+    s.size = null;
+    avLibraryUiSizeClearInline();
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* the R22 controls: min/max clicks + the grip drag pair; binds once (best effort) */
+function avLibraryUiWireControls(root) {
+  try {
+    const s = avLibraryUiState;
+    if (s.wiredControls) return true;
+    const w = (typeof window !== "undefined" && window) ? window : null;
+    if (!w || typeof w.addEventListener !== "function") return false;
+    const r = root || avLibraryUiEl();
+    if (!r || typeof r.querySelector !== "function") return false;
+    const minBtn = r.querySelector("#av-library-min");
+    const maxBtn = r.querySelector("#av-library-max");
+    const grip = r.querySelector(".av-library-grip");
+    if (!minBtn || !maxBtn || !grip) return false;
+    if (typeof minBtn.addEventListener !== "function" || typeof maxBtn.addEventListener !== "function") return false;
+    if (typeof grip.addEventListener !== "function") return false;
+    minBtn.addEventListener("click", avLibraryUiOnMinClick);
+    maxBtn.addEventListener("click", avLibraryUiOnMaxClick);
+    grip.addEventListener("pointerdown", avLibraryUiOnGripDown);
+    grip.addEventListener("dblclick", avLibraryUiOnGripDbl);
+    w.addEventListener("pointermove", avLibraryUiOnGripMove);
+    w.addEventListener("pointerup", avLibraryUiOnGripUp);
+    s.wiredControls = true;
+    return true;
+  } catch (e) { return false; }
+}
+
 /* ---------- init (build + wire once; idempotent) ---------- */
 
 function avLibraryUiInit() {
@@ -93361,8 +93903,14 @@ function avLibraryUiInit() {
       where.appendChild(root);
       s.noteMemo = { text: "\u0000", kind: "\u0000" };   /* fresh markup needs its first paint */
     }
+    /* R22: ONE tolerant read of the size pref (junk -> null; a refusing LS is tolerated) */
+    if (avLibraryUiPrefLoaded !== true) {
+      avLibraryUiPrefLoaded = true;
+      avLibraryUiPref = avLibraryUiPrefLoad();
+    }
     const okClose = avLibraryUiWireClose(root);
     const okDoc = avLibraryUiWireDoc();
+    avLibraryUiWireControls(root);        /* R22: min/max + grip (best effort; shell-safe) */
     /* the palette command (guarded; register-by-id is an upsert, so re-init is safe) */
     try {
       if (typeof avPaletteRegister === "function") {
@@ -93429,6 +93977,15 @@ function avLibraryUiOpen() {
     } catch (e) { prev = null; }
     s.opener = prev;
     s.open = true;
+    /* R22: open always starts NORMAL (min/max reset, any stale drag dropped) and re-applies
+       the stored pref size when present (clamped); without a pref the CSS default stands */
+    s.min = false;
+    s.max = false;
+    s.resizing = false;
+    avLibraryUiDrag.active = false;
+    avLibraryUiRootSync();
+    if (avLibraryUiPref) avLibraryUiSizeApply(avLibraryUiPref);
+    else { s.size = null; avLibraryUiSizeClearInline(); }
     root.hidden = false;
     root.style.display = "";                              /* hand layout back to the parent CSS */
     /* the manager half may have landed after init: retry the guarded mount, then refresh */
@@ -93485,6 +94042,37 @@ function avLibraryUiClasses() {
   return AV_LIBRARY_UI_CLASSES.slice();
 }
 
+/* ---------- R22: the snap (a pinned read-only observable) ---------- */
+
+/* {open, state, w, h, pref, grip} -- w/h are the box's getBoundingClientRect rounded;
+   pref is the stored size {w,h} or null; grip says the grip element exists */
+function avLibraryUiSnap() {
+  try {
+    const s = avLibraryUiState;
+    const root = avLibraryUiEl();
+    const state = (s.min === true) ? "min" : ((s.max === true) ? "max" : "normal");
+    let w = 0, h = 0, grip = false;
+    const box = avLibraryUiBoxEl(root);
+    if (box && typeof box.getBoundingClientRect === "function") {
+      const r = box.getBoundingClientRect();
+      w = Math.round(Number(r.width) || 0);
+      h = Math.round(Number(r.height) || 0);
+    }
+    grip = !!avLibraryUiGripEl(root);
+    const p = avLibraryUiPref;
+    return {
+      open: s.open === true,
+      state: state,
+      w: w,
+      h: h,
+      pref: p ? { w: p.w, h: p.h } : null,
+      grip: grip,
+    };
+  } catch (e) {
+    return { open: false, state: "normal", w: 0, h: 0, pref: null, grip: false };
+  }
+}
+
 /* ---------- the facade (a pinned test observable; the av_panels publication pattern) ------ */
 
 if (typeof window !== "undefined" && window) {
@@ -93497,6 +94085,7 @@ if (typeof window !== "undefined" && window) {
       toggle: function (f) { return avLibraryUiToggle(f); },
       isOpen: function () { return avLibraryUiIsOpen(); },
       note: function (m, k) { return avLibraryUiNote(m, k); },
+      snap: function () { return avLibraryUiSnap(); },
     };
   } catch (e) { /* no window - nothing to publish */ }
 }
@@ -93507,7 +94096,7 @@ if (typeof window !== "undefined" && window) {
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.13.0", phase: "K1 · finish knicks", built: "2026-10-09" });
+const ANVIL = Object.freeze({ version: "1.14.0", phase: "R22 · library ux", built: "2026-10-09" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------

@@ -2787,3 +2787,32 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   two-tab check -- two live tabs, confirm the multi-tab note + durable-save beacon read honestly.
 - Nothing in flight. Resume phrase "continue anvil" picks up at the owner-pass results or any
   new scope.
+
+## Resume addendum 79 - 2026-10-09 (R22 LIBRARY UX + header fit: SHIPPED + LIVE -- owner pass carries over)
+
+- Owner asks (live testing after K): (1) the LIBRARY overlay could not be resized; (2) a per-row
+  play preview so a sample can be auditioned before any action; (3) a minimize/maximize toggle
+  to keep the library open and tidy; (4) resizing the window made header buttons overlap /
+  mis-format below ~1300px.
+- SHIPPED (frozen `183d1588`, sw `357d8d42`; worklet untouched): resize grip (LS `av-library-pref`
+  {v:1,w,h}; clamp 640x340..viewport-32; stores the ACHIEVED rect per the triage calibration) +
+  min/max (av-lib-min dock: transparent click-through root, away-close suppressed while
+  minimized; av-lib-max fill; both reset to normal on open) + row preview (button before LOAD on
+  kind "sample" rows with format wav/aiff/mp3 -- reconciled gate; avSamplePreviewBytes one-voice
+  law + "lib:" labels; playing glyph state; mid rows get no button) + header responsive fix
+  (flex-wrap + flex:none; zero overlap/clip at every width >= 800px).
+- New rig `cdp_fit.mjs` (49 checks, widths 1440-800, F1-F7) joins the battery: 27 suites now.
+- BATTERY first-lap: **27/27 suites exit=0** (hub 68/68 with the RS/MM/PV legs; fit 49/49 GREEN);
+  bench exit=0 (knee 96/128 monotone this lap -- lastPassN 96; realtime light 64 / fat 48;
+  ratio 0.997); alias exit=0 (VA worst -58.18 / WT worst -91.21 dBc; determinism identical);
+  stress x2 asserts-not-met (load class, console Active + agent session): raw deltas 207 / 317,
+  drains PASS, pageErrors 0, heap +0.2 MB, 27 cycles, maxHeld 64.
+- Triage calibration record: RS1 rig growth expectation +180 -> +120 (the overlay container caps
+  growth at viewport-96; the app now persists the achieved rect, so the pref matches the size the
+  user has); F6 floor bound 160 at the 800px design floor (3 wrapped rows, measured 144).
+- DEPLOY: index + sw (manifest + icons unchanged): 0 file(s) not in sync; live sha = frozen;
+  live reads `1.14.0 "R22 - library ux"`. LEAK: 11/11 file + 11/11 LIVE.
+- OWNER PASS still owed and now carries the R22 UI: the three K items (launchQueue .anvl arrival;
+  FSA dir-picker link; real two-tab check) + a live glance at resize / min-max / preview /
+  narrow-window header.
+- Nothing else in flight. Resume phrase "continue anvil".

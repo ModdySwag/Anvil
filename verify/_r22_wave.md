@@ -196,3 +196,41 @@ Legs (names are the contract):
 - reconciliation notes (gate list / receipt shape / note channel -- whatever you verified
   against source);
 - an Undetermined list (anything you could not verify statically).
+
+## 8. W -- header responsive fix (owner clip 2026-10-09: resizing the screen -> overlap)
+
+Probe evidence (cache/scratch/kdiag/header_probe.mjs, run 2026-10-09): the header's natural
+one-row content width is 1298px. Below ~1300px the flex-shrink squeezes the right-cluster
+buttons down to the .av-btn.mini 24px min-width FLOOR, so labels overflow their boxes and
+collide (BROWSE shows as BRO etc -- the owner screenshot), and the a11y cluster
+(av-a11y-contrast @1162+72 / av-a11y-motion @1240+58) extends past the viewport and is
+clipped at narrower widths. Buttons carry flex-shrink 1; no wrap anywhere.
+
+Fix (PARENT CSS at integration; a three-part change, keep every existing pin intact):
+- `header.av-head.av-console { flex-wrap: wrap; row-gap: 6px; }`
+- `header.av-head.av-console > .av-btn { flex: none; }`
+- `header.av-head.av-console #av-a11y-host { flex: none; }` and
+  `header.av-head.av-console #av-a11y-host .av-btn { flex: none; }`
+- the >=1520px absolute-centre block stays unchanged.
+Behaviour target: at fit widths one row exactly as today; when tight the right cluster
+wraps to the second row (header height grows; nothing clips, nothing collides).
+
+W (child) deliverables:
+1) src/av_chrome.js / src/av_console.js / src/av_a11y.js -- change ONLY if static reading
+   shows the CSS alone cannot hold; otherwise report "no source change needed" with the
+   reasoning. (write-first rule applies if a change is needed.)
+2) NEW `verify/cdp_fit.mjs` -- the width-sweep fit rig. Clone the launch block from
+   verify/cdp_hub.mjs (raw CDP, Edge headless, temp profile, wait for data-av-ready).
+   Sweep widths [1440,1400,1300,1200,1100,1000,900,800] via
+   Emulation.setDeviceMetricsOverride (250ms settle, one retry per read). Per width assert:
+   F1 no pairwise overlap among visible header buttons (2px tolerance)
+   F2 every header button's label fits its box: el.scrollWidth <= el.clientWidth + 1
+   F3 the header is not clipped: header.av-head scrollWidth <= clientWidth + 1
+   F4 no document horizontal scroll: documentElement.scrollWidth <= innerWidth + 1
+   F5 av-a11y-contrast + av-a11y-motion fully inside the viewport (rect.right <= innerWidth+1,
+      non-zero size)
+   F6 header height <= 130px at every width
+   F7 after resizing back to 1440: F1+F3 hold and all 15 header buttons are visible
+   Floor note: 800px is the design floor (the transport deck itself cannot fit below);
+   end with a FIT-RESULT line + a per-width tally; exit 0 only when everything is green.
+3) Report: files touched + node --check output + the new check list + anything Undetermined.

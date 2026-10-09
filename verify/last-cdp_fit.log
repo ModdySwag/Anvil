@@ -1,0 +1,66 @@
+index.html sha256 (before): 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+cdp port 9620 | profile C:\Users\Moddy\AppData\Local\Temp\anvil-fit-1791544133284
+   - data-av-ready: true | widths 1440/1400/1300/1200/1100/1000/900/800 | settle 250 ms, one retry per read
+   - floor: 800 px is the design floor (the transport deck itself cannot fit below)
+ ok   F1 W=1440: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=15 hits=0
+ ok   F2 W=1440: every header button label fits its box (scrollWidth <= clientWidth+1)  -> btns=15 spill=0
+ ok   F3 W=1440: header not clipped (header.av-head scrollWidth <= clientWidth+1)  -> sw/cw 1440/1440
+ ok   F4 W=1440: no document horizontal scroll (documentElement.scrollWidth <= innerWidth+1)  -> doc/inner 1440/1440
+ ok   F5 W=1440: av-a11y-contrast + av-a11y-motion fully inside the viewport (right <= innerWidth+1, non-zero size)  -> innerW=1440 both inside
+ ok   F6 W=1440: header height <= 130 px  -> h=70
+   - W=1440 tally 6/6 | inner=1440 headScroll=1440/1440 headH=70 docScroll=1440 btns=15
+ ok   F1 W=1400: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=15 hits=0
+ ok   F2 W=1400: every header button label fits its box (scrollWidth <= clientWidth+1)  -> btns=15 spill=0
+ ok   F3 W=1400: header not clipped (header.av-head scrollWidth <= clientWidth+1)  -> sw/cw 1400/1400
+ ok   F4 W=1400: no document horizontal scroll (documentElement.scrollWidth <= innerWidth+1)  -> doc/inner 1400/1400
+ ok   F5 W=1400: av-a11y-contrast + av-a11y-motion fully inside the viewport (right <= innerWidth+1, non-zero size)  -> innerW=1400 both inside
+ ok   F6 W=1400: header height <= 130 px  -> h=98
+   - W=1400 tally 6/6 | inner=1400 headScroll=1400/1400 headH=98 docScroll=1400 btns=15
+ ok   F1 W=1300: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=15 hits=0
+ ok   F2 W=1300: every header button label fits its box (scrollWidth <= clientWidth+1)  -> btns=15 spill=0
+ ok   F3 W=1300: header not clipped (header.av-head scrollWidth <= clientWidth+1)  -> sw/cw 1300/1300
+ ok   F4 W=1300: no document horizontal scroll (documentElement.scrollWidth <= innerWidth+1)  -> doc/inner 1300/1300
+ ok   F5 W=1300: av-a11y-contrast + av-a11y-motion fully inside the viewport (right <= innerWidth+1, non-zero size)  -> innerW=1300 both inside
+ ok   F6 W=1300: header height <= 130 px  -> h=98
+   - W=1300 tally 6/6 | inner=1300 headScroll=1300/1300 headH=98 docScroll=1300 btns=15
+ ok   F1 W=1200: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=15 hits=0
+ ok   F2 W=1200: every header button label fits its box (scrollWidth <= clientWidth+1)  -> btns=15 spill=0
+ ok   F3 W=1200: header not clipped (header.av-head scrollWidth <= clientWidth+1)  -> sw/cw 1200/1200
+ ok   F4 W=1200: no document horizontal scroll (documentElement.scrollWidth <= innerWidth+1)  -> doc/inner 1200/1200
+ ok   F5 W=1200: av-a11y-contrast + av-a11y-motion fully inside the viewport (right <= innerWidth+1, non-zero size)  -> innerW=1200 both inside
+ ok   F6 W=1200: header height <= 130 px  -> h=102
+   - W=1200 tally 6/6 | inner=1200 headScroll=1200/1200 headH=102 docScroll=1200 btns=15
+ ok   F1 W=1100: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=15 hits=0
+ ok   F2 W=1100: every header button label fits its box (scrollWidth <= clientWidth+1)  -> btns=15 spill=0
+ ok   F3 W=1100: header not clipped (header.av-head scrollWidth <= clientWidth+1)  -> sw/cw 1100/1100
+ ok   F4 W=1100: no document horizontal scroll (documentElement.scrollWidth <= innerWidth+1)  -> doc/inner 1100/1100
+ ok   F5 W=1100: av-a11y-contrast + av-a11y-motion fully inside the viewport (right <= innerWidth+1, non-zero size)  -> innerW=1100 both inside
+ ok   F6 W=1100: header height <= 130 px  -> h=102
+   - W=1100 tally 6/6 | inner=1100 headScroll=1100/1100 headH=102 docScroll=1100 btns=15
+ ok   F1 W=1000: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=15 hits=0
+ ok   F2 W=1000: every header button label fits its box (scrollWidth <= clientWidth+1)  -> btns=15 spill=0
+ ok   F3 W=1000: header not clipped (header.av-head scrollWidth <= clientWidth+1)  -> sw/cw 1000/1000
+ ok   F4 W=1000: no document horizontal scroll (documentElement.scrollWidth <= innerWidth+1)  -> doc/inner 1000/1000
+ ok   F5 W=1000: av-a11y-contrast + av-a11y-motion fully inside the viewport (right <= innerWidth+1, non-zero size)  -> innerW=1000 both inside
+ ok   F6 W=1000: header height <= 130 px  -> h=102
+   - W=1000 tally 6/6 | inner=1000 headScroll=1000/1000 headH=102 docScroll=1000 btns=15
+ ok   F1 W=900: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=15 hits=0
+ ok   F2 W=900: every header button label fits its box (scrollWidth <= clientWidth+1)  -> btns=15 spill=0
+ ok   F3 W=900: header not clipped (header.av-head scrollWidth <= clientWidth+1)  -> sw/cw 900/900
+ ok   F4 W=900: no document horizontal scroll (documentElement.scrollWidth <= innerWidth+1)  -> doc/inner 900/900
+ ok   F5 W=900: av-a11y-contrast + av-a11y-motion fully inside the viewport (right <= innerWidth+1, non-zero size)  -> innerW=900 both inside
+ ok   F6 W=900: header height <= 130 px  -> h=116
+   - W=900 tally 6/6 | inner=900 headScroll=900/900 headH=116 docScroll=900 btns=15
+ ok   F1 W=800: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=15 hits=0
+ ok   F2 W=800: every header button label fits its box (scrollWidth <= clientWidth+1)  -> btns=15 spill=0
+ ok   F3 W=800: header not clipped (header.av-head scrollWidth <= clientWidth+1)  -> sw/cw 800/800
+ ok   F4 W=800: no document horizontal scroll (documentElement.scrollWidth <= innerWidth+1)  -> doc/inner 800/800
+ ok   F5 W=800: av-a11y-contrast + av-a11y-motion fully inside the viewport (right <= innerWidth+1, non-zero size)  -> innerW=800 both inside
+ ok   F6 W=800: header height <= 160 px  -> h=144
+   - W=800 tally 6/6 | inner=800 headScroll=800/800 headH=144 docScroll=800 btns=15
+ ok   F7 back at 1440: F1+F3 hold and all 15 header buttons are visible  -> visible=15 hits=0
+
+49 passed, 0 failed
+per-width tally: 1440 6/6 | 1400 6/6 | 1300 6/6 | 1200 6/6 | 1100 6/6 | 1000 6/6 | 900 6/6 | 800 6/6
+FIT-RESULT: GREEN -- all 49 checks passed (exit 0)

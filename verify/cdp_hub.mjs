@@ -76,7 +76,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* freeze pin: the parent sets this to the frozen sha at the R17 freeze (64-hex); null until then.
    Pinned run = +1 check (the freeze check); unpinned run reports one FEWER check — mirroring
    cdp_import's structure with its pin absent. */
-const EXPECT_SHA = 'e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd';
+const EXPECT_SHA = '183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -2578,6 +2578,530 @@ async function main() {
     !!r20Dup && !r20Dup.noFixture && !r20Dup.missing && r20DupHonest === true
     && r20DupR.songByNameN >= 1 && r20DupR.songByNameN <= 2,
     JSON.stringify({ before: r20DupBefore, after: r20DupAfter, drive: r20Dup, read: r20DupR, marked: r20DupMarked, honest: r20DupHonest }));
+
+  /* ===== R22 section -- RS1-RS4 resize + MM1-MM5 min/max + PV0-PV5 row preview
+     (contract: verify/_r22_wave.md section 4; the freeze leg stays LAST). Overlay state is
+     managed locally: opened here (idempotent), closed at the end. Every probe is typeof-guarded
+     and a not-yet-landed surface fails its leg honestly (the info shows exactly what was read),
+     never throws. The analyser seam below is copied VERBATIM from verify/cdp_sample.mjs
+     (WITNESS_SETUP -- the rig-own AnalyserNode on avMasterFor(ctx); panel reads are never
+     witnesses). The play/stop glyphs are built with String.fromCharCode to keep this block
+     ASCII-only. ===== */
+
+  /* the witness API (verbatim from verify/cdp_sample.mjs: own AnalyserNode on the master tap;
+     max-holds the time-domain RMS across rAF ticks while armed) */
+  const WITNESS_SETUP = `(() => {
+  if (window.__witnessAPI && window.__witnessAPI.v === 1) return { ok: true, cached: true };
+  const API = { v: 1, W: null, ctx: null };
+  API.arm = function (ctx) {
+    API.stop();
+    const master = (typeof avMasterFor === 'function') ? avMasterFor(ctx) : null;
+    if (!master) return { ok: false, why: 'no master tap node for this ctx' };
+    const an = ctx.createAnalyser();
+    an.fftSize = 16384;
+    an.smoothingTimeConstant = 0;
+    master.connect(an);
+    const W = {
+      an: an, sr: ctx.sampleRate,
+      td: new Float32Array(2048), fd: new Float32Array(an.frequencyBinCount),
+      spec: new Float32Array(an.frequencyBinCount),
+      rmsMax: 0, rmsNow: 0, frames: 0, loudFrames: 0, firstLoud: 0, lastLoud: 0, on: true,
+    };
+    for (let i = 0; i < W.spec.length; i++) W.spec[i] = -Infinity;
+    API.W = W; API.ctx = ctx;
+    const tick = () => {
+      if (!W.on) return;
+      try {
+        W.an.getFloatTimeDomainData(W.td);
+        let s = 0;
+        for (let i = 0; i < W.td.length; i++) s += W.td[i] * W.td[i];
+        const rms = Math.sqrt(s / W.td.length);
+        W.rmsNow = rms;
+        if (rms > W.rmsMax) W.rmsMax = rms;
+        W.an.getFloatFrequencyData(W.fd);
+        for (let i = 0; i < W.fd.length; i++) { const v = W.fd[i]; if (v > W.spec[i]) W.spec[i] = v; }
+        if (rms > 0.02) {
+          W.loudFrames++;
+          const now = performance.now();
+          if (!W.firstLoud) W.firstLoud = now;
+          W.lastLoud = now;
+        }
+        W.frames++;
+      } catch (e) { /* analyser gone */ }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+    return { ok: true, sr: W.sr, binHz: W.sr / W.an.fftSize, fft: W.an.fftSize };
+  };
+  API.reset = function () {
+    const W = API.W;
+    if (!W) return false;
+    W.rmsMax = 0; W.rmsNow = 0; W.frames = 0; W.loudFrames = 0; W.firstLoud = 0; W.lastLoud = 0;
+    for (let i = 0; i < W.spec.length; i++) W.spec[i] = -Infinity;
+    return true;
+  };
+  API.read = function () {
+    const W = API.W;
+    if (!W) return null;
+    const binHz = W.sr / W.an.fftSize;
+    const lo = Math.max(1, Math.floor(80 / binHz)), hi = Math.min(W.spec.length - 1, Math.ceil(4000 / binHz));
+    let bi = -1, bv = -Infinity;
+    for (let i = lo; i <= hi; i++) if (W.spec[i] > bv) { bv = W.spec[i]; bi = i; }
+    let lit = 0;
+    for (let i = 0; i < W.spec.length; i++) if (W.spec[i] > -90) lit++;
+    return {
+      sr: W.sr, binHz: binHz, fft: W.an.fftSize, frames: W.frames,
+      rmsMax: W.rmsMax, rmsNow: W.rmsNow, loudFrames: W.loudFrames,
+      loudSpanMs: (W.firstLoud && W.lastLoud) ? (W.lastLoud - W.firstLoud) : 0,
+      peakHz: bi >= 0 ? bi * binHz : null,
+      peakDB: isFinite(bv) ? bv : null,
+      litBins: lit,
+    };
+  };
+  API.stop = function () {
+    const W = API.W;
+    if (W) { W.on = false; try { W.an.disconnect(); } catch (e) { } }
+    API.W = null; API.ctx = null;
+    return true;
+  };
+  window.__witnessAPI = API;
+  return { ok: true };
+})()`;
+
+  /* R22 helpers: the facade snap (contract section 2: {open, state, w, h, pref, grip}) + the
+     grip probe + a CDP drag (press, N cumulative moves, release) via the house mouse helper */
+  const r22Snap = async () => ((await ev(`(() => {
+    try {
+      const L = window.__avLibrary;
+      if (!L || typeof L.snap !== 'function') return null;
+      return L.snap();
+    } catch (e) { return null; }
+  })()`)).value) || null;
+  const r22Grip = async () => ((await ev(`(() => {
+    const g = document.querySelector('[data-av-library-grip]');
+    if (!g) return null;
+    const r = g.getBoundingClientRect();
+    const cs = getComputedStyle(g);
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2),
+             w: Math.round(r.width), h: Math.round(r.height),
+             display: cs.display, vis: cs.visibility };
+  })()`)).value) || null;
+  const r22GripOk = (g) => !!(g && g.w > 0 && g.h > 0 && g.display !== 'none' && g.vis !== 'hidden');
+  const r22DragGrip = async (stepX, stepY, n) => {
+    const g = await r22Grip();
+    if (!r22GripOk(g)) return { ok: false, why: 'grip not visible', grip: g };
+    await mouse('mousePressed', g.x, g.y);
+    await sleep(70);
+    let cx = g.x, cy = g.y;
+    for (let i = 0; i < n; i++) { cx += stepX; cy += stepY; await mouse('mouseMoved', cx, cy); await sleep(70); }
+    await sleep(70);
+    await mouse('mouseReleased', cx, cy);
+    await sleep(260);
+    return { ok: true, from: { x: g.x, y: g.y }, to: { x: cx, y: cy } };
+  };
+
+  /* -- R22 RS1. resize: open; the grip is visible; CDP drag (+80,-40) x 3 -> growth + shrink;
+     the LS pref matches the snap w/h within 3px -- */
+  const r22Open = await openLibrary();
+  await sleep(250);
+  const r22S0 = await r22Snap();
+  const r22G0 = await r22Grip();
+  const r22D1 = await r22DragGrip(80, -40, 3);
+  const r22S1 = await r22Snap();
+  const r22Ls1R = await ev(`(() => { try { const raw = localStorage.getItem('av-library-pref'); return raw == null ? null : JSON.parse(raw); } catch (e) { return { err: String((e && e.message) || e) }; } })()`);
+  const r22Ls1 = r22Ls1R.value || null;
+  const r22W0 = (r22S0 && typeof r22S0.w === 'number') ? r22S0.w : null;
+  const r22H0 = (r22S0 && typeof r22S0.h === 'number') ? r22S0.h : null;
+  const r22W1 = (r22S1 && typeof r22S1.w === 'number') ? r22S1.w : null;
+  const r22H1 = (r22S1 && typeof r22S1.h === 'number') ? r22S1.h : null;
+  check('R22 RS1 resize: grip drag (+80,-40 x3) grows w by >= 120 (the container caps growth at viewport-96) and shrinks h by >= 60; LS av-library-pref present and matching snap w/h within 3px',
+    !!r22S0 && r22S0.open === true && r22GripOk(r22G0) && r22D1.ok === true
+    && r22W0 !== null && r22H0 !== null && r22W1 !== null && r22H1 !== null
+    && r22W1 >= r22W0 + 120 && r22H1 <= r22H0 - 60
+    && !!r22Ls1 && typeof r22Ls1.w === 'number' && typeof r22Ls1.h === 'number'
+    && Math.abs(r22Ls1.w - r22W1) <= 3 && Math.abs(r22Ls1.h - r22H1) <= 3,
+    JSON.stringify({ open: r22Open, s0: r22S0, grip: r22G0, drag: r22D1, s1: r22S1, ls: r22Ls1 }));
+
+  /* -- R22 RS2. persist: close + reopen via the facade -> the size survives within 3px -- */
+  const r22Cl2 = await closeLibrary();
+  const r22Op2 = await openLibrary();
+  await sleep(200);
+  const r22S2 = await r22Snap();
+  const r22W2 = (r22S2 && typeof r22S2.w === 'number') ? r22S2.w : null;
+  const r22H2 = (r22S2 && typeof r22S2.h === 'number') ? r22S2.h : null;
+  check('R22 RS2 persist: close + reopen via the facade -> snap w/h match RS1 within 3px',
+    r22Cl2.hidden === true && r22Op2.visible === true
+    && r22W1 !== null && r22H1 !== null && r22W2 !== null && r22H2 !== null
+    && Math.abs(r22W2 - r22W1) <= 3 && Math.abs(r22H2 - r22H1) <= 3
+    && !!r22S2 && r22S2.state === 'normal',
+    JSON.stringify({ close: r22Cl2, open: r22Op2, s2: r22S2 }));
+
+  /* -- R22 RS3. clamp: drag (+9999,+9999) -> viewport-30 ceiling; drag (-9999,-9999) -> 640x340 floor -- */
+  const r22D3a = await r22DragGrip(9999, 9999, 1);
+  const r22S3a = await r22Snap();
+  const r22VpR = await ev(`({ vw: window.innerWidth, vh: window.innerHeight })`);
+  const r22Vp = r22VpR.value || {};
+  const r22D3b = await r22DragGrip(-9999, -9999, 1);
+  const r22S3b = await r22Snap();
+  check('R22 RS3 clamp: drag (+9999,+9999) -> w <= innerWidth-30 and h <= innerHeight-30; drag (-9999,-9999) -> w >= 640 and h >= 340',
+    r22D3a.ok === true && !!r22S3a && typeof r22S3a.w === 'number' && typeof r22S3a.h === 'number'
+    && typeof r22Vp.vw === 'number' && typeof r22Vp.vh === 'number'
+    && r22S3a.w <= r22Vp.vw - 30 && r22S3a.h <= r22Vp.vh - 30
+    && r22D3b.ok === true && !!r22S3b && typeof r22S3b.w === 'number' && typeof r22S3b.h === 'number'
+    && r22S3b.w >= 640 && r22S3b.h >= 340,
+    JSON.stringify({ a: { drag: r22D3a, snap: r22S3a }, vp: r22Vp, b: { drag: r22D3b, snap: r22S3b } }));
+
+  /* -- R22 RS4. reset: double-click the grip -> the pref is cleared (LS null) + the CSS default
+     size is back (w0/h0 within 4px) -- */
+  const r22G4 = await r22Grip();
+  let r22Dbl4 = false;
+  if (r22GripOk(r22G4)) {
+    await mouse('mousePressed', r22G4.x, r22G4.y); await mouse('mouseReleased', r22G4.x, r22G4.y);
+    await sleep(60);
+    await send('Input.dispatchMouseEvent', { type: 'mousePressed', x: r22G4.x, y: r22G4.y, button: 'left', buttons: 1, clickCount: 2 });
+    await send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: r22G4.x, y: r22G4.y, button: 'left', buttons: 0, clickCount: 2 });
+    r22Dbl4 = true;
+    await sleep(320);
+  }
+  const r22Ls4R = await ev(`(() => { try { return localStorage.getItem('av-library-pref'); } catch (e) { return 'ERR:' + String((e && e.message) || e); } })()`);
+  const r22Ls4 = (r22Ls4R.value === undefined) ? 'UNDEF' : r22Ls4R.value;
+  const r22S4 = await r22Snap();
+  const r22W4 = (r22S4 && typeof r22S4.w === 'number') ? r22S4.w : null;
+  const r22H4 = (r22S4 && typeof r22S4.h === 'number') ? r22S4.h : null;
+  check('R22 RS4 reset: grip double-click clears the pref (LS null) + size back to default (w0/h0 within 4px)',
+    r22Dbl4 === true && r22Ls4 === null
+    && r22W0 !== null && r22H0 !== null && r22W4 !== null && r22H4 !== null
+    && Math.abs(r22W4 - r22W0) <= 4 && Math.abs(r22H4 - r22H0) <= 4
+    && !!r22S4 && (r22S4.pref == null),
+    JSON.stringify({ dbl: r22Dbl4, ls: r22Ls4, s4: r22S4, w0: r22W0, h0: r22H0 }));
+
+  /* -- R22 MM1. maximize: #av-library-max -> state "max" + the box fills the pop content width -- */
+  const r22Max1 = await clickSel('#av-library-max', 300);
+  const r22S5 = await r22Snap();
+  const r22PopR = await ev(`(() => {
+    const p = document.getElementById('av-library-pop');
+    if (!p) return null;
+    const cs = getComputedStyle(p);
+    const pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+    const bl = parseFloat(cs.borderLeftWidth) || 0, br = parseFloat(cs.borderRightWidth) || 0;
+    const r = p.getBoundingClientRect();
+    return { contentW: Math.round(r.width - pl - pr - bl - br), rootW: Math.round(r.width) };
+  })()`);
+  const r22Pop = r22PopR.value || {};
+  check('R22 MM1 maximize: #av-library-max click -> snap.state "max" + box width >= pop content width-2',
+    r22Max1 === true && !!r22S5 && r22S5.state === 'max'
+    && typeof r22S5.w === 'number' && typeof r22Pop.contentW === 'number' && r22S5.w >= r22Pop.contentW - 2,
+    JSON.stringify({ click: r22Max1, snap: r22S5, pop: r22Pop }));
+
+  /* -- R22 MM2. restore: #av-library-max again -> state "normal" + the prior size back -- */
+  const r22Max2 = await clickSel('#av-library-max', 300);
+  const r22S6 = await r22Snap();
+  const r22W6 = (r22S6 && typeof r22S6.w === 'number') ? r22S6.w : null;
+  const r22H6 = (r22S6 && typeof r22S6.h === 'number') ? r22S6.h : null;
+  check('R22 MM2: #av-library-max again -> snap.state "normal" + prior size back (w0/h0 within 4px)',
+    r22Max2 === true && !!r22S6 && r22S6.state === 'normal'
+    && r22W0 !== null && r22H0 !== null && r22W6 !== null && r22H6 !== null
+    && Math.abs(r22W6 - r22W0) <= 4 && Math.abs(r22H6 - r22H0) <= 4,
+    JSON.stringify({ click: r22Max2, snap: r22S6 }));
+
+  /* -- R22 MM3. minimize: #av-library-min -> state "min" + the box is <= 64px tall + the body
+     div is not visible -- */
+  const r22Min1 = await clickSel('#av-library-min', 350);
+  const r22S7 = await r22Snap();
+  const r22BodyR = await ev(`(() => {
+    const b = document.getElementById('av-library-body');
+    if (!b) return { missing: true };
+    const r = b.getBoundingClientRect();
+    const cs = getComputedStyle(b);
+    return { w: Math.round(r.width), h: Math.round(r.height), display: cs.display, vis: cs.visibility, offsetH: b.offsetHeight };
+  })()`);
+  const r22Body = r22BodyR.value || {};
+  const r22BodyHidden = r22Body.missing !== true && (r22Body.display === 'none' || r22Body.vis === 'hidden' || r22Body.h <= 0 || r22Body.offsetH === 0);
+  check('R22 MM3 minimize: #av-library-min click -> snap.state "min" + box height <= 64 + the body div not visible',
+    r22Min1 === true && !!r22S7 && r22S7.state === 'min'
+    && typeof r22S7.h === 'number' && r22S7.h <= 64 && r22BodyHidden === true,
+    JSON.stringify({ click: r22Min1, snap: r22S7, body: r22Body }));
+
+  /* -- R22 MM4. away suppression: a pointerdown+up OUTSIDE the box while minimized must NOT close -- */
+  await mouse('mousePressed', 10, 10); await sleep(70); await mouse('mouseReleased', 10, 10);
+  await sleep(350);
+  const r22AwayR = await ev(`(() => {
+    const L = window.__avLibrary || {};
+    const p = document.getElementById('av-library-pop');
+    let st = null;
+    try { if (typeof L.snap === 'function') { const s = L.snap(); st = s ? s.state : null; } } catch (e) { st = null; }
+    return { isOpen: (typeof L.isOpen === 'function') ? (L.isOpen() === true) : null,
+             hidden: p ? (p.hidden === true) : null, state: st };
+  })()`);
+  const r22Away = r22AwayR.value || {};
+  check('R22 MM4 away suppression: pointerdown+up outside the box (10,10) while minimized -> the overlay is STILL open (isOpen true)',
+    r22Away.isOpen === true && r22Away.hidden === false,
+    JSON.stringify({ away: r22Away }));
+
+  /* -- R22 MM5. restore: #av-library-min again -> state "normal" -- */
+  const r22Min2 = await clickSel('#av-library-min', 350);
+  const r22S8 = await r22Snap();
+  check('R22 MM5 restore: #av-library-min again -> snap.state "normal"',
+    r22Min2 === true && !!r22S8 && r22S8.state === 'normal',
+    JSON.stringify({ click: r22Min2, snap: r22S8 }));
+
+  /* -- R22 PV0. fixtures: the pinned names left the library earlier in the suite (leg 14 renamed
+     hub-alpha.wav to hub-bravo.wav; leg 20 deleted hub-mike.mid + hub-zulu.wav), so the rig
+     re-imports one long WAV per pinned name (8 s / 2 s sines + the leg-8 SMF bytes) -- long
+     voices make the audition/stop/preempt legs observe PLAYING states -- then resolves the
+     fixture rows BY NAME (nearest-row fallback + note when a name is still absent, per
+     contract section 4). -- */
+  note('R22 PV0: post-suite state has hub-alpha.wav renamed and hub-zulu.wav/hub-mike.mid deleted (legs 14/20) -- re-importing rig fixtures under the pinned names');
+  const r22FxImpR = await ev(`(async () => {
+    try {
+      if (typeof avWavEncode !== 'function') return { err: 'avWavEncode absent' };
+      if (!window.__avImport || typeof window.__avImport.importFiles !== 'function') return { err: 'no __avImport.importFiles' };
+      const mk = function (secs, freq) {
+        const sr = 8000, n = Math.round(sr * secs);
+        const l = new Float32Array(n), r = new Float32Array(n);
+        for (let i = 0; i < n; i++) { const v = 0.4 * Math.sin(2 * Math.PI * freq * i / sr); l[i] = v; r[i] = v; }
+        return avWavEncode({ l: l, r: r, sr: sr, bits: 16, dither: false });
+      };
+      const wa = mk(8, 440), wz = mk(2, 220);
+      if (!wa || !wz) return { err: 'encode null' };
+      const m = [];
+      const mp = (...xs) => { for (const x of xs) m.push(x & 255); };
+      const m32 = (v) => { mp(v >>> 24, v >>> 16, v >>> 8, v); };
+      const m16 = (v) => { mp(v >> 8, v); };
+      const tag = (s) => { mp(s.charCodeAt(0), s.charCodeAt(1), s.charCodeAt(2), s.charCodeAt(3)); };
+      tag('MThd'); m32(6); m16(0); m16(1); m16(480);
+      tag('MTrk'); m32(13);
+      mp(0x00, 0x90, 60, 100, 0x83, 0x5F, 0x80, 60, 0, 0x00, 0xFF, 0x2F, 0x00);
+      const r = await window.__avImport.importFiles([
+        new File([wa], 'hub-alpha.wav'),
+        new File([wz], 'hub-zulu.wav'),
+        new File([new Uint8Array(m)], 'hub-mike.mid')
+      ]);
+      return { ok: !!(r && (r.ok === true || (r.counts && r.counts.imported >= 3))), got: r ? { ok: r.ok, counts: r.counts || null } : null, waLen: wa.byteLength, wzLen: wz.byteLength };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  await ev(`(typeof avImportUiRefreshLib === 'function') ? avImportUiRefreshLib() : false`);
+  const r22FxWait = await waitFor(`(async () => {
+    try {
+      const l = await avLibList();
+      const items = (l && l.items) || [];
+      const want = ['hub-alpha.wav', 'hub-zulu.wav', 'hub-mike.mid'];
+      const hits = want.map(function (n) { return items.filter(function (i) { return i && String(i.name) === n; })[0] || null; });
+      if (hits.some(function (x) { return !x; })) return null;
+      const dom = hits.every(function (x) { return !!document.querySelector('#av-import-lib [data-av-import-lib="' + String(x.id) + '"]'); });
+      if (!dom) return null;
+      return { count: (l && l.count) || null, ids: hits.map(function (x) { return String(x.id); }) };
+    } catch (e) { return null; }
+  })()`, 25000);
+  const r22FxC = await ev(`(async () => {
+    try {
+      const l = await avLibList();
+      const items = (l && l.items) || [];
+      const hasBtn = function (id) { return !!document.querySelector('#av-import-lib [data-av-import-lib="' + String(id) + '"] [data-av-import-act="preview"]'); };
+      const byName = function (n) { return items.filter(function (i) { return i && String(i.name) === n; })[0] || null; };
+      const samples = items.filter(function (i) { return i && String(i.kind) === 'sample' && hasBtn(i.id); });
+      const hA = byName('hub-alpha.wav'), hZ = byName('hub-zulu.wav'), hM = byName('hub-mike.mid');
+      const a = (hA && hasBtn(hA.id)) ? hA : (samples[0] || null);
+      const z = (hZ && hasBtn(hZ.id) && (!a || String(hZ.id) !== String(a.id))) ? hZ
+        : (samples.filter(function (i) { return !a || String(i.id) !== String(a.id); })[0] || null);
+      const m = (hM && !hasBtn(hM.id) && (!a || String(hM.id) !== String(a.id)) && (!z || String(hM.id) !== String(z.id))) ? hM
+        : (items.filter(function (i) { return (!a || String(i.id) !== String(a.id)) && (!z || String(i.id) !== String(z.id)) && !hasBtn(i.id); })[0] || null);
+      return { count: (l && l.count) || null,
+        alpha: a ? { id: String(a.id), name: String(a.name), kind: String(a.kind || ''), via: (a === hA) ? 'name' : 'nearest-sample' } : null,
+        zulu: z ? { id: String(z.id), name: String(z.name), kind: String(z.kind || ''), via: (z === hZ) ? 'name' : 'nearest-sample' } : null,
+        mid: m ? { id: String(m.id), name: String(m.name), kind: String(m.kind || ''), via: (m === hM) ? 'name' : 'nearest-nonpreview' } : null };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const r22Fx = r22FxC.value || {};
+  if (r22Fx.alpha && r22Fx.alpha.via !== 'name') note('R22 PV0: hub-alpha.wav absent at this point -- nearest sample row used: ' + r22Fx.alpha.name + ' (' + r22Fx.alpha.id + ')');
+  if (r22Fx.zulu && r22Fx.zulu.via !== 'name') note('R22 PV0: hub-zulu.wav absent at this point -- nearest sample row used: ' + r22Fx.zulu.name + ' (' + r22Fx.zulu.id + ')');
+  if (r22Fx.mid && r22Fx.mid.via !== 'name') note('R22 PV0: hub-mike.mid absent at this point -- nearest non-preview row used: ' + r22Fx.mid.name + ' (' + r22Fx.mid.id + ', kind ' + r22Fx.mid.kind + ')');
+  const r22Alpha = (r22Fx.alpha && r22Fx.alpha.id) || null;
+  const r22Zulu = (r22Fx.zulu && r22Fx.zulu.id) || null;
+  const r22Mid = (r22Fx.mid && r22Fx.mid.id) || null;
+  check('R22 PV0 fixtures: alpha + zulu are sample rows WITH preview buttons; mid is a row WITHOUT one (3 distinct rows)',
+    !!r22Alpha && !!r22Zulu && !!r22Mid
+    && r22Alpha !== r22Zulu && r22Alpha !== r22Mid && r22Zulu !== r22Mid,
+    JSON.stringify({ import: r22FxImpR.value || null, wait: r22FxWait || null, fx: r22Fx }));
+
+  /* PV5 baseline: the library count + the session-entry count right after PV0's fixtures */
+  const r22BaseC = await ev(`(async () => {
+    try {
+      const l = await avLibList();
+      const es = (typeof avSampleStore === 'object' && avSampleStore && avSampleStore.entries) ? avSampleStore.entries.length : -1;
+      return { lib: (l && l.count) || null, entries: es };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const r22Base = r22BaseC.value || {};
+
+  /* -- R22 PV1. audition: the rig-own analyser on the master tap; alpha's preview click ->
+     snap.previewLib within 600ms + the button class + master-tap rms > 0.001 over ~300ms -- */
+  await ev(WITNESS_SETUP);
+  const r22ArmR = await ev(`(() => {
+    try {
+      const W = window.__witnessAPI;
+      if (!W || typeof W.arm !== 'function') return { ok: false, why: 'no witness API' };
+      const ctx = (typeof avSampleStore === 'object' && avSampleStore && typeof avSampleStore.pickCtx === 'function') ? avSampleStore.pickCtx() : null;
+      if (!ctx) return { ok: false, why: 'no preview ctx' };
+      return W.arm(ctx);
+    } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
+  })()`);
+  const r22Armed = !!(r22ArmR.value && r22ArmR.value.ok === true);
+  if (!r22Armed) note('R22 PV1: witness pre-arm refused (' + ((r22ArmR.value && r22ArmR.value.why) || '?') + ') -- re-arming on the preview ctx after the click');
+  await ev(`window.__witnessAPI && window.__witnessAPI.reset ? window.__witnessAPI.reset() : false`);
+  const r22Pv1Sel = r22Alpha ? ('[data-av-import-lib="' + r22Alpha + '"] [data-av-import-act="preview"]') : '[data-av-import-act="preview"]';
+  const r22Pv1Click = r22Alpha ? await clickSel(r22Pv1Sel, 0) : false;
+  const r22Pv1Lib = (r22Alpha && r22Pv1Click) ? await waitFor(`(() => {
+    try {
+      const s = (window.__avSample && typeof window.__avSample.snap === 'function') ? window.__avSample.snap() : null;
+      return (s && s.previewLib === 'lib:' + ${JSON.stringify(r22Alpha)}) ? { previewLib: s.previewLib } : null;
+    } catch (e) { return null; }
+  })()`, 600) : null;
+  const r22Pv1CtxR = (r22Alpha && r22Pv1Click) ? await ev(`(() => {
+    try {
+      const st = (typeof avSampleStore === 'object' && avSampleStore) ? avSampleStore : null;
+      const lp = st ? st.lastPreview : null;
+      const W = window.__witnessAPI;
+      if (!W || typeof W.arm !== 'function') return { ok: false, why: 'no witness API' };
+      if (!lp || !lp.ctx) return { ok: false, why: 'no lastPreview ctx' };
+      if (W.ctx === lp.ctx) return { ok: true, same: true };
+      const r = W.arm(lp.ctx);
+      return { ok: r.ok === true, same: false, why: (r && r.why) || null };
+    } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
+  })()`) : null;
+  const r22Pv1BtnR = (r22Alpha && r22Pv1Click) ? await ev(`(() => {
+    const b = document.querySelector('#av-import-lib [data-av-import-lib="' + ${JSON.stringify(r22Alpha || '')} + '"] [data-av-import-act="preview"]');
+    if (!b) return null;
+    return { playing: !!(b.classList && b.classList.contains('av-import-act-playing')),
+             glyph: String(b.textContent || '').trim(), title: String(b.getAttribute('title') || '') };
+  })()`) : null;
+  if (r22Pv1Click) await sleep(320);
+  const r22Pv1WR = (r22Alpha && r22Pv1Click) ? await ev(`window.__witnessAPI && window.__witnessAPI.read ? window.__witnessAPI.read() : null`) : null;
+  const r22Pv1W = (r22Pv1WR && r22Pv1WR.value) || {};
+  const r22Pv1Btn = (r22Pv1BtnR && r22Pv1BtnR.value) || null;
+  check('R22 PV1 audition: alpha preview click -> snap.previewLib "lib:"+alpha within 600ms + the button carries av-import-act-playing + master-tap rms > 0.001',
+    r22Pv1Click === true && !!r22Pv1Lib
+    && !!r22Pv1Btn && r22Pv1Btn.playing === true
+    && isFinite(r22Pv1W.rmsMax) && r22Pv1W.rmsMax > 0.001 && (r22Pv1W.frames || 0) > 0,
+    JSON.stringify({ sel: r22Pv1Sel, click: r22Pv1Click, lib: r22Pv1Lib, btn: r22Pv1Btn,
+      w: { rmsMax: r22Pv1W.rmsMax, frames: r22Pv1W.frames, loudFrames: r22Pv1W.loudFrames },
+      armed: r22ArmR.value || null, ctxArm: r22Pv1CtxR ? r22Pv1CtxR.value : null }));
+
+  /* -- R22 PV2. stop: click again while playing -> previewLib null within 600ms + the glyph
+     back + no residue (one voice, none active) -- */
+  const r22Pv2Click = (r22Alpha && r22Pv1Click) ? await clickSel(r22Pv1Sel, 0) : false;
+  const r22Pv2Lib = (r22Alpha && r22Pv2Click) ? await waitFor(`(() => {
+    try {
+      const s = (window.__avSample && typeof window.__avSample.snap === 'function') ? window.__avSample.snap() : null;
+      return (s && s.previewLib === null) ? { previewLib: null } : null;
+    } catch (e) { return null; }
+  })()`, 600) : null;
+  const r22Pv2BtnR = r22Alpha ? await ev(`(() => {
+    const b = document.querySelector('#av-import-lib [data-av-import-lib="' + ${JSON.stringify(r22Alpha || '')} + '"] [data-av-import-act="preview"]');
+    if (!b) return null;
+    return { playing: !!(b.classList && b.classList.contains('av-import-act-playing')),
+             glyph: String(b.textContent || '').trim() };
+  })()`) : null;
+  const r22Pv2ResR = await ev(`(() => {
+    try {
+      const st = (typeof avSampleStore === 'object' && avSampleStore) ? avSampleStore : null;
+      return { active: !!(st && st.active), activeId: st ? (st.activeId === undefined ? 'UNDEF' : st.activeId) : 'NO_STORE',
+               activeLib: st ? (st.activeLib === undefined ? 'UNDEF' : st.activeLib) : 'NO_STORE' };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const r22Pv2Btn = (r22Pv2BtnR && r22Pv2BtnR.value) || null;
+  const r22Pv2Res = r22Pv2ResR.value || {};
+  const r22Play = String.fromCharCode(0x25b6), r22StopG = String.fromCharCode(0x25a0);
+  check('R22 PV2 stop: click again -> snap.previewLib null within 600ms + the button glyph back + no residue (one voice, none active)',
+    r22Pv2Click === true && !!r22Pv2Lib
+    && !!r22Pv2Btn && r22Pv2Btn.playing === false
+    && String(r22Pv2Btn.glyph).indexOf(r22Play) >= 0 && String(r22Pv2Btn.glyph).indexOf(r22StopG) < 0
+    && r22Pv2Res.active === false && r22Pv2Res.activeId === null && r22Pv2Res.activeLib === null,
+    JSON.stringify({ click: r22Pv2Click, lib: r22Pv2Lib, btn: r22Pv2Btn, store: r22Pv2Res }));
+
+  /* -- R22 PV3. preempt: alpha playing, zulu's button clicked -> zulu takes over; alpha's button
+     is no longer playing; exactly ONE active voice (activeLib set, activeId null) -- */
+  const r22Pv3A = (r22Alpha && r22Zulu) ? await clickSel(r22Pv1Sel, 0) : false;
+  const r22Pv3ALib = (r22Alpha && r22Pv3A) ? await waitFor(`(() => {
+    try {
+      const s = (window.__avSample && typeof window.__avSample.snap === 'function') ? window.__avSample.snap() : null;
+      return (s && s.previewLib === 'lib:' + ${JSON.stringify(r22Alpha)}) ? { previewLib: s.previewLib } : null;
+    } catch (e) { return null; }
+  })()`, 600) : null;
+  const r22Pv3Sel = r22Zulu ? ('[data-av-import-lib="' + r22Zulu + '"] [data-av-import-act="preview"]') : '[data-av-import-act="preview"]';
+  const r22Pv3Click = (r22Zulu && r22Pv3ALib) ? await clickSel(r22Pv3Sel, 0) : false;
+  const r22Pv3Z = (r22Zulu && r22Pv3Click) ? await waitFor(`(() => {
+    try {
+      const s = (window.__avSample && typeof window.__avSample.snap === 'function') ? window.__avSample.snap() : null;
+      return (s && s.previewLib === 'lib:' + ${JSON.stringify(r22Zulu)}) ? { previewLib: s.previewLib } : null;
+    } catch (e) { return null; }
+  })()`, 600) : null;
+  const r22Pv3BtnR = await ev(`(() => {
+    const q = function (id) {
+      const b = document.querySelector('#av-import-lib [data-av-import-lib="' + id + '"] [data-av-import-act="preview"]');
+      return b ? { playing: !!(b.classList && b.classList.contains('av-import-act-playing')) } : null;
+    };
+    return { alpha: q(${JSON.stringify(r22Alpha || '')}), zulu: q(${JSON.stringify(r22Zulu || '')}) };
+  })()`);
+  const r22Pv3VR = await ev(`(() => {
+    try {
+      const st = (typeof avSampleStore === 'object' && avSampleStore) ? avSampleStore : null;
+      return { active: !!(st && st.active), activeId: st ? (st.activeId === undefined ? 'UNDEF' : st.activeId) : 'NO_STORE',
+               activeLib: st ? (st.activeLib === undefined ? 'UNDEF' : st.activeLib) : 'NO_STORE' };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const r22Pv3B = (r22Pv3BtnR && r22Pv3BtnR.value) || {};
+  const r22Pv3S = r22Pv3VR.value || {};
+  check('R22 PV3 preempt: zulu clicked while alpha plays -> snap.previewLib "lib:"+zulu + alpha\'s button no longer playing + exactly ONE active voice',
+    r22Pv3A === true && !!r22Pv3ALib && r22Pv3Click === true && !!r22Pv3Z
+    && !!r22Pv3B.alpha && r22Pv3B.alpha.playing === false
+    && !!r22Pv3B.zulu && r22Pv3B.zulu.playing === true
+    && r22Pv3S.active === true && r22Pv3S.activeId === null
+    && String(r22Pv3S.activeLib) === ('lib:' + String(r22Zulu || '')),
+    JSON.stringify({ aClick: r22Pv3A, aLib: r22Pv3ALib, zClick: r22Pv3Click, zLib: r22Pv3Z, btns: r22Pv3B, store: r22Pv3S }));
+
+  /* -- R22 PV4. gate: the mid row has NO preview button -- */
+  const r22Pv4R = await ev(`(() => {
+    const row = document.querySelector('#av-import-lib [data-av-import-lib="' + ${JSON.stringify(r22Mid || '')} + '"]');
+    if (!row) return { row: false };
+    const b = row.querySelector('[data-av-import-act="preview"]');
+    return { row: true, preview: !!b, kind: String(row.getAttribute('data-kind') || ''),
+             acts: Array.prototype.map.call(row.querySelectorAll('[data-av-import-act]'), function (x) { return String(x.getAttribute('data-av-import-act') || ''); }) };
+  })()`);
+  const r22Pv4 = r22Pv4R.value || {};
+  check('R22 PV4 gate: the mid row has NO preview button (the load-type set stays as-is apart from the new first button)',
+    r22Pv4.row === true && r22Pv4.preview === false,
+    JSON.stringify({ mid: r22Fx.mid || null, probe: r22Pv4 }));
+
+  /* -- R22 PV5. no side effects: the library count + the session-entry count are unchanged
+     across PV1-PV3 -- */
+  const r22AfterC = await ev(`(async () => {
+    try {
+      const l = await avLibList();
+      const es = (typeof avSampleStore === 'object' && avSampleStore && avSampleStore.entries) ? avSampleStore.entries.length : -1;
+      return { lib: (l && l.count) || null, entries: es };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  const r22After = r22AfterC.value || {};
+  check('R22 PV5 no side effects: avLibList count + session-entry count unchanged across PV1-PV3',
+    typeof r22Base.lib === 'number' && typeof r22After.lib === 'number' && r22After.lib === r22Base.lib
+    && typeof r22Base.entries === 'number' && r22Base.entries >= 0 && r22After.entries === r22Base.entries,
+    JSON.stringify({ base: r22Base, after: r22After }));
+
+  /* R22 cleanup: stop the one preview voice + detach the witness + close the overlay (the
+     closing zero-error + freeze legs then run with the overlay closed) */
+  const r22StopR = await ev(`(() => {
+    try {
+      if (typeof avSamplePreviewStop === 'function') { const r = avSamplePreviewStop(); return { via: 'avSamplePreviewStop', stopped: r === true }; }
+    } catch (e) { /* fall through */ }
+    try {
+      if (typeof avSampleStore === 'object' && avSampleStore && typeof avSampleStore.stopPreview === 'function') { const r = avSampleStore.stopPreview(); return { via: 'stopPreview', stopped: r === true }; }
+    } catch (e2) { /* fall through */ }
+    return { via: null, stopped: false };
+  })()`);
+  await ev(`window.__witnessAPI && window.__witnessAPI.stop ? window.__witnessAPI.stop() : false`);
+  const r22CloseEnd = await closeLibrary();
+  note('R22 cleanup: preview stop ' + JSON.stringify(r22StopR.value || null) + ' -- overlay closed: ' + JSON.stringify(r22CloseEnd));
 
   /* ── 27. zero page errors ── */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

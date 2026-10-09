@@ -2008,3 +2008,19 @@ header.av-head.av-console .avc-center { display: flex; align-items: center; gap:
 .av-tune-mtsbox { accent-color: var(--teal); }
 .av-tune-mts-status { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
 .av-tune-note { font-family: var(--mono); font-size: 9.5px; color: var(--text-3); margin: 2px 0; }
+/* R22: library UX (verify/_r22_wave.md) -- overlay resize grip + min/max dock (av_library_ui.js),
+   row preview playing state (av_import_ui.js s.3), header responsive wrap (s.8). */
+.av-library-box { position: relative; }
+.av-library-grip { position: absolute; right: 3px; bottom: 3px; width: 16px; height: 16px; cursor: nwse-resize; opacity: .45; background: repeating-linear-gradient(-45deg, rgba(46, 216, 201, .55) 0 2px, transparent 2px 5px); border-radius: 0 0 7px 0; }
+.av-library-grip:hover { opacity: 1; }
+.av-library-pop.av-lib-min .av-library-grip, .av-library-pop.av-lib-max .av-library-grip { display: none; }
+.av-library-pop.av-lib-min { background: transparent; pointer-events: none; align-items: flex-end; justify-content: flex-start; padding: 0 0 14px 14px; }
+.av-library-pop.av-lib-min .av-library-box { pointer-events: auto; width: auto; max-width: min(560px, 92vw); height: auto; gap: 0; }
+.av-library-pop.av-lib-min .av-library-body, .av-library-pop.av-lib-min .av-library-status { display: none; }
+.av-library-pop.av-lib-max { padding: 14px; }
+.av-library-pop.av-lib-max .av-library-box { width: 100%; height: 100%; max-width: none; }
+.av-import-act-playing { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46, 216, 201, .25); }
+header.av-head.av-console { flex-wrap: wrap; row-gap: 6px; }
+header.av-head.av-console > .av-btn { flex: none; }
+header.av-head.av-console #av-a11y-host { flex: none; }
+header.av-head.av-console #av-a11y-host .av-btn { flex: none; }

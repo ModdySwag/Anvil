@@ -47,8 +47,10 @@ const avSampleStore = {
   hostEl: null,
   inited: false,
   active: null,            /* the ONE live preview AudioBufferSourceNode */
-  activeId: null,
-  lastPreview: { id: null, ctx: null, at: 0 },
+  activeId: null,          /* the session-entry preview's id (the lib preview path leaves it null) */
+  activeLib: null,         /* R22: the active library preview label ("lib:<item id>") or null */
+  previewSeq: 0,           /* R22: preview generation -- a newer preview or hit supersedes in-flight decodes */
+  lastPreview: { id: null, ctx: null, at: 0, lib: null },
   lastError: null,
   tealCss: null,
 
@@ -84,7 +86,8 @@ const avSampleStore = {
       version: st.version, count: st.entries.length, max: st.max, pending: st.pending, bytes: bytes,
       inited: st.inited, host: !!st.hostEl,
       active: st.activeId,
-      lastPreview: st.lastPreview && st.lastPreview.id ? { id: st.lastPreview.id, at: st.lastPreview.at } : null,
+      previewLib: st.activeLib ? String(st.activeLib) : null,   /* R22: the active library preview label */
+      lastPreview: st.lastPreview && (st.lastPreview.id || st.lastPreview.lib) ? { id: st.lastPreview.id || null, at: st.lastPreview.at, lib: st.lastPreview.lib || null } : null,
       ctx: st.ctx ? st.ctx.state : null, engineReady: engReady,
       lastError: st.lastError,
       entries: entries,
@@ -170,8 +173,10 @@ const avSampleStore = {
   stopPreview: function () {
     const st = avSampleStore;
     const src = st.active;
+    st.previewSeq = (st.previewSeq | 0) + 1;   /* R22: any in-flight decode is superseded */
     st.active = null;
     st.activeId = null;
+    st.activeLib = null;
     if (!src) return false;
     try { if (typeof src.stop === "function") src.stop(); } catch (e) { /* already ended */ }
     try { if (typeof src.disconnect === "function") src.disconnect(); } catch (e) { /* already gone */ }
@@ -544,16 +549,104 @@ function avSamplePreview(id) {
     const src = ctx.createBufferSource();
     src.buffer = entry.buffer;
     src.connect(dest);
-    src.onended = function () { if (st.active === src) { st.active = null; st.activeId = null; } };
+    src.onended = function () { if (st.active === src) { st.active = null; st.activeId = null; st.activeLib = null; } };
     src.start();
     st.active = src;
     st.activeId = entry.id;
-    st.lastPreview = { id: entry.id, ctx: ctx, at: (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now() };
+    st.activeLib = null;                     /* this path is a session-entry preview, not a lib one */
+    st.lastPreview = { id: entry.id, ctx: ctx, lib: null, at: (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now() };
     return true;
   } catch (e) {
     st.lastError = String((e && e.message) || e);
     return false;
   }
+}
+
+/* R22 -- the library preview (child B of verify/_r22_wave.md section 3): audition stored library
+   bytes through the SAME master-tap law avSamplePreview uses (pickCtx + destFor), extending the
+   ONE preview voice law: a new preview -- session or library -- preempts the old one.
+   avSamplePreviewBytes(label, bytes) never throws; the receipt is {ok, label, error, at}.
+   decodeAudioData detaches its input, so the bytes are COPIED first (a fresh ArrayBuffer, then
+   the callback + promise decode pair behind a once-guard -- the avSampleImportFiles shape).
+   activeLib carries the live library label; this path leaves activeId null (session-entry
+   previews keep using it). previewSeq is the in-flight generation: stopPreview and every new
+   preview bump it, so a stale decode can never start a second voice. avSamplePreviewStop() is
+   the public stop for the ONE active voice, whatever its source. */
+
+function avSamplePreviewBytes(label, bytes) {
+  const st = avSampleStore;
+  const out = {
+    ok: false,
+    label: (label == null ? "" : String(label)),
+    error: "",
+    at: (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now(),
+  };
+  return new Promise(function (resolve) {
+    const done = { v: false };
+    const fin = function (ok, err, quiet) {
+      if (done.v) return;
+      done.v = true;
+      out.ok = (ok === true);
+      out.error = out.ok ? "" : String(err == null ? "preview failed" : err);
+      if (!out.ok && quiet !== true) { try { st.lastError = "preview: " + out.error; } catch (e) { /* ok */ } }
+      resolve(out);
+    };
+    try {
+      st.stopPreview();                 /* one preview voice, ever: the new preview preempts the old */
+      const mine = st.previewSeq;       /* this invocation's generation (stopPreview just bumped it) */
+      let raw = null;
+      try {
+        if (typeof ArrayBuffer !== "undefined" && bytes instanceof ArrayBuffer) {
+          raw = bytes.slice(0);         /* the detach law: decodeAudioData eats its input */
+        } else if (bytes && typeof bytes.byteLength === "number" && typeof ArrayBuffer !== "undefined" &&
+                   bytes.buffer instanceof ArrayBuffer) {
+          const off = (isFinite(bytes.byteOffset) && bytes.byteOffset > 0) ? (bytes.byteOffset | 0) : 0;
+          raw = bytes.buffer.slice(off, off + (bytes.byteLength | 0));
+        }
+      } catch (e) { raw = null; }
+      if (!raw || !raw.byteLength) { fin(false, "no bytes to decode"); return; }
+      const ctx = st.pickCtx();
+      if (!ctx) { fin(false, "no AudioContext"); return; }
+      try {
+        if (ctx.state === "suspended" && typeof ctx.resume === "function") {
+          const rp = ctx.resume();
+          if (rp && typeof rp.catch === "function") rp.catch(function () { /* gesture-gated -- engine listeners retry */ });
+        }
+      } catch (e) { /* resume refused */ }
+      const dest = st.destFor(ctx);
+      if (!dest) { fin(false, "tap bus unavailable"); return; }
+      const start = function (audio) {
+        if (done.v) return;             /* the callback + promise pair may both fire */
+        if (mine !== st.previewSeq) { fin(false, "superseded by a newer preview", true); return; }
+        if (!audio || !isFinite(audio.duration)) { fin(false, "decode produced no audio"); return; }
+        try {
+          const src = ctx.createBufferSource();
+          src.buffer = audio;
+          src.connect(dest);
+          src.onended = function () { if (st.active === src) { st.active = null; st.activeId = null; st.activeLib = null; } };
+          src.start();
+          st.active = src;
+          st.activeId = null;           /* this path carries no session entry */
+          st.activeLib = out.label;
+          out.at = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
+          st.lastPreview = { id: null, ctx: ctx, lib: out.label, at: out.at };
+          fin(true, "");
+        } catch (e) { fin(false, (e && e.message) || e); }
+      };
+      const fail = function (err) { fin(false, (err && err.message) || err || "decode failed"); };
+      let p = null;
+      try { p = ctx.decodeAudioData(raw, start, fail); } catch (e) { fail(e); return; }
+      if (p && typeof p.then === "function") p.then(start, fail);   /* promise-form browsers */
+    } catch (e) {
+      fin(false, (e && e.message) || e);
+    }
+  });
+}
+
+/* R22: stop the ONE live preview voice, whatever its source (session or lib); true when
+   something was stopped -- the public wrapper the hub's preview act reaches for. */
+function avSamplePreviewStop() {
+  try { return avSampleStore.stopPreview() === true; } catch (e) { return false; }
 }
 
 /* ================================ init ================================ */

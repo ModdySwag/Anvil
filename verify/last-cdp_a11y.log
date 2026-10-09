@@ -1,7 +1,8 @@
-index.html sha256 (before): e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd
+index.html sha256 (before): 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1791540221316
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1791544603481
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
+   - Page.setDownloadBehavior unavailable
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
    - settle 1400 ms for the decoration pass 2 (module init + 1200 ms)
@@ -12,7 +13,7 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   A4 module UI: #av-a11y-host inside header.av-head + real buttons #av-a11y-contrast / #av-a11y-motion (title + aria-pressed)  -> {"host":true,"inHead":true,"hostCls":"av-a11y","contrast":{"tag":"BUTTON","pressed":"false","title":true,"label":"High contrast"},"motion":{"tag":"BUTTON","pressed":"false","title":true,"label":"Reduce motion"}}
 == B. skip link (real Tab + Enter) ==
  ok   B1 skip link: #av-a11y-skip anchor -> #av-main + main.av-main carries id="av-main"  -> {"skip":true,"tag":"A","cls":"av-a11y-skip","href":"#av-main","first":"av-a11y-skip","mainId":"av-main","rect":{"x":12,"y":-64,"w":158,"h":36},"text":"Skip to main content"}
- ok   B2 skip link is the first focusable: fresh-load Tab -> activeElement #av-a11y-skip  -> {"before":{"id":null,"tag":"BODY","cls":"","txt":"Skip to main content FileEditViewWorkspaceHelpANVIL · v1.13."},"after":{"id":"av-a11y-skip","tag":"A","cls":"av-a11y-skip","txt":"Skip to main content"}}
+ ok   B2 skip link is the first focusable: fresh-load Tab -> activeElement #av-a11y-skip  -> {"before":{"id":null,"tag":"BODY","cls":"","txt":"Skip to main content FileEditViewWorkspaceHelpANVIL · v1.14."},"after":{"id":"av-a11y-skip","tag":"A","cls":"av-a11y-skip","txt":"Skip to main content"}}
  ok   B3 skip link Enter: focus lands on #av-main  -> {"id":"av-main","tag":"MAIN","hash":"","scrollY":0}
 == C. knobs (tabindex/role/aria + keyboard witness on master) ==
    - knob selftest present: true
@@ -23,7 +24,7 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   C5 master knob End (real CDP key): value clamps to max ("1.2") and aria-valuenow matches  -> {"v":1.2,"max":"1.2","aria":"1.2","readout":"120%"}
  ok   C6 master knob restore: start value (0.8) restored through the commit path (readback matches)  -> {"orig":0.8,"restored":0.8,"aria":"0.8"}
 == D. names (visible buttons + counts.unnamed) ==
- ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 237 visible of 520  -> {"total":520,"visible":237,"bad":[]}
+ ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 237 visible of 522  -> {"total":522,"visible":237,"bad":[]}
  ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":460,"counts":{"sliders":192,"knobsTabbed":192,"canvases":6,"liveRegions":4,"roleButtons":2,"labeled":460,"unnamed":0}}
 == E. live regions + announce ==
  ok   E1 live regions: >= 3 pinned-selector elements (.av-fam-status / #av-deliver-status / .av-session-status) carry role=status or aria-live (live 4 of 4)  -> {"found":4,"live":4,"sample":["av-deliver-status","av-fam-hub-status","av-fam-res-status","av-fam-radio-status"]}
@@ -45,11 +46,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned e99ea8e572b3...
+index.html sha256 (after):  183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 183d1588b3c6...
 
 RESULT: 32 passed, 0 failed
 A11Y-RESULT 32/32
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd","sha256After":"e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd","pinned":"e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd","passed":32,"failed":0,"checks":32,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","sha256After":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","pinned":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","passed":32,"failed":0,"checks":32,"verdict":"pass"}
 A11Y PASSED

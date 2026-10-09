@@ -1,10 +1,10 @@
-index.html sha256 (before): e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd
+index.html sha256 (before): 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9790 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-platform-1791540204905
-download dir C:\Users\Moddy\AppData\Local\Temp\anvil-platform-dl-1791540204905
-served artifact set copied -> C:\Users\Moddy\AppData\Local\Temp\anvil-platform-srv-1791540204906
-served index.html sha256: e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd  (sha8 e99ea8e5)
-rig server: http://127.0.0.1:61798  (serving C:\Users\Moddy\AppData\Local\Temp\anvil-platform-srv-1791540204906)
+cdp port 9790 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-platform-1791544586780
+download dir C:\Users\Moddy\AppData\Local\Temp\anvil-platform-dl-1791544586780
+served artifact set copied -> C:\Users\Moddy\AppData\Local\Temp\anvil-platform-srv-1791544586781
+served index.html sha256: 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25  (sha8 183d1588)
+rig server: http://127.0.0.1:51786  (serving C:\Users\Moddy\AppData\Local\Temp\anvil-platform-srv-1791544586781)
 file:// guard leg target: file:///C:/Users/Moddy/anvil/index.html
    · Browser.setDownloadBehavior -> {}
 == P1. manifest + icons (served) ==
@@ -15,37 +15,37 @@ file:// guard leg target: file:///C:/Users/Moddy/anvil/index.html
  ok   P1e manifest icons: 192 any + 512 any + 512 maskable present (paths/type/purpose exact)  -> [{"src":"./icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"./icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},{"src":"./icon-maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]
  ok   P1f icons fetch: each 200 + image/png + PNG magic  -> [{"src":"./icon-192.png","status":200,"mime":"image/png","magic":true,"bytes":998},{"src":"./icon-512.png","status":200,"mime":"image/png","magic":true,"bytes":2980},{"src":"./icon-maskable-512.png","status":200,"mime":"image/png","magic":true,"bytes":2867}]
 == 0. boot (served page) ==
-   · first load: {"href":"http://127.0.0.1:61798/","ready":"1"}
-   · controlled: true · settled: {"href":"http://127.0.0.1:61798/","ready":"1","to":1791540205504.5}
+   · first load: {"href":"http://127.0.0.1:51786/","ready":"1"}
+   · controlled: true · settled: {"href":"http://127.0.0.1:51786/","ready":"1","to":1791544587714.9}
  ok   0a boot: data-av-ready flips + live ctx running (48 kHz) + master node on the tap  -> {"ready":"1","ctx":"running","sr":48000,"nodes":1}
  ok   0b rig helpers injected + av-fam-row count probe  -> {"v":1,"miss":[],"rows":3}
  ok   0c platform surface: __avPwa (state/installPrompt) + __avFamily (send/importPack/preview/save/stop/openRadio/setPackBase) + exactly 3 .av-fam-row  -> {"pwa":true,"fam":true,"pwaState":true,"ip":true,"send":true,"importPack":true,"preview":true,"save":true,"stop":true,"openRadio":true,"setPackBase":true,"rows":3}
 == P2. service worker registration (http) + file:// guard ==
- ok   P2a http origin: __avPwa.supported === true  -> {"missing":false,"supported":true,"registered":true,"active":true,"waiting":false,"online":true,"swUrl":"http://127.0.0.1:61798/sw.js","scope":"http://127.0.0.1:61798/","controlled":true,"errorsN":0,"errors0":null}
- ok   P2b registration: registered + swUrl ends /sw.js  -> {"registered":true,"swUrl":"http://127.0.0.1:61798/sw.js"}
- ok   P2c scope: live registration scope === http://127.0.0.1:61798/ (the ./ scope)  -> {"regScope":"http://127.0.0.1:61798/","stateScope":"http://127.0.0.1:61798/"}
+ ok   P2a http origin: __avPwa.supported === true  -> {"missing":false,"supported":true,"registered":true,"active":true,"waiting":false,"online":true,"swUrl":"http://127.0.0.1:51786/sw.js","scope":"http://127.0.0.1:51786/","controlled":true,"errorsN":0,"errors0":null}
+ ok   P2b registration: registered + swUrl ends /sw.js  -> {"registered":true,"swUrl":"http://127.0.0.1:51786/sw.js"}
+ ok   P2c scope: live registration scope === http://127.0.0.1:51786/ (the ./ scope)  -> {"regScope":"http://127.0.0.1:51786/","stateScope":"http://127.0.0.1:51786/"}
  ok   P2d navigator.serviceWorker.ready resolves + active + page controlled  -> {"ready":true,"active":true,"state":"activated","controlled":true}
  ok   P2e file:// guard: __avPwa.supported === false (no registration attempt)  -> {"href":"file:///C:/Users/Moddy/anvil/index.html","supported":false,"hasSW":true,"reg":"err","pwaErrors":0,"errors0":null,"err":null}
  ok   P2f file:// guard: no SW registration + zero page errors during the leg  -> {"hasSW":true,"reg":"err","pwaErrors":0,"errors0":null,"errDelta":0}
-   · back on the served origin: {"href":"http://127.0.0.1:61798/","ready":"1"}
+   · back on the served origin: {"href":"http://127.0.0.1:51786/","ready":"1"}
 == P3. cache anvil-<sha8> vs the served index.html sha ==
- ok   P3a caches.keys() includes anvil-e99ea8e5 (the SERVED index.html sha8)  -> ["anvil-e99ea8e5"]
- ok   P3b caches.match("./index.html") bytes sha256 === the served index.html sha  -> {"resp":true,"bytes":4563691,"sha":"e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd","want":"e99ea8e572b3572d..."}
- ok   P3c served sw.js SW_VERSION token carries the same sha8 (sw.js on disk)  -> {"token":"e99ea8e5","want":"e99ea8e5"}
+ ok   P3a caches.keys() includes anvil-183d1588 (the SERVED index.html sha8)  -> ["anvil-183d1588"]
+ ok   P3b caches.match("./index.html") bytes sha256 === the served index.html sha  -> {"resp":true,"bytes":4594516,"sha":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","want":"183d1588b3c694e7..."}
+ ok   P3c served sw.js SW_VERSION token carries the same sha8 (sw.js on disk)  -> {"token":"183d1588","want":"183d1588"}
 == P4. offline (CDP Network.emulateNetworkConditions) ==
- ok   P4a offline reload boots: data-av-ready + navigator.onLine === false  -> {"rel":{"href":"http://127.0.0.1:61798/","ready":"1"},"online":false}
+ ok   P4a offline reload boots: data-av-ready + navigator.onLine === false  -> {"rel":{"href":"http://127.0.0.1:51786/","ready":"1"},"online":false}
  ok   P4b offline state: body class av-pwa-offline  -> {"cls":true,"chip":true,"vis":true}
  ok   P4c offline chip: #av-pwa-offline visible  -> {"cls":true,"chip":true,"vis":true}
- ok   P4d served-from-cache proof: nav transferSize 0 OR workerStart > 0 + full doc (4896390 chars)  -> {"n":{"transferSize":4563991,"decodedBodySize":4563691,"encodedBodySize":4563691,"workerStart":2,"responseStart":8.400000035762787,"duration":191.9000000357628,"type":"reload"},"docLen":4896390}
- ok   P4e back online: reload lands live (navigator.onLine true + ready)  -> {"href":"http://127.0.0.1:61798/","ready":"1"}
+ ok   P4d served-from-cache proof: nav transferSize 0 OR workerStart > 0 + full doc (4927683 chars)  -> {"n":{"transferSize":4594816,"decodedBodySize":4594516,"encodedBodySize":4594516,"workerStart":1.300000011920929,"responseStart":5.099999964237213,"duration":133.5,"type":"reload"},"docLen":4927683}
+ ok   P4e back online: reload lands live (navigator.onLine true + ready)  -> {"href":"http://127.0.0.1:51786/","ready":"1"}
 == P5. update flow ==
    · sanctioned offline-window net failures: 4
-   · temp sw.js rewritten: SW_VERSION e99ea8e5 -> deadbeef
+   · temp sw.js rewritten: SW_VERSION 183d1588 -> deadbeef
    · reg.update(): {"called":true} · rewriteOk true
    · post-update worker states: {"inst":true,"wait":false,"act":true}
  ok   P5a update found: registration.waiting + body class av-pwa-update + chip visible  -> {"installing":false,"instState":null,"waiting":true,"stateWaiting":true,"active":true,"cls":true,"chip":true,"chipVis":true,"seen":["I-A--","-WACV"]}
- ok   P5b chip click -> reload once (controllerchange path)  -> {"href":"http://127.0.0.1:61798/","ready":"1"}
- ok   P5c activation: new cache anvil-deadbeef present + old anvil-e99ea8e5 gone  -> ["anvil-deadbeef"]
+ ok   P5b chip click -> reload once (controllerchange path)  -> {"href":"http://127.0.0.1:51786/","ready":"1"}
+ ok   P5c activation: new cache anvil-deadbeef present + old anvil-183d1588 gone  -> ["anvil-deadbeef"]
 == P6. install code path (synthetic beforeinstallprompt — code-path test only) ==
  ok   P6a synthetic beforeinstallprompt captured: __avPwa.installPrompt() truthy (+prompt/userChoice stubs)  -> {"ev6":{"dispatched":true},"ip6":{"truthy":true,"hasPrompt":true,"hasChoice":true}}
  ok   P6b install affordance: #av-pwa-install visible after the event  -> {"vis":true}
@@ -53,12 +53,12 @@ file:// guard leg target: file:///C:/Users/Moddy/anvil/index.html
 == P7. family HUB -> inbox.html ==
  ok   P7a pattern: avSeqLoad (cdp_bounce BUILD_PATTERN shape — 16-step x 4 tracks, bpm 120)  -> {"ok":true,"name":"RIG PAT 1"}
  ok   P7b hub send: receipt ok via "inbox" (loops 2 · 6.000 s · 1152044 bytes)  -> {"ok":true,"via":"inbox","bytes":1152044,"sec":6,"bpm":120,"bars":2,"name":"RIG_PAT_1_120bpm_2loops.wav","loops":2,"error":null,"note":null}
- ok   P7c window.open: ./inbox.html + named target av-hub-inbox (never about:blank, never _blank)  -> [{"url":"./inbox.html","target":"av-hub-inbox","at":1791540215923}]
- ok   P7d bridge record in IDB moddys-bridges/outbox (1 row · kind loop · name/bpm/sr/ch/bytes/wav consistent)  -> {"n":1,"row":{"id":"1791540215910-19d529","name":"RIG_PAT_1_120bpm_2loops.wav","kind":"loop","bpm":120,"bars":2,"sec":6,"sr":48000,"ch":2,"bytes":1152044,"at":1791540215910,"wavBytes":1152044},"err":null}
+ ok   P7c window.open: ./inbox.html + named target av-hub-inbox (never about:blank, never _blank)  -> [{"url":"./inbox.html","target":"av-hub-inbox","at":1791544598130}]
+ ok   P7d bridge record in IDB moddys-bridges/outbox (1 row · kind loop · name/bpm/sr/ch/bytes/wav consistent)  -> {"n":1,"row":{"id":"1791544598120-a69793","name":"RIG_PAT_1_120bpm_2loops.wav","kind":"loop","bpm":120,"bars":2,"sec":6,"sr":48000,"ch":2,"bytes":1152044,"at":1791544598120,"wavBytes":1152044},"err":null}
    · inbox page ready: true
- ok   P7e inbox list(): 1 row with the right name/bpm/bytes  -> {"n":1,"rows":[{"id":"1791540215910-19d529","name":"RIG_PAT_1_120bpm_2loops.wav","kind":"loop","bpm":120,"bars":2,"sec":6,"bytes":1152044,"at":1791540215910}]}
- ok   P7f inbox audio: an <audio> element sourced from a blob: URL  -> {"audios":1,"audioBlob":"blob:http://127.0.0.1:61798/ebc8483a-116d-4559-a"}
- ok   P7g inbox download: a[download] present with a blob: href  -> {"links":1,"dlName":"RIG_PAT_1_120bpm_2loops.wav","dlHref":"blob:http://127.0.0.1:61798/ebc8483a-116d-4559-a"}
+ ok   P7e inbox list(): 1 row with the right name/bpm/bytes  -> {"n":1,"rows":[{"id":"1791544598120-a69793","name":"RIG_PAT_1_120bpm_2loops.wav","kind":"loop","bpm":120,"bars":2,"sec":6,"bytes":1152044,"at":1791544598120}]}
+ ok   P7f inbox audio: an <audio> element sourced from a blob: URL  -> {"audios":1,"audioBlob":"blob:http://127.0.0.1:51786/f50efb5b-48ee-487e-8"}
+ ok   P7g inbox download: a[download] present with a blob: href  -> {"links":1,"dlName":"RIG_PAT_1_120bpm_2loops.wav","dlHref":"blob:http://127.0.0.1:51786/f50efb5b-48ee-487e-8"}
  ok   P7h delete: row gone (__avInbox count 0)  -> {"del":{"found":true,"tag":"BUTTON","label":"Delete"},"path":"click","after":{"n":0,"rows":[]}}
 == P8. family RESONANCE (import · preview witness · save · local · 404) ==
    · ctx: {"ok":true,"state":"running","sr":48000,"nodes":0,"src":"avTap.ctx"}
@@ -67,7 +67,7 @@ file:// guard leg target: file:///C:/Users/Moddy/anvil/index.html
    · witness: {"ok":true,"sr":48000,"fft":32768,"binHz":1.46484375}
  ok   P8c preview(0): receipt ok via master-tap · ~30 s uncapped (the constant fixture)  -> {"ok":true,"seconds":30,"sr":48000,"frames":1440000,"capped":false,"via":"master-tap","name":"classic/constant-tone.gnaural","error":null}
  ok   P8d preview live on the master tap: state().previewing true + lastRender ~30 s  -> {"previewing":true,"lastRender":{"name":"classic/constant-tone.gnaural","seconds":30,"sr":48000,"frames":1440000,"capped":false}}
- ok   P8e witness LEFT: FFT peak ~195.0 Hz (base-beat/2) within 1 Hz — measured 194.978 Hz  -> {"ok":true,"hz":194.9779113187695,"db":-17.494842529296875,"bin":133,"binHz":1.46484375,"fft":32768}
+ ok   P8e witness LEFT: FFT peak ~195.0 Hz (base-beat/2) within 1 Hz — measured 194.978 Hz  -> {"ok":true,"hz":194.97829524888806,"db":-17.49483871459961,"bin":133,"binHz":1.46484375,"fft":32768}
  ok   P8f witness RIGHT: FFT peak ~205.0 Hz (base+beat/2) within 1 Hz — measured 204.997 Hz  -> {"ok":true,"hz":204.99733896898084,"db":-17.444419860839844,"bin":140,"binHz":1.46484375,"fft":32768}
  ok   P8g save: WAV lands on disk — RIFF/WAVE magic + len > 44 (resonance_classic_constant-tone.gnaural.wav · 5760044 B · via handle)  -> {"ret":true,"via":"handle","last":{"name":"resonance_classic_constant-tone.gnaural.wav","bytes":5760044,"via":"deliver"},"file":"resonance_classic_constant-tone.gnaural.wav","len":5760044,"head":"RIFF$äW\u0000WAVE"}
  ok   P8h local-file leg: synthesized File (DataTransfer) -> session rig-loose-tone imported (append or replace per design)  -> {"ok":true,"before":["classic/constant-tone.gnaural","classic/white-noise.gnaural"],"after":["rig-loose-tone"],"count":1}
@@ -76,14 +76,14 @@ file:// guard leg target: file:///C:/Users/Moddy/anvil/index.html
 == P9. family RADIO (rbg-last seed · deep link · OPEN RADIO) ==
  ok   P9a rbg-last seed + reload: the radio row text carries "Test FM"  -> {"rows":3,"txt":"MODDYS WORLD RADIOOPEN RADIOSEARCHGOMODDYS WORLD RADIO — you last played: Test FM (Australia)reads your radio history (rbg-last / rbg-meta) when both run on moddys.net — same-origin localStorage only; nothing is written and nothing is uploaded.","name":"Test FM","ok":true}
  ok   P9b openRadio("dub") returns the exact radio hash deep link  -> "https://moddys.net/#q=dub"
- ok   P9c OPEN RADIO click: window.open("https://moddys.net/", "av-world-radio") captured  -> [{"url":"https://moddys.net/","target":"av-world-radio","at":1791540219831}]
+ ok   P9c OPEN RADIO click: window.open("https://moddys.net/", "av-world-radio") captured  -> [{"url":"https://moddys.net/","target":"av-world-radio","at":1791544602031}]
 == P10 + seal ==
  ok   P10 zero page errors and console errors across every section  -> 0 offenders (sanctioned: 5 = P4 offline net failures + P8i refusal 404)
-index.html sha256 (after): e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd
- ok   S1 freeze: repo index.html sha256 before === after (unchanged by the run)  -> e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd
- ok   S2 freeze pin leg: index.html sha256 = pinned  -> pinned e99ea8e572b3...
+index.html sha256 (after): 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
+ ok   S1 freeze: repo index.html sha256 before === after (unchanged by the run)  -> 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
+ ok   S2 freeze pin leg: index.html sha256 = pinned  -> pinned 183d1588b3c6...
    · server: 43 requests total · fixtures: /fixtures/pack.zip x1 · /fixtures/rig-loose-tone.gnaural x1 · /fixtures/rig-404-does-not-exist.zip x1
 
 RESULT: 52 passed, 0 failed
 PLATFORM-RESULT 52/52 PASSED
-PLATFORM-RESULT-JSON {"kind":"anvil-cdp-platform","sha256Before":"e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd","sha256After":"e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd","servedIndexSha":"e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd","pinned":"e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd","passed":52,"failed":0,"checks":52,"verdict":"pass"}
+PLATFORM-RESULT-JSON {"kind":"anvil-cdp-platform","sha256Before":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","sha256After":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","servedIndexSha":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","pinned":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","passed":52,"failed":0,"checks":52,"verdict":"pass"}

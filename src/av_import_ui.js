@@ -258,6 +258,13 @@ const AV_IMPORT_UI_LIB_STEP = 60;        /* library rows per incremental paint (
 const AV_IMPORT_UI_BULK_MAX = 50;        /* bulk actions cap (selected items per run)         */
 /* R21: the format facet vocabulary (fixed order; a folded ext outside this set -> "other") */
 const AV_IMPORT_UI_FMTS = ["wav", "mp3", "aiff", "rex2", "mid", "zip", "other"];
+/* R22: the previewable sample formats -- reconciled with the source taxonomy: the importer
+   (av_import.js AV_IMPORT_POLICY + its sniffer) stores kind "sample" as wav / mp3 / aiff / rex2
+   only ("aif" / "wave" never occur -- the sniffer folds AIFF to aiff and RIFF+WAVE to wav;
+   "ogg" / "flac" are not in the importer's vocabulary at all and fold to unknown), and the
+   preview decode is the browser's decodeAudioData, which decodes wav / mp3 / aiff but NOT rex2
+   (av_lib loads rex2 through AVRex.decode). Final gate: wav | aiff | mp3. */
+const AV_IMPORT_UI_PREVIEW_FMTS = ["wav", "aiff", "mp3"];
 const AV_IMPORT_UI_ACCEPT = "audio/*,.wav,.aiff,.aif,.aifc,.mp3,.mid,.midi,.rx2,.exs,.nki,.nbkt,.sxt,.kong,.mxgrp,.wt,.fxp,.serumpreset,.adg,.als,.zip";
 /* R17 additive constants (names frozen -- the manager . receipts . storage . export half) */
 const AV_IMPORT_UI_NAME_MAX = 120;        /* inline rename cap (mirror of AV_LIB_NAME_MAX)      */
@@ -302,6 +309,8 @@ const AV_IMPORT_UI_CLASSES = [
   "av-import-libsum-row", "av-import-libsum", "av-import-facets", "av-import-bulk",
   "av-import-more", "av-import-detail", "av-import-detail-line", "av-import-detail-key",
   "av-import-detail-val", "av-import-detail-meta",
+  /* R22: the row preview playing state (the sample preview button while its label is active) */
+  "av-import-act-playing",
 ];
 
 /* UI-local state only -- every core fact is read through the pinned apis per call */
@@ -1136,8 +1145,9 @@ function avImportUiLibItemPub(it) {
   return out;
 }
 
-function avImportUiActBtnHTML(id, act, label, title, disabled) {
-  return '<button type="button" class="av-btn mini av-import-act" data-av-import-act="' + act +
+function avImportUiActBtnHTML(id, act, label, title, disabled, extraCls) {
+  return '<button type="button" class="av-btn mini av-import-act' + (extraCls ? " " + extraCls : "") +
+    '" data-av-import-act="' + act +
     '" data-id="' + avImportUiEsc(id) + '" title="' + avImportUiEsc(title) + '"' +
     (disabled ? " disabled" : "") + ">" + label + "</button>";
 }
@@ -1150,6 +1160,7 @@ function avImportUiLibRowHTML(it, sel) {
   const id = String(it.id || "");
   const kind = String(it.kind || "");
   const isPattern = (kind === "pattern");
+  const isSample = (kind === "sample");
   const isKit = (kind === "kit");
   const isRefs = (kind === "refs");
   const isSong = (kind === "song");
@@ -1207,6 +1218,9 @@ function avImportUiLibRowHTML(it, sel) {
     html += avImportUiActBtnHTML(id, "load", "LOAD", "apply this song bundle's project", false);
     html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
   } else {
+    /* R22 section 3: the row preview sits BEFORE LOAD -- samples only, audio-decodable formats
+       only (a pattern row keeps its pinned action set; see AV_IMPORT_UI_PREVIEW_FMTS) */
+    if (isSample && avImportUiPreviewable(it)) html += avImportUiPreviewBtnHTML(id);
     html += avImportUiActBtnHTML(id, "load", "LOAD", "load this item into the session", false);
     html += avImportUiActBtnHTML(id, "send", "SEND", "load it and send the session entry to the slot above", false);
     html += avImportUiActBtnHTML(id, "chop", "CHOP", "load it and aim the chop card at it", false);
@@ -1271,6 +1285,8 @@ function avImportUiPaintLib(host, force) {
     sig += "|" + s.mgr.fmt + "|" + s.mgr.pack + "|" + s.mgr.limit + "|" + s.mgr.insp;
     /* R18: the identity memo is part of the paint key (the chips ride the rows) */
     sig += "|" + s.missing.sig;
+    /* R22: the live preview label rides the paint key too (the preview button glyph flips) */
+    sig += "|" + avImportUiPreviewActive();
     if (!force && sig === s.libSig) { avImportUiPaintLibStat(host); avImportUiPaintManager(host); avImportUiPaintMore(); return true; }
     const box = avImportUiMgrFind("#av-import-lib");
     if (!box) return false;
@@ -1955,10 +1971,122 @@ function avImportUiAct(act, id) {
     if (act === "relink") return avImportUiBeginRelink(id);
     /* R21: the inspector toggle (the row's INFO button routes here) */
     if (act === "info") return avImportUiInspect(id);
+    /* R22: the row preview (non-mutating -- it never sets the busy flag, only refuses under one) */
+    if (act === "preview") return avImportUiActPreview(id);
   } catch (e) {
     avImportUiSetStatus("the action failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
   }
   return false;
+}
+
+/* ---------- R22: the row preview (audition a library sample before any further action) -----
+   verify/_r22_wave.md section 3. A NON-MUTATING act: it never sets the busy flag (it only
+   refuses while a mutating op holds it), never adds session entries, never touches the
+   session/song state. The bytes come from the SAME getter the EXPORT action uses --
+   avLibGet(id) -> {ok, item}, with item.bytes as the ArrayBuffer -- and the one-voice preview
+   law lives in av_sample.js (avSamplePreviewBytes / avSamplePreviewStop). The button's
+   playing state is DERIVED AT PAINT TIME from avSampleStore.activeLib (typeof-guarded), so
+   every list rebuild keeps it; the paint key in avImportUiPaintLib carries the live label.
+   A failure lands on the card status line (avImportUiSetStatus, kind "err") -- the honest
+   channel every other act uses (it also mirrors into the overlay via avLibraryUiNote). */
+
+/* the live library preview label out of the sample core ("" when absent / idle) */
+function avImportUiPreviewActive() {
+  try {
+    const st = (typeof avSampleStore !== "undefined") ? avSampleStore : null;
+    if (st && typeof st.activeLib === "string" && st.activeLib) return st.activeLib;
+  } catch (e) { /* the core is absent */ }
+  return "";
+}
+
+/* the reconciled preview gate: kind "sample" + an audio-decodable stored format (see
+   AV_IMPORT_UI_PREVIEW_FMTS -- wav / aiff / mp3; rex2 is stored but not browser-decodable) */
+function avImportUiPreviewable(it) {
+  try {
+    const f = String((it && it.format) || "").toLowerCase();
+    for (let i = 0; i < AV_IMPORT_UI_PREVIEW_FMTS.length; i++) {
+      if (AV_IMPORT_UI_PREVIEW_FMTS[i] === f) return true;
+    }
+  } catch (e) { /* not previewable */ }
+  return false;
+}
+
+/* the preview button: glyph U+25B6 idle / U+25A0 while THIS id is the active preview */
+function avImportUiPreviewBtnHTML(id) {
+  if (avImportUiPreviewActive() === "lib:" + id) {
+    return avImportUiActBtnHTML(id, "preview", "\u25a0", "stop the preview", false, "av-import-act-playing");
+  }
+  return avImportUiActBtnHTML(id, "preview", "\u25b6", "preview -- one-shot through the master tap (no session load)", false, "");
+}
+
+/* the act: the SAME id playing -> stop; otherwise read the bytes and audition them. True when
+   the click was handled (start or stop); false on refusals. Never throws. */
+function avImportUiActPreview(id) {
+  const s = avImportUiState;
+  try {
+    if (s.busy) return avImportUiBusyRefuse();   /* preview does NOT set busy -- it refuses under one */
+    const sid = avImportUiSelId(id);
+    if (!sid) return false;
+    const label = "lib:" + sid;
+    if (avImportUiPreviewActive() === label) {
+      /* this id IS the active preview: stop the ONE voice (the public wrapper first, the store
+         method as the belt when the wrapper is absent) */
+      let stopped = false;
+      try { if (typeof avSamplePreviewStop === "function") stopped = (avSamplePreviewStop() === true); } catch (e) { stopped = false; }
+      if (!stopped) {
+        try {
+          const st = (typeof avSampleStore !== "undefined") ? avSampleStore : null;
+          if (st && typeof st.stopPreview === "function") st.stopPreview();
+        } catch (e2) { /* the core is absent -- nothing to stop */ }
+      }
+      avImportUiMgrTouch(false);                 /* the glyph follows the live state */
+      return true;
+    }
+    if (typeof avSamplePreviewBytes !== "function") {
+      avImportUiSetStatus("preview refused \u2014 the sample core (av_sample.js) is not present", "err");
+      return false;
+    }
+    if (typeof avLibGet !== "function") {
+      avImportUiSetStatus("the library (av_lib.js) is not present \u2014 previewing is unavailable", "err");
+      return false;
+    }
+    let out = null;
+    try { out = avLibGet(sid); } catch (e) { out = { ok: false, error: avImportUiErrText(e, "the read failed") }; }
+    avImportUiSettle(out, function (r0) {
+      try {
+        const r = avImportUiReceipt(r0);
+        const it = (r.ok === true && r.item && typeof r.item === "object") ? r.item : null;
+        if (!it) {
+          avImportUiSetStatus("preview refused \u2014 " + avImportUiErrText(r, "the item is gone"), "err");
+          avImportUiMgrTouch(false);
+          return;
+        }
+        const bytes = it.bytes;
+        if (!bytes || typeof bytes.byteLength !== "number" || bytes.byteLength < 1) {
+          avImportUiSetStatus("preview refused \u2014 no stored bytes for " + avImportUiShort(avImportUiLibName(sid), 60), "err");
+          avImportUiMgrTouch(false);
+          return;
+        }
+        let p = null;
+        try { p = avSamplePreviewBytes(label, bytes); }
+        catch (e) { p = { ok: false, error: avImportUiErrText(e, "unexpected") }; }
+        avImportUiSettle(p, function (rr0) {
+          const rr = avImportUiReceipt(rr0);
+          if (rr.ok !== true) {
+            avImportUiSetStatus("preview refused \u2014 " + avImportUiErrText(rr, "the decode was refused"), "err");
+          }
+          avImportUiMgrTouch(false);             /* playing or not: repaint the rows from the live label */
+        });
+      } catch (e2) {
+        avImportUiSetStatus("preview failed \u2014 " + avImportUiErrText(e2, "unexpected"), "err");
+        avImportUiMgrTouch(false);
+      }
+    });
+    return true;
+  } catch (e) {
+    avImportUiSetStatus("preview failed \u2014 " + avImportUiErrText(e, "unexpected"), "err");
+    return false;
+  }
 }
 
 /* ---------- R17: the library manager (view state . selection . rename . export) ----------
