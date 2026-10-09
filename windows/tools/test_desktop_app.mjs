@@ -458,6 +458,13 @@ try {
         check(false, 'the library EXP action downloads through the shell (will-download -> DL dir, no dialog)', 'row present but no row id read');
         check(false, 'the downloaded file carries the library bytes (RIFF)', 'no row id');
       } else {
+        /* The shell exposes showSaveFilePicker (probed 2026-10-10) and this rig evaluates with
+           userGesture: true -- with activation the app's picker leg is ALLOWED to show a native
+           save dialog that no headless check can complete (exportItem returns ok, the picker
+           promise pends, nothing lands). The chain under test is the download path the shell
+           pins: anchor -> will-download -> DL dir, no dialog. Hide the picker for this leg (the
+           cdp_s4 pickHideSave seam) and restore it right after. */
+        await app.ev(`(() => { try { window.__rigPickSave = window.showSaveFilePicker; window.showSaveFilePicker = undefined; return true; } catch (e) { return false; } })()`);
         const expR = await app.ev(`(async () => { try { const ret = window.__avImport.exportItem(${JSON.stringify(id)}); if (ret && typeof ret.then === 'function') await ret; return { ok: true }; } catch (e) { return { ok: false, err: String((e && e.message) || e) }; } })()`);
         let dlFile = null;
         for (let i = 0; i < 40 && !dlFile; i++) {
@@ -465,6 +472,7 @@ try {
           if (hits.length) dlFile = hits[hits.length - 1];
           else await sleep(500);
         }
+        await app.ev(`(() => { try { if (window.__rigPickSave) window.showSaveFilePicker = window.__rigPickSave; return typeof window.showSaveFilePicker; } catch (e) { return 'restore-failed'; } })()`);
         check(!!dlFile, 'the library EXP action downloads through the shell (will-download -> DL dir, no dialog)',
           dlFile ? path.basename(dlFile) + ' (' + statSync(dlFile).size + ' B)' : ('nothing landed in ' + DL + ' exportRet=' + JSON.stringify(expR)));
         if (dlFile) {

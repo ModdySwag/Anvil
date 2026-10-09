@@ -94,13 +94,37 @@ def wait_gone(path, ms=60000):
 
 
 def arp_out(root, needle="Anvil"):
-    r = run(["reg", "query", root, "/s", "/f", needle], timeout=120)
+    """The whole Uninstall tree, UNFILTERED. `reg query /f` strips every value line whose data
+    does not match the needle -- including Publisher -- and display_count attributes entries to
+    our publisher, so the filter belongs in display_count, not in reg."""
+    r = run(["reg", "query", root, "/s"], timeout=120)
     return r.stdout or ""
 
 
 def display_count(out):
-    """One Add/Remove entry == one 'DisplayName ... Anvil' value line."""
-    return sum(1 for l in out.splitlines() if l.strip().startswith("DisplayName") and "Anvil" in l)
+    """One Add/Remove entry == one registry BLOCK whose DisplayName carries Anvil AND whose
+    Publisher is ours. This machine also carries an unrelated 'Anvil' entry -- the Brave PWA
+    install of the web app (Publisher BraveSoftware\\Brave-Browser, HKCU). Counting every
+    Anvil-named DisplayName row asserted a defect the installer never had; attributing the
+    block to our publisher keeps the checks' teeth (entries of OURS count wherever they land,
+    so an admin glom would still fail) while a third-party app that merely shares the name is
+    not this installer's entry."""
+    count = 0
+    block = []
+
+    def ours(b):
+        has_name = any(l.strip().startswith("DisplayName") and "Anvil" in l for l in b)
+        has_pub = any(l.strip().startswith("Publisher") and "modtech" in l.lower() for l in b)
+        return 1 if (has_name and has_pub) else 0
+
+    for l in out.splitlines():
+        if l.startswith("HKEY_"):
+            count += ours(block)
+            block = []
+        else:
+            block.append(l)
+    count += ours(block)
+    return count
 
 
 def start_menu_links():

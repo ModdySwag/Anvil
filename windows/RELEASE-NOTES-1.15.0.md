@@ -13,9 +13,9 @@ instrument and a sibling of Pattern Forge.
 
 A look at the Windows build:
 
-![Anvil - the cockpit: the SYNTH zone, the module rail and the console](TODO-SHOT-URL-1)
-![Anvil - the Import & Library overlay: search, facets, bulk actions](TODO-SHOT-URL-2)
-![Anvil - the TUNE card and the scale library](TODO-SHOT-URL-3)
+![Anvil - the cockpit: the SYNTH zone, the module rail and the console](https://raw.githubusercontent.com/ModdySwag/Anvil/main/screenshots/anvil-cockpit.jpg)
+![Anvil - the Import & Library overlay: search, facets, bulk actions](https://raw.githubusercontent.com/ModdySwag/Anvil/main/screenshots/anvil-hub.jpg)
+![Anvil - the TUNE card and the scale library](https://raw.githubusercontent.com/ModdySwag/Anvil/main/screenshots/anvil-library.jpg)
 
 ## What's new
 
@@ -52,9 +52,9 @@ A look at the Windows build:
   installer never touches that folder; the uninstaller keeps it by default and asks before
   deleting anything - installing again picks up where you left off. Nothing is sent anywhere.
 - Verified on this exact payload: the desktop suite driving the installed program
-  (TODO-DESKTOP-CHECKS checks - the worklet engine tier, a note played with a master-tap
+  (31 checks - the worklet engine tier, a note played with a master-tap
   witness, MIDI, the library overlay, zero page errors) and a silent install -> upgrade-over
-  install -> uninstall journey (TODO-JOURNEY-CHECKS checks) that leaves your data intact. The
+  install -> uninstall journey (28 checks) that leaves your data intact. The
   build inside the installer is byte-identical to the one live at moddys.net/anvil (6ac4425b);
   the app's own gates ran green first-lap (27 suites, hub 68 checks, fit 49; bench and alias
   clean; the leak probe 11/11, file and live).
@@ -62,9 +62,9 @@ A look at the Windows build:
 
 ## sha256
 
-  TODO-SHA256-SETUP-EXE      Anvil-1.15.0-Setup.exe
-  TODO-SHA256-SETUP-EXE-ZIP  Anvil-1.15.0-Setup.exe.zip
-  TODO-SHA256-SOURCE-ZIP     Anvil-1.15.0-source.zip
+  2b83ded4c00e6c7d934b8c1a68827a61b29b62ea00ddc83af36c4be064f7a9da  Anvil-1.15.0-Setup.exe
+  18da99f75f8ff85dcb60fc0839a9cc566f3580b14a43a625a0da0a2f267bacb7  Anvil-1.15.0-Setup.exe.zip
+  5dcea21ac5b6403239640bdbb5f27a1d6b8ff1dc44dc34a8682fc3cf0aff1037  Anvil-1.15.0-source.zip
 
 The download page is also https://moddys.net/moddys-downloads.html.
 
