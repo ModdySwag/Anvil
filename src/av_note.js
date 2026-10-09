@@ -7,7 +7,8 @@
    - dedupe on the note key (name, or name@channel for MPE member notes) — a second down for a held name is a no-op (also the key-repeat guard;
      nothing anywhere handles e.repeat).
    - velocity is OPTIONAL and arrives pre-scaled (hardware passes vel/127); gain clamps 0.05..1,
-     default 0.9.
+     default 0.9. The optional 4th arg (opts - T wave: the tuning/scheduler pass-through) rides
+     avNoteSink.on untouched; no caller supplies one here, so the sink sees undefined (pre-T).
    - notes the engine "took" are tracked — their release goes through the sink; nothing heavy runs.
    - stop-all clears every structure (panic safety: leaving KEYS, CC 120/123, device change).
    - observables suites rely on: window.__lastNotePreview (name on every fresh down),
@@ -45,7 +46,7 @@ function avNoteGain(name) {
   return AV_NOTE_DEF_GAIN;
 }
 
-/* the engine (P1) registers { on(midi, gain, name, ch)->bool, off(midi, name, ch), allOff() } — or null */
+/* the engine (P1) registers { on(midi, gain, name, ch, opts)->bool, off(midi, name, ch), allOff() } — or null */
 function avNoteSetSink(sink) {
   avNoteSink.on = (sink && typeof sink.on === "function") ? sink.on : null;
   avNoteSink.off = (sink && typeof sink.off === "function") ? sink.off : null;
@@ -58,8 +59,9 @@ function avNoteKey(name, ch) {
   return (isFinite(c) && c > 0) ? name + "@" + c : name;
 }
 
-/* returns true when this call started a fresh note; ch > 0 tags an MPE member channel */
-function avNoteDown(name, vel, ch) {
+/* returns true when this call started a fresh note; ch > 0 tags an MPE member channel;
+   opts (optional 4th param, T wave) rides the sink call untouched - undefined when omitted */
+function avNoteDown(name, vel, ch, opts) {
   const key = avNoteKey(name, ch);
   if (!name || avNoteHeld.has(key)) return false;
   avNoteHeld.add(key);
@@ -72,7 +74,7 @@ function avNoteDown(name, vel, ch) {
   let taken = false;
   if (midi != null && typeof avNoteSink.on === "function") {
     const g0 = avNoteGains.has(key) ? avNoteGains.get(key) : AV_NOTE_DEF_GAIN;
-    try { taken = avNoteSink.on(midi, Math.max(AV_NOTE_MIN_GAIN, Math.min(1, g0)), name, mpeCh) === true; } catch (e) { taken = false; }
+    try { taken = avNoteSink.on(midi, Math.max(AV_NOTE_MIN_GAIN, Math.min(1, g0)), name, mpeCh, opts) === true; } catch (e) { taken = false; }
   }
   if (taken) avNoteTaken.set(key, { name: name, ch: mpeCh });
   return true;

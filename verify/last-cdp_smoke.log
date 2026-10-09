@@ -1,6 +1,6 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v1.11.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.11.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v1.12.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.12.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":2,"ctxState":"running"}
  ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
@@ -33,10 +33,10 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   P7 a11y: knobs decorated (>= 85 sliders) + zero unnamed buttons  -> {"skip":true,"live":true,"sliders":192,"unnamed":0}
  ok   R1 cockpit: 8 zones + 8 tabs (workflow order), exactly one shown (synth default), page cannot scroll  -> {"zones":8,"tabs":8,"shown":1,"active":"synth","doc":"900/900","overflow":"hidden"}
  ok   R1 cockpit: SHELL SELFTEST ok (?avtest=1)  -> {"v":"r1.0","ready":true,"zones":8,"active":"synth"}
- ok   R2 chrome: module heads + menu buttons on every chrome card, engine strip (6 chips in Synth), header BROWSE/undo/redo  -> {"heads":8,"toggles":25,"menus":25,"chips":6,"stripInSynth":true,"browse":true,"undo":true,"redo":true,"menuHost":true,"chromeApi":"object","proof":{"v":"r2.0","heads":25,"cards":25,"strip":true,"browse":true}}
- ok   R2 chrome: CHROME SELFTEST ok (?avtest=1)  -> {"v":"r2.0","heads":25,"cards":25,"strip":true,"browse":true}
+ ok   R2 chrome: module heads + menu buttons on every chrome card, engine strip (6 chips in Synth), header BROWSE/undo/redo  -> {"heads":8,"toggles":26,"menus":26,"chips":6,"stripInSynth":true,"browse":true,"undo":true,"redo":true,"menuHost":true,"chromeApi":"object","proof":{"v":"r2.0","heads":26,"cards":26,"strip":true,"browse":true}}
+ ok   R2 chrome: CHROME SELFTEST ok (?avtest=1)  -> {"v":"r2.0","heads":26,"cards":26,"strip":true,"browse":true}
  ok   R2 chrome: collapse toggles fold on/off; Init restores the first knob to its data-def via the one commit funnel  -> {"folded":true,"unfolded":true,"initN":87,"restored":true,"before":1}
- ok   R3 workspace: float buttons on every head (>=20), About button + hidden about host, panels facade + proof  -> {"floatBtns":25,"aboutBtn":true,"aboutHost":true,"panelsApi":"object","proof":{"v":"r3.0","open":0,"layouts":["sounddesign","mixdown"],"about":true}}
+ ok   R3 workspace: float buttons on every head (>=20), About button + hidden about host, panels facade + proof  -> {"floatBtns":26,"aboutBtn":true,"aboutHost":true,"panelsApi":"object","proof":{"v":"r3.0","open":0,"layouts":["sounddesign","mixdown"],"about":true}}
  ok   R4 rail: left navigator (8 groups + >=20 card links) + header NAV toggle + RAIL SELFTEST  -> {"rail":true,"groups":8,"links":25,"navBtn":true,"tabBorder":"1px","tabRadius":"6px","railApi":"object","proof":{"v":"r7.0","ready":true,"groups":8,"cards":25,"open":true,"sections":1,"panels":true}}
  ok   R4 toggles: the top tabs are sectioned chips (bordered, rounded)  -> {"border":"1px","radius":"6px"}
  ok   R4 float controls: pin/opacity/min/max buttons + minimize toggle + named layout save/load  -> {"pin":true,"op":true,"min":true,"max":true,"mini":true,"back":true,"saved":true,"loaded":true,"n":1}
@@ -47,7 +47,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R7 panels section: the head collapses/expands the quick-view body and persists (av-rail-sections.panels)  -> {"sec":true,"head":true,"body":true,"pvis0":"block","paria0":"true","pvis1":"none","paria1":"false","pmap":{"synth":1,"fx":0,"mod":0,"seq":0,"studio":0,"store":0,"code":0,"system":0,"panels":0},"pvis2":"block"}
  ok   R8 mod drag: 14 chips + drag begins (body class, 4 target halos) + drop on filter.cutoff assigns env1->cutoff with the mod ring shown + unmapped knob refused  -> {"chips":14,"knob":true,"slots0":0,"dt":true,"dragging":true,"targets":4,"hover":true,"dragging2":false,"targets2":0,"slots":1,"s1":"env1->cutoff","ringShown":true,"ringDisp":"block","modAttr":"env1:+50%","rows":1,"slotsAfter":1}
  ok   R8 matrix grammar: header (SOURCE/CURVE/AMOUNT/POL/DESTINATION/OUT) + re-drop re-defaults one instance + POL flips sign + macro OUT tracks 42% + cleanup clears ring  -> {"hdr":"SOURCECURVEAMOUNTPOLDESTINATIONOUT","again":true,"single":true,"amtReset":true,"pol0":"+","amtPol":-0.5,"pol1":"±","out":"42%","ringCleared":true,"slotsEnd":0,"rowsEnd":0}
- ok   R9 chrome: every zone card carries the module head + float button - LEVELS, FAMILY and ROADMAP included  -> {"cards":25,"withHead":25,"withFloat":25,"lvMenu":true,"lvFloat":true,"famToggle":true,"rdMenu":true,"rdFloat":true}
+ ok   R9 chrome: every zone card carries the module head + float button - LEVELS, FAMILY and ROADMAP included  -> {"cards":26,"withHead":26,"withFloat":26,"lvMenu":true,"lvFloat":true,"famToggle":true,"rdMenu":true,"rdFloat":true}
  ok   R9 pitch+fluidity: PITCH/FINE knobs bound + commit funnel mirrors + drag defers to rAF and lands on release  -> {"p":{"knobs":[true,true,true,true],"bound":[true,true,true,true],"mirror":25,"back":0,"n0":0.534,"mid":0.534,"end":0.5945},"r":{"settled":0.7687,"dragging":false,"restored":0.534}}
  ok   R10 no-select: body + card prose are user-select:none while text surfaces (textarea/input) stay selectable  -> {"body":"none","note":"none","ta":"text","inp":"text"}
  ok   R11 console: transport deck + BPM segment + OLED (pack/preset/sys) in the header, every legacy id intact, BPM live  -> {"cls":true,"play":true,"stop":true,"song":true,"rec":true,"bpm":true,"pack":true,"preset":true,"power":true,"api":"object","bpmText":"120","bpmVal":120,"leg":{"version":true,"tier":true,"voices":true,"browse":true,"undo":true,"about":true,"rail":true,"help":true,"piano":true},"tierInOled":true}
@@ -75,7 +75,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   R19 user packs: #av-import-pack in the manager + __avPack facade complete  -> {"btn":true,"label":"COLLECT & PACK (0)","version":"r19.0","fns":4}
  ok   R18b linked sources: section mounted in the hub card + __avSources facade complete  -> {"host":true,"sec":true,"version":"r18b.0","fns":7,"fsKind":"window"}
  ok   R18a layout guard: no button label overflows its box (all zones swept)  -> []
+ ok   T wave TUNE: card mounted + host populated (scale · root · morph · MTS · status)  -> {"card":true,"host":true,"children":1,"scale":true,"root":true,"morph":true,"mts":true,"status":true,"tuneUi":"object","coreApi":"object"}
  ok   R12 proof gate: a plain load (no ?avtest=1) renders zero SELFTEST text + an empty proof host  -> {"plainReady":true,"leak":{"hits":0,"hostText":"","consoleEl":false}}
  ok   zero page errors
 
-78 passed, 0 failed
+79 passed, 0 failed

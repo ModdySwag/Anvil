@@ -11,7 +11,9 @@
    - IN notes play through the ONE note path (avNoteDown / avNoteUp — PF L3-6, L401-403): a hardware
      note is never a second synth path. Same voice, same hold-to-play; velocity arrives as vel/127.
    - requestMIDIAccess() is called with NO options — the deck never sends sysex, so it never asks
-     for it (PF L268-269).
+     for it (PF L268-269). Sysex is RECEIVED only through the passive sink hook
+     avMidiSetSysExSink (T wave: the TUNE card's MTS live receive registers it; the hook costs
+     nothing until then and nothing in the deck's own behaviour changes).
    - the input is attached with addEventListener('midimessage'), never onmidimessage (PF L370-372):
      another WebMidi user on the page may claim the property; listeners coexist.
    - monitor caps: 60 kept / 12 drawn per direction, 240 recorded per second SHARED in+out, one
@@ -97,6 +99,9 @@ let avMidiSelfSend = false;    /* true while OUR own send is on the stack (the t
 let avMidiWired = false;
 let avMidiLearnWired = false;
 let avMidiSayState = "";
+/* T wave: the passive sysex sink the TUNE card registers for MTS receive (null = no cost) */
+let avMidiSysExSink = null;
+let avMidiSysExBuf = [];
 
 let avMidiLearn = { armed: false, cc: null, chan: 0, at: 0, armedAt: 0, bound: 0, refused: 0, lastRefused: null };
 let avMidiCcBinds = [];
@@ -213,6 +218,38 @@ function avMidiDecode(data) {
   if (type === "cc") { out.cc = v1; out.value = v2; }
   if (type === "pitchbend") out.bend = ((v2 << 7) | v1) - 8192;   /* 14-bit, −8192..8191 (PF L153) */
   return out;
+}
+
+/* ---------- the passive sysex sink (T wave: MTS receive for the TUNE card) ---------- */
+
+/* The deck itself never asks for sysex (header law); this hook is how the TUNE card's MTS live
+   receive gets its raw bytes once the card holds a SysEx-enabled access of its own. Passive:
+   with no sink registered the input handler does zero extra work beyond the length check below.
+   Raw F0..F7 arrays are forwarded whole; a message that arrives split across events is
+   reassembled first. The sink call is guarded: it can never break the deck. */
+function avMidiSetSysExSink(fn) {
+  avMidiSysExSink = (typeof fn === "function") ? fn : null;
+  avMidiSysExBuf = [];
+  return avMidiSysExSink !== null;
+}
+
+function avMidiSysExForward(bytes) {
+  if (!avMidiSysExSink) { avMidiSysExBuf = []; return false; }
+  try {
+    for (let i = 0; i < bytes.length; i++) {
+      const b = bytes[i] & 0xff;
+      if (b === 0xf0) { avMidiSysExBuf = [b]; continue; }   /* a new F0 restarts the message */
+      if (!avMidiSysExBuf.length) continue;                  /* data with no open F0: ignored */
+      avMidiSysExBuf.push(b);
+      if (b === 0xf7) {
+        const msg = avMidiSysExBuf;
+        avMidiSysExBuf = [];
+        avMidiSysExSink(msg);
+      }
+      if (avMidiSysExBuf.length > 8192) avMidiSysExBuf = []; /* runaway guard */
+    }
+    return true;
+  } catch (e) { avMidiSysExBuf = []; return false; }
 }
 
 /* ---------- monitor (PF L157-254) ---------- */
@@ -670,6 +707,8 @@ function avMidiOnInputMessage(e, port) {
   if (!bytes.length) return;
   const pname = (port && port.name) || "";
   avMidiRecord("in", bytes, pname);       /* monitor first (PF L390) */
+  /* T wave: the passive sysex forward to the TUNE card's MTS sink - no sink, zero extra work */
+  if (avMidiSysExSink && ((bytes[0] & 0xff) === 0xf0 || avMidiSysExBuf.length)) avMidiSysExForward(bytes);
   const m = avMidiDecode(bytes);
   if (!m) return;
   /* M2: the MPE branch -- a live member channel routes to the deck; everything else falls through */
@@ -680,7 +719,8 @@ function avMidiOnInputMessage(e, port) {
   else if (m.type === "pitchbend") avMidiBendIncoming(m);
   else if (m.type === "touch") avMidiTouchIncoming(m);
   /* clock / start / continue / stop / sensing / reset / sysex / program / polytouch:
-     decoded and monitored only — no branch (PF L61, L393-398) */
+     decoded and monitored only — no branch here (PF L61, L393-398); sysex additionally rides
+     the passive sink forward above when the TUNE card has registered one */
 }
 
 function avMidiNoteOn(note, velByte, chan) {

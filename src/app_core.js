@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.11.0", phase: "R20 · work persistence", built: "2026-10-09" });
+const ANVIL = Object.freeze({ version: "1.12.0", phase: "T1 · tuning studio", built: "2026-10-09" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
@@ -140,9 +140,10 @@ function avMountLevels() {
   try { palOk = (typeof avPaletteInit === "function") ? (avPaletteInit() !== false) : false; } catch (e) { console.warn("[anvil] palette init failed", e); }
   try { lessonsOk = (typeof avLessonsInit === "function") ? (avLessonsInit() !== false) : false; } catch (e) { console.warn("[anvil] lessons init failed", e); }
   /* M1: the FM card + the wavetable editor */
-  let fmUiOk = false, wtUiOk = false, chopUiOk = false;
+  let fmUiOk = false, wtUiOk = false, chopUiOk = false, tuneUiOk = false;
   try { fmUiOk = (typeof avFmUiInit === "function") ? (avFmUiInit() !== false) : false; } catch (e) { console.warn("[anvil] fm card init failed", e); }
   try { wtUiOk = (typeof avWtUiInit === "function") ? (avWtUiInit() !== false) : false; } catch (e) { console.warn("[anvil] wt editor init failed", e); }
+  try { tuneUiOk = (typeof avTuneUiInit === "function") ? (avTuneUiInit() !== false) : false; } catch (e) { console.warn("[anvil] tune card init failed", e); }
   try { chopUiOk = (typeof avChopUiInit === "function") ? (avChopUiInit() !== false) : false; } catch (e) { console.warn("[anvil] chop ui init failed", e); }
   /* PLATFORM: the PWA module + the FAMILY card */
   let pwaOk = false, familyOk = false;
@@ -183,7 +184,7 @@ function avMountLevels() {
   const tier = document.getElementById("av-tier");
   if (tier) tier.textContent = tapOk ? "tap: armed · engine: booting" : "tap: UNAVAILABLE";
   document.documentElement.setAttribute("data-av-ready", "1");   /* the smoke contract: tap + UI are wired */
-  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " import=" + importOk + " sourcesUi=" + sourcesUiOk + " fx=" + fxOk + " mod=" + modOk + " lfo=" + lfoOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk + " rail=" + railOk + " menus=" + menusOk);
+  console.log("[anvil] boot — v" + ANVIL.version + " tap=" + tapOk + " knobs=" + levelsOk + " kb=" + kbOk + " midi=" + midiOk + " synth=" + synthOk + " pads=" + padsOk + " sample=" + sampleOk + " rec=" + recOk + " import=" + importOk + " sourcesUi=" + sourcesUiOk + " fx=" + fxOk + " mod=" + modOk + " lfo=" + lfoOk + " seq=" + seqOk + " seqUi=" + seqUiOk + " cap=" + capOk + " undo=" + undoOk + " store=" + storeOk + " bank=" + bankOk + " storeUi=" + storeUiOk + " deliver=" + deliverOk + " input=" + inputOk + " metro=" + metroOk + " takes=" + takesOk + " studioUi=" + studioUiOk + " session=" + sessionOk + " backup=" + backupOk + " sessionUi=" + sessionUiOk + " comp=" + compOk + " compUi=" + compUiOk + " mix=" + mixOk + " mixUi=" + mixUiOk + " deck=" + deckOk + " deckUi=" + deckUiOk + " proj=" + projOk + " card=" + cardOk + " video=" + videoOk + " filesUi=" + filesUiOk + " kbPop=" + kbPopOk + " code=" + codeOk + " codeUi=" + codeUiOk + " help=" + helpOk + " pal=" + palOk + " lessons=" + lessonsOk + " fmUi=" + fmUiOk + " wtUi=" + wtUiOk + " mpe=" + mpeOk + " chopUi=" + chopUiOk + " tuneUi=" + tuneUiOk + " pwa=" + pwaOk + " family=" + familyOk + " a11y=" + a11yOk + " shell=" + shellOk + " chrome=" + chromeOk + " panels=" + panelsOk + " rail=" + railOk + " menus=" + menusOk);
   if (/[?&]avtest=1/.test(location.search)) {
     try { avTapSelfTest(); } catch (e) { console.warn("avtest tap", e); }
     try { avKnobSelfTest(); } catch (e) { console.warn("avtest knob", e); }

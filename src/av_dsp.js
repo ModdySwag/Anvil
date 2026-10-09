@@ -27,7 +27,13 @@
      the parent blends dry*(1-mix)+wet*mix; mod/delay write their FINAL mix and the parent
      copies); kind ids widen to 1..5 (grain = 4, sampler = 5); eng.samples[4] + eng.zones(40)
      written at message time; eng.modMacros[8]/modSlots[128] with the v1 mod application
-     (recomputeFilter / computePitch cadence). */
+     (recomputeFilter / computePitch cadence).
+   - T wave (verify/_t_wave.md section 4): eng.tuneBank[8] (null | Float32Array(128), written at
+     message time) + eng.tuneActive (fallback slot); AVDSP.noteOn gains the optional 5th param
+     opts ({ tune int 0..7, acc 0|1 }); EVERY reinitVoice path (fresh/steal/pending) carries the
+     note's own opts; v.tuneOff (semitone offset vs 12-EDO) joins the pitch calc after the MPE
+     add and is CONSTANT per voice (glide/ramp never sweep it - by design); stats() gains the
+     additive `tune` block. eng.tune (the master-tune semitone param) is a DIFFERENT thing. */
 "use strict";
 
 const AVDSP = (function () {
@@ -368,6 +374,9 @@ const AVDSP = (function () {
       randVal: 0, modCut: 0, modReso: 0, modPitch: 0, modL1: 0, modL2: 0,
       kindId: 0,                    /* P2/P3: engine kind for the current note (set in reinitVoice) */
       mpeCh: 0, mpeBendApplied: 0,  /* M2: MPE member channel tag (0 = global path) + applied-bend cache */
+      /* T wave: per-note microtuning state (set in reinitVoice; noteOpts carries the note's own
+         opts into every reinit path - preallocated here so pending/retrigger allocates none) */
+      tuneOff: 0, acc: -1, noteOpts: { tune: -1, acc: -1 },
       k: {},                        /* P2: kind voice-state union (initVoiceK per module, at create) */
       lad: (typeof AVLADDER !== "undefined" && AVLADDER && typeof AVLADDER.createState === "function")
         ? AVLADDER.createState() : null,   /* P2: Moog-ladder state (filter.mode ladder24) */
@@ -430,6 +439,14 @@ const AVDSP = (function () {
       fx: [],
       userWt: [],
       mpe: null,
+      /* T wave: 8-slot tuning bank (null | Float32Array(128) semitone offsets vs 12-EDO, copied
+         at message time) + the active slot + the stats `last` record (preallocated: reinitVoice
+         runs on the render path and must not allocate) */
+      tuneBank: [null, null, null, null, null, null, null, null],
+      tuneNames: [null, null, null, null, null, null, null, null],
+      tuneActive: 0,
+      tuneLast: { midi: -1, slot: 0, off: 0 },
+      tuneLastOn: 0,
     };
     if (typeof AVM !== "undefined" && AVM && typeof AVM.create === "function") {
       try { eng.mpe = AVM.create(); } catch (e) { eng.mpe = null; }
@@ -640,6 +657,7 @@ const AVDSP = (function () {
        midi 69 -> 440 Hz), then bend/tune (semitones) + LFO pitch (+-50 ct at +-1) */
     let st = (v.pitch - 69) + eng.bend + eng.tune + 0.5 * eng.lfoToPitch * v.lfoVal;
     if (v.mpeCh > 0 && eng.mpe && eng.mpe.on && typeof AVM !== "undefined" && AVM) st += AVM.pitchSemis(eng.mpe, v.mpeCh);
+    st += v.tuneOff;                                    /* T wave: per-note microtuning (semis) - constant per voice; glide/ramp never sweep it (by design) */
     if (v.modPitch !== 0) st += v.modPitch * 12;                  /* P3: pitch ±12 st */
     let f = 440 * Math.pow(2, st / 12);
     if (f > eng.fLim) f = eng.fLim;                      /* safety: keeps increments < 0.5 */
@@ -662,7 +680,7 @@ const AVDSP = (function () {
     v.mpeBendApplied = (v.mpeCh > 0 && eng.mpe) ? eng.mpe.chBend[v.mpeCh] : 0;
   }
 
-  function reinitVoice(eng, v, midi, gain, start) {
+  function reinitVoice(eng, v, midi, gain, start, opts) {
     v.state = 1;
     v.kindId = routeKind(eng, midi);
     v.noteMidi = midi;
@@ -675,6 +693,25 @@ const AVDSP = (function () {
     v.glideInc = v.gliding ? (midi - start) / (eng.glide * eng.sr) : 0;
     v.pitchGen = -1;
     v.ktrkOct = (midi - 60) / 12;
+    /* T wave: per-note microtuning. opts.tune (valid int 0..7) wins over eng.tuneActive; the
+       offset is read from the bank's OWN table copy (bank[slot][midi & 127] or 0) and stays
+       CONSTANT for the whole voice (glide/ramp never sweep it - by design). opts.acc is 0|1,
+       else the -1 sentinel. `last` records the tuning this note-on read (rule: every note-on). */
+    let tSlot = Math.floor(Number(eng.tuneActive));
+    if (!isFinite(tSlot) || tSlot < 0 || tSlot > 7) tSlot = 0;
+    if (opts && typeof opts === "object") {
+      const tt = Number(opts.tune);
+      if (isFinite(tt) && tt >= 0 && tt <= 7 && Math.floor(tt) === tt) tSlot = tt | 0;
+    }
+    const ttab = eng.tuneBank ? eng.tuneBank[tSlot] : null;
+    v.tuneOff = ttab ? (ttab[midi & 127] || 0) : 0;
+    v.acc = -1;
+    if (opts && typeof opts === "object") {
+      const aa = Number(opts.acc);
+      if (aa === 0 || aa === 1) v.acc = aa;
+    }
+    eng.tuneLast.midi = midi; eng.tuneLast.slot = tSlot; eng.tuneLast.off = v.tuneOff;
+    eng.tuneLastOn = 1;
     /* unison: counts + detune factors cached for this note; seeded-random phases */
     v.uni1 = eng.osc1Uni; v.uni2 = eng.osc2Uni;
     v.uni1Gain = 1 / Math.sqrt(v.uni1);
@@ -735,7 +772,7 @@ const AVDSP = (function () {
   }
 
   /* ---- notes ---- */
-  function noteOn(eng, midi, gain, ch) {
+  function noteOn(eng, midi, gain, ch, opts) {
     const m = Number(midi);
     if (!isFinite(m)) return false;
     let mc = Math.floor(Number(ch));
@@ -743,6 +780,15 @@ const AVDSP = (function () {
     let g = Number(gain);
     if (!isFinite(g)) g = 1;
     g = cl(g, 0.05, 1);
+    /* T wave: normalize the optional per-note opts ONCE (message time; -1 = absent/invalid).
+       reinitVoice re-validates and owns the actual bank read. */
+    let tOpt = -1, aOpt = -1;
+    if (opts && typeof opts === "object") {
+      const tt = Number(opts.tune);
+      if (isFinite(tt) && tt >= 0 && tt <= 7 && Math.floor(tt) === tt) tOpt = tt | 0;
+      const aa = Number(opts.acc);
+      if (aa === 0 || aa === 1) aOpt = aa;
+    }
     let start = m;
     if (eng.glide > 0 && eng.lastMidi >= 0) start = eng.lastMidi;
     const vs = eng.voices;
@@ -774,21 +820,25 @@ const AVDSP = (function () {
     eng.lastMidi = m;
     if (v.state === 0) {
       v.mpeCh = mc;
-      reinitVoice(eng, v, m, g, start);
+      v.noteOpts.tune = tOpt; v.noteOpts.acc = aOpt;
+      reinitVoice(eng, v, m, g, start, v.noteOpts);
       return true;
     }
     if (v.state === 3 && v.pendingMidi === m && v.pendingCh === mc) {
       v.pendingVel = g;
       v.pendingStart = start;
+      v.noteOpts.tune = tOpt; v.noteOpts.acc = aOpt;   /* the newest note-on's own opts */
       return true;
     }
-    /* steal: >=1 ms fade-out, then retrigger (contract 4.3) */
+    /* steal: >=1 ms fade-out, then retrigger (contract 4.3). The pending reinit carries the
+       note's OWN opts (v.noteOpts) - a retrigger never inherits the previous note's tuning. */
     v.state = 3;
     v.pending = 1;
     v.pendingMidi = m;
     v.pendingVel = g;
     v.pendingStart = start;
     v.pendingCh = mc;
+    v.noteOpts.tune = tOpt; v.noteOpts.acc = aOpt;
     v.fadeStep = -1 / eng.fadeOutSamples;
     if (!same) eng.stolen++;
     return true;
@@ -1101,7 +1151,7 @@ const AVDSP = (function () {
       if (v.state === 3) {
         v.fade += v.fadeStep;
         if (v.fade <= 0) {
-          if (v.pending === 1) { v.mpeCh = v.pendingCh; reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart); }
+          if (v.pending === 1) { v.mpeCh = v.pendingCh; reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart, v.noteOpts); }
           else {
             v.fade = 0; v.state = 2;
             if (typeof m0.releaseVoice === "function") { try { m0.releaseVoice(eng, v); } catch (e) { } }
@@ -1167,7 +1217,7 @@ const AVDSP = (function () {
     if (v.state === 3) {
       v.fade += v.fadeStep;
       if (v.fade <= 0) {
-        if (v.pending === 1) { v.mpeCh = v.pendingCh; reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart); }
+        if (v.pending === 1) { v.mpeCh = v.pendingCh; reinitVoice(eng, v, v.pendingMidi, v.pendingVel, v.pendingStart, v.noteOpts); }
         else { v.fade = 0; v.state = 2; v.e1Stage = 4; v.e2Stage = 4; v.fadeStep = 1 / eng.fadeInSamples; }
       }
     } else if (v.fade < 1) {
@@ -1336,6 +1386,39 @@ const AVDSP = (function () {
     return true;
   }
 
+  /* ---- T wave: the 8-slot tuning bank (worklet message + SPN facade call the SAME paths)
+     {t:'tuning'}: offs must be an array-like of length 128 (else refuse false); values clamp
+     to +-2 semitones, non-finite -> 0; the engine keeps its OWN Float32Array copy. null offs
+     clears the slot (table + name).
+     {t:'tuneactive'}: int 0..7 becomes the fallback slot for notes with no valid opts.tune. */
+  function setTuning(eng, slot, offs, name) {
+    const i = Math.floor(Number(slot));
+    if (!isFinite(i) || i < 0 || i > 7) return false;
+    if (offs === null || offs === undefined) {
+      eng.tuneBank[i] = null;
+      eng.tuneNames[i] = null;
+      return true;
+    }
+    if (typeof offs.length !== "number" || offs.length !== 128) return false;
+    const copy = new Float32Array(128);
+    for (let k = 0; k < 128; k++) {
+      let x = Number(offs[k]);
+      if (!isFinite(x)) x = 0;
+      else if (x > 2) x = 2;
+      else if (x < -2) x = -2;
+      copy[k] = x;
+    }
+    eng.tuneBank[i] = copy;
+    eng.tuneNames[i] = (typeof name === "string" && name) ? name.slice(0, 48) : null;
+    return true;
+  }
+  function setTuneActive(eng, slot) {
+    const i = Math.floor(Number(slot));
+    if (!isFinite(i) || i < 0 || i > 7) return false;
+    eng.tuneActive = i;
+    return true;
+  }
+
   /* ---- stats / bench ---- */
   function stats(eng) {
     let active = 0, released = 0;
@@ -1351,6 +1434,13 @@ const AVDSP = (function () {
       uwt: (eng.userWt || []).filter(Boolean).length,
       fxChain: eng.fx.map(function (e0) { return e0.mod && e0.mod.PREFIX; }).join(" "),
       mpe: (eng.mpe ? { on: eng.mpe.on, bend: eng.mpe.bendRange, active: (typeof AVM !== "undefined" && AVM && typeof AVM.activeCount === "function") ? AVM.activeCount(eng.mpe) : 0 } : null),
+      /* T wave: additive block - active bank slot, per-slot names, the last note-on's tuning
+         read (null before the first note-on; rule: every note-on updates it) */
+      tune: {
+        active: eng.tuneActive,
+        slots: eng.tuneNames.slice(0),
+        last: eng.tuneLastOn ? { midi: eng.tuneLast.midi, slot: eng.tuneLast.slot, off: eng.tuneLast.off } : null,
+      },
     };
   }
 
@@ -1422,5 +1512,8 @@ const AVDSP = (function () {
     /* M2 additive surface (verify/_m2_wave.md sections 2.1/4.3) */
     mpeSet: mpeSet,
     mpeExpr: mpeExpr,
+    /* T wave additive surface (verify/_t_wave.md section 4) */
+    setTuning: setTuning,
+    setTuneActive: setTuneActive,
   };
 })();

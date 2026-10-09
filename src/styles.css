@@ -1976,3 +1976,35 @@ header.av-head.av-console .avc-center { display: flex; align-items: center; gap:
 .av-files-recent-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .av-files-recent-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
 .av-files-recent-acts { display: inline-flex; gap: 4px; margin-left: auto; }
+
+/* T wave: the TUNE card (src/av_tune_ui.js runtime class list). */
+.av-tune-head { display: flex; align-items: baseline; gap: 10px; }
+.av-tune-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+.av-tune-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+.av-tune-status-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-tune-status, .av-tune-msg { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 0; overflow-wrap: anywhere; }
+.av-tune-err { color: #ff8f6e; }
+.av-tune-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-tune-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-tune-select { background: var(--raised); border: 1px solid var(--hair); border-radius: 4px; color: var(--text); font-family: var(--mono); font-size: 10.5px; padding: 3px 6px; }
+.av-tune-select:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
+.av-tune-range { flex: 1; min-width: 120px; }
+.av-tune-morph-val { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 40px; text-align: right; }
+.av-tune-tracks { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-tune-track { display: inline-flex; align-items: center; gap: 5px; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 7px; }
+.av-tune-lib { display: flex; flex-direction: column; gap: 4px; }
+.av-tune-lib-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: space-between; background: var(--raised); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 8px; }
+.av-tune-lib-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.av-tune-lib-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-tune-lib-acts { display: inline-flex; gap: 4px; margin-left: auto; }
+.av-tune-lib-empty { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin: 2px 0; }
+.av-tune-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.av-tune-btn { background: var(--raised); border: 1px solid var(--hair); border-radius: 4px; color: var(--text-2); font-family: var(--mono); font-size: 10px; letter-spacing: .06em; padding: 3px 8px; cursor: pointer; }
+.av-tune-btn:hover { color: var(--teal); border-color: var(--teal-deep); }
+.av-tune-btn[aria-pressed="true"] { color: var(--teal); border-color: var(--teal-deep); box-shadow: inset 0 0 7px rgba(46,216,201,.18); }
+.av-tune-file { display: none; }
+.av-tune-mtsrow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.av-tune-mtslbl { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 10px; color: var(--text-2); cursor: pointer; }
+.av-tune-mtsbox { accent-color: var(--teal); }
+.av-tune-mts-status { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-tune-note { font-family: var(--mono); font-size: 9.5px; color: var(--text-3); margin: 2px 0; }

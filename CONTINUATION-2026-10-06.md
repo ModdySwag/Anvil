@@ -2660,3 +2660,30 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   body.html card -> app_core boot + 1.12.0 -> _t_integrate.py counted-assert pass).
 - Nothing else in flight. Owner-pass (his machine, after the final deploy): real launchQueue
   arrival (install PWA -> open a file WITH it) + real FSA dir-picker click.
+
+## Resume addendum 74 - 2026-10-09 (T wave INTEGRATED: TUNING STUDIO + PERFECT TUNINGS -- triage green, pins swept; battery next)
+
+- Authors landed + verified on disk: `av_tune.js` (1139; harness 89/89) - `av_tune_ui.js`
+  (1818; 133/133 + 33/33 real-core) - engine B (`av_dsp/av_voiceproc/av_engine/av_note/
+  av_seq_sched`; 84/84; byte-identity proven) - B2 kinds (`av_acid/av_string/av_drum/av_grain/
+  av_sampler/av_fm` read `v.tuneOff`; 100/100 + B1 re-run 84/84) - `verify/cdp_tune.mjs`
+  (18/18 after the E1fix SPEC pass; T9 drives the SCHED) - pack `perfect-tunings` (32 presets;
+  sha `5aebfae2`; verifier PASS).
+- INTEGRATION: build.py js_parts + body card + app_core 1.12.0 "T1 - tuning studio" + av_import
+  scl/kbm policy rows + styles block + `av_chrome` AV_CHROME_CARDS (`av-tune`) -- ONE
+  counted-assert pass (`_t_integrate.py`, dry-run first). Frozen **`c6bc282c`** (4,506,520 B;
+  sw `8a19a9ef`; WORKLET CHANGED by design: tuning bank + opts path + kind readers).
+- GATES: smoke **79** (R9 head gap fixed via AV_CHROME_CARDS) - cdp_tune **18/18** (pin set;
+  tune pinned => 23 pinned files for future sweeps) - cockpit 21 - hub 53 - platform 52 -
+  import 24 - avpack selftests PASS - `verify_avpacks` FULL **PASS + `--index`** (10 packs /
+  **580 presets** -- the day-one target) + schema `ENGINE_KINDS` synced (+fm; pre-existing
+  parity drift fixed). Pins swept 354b74dd -> c6bc282c (22 files).
+- Recorded decisions/limits: MTS = the STANDARD SysEx forms (MTS-ESP/Oddsound interop =
+  recorded option, needs its spec); genuinely unpitched drum parts skip tuning honestly; pack
+  spans 11 scales (12edo = identity, intentionally skipped). Cents shapes documented (13
+  just-major with closing 2/1; 12 12edo). Per-part tuning stays page-side (avTuneTrackSlot at
+  the sched emission; no pattern-schema change). TUNE card carries LS `av-tune-pref` v1.
+- NEXT (this session): battery 26 suites + bench (detached) -> stress x2 -> deploy (index.html +
+  sw.js + packs/perfect-tunings.avbank.json + packs/index.json) -> live verify + live tune
+  probe -> close addendum 75 -> E wave (ENGINE EDGE: accent flag + P.2 minBLEP) -> K wave
+  (FINISH KNICKS: fill/undo/template/WAV-meta + the FINISH close).

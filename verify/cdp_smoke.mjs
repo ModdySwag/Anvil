@@ -1538,6 +1538,27 @@ async function main() {
     !!og && og.zones === 8 && Array.isArray(og.bad) && og.bad.length === 0,
     JSON.stringify(og.bad ? og.bad.slice(0, 6) : og));
 
+  /* 6cw. T wave: the TUNE card (microtuning studio) - mounted with its host populated
+     (the smoke check count moves 78 -> 79 with this leg) */
+  const tuneR = await ev(`(() => {
+    try { if (typeof window.__avZoneAuto === 'function') window.__avZoneAuto('#av-tune'); } catch (e) { }
+    const card = document.getElementById('av-tune');
+    const host = document.getElementById('av-tune-host');
+    return { card: !!card, host: !!host,
+             children: host ? host.children.length : 0,
+             scale: !!document.getElementById('av-tune-scale'),
+             root: !!document.getElementById('av-tune-root'),
+             morph: !!document.getElementById('av-tune-morph'),
+             mts: !!document.getElementById('av-tune-mts'),
+             status: !!document.getElementById('av-tune-status'),
+             tuneUi: typeof window.__avTuneUi, coreApi: typeof window.__avTune };
+  })()`);
+  const tune = tuneR.value || {};
+  check('T wave TUNE: card mounted + host populated (scale \u00b7 root \u00b7 morph \u00b7 MTS \u00b7 status)',
+    tune.card === true && tune.host === true && tune.children > 0
+    && tune.scale === true && tune.root === true && tune.morph === true && tune.mts === true && tune.status === true,
+    JSON.stringify(tune));
+
   /* 6cd. R12: the proof gate — a PLAIN load (no ?avtest=1) renders ZERO proof text */
   const plainUrl = 'file:///' + path.resolve(page).replace(/\\/g, '/');
   await send('Page.navigate', { url: plainUrl });

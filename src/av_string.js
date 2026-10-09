@@ -169,7 +169,7 @@ const AVSTRING = (function () {
     const k = v.k;
     const kx = ensureKext(eng);
     const sr = eng.sr;
-    const st = (v.pitch - 69) + eng.bend + eng.tune + k.stDet * 0.01;
+    const st = (v.pitch - 69) + eng.bend + eng.tune + k.stDet * 0.01 + (v.tuneOff || 0);   /* T wave: per-note microtuning joins the pluck solve (semis; absent field = 0) */
     let fT = 440 * Math.pow(2, st / 12);
     const fMin = sr / (k.stCap - 8);
     const fMax = 0.18 * sr;

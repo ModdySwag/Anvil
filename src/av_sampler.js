@@ -269,7 +269,7 @@ const AVSAMPLER = (function () {
 
   /* ---- read increment solve (note-on + glide/pitchGen ticks only) ---- */
   function computeInc(eng, v, k, kx) {
-    let st = (v.pitch - k.svRoot) + kx.svTune + eng.bend + eng.tune;
+    let st = (v.pitch - k.svRoot) + kx.svTune + eng.bend + eng.tune + (v.tuneOff || 0);   /* T wave: per-note microtuning (semis; absent field = 0) */
     if (!isFinite(st)) st = 0; else if (st > 120) st = 120; else if (st < -120) st = -120;
     let inc = (k.svRate > 0 ? k.svRate / eng.sr : 1) * Math.pow(2, st / 12);
     if (!(inc > 0)) inc = 1e-9; else if (inc > 1e9) inc = 1e9;

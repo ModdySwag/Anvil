@@ -28,7 +28,11 @@
    P3 additive surface (verify/_p3_wave.md sections 4-6): the facade gains the wire senders
    avEngineMod({macros F64(8), slots F64(128)}) · avEngineSample(id, name, rate, ch1, ch2) ·
    avEngineZones(F64(40|144)) — each routes to the live tier (worklet port message / SPN direct
-   AVDSP call) and returns false honestly when the engine is not ready. */
+   AVDSP call) and returns false honestly when the engine is not ready.
+   T wave additive surface (verify/_t_wave.md section 4): avEngineTune(slot, offs(128)|null,
+   name) - avEngineTuneActive(slot) - same transport law; the note path carries the optional
+   per-note opts (ch 0: the note message gains tune/acc; SPN: AVDSP.noteOn gets opts); the
+   worklet/SPN handle noteOn wears the sink's 5-arg shape (midi, gain, ch, opts). */
 "use strict";
 
 const AV_ENGINE_HELLO_MS = 2500;    /* hello → ready handshake budget (§6) */
@@ -277,11 +281,20 @@ function avEngineChannel(ch) {
   return (isFinite(c) && c > 0 && c <= 15) ? c : 0;
 }
 
-function avEngineNoteArgs(midi, gain) {
+function avEngineNoteArgs(midi, gain, opts) {
   const m = Math.round(Number(midi));
   if (!isFinite(m) || m < 0 || m > 127) return null;
   const g0 = Number(gain);
-  return { midi: m, gain: isFinite(g0) ? Math.max(0.05, Math.min(1, g0)) : 0.9 };
+  const a = { midi: m, gain: isFinite(g0) ? Math.max(0.05, Math.min(1, g0)) : 0.9 };
+  /* T wave: the optional per-note fields ride the message / the SPN call only when the caller
+     provides valid values; absent keeps the exact pre-T object shape ({midi, gain}). */
+  if (opts && typeof opts === "object") {
+    const tt = Number(opts.tune);
+    if (isFinite(tt) && tt >= 0 && tt <= 7 && Math.floor(tt) === tt) a.tune = tt | 0;
+    const aa = Number(opts.acc);
+    if (aa === 0 || aa === 1) a.acc = aa;
+  }
+  return a;
 }
 
 function avEngineMakeWorkletHandle(ctx, node, transport, readyMsg, maxVoices, log) {
@@ -306,12 +319,19 @@ function avEngineMakeWorkletHandle(ctx, node, transport, readyMsg, maxVoices, lo
     version: (readyMsg && readyMsg.version) || null,
     sha: avEngineWorkletSha(),
     log: log,
-    noteOn: (midi, gain, ch) => {
+    noteOn: (midi, gain, ch, opts) => {
       avEngineTryResume(ctx);                              /* §6: also try resume inside noteOn */
-      const a = avEngineNoteArgs(midi, gain);
+      const a = avEngineNoteArgs(midi, gain, opts);
       if (!a) return false;
       const c = avEngineChannel(ch);
-      try { node.port.postMessage(c > 0 ? { t: "mpenote", on: true, midi: a.midi, gain: a.gain, ch: c } : { t: "note", on: true, midi: a.midi, gain: a.gain }); return true; }
+      const msg = (c > 0)
+        ? { t: "mpenote", on: true, midi: a.midi, gain: a.gain, ch: c }
+        : { t: "note", on: true, midi: a.midi, gain: a.gain };
+      /* T wave: the note message (ch 0 only) carries tune/acc when the caller provided them
+         (the mpenote shape is unchanged; the SPN tier gets opts directly instead) */
+      if (c === 0 && a.tune !== undefined) msg.tune = a.tune;
+      if (c === 0 && a.acc !== undefined) msg.acc = a.acc;
+      try { node.port.postMessage(msg); return true; }
       catch (e) { return false; }
     },
     noteOff: (midi, ch) => {
@@ -388,11 +408,14 @@ function avEngineMakeSpnHandle(ctx, maxVoices, log) {
     version: (typeof AVDSP.version === "string") ? AVDSP.version : null,
     sha: null,
     log: log,
-    noteOn: (midi, gain, ch) => {
+    noteOn: (midi, gain, ch, opts) => {
       avEngineTryResume(ctx);
-      const a = avEngineNoteArgs(midi, gain);
+      const a = avEngineNoteArgs(midi, gain, opts);
       if (!a) return false;
-      try { return AVDSP.noteOn(eng, a.midi, a.gain, avEngineChannel(ch)) === true; } catch (e) { return false; }
+      /* T wave: the SPN tier applies tuning identically - normalized opts go straight to
+         AVDSP.noteOn (undefined keeps the pre-T call shape when neither field was provided) */
+      const o = (a.tune !== undefined || a.acc !== undefined) ? { tune: a.tune, acc: a.acc } : undefined;
+      try { return AVDSP.noteOn(eng, a.midi, a.gain, avEngineChannel(ch), o) === true; } catch (e) { return false; }
     },
     noteOff: (midi, ch) => {
       const a = avEngineNoteArgs(midi, 0.9);
@@ -537,7 +560,7 @@ function avEngineRegisterSink(h) {
   try {
     if (typeof avNoteSetSink !== "function") return;
     avNoteSetSink({
-      on: (midi, gain, name, ch) => h.noteOn(midi, gain, ch),
+      on: (midi, gain, name, ch, opts) => h.noteOn(midi, gain, ch, opts),   /* T wave: opts ride through */
       off: (midi, name, ch) => { h.noteOff(midi, ch); },
       allOff: () => { h.allOff(); },
     });
@@ -720,6 +743,35 @@ function avEngineConv(id, name, rate, ch1, ch2) {
     catch (e) { return false; }
   }
   try { return AVDSP.setConvImpulse(h.engine, id, name, rate, ch1, ch2) === true; } catch (e) { return false; }
+}
+
+/* T wave: the 8-slot tuning bank senders (verify/_t_wave.md section 4). Same transport law as
+   avEngineSample: worklet = port message; SPN = the SAME AVDSP setters directly. false = not
+   accepted (no engine yet, bad slot, or the tier threw). offs = Float32Array(128) of semitone
+   offsets vs 12-EDO, or null to clear the slot; name caps at 48 chars. */
+function avEngineTune(slot, offs, name) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  const i = Math.floor(Number(slot));
+  if (!isFinite(i) || i < 0 || i > 7) return false;
+  if (offs !== null && offs !== undefined && typeof offs.length !== "number") return false;
+  const nm = (typeof name === "string") ? name.slice(0, 48) : null;
+  if (h.kind === "worklet") {
+    try { h.node.port.postMessage({ t: "tuning", slot: i, offs: (offs === undefined ? null : offs), name: nm }); return true; }
+    catch (e) { return false; }
+  }
+  try { return AVDSP.setTuning(h.engine, i, (offs === undefined ? null : offs), nm) === true; } catch (e) { return false; }
+}
+function avEngineTuneActive(slot) {
+  const h = avEngineLive;
+  if (!h || h.ready !== true) return false;
+  const i = Math.floor(Number(slot));
+  if (!isFinite(i) || i < 0 || i > 7) return false;
+  if (h.kind === "worklet") {
+    try { h.node.port.postMessage({ t: "tuneactive", slot: i }); return true; }
+    catch (e) { return false; }
+  }
+  try { return AVDSP.setTuneActive(h.engine, i) === true; } catch (e) { return false; }
 }
 
 /* M2: MPE zone + per-channel expression senders (verify/_m2_wave.md sections 2.1/4.5) */

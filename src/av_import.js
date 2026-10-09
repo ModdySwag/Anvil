@@ -177,6 +177,8 @@ const AV_IMPORT_POLICY = {
   mid:     { kind: "pattern", result: "imported", reason: "", persist: true },
   rex2:    { kind: "sample",  result: "imported", reason: "", persist: true },
   wt:      { kind: "refused", result: "deferred", reason: "wavetable \u2014 import it in the Wavetable editor (WT IMPORT)", persist: false },
+  scl:     { kind: "refused", result: "deferred", reason: "tuning scale - import it in the TUNE card (TUNE > LIBRARY)", persist: false },
+  kbm:     { kind: "refused", result: "deferred", reason: "keyboard mapping - import it in the TUNE card (TUNE > LIBRARY)", persist: false },
   adg:     { kind: "refs",    result: "imported", reason: "", persist: true },
   als:     { kind: "refs",    result: "imported", reason: "", persist: true },
   exs:     { kind: "kit",     result: "imported", reason: "", persist: true },
@@ -351,6 +353,7 @@ function avImportSniff(u8OrArrayBuffer, ext) {
     }
     if (has2 && u8[0] === 0x1F && u8[1] === 0x8B) return { format: "gzip", note: "" };
     if (e === "wt") return { format: "wt", note: "extension match" };
+    if (e === "scl" || e === "kbm") return { format: e, note: "extension match" };
     if (e === "exs" || e === "nki" || e === "nbkt" || e === "sxt" || e === "kong" || e === "mxgrp") {
       return { format: e, note: "extension match" };
     }

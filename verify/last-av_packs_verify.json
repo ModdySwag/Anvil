@@ -2,7 +2,7 @@
  "v": 1,
  "tool": "verify_avpacks.mjs",
  "mode": "index",
- "at": "2026-10-07T06:10:04.533Z",
+ "at": "2026-10-09T07:27:50.875Z",
  "node": "v26.7.0",
  "ok": true,
  "errors": [],
@@ -132,6 +132,29 @@
      "hybrid"
     ],
     "engine": "string"
+   },
+   {
+    "id": "perfect-tunings",
+    "name": "PERFECT TUNINGS",
+    "file": "perfect-tunings.avbank.json",
+    "sha256": "5aebfae2f915ffa0b49ea244b689e892074d66d513e54b096b84e588f9632466",
+    "bytes": 47315,
+    "presetCount": 32,
+    "tags": [
+     "microtuning",
+     "tuning",
+     "just-intonation",
+     "temperament",
+     "bells",
+     "drones",
+     "plucks",
+     "keys",
+     "pads",
+     "edo",
+     "harmonic",
+     "gamelan"
+    ],
+    "engine": "mixed"
    },
    {
     "id": "starter-100",

@@ -249,6 +249,9 @@ const AVDRUM = (function () {
     if (kit < 0) return;                    /* non-finite note: silent voice, instantly done */
 
     const tf = Math.pow(2, kext.vtune[kit] / 12);   /* tune: every frequency in the voice */
+    /* T wave: the note's microtuning offset joins the kit tune for the TUNED OSCILLATORS only
+       (tone A/B, cluster members). The noise components are genuinely unpitched - they stay on tf. */
+    const tft = Math.pow(2, (kext.vtune[kit] + (v.tuneOff || 0)) / 12);
     const dec = kext.vdecay[kit];
     const lvl = kext.vlevel[kit];
 
@@ -273,14 +276,14 @@ const AVDRUM = (function () {
 
     /* ---- the kit recipes (PF pfSXDrumBuild lineage; own clean-room per-sample code) ---- */
     if (kit === 0) {                                       /* kick: 155->44 Hz sweep + hp click */
-      toneA(k, 155 * tf, 44 * tf, Math.max(0.012, dec * 0.12), dec, ATT_TONE, 1.00 * lvl, sr);
+      toneA(k, 155 * tft, 44 * tft, Math.max(0.012, dec * 0.12), dec, ATT_TONE, 1.00 * lvl, sr);
       noiseN(k, eng, 2, 1500 * tf, 0.9, Math.max(0.02, dec * 0.08), ATT_NOISE, 0.22 * lvl, sr);
     } else if (kit === 1) {                                /* snare: two body sines + bp noise */
-      toneA(k, 185 * tf, 185 * tf, 0, dec * 0.55, ATT_TONE, 0.55 * lvl, sr);
-      toneB(k, 331 * tf, 331 * tf, 0, dec * 0.50, ATT_TONE, 0.38 * lvl, sr);
+      toneA(k, 185 * tft, 185 * tft, 0, dec * 0.55, ATT_TONE, 0.55 * lvl, sr);
+      toneB(k, 331 * tft, 331 * tft, 0, dec * 0.50, ATT_TONE, 0.38 * lvl, sr);
       noiseN(k, eng, 1, 1900 * tf, 1.4, dec, ATT_NOISE, 0.95 * lvl, sr);
     } else if (kit === 2) {                                /* rim: 1750->1600 click + hp snap */
-      toneA(k, 1750 * tf, 1600 * tf, 0.004, dec, ATT_CLICK, 0.65 * lvl, sr);
+      toneA(k, 1750 * tft, 1600 * tft, 0.004, dec, ATT_CLICK, 0.65 * lvl, sr);
       noiseN(k, eng, 2, 3200 * tf, 0.9, dec * 0.6, ATT_NOISE, 0.50 * lvl, sr);
     } else if (kit === 3) {                                /* clap: 4-burst bp noise */
       noiseN(k, eng, 1, 1200 * tf, 0.83, dec, ATT_NOISE, 1.00 * lvl, sr);
@@ -294,17 +297,17 @@ const AVDRUM = (function () {
       noiseN(k, eng, 2, 7000 * tf, 0.9, dec, ATT_NOISE, 0.65 * lvl, sr);
     } else if (kit === 6 || kit === 7 || kit === 8) {      /* toms: sine sweep + bp thump */
       const j = kit - 6;
-      const f0 = [140, 190, 260][j] * tf;
-      const f1 = [90, 120, 160][j] * tf;
+      const f0 = [140, 190, 260][j] * tft;
+      const f1 = [90, 120, 160][j] * tft;
       const nf = [300, 380, 470][j] * tf;
       toneA(k, f0, f1, Math.max(0.008, dec * 0.10), dec, ATT_TONE, 0.90 * lvl, sr);
       noiseN(k, eng, 1, nf, 1.43, dec * 0.18, ATT_NOISE, 0.30 * lvl, sr);
     } else if (kit === 9) {                                /* crash: inharmonic cluster + hp air */
-      clusterA(k, 1800, dec * 0.9, ATT_CYM, 0.32 * lvl, sr, invSr, tf);
+      clusterA(k, 1800, dec * 0.9, ATT_CYM, 0.32 * lvl, sr, invSr, tft);
       noiseN(k, eng, 2, 3200 * tf, 0.9, dec, ATT_NOISE, 0.65 * lvl, sr);
     } else {                                               /* ride: cluster + 5.2k ping + stick */
-      clusterA(k, 1400, dec * 0.95, ATT_CYM, 0.32 * lvl, sr, invSr, tf);
-      toneB(k, 5200 * tf, 5200 * tf, 0, dec * 0.05, ATT_CLICK, 0.26 * lvl, sr);
+      clusterA(k, 1400, dec * 0.95, ATT_CYM, 0.32 * lvl, sr, invSr, tft);
+      toneB(k, 5200 * tft, 5200 * tft, 0, dec * 0.05, ATT_CLICK, 0.26 * lvl, sr);
       noiseN(k, eng, 2, 4500 * tf, 0.9, dec * 0.22, ATT_NOISE, 0.35 * lvl, sr);
     }
 

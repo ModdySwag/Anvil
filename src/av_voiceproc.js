@@ -2,9 +2,10 @@
    This text is concatenated after av_dsp.js by build.py: one module, one processor, one
    registration. No page/global-scope reach-ins; timing runs through a guarded clock so the
    same source also loads in plain-scope rigs. Message protocol (both directions) is pinned:
-   in  {t:'param', path, v} | {t:'note', on, midi, gain} | {t:'allOff'} |
+   in  {t:'param', path, v} | {t:'note', on, midi, gain, tune?, acc?} | {t:'allOff'} |
        {t:'bench', cmd:'reset'|'read', id} | {t:'stats', id} | {t:'hello', id} |
        {t:'sample', id, name, rate, ch1, ch2?} | {t:'zones', zones} | {t:'mod', macros, slots} |
+       {t:'tuning', slot, offs, name} | {t:'tuneactive', slot} |
        {t:'mpe', on, bend} | {t:'mpenote', on, midi, gain, ch} | {t:'mpeexpr', ch, dim, v}
    out {t:'ready', sr, maxVoices, os, version} | {t:'bench', id, data} | {t:'stats', id, data} */
 "use strict";
@@ -18,6 +19,19 @@
    marginal-cost ramp (verify/cdp_bench.mjs); the live ring stays per-quantum. */
 const NOW = (typeof performance !== 'undefined' && typeof performance.now === 'function') ? () => performance.now() : () => Date.now();
 
+/* T wave: build the optional per-note opts for the note/mpenote branches. undefined when the
+   message carries neither field (absent = pre-T behaviour exactly; AVDSP then falls back to its
+   own defaults). Message-time allocation only - never called from process(). */
+function avProcNoteOpts(m) {
+  const hasT = m.tune !== undefined && m.tune !== null;
+  const hasA = m.acc !== undefined && m.acc !== null;
+  if (!hasT && !hasA) return undefined;
+  const o = {};
+  if (hasT) o.tune = m.tune;
+  if (hasA) o.acc = m.acc;
+  return o;
+}
+
 class AVVoiceProcessor extends AudioWorkletProcessor {
   constructor(options) {
     super();
@@ -30,7 +44,7 @@ class AVVoiceProcessor extends AudioWorkletProcessor {
       const eng = this.engine;
       if (m.t === 'param') { AVDSP.setParam(eng, m.path, m.v); return; }
       if (m.t === 'note') {
-        if (m.on) AVDSP.noteOn(eng, m.midi, m.gain);
+        if (m.on) AVDSP.noteOn(eng, m.midi, m.gain, 0, avProcNoteOpts(m));
         else AVDSP.noteOff(eng, m.midi);
         return;
       }
@@ -41,10 +55,13 @@ class AVVoiceProcessor extends AudioWorkletProcessor {
       if (m.t === 'mod') { AVDSP.setMod(eng, m.macros, m.slots); return; }
       if (m.t === 'wtab') { AVDSP.setUserWt(eng, m.slot, m.name, m.frames); return; }
       if (m.t === 'conv') { AVDSP.setConvImpulse(eng, m.id, m.name, m.rate, m.ch1, m.ch2); return; }
+      /* T wave: the 8-slot tuning bank + the active slot (avEngineTune/avEngineTuneActive) */
+      if (m.t === 'tuning') { AVDSP.setTuning(eng, m.slot, m.offs, m.name); return; }
+      if (m.t === 'tuneactive') { AVDSP.setTuneActive(eng, m.slot); return; }
       /* M2: MPE zone + member notes + per-channel expression */
       if (m.t === 'mpe') { AVDSP.mpeSet(eng, m.on, m.bend); return; }
       if (m.t === 'mpenote') {
-        if (m.on) AVDSP.noteOn(eng, m.midi, m.gain, m.ch);
+        if (m.on) AVDSP.noteOn(eng, m.midi, m.gain, m.ch, avProcNoteOpts(m));
         else AVDSP.noteOff(eng, m.midi, m.ch);
         return;
       }

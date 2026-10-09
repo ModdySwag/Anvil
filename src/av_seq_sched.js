@@ -1,8 +1,8 @@
 /* av_seq_sched.js — Anvil P4 sequencer timing layer (verify/_p4_wave.md §3.2, owner B).
    The pure event planner + the live transport (audio clock) + the note-bus bridge + slide/legato
    emission + the p-lock dispatch hook. Loads in plain node: every global reach (window,
-   avEngineEnsure, avState, avNoteDown/Up, avPlock*, avSeqAcid*) is `typeof`-guarded inside a
-   function; nothing touches a DOM at load.
+   avEngineEnsure, avState, avNoteDown/Up, avPlock*, avSeqAcid*, avTuneTrackSlot) is
+   `typeof`-guarded inside a function; nothing touches a DOM at load.
 
    THE PURE PLANNER — avSeqPlan(snap, fromStep, toStep, originT, rngState) -> {events, rngNext}
      Analytic times, no I/O. Per track (4, polymetric):
@@ -45,6 +45,10 @@
      (avPlockApplyAt(step, tSec), guarded): step = monotonic step mod the pattern cycle length
      (max track len), tSec = the boundary's analytic audio time; avPlockTransportStart/Stop
      bracket play/stop and the snapshot's plocks array is pushed via avPlockLoad when present.
+     Track tuning (T wave): the 'on' emission asks the page-side TUNE card for the track's bank
+     slot via a guarded avTuneTrackSlot(ev.track) sibling call; a valid int 0..7 rides
+     avNoteDown as its optional opts ({ tune: slot }, 4th param). No card / no assignment keeps
+     the original 2-arg call exactly (guarded, never cached across emissions, never throws).
      Trace: bounded ring window.__avSeqTrace (256 × {t,type,note,step,track}, t = planned time);
      window.__avSeq debug handle (playing, patternName, lastEvents, + setFill/traceCount). */
 
@@ -494,7 +498,20 @@ function avSeqSchedSlideAbort() {
 function avSeqSchedEmit(ev) {
   try {
     if (ev.type === "on") {
-      const took = (typeof avNoteDown === "function") ? (avNoteDown(ev.note, ev.vel) === true) : false;
+      /* T wave: per-track microtuning (page-side). avTuneTrackSlot is the TUNE card's guarded
+         sibling hook - a valid int 0..7 becomes the optional opts { tune }; anything else keeps
+         the original 2-arg avNoteDown call exactly (re-evaluated every emission, never cached,
+         never throws). The track index rides the event itself (ev.track, set by the planner). */
+      let to = null;
+      try {
+        if (typeof avTuneTrackSlot === "function") {
+          const ts = avTuneTrackSlot(ev.track);
+          if (typeof ts === "number" && isFinite(ts) && Math.floor(ts) === ts && ts >= 0 && ts <= 7) to = { tune: ts | 0 };
+        }
+      } catch (e2) { to = null; }
+      const took = (typeof avNoteDown === "function")
+        ? (to ? (avNoteDown(ev.note, ev.vel, undefined, to) === true) : (avNoteDown(ev.note, ev.vel) === true))
+        : false;
       if (took) {
         avSeqSchedHeldMap().set(ev.note, { step: ev.step, track: ev.track });
         avSeqSchedTracePush(ev.t, "on", ev.note, ev.step, ev.track);

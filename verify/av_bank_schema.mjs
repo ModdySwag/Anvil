@@ -68,7 +68,7 @@ const ENUMS = Object.freeze({
   SUB_WAVES: ["square", "sine"],
   FILTER_MODES: ["lp12", "lp24", "bp", "hp", "ladder24"],
   LFO_SHAPES: ["sine", "tri", "square", "sh"],
-  ENGINE_KINDS: ["va", "acid", "string", "drum", "grain", "sampler"],
+  ENGINE_KINDS: ["va", "acid", "string", "drum", "grain", "sampler", "fm"],
   EXCITERS: ["noise", "saw", "pulse"],
   VERB_MODES: ["plate", "fdn", "freeverb"],
   DELAY_DIVS: ["free", "1/1", "1/2", "1/4", "1/8", "1/8d", "1/16"],

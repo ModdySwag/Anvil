@@ -331,7 +331,7 @@ const AVACID = (function () {
         k.sliding = 0;
       }
     }
-    const st = (k.pitchCur - 69) + eng.bend + eng.tune;
+    const st = (k.pitchCur - 69) + eng.bend + eng.tune + (v.tuneOff || 0);   /* T wave: per-note microtuning (semis; constant per voice; absent field = 0) */
     let f = 440 * Math.pow(2, st / 12);
     const fLim = eng.fs2 * 0.45;
     if (f > fLim) f = fLim;

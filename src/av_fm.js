@@ -247,7 +247,9 @@ const AVFM = (function () {
     let bend = eng.bend, tune = eng.tune;
     if (!isFinite(bend)) bend = 0;
     if (!isFinite(tune)) tune = 0;
-    let st = (k.fmPitch - 69) + bend + tune;
+    let tuneOff = v.tuneOff;                  /* T wave: per-note microtuning (semis; constant per voice) */
+    if (!isFinite(tuneOff)) tuneOff = 0;
+    let st = (k.fmPitch - 69) + bend + tune + tuneOff;
     if (!isFinite(st)) st = 0;
     if (st < -132) st = -132; else if (st > 132) st = 132;
     let f0 = 440 * Math.pow(2, st / 12);

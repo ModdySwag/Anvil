@@ -298,7 +298,7 @@ const AVGRAIN = (function () {
 
     /* rate: key-tracked (root C4=60) + grain.pitch + master bend/tune, latched per grain */
     const rateB = (typeof slot.rate === "number" && slot.rate > 0) ? slot.rate : eng.sr;
-    let st = (v.pitch - 60) + kx.grPitch + eng.bend + eng.tune;
+    let st = (v.pitch - 60) + kx.grPitch + eng.bend + eng.tune + (v.tuneOff || 0);   /* T wave: per-note microtuning (semis; latched like the rest of the rate; absent field = 0) */
     if (!isFinite(st)) st = 0; else if (st > 120) st = 120; else if (st < -120) st = -120;
     let inc = (rateB / eng.sr) * Math.pow(2, st / 12);
     if (!(inc > 0)) inc = 1e-9; else if (inc > 1e9) inc = 1e9;
