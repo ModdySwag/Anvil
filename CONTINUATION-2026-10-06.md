@@ -2575,6 +2575,39 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   battery_r20.sh), deploy + live + close.
 - Carried: unchanged. Nothing else in flight.
 
+## Resume addendum 72 - 2026-10-09 (R20 CLOSED: WORK PERSISTENCE SHIPPED + LIVE -- the R17-R20 roadmap is COMPLETE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `354b74dd` (4,358,179 B; sw `56b8af71`) at
+  moddys.net/anvil (scoped --verify = 0 not in sync; live sha = frozen on both files). Gates:
+  smoke **78** - cdp_sessions **60** - cdp_s4 **42** - cdp_hub **53** - cockpit **21** - platform
+  **52** - import **24** - avpack selftest + file PASS - bench exit=0 (realtime light 64 / fat 48;
+  offline knee 96/128 monotone - loaded-window class) - leak **11/11 LIVE** - pins 22 swept -
+  ANVIL **1.11.0** "R20 - work persistence".
+- BATTERY: 24/25 suites exit=0 first-lap; cdp_seq hit the RECORDED knife-edge (swing 26.2 ms vs the
+  ±6 window under lap load) -> solo quiet re-run **31/31** (swing 20.4 ms); both runs recorded,
+  check never loosened.
+- SHIPPED: autosave default-on-after-first-save (virgin store = off; explicit choice persists, LS
+  `av-sessions-autosave`) + visibilitychange flush + fingerprint coverage (takes meta / chains /
+  song / scenes / prefs); sessions browser v2 (`#av-sessions-search` + `#av-sessions-sort`
+  newest|name|updated; tags max 8x24 with inline editor, persisted; row preview lines); projects:
+  Save reuses the stored FSA handle (permission regrant; picker only when denied/absent), Save As
+  always picks, RECENT projects (IDB `av-projects-store`, cap 8, OPEN/FORGET rows in the card) +
+  the `av-proj-changed` refresh event (menu/palette/facade saves all refresh); Song Bundle
+  (avpack kind `song`: project.anvl + slot-referenced library items + user wt tables + user
+  modules + installed-pack refs; 96 MiB/600 caps, named refusals) + the song LOAD route
+  (avProjOpenText) + the song import row set; backup coverage extended to av-samples-store +
+  av-wt-store + av-code-store + 26 user prefs LS keys (restore applies-what-it-can, named skips);
+  pack-route PRE-COMMIT sha dup marking (the R18a law now covers bundle items).
+- Authors A-E2 (deleg_10546b44) + 3 fix tasks (deleg_1b7f6d52: the recents refresh event / pack
+  dup flagging / the s4 seam re-inject contract-shape) + parent rigfixes (3r-b object-vs-number
+  predicate; 3r-d distinctive-master witness; 3r seam restore).
+- LIVE EVIDENCE (read + recorded): renders/r20-live-sessions.png + renders/r20-live-files.png;
+  R20-PROBE ok (search/sort values/autosave line/recent block/`__avPack.song`/overlay/1.11.0).
+- THE docs/12 R17-R20 ROADMAP IS COMPLETE (hub -> library intelligence -> user packs -> work
+  persistence, all shipped + live). Carried (owed, non-blocking): P.2 minBLEP pass - P4
+  follow-ups - PERFECT TUNINGS - README status refresh (offered) - owner-pass items (real
+  launchQueue arrival + real FSA dir-picker click) - boot templates (deferred per R20 contract).
+
 ## OWNER ASK (2026-10-09) - IMPORT & LIBRARY redesign = wave R21 (STAGED; next after the R19 close)
 
 - Ask (recorded intent): full access to ALL loaded files but STREAMLINED navigation - the hub

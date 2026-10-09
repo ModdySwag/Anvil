@@ -1,6 +1,6 @@
-index.html sha256 (before): 1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa
+index.html sha256 (before): 354b74ddfaaf42788378a5089ceb7b3590c0c65036187ad743082c2d1ffc55fe
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791503159921
+cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791506686374
  ok   boot: data-av-ready flips
  ok   store card mounted: #av-store-host + card root + search + 3 filter chips + both list containers + mode chip
  ok   exports: avStoreUiInit + avStoreUiSync + avStoreUiClasses + window.__avStoreUi (p5.0, ≥40 classes) · host wired  -> {"init":true,"sync":true,"classes":true,"refresh":true,"handle":true,"version":"p5.0","classesN":50,"wired":true}
@@ -27,10 +27,10 @@ cdp port 9520 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-storeui-1791503
  ok   chip restores to the real backend after the stub is removed  -> {"backend":"idb","text":"storage: IndexedDB"}
  ok   sha-mismatch refusal: INSTALL on rig-badsha refused (click) — no badge, count unchanged (1), no client record, honest copy  -> {"badge":false,"cnt":"1","status":"checksum mismatch — the pack was refused (not stored)","client":false}
  ok   zero page errors
- ok   screenshot: renders/p5-store-suite.png (the store card, scale 2)  -> 103061 bytes · clip 1010×424 @2x
-index.html sha256 (after): 1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa
- ok   freeze: index.html sha256 = pinned  -> pinned 1bbfe2cfe063…
+ ok   screenshot: renders/p5-store-suite.png (the store card, scale 2)  -> 103229 bytes · clip 1010×424 @2x
+index.html sha256 (after): 354b74ddfaaf42788378a5089ceb7b3590c0c65036187ad743082c2d1ffc55fe
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 354b74ddfaaf42788378a5089ceb7b3590c0c65036187ad743082c2d1ffc55fe
+ ok   freeze: index.html sha256 = pinned  -> pinned 354b74ddfaaf…
 
 28 passed, 0 failed
 STORE PASSED

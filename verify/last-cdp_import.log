@@ -1,7 +1,7 @@
-index.html sha256 (before): 1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa
+index.html sha256 (before): 354b74ddfaaf42788378a5089ceb7b3590c0c65036187ad743082c2d1ffc55fe
 fixtures staged in C:\Users\Moddy\anvil\cache\r15b\rig-fixtures
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791502913165
+cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791506407035
  ok   boot + card: SAMPLE PACKS mounted in the store zone (drop, pickers, slot, facade)  -> {"card":true,"zone":"store","drop":true,"file":true,"dir":true,"slot":true,"facade":"function","ver":"r15b.0"}
  ok   IMPORT SELFTEST proof: parses on the avtest load (inited, sniff = wav)  -> {"version":"r15b.0","inited":true,"libCount":0,"sniff":"wav","hub":true}
  ok   absent host: avImportUiInit() returns false without throwing; re-attaching restores the card  -> {"r1":false,"threw1":false,"r2":true,"threw2":false,"back":true}
@@ -26,6 +26,6 @@ cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-17915029
  ok   R16 rig: f64 wav imports + LOAD lands (clean-room route, 200 frames @ 8000)  -> {"rows":1,"load":{"frames":200,"rate":8000}}
  ok   R16 rig: the real .rx2 loads from the library -> 10 slices -> detect via rex2 -> kit -> apply  -> {"n":10,"via":"rex2","count":10,"kitOk":true,"kitN":10,"aplOk":true}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned (before === after)  -> pinned 1bbfe2cfe063… · before 1bbfe2cfe063… · after 1bbfe2cfe063…
+ ok   freeze: index.html sha256 = pinned (before === after)  -> pinned 354b74ddfaaf… · before 354b74ddfaaf… · after 354b74ddfaaf…
 
 24 passed, 0 failed
