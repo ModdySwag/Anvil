@@ -34,7 +34,7 @@ design (tuning bank + note opts) — the worklet sha WILL move; record both shas
 | # | files | work |
 |---|-------|------|
 | A | `src/av_tune.js` | NEW core: parsers + builtins + builder + morph + MTS parse + store + export + harness |
-| B | `src/av_dsp.js` + `src/av_voiceproc.js` + `src/av_engine.js` + `src/av_note.js` | tuning bank, messages, note opts path, pitch application, stats |
+| B | `src/av_dsp.js` + `src/av_voiceproc.js` + `src/av_engine.js` + `src/av_note.js` + `src/av_seq_sched.js` | tuning bank, messages, note opts path, pitch application, stats; the sched's per-track slot lookup at note emission |
 | C | `src/av_tune_ui.js` + `src/av_midi.js` | NEW card UI + MTS SysEx receive |
 | D | `src/av_import.js` | `.scl`/`.kbm` policy + sniffer rows only (2+2 rows) |
 | E1 | `verify/cdp_tune.mjs` + `verify/cdp_smoke.mjs` | NEW rig + smoke TUNE card check |
@@ -135,6 +135,11 @@ fields — sink `on(midi, gain, name, ch, opts)`; for ch === 0 the note message 
 av_note.js: `avNoteDown(name, vel, ch, opts)` — NEW 4th param, passed through to
 `avNoteSink.on(midi, g, name, mpeCh, opts)`; `window.__avNotes` unchanged. Backwards
 compatible: no opts = today.
+av_seq_sched.js: at the DOWN emission site (~L497 `avNoteDown(ev.note, ev.vel)` — confirm the
+exact line and that the track index is in scope; thread it minimally if not), pass
+`opts = { tune: slot }` ONLY when a guarded `avTuneTrackSlot(trackIndex)` (page function from
+av_tune_ui.js) returns an integer 0..7; otherwise keep the original 2-arg call shape exactly.
+Never throw; never cache across calls. Update the header doc comment.
 Careful: AVDSP.noteOn is called from av_voiceproc (both note + mpenote branches) and the SPN
 path — all call sites updated in this one file set; grep `noteOn(` and prove each.
 Node harness (`cache/scratch/t/B/`): load the worklet concat sources in node (av_dsp +
@@ -159,7 +164,11 @@ note names, default c4), `#av-tune-morph` (range 0..100, default 100), `#av-tune
 `#av-tune-mts` (checkbox), `#av-tune-status` (status line), `#av-tune-mts-status`.
 Behaviour pins:
 - Selection state `{ sel (id), root, morph, tracks: [4 x id|""], mts }` persisted in LS
-  `av-tune-pref` (v:1) and re-applied on init.
+  `av-tune-pref` (v:1) and re-applied on init. Export `avTuneTrackSlot(trackIndex) -> int | undefined`:
+  the LIVE lookup the SCHED uses at note emission — returns the ENGINE SLOT (0..6) for that
+  track's assignment, or undefined when the card is uninitialised / the track is on GLOBAL.
+  It must be side-effect free and never throw. (Per-part mapping is page state: NO pattern
+  schema change — the sched calls it guarded per note; a pattern does not carry tunings.)
 - Slot management (page-side): slot 7 reserved for MTS live; card assigns slots 0..6 to
   distinct selected tunings (global selection first; then track assignments; LRU reuse by
   selection order). Upload = avTuneBuildTable -> avTuneMorph -> avEngineTune(slot, offs,
