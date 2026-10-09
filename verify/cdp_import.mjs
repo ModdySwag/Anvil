@@ -29,6 +29,15 @@
 //       resets (fresh page), and no SELFTEST text leaks on the plain load.
 //   R16: zip expansion + f64-WAV + REX2 slice->chop legs.
 //   R15d: legacy-NKI kit e2e · the real CWM container NKI · synthetic SXT + NBKT legs.
+//   K (contract verify/_k_wave.md section 4 + 5): the WAV-metadata leg -- a minimal 16-bit
+//      PCM WAV carrying a clean iXML TEMPO/ROOT/KEY chunk is built IN-PAGE (never staged on
+//      disk), imported through the funnel (window.__avImport.importFiles -> avImportUiImport
+//      -> the core pipeline), the folded item meta asserted (meta.tempo 128 · meta.root A ·
+//      meta.key "A minor" · meta.metaSource iXML) and the item inspector (#av-import-detail
+//      via the row INFO action, which renders the meta JSON) read. Read-only end to end:
+//      nothing rewrites the fixture.
+//      CHECKS: 26 on a green pass (24 pre-K + 2 WAV-meta; the R15c/R15d/R16 "input missing"
+//      rows are the failure branches of their legs).
 //   14. zero page errors · screenshot renders/r15b-import-suite.png · freeze sha before === after.
 //
 // Launch skeleton follows cdp_store.mjs / cdp_smoke.mjs VERBATIM (candidates Chrome/Edge/Brave,
@@ -52,7 +61,7 @@ const shaArg = argv.indexOf('--sha');
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
-const EXPECT_SHA = 'dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca';
+const EXPECT_SHA = 'e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -592,6 +601,67 @@ async function main() {
         rch.n === 10 && rch.via === 'rex2' && rch.count === 10 && rch.kitOk === true && rch.kitN === 10 && rch.aplOk === true,
         JSON.stringify(rch));
     }
+  }
+
+  /* ---- K leg: WAV metadata (iXML TEMPO/ROOT) -- contract verify/_k_wave.md section 4 + 5.
+     A minimal 16-bit PCM WAV with an iXML chunk is built IN-PAGE (never staged on disk),
+     imported through the funnel (window.__avImport.importFiles -> avImportUiImport -> the
+     core pipeline), and the folded item meta (meta.tempo/root/key/metaSource) plus the item
+     inspector (#av-import-detail, which renders the meta JSON) are asserted. Read-only end
+     to end: nothing rewrites the fixture. */
+  console.log('-- K. WAV metadata (iXML) --');
+  {
+    const val = (r) => (r && typeof r === 'object' && 'value' in r) ? r.value : r;
+    const metaBuild = val(await ev(`(() => {
+      try {
+        const sr = 8000, frames = 400;
+        const ixml = '<BWFXML><IXML_VERSION>1.2</IXML_VERSION><TEMPO>128.000000</TEMPO><ROOT>A</ROOT><KEY>A minor</KEY></BWFXML>';
+        const enc = new TextEncoder();
+        const ixmlBytes = enc.encode(ixml);
+        const pad = ixmlBytes.length & 1;
+        const dataBytes = frames * 2;
+        const total = 12 + (8 + 16) + (8 + ixmlBytes.length + pad) + (8 + dataBytes);
+        const buf = new ArrayBuffer(total);
+        const dv = new DataView(buf);
+        const u8 = new Uint8Array(buf);
+        let o = 0;
+        const tag = function (s) { for (let i = 0; i < 4; i++) u8[o++] = s.charCodeAt(i) & 255; };
+        const u32 = function (v) { dv.setUint32(o, v >>> 0, true); o += 4; };
+        const u16 = function (v) { dv.setUint16(o, v & 65535, true); o += 2; };
+        tag('RIFF'); u32(total - 8); tag('WAVE');
+        tag('fmt '); u32(16); u16(1); u16(1); u32(sr); u32(sr * 2); u16(2); u16(16);
+        tag('iXML'); u32(ixmlBytes.length);
+        for (let i = 0; i < ixmlBytes.length; i++) u8[o++] = ixmlBytes[i];
+        if (pad) u8[o++] = 0;
+        tag('data'); u32(dataBytes);
+        for (let i = 0; i < frames; i++) { dv.setInt16(o, Math.round(Math.sin(2 * Math.PI * 440 * i / sr) * 0.5 * 32767), true); o += 2; }
+        window.__kimeta = { file: new File([buf], 'rig-ixml.wav', { type: 'audio/wav' }) };
+        return { ok: true, bytes: total, ixmlLen: ixmlBytes.length, frames: frames, sr: sr };
+      } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
+    })()`)) || {};
+    const metaRun = val(await ev(`(async () => {
+      try {
+        if (!window.__kimeta || !window.__kimeta.file) return { ok: false, why: 'no fixture' };
+        const r = await window.__avImport.importFiles([window.__kimeta.file]);
+        return { ok: !!(r && r.ok === true), counts: (r && r.counts) || null, why: (r && (r.error || r.why)) || null };
+      } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
+    })()`)) || {};
+    const rowsK = await waitFor(`document.querySelectorAll('#av-import-report [data-av-import-row]').length === 1 ? 1 : 0`, 15000);
+    const metaRec = await waitFor(`(async () => { if (typeof avLibList !== 'function') return null; const l = await avLibList(); const it = (l.items || []).find(i => i.name === 'rig-ixml.wav'); return (it && it.meta) ? { tempo: it.meta.tempo, root: it.meta.root, key: it.meta.key, metaSource: (Array.isArray(it.meta.metaSource) ? it.meta.metaSource.join(',') : String(it.meta.metaSource || '')), id: it.id } : null; })()`, 15000);
+    const msOk = !!metaRec && String(metaRec.metaSource || '').toLowerCase().indexOf('ixml') >= 0;
+    check('K meta import: the in-page iXML WAV imports through the funnel (1 report row | imported 1) and the library record folds meta.tempo 128 | meta.root A | meta.key "A minor" | metaSource iXML',
+      metaBuild.ok === true && rowsK === 1 && metaRun.ok === true && !!metaRun.counts && metaRun.counts.total === 1 && metaRun.counts.imported === 1 && !!metaRec && Number(metaRec.tempo) === 128 && metaRec.root === 'A' && metaRec.key === 'A minor' && msOk === true,
+      JSON.stringify({ build: metaBuild, run: metaRun, rows: rowsK, rec: metaRec }).slice(0, 500));
+    /* the inspector: the row's INFO action renders #av-import-detail with the meta JSON */
+    const kId = metaRec ? metaRec.id : await rowId('rig-ixml.wav');
+    await openLib();
+    const infoClick = kId ? await clickSel(`[data-av-import-lib="${kId}"] [data-av-import-act="info"]`, 500) : false;
+    const detailTxt = await waitFor(`(() => { const el = document.getElementById('av-import-detail'); if (!el || el.hidden === true) return null; const t = String(el.textContent || ''); return t.length > 10 ? t.slice(0, 4000) : null; })()`, 8000);
+    check('K meta inspector: the item inspector (#av-import-detail via the row INFO action) shows the folded meta (tempo 128 | root A | key "A minor")',
+      infoClick === true && typeof detailTxt === 'string' && /"tempo"\s*:\s*"?128"?/.test(detailTxt) && /"root"\s*:\s*"A"/.test(detailTxt) && /"key"\s*:\s*"A minor"/.test(detailTxt),
+      JSON.stringify({ clicked: infoClick, id: kId, detail: typeof detailTxt === 'string' ? detailTxt.slice(0, 220) : detailTxt }).slice(0, 480));
+    /* hygiene: drop the page-side stash (the inspector may stay open; the run ends here) */
+    await ev(`(() => { try { window.__kimeta = null; } catch (e) { } return true; })()`);
   }
 
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

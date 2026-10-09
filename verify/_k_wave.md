@@ -12,8 +12,8 @@ Owner scope: the last owed items after E closes. This wave's close = the FINISH 
    imported WAVs, fixture-evidenced, read-only (never rewrite files).
 4. Multi-tab contention (docs/12 §7.5): probe + a lightweight honest note.
 
-State at open: E wave CLOSED first (its frozen sha fills in at open; worklet unchanged by
-this wave — page-side only, unless a listed file proves otherwise).
+State at open: E wave CLOSED at `dc240f75` (sw `b1c70d33`) -- start from that tree. This wave
+is page-side; the worklet must stay untouched (unless a listed file proves otherwise).
 
 ## 1. Deliverables + file ownership
 

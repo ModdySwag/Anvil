@@ -109,6 +109,16 @@
      byte-for-byte. Any internal failure -- support absent, a throw, a garbage return --
      falls back to the generic expansion with a ctx note. Never throws outward.
 
+   K wave KL (verify/_k_wave.md section 4; additive fold):
+   - The wav-family read folds the avWavMeta(buf) tags into item meta: additive keys
+     meta.tempo (number; the reader already sanity-ranges it to 20..300), meta.root (number
+     0..127 or a note-name string), meta.key (string) and meta.metaSource (string[] - the
+     metadata readers that contributed: iXML / acid / id3 / bext). The fold runs ONLY for
+     format "wav" (rex2 tempo stays its own probe; aiff/mid keep their readers), ONLY when
+     avWavMeta exists (typeof-guarded PER CALL), never overwrites an existing meta key, and
+     never touches the policy table, result/reason, counts or the receipt laws. Refusals
+     and deferrals are untouched.
+
    Craft laws: "use strict", classic script (no modules/imports), node-loadable (no DOM at load,
    no top-level side effects), one namespace (avImport prefixes + AV_IMPORT_ consts), never
    throw. Every cross-module call is typeof-guarded PER CALL (av_aiff/av_rex/av_lib/av_exs/
@@ -559,6 +569,32 @@ function avImportWavMeta(bytes) {
   return {};
 }
 
+/* K wave KL: fold the avWavMeta detected tags into the wav item meta -- additive keys only
+   (tempo/root/key/metaSource), an existing key is never overwritten, typeof-guarded PER
+   CALL, never throws; the sample meta stands untouched when the reader is absent */
+function avImportWavMetaFold(m, bytes) {
+  try {
+    if (!m || typeof m !== "object") return m;
+    if (typeof avWavMeta !== "function") return m;
+    const r = avWavMeta(bytes);
+    if (!r || r.ok !== true) return m;
+    if (m.tempo === undefined && avImportIsNum(r.tempo) && r.tempo >= 20 && r.tempo <= 300) m.tempo = r.tempo;
+    if (m.root === undefined) {
+      if (avImportIsNum(r.root) && r.root >= 0 && r.root <= 127) m.root = Math.round(r.root);
+      else if (typeof r.root === "string" && r.root) m.root = avImportCapStr(r.root, 16);
+    }
+    if (m.key === undefined && typeof r.key === "string" && r.key) m.key = avImportCapStr(r.key, 64);
+    if (m.metaSource === undefined && Array.isArray(r.source) && r.source.length) {
+      const rows = [];
+      for (let i = 0; i < r.source.length && rows.length < 16; i++) {
+        if (typeof r.source[i] === "string" && r.source[i]) rows.push(avImportCapStr(r.source[i], 24));
+      }
+      if (rows.length) m.metaSource = rows;
+    }
+  } catch (e) { /* the sample meta stands */ }
+  return m;
+}
+
 function avImportAiffMeta(bytes) {
   try {
     if (avImportHasAiff()) {
@@ -610,7 +646,8 @@ function avImportRexMeta(pr) {
 
 function avImportMeta(format, bytes) {
   try {
-    if (format === "wav") return avImportWavMeta(bytes);
+    /* K wave KL: the wav read is the sample probe + the additive avWavMeta tag fold */
+    if (format === "wav") return avImportWavMetaFold(avImportWavMeta(bytes), bytes);
     if (format === "aiff") return avImportAiffMeta(bytes);
     if (format === "mid") return avImportMidMeta(bytes);
   } catch (e) { return {}; }

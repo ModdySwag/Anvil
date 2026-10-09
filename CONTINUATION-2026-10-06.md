@@ -2736,3 +2736,54 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   (chains/song/scenes capture + restore + push audit) / KS boot template + multitab note /
   KL avWavMeta (BWF/iXML/acid/ID3) + import fold / KR rig legs (cdp_seq, cdp_sessions,
   cdp_import); then the FINISH close (README + docs/12 section 7 statuses + owner-pass ask).
+
+## Resume addendum 77 - 2026-10-09 (K wave INTEGRATED + triaged green; battery in flight -- FINISH close next)
+
+- K authors landed (deleg_f9241a19): KI fill toggle (avSeqSchedSetFill/GetFill + #av-seq-fill-toggle;
+  undo "seq" capture v2 = {v:2, pattern, chains, song, scenes}) - KS boot template + multitab
+  beacon (av-boot-template LS; #av-sessions-boot/#av-sessions-new/#av-sessions-tabnote) - KL
+  avWavMeta (BWF/iXML/acid/ID3 clean-room reads; 118/0 harness; import fold meta.tempo/root/key)
+  - KR rig legs. Reports on disk in the transcripts.
+- INTEGRATION: app_core bumped **1.13.0 "K1 - finish knicks"**; rebuild **e99ea8e5** (sw per
+  build); pins 23 swept to e99ea8e5. Triage: smoke 79 - tune 18 - sessions PASS -
+  cdp_import 26 - cockpit 21 green; **cdp_seq 41/41** after TWO fixes: (1) LATENT APP BUG fixed
+  -- `avSeqUiChainAdd` passed objects/flat-array into `avSeqChainsLoad`, which norm-drops all
+  but per-track STRING arrays (chain items are strings; the +CHAIN append had silently no-opped
+  since P4) -> rebuilt to snapshot the per-track shape + push the name into chains[0]; (2) rig
+  capture/arm fixes (offP window, tolerant chain counter, scene-select seed when the paint lags,
+  T6-style retry patterns).
+- Battery chain `cache/finish/battery_k.sh` (26 suites + bench + alias + stress x2) RUNNING
+  detached; README status refreshed to the FINAL block; docs/12 section 7 statuses written
+  (7.1/7.4 owner-pass, 7.2/7.3/7.6 recorded-open, 7.5 shipped-note, 7.7 implemented).
+- NEXT: battery read -> deploy (index+sw via cache/finish/deploy_t.sh) -> leak probe -> addendum
+  final -> commit -> Mnemosyne + skill refresh -> OWNER-PASS ASK (launchQueue arrival + FSA
+  dir-picker click; real two-tab check).
+
+## Resume addendum 78 - 2026-10-09 (K wave + FINISH close: SHIPPED + LIVE -- owner pass owed)
+
+- BATTERY first-lap (frozen `e99ea8e5`, 4,563,691 B; sw `deefa055`; worklet `eda74827` untouched):
+  25/26 suites exit=0. `cdp_hub` 51/53 -- the two post-reload legs missed (card rows unpainted
+  after the plain reload; the data itself loaded fine). Verbatim rows: "FAIL reload: receipts
+  survive fresh ... -> null" + "FAIL reload: the library loads fresh ... -> {count:3, dom:0}".
+  SOLO re-runs on the SAME frozen bytes: **53/53 x2** (`verify/hub-k-solo1.log` /
+  `verify/hub-k-solo2.log`) = first-lap knife-edge class (the R20 `cdp_seq` precedent; both
+  recorded). The failing first-lap log was overwritten by the first re-run -- the fail lines
+  above are the preserved record.
+- bench exit=0: offline knee **128 monotone** (publishable metric clean); realtime light 64 /
+  fat 32; ratio 0.999 (console Active + agent session during the run -- load class; a quiet
+  re-run stays optional for the realtime cell only). alias exit=0: VA worst -58.18 dBc (gate
+  -45) / WT worst -91.21 dBc (gate -80); determinism bit-identical; pinned sha.
+- stress x2: asserts-not-met (load class; console Active both laps): raw deltas 36 / 25, drains
+  PASS, pageErrors 0, heap +0.2 / 0 MB, 27 cycles, maxHeld 64 -- LOWER raw than the E lap
+  (256/60).
+- DEPLOY via `cache/finish/deploy_t.sh` (pack + index.json unchanged): 2 uploaded ->
+  **0 file(s) not in sync**; live sha = frozen both files; live reads `1.13.0 "K1 - finish
+  knicks"`. LEAK: 11/11 file + **11/11 LIVE** (`cache/finish/leak_k.log` + `leak_k_live.log`).
+- FINISH program COMPLETE (T + E closed earlier today; K here): docs/12 section 7 statuses
+  (7.1/7.4 owner-pass; 7.2/7.3/7.6 recorded-open; 7.5 shipped-note; 7.7 implemented) + README
+  FINAL block stand as written (addendum 77).
+- OWNER PASS OWED (the final ask): (1) launchQueue arrival -- double-click an `.anvl` with the
+  PWA installed; (2) FSA dir-picker click -- LINK A FOLDER via the real picker; (3) real
+  two-tab check -- two live tabs, confirm the multi-tab note + durable-save beacon read honestly.
+- Nothing in flight. Resume phrase "continue anvil" picks up at the owner-pass results or any
+  new scope.

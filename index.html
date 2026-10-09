@@ -26923,6 +26923,16 @@ if (typeof window !== "undefined") {
      byte-for-byte. Any internal failure -- support absent, a throw, a garbage return --
      falls back to the generic expansion with a ctx note. Never throws outward.
 
+   K wave KL (verify/_k_wave.md section 4; additive fold):
+   - The wav-family read folds the avWavMeta(buf) tags into item meta: additive keys
+     meta.tempo (number; the reader already sanity-ranges it to 20..300), meta.root (number
+     0..127 or a note-name string), meta.key (string) and meta.metaSource (string[] - the
+     metadata readers that contributed: iXML / acid / id3 / bext). The fold runs ONLY for
+     format "wav" (rex2 tempo stays its own probe; aiff/mid keep their readers), ONLY when
+     avWavMeta exists (typeof-guarded PER CALL), never overwrites an existing meta key, and
+     never touches the policy table, result/reason, counts or the receipt laws. Refusals
+     and deferrals are untouched.
+
    Craft laws: "use strict", classic script (no modules/imports), node-loadable (no DOM at load,
    no top-level side effects), one namespace (avImport prefixes + AV_IMPORT_ consts), never
    throw. Every cross-module call is typeof-guarded PER CALL (av_aiff/av_rex/av_lib/av_exs/
@@ -27373,6 +27383,32 @@ function avImportWavMeta(bytes) {
   return {};
 }
 
+/* K wave KL: fold the avWavMeta detected tags into the wav item meta -- additive keys only
+   (tempo/root/key/metaSource), an existing key is never overwritten, typeof-guarded PER
+   CALL, never throws; the sample meta stands untouched when the reader is absent */
+function avImportWavMetaFold(m, bytes) {
+  try {
+    if (!m || typeof m !== "object") return m;
+    if (typeof avWavMeta !== "function") return m;
+    const r = avWavMeta(bytes);
+    if (!r || r.ok !== true) return m;
+    if (m.tempo === undefined && avImportIsNum(r.tempo) && r.tempo >= 20 && r.tempo <= 300) m.tempo = r.tempo;
+    if (m.root === undefined) {
+      if (avImportIsNum(r.root) && r.root >= 0 && r.root <= 127) m.root = Math.round(r.root);
+      else if (typeof r.root === "string" && r.root) m.root = avImportCapStr(r.root, 16);
+    }
+    if (m.key === undefined && typeof r.key === "string" && r.key) m.key = avImportCapStr(r.key, 64);
+    if (m.metaSource === undefined && Array.isArray(r.source) && r.source.length) {
+      const rows = [];
+      for (let i = 0; i < r.source.length && rows.length < 16; i++) {
+        if (typeof r.source[i] === "string" && r.source[i]) rows.push(avImportCapStr(r.source[i], 24));
+      }
+      if (rows.length) m.metaSource = rows;
+    }
+  } catch (e) { /* the sample meta stands */ }
+  return m;
+}
+
 function avImportAiffMeta(bytes) {
   try {
     if (avImportHasAiff()) {
@@ -27424,7 +27460,8 @@ function avImportRexMeta(pr) {
 
 function avImportMeta(format, bytes) {
   try {
-    if (format === "wav") return avImportWavMeta(bytes);
+    /* K wave KL: the wav read is the sample probe + the additive avWavMeta tag fold */
+    if (format === "wav") return avImportWavMetaFold(avImportWavMeta(bytes), bytes);
     if (format === "aiff") return avImportAiffMeta(bytes);
     if (format === "mid") return avImportMidMeta(bytes);
   } catch (e) { return {}; }
@@ -45829,7 +45866,7 @@ if (typeof window !== "undefined") {
      sorted (t, tie-rank, insertion); slide tie-offs carry a hidden __rank=1 so a transport
      merging plan windows keeps down(k+1) before off(k) across chunk boundaries.
 
-   THE LIVE TRANSPORT — avSeqInit/Play/Stop/Toggle/IsPlaying/SetPattern/Position/Rng/SchedNow
+   THE LIVE TRANSPORT — avSeqInit/Play/Stop/Toggle/IsPlaying/SetPattern/Position/Rng/SchedNow/SetFill/GetFill
      Lookahead 0.12 s / wake 25 ms (§2 pin), all times against the live handle's ctx.currentTime.
      Honest clock: every event time is analytic from the transport origin (no accumulation →
      no drift). A tempo/grid change re-anchors the origin at the current plan pointer, so the
@@ -45852,6 +45889,22 @@ if (typeof window !== "undefined") {
      avTuneTrackSlot(ev.track) sibling call contributes tune (a valid int 0..7) to the same
      object when present; no card / no assignment omits tune alone (acc still rides). Both are
      re-evaluated every emission, never cached across emissions, never throws.
+     FILL (K wave §2): the runtime fill flag (the cond "fill" gate, T3 §17) has three surfaces:
+       avSeqSchedSetFill(on) -> bool   sets the flag, rebuilds the pattern view NOW (so the very
+                                       next plan sees it), republishes the debug handle; never
+                                       throws; always returns true. The legacy avSeqSetFill /
+                                       __avSeq.setFill delegate here (same semantics).
+       avSeqSchedGetFill() -> 0|1      the current flag value.
+       pattern.fill at LOAD — THE AUDITED SEMANTICS (L723/L800): a snapshot's own `fill` field
+       only INITIALISES the runtime flag, and only through those two seams: avSeqInit() seeds it
+       once when the current pattern carries a truthy fill (L723), and EVERY avSeqSetPattern()
+       re-seeds it (L800: avSeqSchedFill = snap.fill ? 1 : 0). At PLAN time the runtime flag is
+       authoritative: avSeqSchedPatternView() overlays v.fill = the flag on the base snapshot,
+       so after the load the snapshot's fill field is never read again — the toggle owns the
+       flag. The core's sanitising avSeqLoad drops an incoming fill field (avSeqPatternNorm /
+       avSeqPatternCopy carry fixed keys — av_seq_core), so a core round-trip resets
+       pattern.fill to absent (= 0). The toggle is PERFORMANCE state: not part of the pattern,
+       no undo checkpoint, not persisted (K wave decision).
      Trace: bounded ring window.__avSeqTrace (256 × {t,type,note,step,track}, t = planned time);
      window.__avSeq debug handle (playing, patternName, lastEvents, + setFill/traceCount). */
 
@@ -46100,7 +46153,8 @@ let avSeqSchedCtx = null;                  /* the live handle's ctx */
 let avSeqSchedHandle = null;
 let avSeqSchedPattern = null;              /* snapshot as set (read-only use; never mutated) */
 let avSeqSchedPatternName = "PAT 1";
-let avSeqSchedFill = 0;                    /* runtime fill flag (T3 §17 modal boolean) */
+let avSeqSchedFill = 0;                    /* runtime fill flag (T3 §17; seeded by pattern.fill at
+                                              init/setPattern, owned by the toggle thereafter) */
 let avSeqSchedPlanFrom = 0;                /* next monotonic global step to plan */
 let avSeqSchedOriginT = 0;                 /* analytic base: T(g) = origin + g×stepDur */
 let avSeqSchedOriginSet = false;
@@ -46483,10 +46537,20 @@ function avSeqSchedPublish() {
   } catch (e) { /* debug publishing is best effort */ }
 }
 
-function avSeqSetFill(on) {
+function avSeqSchedSetFill(on) {
   avSeqSchedFill = on ? 1 : 0;
+  try { avSeqSchedPatternView(); } catch (e) { /* view rebuild is a nicety — the flag already moved */ }
   avSeqSchedPublish();
   return true;
+}
+
+function avSeqSchedGetFill() {
+  return avSeqSchedFill ? 1 : 0;
+}
+
+/* legacy alias — the __avSeq debug handle's setter; IDENTICAL semantics (K wave §2) */
+function avSeqSetFill(on) {
+  return avSeqSchedSetFill(on);
 }
 
 if (typeof window !== "undefined") {
@@ -48181,9 +48245,25 @@ if (typeof window !== "undefined") {
        the entry itself moved (mount-time / out-of-band mirror writes are never clobbered), each
        restored key rides the avApplyParam funnel so the engine hears it; the tap is suppressed
        while restoring (no self-recording), and no restore is ever captured as a new entry.
-     "seq" — avSeqSnap() / avSeqLoad() via typeof guards only (contract-pinned names; the module
-       must not be loaded yet at boot of this file). Full pattern deep-copy lives in the entry as
-       JSON — later mutation of the live pattern cannot leak into history.
+     "seq" — capture v2 (K wave §2): ONE JSON object per checkpoint carrying the whole seq family,
+       { v:2, pattern: avSeqSnap(), chains: avSeqChainsSnap(), song: avSeqSongSnap(),
+         scenes: avSeqScenesSnap() }. Every piece is reached through typeof guards only
+       (contract-pinned names; the modules must not be loaded yet at boot of this file); a
+       missing / refused piece is a null field, and when NO piece exists at all the capture
+       refuses (null) so a wholly offline seq family records nothing (v1 honesty kept). Deep
+       copies live in the entry as JSON — later mutation of live state cannot leak into history.
+       Restore applies every NON-NULL piece through its LOAD function in the order pattern ->
+       chains -> song -> scenes. ORDER SAFETY: the four loaders write DISJOINT core state
+       (avSeqPattern / avSeqChainsState / avSeqSongState / avSeqScenesState — av_seq_core.js
+       L373-376), so no order cross-contaminates; pattern-first mirrors av_session.js's pinned
+       seq apply order and lands the big piece before the small ones. Restore is PRE-FLIGHTED
+       and refuses BEFORE applying anything when a present piece's loader is absent — never a
+       partial restore (the entry stays on its stack). Legacy v1 entries (a bare pattern
+       snapshot, v != 2) keep the single avSeqLoad path. Deliberately loader-ONLY: the restore
+       does not call avSeqSetPattern/avSeqUiSync (session apply owns that sync pair; the undo
+       restore keeps v1's scope). A/B (avUndoAStore/avUndoARecall) rides this same
+       capture/restore. Entry bytes accounting is UNCHANGED (before+after+label lengths; the
+       same cap/evict laws) — the v2 strings are naturally longer.
      "plock" — avPlockSnap()/avPlockLoad() when the plock module provides them (typeof-guarded);
        otherwise the v1 fallback: the plock container carried inside the core snapshot
        ({plocks:[…]} merged into the CURRENT avSeqSnap() and loaded via avSeqLoad).
@@ -48304,12 +48384,31 @@ function avUndoSnapParams() {
   } catch (e) { return null; }
 }
 
+/* one guarded capture piece (absent hook / refusal / throw -> null; never throws) */
+function avUndoSeqPiece(kind) {
+  try {
+    let v = null;
+    if (kind === "pattern") { if (typeof avSeqSnap === "function") v = avSeqSnap(); }
+    else if (kind === "chains") { if (typeof avSeqChainsSnap === "function") v = avSeqChainsSnap(); }
+    else if (kind === "song") { if (typeof avSeqSongSnap === "function") v = avSeqSongSnap(); }
+    else if (kind === "scenes") { if (typeof avSeqScenesSnap === "function") v = avSeqScenesSnap(); }
+    if (v && typeof v === "object") return v;
+  } catch (e) { /* absent or refused -> null */ }
+  return null;
+}
+
+/* capture v2 (K wave §2): {v:2, pattern, chains, song, scenes}; null only when NO piece exists */
 function avUndoSnapSeq() {
   try {
-    if (typeof avSeqSnap !== "function") return null;
-    const s = avSeqSnap();
-    if (!s || typeof s !== "object") return null;
-    return JSON.stringify(s);
+    const out = {
+      v: 2,
+      pattern: avUndoSeqPiece("pattern"),
+      chains: avUndoSeqPiece("chains"),
+      song: avUndoSeqPiece("song"),
+      scenes: avUndoSeqPiece("scenes"),
+    };
+    if (out.pattern == null && out.chains == null && out.song == null && out.scenes == null) return null;
+    return JSON.stringify(out);
   } catch (e) { return null; }
 }
 
@@ -48370,10 +48469,43 @@ function avUndoApplyParams(targetStr, otherStr) {
   return true;
 }
 
+/* v2 restore (K wave §2): pre-flight EVERY non-null piece, then apply via the LOADERS in the
+   pinned order pattern -> chains -> song -> scenes (disjoint core state — see the header). A
+   present piece with no loader refuses BEFORE anything lands. */
+function avUndoApplySeqV2(o) {
+  const order = ["pattern", "chains", "song", "scenes"];
+  const fns = [
+    (typeof avSeqLoad === "function") ? avSeqLoad : null,
+    (typeof avSeqChainsLoad === "function") ? avSeqChainsLoad : null,
+    (typeof avSeqSongLoad === "function") ? avSeqSongLoad : null,
+    (typeof avSeqScenesLoad === "function") ? avSeqScenesLoad : null,
+  ];
+  let present = 0;
+  for (let i = 0; i < order.length; i++) {
+    const piece = o[order[i]];
+    if (piece == null) continue;                     /* absent at capture time — honestly skipped */
+    if (typeof piece !== "object") return false;     /* a primitive can never restore */
+    if (typeof fns[i] !== "function") return false;  /* pre-flight refusal: never a partial apply */
+    present++;
+  }
+  if (!present) return false;                        /* nothing restorable — a fake success would corrupt */
+  for (let i = 0; i < order.length; i++) {
+    const piece = o[order[i]];
+    if (piece == null) continue;
+    let ok = false;
+    try { ok = fns[i](piece) !== false; } catch (e) { ok = false; }
+    if (!ok) return false;                           /* a refused loader stops here; undo() keeps the entry */
+  }
+  return true;
+}
+
+/* "seq" restore: v2 structured entries (v === 2) go through the four loaders; legacy v1 entries
+   (a bare pattern snapshot, v != 2) keep the single avSeqLoad path (K wave §2). */
 function avUndoApplySeq(targetStr) {
   let o = null;
   try { o = JSON.parse(targetStr); } catch (e) { return false; }
-  if (!o || typeof o !== "object") return false;
+  if (!o || typeof o !== "object" || Array.isArray(o)) return false;
+  if (Number(o.v) === 2) return avUndoApplySeqV2(o);
   if (typeof avSeqLoad !== "function") return false;
   try { return avSeqLoad(o) !== false; } catch (e) { return false; }
 }
@@ -49205,12 +49337,28 @@ function avSeqAcidSlideState() {
      the song runner plays, else the existing immediate avSeqSceneRecall; the immediate branch
      pushes avUndoPush("seq","scene") AFTER (the playing branch's checkpoint is the runner's own
      ONE per applied recall — §2.6). Chain edits (+CHAIN/CLEAR) push checkpoints AFTER (label
-     "chain"). The local default pattern builder (`avSeqUiLocalDefault`) gains swing 0 per track
-     (model v2).
+     "chain"). Scene CAPTURE pushes AFTER too (label "scene" — K wave: undo v2 captures scenes,
+     so capture is now restorable). Song JSON import pushes AFTER (label "song"): the runner's
+     own checkpoint covers the pattern leg; the UI push covers a rows-only import and no-ops
+     when both landed (same state -> no entry). The local default pattern builder
+     (`avSeqUiLocalDefault`) gains swing 0 per track (model v2).
    - FOREIGN REACHES stay typeof-guarded: avSeqEuclid · avSeqMutate · avSeqHumanize · avSeqFill ·
      avSeqFillIds · avSeqSongSnap/Load · avSeqSchedCycleLen · avSongPlay/Stop/IsPlaying/Status/
      SceneRecall/ExportMidi/ExportJson/ImportJson (the sa-F sibling — authored in parallel; every
      call is typeof-guarded and this file never assumes it exists).
+
+   K ADDENDUM (wave verify/_k_wave.md §2 — child KI): the runtime FILL toggle.
+   - Control: `#av-seq-fill-toggle` (label "FILL"; class "on" + aria-pressed reflect
+     avSeqSchedGetFill() === 1). PLACEMENT NOTE — the pin reads "transport row next to the
+     existing FILL apply control"; the ONLY fill apply control (`#av-seq-fill-apply`) lives in
+     the GEN block's FILL row, so the toggle sits next to it THERE (the adjacency anchor wins;
+     the transport row carries PLAY/STOP/REC/pos/BPM only).
+   - Click -> avSeqSchedSetFill(!(avSeqSchedGetFill() === 1)) + an avSeqUiSync() repaint (both
+     sched exports typeof-guarded; without them the click refuses, never throws).
+   - PERFORMANCE state (pin): toggling pushes NO undo checkpoint (the named-fill apply keeps its
+     own "gen" push), the flag is NOT part of the pattern model (a snapshot's fill field only
+     seeds the runtime flag at load inside av_seq_sched — see its header), and it is NOT
+     persisted anywhere (no LS/IDB/session leg). It gates cond "fill" steps live.
 
    WHAT THIS CARD IS
    - transport (PLAY · STOP · REC) wired to av_seq_sched.js's pinned API through typeof guards;
@@ -49256,7 +49404,7 @@ function avSeqAcidSlideState() {
      M2: #av-seq-gen · #av-seq-gen-track · #av-seq-gen-status
      #av-seq-euclid-pulses · #av-seq-euclid-len · #av-seq-euclid-rot · #av-seq-euclid-apply
      #av-seq-mutate-amt · #av-seq-mutate-apply · #av-seq-humanize-amt · #av-seq-humanize-apply
-     #av-seq-fill-id · #av-seq-fill-apply
+     #av-seq-fill-id · #av-seq-fill-apply · #av-seq-fill-toggle
      #av-seq-song-rows · #av-seq-song-rows-add · #av-seq-song-play · #av-seq-song-pos
      #av-seq-song-quant · #av-seq-song-midi · #av-seq-song-json · #av-seq-song-open
      #av-seq-song-timeline · #av-seq-song-status
@@ -49432,7 +49580,7 @@ function avSeqUiCycleLen() {
   return AV_SEQ_UI_DEFAULT_LEN;
 }
 
-/* ---------- model edits (core snapshot path; undo push BEFORE the load when F is present) ---------- */
+/* ---------- model edits (core snapshot path; undo push AFTER the load — see avSeqUiModelEdit) ---------- */
 
 function avSeqUiCleanPatch(patch) {
   if (!patch || typeof patch !== "object") return null;
@@ -49812,6 +49960,20 @@ function avSeqUiGenFill() {
   return ok;
 }
 
+/* K wave §2: the runtime FILL flag toggle (PERFORMANCE state — no undo push, not part of the
+   pattern, not persisted; see the header). Guarded: without the sched exports the click
+   refuses (false), never throws. */
+function avSeqUiFillToggle() {
+  let ok = false;
+  try {
+    if (typeof avSeqSchedGetFill === "function" && typeof avSeqSchedSetFill === "function") {
+      ok = avSeqSchedSetFill(avSeqSchedGetFill() === 1 ? false : true) === true;
+    }
+  } catch (e) { ok = false; }
+  avSeqUiSync();          /* repaint: the pressed state follows avSeqSchedGetFill() */
+  return ok;
+}
+
 /* ---------- M2 · song rows + arranger (core snapshot path, undo AFTER — label "song") ---------- */
 
 /* pure: normalise a song snapshot ({v,rows} or rows[]) into render rows — guarded reads with the
@@ -50157,6 +50319,9 @@ function avSeqUiSongOpenFile(inputEl) {
     const done = function (txt) {
       let ok = false;
       try { if (typeof avSongImportJson === "function") ok = avSongImportJson(String(txt)) === true; } catch (e) { ok = false; }
+      /* K wave audit: the runner's own checkpoint covers the pattern leg; this push covers a
+         rows-only import and no-ops when both landed (same state -> no entry). */
+      if (ok) { try { if (typeof avUndoPush === "function") avUndoPush("seq", "song"); } catch (e) { /* F optional */ } }
       avSeqUiSongStatusSet(ok ? "song JSON imported" : "song JSON refused");
       if (ok) avSeqUiSync();
       reset();
@@ -50283,6 +50448,7 @@ function avSeqUiGenHTML() {
     '<span class="av-seq-gen-lbl">FILL</span>' +
     '<select class="av-select av-seq-tsel" id="av-seq-fill-id" aria-label="Named fill">' + fillOpts + '</select>' +
     '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-fill-apply" title="Apply the named fill (avSeqFill) — model edit, undo checkpoint after">FILL ▸</button>' +
+    '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-fill-toggle" aria-pressed="false" title="FILL — runtime fill flag (steps with condition FILL fire while on) · performance state: no undo, not part of the pattern, not saved">FILL</button>' +
     '</div>' +
     '<div class="av-seq-gen-row">' +
     '<span class="av-seq-gen-lbl">EUCLID</span>' +
@@ -50622,6 +50788,14 @@ function avSeqUiTransportRefresh(host, playing) {
       rec.setAttribute("aria-pressed", armed ? "true" : "false");
       rec.textContent = mode === "step" ? "REC·STEP" : mode === "live" ? "REC·LIVE" : "REC";
     }
+    /* K wave §2: the runtime FILL toggle's pressed state follows avSeqSchedGetFill() */
+    const ft = host.querySelector("#av-seq-fill-toggle");
+    if (ft) {
+      let fillOn = false;
+      try { if (typeof avSeqSchedGetFill === "function") fillOn = avSeqSchedGetFill() === 1; } catch (e) { fillOn = false; }
+      ft.classList.toggle("on", fillOn);
+      ft.setAttribute("aria-pressed", fillOn ? "true" : "false");
+    }
     return true;
   } catch (e) { return false; }
 }
@@ -50732,13 +50906,18 @@ function avSeqUiImport() {
 function avSeqUiChainAdd() {
   let ok = false;
   try {
-    const items = avSeqUiChainItems();
-    let name = "CHAIN " + (items.length + 1);
+    const itemsN = (function () { try { const s = (typeof avSeqChainsSnap === "function") ? avSeqChainsSnap() : null; if (!s || !Array.isArray(s.chains)) return 0; let n = 0; for (let i = 0; i < s.chains.length; i++) n += Array.isArray(s.chains[i]) ? s.chains[i].length : 0; return n; } catch (e) { return 0; } })();
+    let name = "CHAIN " + (itemsN + 1);
     try {
       const snap = avSeqUiPatternSnapshot();
-      if (snap && snap.name) name = "CHAIN " + (items.length + 1) + " · " + String(snap.name).slice(0, 24);
+      if (snap && snap.name) name = "CHAIN " + (itemsN + 1) + " · " + String(snap.name).slice(0, 24);
     } catch (e) { /* name nicety */ }
-    if (typeof avSeqChainsLoad === "function") ok = avSeqChainsLoad(items.concat([{ name: name }])) !== false;
+    if (typeof avSeqChainsLoad === "function") {
+      const cs = (typeof avSeqChainsSnap === "function") ? avSeqChainsSnap() : null;
+      const chains = (cs && Array.isArray(cs.chains)) ? cs.chains.map(function (c) { return Array.isArray(c) ? c.slice() : []; }) : [[], [], [], []];
+      chains[0].push(name);
+      ok = avSeqChainsLoad({ v: 1, chains: chains }) !== false;
+    }
   } catch (e) { ok = false; }
   if (ok) { try { if (typeof avUndoPush === "function") avUndoPush("seq", "chain"); } catch (e) { /* F optional */ } }
   avSeqUiSongRefresh(avSeqUiHost());
@@ -50765,6 +50944,8 @@ function avSeqUiSceneCaptureUI() {
     if (!name) name = "SCENE " + (avSeqUiSceneNames().length + 1);
     if (typeof avSeqSceneCapture === "function") ok = avSeqSceneCapture(name) !== false;
   } catch (e) { ok = false; }
+  /* K wave audit: scene capture now restores (undo v2 captures scenes) — checkpoint AFTER */
+  if (ok) { try { if (typeof avUndoPush === "function") avUndoPush("seq", "scene"); } catch (e) { /* F optional */ } }
   avSeqUiSongRefresh(host);
   return ok;
 }
@@ -50843,6 +51024,7 @@ function avSeqUiClick(e) {
     if (t.closest("#av-seq-mutate-apply")) { avSeqUiGenMutate(); return; }
     if (t.closest("#av-seq-humanize-apply")) { avSeqUiGenHumanize(); return; }
     if (t.closest("#av-seq-fill-apply")) { avSeqUiGenFill(); return; }
+    if (t.closest("#av-seq-fill-toggle")) { avSeqUiFillToggle(); return; }
     /* M2 — the arranger */
     if (t.closest("#av-seq-song-rows-add")) { avSeqUiSongRowAdd(); return; }
     if (t.closest("#av-seq-song-play")) { avSeqUiSongPlayToggle(); return; }
@@ -51035,10 +51217,13 @@ function avSeqUiSnap() {
     for (let t = 0; t < AV_SEQ_UI_TRACKS; t++) tracks.push({ len: avSeqUiTrackLen(pat, t), speed: avSeqUiTrackSpeed(pat, t), swing: avSeqUiTrackSwing(pat, t) });
     let songRows = 0;
     try { if (typeof avSeqSongSnap === "function") songRows = avSeqUiSongRowsModel(avSeqSongSnap()).length; } catch (e) { songRows = 0; }
+    let fillOn = 0;
+    try { if (typeof avSeqSchedGetFill === "function") fillOn = avSeqSchedGetFill() === 1 ? 1 : 0; } catch (e) { fillOn = 0; }
     snap.ctl = {
       tracks: tracks,
       genTrack: avSeqUiState.genTrack,
       fill: avSeqUiState.fillId || avSeqUiFillIdRead(host),
+      fillOn: fillOn,
       songQuant: avSeqUiState.songQuant,
       songPlaying: avSeqUiSongPlaying(),
       songRows: songRows,
@@ -54420,6 +54605,12 @@ if (typeof window !== "undefined") {
      to planar Float32 (non-finite and f32-overflow doubles -> 0); mono -> ch1 only, ch2 null;
      a truncated data chunk is clamped to whole frames and warned; error = "" when ok.
      Never throws.
+   - avWavMeta(buf) -> { ok, tempo, root, key, source: string[], warnings: string[], error }
+     (K wave KL, verify/_k_wave.md section 4): read-only metadata chunk walk (iXML / acid /
+     id3 / bext) on the avWavInfo discipline - never throws, clamps, honest refusal
+     (ok:false + error for a non-RIFF/WAVE buffer). The section comment below pins the chunk
+     layouts, the sanity clamps (tempo 20..300 else dropped; numeric root 0..127 else
+     dropped) and the first-wins precedence. The import fold (av_import.js) is the caller.
 
    Byte laws (house discipline, av_rec.js header + writer): little-endian everywhere; 16-bit
    sample law = clamp(round(v * 32767), -32768, 32767) with NaN -> 0; 24-bit scales by 8388607
@@ -54694,6 +54885,352 @@ function avWavDecodeF64(buf) {
     res.error = "f64 read failed: " + avWavErrMsg(e);
     res.ch1 = null;
     res.ch2 = null;
+    return res;
+  }
+}
+
+/* ---------- K wave KL (verify/_k_wave.md section 4): avWavMeta ------------------------------
+   Clean-room, READ-ONLY metadata chunk walk (the walker never writes to buf; files are never
+   rewritten). avWavMeta(buf) -> { ok, tempo, root, key, source: string[], warnings: string[],
+   error }. Discipline mirrors avWavInfo: never throws; honest refusal (ok:false + error) for a
+   non-RIFF/WAVE buffer; ok:true with the fields present-or-null; clamps instead of lies.
+
+   Chunk layouts (documented here because they are the contract this reader implements):
+   - iXML (4-char tag "iXML", text): <TEMPO>/<ROOT>/<KEY> read via tolerant case-insensitive
+     tag regexes (a missing close tag reads to the next "<"). Latin1 or BOM'd UTF-16 text.
+   - acid (tag "acid", 16 bytes minimum; the Sonic Foundry ACIDized form):
+       +0  u32  type      (1 = loop; informational)
+       +4  u16  root      (16-bit field: HIGH byte = MIDI note 0..127, LOW byte = fractional
+                           cents 0..99 - the note lands, the cents stay informational)
+       +6  u16  reserved  (0x8000 nominal; informational)
+       +8  f32  tempo     (BPM, little-endian)
+       +12 u32  beats     (read for layout completeness; the pinned return shape has no slot)
+     A 24-byte tail is tolerated; shorter chunks read what fits and warn.
+   - id3 / ID3 (tag "id3 " - any case, any 4th byte; ID3v2.3/v2.4): TBPM (tempo) + TKEY (key)
+     text frames; 64 KiB scan cap; syncsafe sizes for v2.4, plain BE u32 for v2.3; v2.2
+     (3-byte frame headers) is warned and not guessed.
+   - bext (tag "bext", EBU 3285): presence + the Description (256 B) / Originator (32 B)
+     text; informational only - the strings ride warnings ("bext description: ..."), and
+     "bext" in source marks presence.
+   Sanity clamps: a tempo outside 20..300 from ANY source is DROPPED with a warning (never
+   clamped into a lie); a numeric root outside 0..127 is dropped with a warning; a note-name
+   root stays the trimmed literal string (capped 16 - no invented octave mapping).
+   Precedence: first source that provides a field wins, in the pinned order iXML < acid <
+   id3 (chunk order inside the file does not matter). source lists the readers that
+   CONTRIBUTED (iXML/acid/id3) or were present (bext), in that order. */
+
+const AV_WAV_META_ID3_CAP = 65536;       /* id3 scan cap (bytes of the chunk) */
+const AV_WAV_META_IXML_CAP = 65536;      /* iXML scan cap (bytes) */
+const AV_WAV_META_WARN_MAX = 20;         /* warning lines kept */
+const AV_WAV_META_WARN_LEN = 140;        /* per-warning cap */
+const AV_WAV_META_KEY_CAP = 64;          /* key string cap */
+const AV_WAV_META_NAME_CAP = 16;         /* note-name root cap */
+const AV_WAV_META_TEMPO_MIN = 20;
+const AV_WAV_META_TEMPO_MAX = 300;
+
+function avWavMetaWarn(res, msg) {
+  try {
+    if (res.warnings.length < AV_WAV_META_WARN_MAX) {
+      res.warnings.push(String(msg).slice(0, AV_WAV_META_WARN_LEN));
+    }
+  } catch (e) { /* best-effort */ }
+}
+
+/* collapse control runs + whitespace (the tolerant text normaliser) */
+function avWavMetaTrimStr(s) {
+  try {
+    return String(s).replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").replace(/^ +| +$/g, "");
+  } catch (e) { return ""; }
+}
+
+/* latin1 (or BOM'd UTF-16) decode of u8[start .. start+len), capped 4096 chars; keepNul=false
+   stops at the first NUL (text fields), keepNul=true maps NULs to spaces (iXML blocks) */
+function avWavMetaText(u8, start, len, keepNul) {
+  const n = u8.length;
+  let end = start + len;
+  if (end > n) end = n;
+  if (start >= end) return "";
+  const b0 = u8[start], b1 = u8[start + 1];
+  if (start + 1 < end && b0 === 0xFF && b1 === 0xFE) {    /* UTF-16LE BOM */
+    let s = "";
+    for (let i = start + 2; i + 1 < end && s.length < 4096; i += 2) {
+      const c = u8[i] | (u8[i + 1] << 8);
+      if (c === 0) { if (keepNul) { s += " "; continue; } break; }
+      s += String.fromCharCode(c);
+    }
+    return s;
+  }
+  if (start + 1 < end && b0 === 0xFE && b1 === 0xFF) {    /* UTF-16BE BOM */
+    let s = "";
+    for (let i = start + 2; i + 1 < end && s.length < 4096; i += 2) {
+      const c = (u8[i] << 8) | u8[i + 1];
+      if (c === 0) { if (keepNul) { s += " "; continue; } break; }
+      s += String.fromCharCode(c);
+    }
+    return s;
+  }
+  let s = "";
+  for (let i = start; i < end && s.length < 4096; i++) {
+    const c = u8[i];
+    if (c === 0) { if (keepNul) { s += " "; continue; } break; }
+    s += String.fromCharCode(c);
+  }
+  return s;
+}
+
+/* first numeric token in a string ("128 bpm" -> 128); null when none */
+function avWavMetaNumOf(txt) {
+  try {
+    if (typeof txt !== "string" || !txt) return null;
+    const m = /[-+]?(?:\d+\.?\d*|\.\d+)/.exec(txt);
+    if (!m) return null;
+    const v = Number(m[0]);
+    return isFinite(v) ? v : null;
+  } catch (e) { return null; }
+}
+
+function avWavMetaTempoOk(v) {
+  return (typeof v === "number" && isFinite(v) && v >= AV_WAV_META_TEMPO_MIN && v <= AV_WAV_META_TEMPO_MAX);
+}
+
+/* <TAG ...>value</TAG> or an unterminated <TAG ...>value< tolerant read; "" when absent */
+function avWavMetaTag(text, tag) {
+  try {
+    let re = new RegExp("<\\s*" + tag + "(\\s[^>]*)?>([\\s\\S]*?)<\\s*/\\s*" + tag + "\\s*>", "i");
+    let m = re.exec(text);
+    if (m) return avWavMetaTrimStr(m[2]);
+    re = new RegExp("<\\s*" + tag + "(\\s[^>]*)?>([^<]*)", "i");
+    m = re.exec(text);
+    if (m) return avWavMetaTrimStr(m[2]);
+  } catch (e) { /* absent */ }
+  return "";
+}
+
+/* the iXML read: { tempo, root, key, got } (got = at least one field landed) */
+function avWavMetaFromIxml(u8, start, size, avail, res) {
+  const out = { tempo: null, root: null, key: null, got: false };
+  try {
+    if (size > avail) avWavMetaWarn(res, "iXML chunk truncated (" + avail + " of " + size + " bytes)");
+    let len = (size < avail) ? size : avail;
+    if (len > AV_WAV_META_IXML_CAP) { len = AV_WAV_META_IXML_CAP; avWavMetaWarn(res, "iXML chunk beyond the 64 KiB read cap"); }
+    const txt = avWavMetaText(u8, start, len, true);
+    if (!txt) return out;
+    const t = avWavMetaTag(txt, "TEMPO");
+    if (t) {
+      const v = avWavMetaNumOf(t);
+      if (avWavMetaTempoOk(v)) { out.tempo = v; out.got = true; }
+      else avWavMetaWarn(res, "iXML TEMPO " + t.slice(0, 24) + " outside 20..300 - dropped");
+    }
+    const r = avWavMetaTag(txt, "ROOT");
+    if (r) {
+      if (/^[-+]?\d+$/.test(r)) {
+        const rv = Number(r);
+        if (isFinite(rv) && rv >= 0 && rv <= 127) { out.root = rv; out.got = true; }
+        else avWavMetaWarn(res, "iXML ROOT " + r.slice(0, 24) + " outside 0..127 - dropped");
+      } else { out.root = r.slice(0, AV_WAV_META_NAME_CAP); out.got = true; }
+    }
+    const k = avWavMetaTag(txt, "KEY");
+    if (k) { out.key = k.slice(0, AV_WAV_META_KEY_CAP); out.got = true; }
+  } catch (e) { /* absent */ }
+  return out;
+}
+
+/* the acid read: { tempo, root, got } on the documented 16-byte layout above (a short chunk
+   reads the fields its bytes actually hold and warns) */
+function avWavMetaFromAcid(dv, start, size, avail, res) {
+  const out = { tempo: null, root: null, beats: 0, got: false };
+  try {
+    if (size < 16) avWavMetaWarn(res, "acid chunk undersized (" + size + " bytes; the documented layout is 16)");
+    if (size > avail) avWavMetaWarn(res, "acid chunk truncated (" + avail + " of " + size + " bytes)");
+    const len = (size < avail) ? size : avail;
+    if (len >= 6) {
+      const root16 = dv.getUint16(start + 4, true);
+      const note = (root16 >> 8) & 0xFF;                  /* high byte = MIDI note */
+      if (note >= 0 && note <= 127) { out.root = note; out.got = true; }
+      else avWavMetaWarn(res, "acid root note " + note + " outside 0..127 - dropped");
+    }
+    if (len >= 12) {
+      const t = dv.getFloat32(start + 8, true);
+      if (avWavMetaTempoOk(t)) { out.tempo = t; out.got = true; }
+      else avWavMetaWarn(res, "acid tempo " + (isFinite(t) ? String(t) : "non-finite") + " outside 20..300 - dropped");
+    }
+    if (len >= 16) out.beats = dv.getUint32(start + 12, true);   /* read; no output slot (pinned shape) */
+  } catch (e) { /* absent */ }
+  return out;
+}
+
+/* ID3v2 syncsafe 28-bit integer (tag + v2.4 frame sizes): 4 x 7-bit groups, MSB first */
+function avWavMetaSyncsafe(u8, o) {
+  return ((u8[o] & 0x7F) << 21) | ((u8[o + 1] & 0x7F) << 14) | ((u8[o + 2] & 0x7F) << 7) | (u8[o + 3] & 0x7F);
+}
+
+/* one ID3 text frame's text (enc 0 latin1 / 1 UTF-16 BOM'd / 2 UTF-16BE / 3 UTF-8-tolerated) */
+function avWavMetaId3Text(u8, o, end) {
+  if (o >= end) return "";
+  const enc = u8[o];
+  const s = o + 1;
+  if (enc === 1 || enc === 2) {
+    let be = (enc === 2), st = s;
+    if (enc === 1) {
+      if (s + 1 < end && u8[s] === 0xFF && u8[s + 1] === 0xFE) { be = false; st = s + 2; }
+      else if (s + 1 < end && u8[s] === 0xFE && u8[s + 1] === 0xFF) { be = true; st = s + 2; }
+    }
+    let out = "";
+    for (let i = st; i + 1 < end && out.length < 256; i += 2) {
+      const c = be ? ((u8[i] << 8) | u8[i + 1]) : (u8[i] | (u8[i + 1] << 8));
+      if (c === 0) break;
+      out += String.fromCharCode(c);
+    }
+    return avWavMetaTrimStr(out);
+  }
+  if (enc === 3 && typeof TextDecoder === "function") {
+    try {
+      let out = new TextDecoder("utf-8").decode(u8.subarray(s, end));
+      const z = out.indexOf("\u0000");
+      if (z >= 0) out = out.slice(0, z);
+      return avWavMetaTrimStr(out).slice(0, 256);
+    } catch (e2) { /* fall through to the latin1 read */ }
+  }
+  let out = "";
+  for (let i = s; i < end && out.length < 256; i++) {
+    const c = u8[i];
+    if (c === 0) break;
+    out += String.fromCharCode(c);
+  }
+  return avWavMetaTrimStr(out);
+}
+
+/* the id3 read: { tempo, key, got } - ID3v2.3/v2.4 TBPM + TKEY text frames, 64 KiB cap */
+function avWavMetaFromId3(u8, start, size, avail, res) {
+  const out = { tempo: null, key: null, got: false };
+  try {
+    if (size < 10) { avWavMetaWarn(res, "id3 chunk undersized (" + size + " bytes) - nothing read"); return out; }
+    if (size > avail) avWavMetaWarn(res, "id3 chunk truncated (" + avail + " of " + size + " bytes)");
+    let len = (size < avail) ? size : avail;
+    if (len > AV_WAV_META_ID3_CAP) { avWavMetaWarn(res, "id3 chunk beyond the 64 KiB scan cap"); len = AV_WAV_META_ID3_CAP; }
+    if (!(u8[start] === 0x49 && u8[start + 1] === 0x44 && u8[start + 2] === 0x33)) {
+      avWavMetaWarn(res, "id3 chunk without an ID3 tag header - skipped");
+      return out;
+    }
+    const major = u8[start + 3];
+    if (major !== 3 && major !== 4) {
+      avWavMetaWarn(res, "ID3v2." + major + " tag - frames not read (v2.3/v2.4 only)");
+      return out;
+    }
+    const tagSize = avWavMetaSyncsafe(u8, start + 6);
+    let body = start + 10;
+    let end = start + 10 + tagSize;
+    const hardEnd = start + len;
+    if (end > hardEnd) end = hardEnd;
+    let frames = 0;
+    while (body + 10 <= end && frames < 64) {
+      const i0 = u8[body], i1 = u8[body + 1], i2 = u8[body + 2], i3 = u8[body + 3];
+      if (i0 === 0) break;                                  /* padding starts */
+      const id = String.fromCharCode(i0, i1, i2, i3);
+      if (!/^[A-Z0-9]{4}$/.test(id)) break;                 /* not a frame id: stop honestly */
+      const fsz = (major === 4)
+        ? avWavMetaSyncsafe(u8, body + 4)
+        : ((u8[body + 4] * 0x1000000) + (u8[body + 5] << 16) + (u8[body + 6] << 8) + u8[body + 7]);
+      const dataEnd = body + 10 + fsz;
+      if (dataEnd > end) { avWavMetaWarn(res, "id3 frame " + id + " truncated - skipped"); break; }
+      if (id === "TBPM") {
+        const t = avWavMetaId3Text(u8, body + 10, dataEnd);
+        const v = avWavMetaNumOf(t);
+        if (avWavMetaTempoOk(v)) { out.tempo = v; out.got = true; }
+        else avWavMetaWarn(res, "id3 TBPM " + (t ? t.slice(0, 24) : "empty") + " outside 20..300 - dropped");
+      } else if (id === "TKEY") {
+        const t = avWavMetaId3Text(u8, body + 10, dataEnd);
+        if (t) { out.key = t.slice(0, AV_WAV_META_KEY_CAP); out.got = true; }
+      }
+      body = dataEnd;
+      frames += 1;
+    }
+  } catch (e) { /* absent */ }
+  return out;
+}
+
+/* the bext read: presence + informational Description (256 B) / Originator (32 B) strings
+   (they ride warnings - the pinned shape has no bext field); returns presence */
+function avWavMetaFromBext(u8, start, size, avail, res) {
+  try {
+    if (size < 348) avWavMetaWarn(res, "bext chunk undersized (" + size + " bytes)");
+    const len = (size < avail) ? size : avail;
+    if (len >= 288) {
+      const desc = avWavMetaTrimStr(avWavMetaText(u8, start, 256, false)).slice(0, 160);
+      const orig = avWavMetaTrimStr(avWavMetaText(u8, start + 256, 32, false)).slice(0, 80);
+      if (desc) avWavMetaWarn(res, "bext description: " + desc);
+      if (orig) avWavMetaWarn(res, "bext originator: " + orig);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avWavMeta(buf) {
+  const res = { ok: false, tempo: null, root: null, key: null, source: [], warnings: [], error: "" };
+  try {
+    const u8 = avWavBytes(buf);
+    if (!u8) { res.error = "unsupported buffer (ArrayBuffer|view required)"; return res; }
+    const n = u8.length;
+    if (n < 12) { res.error = "too short for a RIFF header"; return res; }
+    if (!(u8[0] === 82 && u8[1] === 73 && u8[2] === 70 && u8[3] === 70)) { res.error = "missing RIFF tag"; return res; }
+    if (!(u8[8] === 87 && u8[9] === 65 && u8[10] === 86 && u8[11] === 69)) { res.error = "not a WAVE file"; return res; }
+
+    const dv = new DataView(u8.buffer, u8.byteOffset, n);
+    const got = { ixml: null, acid: null, id3: null, bext: false };
+    let sawAny = false;
+    let o = 12;
+    while (o + 8 <= n) {
+      const size = dv.getUint32(o + 4, true);
+      const body = o + 8;
+      const avail = (body <= n) ? (n - body) : 0;
+      const c0 = u8[o] | 0x20, c1 = u8[o + 1] | 0x20, c2 = u8[o + 2] | 0x20, c3 = u8[o + 3] | 0x20;
+      if (c0 === 105 && c1 === 120 && c2 === 109 && c3 === 108) {          /* "iXML" */
+        sawAny = true;
+        if (!got.ixml) got.ixml = avWavMetaFromIxml(u8, body, size, avail, res);
+      } else if (c0 === 97 && c1 === 99 && c2 === 105 && c3 === 100) {     /* "acid" */
+        sawAny = true;
+        if (!got.acid) got.acid = avWavMetaFromAcid(dv, body, size, avail, res);
+      } else if (c0 === 105 && c1 === 100 && c2 === 51) {                  /* "id3" (any 4th byte) */
+        sawAny = true;
+        if (!got.id3) got.id3 = avWavMetaFromId3(u8, body, size, avail, res);
+      } else if (c0 === 98 && c1 === 101 && c2 === 120 && c3 === 116) {    /* "bext" */
+        sawAny = true;
+        if (got.bext === false) got.bext = avWavMetaFromBext(u8, body, size, avail, res) === true;
+      }
+      if (size > n) { avWavMetaWarn(res, "chunk at " + o + " claims more bytes than the buffer holds - walking stopped"); break; }
+      o = body + size + (size & 1);                                        /* RIFF chunks pad to even */
+    }
+
+    /* first-wins fold in the pinned order iXML < acid < id3; bext contributes presence */
+    const srcs = [];
+    if (got.ixml && got.ixml.got) {
+      if (got.ixml.tempo !== null) res.tempo = got.ixml.tempo;
+      if (got.ixml.root !== null) res.root = got.ixml.root;
+      if (got.ixml.key !== null) res.key = got.ixml.key;
+      srcs.push("iXML");
+    }
+    if (got.acid && got.acid.got) {
+      if (res.tempo === null && got.acid.tempo !== null) res.tempo = got.acid.tempo;
+      if (res.root === null && got.acid.root !== null) res.root = got.acid.root;
+      srcs.push("acid");
+    }
+    if (got.id3 && got.id3.got) {
+      if (res.tempo === null && got.id3.tempo !== null) res.tempo = got.id3.tempo;
+      if (res.key === null && got.id3.key !== null) res.key = got.id3.key;
+      srcs.push("id3");
+    }
+    if (got.bext) srcs.push("bext");
+    res.source = srcs;
+    if (!srcs.length) res.warnings.push(sawAny ? "no usable metadata found" : "no metadata chunks found");
+    res.ok = true;
+    return res;
+  } catch (e) {
+    res.ok = false;
+    res.tempo = null;
+    res.root = null;
+    res.key = null;
+    res.source = [];
+    res.error = avWavErrMsg(e);
     return res;
   }
 }
@@ -61802,10 +62339,19 @@ if (typeof window !== "undefined") {
                                           lowercase-trimmed); persists via the record write path
      avSessionClasses() -> string[]       [] — this module mounts nothing
      avSessionHydrate() -> Promise<mode>  (extra: boot hydrate, idempotent, never rejects)
+     avSessionBootGet() -> {v:1, id}      the boot template (K wave; tolerant junk -> id "")
+     avSessionBootSet(id) -> {ok, id, persisted}
+                                          set/clear the boot template (LS tier + memory)
+     avSessionNewSession() -> Promise     NEW SESSION (K wave): applies the template's newest
+                                          version when one is set (else nothing), clears the
+                                          current pointer IN MEMORY and marks DIRTY without a
+                                          rebase -- see the BOOT TEMPLATE contract below;
+                                          never touches the recovery offer
      window.__avSession -> { version, init, capture, apply, save, list, load, delete, versions,
                              restore, autosave, state, recover, export: avSessionExport,
                              import: avSessionImport }
-                           + extras: touch, dismiss, classes, hydrate, setTags, flush
+                           + extras: touch, dismiss, classes, hydrate, setTags, flush,
+                             bootGet, bootSet, newSession
 
    STATE SCHEMA (v1, JSON-safe by construction):
      { v:1, name, savedAt,
@@ -61868,6 +62414,35 @@ if (typeof window !== "undefined") {
    offer NEVER auto-applies. avSessionRecover() = apply its state + clear the record durably +
    note "recovered"; avSessionDismissRecovery() drops offer + record.
 
+   BOOT TEMPLATE (K wave): an optional template applied by an EXPLICIT avSessionNewSession() only
+   (never at hydrate; the recovery offer is untouched). LS key `av-boot-template`, value JSON
+   { v:1, id } ("" = none; id = a saved session's id, <= 64 chars; any id is accepted at set
+   time -- a vanished session is reported at apply time, never forged). avSessionBootGet() reads
+   (LS once into the page's memory value, tolerant junk -> id ""); avSessionBootSet(id) writes
+   (memory accepts; the LS tier is durable: a refused LS write rolls the memory change back and
+   resolves ok:false -- "nothing durable -> not set"; no LS at all keeps the memory value with
+   persisted:false, honest). avSessionNewSession() does the ONE action: (1) when a template id is
+   set, the session's NEWEST version is restored as the working state through the ordinary apply
+   core (all its laws/refusals stand; a missing session -> ok:false error "template-missing"; a
+   version-less record -> "template-empty"); (2) the current pointer is cleared IN MEMORY (the
+   current flags drop with it) so the NEXT SAVE creates a NEW session (the v1 "creates on first
+   save" law) -- the clear is NOT persisted (avSessionFixCurrent re-derives after a reload; a
+   session exists only once saved); (3) DIRTY, never rebased: avSessionTouch() marks eager and
+   the fingerprint baseline is left alone. THE DIRTY/UNSAVED CONTRACT: this action writes no
+   session record; an autosave (while on) keeps protecting the state into the ONE `__autosave`
+   recovery record -- it never writes session versions, so it cannot silently overwrite a saved
+   session; only an explicit avSessionSave() makes it a session. A landed autosave or an explicit
+   save re-bases the fingerprint per the existing laws.
+
+   MULTI-TAB NOTE (K wave; docs/12 7.5 disposition -- note over lock): av_session.js opens ONE
+   guarded BroadcastChannel `anvil-tabs` at init (absent BroadcastChannel = silent no-op; a
+   constructor throw is swallowed once). After a DURABLE save (avSessionSaveRun) and after a
+   durable autosave write it posts { t:"saved", at } (memory-tier/volatile writes post nothing --
+   no other tab can see them). An arriving { t:"saved" } records tab.seenAt (arrival) and
+   tab.savedAt (the message at, clamped to arrival); the CARD derives the dim note from
+   tab.seenAt with a 15 s window (AV_SESSION_TAB_WINDOW_MS). This module never touches the DOM,
+   never locks: last write wins.
+
    LAWS (verify/_s2_wave.md §3): "use strict"; node-loadable (no DOM/browser reach at load — the
    only top-level browser touch is the guarded typeof window publish at the end); never throws;
    no console noise; bounded growth (16 versions/session, ONE autosave record, notes capped).
@@ -61898,6 +62473,10 @@ const AV_SESSION_AUTO_LS = "av-sessions-autosave";  /* the EXPLICIT autosave cho
 const AV_SESSION_TAG_MAX = 8;                       /* session tags (R20): max 8 per session */
 const AV_SESSION_TAG_LEN = 24;                      /* max 24 chars each (lowercase-trimmed)   */
 const AV_SESSION_OPEN_CAP_MS = 1800;                /* hung-open give-up (the av_store cap) */
+const AV_SESSION_BOOT_LS = "av-boot-template";      /* the boot template (K wave): JSON {v:1,id} */
+const AV_SESSION_BOOT_V = 1;                        /* the boot template value version           */
+const AV_SESSION_TAB_CHANNEL = "anvil-tabs";        /* the multi-tab beacon channel (K wave)     */
+const AV_SESSION_TAB_WINDOW_MS = 15000;             /* the tab note window (< 15 s, K wave)      */
 const AV_SESSION_NAME_CAP = 40;
 const AV_SESSION_ID_CAP = 64;
 const AV_SESSION_NOTES_CAP = 8;                     /* bounded state (no unbounded logs) */
@@ -61937,6 +62516,9 @@ const avSession = {
   lastSave: null,
   lastLoad: null,
   lastError: null,
+  boot: { id: "", read: false },     /* boot template (K wave): the page value + LS read-once   */
+  tab: { tried: false, chan: null, seenAt: 0, at: 0 },   /* multi-tab beacon (K wave)          */
+  lastNew: null,                     /* the last avSessionNewSession receipt (K wave)           */
 };
 
 /* ---------- guarded environment reaches (plain node has none of these) ---------- */
@@ -62995,6 +63577,7 @@ function avSessionInit() {
     const st = avSession;
     if (!st.inited) {
       st.inited = true;
+      avSessionTabsEnsure();              /* K wave: the multi-tab beacon channel (guarded) */
       avSessionBindVisibility();          /* R20: the hidden flush listener (guarded) */
       avSessionHydrate();                 /* best-effort boot hydrate; idempotent by promise */
     }
@@ -63083,6 +63666,8 @@ async function avSessionSaveRun(name) {
   const receipt = { ok: true, id: rec.id, name: rec.name, version: nextV, savedAt: now, backend: put.backend, volatile: !!put.volatile, versions: rec.versions.length };
   st.lastSave = receipt;
   st.lastError = null;
+  /* K wave: a DURABLE save beacons the other tabs (a memory-tier write is invisible to them) */
+  if (put.volatile !== true) avSessionTabsPost();
   return receipt;
 }
 
@@ -63387,6 +63972,8 @@ function avSessionAutosaveWrite() {
       st.lastAutosaveAt = rec.savedAt;
       st.baseFp = fp;
       st.touchDirty = false;
+      /* K wave: a DURABLE autosave write beacons the other tabs too */
+      if (r.volatile !== true) avSessionTabsPost();
       if (st.recovery && st.recovery.available === true) {   /* refresh the pending offer */
         st.recovery.savedAt = rec.savedAt;
         st.recovery.name = rec.name;
@@ -63427,6 +64014,164 @@ function avSessionVisibilityHandler() {
     try { if (typeof document !== "undefined" && document) vis = String(document.visibilityState || ""); } catch (e) { vis = ""; }
     if (vis !== "hidden") return false;
     return avSessionVisibilityFlush();
+  } catch (e) { return false; }
+}
+
+/* ---------- boot template (K wave) ---------- */
+
+/* read: LS once into the page's memory value (tolerant junk -> id ""); later calls are memory */
+function avSessionBootGet() {
+  try {
+    const st = avSession;
+    if (st.boot.read !== true) {
+      st.boot.read = true;
+      try {
+        const ls = avSessionLs();
+        const raw = ls ? ls.getItem(AV_SESSION_BOOT_LS) : null;
+        if (raw != null) {
+          let obj = null;
+          try { obj = JSON.parse(String(raw)); } catch (e) { obj = null; }
+          if (avSessionObj(obj)) st.boot.id = avSessionText(obj.id, AV_SESSION_ID_CAP, "");
+          else st.boot.id = "";
+        }
+      } catch (e) { /* no storage -> the memory value stands */ }
+    }
+    return { v: AV_SESSION_BOOT_V, id: st.boot.id };
+  } catch (e) {
+    return { v: AV_SESSION_BOOT_V, id: "" };
+  }
+}
+
+/* write: memory accepts; the LS write is the durable tier (rollback when it is refused) */
+function avSessionBootSet(id) {
+  const st = avSession;
+  try {
+    avSessionEnsure();
+    const want = avSessionText(id, AV_SESSION_ID_CAP, "");
+    const prev = st.boot.id;
+    st.boot.id = want;
+    st.boot.read = true;
+    let ls = null;
+    try { ls = avSessionLs(); } catch (e) { ls = null; }
+    if (!ls) return { ok: true, id: want, persisted: false, error: null };   /* memory tier */
+    try {
+      ls.setItem(AV_SESSION_BOOT_LS, JSON.stringify({ v: AV_SESSION_BOOT_V, id: want }));
+      return { ok: true, id: want, persisted: true, error: null };
+    } catch (e) {
+      st.boot.id = prev;                 /* the rollback law: nothing durable -> not set */
+      return { ok: false, id: prev, persisted: false, error: "ls" };
+    }
+  } catch (e) {
+    return { ok: false, id: "", persisted: false, error: avSessionErrMsg(e) };
+  }
+}
+
+/* avSessionNewSession() -> Promise<receipt>  the ONE explicit NEW SESSION action (see the
+   header contract): template apply (or nothing) + the current pointer cleared in memory +
+   DIRTY, never rebased. Never throws. */
+function avSessionNewSession() {
+  const fail = function (e) {
+    return { ok: false, error: avSessionErrMsg(e), from: "", name: null, version: null, applied: 0, skipped: [], carried: [], seqOk: true };
+  };
+  try {
+    avSessionEnsure();
+    return Promise.resolve(avSessionNewSessionRun()).catch(fail);
+  } catch (e) {
+    return Promise.resolve(fail(e));
+  }
+}
+
+async function avSessionNewSessionRun() {
+  const st = avSession;
+  await avSessionHydrate();
+  const tpl = avSessionBootGet();
+  const out = { ok: true, from: tpl.id || "", name: null, version: null, applied: 0, skipped: [], carried: [], seqOk: true, error: null };
+  try {
+    /* (1) the template: its NEWEST version restored as the working state (apply-core laws) */
+    if (tpl.id) {
+      const rec = avSessionFind(tpl.id);
+      if (!rec) { out.ok = false; out.error = "template-missing"; }
+      else if (!rec.versions.length) { out.ok = false; out.name = rec.name; out.error = "template-empty"; }
+      else {
+        const ver = rec.versions[rec.versions.length - 1];
+        const ap = avSessionApply(ver.state);
+        out.name = rec.name;
+        out.version = ver.v;
+        out.applied = ap.applied;
+        out.skipped = ap.skipped;
+        out.carried = ap.carried;
+        out.seqOk = ap.seqOk;
+        out.ok = ap.ok === true;
+        out.error = (ap.ok === true) ? null : (ap.error || "apply-refused");
+      }
+    }
+    /* (2) the current pointer is cleared IN MEMORY: the next SAVE creates a NEW session */
+    st.currentId = null;
+    avSessionClearOtherCurrent(null);    /* no row reads CURRENT until the new session is saved */
+    /* (3) DIRTY, never rebased (the header contract) */
+    avSessionTouch();
+    avSessionPushNote("new session" + (tpl.id ? " from template" : ""));
+  } catch (e) {
+    out.ok = false;
+    out.error = avSessionErrMsg(e);
+  }
+  st.lastNew = {
+    ok: out.ok === true, from: out.from, name: out.name, version: out.version,
+    applied: out.applied, skipped: out.skipped.length, seqOk: out.seqOk,
+    error: out.error, at: avSessionNow(),
+  };
+  return out;
+}
+
+/* ---------- multi-tab beacon (K wave; docs/12 7.5 -- note over lock) ---------- */
+
+/* guarded BroadcastChannel reach (plain node / old browsers have none) */
+function avSessionBroadcast() {
+  try { if (typeof BroadcastChannel !== "undefined" && BroadcastChannel) return BroadcastChannel; } catch (e) { /* none */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && w.BroadcastChannel) return w.BroadcastChannel; } catch (e) { /* none */ }
+  return null;
+}
+
+/* open the ONE channel (lazily, once; silent no-op without BroadcastChannel) */
+function avSessionTabsEnsure() {
+  const tb = avSession.tab;
+  try {
+    if (tb.chan) return tb.chan;
+    if (tb.tried === true) return null;
+    tb.tried = true;
+    const BC = avSessionBroadcast();
+    if (typeof BC !== "function") return null;
+    const chan = new BC(AV_SESSION_TAB_CHANNEL);
+    if (!chan || typeof chan.postMessage !== "function") return null;
+    try { chan.onmessage = avSessionTabsMessage; } catch (e) {
+      try { chan.addEventListener("message", avSessionTabsMessage); } catch (e2) { return null; }
+    }
+    tb.chan = chan;
+    return chan;
+  } catch (e) { return null; }
+}
+
+/* a message from ANOTHER channel object (own posts are never delivered to the sender object) */
+function avSessionTabsMessage(e) {
+  try {
+    const d = (e && e.data !== undefined) ? e.data : null;
+    if (!avSessionObj(d)) return;
+    if (String(d.t) !== "saved") return;
+    const now = avSessionNow();
+    const at = Number(d.at);
+    const tb = avSession.tab;
+    tb.seenAt = now;
+    tb.at = (isFinite(at) && at > 0 && at <= now) ? at : now;
+  } catch (e2) { /* a listener never throws outward */ }
+}
+
+/* post after a DURABLE save/autosave write (a memory-tier write is invisible to other tabs) */
+function avSessionTabsPost() {
+  try {
+    const chan = avSessionTabsEnsure();
+    if (!chan) return false;
+    chan.postMessage({ t: "saved", at: avSessionNow() });
+    return true;
   } catch (e) { return false; }
 }
 
@@ -63471,6 +64216,9 @@ function avSessionState() {
       lastError: st.lastError,
       lastSave: st.lastSave ? avSessionClone(st.lastSave) : null,
       lastLoad: st.lastLoad ? avSessionClone(st.lastLoad) : null,
+      boot: { id: avSessionBootGet().id },
+      tab: { seenAt: st.tab.seenAt, savedAt: st.tab.at, windowMs: AV_SESSION_TAB_WINDOW_MS },
+      lastNew: st.lastNew ? avSessionClone(st.lastNew) : null,
     };
   } catch (e) {
     return {
@@ -63479,7 +64227,8 @@ function avSessionState() {
       current: null, dirty: false, lastAutosaveAt: 0,
       autosave: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS, choice: null },
       recovery: { available: false, savedAt: null, name: null, at: null },
-      lastError: "state", lastSave: null, lastLoad: null,
+      lastError: "state", lastSave: null, lastLoad: null, lastNew: null,
+      boot: { id: "" }, tab: { seenAt: 0, savedAt: 0, windowMs: AV_SESSION_TAB_WINDOW_MS },
     };
   }
 }
@@ -63622,6 +64371,9 @@ if (typeof window !== "undefined" && window) {
       hydrate: avSessionHydrate,
       setTags: avSessionSetTags,
       flush: avSessionVisibilityFlush,
+      bootGet: avSessionBootGet,
+      bootSet: avSessionBootSet,
+      newSession: avSessionNewSession,
     };
   } catch (e) { /* no window — node harness only */ }
 }
@@ -65010,6 +65762,16 @@ if (typeof window !== "undefined") {
      #av-sessions-restore-file input -> avBackupRestore(buffer) with a progress line and a
      report of the restored counts (sessions/packs/samples), skipped and errors.
    - status line + warnings area (degradation is reported there, never console noise).
+   - K WAVE BOOT TEMPLATE: a "BOOT TEMPLATE" row (select #av-sessions-boot: none + one option
+     per saved session) + the NEW SESSION button (#av-sessions-new -> avSessionNewSession):
+     when a template is set, that session's newest snapshot is restored as the working state and
+     the card reports it UNSAVED (a new session is only kept by an explicit SAVE; autosave keeps
+     protecting the state via the recovery record, never a session version). With no template,
+     NEW SESSION starts a plain new session (the module clears its current pointer in memory --
+     the next SAVE creates the session). The recovery banner is untouched either way.
+   - K WAVE MULTI-TAB NOTE: a dim line (#av-sessions-tabnote, "another tab saved recently -
+     last write wins") shows while avSessionState().tab.seenAt sits inside the module's 15 s
+     window and auto-hides with it; the module owns the beacon, this card only renders the window.
 
    LAW: every sibling call is consumed through the pinned §2.1/§2.2 names with typeof guards
    ONLY — avSessionState/List/Save/Load/Delete/Versions/Restore/Autosave/Recover/
@@ -65060,8 +65822,14 @@ if (typeof window !== "undefined") {
    window.__avSessionUiLastExport = { kind, name, bytes, downloaded, at } (backup download
    stamp) · window.__avSessionUiLastRestore = { name, bytes, restored, skipped, errors, at }.
 
+   K WAVE OBSERVABLES (additive; the parent styles the new classes): window.__avSessionUi gains
+   newSession() and boot(id); avSessionUiSnap() gains boot:{id} and tab:{seenAt,savedAt,windowMs,
+   fresh}; the status line after NEW SESSION reports the template apply honestly.
+
    ID INVENTORY (rig + parent rely on these):
     #av-sessions-search (browser v2 search) | #av-sessions-sort (newest | name | updated)
+   (K wave additions) #av-sessions-boot (boot template select) | #av-sessions-new (NEW SESSION)
+     | #av-sessions-tabnote (multi-tab note; exact dim line text).
      #av-sessions-status
      #av-sessions-recovery · #av-sessions-recovery-at · #av-sessions-recover · #av-sessions-dismiss
      #av-sessions-count · #av-sessions-storage
@@ -65089,6 +65857,7 @@ const AV_SESSION_UI_TAG_MAX = 8;                      /* tags per session (mirro
 const AV_SESSION_UI_TAG_LEN = 24;                     /* chars per tag (mirrors the module cap)    */
 const AV_SESSION_UI_SEARCH_MAX = 64;                  /* the search field cap (view filter only)   */
 const AV_SESSION_UI_SORTS = ["newest", "name", "updated"];   /* the pinned sort values (R20)        */
+const AV_SESSION_UI_TAB_WINDOW_MS = 15000;            /* the tab note window (K; mirrors the module) */
 
 /* UI-local state only — every module fact is read through the pinned av* APIs per paint */
 const avSessionUiState = {
@@ -65112,6 +65881,8 @@ const avSessionUiState = {
   sessKey: "", asKey: "",
   /* browser v2 (R20): client-side view filters + the tag inline editor + tags-write counter */
   search: "", sort: "newest", tagEditId: "", tagDraft: "", lastRows: 0, tagsBusy: 0,
+  /* K wave: boot template mirror + NEW SESSION busy + the multi-tab note mirror */
+  bootId: "", bootKey: "", newBusy: false, tabSeenAt: 0, tabSavedAt: 0, tabWindowMs: AV_SESSION_UI_TAB_WINDOW_MS,
   /* poll signature sentinel so the first poll always syncs */
   pollSig: "\u0000",
 };
@@ -65469,8 +66240,24 @@ function avSessionUiStateSync() {
       s.recName = avSessionUiStrField(rc, ["name"]);
       if (av === false) { s.recAt = ""; s.recName = ""; }
     }
+    avSessionUiStateSyncExtra(st, s);   /* K wave: boot + tab mirrors */
     return true;
   } catch (e) { return false; }
+}
+
+/* K wave: the boot template mirror + the multi-tab note mirror (both additive keys) */
+function avSessionUiStateSyncExtra(st, s) {
+  try {
+    const bt = (st && typeof st === "object") ? st.boot : null;
+    s.bootId = (bt && typeof bt === "object") ? avSessionUiStrField(bt, ["id"]) : "";
+    const tb = (st && typeof st === "object") ? st.tab : null;
+    const seen = (tb && typeof tb === "object") ? avSessionUiNumField(tb, ["seenAt"]) : null;
+    s.tabSeenAt = (seen != null && seen > 0) ? seen : 0;
+    const sat = (tb && typeof tb === "object") ? avSessionUiNumField(tb, ["savedAt"]) : null;
+    s.tabSavedAt = (sat != null && sat > 0) ? sat : 0;
+    const win = (tb && typeof tb === "object") ? avSessionUiNumField(tb, ["windowMs"]) : null;
+    s.tabWindowMs = (win != null && win > 0) ? Math.max(1000, Math.min(600000, win)) : AV_SESSION_UI_TAB_WINDOW_MS;
+  } catch (e) { /* the mirrors keep their previous values */ }
 }
 
 function avSessionUiListRead() {
@@ -65579,6 +66366,7 @@ function avSessionUiBodyHTML() {
     '<div class="av-sessions-head"><span class="av-sessions-title">SESSIONS</span>' +
     '<span class="av-sessions-cap">save the whole working state (pattern \u00b7 chains \u00b7 song \u00b7 scenes \u00b7 params \u00b7 macros) as named sessions with version history; autosave keeps a recovery snapshot; BACKUP packs sessions, installed packs and samples into one zip. Nothing is uploaded.</span></div>' +
     '<div class="av-sessions-status-line"><span class="av-sessions-status av-sessions-msg" id="av-sessions-status" role="status">\u2026</span></div>' +
+    '<p class="av-note av-dim av-sessions-tabnote" id="av-sessions-tabnote" hidden>another tab saved recently - last write wins</p>' +
 
     '<div class="av-sessions-recovery" id="av-sessions-recovery" hidden>' +
     '<span class="av-sessions-recovery-lbl">RECOVERY</span>' +
@@ -65594,6 +66382,11 @@ function avSessionUiBodyHTML() {
     '<div class="av-sessions-row">' +
     '<input type="text" class="av-sessions-name" id="av-sessions-name" spellcheck="false" autocomplete="off" maxlength="64" placeholder="session name" aria-label="Session name">' +
     '<button type="button" class="av-btn mini av-sessions-btn av-sessions-save" id="av-sessions-save" title="Save the current working state (new session, or a new version of the current one)">SAVE</button>' +
+    "</div>" +
+    '<div class="av-sessions-row">' +
+    '<label class="av-sessions-lab" for="av-sessions-boot">BOOT TEMPLATE</label>' +
+    '<select class="av-select av-sessions-boot" id="av-sessions-boot" aria-label="Boot template applied by NEW SESSION (none = a plain new session)"></select>' +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-new" id="av-sessions-new" title="Start a new session \u2014 applies the boot template when one is set (the working state becomes unsaved)">NEW SESSION</button>' +
     "</div>" +
     '<div class="av-sessions-tools">' +
     '<input type="search" class="av-sessions-search" id="av-sessions-search" spellcheck="false" autocomplete="off" maxlength="64" placeholder="search name or tags\u2026" aria-label="Search sessions by name or tag">' +
@@ -65657,7 +66450,7 @@ function avSessionUiSettle(p, cb) {
 /* one module op at a time (keeps the pin honest; controls disabled meanwhile) */
 function avSessionUiBusy() {
   const s = avSessionUiState;
-  return !!(s.saveBusy || s.opBusy || s.backupBusy || s.restoreFileBusy || s.recovering);
+  return !!(s.saveBusy || s.opBusy || s.backupBusy || s.restoreFileBusy || s.recovering || s.newBusy);
 }
 
 /* ---------- SESSIONS actions ---------- */
@@ -66198,6 +66991,96 @@ function avSessionUiDismiss() {
   } catch (e) { return false; }
 }
 
+/* ---------- K wave actions: BOOT TEMPLATE set + NEW SESSION ---------- */
+
+/* the select change: commit the chosen template id ("" = none) through the pinned module call */
+function avSessionUiBootSet(id) {
+  const s = avSessionUiState;
+  try {
+    if (typeof avSessionBootSet !== "function") {
+      avSessionUiMissingNote("avSessionBootSet", "the boot template is unavailable");
+      s.lastMsg = "this build cannot set a boot template (avSessionBootSet is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    const want = String(id == null ? "" : id);
+    let r = null;
+    try { r = avSessionBootSet(want); } catch (e) { r = { ok: false, error: String((e && e.message) || e || "boot template failed") }; }
+    if (r && r.ok === true) {
+      const got = avSessionUiStrField(r, ["id"]);
+      s.bootId = got;
+      if (!got) s.lastMsg = "boot template cleared \u2014 NEW SESSION starts a plain new session";
+      else if (r.persisted === false) s.lastMsg = "boot template set for this page only \u2014 storage is not durable";
+      else s.lastMsg = "boot template set \u2014 NEW SESSION applies it";
+      s.lastMsgKind = "msg";
+      avSessionUiWarnDropKey("boot.fail");
+    } else {
+      const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+      s.lastMsg = "the boot template was not set \u2014 " + why;
+      s.lastMsgKind = "err";
+      avSessionUiWarn("boot.fail", "the boot template was not set \u2014 " + why);
+    }
+    s.bootKey = "";                      /* rebuild the select on the next paint */
+    avSessionUiSync();
+    return !!(r && r.ok === true);
+  } catch (e) { return false; }
+}
+
+/* NEW SESSION: the module applies the boot template (when set), resets its current pointer and
+   marks the state unsaved; this card reports it honestly (the recovery banner stays untouched) */
+function avSessionUiNewSession() {
+  const s = avSessionUiState;
+  try {
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionNewSession !== "function") {
+      avSessionUiMissingNote("avSessionNewSession", "starting a new session is unavailable");
+      s.lastMsg = "this build cannot start a new session (avSessionNewSession is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    s.newBusy = true;
+    s.lastMsg = s.bootId ? "starting a new session from the boot template\u2026" : "starting a new session\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = avSessionNewSession(); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "new session failed") }; }
+    avSessionUiSettle(p, avSessionUiNewSettle);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiNewSettle(r) {
+  const s = avSessionUiState;
+  s.newBusy = false;
+  if (avSessionUiOK(r) === false) {
+    let why = "refused";
+    if (r && typeof r === "object") {
+      if (r.error === "template-missing") why = "the boot template session no longer exists";
+      else if (r.error === "template-empty") why = "the boot template session has no saved version";
+      else if (r.error) why = avSessionUiErrText(r.error);
+    }
+    s.lastMsg = "the boot template was not applied \u2014 " + why + "; a new session is ready and SAVE keeps the working state";
+    s.lastMsgKind = "err";
+    avSessionUiWarn("new.fail", "the boot template was not applied \u2014 " + why);
+  } else {
+    const from = (r && typeof r === "object") ? avSessionUiStrField(r, ["from"]) : "";
+    const rname = (r && typeof r === "object") ? avSessionUiStrField(r, ["name"]) : "";
+    const rver = (r && typeof r === "object") ? avSessionUiNumField(r, ["version"]) : null;
+    if (from) {
+      s.lastMsg = "new session from template \u201c" + avSessionUiClean(rname || from, 48) + "\u201d" + (rver != null ? " v" + Math.round(rver) : "") + " \u2014 unsaved; press SAVE to keep it";
+    } else {
+      s.lastMsg = "new session started \u2014 unsaved; press SAVE to keep the working state";
+    }
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("new.fail");
+  }
+  s.nameId = null;                       /* the current pointer changed: refill the name field */
+  s.bootKey = "";                        /* repaint the select against the fresh list */
+  avSessionUiSync();
+}
+
 /* ---------- browser v2 actions (R20: search / sort / tags) ---------- */
 
 function avSessionUiSearchSet(v) {
@@ -66366,6 +67249,7 @@ function avSessionUiStatusText() {
   if (s.backupBusy) return { text: "building the backup zip\u2026", kind: "msg" };
   if (s.restoreFileBusy) return { text: "restoring from file\u2026", kind: "msg" };
   if (s.recovering) return { text: "recovering the autosaved snapshot\u2026", kind: "msg" };
+  if (s.newBusy) return { text: "starting a new session\u2026", kind: "msg" };
   if (s.tagsBusy > 0) return { text: "saving tags\u2026", kind: "msg" };
   if (s.lastMsg) return { text: s.lastMsg, kind: (s.lastMsgKind === "err") ? "err" : "msg" };
   return { text: avSessionUiIdleText(), kind: "msg" };
@@ -66656,6 +67540,69 @@ function avSessionUiPaintTools(host) {
   } catch (e) { return false; }
 }
 
+/* ---------- K wave: boot template row + the multi-tab note ---------- */
+
+/* the note is fresh while the module's arrival stamp sits inside the window (auto-hide) */
+function avSessionUiTabFresh() {
+  const s = avSessionUiState;
+  try {
+    if (!(s.tabSeenAt > 0)) return false;
+    const win = (s.tabWindowMs > 0) ? s.tabWindowMs : AV_SESSION_UI_TAB_WINDOW_MS;
+    return (Date.now() - s.tabSeenAt) < win;
+  } catch (e) { return false; }
+}
+
+/* the BOOT TEMPLATE select (none + one option per saved session; a vanished id stays visible
+   as "(missing)" so the select never lies) + the NEW SESSION button state */
+function avSessionUiPaintBoot(host) {
+  const s = avSessionUiState;
+  try {
+    const sel = host.querySelector("#av-sessions-boot");
+    if (sel) {
+      const list = avSessionUiListRead();
+      const opts = [{ id: "", label: "none" }];
+      let found = (s.bootId === "");
+      for (let i = 0; i < list.length && opts.length <= AV_SESSION_UI_LIST_MAX; i++) {
+        const r = list[i];
+        if (!r || typeof r !== "object") continue;
+        const id = avSessionUiStrField(r, ["id"]);
+        if (!id) continue;
+        const v = Math.max(1, Math.round(avSessionUiNum(r.version, 1)));
+        opts.push({ id: id, label: avSessionUiClean(avSessionUiStrField(r, ["name"]) || "untitled", 48) + " (v" + v + ")" });
+        if (id === s.bootId) found = true;
+      }
+      if (!found && s.bootId) opts.push({ id: s.bootId, label: "(missing) " + avSessionUiClean(s.bootId, 40) });
+      let key = "sel:" + s.bootId;
+      for (let i = 0; i < opts.length; i++) key += "|" + opts[i].id + ":" + opts[i].label;
+      if (key !== s.bootKey) {
+        s.bootKey = key;
+        let html = "";
+        for (let i = 0; i < opts.length; i++) html += '<option value="' + avSessionUiEsc(opts[i].id) + '">' + avSessionUiEsc(opts[i].label) + "</option>";
+        sel.innerHTML = html;
+      }
+      avSessionUiSetValue(sel, s.bootId);
+    }
+    const nb = host.querySelector("#av-sessions-new");
+    if (nb) {
+      if (nb.disabled !== !!s.newBusy) nb.disabled = !!s.newBusy;
+      const txt = s.newBusy ? "NEW SESSION\u2026" : "NEW SESSION";
+      if (nb.textContent !== txt) nb.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the dim multi-tab note line (exact text lives in the markup; this toggles visibility) */
+function avSessionUiPaintTabNote(host) {
+  try {
+    const el = host.querySelector("#av-sessions-tabnote");
+    if (!el) return false;
+    const fresh = avSessionUiTabFresh();
+    if (el.hidden !== !fresh) el.hidden = !fresh;
+    return true;
+  } catch (e) { return false; }
+}
+
 /* full repaint: mirrors first (guarded), then every control (write-on-change only) */
 function avSessionUiSync() {
   const host = avSessionUiHost();
@@ -66674,8 +67621,10 @@ function avSessionUiSync() {
     avSessionUiStorageNote();
     avSessionUiPaintName(host);
     avSessionUiPaintTools(host);
+    avSessionUiPaintBoot(host);          /* K wave */
     avSessionUiPaintSave(host);
     avSessionUiPaintStatus(host);
+    avSessionUiPaintTabNote(host);       /* K wave */
     avSessionUiPaintRecovery(host);
     avSessionUiPaintCounts(host);
     avSessionUiPaintList(host);
@@ -66719,7 +67668,12 @@ function avSessionUiSig() {
         const rc = st.recovery;
         const rcAv = (rc && typeof rc === "object") ? (rc.available === true ? 1 : (rc.available === false ? 0 : -1)) : -1;
         const rcAt = (rc && typeof rc === "object" && rc.savedAt != null) ? String(rc.savedAt) : "";
-        sig += [st.count, curId, (st.dirty === true ? 1 : 0), st.lastAutosaveAt, asOn, asMs, rcAv, rcAt, st.backend].join("|");
+        const bt = st.boot;
+        const bootId = (bt && typeof bt === "object" && typeof bt.id === "string") ? bt.id : "";
+        const tb2 = st.tab;
+        const tabSeen = (tb2 && typeof tb2 === "object" && isFinite(Number(tb2.seenAt))) ? Number(tb2.seenAt) : 0;
+        const tabFresh = avSessionUiTabFresh() ? 1 : 0;
+        sig += [st.count, curId, (st.dirty === true ? 1 : 0), st.lastAutosaveAt, asOn, asMs, rcAv, rcAt, st.backend, bootId, tabSeen, tabFresh].join("|");
       }
     }
     return sig + ";" + avSessionUiListSig();
@@ -66755,6 +67709,7 @@ function avSessionUiClick(e) {
     const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
     if (!t) return;
     if (t.closest("#av-sessions-save")) { avSessionUiSave(); return; }
+    if (t.closest("#av-sessions-new")) { avSessionUiNewSession(); return; }
     if (t.closest("#av-sessions-autosave")) { avSessionUiAutosaveToggle(); return; }
     if (t.closest("#av-sessions-recover")) { avSessionUiRecover(); return; }
     if (t.closest("#av-sessions-dismiss")) { avSessionUiDismiss(); return; }
@@ -66786,6 +67741,7 @@ function avSessionUiChange(e) {
     const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
     if (!t) return;
     if (t.closest("#av-sessions-autosave-ms")) { avSessionUiAutosaveMsChange(t); return; }
+    if (t.closest("#av-sessions-boot")) { avSessionUiBootSet(t.value); return; }
     if (t.closest("#av-sessions-restore-file")) { avSessionUiFileChange(t); return; }
     if (t.closest("#av-sessions-sort")) { avSessionUiSortSet(t.value); return; }
     if (t.closest(".av-sessions-tags-input")) { avSessionUiTagsCommit(t); return; }
@@ -66897,12 +67853,15 @@ function avSessionUiSnap() {
     },
     autosave: { on: !!s.autosaveOn, ms: s.autosaveMs, lastAt: s.lastAsAt },
     recovery: { available: !!s.recAvail, at: s.recAt, name: s.recName },
+    boot: { id: s.bootId },
+    tab: { seenAt: s.tabSeenAt, savedAt: s.tabSavedAt, windowMs: s.tabWindowMs, fresh: avSessionUiTabFresh() },
     busy: {
       save: !!s.saveBusy,
       op: s.opBusy ? (s.opBusy.kind + ":" + s.opBusy.id + ":" + (s.opBusy.ver == null ? "" : s.opBusy.ver)) : "",
       backup: !!s.backupBusy,
       restoreFile: !!s.restoreFileBusy,
       recovering: !!s.recovering,
+      newSession: !!s.newBusy,
       tags: s.tagsBusy > 0,
     },
     view: { search: s.search, sort: s.sort, editing: s.tagEditId || null, rows: s.lastRows },
@@ -66940,6 +67899,7 @@ function avSessionUiClasses() {
     "av-sessions-tags-sep", "av-sessions-tags-input", "av-sessions-tags-btn",
     "av-sessions-prev", "av-sessions-prev-part", "av-sessions-prev-eng", "av-sessions-prev-bars",
     "av-sessions-prev-takes", "av-sessions-prev-saved", "av-sessions-prev-upd",
+    "av-sessions-boot", "av-sessions-new", "av-sessions-tabnote",
   ];
 }
 
@@ -66963,6 +67923,8 @@ if (typeof window !== "undefined") {
       dismiss: function () { return avSessionUiDismiss(); },
       autosave: function (on, ms) { return avSessionUiAutosaveSet(on, ms); },
       setTags: function (id, tags) { return avSessionUiTagsSave(id, tags); },
+      newSession: function () { return avSessionUiNewSession(); },
+      boot: function (id) { return avSessionUiBootSet(id); },
     };
   } catch (e) { /* no window — nothing to publish */ }
 }
@@ -92545,7 +93507,7 @@ if (typeof window !== "undefined" && window) {
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.12.0", phase: "T1 · tuning studio", built: "2026-10-09" });
+const ANVIL = Object.freeze({ version: "1.13.0", phase: "K1 · finish knicks", built: "2026-10-09" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------

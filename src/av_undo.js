@@ -26,9 +26,25 @@
        the entry itself moved (mount-time / out-of-band mirror writes are never clobbered), each
        restored key rides the avApplyParam funnel so the engine hears it; the tap is suppressed
        while restoring (no self-recording), and no restore is ever captured as a new entry.
-     "seq" — avSeqSnap() / avSeqLoad() via typeof guards only (contract-pinned names; the module
-       must not be loaded yet at boot of this file). Full pattern deep-copy lives in the entry as
-       JSON — later mutation of the live pattern cannot leak into history.
+     "seq" — capture v2 (K wave §2): ONE JSON object per checkpoint carrying the whole seq family,
+       { v:2, pattern: avSeqSnap(), chains: avSeqChainsSnap(), song: avSeqSongSnap(),
+         scenes: avSeqScenesSnap() }. Every piece is reached through typeof guards only
+       (contract-pinned names; the modules must not be loaded yet at boot of this file); a
+       missing / refused piece is a null field, and when NO piece exists at all the capture
+       refuses (null) so a wholly offline seq family records nothing (v1 honesty kept). Deep
+       copies live in the entry as JSON — later mutation of live state cannot leak into history.
+       Restore applies every NON-NULL piece through its LOAD function in the order pattern ->
+       chains -> song -> scenes. ORDER SAFETY: the four loaders write DISJOINT core state
+       (avSeqPattern / avSeqChainsState / avSeqSongState / avSeqScenesState — av_seq_core.js
+       L373-376), so no order cross-contaminates; pattern-first mirrors av_session.js's pinned
+       seq apply order and lands the big piece before the small ones. Restore is PRE-FLIGHTED
+       and refuses BEFORE applying anything when a present piece's loader is absent — never a
+       partial restore (the entry stays on its stack). Legacy v1 entries (a bare pattern
+       snapshot, v != 2) keep the single avSeqLoad path. Deliberately loader-ONLY: the restore
+       does not call avSeqSetPattern/avSeqUiSync (session apply owns that sync pair; the undo
+       restore keeps v1's scope). A/B (avUndoAStore/avUndoARecall) rides this same
+       capture/restore. Entry bytes accounting is UNCHANGED (before+after+label lengths; the
+       same cap/evict laws) — the v2 strings are naturally longer.
      "plock" — avPlockSnap()/avPlockLoad() when the plock module provides them (typeof-guarded);
        otherwise the v1 fallback: the plock container carried inside the core snapshot
        ({plocks:[…]} merged into the CURRENT avSeqSnap() and loaded via avSeqLoad).
@@ -149,12 +165,31 @@ function avUndoSnapParams() {
   } catch (e) { return null; }
 }
 
+/* one guarded capture piece (absent hook / refusal / throw -> null; never throws) */
+function avUndoSeqPiece(kind) {
+  try {
+    let v = null;
+    if (kind === "pattern") { if (typeof avSeqSnap === "function") v = avSeqSnap(); }
+    else if (kind === "chains") { if (typeof avSeqChainsSnap === "function") v = avSeqChainsSnap(); }
+    else if (kind === "song") { if (typeof avSeqSongSnap === "function") v = avSeqSongSnap(); }
+    else if (kind === "scenes") { if (typeof avSeqScenesSnap === "function") v = avSeqScenesSnap(); }
+    if (v && typeof v === "object") return v;
+  } catch (e) { /* absent or refused -> null */ }
+  return null;
+}
+
+/* capture v2 (K wave §2): {v:2, pattern, chains, song, scenes}; null only when NO piece exists */
 function avUndoSnapSeq() {
   try {
-    if (typeof avSeqSnap !== "function") return null;
-    const s = avSeqSnap();
-    if (!s || typeof s !== "object") return null;
-    return JSON.stringify(s);
+    const out = {
+      v: 2,
+      pattern: avUndoSeqPiece("pattern"),
+      chains: avUndoSeqPiece("chains"),
+      song: avUndoSeqPiece("song"),
+      scenes: avUndoSeqPiece("scenes"),
+    };
+    if (out.pattern == null && out.chains == null && out.song == null && out.scenes == null) return null;
+    return JSON.stringify(out);
   } catch (e) { return null; }
 }
 
@@ -215,10 +250,43 @@ function avUndoApplyParams(targetStr, otherStr) {
   return true;
 }
 
+/* v2 restore (K wave §2): pre-flight EVERY non-null piece, then apply via the LOADERS in the
+   pinned order pattern -> chains -> song -> scenes (disjoint core state — see the header). A
+   present piece with no loader refuses BEFORE anything lands. */
+function avUndoApplySeqV2(o) {
+  const order = ["pattern", "chains", "song", "scenes"];
+  const fns = [
+    (typeof avSeqLoad === "function") ? avSeqLoad : null,
+    (typeof avSeqChainsLoad === "function") ? avSeqChainsLoad : null,
+    (typeof avSeqSongLoad === "function") ? avSeqSongLoad : null,
+    (typeof avSeqScenesLoad === "function") ? avSeqScenesLoad : null,
+  ];
+  let present = 0;
+  for (let i = 0; i < order.length; i++) {
+    const piece = o[order[i]];
+    if (piece == null) continue;                     /* absent at capture time — honestly skipped */
+    if (typeof piece !== "object") return false;     /* a primitive can never restore */
+    if (typeof fns[i] !== "function") return false;  /* pre-flight refusal: never a partial apply */
+    present++;
+  }
+  if (!present) return false;                        /* nothing restorable — a fake success would corrupt */
+  for (let i = 0; i < order.length; i++) {
+    const piece = o[order[i]];
+    if (piece == null) continue;
+    let ok = false;
+    try { ok = fns[i](piece) !== false; } catch (e) { ok = false; }
+    if (!ok) return false;                           /* a refused loader stops here; undo() keeps the entry */
+  }
+  return true;
+}
+
+/* "seq" restore: v2 structured entries (v === 2) go through the four loaders; legacy v1 entries
+   (a bare pattern snapshot, v != 2) keep the single avSeqLoad path (K wave §2). */
 function avUndoApplySeq(targetStr) {
   let o = null;
   try { o = JSON.parse(targetStr); } catch (e) { return false; }
-  if (!o || typeof o !== "object") return false;
+  if (!o || typeof o !== "object" || Array.isArray(o)) return false;
+  if (Number(o.v) === 2) return avUndoApplySeqV2(o);
   if (typeof avSeqLoad !== "function") return false;
   try { return avSeqLoad(o) !== false; } catch (e) { return false; }
 }

@@ -25,6 +25,12 @@
      to planar Float32 (non-finite and f32-overflow doubles -> 0); mono -> ch1 only, ch2 null;
      a truncated data chunk is clamped to whole frames and warned; error = "" when ok.
      Never throws.
+   - avWavMeta(buf) -> { ok, tempo, root, key, source: string[], warnings: string[], error }
+     (K wave KL, verify/_k_wave.md section 4): read-only metadata chunk walk (iXML / acid /
+     id3 / bext) on the avWavInfo discipline - never throws, clamps, honest refusal
+     (ok:false + error for a non-RIFF/WAVE buffer). The section comment below pins the chunk
+     layouts, the sanity clamps (tempo 20..300 else dropped; numeric root 0..127 else
+     dropped) and the first-wins precedence. The import fold (av_import.js) is the caller.
 
    Byte laws (house discipline, av_rec.js header + writer): little-endian everywhere; 16-bit
    sample law = clamp(round(v * 32767), -32768, 32767) with NaN -> 0; 24-bit scales by 8388607
@@ -299,6 +305,352 @@ function avWavDecodeF64(buf) {
     res.error = "f64 read failed: " + avWavErrMsg(e);
     res.ch1 = null;
     res.ch2 = null;
+    return res;
+  }
+}
+
+/* ---------- K wave KL (verify/_k_wave.md section 4): avWavMeta ------------------------------
+   Clean-room, READ-ONLY metadata chunk walk (the walker never writes to buf; files are never
+   rewritten). avWavMeta(buf) -> { ok, tempo, root, key, source: string[], warnings: string[],
+   error }. Discipline mirrors avWavInfo: never throws; honest refusal (ok:false + error) for a
+   non-RIFF/WAVE buffer; ok:true with the fields present-or-null; clamps instead of lies.
+
+   Chunk layouts (documented here because they are the contract this reader implements):
+   - iXML (4-char tag "iXML", text): <TEMPO>/<ROOT>/<KEY> read via tolerant case-insensitive
+     tag regexes (a missing close tag reads to the next "<"). Latin1 or BOM'd UTF-16 text.
+   - acid (tag "acid", 16 bytes minimum; the Sonic Foundry ACIDized form):
+       +0  u32  type      (1 = loop; informational)
+       +4  u16  root      (16-bit field: HIGH byte = MIDI note 0..127, LOW byte = fractional
+                           cents 0..99 - the note lands, the cents stay informational)
+       +6  u16  reserved  (0x8000 nominal; informational)
+       +8  f32  tempo     (BPM, little-endian)
+       +12 u32  beats     (read for layout completeness; the pinned return shape has no slot)
+     A 24-byte tail is tolerated; shorter chunks read what fits and warn.
+   - id3 / ID3 (tag "id3 " - any case, any 4th byte; ID3v2.3/v2.4): TBPM (tempo) + TKEY (key)
+     text frames; 64 KiB scan cap; syncsafe sizes for v2.4, plain BE u32 for v2.3; v2.2
+     (3-byte frame headers) is warned and not guessed.
+   - bext (tag "bext", EBU 3285): presence + the Description (256 B) / Originator (32 B)
+     text; informational only - the strings ride warnings ("bext description: ..."), and
+     "bext" in source marks presence.
+   Sanity clamps: a tempo outside 20..300 from ANY source is DROPPED with a warning (never
+   clamped into a lie); a numeric root outside 0..127 is dropped with a warning; a note-name
+   root stays the trimmed literal string (capped 16 - no invented octave mapping).
+   Precedence: first source that provides a field wins, in the pinned order iXML < acid <
+   id3 (chunk order inside the file does not matter). source lists the readers that
+   CONTRIBUTED (iXML/acid/id3) or were present (bext), in that order. */
+
+const AV_WAV_META_ID3_CAP = 65536;       /* id3 scan cap (bytes of the chunk) */
+const AV_WAV_META_IXML_CAP = 65536;      /* iXML scan cap (bytes) */
+const AV_WAV_META_WARN_MAX = 20;         /* warning lines kept */
+const AV_WAV_META_WARN_LEN = 140;        /* per-warning cap */
+const AV_WAV_META_KEY_CAP = 64;          /* key string cap */
+const AV_WAV_META_NAME_CAP = 16;         /* note-name root cap */
+const AV_WAV_META_TEMPO_MIN = 20;
+const AV_WAV_META_TEMPO_MAX = 300;
+
+function avWavMetaWarn(res, msg) {
+  try {
+    if (res.warnings.length < AV_WAV_META_WARN_MAX) {
+      res.warnings.push(String(msg).slice(0, AV_WAV_META_WARN_LEN));
+    }
+  } catch (e) { /* best-effort */ }
+}
+
+/* collapse control runs + whitespace (the tolerant text normaliser) */
+function avWavMetaTrimStr(s) {
+  try {
+    return String(s).replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").replace(/^ +| +$/g, "");
+  } catch (e) { return ""; }
+}
+
+/* latin1 (or BOM'd UTF-16) decode of u8[start .. start+len), capped 4096 chars; keepNul=false
+   stops at the first NUL (text fields), keepNul=true maps NULs to spaces (iXML blocks) */
+function avWavMetaText(u8, start, len, keepNul) {
+  const n = u8.length;
+  let end = start + len;
+  if (end > n) end = n;
+  if (start >= end) return "";
+  const b0 = u8[start], b1 = u8[start + 1];
+  if (start + 1 < end && b0 === 0xFF && b1 === 0xFE) {    /* UTF-16LE BOM */
+    let s = "";
+    for (let i = start + 2; i + 1 < end && s.length < 4096; i += 2) {
+      const c = u8[i] | (u8[i + 1] << 8);
+      if (c === 0) { if (keepNul) { s += " "; continue; } break; }
+      s += String.fromCharCode(c);
+    }
+    return s;
+  }
+  if (start + 1 < end && b0 === 0xFE && b1 === 0xFF) {    /* UTF-16BE BOM */
+    let s = "";
+    for (let i = start + 2; i + 1 < end && s.length < 4096; i += 2) {
+      const c = (u8[i] << 8) | u8[i + 1];
+      if (c === 0) { if (keepNul) { s += " "; continue; } break; }
+      s += String.fromCharCode(c);
+    }
+    return s;
+  }
+  let s = "";
+  for (let i = start; i < end && s.length < 4096; i++) {
+    const c = u8[i];
+    if (c === 0) { if (keepNul) { s += " "; continue; } break; }
+    s += String.fromCharCode(c);
+  }
+  return s;
+}
+
+/* first numeric token in a string ("128 bpm" -> 128); null when none */
+function avWavMetaNumOf(txt) {
+  try {
+    if (typeof txt !== "string" || !txt) return null;
+    const m = /[-+]?(?:\d+\.?\d*|\.\d+)/.exec(txt);
+    if (!m) return null;
+    const v = Number(m[0]);
+    return isFinite(v) ? v : null;
+  } catch (e) { return null; }
+}
+
+function avWavMetaTempoOk(v) {
+  return (typeof v === "number" && isFinite(v) && v >= AV_WAV_META_TEMPO_MIN && v <= AV_WAV_META_TEMPO_MAX);
+}
+
+/* <TAG ...>value</TAG> or an unterminated <TAG ...>value< tolerant read; "" when absent */
+function avWavMetaTag(text, tag) {
+  try {
+    let re = new RegExp("<\\s*" + tag + "(\\s[^>]*)?>([\\s\\S]*?)<\\s*/\\s*" + tag + "\\s*>", "i");
+    let m = re.exec(text);
+    if (m) return avWavMetaTrimStr(m[2]);
+    re = new RegExp("<\\s*" + tag + "(\\s[^>]*)?>([^<]*)", "i");
+    m = re.exec(text);
+    if (m) return avWavMetaTrimStr(m[2]);
+  } catch (e) { /* absent */ }
+  return "";
+}
+
+/* the iXML read: { tempo, root, key, got } (got = at least one field landed) */
+function avWavMetaFromIxml(u8, start, size, avail, res) {
+  const out = { tempo: null, root: null, key: null, got: false };
+  try {
+    if (size > avail) avWavMetaWarn(res, "iXML chunk truncated (" + avail + " of " + size + " bytes)");
+    let len = (size < avail) ? size : avail;
+    if (len > AV_WAV_META_IXML_CAP) { len = AV_WAV_META_IXML_CAP; avWavMetaWarn(res, "iXML chunk beyond the 64 KiB read cap"); }
+    const txt = avWavMetaText(u8, start, len, true);
+    if (!txt) return out;
+    const t = avWavMetaTag(txt, "TEMPO");
+    if (t) {
+      const v = avWavMetaNumOf(t);
+      if (avWavMetaTempoOk(v)) { out.tempo = v; out.got = true; }
+      else avWavMetaWarn(res, "iXML TEMPO " + t.slice(0, 24) + " outside 20..300 - dropped");
+    }
+    const r = avWavMetaTag(txt, "ROOT");
+    if (r) {
+      if (/^[-+]?\d+$/.test(r)) {
+        const rv = Number(r);
+        if (isFinite(rv) && rv >= 0 && rv <= 127) { out.root = rv; out.got = true; }
+        else avWavMetaWarn(res, "iXML ROOT " + r.slice(0, 24) + " outside 0..127 - dropped");
+      } else { out.root = r.slice(0, AV_WAV_META_NAME_CAP); out.got = true; }
+    }
+    const k = avWavMetaTag(txt, "KEY");
+    if (k) { out.key = k.slice(0, AV_WAV_META_KEY_CAP); out.got = true; }
+  } catch (e) { /* absent */ }
+  return out;
+}
+
+/* the acid read: { tempo, root, got } on the documented 16-byte layout above (a short chunk
+   reads the fields its bytes actually hold and warns) */
+function avWavMetaFromAcid(dv, start, size, avail, res) {
+  const out = { tempo: null, root: null, beats: 0, got: false };
+  try {
+    if (size < 16) avWavMetaWarn(res, "acid chunk undersized (" + size + " bytes; the documented layout is 16)");
+    if (size > avail) avWavMetaWarn(res, "acid chunk truncated (" + avail + " of " + size + " bytes)");
+    const len = (size < avail) ? size : avail;
+    if (len >= 6) {
+      const root16 = dv.getUint16(start + 4, true);
+      const note = (root16 >> 8) & 0xFF;                  /* high byte = MIDI note */
+      if (note >= 0 && note <= 127) { out.root = note; out.got = true; }
+      else avWavMetaWarn(res, "acid root note " + note + " outside 0..127 - dropped");
+    }
+    if (len >= 12) {
+      const t = dv.getFloat32(start + 8, true);
+      if (avWavMetaTempoOk(t)) { out.tempo = t; out.got = true; }
+      else avWavMetaWarn(res, "acid tempo " + (isFinite(t) ? String(t) : "non-finite") + " outside 20..300 - dropped");
+    }
+    if (len >= 16) out.beats = dv.getUint32(start + 12, true);   /* read; no output slot (pinned shape) */
+  } catch (e) { /* absent */ }
+  return out;
+}
+
+/* ID3v2 syncsafe 28-bit integer (tag + v2.4 frame sizes): 4 x 7-bit groups, MSB first */
+function avWavMetaSyncsafe(u8, o) {
+  return ((u8[o] & 0x7F) << 21) | ((u8[o + 1] & 0x7F) << 14) | ((u8[o + 2] & 0x7F) << 7) | (u8[o + 3] & 0x7F);
+}
+
+/* one ID3 text frame's text (enc 0 latin1 / 1 UTF-16 BOM'd / 2 UTF-16BE / 3 UTF-8-tolerated) */
+function avWavMetaId3Text(u8, o, end) {
+  if (o >= end) return "";
+  const enc = u8[o];
+  const s = o + 1;
+  if (enc === 1 || enc === 2) {
+    let be = (enc === 2), st = s;
+    if (enc === 1) {
+      if (s + 1 < end && u8[s] === 0xFF && u8[s + 1] === 0xFE) { be = false; st = s + 2; }
+      else if (s + 1 < end && u8[s] === 0xFE && u8[s + 1] === 0xFF) { be = true; st = s + 2; }
+    }
+    let out = "";
+    for (let i = st; i + 1 < end && out.length < 256; i += 2) {
+      const c = be ? ((u8[i] << 8) | u8[i + 1]) : (u8[i] | (u8[i + 1] << 8));
+      if (c === 0) break;
+      out += String.fromCharCode(c);
+    }
+    return avWavMetaTrimStr(out);
+  }
+  if (enc === 3 && typeof TextDecoder === "function") {
+    try {
+      let out = new TextDecoder("utf-8").decode(u8.subarray(s, end));
+      const z = out.indexOf("\u0000");
+      if (z >= 0) out = out.slice(0, z);
+      return avWavMetaTrimStr(out).slice(0, 256);
+    } catch (e2) { /* fall through to the latin1 read */ }
+  }
+  let out = "";
+  for (let i = s; i < end && out.length < 256; i++) {
+    const c = u8[i];
+    if (c === 0) break;
+    out += String.fromCharCode(c);
+  }
+  return avWavMetaTrimStr(out);
+}
+
+/* the id3 read: { tempo, key, got } - ID3v2.3/v2.4 TBPM + TKEY text frames, 64 KiB cap */
+function avWavMetaFromId3(u8, start, size, avail, res) {
+  const out = { tempo: null, key: null, got: false };
+  try {
+    if (size < 10) { avWavMetaWarn(res, "id3 chunk undersized (" + size + " bytes) - nothing read"); return out; }
+    if (size > avail) avWavMetaWarn(res, "id3 chunk truncated (" + avail + " of " + size + " bytes)");
+    let len = (size < avail) ? size : avail;
+    if (len > AV_WAV_META_ID3_CAP) { avWavMetaWarn(res, "id3 chunk beyond the 64 KiB scan cap"); len = AV_WAV_META_ID3_CAP; }
+    if (!(u8[start] === 0x49 && u8[start + 1] === 0x44 && u8[start + 2] === 0x33)) {
+      avWavMetaWarn(res, "id3 chunk without an ID3 tag header - skipped");
+      return out;
+    }
+    const major = u8[start + 3];
+    if (major !== 3 && major !== 4) {
+      avWavMetaWarn(res, "ID3v2." + major + " tag - frames not read (v2.3/v2.4 only)");
+      return out;
+    }
+    const tagSize = avWavMetaSyncsafe(u8, start + 6);
+    let body = start + 10;
+    let end = start + 10 + tagSize;
+    const hardEnd = start + len;
+    if (end > hardEnd) end = hardEnd;
+    let frames = 0;
+    while (body + 10 <= end && frames < 64) {
+      const i0 = u8[body], i1 = u8[body + 1], i2 = u8[body + 2], i3 = u8[body + 3];
+      if (i0 === 0) break;                                  /* padding starts */
+      const id = String.fromCharCode(i0, i1, i2, i3);
+      if (!/^[A-Z0-9]{4}$/.test(id)) break;                 /* not a frame id: stop honestly */
+      const fsz = (major === 4)
+        ? avWavMetaSyncsafe(u8, body + 4)
+        : ((u8[body + 4] * 0x1000000) + (u8[body + 5] << 16) + (u8[body + 6] << 8) + u8[body + 7]);
+      const dataEnd = body + 10 + fsz;
+      if (dataEnd > end) { avWavMetaWarn(res, "id3 frame " + id + " truncated - skipped"); break; }
+      if (id === "TBPM") {
+        const t = avWavMetaId3Text(u8, body + 10, dataEnd);
+        const v = avWavMetaNumOf(t);
+        if (avWavMetaTempoOk(v)) { out.tempo = v; out.got = true; }
+        else avWavMetaWarn(res, "id3 TBPM " + (t ? t.slice(0, 24) : "empty") + " outside 20..300 - dropped");
+      } else if (id === "TKEY") {
+        const t = avWavMetaId3Text(u8, body + 10, dataEnd);
+        if (t) { out.key = t.slice(0, AV_WAV_META_KEY_CAP); out.got = true; }
+      }
+      body = dataEnd;
+      frames += 1;
+    }
+  } catch (e) { /* absent */ }
+  return out;
+}
+
+/* the bext read: presence + informational Description (256 B) / Originator (32 B) strings
+   (they ride warnings - the pinned shape has no bext field); returns presence */
+function avWavMetaFromBext(u8, start, size, avail, res) {
+  try {
+    if (size < 348) avWavMetaWarn(res, "bext chunk undersized (" + size + " bytes)");
+    const len = (size < avail) ? size : avail;
+    if (len >= 288) {
+      const desc = avWavMetaTrimStr(avWavMetaText(u8, start, 256, false)).slice(0, 160);
+      const orig = avWavMetaTrimStr(avWavMetaText(u8, start + 256, 32, false)).slice(0, 80);
+      if (desc) avWavMetaWarn(res, "bext description: " + desc);
+      if (orig) avWavMetaWarn(res, "bext originator: " + orig);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avWavMeta(buf) {
+  const res = { ok: false, tempo: null, root: null, key: null, source: [], warnings: [], error: "" };
+  try {
+    const u8 = avWavBytes(buf);
+    if (!u8) { res.error = "unsupported buffer (ArrayBuffer|view required)"; return res; }
+    const n = u8.length;
+    if (n < 12) { res.error = "too short for a RIFF header"; return res; }
+    if (!(u8[0] === 82 && u8[1] === 73 && u8[2] === 70 && u8[3] === 70)) { res.error = "missing RIFF tag"; return res; }
+    if (!(u8[8] === 87 && u8[9] === 65 && u8[10] === 86 && u8[11] === 69)) { res.error = "not a WAVE file"; return res; }
+
+    const dv = new DataView(u8.buffer, u8.byteOffset, n);
+    const got = { ixml: null, acid: null, id3: null, bext: false };
+    let sawAny = false;
+    let o = 12;
+    while (o + 8 <= n) {
+      const size = dv.getUint32(o + 4, true);
+      const body = o + 8;
+      const avail = (body <= n) ? (n - body) : 0;
+      const c0 = u8[o] | 0x20, c1 = u8[o + 1] | 0x20, c2 = u8[o + 2] | 0x20, c3 = u8[o + 3] | 0x20;
+      if (c0 === 105 && c1 === 120 && c2 === 109 && c3 === 108) {          /* "iXML" */
+        sawAny = true;
+        if (!got.ixml) got.ixml = avWavMetaFromIxml(u8, body, size, avail, res);
+      } else if (c0 === 97 && c1 === 99 && c2 === 105 && c3 === 100) {     /* "acid" */
+        sawAny = true;
+        if (!got.acid) got.acid = avWavMetaFromAcid(dv, body, size, avail, res);
+      } else if (c0 === 105 && c1 === 100 && c2 === 51) {                  /* "id3" (any 4th byte) */
+        sawAny = true;
+        if (!got.id3) got.id3 = avWavMetaFromId3(u8, body, size, avail, res);
+      } else if (c0 === 98 && c1 === 101 && c2 === 120 && c3 === 116) {    /* "bext" */
+        sawAny = true;
+        if (got.bext === false) got.bext = avWavMetaFromBext(u8, body, size, avail, res) === true;
+      }
+      if (size > n) { avWavMetaWarn(res, "chunk at " + o + " claims more bytes than the buffer holds - walking stopped"); break; }
+      o = body + size + (size & 1);                                        /* RIFF chunks pad to even */
+    }
+
+    /* first-wins fold in the pinned order iXML < acid < id3; bext contributes presence */
+    const srcs = [];
+    if (got.ixml && got.ixml.got) {
+      if (got.ixml.tempo !== null) res.tempo = got.ixml.tempo;
+      if (got.ixml.root !== null) res.root = got.ixml.root;
+      if (got.ixml.key !== null) res.key = got.ixml.key;
+      srcs.push("iXML");
+    }
+    if (got.acid && got.acid.got) {
+      if (res.tempo === null && got.acid.tempo !== null) res.tempo = got.acid.tempo;
+      if (res.root === null && got.acid.root !== null) res.root = got.acid.root;
+      srcs.push("acid");
+    }
+    if (got.id3 && got.id3.got) {
+      if (res.tempo === null && got.id3.tempo !== null) res.tempo = got.id3.tempo;
+      if (res.key === null && got.id3.key !== null) res.key = got.id3.key;
+      srcs.push("id3");
+    }
+    if (got.bext) srcs.push("bext");
+    res.source = srcs;
+    if (!srcs.length) res.warnings.push(sawAny ? "no usable metadata found" : "no metadata chunks found");
+    res.ok = true;
+    return res;
+  } catch (e) {
+    res.ok = false;
+    res.tempo = null;
+    res.root = null;
+    res.key = null;
+    res.source = [];
+    res.error = avWavErrMsg(e);
     return res;
   }
 }

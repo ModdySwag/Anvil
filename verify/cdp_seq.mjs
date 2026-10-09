@@ -70,8 +70,25 @@
 //     recorded here (never silently): 30 pre-E checks audited clean. The E legs run a
 //     deterministic acid patch with fx muted (the T6 clean-patch discipline) on their own kind
 //     switch, restoring every value they set.
+// 11b. WAVE K RIG LEGS (contract verify/_k_wave.md section 5; the section-11b/11c blocks
+//     below): fill toggle -- the runtime FILL flag's real UI toggle (#av-seq-fill-toggle +
+//     avSeqSchedSetFill/GetFill, the KI pin) is driven with REAL mouse clicks MID-RUN: a lone
+//     cond:"fill" step (step 0, track 0) stays silent while the flag reads 0 and emits once
+//     the toggle click flips it to 1, witnessed on the existing planner/event observables
+//     (window.__avSeqTrace records only after avSeqSchedEmit actually fired avNoteDown;
+//     __avSeq.traceCount indexes the ring). Mid-run because avSeqUiSchedPush ->
+//     avSeqSetPattern runs on every UI PLAY -- a before-play toggle would conflate the
+//     load-path fill initialisation with the runtime toggle ("the toggle owns it at
+//     runtime"). chain undo -- a real +CHAIN click (avSeqUiChainAdd -> avSeqChainsLoad +
+//     avUndoPush("seq","chain")) must be restored by avUndo() and re-applied by avRedo()
+//     (the v2 "seq" capture: avSeqChainsSnap() deep-equal both ways). scene undo -- a scene
+//     captured through the real CAPTURE control with one mute flipped away, then a real
+//     RECALL click (immediate path + avUndoPush("seq","scene")); avUndo() must restore the
+//     prior avSeqSnap() byte-for-byte. State read via the facade observables only.
 //     CHECKS: 30 before the E wave; +4 accent-leg checks (3 ratio/band gates + 1 capture
-//     sanity) => 34 unpinned, 35 pinned (the freeze pin pair stays LAST, per the contract).
+//     sanity) => 34 unpinned, 35 pinned; +6 WAVE K checks (fill surface - fill OFF silence -
+//     fill ON emit - chain undo - chain redo - scene undo) => 40 unpinned, 41 pinned (the
+//     freeze pin pair stays LAST, per the contract).
 import { spawn, execSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -90,7 +107,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    P4: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = 'dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca';
+const EXPECT_SHA = 'e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -401,6 +418,12 @@ const ACC_VEL_GAIN = 1.6;           /* = 0.8 / 0.5 -- the default-vel band leg's
 const ACC_VEL_BAND_REL = 0.15;      /* tight band around the gain ratio; the OLD implicit       */
                                     /* accent reads ~3x and cannot sit inside it (pinned on the */
                                     /* first real run)                                          */
+
+/* ---------- WAVE K timings (verify/_k_wave.md section 5: the fill-toggle leg) ---------- */
+const FILL_OFF_MS = 2600;    /* fill-off phase: >= 1 bar (2 s @120 bpm) of cond:"fill" silence  */
+const FILL_ON_MS = 3200;     /* fill-on phase: >= 1 full bar + the 0.12 s plan lookahead +      */
+                             /* delivery slack (a step already planned pre-toggle is skipped;   */
+                             /* the following bar is planned and delivered within ~2.12 s)      */
 
 const shotPath = path.join(here, '..', 'renders', 'p4-seq-suite.png');
 
@@ -1032,6 +1055,149 @@ async function main() {
     check('accent witness (default-vel unflagged): vel 0.8 flag 0 vs vel 0.5 flag 0 -> peak ratio inside the pure-gain band (' + ACC_VEL_GAIN + ' +- ' + Math.round(ACC_VEL_BAND_REL * 100) + '%; the old implicit accent reads ~3x)', false, 'witness not armed');
     check('accent witness (legacy path): plain avNoteDown vel 0.9 (no opts) still accents vs an explicit acc:0 render (ratio >= ' + ACCENT_RATIO_MIN + ')', false, 'witness not armed');
     check('accent witness sanity: all six renders flowed on the master tap (peak rms > ' + ACC_MIN_RMS + ' -- the ratio gates are never vacuous)', false, 'witness not armed');
+  }
+
+  /* ---- 11b. WAVE K: fill toggle (contract verify/_k_wave.md section 5) ----
+     The runtime FILL flag's real UI toggle (#av-seq-fill-toggle + avSeqSchedSetFill/GetFill,
+     the KI pin) is driven with REAL mouse clicks MID-RUN. The witness is the existing
+     planner/event observable: window.__avSeqTrace + __avSeq.traceCount -- records are pushed
+     ONLY when avSeqSchedEmit actually fired avNoteDown ("on"). The lone cond:"fill" step sits
+     at step 0 of track 0, so one bar of silence = zero track-0/step-0 "on" records; one bar
+     with the flag on = >= 1. Mid-run because avSeqUiSchedPush -> avSeqSetPattern runs on
+     every UI PLAY (a before-play toggle would conflate the load-path fill initialisation
+     with the runtime toggle). State read via the facade observables only. */
+  {
+    const tracePull = async (from) => (await ev(`(() => {
+      const d = window.__avSeq || null;
+      const ring = window.__avSeqTrace || [];
+      const to = (d && isFinite(d.traceCount)) ? d.traceCount : 0;
+      const recs = [];
+      for (let k = ${from}; k < to && k < ${from} + 400; k++) { const r = ring[k % 256]; if (r) recs.push(r); }
+      return { from: ${from}, to: to, fill: d ? d.fill : null, recs: recs };
+    })()`)).value || {};
+    const onStep0 = (recs) => (recs || []).filter(r => r && r.type === 'on' && r.track === 0 && r.step === 0).length;
+
+    const surf = (await ev(`(() => {
+      const t = document.querySelector('#av-seq-host #av-seq-fill-toggle');
+      return {
+        tog: !!t, label: t ? String(t.textContent || '').trim() : null,
+        cls: t ? String(t.className || '') : null, aria: t ? String(t.getAttribute('aria-pressed') || '') : null,
+        setFn: typeof avSeqSchedSetFill === 'function', getFn: typeof avSeqSchedGetFill === 'function',
+        fill: (typeof avSeqSchedGetFill === 'function') ? avSeqSchedGetFill() : null,
+        handle: !!(window.__avSeq && typeof window.__avSeq.setFill === 'function'),
+      };
+    })()`)).value || {};
+    check('K fill toggle surface: #av-seq-fill-toggle in the transport row (label FILL) + avSeqSchedSetFill/GetFill exports live (the KI pin)',
+      surf.tog === true && /FILL/i.test(surf.label || '') && surf.setFn === true && surf.getFn === true && surf.handle === true && (surf.fill === 0 || surf.fill === 1),
+      JSON.stringify(surf));
+
+    if (!(surf.tog === true && surf.setFn === true && surf.getFn === true)) {
+      check('K fill OFF: a lone cond:"fill" step stays SILENT while the runtime flag reads 0 (no track-0/step-0 "on" trace records; transport provably ran)', false, 'toggle/export surface missing');
+      check('K fill ON: the real toggle click flips avSeqSchedGetFill() to 1 (pressed-state class moves) and the cond:"fill" step emits (>= 1 "on" trace record)', false, 'toggle/export surface missing');
+    } else {
+      await stopTransport();
+      /* start from OFF (performance state; the leg restores it at the end) */
+      let f0 = (await ev(`(() => { try { return avSeqSchedGetFill(); } catch (e) { return null; } })()`)).value;
+      if (f0 === 1) {
+        await clickSel('#av-seq-host #av-seq-fill-toggle', 250);
+        f0 = (await ev(`(() => { try { return avSeqSchedGetFill(); } catch (e) { return null; } })()`)).value;
+      }
+      const clsOff = (await ev(`(() => { const t = document.querySelector('#av-seq-host #av-seq-fill-toggle'); return t ? String(t.className || '') : null; })()`)).value;
+      const ariaOff = (await ev(`(() => { const t = document.querySelector('#av-seq-host #av-seq-fill-toggle'); return t ? String(t.getAttribute('aria-pressed') || '') : null; })()`)).value;
+      /* one cond:"fill" step at step 0 of track 0 (every other step off; H.pattern shape) */
+      const fillPat = await ev(`(() => {
+        const H = window.__seqh;
+        const P = H.pattern({ name: 'RIG FILL PAT' });
+        const steps = [];
+        for (let s = 0; s < 64; s++) steps.push(H.step(s === 0 ? { on: 1, cond: 'fill' } : { on: 0 }));
+        P.tracks[0].steps = steps;
+        return P;
+      })()`);
+      let loadOk = false;
+      if (fillPat && fillPat.value) {
+        const loadF = await ev(`window.__seqh.load(${JSON.stringify(fillPat.value)})`);
+        loadOk = !!(loadF.value && loadF.value.ok === true);
+        if (!loadOk) note('K fill pattern load: ' + JSON.stringify(loadF.value));
+      } else {
+        note('K fill pattern build failed');
+      }
+      const c0 = (await ev(`window.__avSeq.traceCount`)).value;
+      const playClick = await clickSel('#av-seq-host #av-seq-play', 250);
+      let playing = false;
+      for (let i = 0; i < 20 && !playing; i++) {
+        playing = (await ev(`(() => { try { return avSeqIsPlaying() === true; } catch (e) { return false; } })()`)).value === true;
+        if (!playing) await sleep(100);
+      }
+      await sleep(FILL_OFF_MS);
+      const gPre = (await ev(`(() => { try { return avSeqSchedGetFill(); } catch (e) { return null; } })()`)).value;
+      const cTog = (await ev(`window.__avSeq.traceCount`)).value;
+      const offP = await tracePull(Number(c0) || 0);
+      const togClick = await clickSel('#av-seq-host #av-seq-fill-toggle', 250);
+      const gPost = (await ev(`(() => { try { return avSeqSchedGetFill(); } catch (e) { return null; } })()`)).value;
+      const postR = (await ev(`(() => { const t = document.querySelector('#av-seq-host #av-seq-fill-toggle'); return t ? { cls: String(t.className || ''), aria: String(t.getAttribute('aria-pressed') || '') } : null; })()`)).value;
+      await sleep(FILL_ON_MS);
+      const stopClick = await clickSel('#av-seq-host #av-seq-stop', 250);
+      const onP = await tracePull(Number(cTog) || 0);
+      const offHits = onStep0(offP.recs);
+      const onHits = onStep0(onP.recs);
+      check('K fill OFF: a lone cond:"fill" step stays SILENT while the runtime flag reads 0 (no track-0/step-0 "on" trace records; transport provably ran)',
+        loadOk === true && playClick === true && playing === true && gPre === 0 && offHits === 0,
+        JSON.stringify({ load: loadOk, play: playClick, playing: playing, fill: gPre, offHits: offHits, offWindow: [offP.from, offP.to] }));
+      const clsOk = (postR && typeof clsOff === 'string') ? (postR.cls !== clsOff || postR.aria !== ariaOff) : false;
+      check('K fill ON: the real toggle click flips avSeqSchedGetFill() to 1 (pressed-state class moves) and the cond:"fill" step emits (>= 1 "on" trace record)',
+        loadOk === true && togClick === true && gPost === 1 && onHits >= 1 && clsOk === true,
+        JSON.stringify({ load: loadOk, toggle: togClick, fill: gPost, onHits: onHits, onWindow: [onP.from, onP.to], clsOff: clsOff, clsOn: postR && postR.cls, ariaOff: ariaOff, ariaOn: postR && postR.aria, stop: stopClick }));
+      /* restore the performance state (the toggle is not persisted; leave it as found) */
+      if (gPost === 1) await clickSel('#av-seq-host #av-seq-fill-toggle', 250);
+    }
+  }
+
+  /* ---- 11c. WAVE K: chain + scene undo (the v2 "seq" capture; contract section 5) ----
+     chain: a real +CHAIN click appends via avSeqUiChainAdd (avSeqChainsLoad + avUndoPush
+     ("seq","chain")); avUndo() must restore avSeqChainsSnap() and avRedo() re-apply it.
+     scene: a scene captured through the real controls with one mute flipped away, then a
+     real RECALL click (avSeqSceneRecall + avUndoPush("seq","scene")); avUndo() must restore
+     the prior avSeqSnap() byte-for-byte. State read via the facade observables only. */
+  {
+    await stopTransport();
+    const chainsJ = async () => (await ev(`(() => { try { return JSON.stringify(avSeqChainsSnap()); } catch (e) { return null; } })()`)).value;
+    const cPreJ = await chainsJ();
+    await ev(`(() => { const ids = ['av-seq-song-name','av-seq-chain-name','av-seq-chains-name']; for (let i = 0; i < ids.length; i++) { const el = document.getElementById(ids[i]); if (el) { el.value = 'RIG CHAIN'; el.dispatchEvent(new Event('input', { bubbles: true })); return true; } } return false; })()`);
+    const addClick = await clickSel('#av-seq-host #av-seq-song-add', 350);
+    const cMidJ = await chainsJ();
+    const grew = (() => { try { return cMidJ != null && cPreJ != null && cMidJ !== cPreJ; } catch (e) { return false; } })();
+    const undR = await ev(`(() => { try { return avUndo() === true; } catch (e) { return 'threw: ' + ((e && e.message) || e); } })()`);
+    const cUndJ = await chainsJ();
+    const undoOk = undR.value === true && cUndJ != null && cPreJ != null && deepEq(JSON.parse(cUndJ), JSON.parse(cPreJ));
+    check('K chain undo: real +CHAIN click appends (avSeqChainsSnap grew by one) -> avUndo() restores the chain list byte-for-byte (v2 "seq" capture)',
+      addClick === true && grew === true && undoOk, JSON.stringify({ add: addClick, grew: grew, undo: undR.value, restored: undoOk }));
+    const redR = await ev(`(() => { try { return avRedo() === true; } catch (e) { return 'threw: ' + ((e && e.message) || e); } })()`);
+    const cRedJ = await chainsJ();
+    const redoOk = redR.value === true && cRedJ != null && cMidJ != null && deepEq(JSON.parse(cRedJ), JSON.parse(cMidJ));
+    check('K chain redo: avRedo() re-applies the appended chain (avSeqChainsSnap equals the post-add snapshot)',
+      redoOk, JSON.stringify({ redo: redR.value, reapplied: redoOk }));
+  }
+  {
+    await stopTransport();
+    /* fixture: mute track 0, capture scene RIG SCN, un-mute (the state now differs from it) */
+    const mute1 = await clickSel('#av-seq-host .av-seq-row-mute[data-track="0"]', 350);
+    const nameSet = (await ev(`(() => { const i = document.getElementById('av-seq-scene-name'); if (!i) return false; i.value = 'RIG SCN'; return true; })()`)).value === true;
+    const capClick = await clickSel('#av-seq-host #av-seq-scene-cap', 350);
+    const sceneIn = (await ev(`(() => { try { const s = avSeqScenesSnap(); return Array.isArray(s.scenes) && s.scenes.some(function (x) { return x && x.name === 'RIG SCN'; }); } catch (e) { return false; } })()`)).value === true;
+    const mute2 = await clickSel('#av-seq-host .av-seq-row-mute[data-track="0"]', 350);
+    await sleep(150);
+    const s1J = (await ev(`(() => { try { return JSON.stringify(avSeqSnap()); } catch (e) { return null; } })()`)).value;
+    await sleep(400);
+    const arm = (await ev(`(() => { const s = document.getElementById('av-seq-scene-sel'); if (!s) return { ok: false, why: 'no #av-seq-scene-sel' }; if (s.options.length === 0) { try { if (typeof avSeqUiSongRefresh === 'function') avSeqUiSongRefresh(document.getElementById('av-seq-host')); } catch (e) {} } if (s.options.length === 0 && typeof avSeqScenesSnap === 'function') { try { const sc = avSeqScenesSnap(); const ns = (sc && Array.isArray(sc.scenes)) ? sc.scenes.map(function (x) { return x && x.name ? String(x.name) : ''; }).filter(Boolean) : []; if (ns.length) s.innerHTML = ns.map(function (n) { return '<option value="' + n + '">' + n + '</option>'; }).join(''); } catch (e) {} } const o = Array.prototype.find.call(s.options, function (x) { return String(x.textContent || '').trim().indexOf('RIG SCN') >= 0 || String(x.value) === 'RIG SCN'; }); if (o) { s.value = o.value; s.dispatchEvent(new Event('change', { bubbles: true })); return { ok: true, via: 'option', n: s.options.length }; } const nn = s.options.length; if (nn > 0) { s.selectedIndex = nn - 1; s.dispatchEvent(new Event('change', { bubbles: true })); return { ok: true, via: 'last', n: nn }; } return { ok: false, why: 'no options', n: 0 }; })()`)).value || {};
+    const recClick = await clickSel('#av-seq-host #av-seq-scene-recall', 450);
+    const s2J = (await ev(`(() => { try { return JSON.stringify(avSeqSnap()); } catch (e) { return null; } })()`)).value;
+    const recalled = (() => { try { const a = JSON.parse(s1J), b = JSON.parse(s2J); return a.tracks[0].mute === 0 && b.tracks[0].mute === 1; } catch (e) { return false; } })();
+    const und2R = await ev(`(() => { try { return avUndo() === true; } catch (e) { return 'threw: ' + ((e && e.message) || e); } })()`);
+    const s3J = (await ev(`(() => { try { return JSON.stringify(avSeqSnap()); } catch (e) { return null; } })()`)).value;
+    const sceneUndoOk = und2R.value === true && s3J != null && s1J != null && deepEq(JSON.parse(s3J), JSON.parse(s1J));
+    check('K scene undo: capture (track 0 muted) + un-mute -> real RECALL applies the scene -> avUndo() restores the prior pattern byte-for-byte (facade avSeqSnap deep-equal)',
+      mute1 === true && nameSet === true && capClick === true && sceneIn === true && mute2 === true && arm.ok === true && recClick === true && recalled === true && sceneUndoOk,
+      JSON.stringify({ muteOn: mute1, captured: sceneIn, muteOff: mute2, armed: arm.ok, recall: recClick, recalled: recalled, undo: und2R.value, restored: sceneUndoOk }).slice(0, 400));
   }
 
   /* ── 12. restore the witness patch (engine kind + kick decay) ── */

@@ -40,12 +40,28 @@
      the song runner plays, else the existing immediate avSeqSceneRecall; the immediate branch
      pushes avUndoPush("seq","scene") AFTER (the playing branch's checkpoint is the runner's own
      ONE per applied recall — §2.6). Chain edits (+CHAIN/CLEAR) push checkpoints AFTER (label
-     "chain"). The local default pattern builder (`avSeqUiLocalDefault`) gains swing 0 per track
-     (model v2).
+     "chain"). Scene CAPTURE pushes AFTER too (label "scene" — K wave: undo v2 captures scenes,
+     so capture is now restorable). Song JSON import pushes AFTER (label "song"): the runner's
+     own checkpoint covers the pattern leg; the UI push covers a rows-only import and no-ops
+     when both landed (same state -> no entry). The local default pattern builder
+     (`avSeqUiLocalDefault`) gains swing 0 per track (model v2).
    - FOREIGN REACHES stay typeof-guarded: avSeqEuclid · avSeqMutate · avSeqHumanize · avSeqFill ·
      avSeqFillIds · avSeqSongSnap/Load · avSeqSchedCycleLen · avSongPlay/Stop/IsPlaying/Status/
      SceneRecall/ExportMidi/ExportJson/ImportJson (the sa-F sibling — authored in parallel; every
      call is typeof-guarded and this file never assumes it exists).
+
+   K ADDENDUM (wave verify/_k_wave.md §2 — child KI): the runtime FILL toggle.
+   - Control: `#av-seq-fill-toggle` (label "FILL"; class "on" + aria-pressed reflect
+     avSeqSchedGetFill() === 1). PLACEMENT NOTE — the pin reads "transport row next to the
+     existing FILL apply control"; the ONLY fill apply control (`#av-seq-fill-apply`) lives in
+     the GEN block's FILL row, so the toggle sits next to it THERE (the adjacency anchor wins;
+     the transport row carries PLAY/STOP/REC/pos/BPM only).
+   - Click -> avSeqSchedSetFill(!(avSeqSchedGetFill() === 1)) + an avSeqUiSync() repaint (both
+     sched exports typeof-guarded; without them the click refuses, never throws).
+   - PERFORMANCE state (pin): toggling pushes NO undo checkpoint (the named-fill apply keeps its
+     own "gen" push), the flag is NOT part of the pattern model (a snapshot's fill field only
+     seeds the runtime flag at load inside av_seq_sched — see its header), and it is NOT
+     persisted anywhere (no LS/IDB/session leg). It gates cond "fill" steps live.
 
    WHAT THIS CARD IS
    - transport (PLAY · STOP · REC) wired to av_seq_sched.js's pinned API through typeof guards;
@@ -91,7 +107,7 @@
      M2: #av-seq-gen · #av-seq-gen-track · #av-seq-gen-status
      #av-seq-euclid-pulses · #av-seq-euclid-len · #av-seq-euclid-rot · #av-seq-euclid-apply
      #av-seq-mutate-amt · #av-seq-mutate-apply · #av-seq-humanize-amt · #av-seq-humanize-apply
-     #av-seq-fill-id · #av-seq-fill-apply
+     #av-seq-fill-id · #av-seq-fill-apply · #av-seq-fill-toggle
      #av-seq-song-rows · #av-seq-song-rows-add · #av-seq-song-play · #av-seq-song-pos
      #av-seq-song-quant · #av-seq-song-midi · #av-seq-song-json · #av-seq-song-open
      #av-seq-song-timeline · #av-seq-song-status
@@ -267,7 +283,7 @@ function avSeqUiCycleLen() {
   return AV_SEQ_UI_DEFAULT_LEN;
 }
 
-/* ---------- model edits (core snapshot path; undo push BEFORE the load when F is present) ---------- */
+/* ---------- model edits (core snapshot path; undo push AFTER the load — see avSeqUiModelEdit) ---------- */
 
 function avSeqUiCleanPatch(patch) {
   if (!patch || typeof patch !== "object") return null;
@@ -647,6 +663,20 @@ function avSeqUiGenFill() {
   return ok;
 }
 
+/* K wave §2: the runtime FILL flag toggle (PERFORMANCE state — no undo push, not part of the
+   pattern, not persisted; see the header). Guarded: without the sched exports the click
+   refuses (false), never throws. */
+function avSeqUiFillToggle() {
+  let ok = false;
+  try {
+    if (typeof avSeqSchedGetFill === "function" && typeof avSeqSchedSetFill === "function") {
+      ok = avSeqSchedSetFill(avSeqSchedGetFill() === 1 ? false : true) === true;
+    }
+  } catch (e) { ok = false; }
+  avSeqUiSync();          /* repaint: the pressed state follows avSeqSchedGetFill() */
+  return ok;
+}
+
 /* ---------- M2 · song rows + arranger (core snapshot path, undo AFTER — label "song") ---------- */
 
 /* pure: normalise a song snapshot ({v,rows} or rows[]) into render rows — guarded reads with the
@@ -992,6 +1022,9 @@ function avSeqUiSongOpenFile(inputEl) {
     const done = function (txt) {
       let ok = false;
       try { if (typeof avSongImportJson === "function") ok = avSongImportJson(String(txt)) === true; } catch (e) { ok = false; }
+      /* K wave audit: the runner's own checkpoint covers the pattern leg; this push covers a
+         rows-only import and no-ops when both landed (same state -> no entry). */
+      if (ok) { try { if (typeof avUndoPush === "function") avUndoPush("seq", "song"); } catch (e) { /* F optional */ } }
       avSeqUiSongStatusSet(ok ? "song JSON imported" : "song JSON refused");
       if (ok) avSeqUiSync();
       reset();
@@ -1118,6 +1151,7 @@ function avSeqUiGenHTML() {
     '<span class="av-seq-gen-lbl">FILL</span>' +
     '<select class="av-select av-seq-tsel" id="av-seq-fill-id" aria-label="Named fill">' + fillOpts + '</select>' +
     '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-fill-apply" title="Apply the named fill (avSeqFill) — model edit, undo checkpoint after">FILL ▸</button>' +
+    '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-fill-toggle" aria-pressed="false" title="FILL — runtime fill flag (steps with condition FILL fire while on) · performance state: no undo, not part of the pattern, not saved">FILL</button>' +
     '</div>' +
     '<div class="av-seq-gen-row">' +
     '<span class="av-seq-gen-lbl">EUCLID</span>' +
@@ -1457,6 +1491,14 @@ function avSeqUiTransportRefresh(host, playing) {
       rec.setAttribute("aria-pressed", armed ? "true" : "false");
       rec.textContent = mode === "step" ? "REC·STEP" : mode === "live" ? "REC·LIVE" : "REC";
     }
+    /* K wave §2: the runtime FILL toggle's pressed state follows avSeqSchedGetFill() */
+    const ft = host.querySelector("#av-seq-fill-toggle");
+    if (ft) {
+      let fillOn = false;
+      try { if (typeof avSeqSchedGetFill === "function") fillOn = avSeqSchedGetFill() === 1; } catch (e) { fillOn = false; }
+      ft.classList.toggle("on", fillOn);
+      ft.setAttribute("aria-pressed", fillOn ? "true" : "false");
+    }
     return true;
   } catch (e) { return false; }
 }
@@ -1567,13 +1609,18 @@ function avSeqUiImport() {
 function avSeqUiChainAdd() {
   let ok = false;
   try {
-    const items = avSeqUiChainItems();
-    let name = "CHAIN " + (items.length + 1);
+    const itemsN = (function () { try { const s = (typeof avSeqChainsSnap === "function") ? avSeqChainsSnap() : null; if (!s || !Array.isArray(s.chains)) return 0; let n = 0; for (let i = 0; i < s.chains.length; i++) n += Array.isArray(s.chains[i]) ? s.chains[i].length : 0; return n; } catch (e) { return 0; } })();
+    let name = "CHAIN " + (itemsN + 1);
     try {
       const snap = avSeqUiPatternSnapshot();
-      if (snap && snap.name) name = "CHAIN " + (items.length + 1) + " · " + String(snap.name).slice(0, 24);
+      if (snap && snap.name) name = "CHAIN " + (itemsN + 1) + " · " + String(snap.name).slice(0, 24);
     } catch (e) { /* name nicety */ }
-    if (typeof avSeqChainsLoad === "function") ok = avSeqChainsLoad(items.concat([{ name: name }])) !== false;
+    if (typeof avSeqChainsLoad === "function") {
+      const cs = (typeof avSeqChainsSnap === "function") ? avSeqChainsSnap() : null;
+      const chains = (cs && Array.isArray(cs.chains)) ? cs.chains.map(function (c) { return Array.isArray(c) ? c.slice() : []; }) : [[], [], [], []];
+      chains[0].push(name);
+      ok = avSeqChainsLoad({ v: 1, chains: chains }) !== false;
+    }
   } catch (e) { ok = false; }
   if (ok) { try { if (typeof avUndoPush === "function") avUndoPush("seq", "chain"); } catch (e) { /* F optional */ } }
   avSeqUiSongRefresh(avSeqUiHost());
@@ -1600,6 +1647,8 @@ function avSeqUiSceneCaptureUI() {
     if (!name) name = "SCENE " + (avSeqUiSceneNames().length + 1);
     if (typeof avSeqSceneCapture === "function") ok = avSeqSceneCapture(name) !== false;
   } catch (e) { ok = false; }
+  /* K wave audit: scene capture now restores (undo v2 captures scenes) — checkpoint AFTER */
+  if (ok) { try { if (typeof avUndoPush === "function") avUndoPush("seq", "scene"); } catch (e) { /* F optional */ } }
   avSeqUiSongRefresh(host);
   return ok;
 }
@@ -1678,6 +1727,7 @@ function avSeqUiClick(e) {
     if (t.closest("#av-seq-mutate-apply")) { avSeqUiGenMutate(); return; }
     if (t.closest("#av-seq-humanize-apply")) { avSeqUiGenHumanize(); return; }
     if (t.closest("#av-seq-fill-apply")) { avSeqUiGenFill(); return; }
+    if (t.closest("#av-seq-fill-toggle")) { avSeqUiFillToggle(); return; }
     /* M2 — the arranger */
     if (t.closest("#av-seq-song-rows-add")) { avSeqUiSongRowAdd(); return; }
     if (t.closest("#av-seq-song-play")) { avSeqUiSongPlayToggle(); return; }
@@ -1870,10 +1920,13 @@ function avSeqUiSnap() {
     for (let t = 0; t < AV_SEQ_UI_TRACKS; t++) tracks.push({ len: avSeqUiTrackLen(pat, t), speed: avSeqUiTrackSpeed(pat, t), swing: avSeqUiTrackSwing(pat, t) });
     let songRows = 0;
     try { if (typeof avSeqSongSnap === "function") songRows = avSeqUiSongRowsModel(avSeqSongSnap()).length; } catch (e) { songRows = 0; }
+    let fillOn = 0;
+    try { if (typeof avSeqSchedGetFill === "function") fillOn = avSeqSchedGetFill() === 1 ? 1 : 0; } catch (e) { fillOn = 0; }
     snap.ctl = {
       tracks: tracks,
       genTrack: avSeqUiState.genTrack,
       fill: avSeqUiState.fillId || avSeqUiFillIdRead(host),
+      fillOn: fillOn,
       songQuant: avSeqUiState.songQuant,
       songPlaying: avSeqUiSongPlaying(),
       songRows: songRows,

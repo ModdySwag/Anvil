@@ -46,6 +46,17 @@
 //   7. zero page errors · screenshot renders/s2-sessions-suite.png (the sessions card, scale 2) ·
 //      freeze sha256 before === after · THE PAGE IS LEFT CLEAN (autosave back off, rig sessions
 //      deleted, recovery cleared, transport stopped).
+//   K. WAVE K RIG LEGS (contract verify/_k_wave.md section 3 + 5; the 6c/6d blocks below):
+//      6c boot template -- two sessions saved with distinctive markers (RIG TPL A/B), the
+//      boot-template select pointed at B (the av-boot-template LS pin {v:1,id} must follow),
+//      the state mutated away, then a real #av-sessions-new click must apply B's snapshot
+//      (export string + bpm + macro equal to the save-time witness), mark the state DIRTY
+//      (autosave is turned off for the leg so no tick can re-base the fingerprint) and write
+//      an honest status line. 6d multi-tab -- the rig creates its OWN second
+//      BroadcastChannel('anvil-tabs') object in the page and posts {t:"saved"}:
+//      #av-sessions-tabnote must appear ("another tab saved recently") and auto-hide after
+//      the (< 15 s) window. CHECKS: 60 before the K wave; +5 K checks => 65 unpinned,
+//      66 pinned (the freeze pin pair stays LAST).
 import { spawn, execSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -64,7 +75,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    S2: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = 'dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca';
+const EXPECT_SHA = 'e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -120,6 +131,9 @@ const chrome = spawn(exe, [
 ], { stdio: 'ignore', windowsHide: true });
 
 const errors = [];
+/* WAVE K: a blocking JS dialog would hang every later Runtime.evaluate -- page dialogs are
+   auto-accepted and recorded (none is expected: the K pins apply on the explicit click only) */
+const dialogs = [];
 
 /* ---------- page-side scaffolding injected at runtime (rig-owned; never app code) ----------
    __seqi: the rig PATTERN loader — the cdp_studio approach (import string -> avSeqPatternImport
@@ -240,6 +254,7 @@ async function main() {
     else if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description || m.params.exceptionDetails.text);
     else if (m.method === 'Log.entryAdded' && m.params.entry.level === 'error') errors.push('LOG: ' + m.params.entry.text);
     else if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') errors.push(m.params.args.map(a => a.value || a.description || '').join(' '));
+    else if (m.method === 'Page.javascriptDialogOpening') { dialogs.push(String((m.params && m.params.message) || '')); send('Page.handleJavaScriptDialog', { accept: true }).catch(() => { }); }
   };
   await send('Runtime.enable'); await send('Log.enable'); await send('Page.enable');
   if (!String(target.url).startsWith('file://')) await send('Page.navigate', { url });
@@ -1029,6 +1044,146 @@ async function main() {
   check('6b sort: "newest" = the module order after the reload [RIG TWO, RIG] (IDB key readback) \u00b7 "name" = the import comparator flips it (the exact reverse) [RIG, RIG TWO] \u00b7 "updated" = [RIG TWO, RIG] \u00b7 back to "newest" restores byte-for-byte',
     (ordNewest.names || []).join() === 'RIG TWO,RIG' && ordName.ok === true && ordUpd.ok === true && ordBack.ok === true,
     JSON.stringify({ newest: ordNewest.names, name: ordName.r && ordName.r.names, updated: ordUpd.r && ordUpd.r.names, back: ordBack.r && ordBack.r.names }));
+
+  /* ---- 6c. WAVE K: boot template (contract verify/_k_wave.md section 3 + 5) ----
+     Two sessions with distinctive markers are saved (RIG TPL A/B); the boot-template select
+     is pointed at B (the av-boot-template LS pin {v:1,id} must follow); the working state is
+     mutated away; the real NEW SESSION click (#av-sessions-new) must apply B's snapshot
+     (export string + bpm + macro equal to the save-time witness), mark the state DIRTY
+     (autosave turned off for the leg so no tick can re-base the fingerprint) and write an
+     honest status line. The recovery offer is untouched by design. */
+  console.log('-- 6c. boot template (WAVE K) --');
+
+  const asOff6c = val(await ev(`(() => { try { const r = avSessionAutosave(false); return { on: !!(r && r.on === false) }; } catch (e) { return { error: String((e && e.message) || e) }; } })()`)) || {};
+  note('6c autosave off for the template leg: ' + JSON.stringify(asOff6c));
+
+  const mkA = val(await ev(`(() => { const H = window.__seqi; const c = H.clear('RIG TPL A CUT'); const b = H.commit('bpm', 171); const m = H.macro(0, 0.42); return { clear: !!(c && c.ok === true), bpm: b, macro: m }; })()`)) || {};
+  const savA = val(await ev(`(async () => { try { const r = await avSessionSave('RIG TPL A'); return { ok: !!(r && r.ok !== false), id: (typeof r === 'string') ? r : ((r && (r.id || r.sessionId || (r.session && r.session.id) || (r.record && r.record.id))) || null) }; } catch (e) { return { ok: false, error: String((e && e.message) || e) }; } })()`)) || {};
+  const mkB = val(await ev(`(() => { const H = window.__seqi; const c = H.clear('RIG TPL B CUT'); const b = H.commit('bpm', 152); const m = H.macro(0, 0.63); return { clear: !!(c && c.ok === true), bpm: b, macro: m }; })()`)) || {};
+  const w6cB = await wit();
+  const savB = val(await ev(`(async () => { try { const r = await avSessionSave('RIG TPL B'); return { ok: !!(r && r.ok !== false), id: (typeof r === 'string') ? r : ((r && (r.id || r.sessionId || (r.session && r.session.id) || (r.record && r.record.id))) || null) }; } catch (e) { return { ok: false, error: String((e && e.message) || e) }; } })()`)) || {};
+  const l6c = val(await ev(`(typeof avSessionList === 'function') ? avSessionList() : null`)) || [];
+  let idA = savA.id || null, idB = savB.id || null;
+  if (!idA) { const h = l6c.find(s => s && s.name === 'RIG TPL A'); if (h) idA = h.id; }
+  if (!idB) { const h = l6c.find(s => s && s.name === 'RIG TPL B'); if (h) idB = h.id; }
+  const saveOk = mkA.clear === true && mkB.clear === true && savA.ok === true && savB.ok === true && idA != null && idB != null && w6cB.bpm === 152 && near(w6cB.macros && w6cB.macros[0], 0.63, 0.002);
+
+  /* the boot-template select: discovery among the card's selects (the id is not pinned; the
+     sort + autosave-interval selects are excluded), then set to RIG TPL B */
+  const tplR = val(await ev(`(() => {
+    const card = document.getElementById('av-sessions') || document.getElementById('av-sessions-host');
+    const newBtn = !!document.getElementById('av-sessions-new');
+    if (!card) return { card: false, newBtn: newBtn };
+    const sels = [...card.querySelectorAll('select')].filter(function (s) { return s.id !== 'av-sessions-sort' && s.id !== 'av-sessions-autosave-ms'; });
+    return { card: true, newBtn: newBtn, n: sels.length, info: sels.map(function (s) { return { id: s.id || '', opts: [...s.options].map(function (o) { return { v: String(o.value), t: String(o.textContent || '').trim() }; }) }; }) };
+  })()`)) || {};
+  const tplSel = (() => {
+    const list = tplR.info || [];
+    let pick = list.find(s => s.opts.some(o => (idB != null && o.v === idB) || o.t === 'RIG TPL B'));
+    if (!pick) pick = list.find(s => s.opts.some(o => /RIG TPL/.test(o.t)));
+    if (!pick) pick = list.find(s => s.opts.some(o => /none/i.test(o.t)));
+    return pick || null;
+  })();
+  const tplIdx = (tplR.info && tplSel) ? tplR.info.indexOf(tplSel) : -1;
+  const tplSet = tplIdx >= 0 ? (val(await ev(`(() => {
+    const card = document.getElementById('av-sessions') || document.getElementById('av-sessions-host');
+    if (!card) return { ok: false, why: 'no card' };
+    const sels = [...card.querySelectorAll('select')].filter(function (s) { return s.id !== 'av-sessions-sort' && s.id !== 'av-sessions-autosave-ms'; });
+    const sel = sels[${tplIdx}] || null;
+    if (!sel) return { ok: false, why: 'select gone' };
+    const o = Array.prototype.find.call(sel.options, function (x) { return (${JSON.stringify(idB)} != null && x.value === ${JSON.stringify(idB)}) || String(x.textContent || '').trim() === 'RIG TPL B'; });
+    if (!o) return { ok: false, why: 'no RIG TPL B option' };
+    sel.value = o.value;
+    sel.dispatchEvent(new Event('input', { bubbles: true }));
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    return { ok: true, value: sel.value };
+  })()`)) || {}) : { ok: false, why: 'no template select found' };
+  let lsPin = null;
+  for (let i = 0; i < 8; i++) {
+    lsPin = val(await ev(`(() => { try { const raw = localStorage.getItem('av-boot-template'); if (!raw) return null; const o = JSON.parse(raw); return { v: (o && o.v !== undefined) ? o.v : null, id: (o && o.id !== undefined) ? o.id : null }; } catch (e) { return { error: String((e && e.message) || e) }; } })()`));
+    if (lsPin && idB != null && String(lsPin.id) === String(idB)) break;
+    await sleep(200);
+  }
+  check('6c template select: the sessions card exposes the boot-template select + #av-sessions-new; setting it to RIG TPL B pins av-boot-template {v:1, id} (the LS pin)',
+    tplR.card === true && tplR.newBtn === true && tplIdx >= 0 && tplSet.ok === true && !!lsPin && idB != null && String(lsPin.id) === String(idB),
+    JSON.stringify({ newBtn: tplR.newBtn, selects: tplR.n, pick: tplSel && tplSel.id, pickIdx: tplIdx, set: tplSet, lsPin: lsPin, idB: idB, save: saveOk }).slice(0, 500));
+
+  /* mutate away; the real NEW SESSION click; poll the applied state + dirty */
+  await ev(`(() => { const H = window.__seqi; return { bpm: H.commit('bpm', 149) }; })()`);
+  const w6cPre = await wit();
+  const statusPre = String(val(await ev(`(() => { const el = document.getElementById('av-sessions-status'); return el ? String(el.textContent || '') : null; })()`)) || '');
+  const newClick = await clickSel('#av-sessions-new', 600);
+  let wTpl = null, stPost = {};
+  for (let i = 0; i < 40; i++) {
+    wTpl = await wit();
+    stPost = val(await ev(`(() => { try { const s = avSessionState() || {}; return { dirty: (s.dirty !== undefined) ? s.dirty : null, current: s.current ? (s.current.name || s.current.id) : null }; } catch (e) { return { error: String((e && e.message) || e) }; } })()`)) || {};
+    if (wTpl && wTpl.bpm === 152 && near(wTpl.macros && wTpl.macros[0], 0.63, 0.002) && stPost.dirty === true) break;
+    await sleep(250);
+  }
+  const statusPost = String(val(await ev(`(() => { const el = document.getElementById('av-sessions-status'); return el ? String(el.textContent || '') : null; })()`)) || '');
+  const preDiffers = !!(w6cPre && (w6cPre.bpm !== 152 || !eqStr(w6cPre.export, w6cB.export)));
+  const applies = !!(wTpl && eqStr(wTpl.export, w6cB.export) && wTpl.bpm === 152 && near(wTpl.macros && wTpl.macros[0], 0.63, 0.002));
+  check('6c NEW applies the template: real #av-sessions-new click -> state equals RIG TPL B (export string equal | bpm 152 | macro0 0.63) | marked DIRTY (the pre-click state differed: never auto-applied)',
+    newClick === true && preDiffers === true && applies === true && stPost.dirty === true && saveOk === true,
+    JSON.stringify({ newBtn: newClick, preBpm: w6cPre && w6cPre.bpm, preDiffers: preDiffers, applies: applies, dirty: stPost.dirty, current: stPost.current, dialogs: dialogs.slice(0, 2) }).slice(0, 500));
+  check('6c status line after NEW with a template: honest text (changed from the pre-click text, non-empty)',
+    newClick === true && statusPost.length > 0 && statusPost !== statusPre,
+    JSON.stringify({ pre: statusPre.slice(0, 90), post: statusPost.slice(0, 140) }).slice(0, 300));
+
+  /* hygiene: point the template back at none (best effort; the template sessions themselves
+     are deleted by the section-7 cleanup) */
+  const tplReset = tplIdx >= 0 ? (val(await ev(`(() => {
+    const card = document.getElementById('av-sessions') || document.getElementById('av-sessions-host');
+    if (!card) return { ok: false };
+    const sels = [...card.querySelectorAll('select')].filter(function (s) { return s.id !== 'av-sessions-sort' && s.id !== 'av-sessions-autosave-ms'; });
+    const sel = sels[${tplIdx}] || null;
+    if (!sel) return { ok: false };
+    const o = Array.prototype.find.call(sel.options, function (x) { return x.value === '' || /none/i.test(String(x.textContent || '')); });
+    if (!o) return { ok: false, why: 'no none option' };
+    sel.value = o.value;
+    sel.dispatchEvent(new Event('change', { bubbles: true }));
+    return { ok: true };
+  })()`)) || {}) : null;
+  note('6c template reset (hygiene, best effort): ' + JSON.stringify(tplReset));
+
+  /* ---- 6d. WAVE K: multi-tab note (contract verify/_k_wave.md section 3 + 5) ----
+     The rig creates its OWN second BroadcastChannel('anvil-tabs') object in the page (the
+     same-context second channel receives; no second tab is opened) and posts {t:"saved"}:
+     #av-sessions-tabnote must appear (the "another tab saved recently" note) and auto-hide
+     after the (< 15 s) window. */
+  console.log('-- 6d. multi-tab note (WAVE K) --');
+  const tabSetup = val(await ev(`(() => {
+    try {
+      if (!window.__s2tab || !window.__s2tab.ch) window.__s2tab = { ch: new BroadcastChannel('anvil-tabs') };
+      return { ok: true, bc: (typeof BroadcastChannel === 'function') };
+    } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
+  })()`)) || {};
+  const tabPost = val(await ev(`(() => { try { if (!window.__s2tab || !window.__s2tab.ch) return false; window.__s2tab.ch.postMessage({ t: 'saved', at: Date.now() }); return true; } catch (e) { return 'threw: ' + ((e && e.message) || e); } })()`));
+  const NOTE_EXPR = `(() => { const el = document.getElementById('av-sessions-tabnote'); if (!el) return null; let vis = true; try { if (el.hidden === true || el.hasAttribute('hidden')) vis = false; const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden') vis = false; } catch (e) { } return { vis: vis, text: String(el.textContent || '').trim().slice(0, 160), cls: String(el.className || '') }; })()`;
+  const tNote = Date.now();
+  let tabNote = null;
+  for (let i = 0; i < 40 && !(tabNote && tabNote.vis === true); i++) {
+    tabNote = val(await ev(NOTE_EXPR));
+    if (!(tabNote && tabNote.vis === true)) await sleep(250);
+  }
+  const appeared = !!(tabNote && tabNote.vis === true);
+  const noteMs = appeared ? (Date.now() - tNote) : null;
+  check('6d multi-tab note appears: the rig\'s OWN second BroadcastChannel(\'anvil-tabs\') posts {t:"saved"} -> #av-sessions-tabnote is visible ("another tab saved recently")',
+    tabSetup.ok === true && tabPost === true && appeared === true && /another tab/i.test(tabNote.text),
+    JSON.stringify({ setup: tabSetup, posted: tabPost, note: tabNote, appearedAfterMs: noteMs }).slice(0, 400));
+  let noteGone = false;
+  if (appeared) {
+    for (let i = 0; i < 68 && !noteGone; i++) {
+      const r = val(await ev(NOTE_EXPR));
+      if (!r || r.vis !== true) { noteGone = true; break; }
+      await sleep(250);
+    }
+  }
+  const hideMs = (appeared && noteGone) ? (Date.now() - tNote) : null;
+  check('6d multi-tab note auto-hides after the window: the note leaves the visible state within 17 s of the message (the pin is a < 15 s window)',
+    appeared === true && noteGone === true,
+    JSON.stringify({ hiddenAfterMsFromPost: hideMs, presentText: tabNote && tabNote.text }).slice(0, 300));
+  await ev(`(() => { try { if (window.__s2tab && window.__s2tab.ch) { window.__s2tab.ch.close(); window.__s2tab = null; } } catch (e) { } return true; })()`);
 
   /* ── 7. cleanup — the page left clean; then zero errors · screenshot · freeze ── */
   console.log('── 7. seal ──');

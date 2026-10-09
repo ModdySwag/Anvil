@@ -338,6 +338,22 @@ work in any of these — worklet `b65160e0` must stay untouched (page-side waves
 7. **BWF/iXML/acid chunk reads** (R18 stretch) — clean-room feasibility on the existing
    WAV reader; decide by fixture evidence, not by promise.
 
+### Section 7 statuses (2026-10-09 — the FINISH program close)
+
+1. FSA on `file://` — owner-pass: a real click test on the owner's machine (pending, recorded).
+2. `persist()` grant behaviour — observational only by design (headless reads false; engagement may
+   grant); the storage-honesty copy ships and promises nothing.
+3. IDB record-size ceilings — the 96 MiB caps are documented and exercised by the shipped import
+   paths; a dedicated large-write benchmark remains open (recorded).
+4. `.zip` widened accept + launchQueue — owner-pass: open a file with the installed PWA (pending).
+5. Multi-tab contention — disposition SHIPPED: a guarded `BroadcastChannel` beacon + the
+   sessions-card note ("another tab saved recently - last write wins"); the real two-tab probe
+   stays owner-pass.
+6. Bundle ceilings — the 96 MiB/item + 600-item caps are honest; a fat-library timing bench
+   remains open (recorded).
+7. BWF/iXML/acid/ID3 reads — IMPLEMENTED: `avWavMeta` (clean-room, read-only; tempo/root/key
+   auto-tags) + fixture-verified (118/0 harness) + the cdp_import rig leg in the suite.
+
 ## 8. Laws added by this doc (never drift)
 
 - One funnel: every imported byte enters via `avImportFiles`; every entry point lands in

@@ -18,6 +18,16 @@
      #av-sessions-restore-file input -> avBackupRestore(buffer) with a progress line and a
      report of the restored counts (sessions/packs/samples), skipped and errors.
    - status line + warnings area (degradation is reported there, never console noise).
+   - K WAVE BOOT TEMPLATE: a "BOOT TEMPLATE" row (select #av-sessions-boot: none + one option
+     per saved session) + the NEW SESSION button (#av-sessions-new -> avSessionNewSession):
+     when a template is set, that session's newest snapshot is restored as the working state and
+     the card reports it UNSAVED (a new session is only kept by an explicit SAVE; autosave keeps
+     protecting the state via the recovery record, never a session version). With no template,
+     NEW SESSION starts a plain new session (the module clears its current pointer in memory --
+     the next SAVE creates the session). The recovery banner is untouched either way.
+   - K WAVE MULTI-TAB NOTE: a dim line (#av-sessions-tabnote, "another tab saved recently -
+     last write wins") shows while avSessionState().tab.seenAt sits inside the module's 15 s
+     window and auto-hides with it; the module owns the beacon, this card only renders the window.
 
    LAW: every sibling call is consumed through the pinned §2.1/§2.2 names with typeof guards
    ONLY — avSessionState/List/Save/Load/Delete/Versions/Restore/Autosave/Recover/
@@ -68,8 +78,14 @@
    window.__avSessionUiLastExport = { kind, name, bytes, downloaded, at } (backup download
    stamp) · window.__avSessionUiLastRestore = { name, bytes, restored, skipped, errors, at }.
 
+   K WAVE OBSERVABLES (additive; the parent styles the new classes): window.__avSessionUi gains
+   newSession() and boot(id); avSessionUiSnap() gains boot:{id} and tab:{seenAt,savedAt,windowMs,
+   fresh}; the status line after NEW SESSION reports the template apply honestly.
+
    ID INVENTORY (rig + parent rely on these):
     #av-sessions-search (browser v2 search) | #av-sessions-sort (newest | name | updated)
+   (K wave additions) #av-sessions-boot (boot template select) | #av-sessions-new (NEW SESSION)
+     | #av-sessions-tabnote (multi-tab note; exact dim line text).
      #av-sessions-status
      #av-sessions-recovery · #av-sessions-recovery-at · #av-sessions-recover · #av-sessions-dismiss
      #av-sessions-count · #av-sessions-storage
@@ -97,6 +113,7 @@ const AV_SESSION_UI_TAG_MAX = 8;                      /* tags per session (mirro
 const AV_SESSION_UI_TAG_LEN = 24;                     /* chars per tag (mirrors the module cap)    */
 const AV_SESSION_UI_SEARCH_MAX = 64;                  /* the search field cap (view filter only)   */
 const AV_SESSION_UI_SORTS = ["newest", "name", "updated"];   /* the pinned sort values (R20)        */
+const AV_SESSION_UI_TAB_WINDOW_MS = 15000;            /* the tab note window (K; mirrors the module) */
 
 /* UI-local state only — every module fact is read through the pinned av* APIs per paint */
 const avSessionUiState = {
@@ -120,6 +137,8 @@ const avSessionUiState = {
   sessKey: "", asKey: "",
   /* browser v2 (R20): client-side view filters + the tag inline editor + tags-write counter */
   search: "", sort: "newest", tagEditId: "", tagDraft: "", lastRows: 0, tagsBusy: 0,
+  /* K wave: boot template mirror + NEW SESSION busy + the multi-tab note mirror */
+  bootId: "", bootKey: "", newBusy: false, tabSeenAt: 0, tabSavedAt: 0, tabWindowMs: AV_SESSION_UI_TAB_WINDOW_MS,
   /* poll signature sentinel so the first poll always syncs */
   pollSig: "\u0000",
 };
@@ -477,8 +496,24 @@ function avSessionUiStateSync() {
       s.recName = avSessionUiStrField(rc, ["name"]);
       if (av === false) { s.recAt = ""; s.recName = ""; }
     }
+    avSessionUiStateSyncExtra(st, s);   /* K wave: boot + tab mirrors */
     return true;
   } catch (e) { return false; }
+}
+
+/* K wave: the boot template mirror + the multi-tab note mirror (both additive keys) */
+function avSessionUiStateSyncExtra(st, s) {
+  try {
+    const bt = (st && typeof st === "object") ? st.boot : null;
+    s.bootId = (bt && typeof bt === "object") ? avSessionUiStrField(bt, ["id"]) : "";
+    const tb = (st && typeof st === "object") ? st.tab : null;
+    const seen = (tb && typeof tb === "object") ? avSessionUiNumField(tb, ["seenAt"]) : null;
+    s.tabSeenAt = (seen != null && seen > 0) ? seen : 0;
+    const sat = (tb && typeof tb === "object") ? avSessionUiNumField(tb, ["savedAt"]) : null;
+    s.tabSavedAt = (sat != null && sat > 0) ? sat : 0;
+    const win = (tb && typeof tb === "object") ? avSessionUiNumField(tb, ["windowMs"]) : null;
+    s.tabWindowMs = (win != null && win > 0) ? Math.max(1000, Math.min(600000, win)) : AV_SESSION_UI_TAB_WINDOW_MS;
+  } catch (e) { /* the mirrors keep their previous values */ }
 }
 
 function avSessionUiListRead() {
@@ -587,6 +622,7 @@ function avSessionUiBodyHTML() {
     '<div class="av-sessions-head"><span class="av-sessions-title">SESSIONS</span>' +
     '<span class="av-sessions-cap">save the whole working state (pattern \u00b7 chains \u00b7 song \u00b7 scenes \u00b7 params \u00b7 macros) as named sessions with version history; autosave keeps a recovery snapshot; BACKUP packs sessions, installed packs and samples into one zip. Nothing is uploaded.</span></div>' +
     '<div class="av-sessions-status-line"><span class="av-sessions-status av-sessions-msg" id="av-sessions-status" role="status">\u2026</span></div>' +
+    '<p class="av-note av-dim av-sessions-tabnote" id="av-sessions-tabnote" hidden>another tab saved recently - last write wins</p>' +
 
     '<div class="av-sessions-recovery" id="av-sessions-recovery" hidden>' +
     '<span class="av-sessions-recovery-lbl">RECOVERY</span>' +
@@ -602,6 +638,11 @@ function avSessionUiBodyHTML() {
     '<div class="av-sessions-row">' +
     '<input type="text" class="av-sessions-name" id="av-sessions-name" spellcheck="false" autocomplete="off" maxlength="64" placeholder="session name" aria-label="Session name">' +
     '<button type="button" class="av-btn mini av-sessions-btn av-sessions-save" id="av-sessions-save" title="Save the current working state (new session, or a new version of the current one)">SAVE</button>' +
+    "</div>" +
+    '<div class="av-sessions-row">' +
+    '<label class="av-sessions-lab" for="av-sessions-boot">BOOT TEMPLATE</label>' +
+    '<select class="av-select av-sessions-boot" id="av-sessions-boot" aria-label="Boot template applied by NEW SESSION (none = a plain new session)"></select>' +
+    '<button type="button" class="av-btn mini av-sessions-btn av-sessions-new" id="av-sessions-new" title="Start a new session \u2014 applies the boot template when one is set (the working state becomes unsaved)">NEW SESSION</button>' +
     "</div>" +
     '<div class="av-sessions-tools">' +
     '<input type="search" class="av-sessions-search" id="av-sessions-search" spellcheck="false" autocomplete="off" maxlength="64" placeholder="search name or tags\u2026" aria-label="Search sessions by name or tag">' +
@@ -665,7 +706,7 @@ function avSessionUiSettle(p, cb) {
 /* one module op at a time (keeps the pin honest; controls disabled meanwhile) */
 function avSessionUiBusy() {
   const s = avSessionUiState;
-  return !!(s.saveBusy || s.opBusy || s.backupBusy || s.restoreFileBusy || s.recovering);
+  return !!(s.saveBusy || s.opBusy || s.backupBusy || s.restoreFileBusy || s.recovering || s.newBusy);
 }
 
 /* ---------- SESSIONS actions ---------- */
@@ -1206,6 +1247,96 @@ function avSessionUiDismiss() {
   } catch (e) { return false; }
 }
 
+/* ---------- K wave actions: BOOT TEMPLATE set + NEW SESSION ---------- */
+
+/* the select change: commit the chosen template id ("" = none) through the pinned module call */
+function avSessionUiBootSet(id) {
+  const s = avSessionUiState;
+  try {
+    if (typeof avSessionBootSet !== "function") {
+      avSessionUiMissingNote("avSessionBootSet", "the boot template is unavailable");
+      s.lastMsg = "this build cannot set a boot template (avSessionBootSet is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    const want = String(id == null ? "" : id);
+    let r = null;
+    try { r = avSessionBootSet(want); } catch (e) { r = { ok: false, error: String((e && e.message) || e || "boot template failed") }; }
+    if (r && r.ok === true) {
+      const got = avSessionUiStrField(r, ["id"]);
+      s.bootId = got;
+      if (!got) s.lastMsg = "boot template cleared \u2014 NEW SESSION starts a plain new session";
+      else if (r.persisted === false) s.lastMsg = "boot template set for this page only \u2014 storage is not durable";
+      else s.lastMsg = "boot template set \u2014 NEW SESSION applies it";
+      s.lastMsgKind = "msg";
+      avSessionUiWarnDropKey("boot.fail");
+    } else {
+      const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+      s.lastMsg = "the boot template was not set \u2014 " + why;
+      s.lastMsgKind = "err";
+      avSessionUiWarn("boot.fail", "the boot template was not set \u2014 " + why);
+    }
+    s.bootKey = "";                      /* rebuild the select on the next paint */
+    avSessionUiSync();
+    return !!(r && r.ok === true);
+  } catch (e) { return false; }
+}
+
+/* NEW SESSION: the module applies the boot template (when set), resets its current pointer and
+   marks the state unsaved; this card reports it honestly (the recovery banner stays untouched) */
+function avSessionUiNewSession() {
+  const s = avSessionUiState;
+  try {
+    if (avSessionUiBusy()) return false;
+    if (typeof avSessionNewSession !== "function") {
+      avSessionUiMissingNote("avSessionNewSession", "starting a new session is unavailable");
+      s.lastMsg = "this build cannot start a new session (avSessionNewSession is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    s.newBusy = true;
+    s.lastMsg = s.bootId ? "starting a new session from the boot template\u2026" : "starting a new session\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = avSessionNewSession(); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "new session failed") }; }
+    avSessionUiSettle(p, avSessionUiNewSettle);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiNewSettle(r) {
+  const s = avSessionUiState;
+  s.newBusy = false;
+  if (avSessionUiOK(r) === false) {
+    let why = "refused";
+    if (r && typeof r === "object") {
+      if (r.error === "template-missing") why = "the boot template session no longer exists";
+      else if (r.error === "template-empty") why = "the boot template session has no saved version";
+      else if (r.error) why = avSessionUiErrText(r.error);
+    }
+    s.lastMsg = "the boot template was not applied \u2014 " + why + "; a new session is ready and SAVE keeps the working state";
+    s.lastMsgKind = "err";
+    avSessionUiWarn("new.fail", "the boot template was not applied \u2014 " + why);
+  } else {
+    const from = (r && typeof r === "object") ? avSessionUiStrField(r, ["from"]) : "";
+    const rname = (r && typeof r === "object") ? avSessionUiStrField(r, ["name"]) : "";
+    const rver = (r && typeof r === "object") ? avSessionUiNumField(r, ["version"]) : null;
+    if (from) {
+      s.lastMsg = "new session from template \u201c" + avSessionUiClean(rname || from, 48) + "\u201d" + (rver != null ? " v" + Math.round(rver) : "") + " \u2014 unsaved; press SAVE to keep it";
+    } else {
+      s.lastMsg = "new session started \u2014 unsaved; press SAVE to keep the working state";
+    }
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("new.fail");
+  }
+  s.nameId = null;                       /* the current pointer changed: refill the name field */
+  s.bootKey = "";                        /* repaint the select against the fresh list */
+  avSessionUiSync();
+}
+
 /* ---------- browser v2 actions (R20: search / sort / tags) ---------- */
 
 function avSessionUiSearchSet(v) {
@@ -1374,6 +1505,7 @@ function avSessionUiStatusText() {
   if (s.backupBusy) return { text: "building the backup zip\u2026", kind: "msg" };
   if (s.restoreFileBusy) return { text: "restoring from file\u2026", kind: "msg" };
   if (s.recovering) return { text: "recovering the autosaved snapshot\u2026", kind: "msg" };
+  if (s.newBusy) return { text: "starting a new session\u2026", kind: "msg" };
   if (s.tagsBusy > 0) return { text: "saving tags\u2026", kind: "msg" };
   if (s.lastMsg) return { text: s.lastMsg, kind: (s.lastMsgKind === "err") ? "err" : "msg" };
   return { text: avSessionUiIdleText(), kind: "msg" };
@@ -1664,6 +1796,69 @@ function avSessionUiPaintTools(host) {
   } catch (e) { return false; }
 }
 
+/* ---------- K wave: boot template row + the multi-tab note ---------- */
+
+/* the note is fresh while the module's arrival stamp sits inside the window (auto-hide) */
+function avSessionUiTabFresh() {
+  const s = avSessionUiState;
+  try {
+    if (!(s.tabSeenAt > 0)) return false;
+    const win = (s.tabWindowMs > 0) ? s.tabWindowMs : AV_SESSION_UI_TAB_WINDOW_MS;
+    return (Date.now() - s.tabSeenAt) < win;
+  } catch (e) { return false; }
+}
+
+/* the BOOT TEMPLATE select (none + one option per saved session; a vanished id stays visible
+   as "(missing)" so the select never lies) + the NEW SESSION button state */
+function avSessionUiPaintBoot(host) {
+  const s = avSessionUiState;
+  try {
+    const sel = host.querySelector("#av-sessions-boot");
+    if (sel) {
+      const list = avSessionUiListRead();
+      const opts = [{ id: "", label: "none" }];
+      let found = (s.bootId === "");
+      for (let i = 0; i < list.length && opts.length <= AV_SESSION_UI_LIST_MAX; i++) {
+        const r = list[i];
+        if (!r || typeof r !== "object") continue;
+        const id = avSessionUiStrField(r, ["id"]);
+        if (!id) continue;
+        const v = Math.max(1, Math.round(avSessionUiNum(r.version, 1)));
+        opts.push({ id: id, label: avSessionUiClean(avSessionUiStrField(r, ["name"]) || "untitled", 48) + " (v" + v + ")" });
+        if (id === s.bootId) found = true;
+      }
+      if (!found && s.bootId) opts.push({ id: s.bootId, label: "(missing) " + avSessionUiClean(s.bootId, 40) });
+      let key = "sel:" + s.bootId;
+      for (let i = 0; i < opts.length; i++) key += "|" + opts[i].id + ":" + opts[i].label;
+      if (key !== s.bootKey) {
+        s.bootKey = key;
+        let html = "";
+        for (let i = 0; i < opts.length; i++) html += '<option value="' + avSessionUiEsc(opts[i].id) + '">' + avSessionUiEsc(opts[i].label) + "</option>";
+        sel.innerHTML = html;
+      }
+      avSessionUiSetValue(sel, s.bootId);
+    }
+    const nb = host.querySelector("#av-sessions-new");
+    if (nb) {
+      if (nb.disabled !== !!s.newBusy) nb.disabled = !!s.newBusy;
+      const txt = s.newBusy ? "NEW SESSION\u2026" : "NEW SESSION";
+      if (nb.textContent !== txt) nb.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the dim multi-tab note line (exact text lives in the markup; this toggles visibility) */
+function avSessionUiPaintTabNote(host) {
+  try {
+    const el = host.querySelector("#av-sessions-tabnote");
+    if (!el) return false;
+    const fresh = avSessionUiTabFresh();
+    if (el.hidden !== !fresh) el.hidden = !fresh;
+    return true;
+  } catch (e) { return false; }
+}
+
 /* full repaint: mirrors first (guarded), then every control (write-on-change only) */
 function avSessionUiSync() {
   const host = avSessionUiHost();
@@ -1682,8 +1877,10 @@ function avSessionUiSync() {
     avSessionUiStorageNote();
     avSessionUiPaintName(host);
     avSessionUiPaintTools(host);
+    avSessionUiPaintBoot(host);          /* K wave */
     avSessionUiPaintSave(host);
     avSessionUiPaintStatus(host);
+    avSessionUiPaintTabNote(host);       /* K wave */
     avSessionUiPaintRecovery(host);
     avSessionUiPaintCounts(host);
     avSessionUiPaintList(host);
@@ -1727,7 +1924,12 @@ function avSessionUiSig() {
         const rc = st.recovery;
         const rcAv = (rc && typeof rc === "object") ? (rc.available === true ? 1 : (rc.available === false ? 0 : -1)) : -1;
         const rcAt = (rc && typeof rc === "object" && rc.savedAt != null) ? String(rc.savedAt) : "";
-        sig += [st.count, curId, (st.dirty === true ? 1 : 0), st.lastAutosaveAt, asOn, asMs, rcAv, rcAt, st.backend].join("|");
+        const bt = st.boot;
+        const bootId = (bt && typeof bt === "object" && typeof bt.id === "string") ? bt.id : "";
+        const tb2 = st.tab;
+        const tabSeen = (tb2 && typeof tb2 === "object" && isFinite(Number(tb2.seenAt))) ? Number(tb2.seenAt) : 0;
+        const tabFresh = avSessionUiTabFresh() ? 1 : 0;
+        sig += [st.count, curId, (st.dirty === true ? 1 : 0), st.lastAutosaveAt, asOn, asMs, rcAv, rcAt, st.backend, bootId, tabSeen, tabFresh].join("|");
       }
     }
     return sig + ";" + avSessionUiListSig();
@@ -1763,6 +1965,7 @@ function avSessionUiClick(e) {
     const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
     if (!t) return;
     if (t.closest("#av-sessions-save")) { avSessionUiSave(); return; }
+    if (t.closest("#av-sessions-new")) { avSessionUiNewSession(); return; }
     if (t.closest("#av-sessions-autosave")) { avSessionUiAutosaveToggle(); return; }
     if (t.closest("#av-sessions-recover")) { avSessionUiRecover(); return; }
     if (t.closest("#av-sessions-dismiss")) { avSessionUiDismiss(); return; }
@@ -1794,6 +1997,7 @@ function avSessionUiChange(e) {
     const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
     if (!t) return;
     if (t.closest("#av-sessions-autosave-ms")) { avSessionUiAutosaveMsChange(t); return; }
+    if (t.closest("#av-sessions-boot")) { avSessionUiBootSet(t.value); return; }
     if (t.closest("#av-sessions-restore-file")) { avSessionUiFileChange(t); return; }
     if (t.closest("#av-sessions-sort")) { avSessionUiSortSet(t.value); return; }
     if (t.closest(".av-sessions-tags-input")) { avSessionUiTagsCommit(t); return; }
@@ -1905,12 +2109,15 @@ function avSessionUiSnap() {
     },
     autosave: { on: !!s.autosaveOn, ms: s.autosaveMs, lastAt: s.lastAsAt },
     recovery: { available: !!s.recAvail, at: s.recAt, name: s.recName },
+    boot: { id: s.bootId },
+    tab: { seenAt: s.tabSeenAt, savedAt: s.tabSavedAt, windowMs: s.tabWindowMs, fresh: avSessionUiTabFresh() },
     busy: {
       save: !!s.saveBusy,
       op: s.opBusy ? (s.opBusy.kind + ":" + s.opBusy.id + ":" + (s.opBusy.ver == null ? "" : s.opBusy.ver)) : "",
       backup: !!s.backupBusy,
       restoreFile: !!s.restoreFileBusy,
       recovering: !!s.recovering,
+      newSession: !!s.newBusy,
       tags: s.tagsBusy > 0,
     },
     view: { search: s.search, sort: s.sort, editing: s.tagEditId || null, rows: s.lastRows },
@@ -1948,6 +2155,7 @@ function avSessionUiClasses() {
     "av-sessions-tags-sep", "av-sessions-tags-input", "av-sessions-tags-btn",
     "av-sessions-prev", "av-sessions-prev-part", "av-sessions-prev-eng", "av-sessions-prev-bars",
     "av-sessions-prev-takes", "av-sessions-prev-saved", "av-sessions-prev-upd",
+    "av-sessions-boot", "av-sessions-new", "av-sessions-tabnote",
   ];
 }
 
@@ -1971,6 +2179,8 @@ if (typeof window !== "undefined") {
       dismiss: function () { return avSessionUiDismiss(); },
       autosave: function (on, ms) { return avSessionUiAutosaveSet(on, ms); },
       setTags: function (id, tags) { return avSessionUiTagsSave(id, tags); },
+      newSession: function () { return avSessionUiNewSession(); },
+      boot: function (id) { return avSessionUiBootSet(id); },
     };
   } catch (e) { /* no window — nothing to publish */ }
 }

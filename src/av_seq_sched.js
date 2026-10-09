@@ -29,7 +29,7 @@
      sorted (t, tie-rank, insertion); slide tie-offs carry a hidden __rank=1 so a transport
      merging plan windows keeps down(k+1) before off(k) across chunk boundaries.
 
-   THE LIVE TRANSPORT — avSeqInit/Play/Stop/Toggle/IsPlaying/SetPattern/Position/Rng/SchedNow
+   THE LIVE TRANSPORT — avSeqInit/Play/Stop/Toggle/IsPlaying/SetPattern/Position/Rng/SchedNow/SetFill/GetFill
      Lookahead 0.12 s / wake 25 ms (§2 pin), all times against the live handle's ctx.currentTime.
      Honest clock: every event time is analytic from the transport origin (no accumulation →
      no drift). A tempo/grid change re-anchors the origin at the current plan pointer, so the
@@ -52,6 +52,22 @@
      avTuneTrackSlot(ev.track) sibling call contributes tune (a valid int 0..7) to the same
      object when present; no card / no assignment omits tune alone (acc still rides). Both are
      re-evaluated every emission, never cached across emissions, never throws.
+     FILL (K wave §2): the runtime fill flag (the cond "fill" gate, T3 §17) has three surfaces:
+       avSeqSchedSetFill(on) -> bool   sets the flag, rebuilds the pattern view NOW (so the very
+                                       next plan sees it), republishes the debug handle; never
+                                       throws; always returns true. The legacy avSeqSetFill /
+                                       __avSeq.setFill delegate here (same semantics).
+       avSeqSchedGetFill() -> 0|1      the current flag value.
+       pattern.fill at LOAD — THE AUDITED SEMANTICS (L723/L800): a snapshot's own `fill` field
+       only INITIALISES the runtime flag, and only through those two seams: avSeqInit() seeds it
+       once when the current pattern carries a truthy fill (L723), and EVERY avSeqSetPattern()
+       re-seeds it (L800: avSeqSchedFill = snap.fill ? 1 : 0). At PLAN time the runtime flag is
+       authoritative: avSeqSchedPatternView() overlays v.fill = the flag on the base snapshot,
+       so after the load the snapshot's fill field is never read again — the toggle owns the
+       flag. The core's sanitising avSeqLoad drops an incoming fill field (avSeqPatternNorm /
+       avSeqPatternCopy carry fixed keys — av_seq_core), so a core round-trip resets
+       pattern.fill to absent (= 0). The toggle is PERFORMANCE state: not part of the pattern,
+       no undo checkpoint, not persisted (K wave decision).
      Trace: bounded ring window.__avSeqTrace (256 × {t,type,note,step,track}, t = planned time);
      window.__avSeq debug handle (playing, patternName, lastEvents, + setFill/traceCount). */
 
@@ -300,7 +316,8 @@ let avSeqSchedCtx = null;                  /* the live handle's ctx */
 let avSeqSchedHandle = null;
 let avSeqSchedPattern = null;              /* snapshot as set (read-only use; never mutated) */
 let avSeqSchedPatternName = "PAT 1";
-let avSeqSchedFill = 0;                    /* runtime fill flag (T3 §17 modal boolean) */
+let avSeqSchedFill = 0;                    /* runtime fill flag (T3 §17; seeded by pattern.fill at
+                                              init/setPattern, owned by the toggle thereafter) */
 let avSeqSchedPlanFrom = 0;                /* next monotonic global step to plan */
 let avSeqSchedOriginT = 0;                 /* analytic base: T(g) = origin + g×stepDur */
 let avSeqSchedOriginSet = false;
@@ -683,10 +700,20 @@ function avSeqSchedPublish() {
   } catch (e) { /* debug publishing is best effort */ }
 }
 
-function avSeqSetFill(on) {
+function avSeqSchedSetFill(on) {
   avSeqSchedFill = on ? 1 : 0;
+  try { avSeqSchedPatternView(); } catch (e) { /* view rebuild is a nicety — the flag already moved */ }
   avSeqSchedPublish();
   return true;
+}
+
+function avSeqSchedGetFill() {
+  return avSeqSchedFill ? 1 : 0;
+}
+
+/* legacy alias — the __avSeq debug handle's setter; IDENTICAL semantics (K wave §2) */
+function avSeqSetFill(on) {
+  return avSeqSchedSetFill(on);
 }
 
 if (typeof window !== "undefined") {

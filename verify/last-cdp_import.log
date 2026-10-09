@@ -1,7 +1,7 @@
-index.html sha256 (before): dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca
+index.html sha256 (before): e99ea8e572b3572dbbb3f080ae069ccde5ae32e0bbc7c9a9c66e9b0328f35ffd
 fixtures staged in C:\Users\Moddy\anvil\cache\r15b\rig-fixtures
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791535588706
+cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-1791539745876
  ok   boot + card: SAMPLE PACKS mounted in the store zone (drop, pickers, slot, facade)  -> {"card":true,"zone":"store","drop":true,"file":true,"dir":true,"slot":true,"facade":"function","ver":"r15b.0"}
  ok   IMPORT SELFTEST proof: parses on the avtest load (inited, sniff = wav)  -> {"version":"r15b.0","inited":true,"libCount":0,"sniff":"wav","hub":true}
  ok   absent host: avImportUiInit() returns false without throwing; re-attaching restores the card  -> {"r1":false,"threw1":false,"r2":true,"threw2":false,"back":true}
@@ -25,7 +25,10 @@ cdp port 9560 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-import-17915355
  ok   R16 rig: the real zip expands (4 rows; bundles 1 · samples 2 · refused 1) + a child LOADs (native resample: 0.05 s @ 48 kHz)  -> {"rows":4,"counts":{"total":4,"imported":3,"deferred":0,"refused":1,"samples":2,"patterns":0,"kits":0,"refs":0,"bundles":1,"dups":0},"load":{"frames":2400,"rate":48000}}
  ok   R16 rig: f64 wav imports + LOAD lands (clean-room route, 200 frames @ 8000)  -> {"rows":1,"load":{"frames":200,"rate":8000}}
  ok   R16 rig: the real .rx2 loads from the library -> 10 slices -> detect via rex2 -> kit -> apply  -> {"n":10,"via":"rex2","count":10,"kitOk":true,"kitN":10,"aplOk":true}
+-- K. WAV metadata (iXML) --
+ ok   K meta import: the in-page iXML WAV imports through the funnel (1 report row | imported 1) and the library record folds meta.tempo 128 | meta.root A | meta.key "A minor" | metaSource iXML  -> {"build":{"ok":true,"bytes":958,"ixmlLen":106,"frames":400,"sr":8000},"run":{"ok":true,"counts":{"total":1,"imported":1,"deferred":0,"refused":0,"samples":1,"patterns":0,"kits":0,"refs":0,"bundles":0,"dups":0},"why":null},"rows":1,"rec":{"tempo":128,"root":"A","key":"A minor","metaSource":"iXML","id":"lmv0sixjr-rig-ixml-wav"}}
+ ok   K meta inspector: the item inspector (#av-import-detail via the row INFO action) shows the folded meta (tempo 128 | root A | key "A minor")  -> {"clicked":true,"id":"lmv0sixjr-rig-ixml-wav","detail":"×NAMErig-ixml.wavidlmv0sixjr-rig-ixml-wavkindsampleformatwav / wavsize958 B · 958 Badded09/10/2026, 8:26:15 pmfromrig-ixml.wavpathrig-ixml.wavsha25601cce0b8dd6f2153…{\n  \"rate\": 8000,\n  \"channels\": 1,\n  \"frames\": 400,\n  \""}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned (before === after)  -> pinned dc240f751700… · before dc240f751700… · after dc240f751700…
+ ok   freeze: index.html sha256 = pinned (before === after)  -> pinned e99ea8e572b3… · before e99ea8e572b3… · after e99ea8e572b3…
 
-24 passed, 0 failed
+26 passed, 0 failed

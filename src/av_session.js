@@ -24,10 +24,19 @@
                                           lowercase-trimmed); persists via the record write path
      avSessionClasses() -> string[]       [] — this module mounts nothing
      avSessionHydrate() -> Promise<mode>  (extra: boot hydrate, idempotent, never rejects)
+     avSessionBootGet() -> {v:1, id}      the boot template (K wave; tolerant junk -> id "")
+     avSessionBootSet(id) -> {ok, id, persisted}
+                                          set/clear the boot template (LS tier + memory)
+     avSessionNewSession() -> Promise     NEW SESSION (K wave): applies the template's newest
+                                          version when one is set (else nothing), clears the
+                                          current pointer IN MEMORY and marks DIRTY without a
+                                          rebase -- see the BOOT TEMPLATE contract below;
+                                          never touches the recovery offer
      window.__avSession -> { version, init, capture, apply, save, list, load, delete, versions,
                              restore, autosave, state, recover, export: avSessionExport,
                              import: avSessionImport }
-                           + extras: touch, dismiss, classes, hydrate, setTags, flush
+                           + extras: touch, dismiss, classes, hydrate, setTags, flush,
+                             bootGet, bootSet, newSession
 
    STATE SCHEMA (v1, JSON-safe by construction):
      { v:1, name, savedAt,
@@ -90,6 +99,35 @@
    offer NEVER auto-applies. avSessionRecover() = apply its state + clear the record durably +
    note "recovered"; avSessionDismissRecovery() drops offer + record.
 
+   BOOT TEMPLATE (K wave): an optional template applied by an EXPLICIT avSessionNewSession() only
+   (never at hydrate; the recovery offer is untouched). LS key `av-boot-template`, value JSON
+   { v:1, id } ("" = none; id = a saved session's id, <= 64 chars; any id is accepted at set
+   time -- a vanished session is reported at apply time, never forged). avSessionBootGet() reads
+   (LS once into the page's memory value, tolerant junk -> id ""); avSessionBootSet(id) writes
+   (memory accepts; the LS tier is durable: a refused LS write rolls the memory change back and
+   resolves ok:false -- "nothing durable -> not set"; no LS at all keeps the memory value with
+   persisted:false, honest). avSessionNewSession() does the ONE action: (1) when a template id is
+   set, the session's NEWEST version is restored as the working state through the ordinary apply
+   core (all its laws/refusals stand; a missing session -> ok:false error "template-missing"; a
+   version-less record -> "template-empty"); (2) the current pointer is cleared IN MEMORY (the
+   current flags drop with it) so the NEXT SAVE creates a NEW session (the v1 "creates on first
+   save" law) -- the clear is NOT persisted (avSessionFixCurrent re-derives after a reload; a
+   session exists only once saved); (3) DIRTY, never rebased: avSessionTouch() marks eager and
+   the fingerprint baseline is left alone. THE DIRTY/UNSAVED CONTRACT: this action writes no
+   session record; an autosave (while on) keeps protecting the state into the ONE `__autosave`
+   recovery record -- it never writes session versions, so it cannot silently overwrite a saved
+   session; only an explicit avSessionSave() makes it a session. A landed autosave or an explicit
+   save re-bases the fingerprint per the existing laws.
+
+   MULTI-TAB NOTE (K wave; docs/12 7.5 disposition -- note over lock): av_session.js opens ONE
+   guarded BroadcastChannel `anvil-tabs` at init (absent BroadcastChannel = silent no-op; a
+   constructor throw is swallowed once). After a DURABLE save (avSessionSaveRun) and after a
+   durable autosave write it posts { t:"saved", at } (memory-tier/volatile writes post nothing --
+   no other tab can see them). An arriving { t:"saved" } records tab.seenAt (arrival) and
+   tab.savedAt (the message at, clamped to arrival); the CARD derives the dim note from
+   tab.seenAt with a 15 s window (AV_SESSION_TAB_WINDOW_MS). This module never touches the DOM,
+   never locks: last write wins.
+
    LAWS (verify/_s2_wave.md §3): "use strict"; node-loadable (no DOM/browser reach at load — the
    only top-level browser touch is the guarded typeof window publish at the end); never throws;
    no console noise; bounded growth (16 versions/session, ONE autosave record, notes capped).
@@ -120,6 +158,10 @@ const AV_SESSION_AUTO_LS = "av-sessions-autosave";  /* the EXPLICIT autosave cho
 const AV_SESSION_TAG_MAX = 8;                       /* session tags (R20): max 8 per session */
 const AV_SESSION_TAG_LEN = 24;                      /* max 24 chars each (lowercase-trimmed)   */
 const AV_SESSION_OPEN_CAP_MS = 1800;                /* hung-open give-up (the av_store cap) */
+const AV_SESSION_BOOT_LS = "av-boot-template";      /* the boot template (K wave): JSON {v:1,id} */
+const AV_SESSION_BOOT_V = 1;                        /* the boot template value version           */
+const AV_SESSION_TAB_CHANNEL = "anvil-tabs";        /* the multi-tab beacon channel (K wave)     */
+const AV_SESSION_TAB_WINDOW_MS = 15000;             /* the tab note window (< 15 s, K wave)      */
 const AV_SESSION_NAME_CAP = 40;
 const AV_SESSION_ID_CAP = 64;
 const AV_SESSION_NOTES_CAP = 8;                     /* bounded state (no unbounded logs) */
@@ -159,6 +201,9 @@ const avSession = {
   lastSave: null,
   lastLoad: null,
   lastError: null,
+  boot: { id: "", read: false },     /* boot template (K wave): the page value + LS read-once   */
+  tab: { tried: false, chan: null, seenAt: 0, at: 0 },   /* multi-tab beacon (K wave)          */
+  lastNew: null,                     /* the last avSessionNewSession receipt (K wave)           */
 };
 
 /* ---------- guarded environment reaches (plain node has none of these) ---------- */
@@ -1217,6 +1262,7 @@ function avSessionInit() {
     const st = avSession;
     if (!st.inited) {
       st.inited = true;
+      avSessionTabsEnsure();              /* K wave: the multi-tab beacon channel (guarded) */
       avSessionBindVisibility();          /* R20: the hidden flush listener (guarded) */
       avSessionHydrate();                 /* best-effort boot hydrate; idempotent by promise */
     }
@@ -1305,6 +1351,8 @@ async function avSessionSaveRun(name) {
   const receipt = { ok: true, id: rec.id, name: rec.name, version: nextV, savedAt: now, backend: put.backend, volatile: !!put.volatile, versions: rec.versions.length };
   st.lastSave = receipt;
   st.lastError = null;
+  /* K wave: a DURABLE save beacons the other tabs (a memory-tier write is invisible to them) */
+  if (put.volatile !== true) avSessionTabsPost();
   return receipt;
 }
 
@@ -1609,6 +1657,8 @@ function avSessionAutosaveWrite() {
       st.lastAutosaveAt = rec.savedAt;
       st.baseFp = fp;
       st.touchDirty = false;
+      /* K wave: a DURABLE autosave write beacons the other tabs too */
+      if (r.volatile !== true) avSessionTabsPost();
       if (st.recovery && st.recovery.available === true) {   /* refresh the pending offer */
         st.recovery.savedAt = rec.savedAt;
         st.recovery.name = rec.name;
@@ -1649,6 +1699,164 @@ function avSessionVisibilityHandler() {
     try { if (typeof document !== "undefined" && document) vis = String(document.visibilityState || ""); } catch (e) { vis = ""; }
     if (vis !== "hidden") return false;
     return avSessionVisibilityFlush();
+  } catch (e) { return false; }
+}
+
+/* ---------- boot template (K wave) ---------- */
+
+/* read: LS once into the page's memory value (tolerant junk -> id ""); later calls are memory */
+function avSessionBootGet() {
+  try {
+    const st = avSession;
+    if (st.boot.read !== true) {
+      st.boot.read = true;
+      try {
+        const ls = avSessionLs();
+        const raw = ls ? ls.getItem(AV_SESSION_BOOT_LS) : null;
+        if (raw != null) {
+          let obj = null;
+          try { obj = JSON.parse(String(raw)); } catch (e) { obj = null; }
+          if (avSessionObj(obj)) st.boot.id = avSessionText(obj.id, AV_SESSION_ID_CAP, "");
+          else st.boot.id = "";
+        }
+      } catch (e) { /* no storage -> the memory value stands */ }
+    }
+    return { v: AV_SESSION_BOOT_V, id: st.boot.id };
+  } catch (e) {
+    return { v: AV_SESSION_BOOT_V, id: "" };
+  }
+}
+
+/* write: memory accepts; the LS write is the durable tier (rollback when it is refused) */
+function avSessionBootSet(id) {
+  const st = avSession;
+  try {
+    avSessionEnsure();
+    const want = avSessionText(id, AV_SESSION_ID_CAP, "");
+    const prev = st.boot.id;
+    st.boot.id = want;
+    st.boot.read = true;
+    let ls = null;
+    try { ls = avSessionLs(); } catch (e) { ls = null; }
+    if (!ls) return { ok: true, id: want, persisted: false, error: null };   /* memory tier */
+    try {
+      ls.setItem(AV_SESSION_BOOT_LS, JSON.stringify({ v: AV_SESSION_BOOT_V, id: want }));
+      return { ok: true, id: want, persisted: true, error: null };
+    } catch (e) {
+      st.boot.id = prev;                 /* the rollback law: nothing durable -> not set */
+      return { ok: false, id: prev, persisted: false, error: "ls" };
+    }
+  } catch (e) {
+    return { ok: false, id: "", persisted: false, error: avSessionErrMsg(e) };
+  }
+}
+
+/* avSessionNewSession() -> Promise<receipt>  the ONE explicit NEW SESSION action (see the
+   header contract): template apply (or nothing) + the current pointer cleared in memory +
+   DIRTY, never rebased. Never throws. */
+function avSessionNewSession() {
+  const fail = function (e) {
+    return { ok: false, error: avSessionErrMsg(e), from: "", name: null, version: null, applied: 0, skipped: [], carried: [], seqOk: true };
+  };
+  try {
+    avSessionEnsure();
+    return Promise.resolve(avSessionNewSessionRun()).catch(fail);
+  } catch (e) {
+    return Promise.resolve(fail(e));
+  }
+}
+
+async function avSessionNewSessionRun() {
+  const st = avSession;
+  await avSessionHydrate();
+  const tpl = avSessionBootGet();
+  const out = { ok: true, from: tpl.id || "", name: null, version: null, applied: 0, skipped: [], carried: [], seqOk: true, error: null };
+  try {
+    /* (1) the template: its NEWEST version restored as the working state (apply-core laws) */
+    if (tpl.id) {
+      const rec = avSessionFind(tpl.id);
+      if (!rec) { out.ok = false; out.error = "template-missing"; }
+      else if (!rec.versions.length) { out.ok = false; out.name = rec.name; out.error = "template-empty"; }
+      else {
+        const ver = rec.versions[rec.versions.length - 1];
+        const ap = avSessionApply(ver.state);
+        out.name = rec.name;
+        out.version = ver.v;
+        out.applied = ap.applied;
+        out.skipped = ap.skipped;
+        out.carried = ap.carried;
+        out.seqOk = ap.seqOk;
+        out.ok = ap.ok === true;
+        out.error = (ap.ok === true) ? null : (ap.error || "apply-refused");
+      }
+    }
+    /* (2) the current pointer is cleared IN MEMORY: the next SAVE creates a NEW session */
+    st.currentId = null;
+    avSessionClearOtherCurrent(null);    /* no row reads CURRENT until the new session is saved */
+    /* (3) DIRTY, never rebased (the header contract) */
+    avSessionTouch();
+    avSessionPushNote("new session" + (tpl.id ? " from template" : ""));
+  } catch (e) {
+    out.ok = false;
+    out.error = avSessionErrMsg(e);
+  }
+  st.lastNew = {
+    ok: out.ok === true, from: out.from, name: out.name, version: out.version,
+    applied: out.applied, skipped: out.skipped.length, seqOk: out.seqOk,
+    error: out.error, at: avSessionNow(),
+  };
+  return out;
+}
+
+/* ---------- multi-tab beacon (K wave; docs/12 7.5 -- note over lock) ---------- */
+
+/* guarded BroadcastChannel reach (plain node / old browsers have none) */
+function avSessionBroadcast() {
+  try { if (typeof BroadcastChannel !== "undefined" && BroadcastChannel) return BroadcastChannel; } catch (e) { /* none */ }
+  try { const w = (typeof window !== "undefined") ? window : null; if (w && w.BroadcastChannel) return w.BroadcastChannel; } catch (e) { /* none */ }
+  return null;
+}
+
+/* open the ONE channel (lazily, once; silent no-op without BroadcastChannel) */
+function avSessionTabsEnsure() {
+  const tb = avSession.tab;
+  try {
+    if (tb.chan) return tb.chan;
+    if (tb.tried === true) return null;
+    tb.tried = true;
+    const BC = avSessionBroadcast();
+    if (typeof BC !== "function") return null;
+    const chan = new BC(AV_SESSION_TAB_CHANNEL);
+    if (!chan || typeof chan.postMessage !== "function") return null;
+    try { chan.onmessage = avSessionTabsMessage; } catch (e) {
+      try { chan.addEventListener("message", avSessionTabsMessage); } catch (e2) { return null; }
+    }
+    tb.chan = chan;
+    return chan;
+  } catch (e) { return null; }
+}
+
+/* a message from ANOTHER channel object (own posts are never delivered to the sender object) */
+function avSessionTabsMessage(e) {
+  try {
+    const d = (e && e.data !== undefined) ? e.data : null;
+    if (!avSessionObj(d)) return;
+    if (String(d.t) !== "saved") return;
+    const now = avSessionNow();
+    const at = Number(d.at);
+    const tb = avSession.tab;
+    tb.seenAt = now;
+    tb.at = (isFinite(at) && at > 0 && at <= now) ? at : now;
+  } catch (e2) { /* a listener never throws outward */ }
+}
+
+/* post after a DURABLE save/autosave write (a memory-tier write is invisible to other tabs) */
+function avSessionTabsPost() {
+  try {
+    const chan = avSessionTabsEnsure();
+    if (!chan) return false;
+    chan.postMessage({ t: "saved", at: avSessionNow() });
+    return true;
   } catch (e) { return false; }
 }
 
@@ -1693,6 +1901,9 @@ function avSessionState() {
       lastError: st.lastError,
       lastSave: st.lastSave ? avSessionClone(st.lastSave) : null,
       lastLoad: st.lastLoad ? avSessionClone(st.lastLoad) : null,
+      boot: { id: avSessionBootGet().id },
+      tab: { seenAt: st.tab.seenAt, savedAt: st.tab.at, windowMs: AV_SESSION_TAB_WINDOW_MS },
+      lastNew: st.lastNew ? avSessionClone(st.lastNew) : null,
     };
   } catch (e) {
     return {
@@ -1701,7 +1912,8 @@ function avSessionState() {
       current: null, dirty: false, lastAutosaveAt: 0,
       autosave: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS, choice: null },
       recovery: { available: false, savedAt: null, name: null, at: null },
-      lastError: "state", lastSave: null, lastLoad: null,
+      lastError: "state", lastSave: null, lastLoad: null, lastNew: null,
+      boot: { id: "" }, tab: { seenAt: 0, savedAt: 0, windowMs: AV_SESSION_TAB_WINDOW_MS },
     };
   }
 }
@@ -1844,6 +2056,9 @@ if (typeof window !== "undefined" && window) {
       hydrate: avSessionHydrate,
       setTags: avSessionSetTags,
       flush: avSessionVisibilityFlush,
+      bootGet: avSessionBootGet,
+      bootSet: avSessionBootSet,
+      newSession: avSessionNewSession,
     };
   } catch (e) { /* no window — node harness only */ }
 }
