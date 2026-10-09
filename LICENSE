@@ -1,6 +1,6 @@
-Pattern Forge — a Strudel-powered music workstation (single-file web app)
+Anvil - a MODDYS Foundry instrument (single-file web app)
 Copyright (C) 2026 Modtech (a.k.a. Moddy) <modtech@gmail.com>
-Home: https://moddys.net/forge/ · GitHub: https://github.com/ModdySwag
+Home: https://moddys.net/anvil/ | GitHub: https://github.com/ModdySwag/Anvil
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published
@@ -15,9 +15,10 @@ Home: https://moddys.net/forge/ · GitHub: https://github.com/ModdySwag
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Pattern Forge builds on the open-source Strudel engine (AGPL-3.0-or-later,
-copyright Felix Roos, Alex McLean and the Strudel contributors), fetched
-unmodified at runtime — see THIRD-PARTY-NOTICES.md.
+Anvil is original software: no third-party code text is included in the build.
+Its acid and ladder filter designs follow published open references - Open303
+(Robin Schmidt, MIT) and MoogLadders (github.com/ddiakopoulos/MoogLadders,
+Unlicense) - re-implemented as the project's own clean text.
 
 --------------------------------------------------------------------------------
 

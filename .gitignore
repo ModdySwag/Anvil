@@ -5,3 +5,8 @@ research/external/serum2/frames/
 research/external/serum2/raw/
 research/external/serum2/digest-parts/
 research/external/serum2/text/
+cache/
+windows/out/
+windows/stage/
+windows/tmp/
+windows/shots/
