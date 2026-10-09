@@ -2632,3 +2632,31 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   4. Plan: contract verify/_r21_wave.md -> authors (overlay UI core / hub slimming + rig legs /
      styles) -> integrate -> gates (battery 25 + bench) -> deploy -> live capture.
 - SEQUENCE: finish the R19 close (battery/deploy/live), then R21, then R20 persistence.
+
+## FINISH program addendum 73 - 2026-10-09 (post-roadmap FINISH: waves T/E/K opened -- T RUNNING)
+
+- The R17-R21 program + the whole carried list is being finished as a 3-wave program:
+  **T = TUNING STUDIO** (av_tune.js core + 12 authored scales + engine 8-slot tuning bank +
+  TUNE card + per-part assignment + MTS receive + .scl/.kbm policy rows + cdp_tune rig + the
+  32-preset PERFECT TUNINGS pack -- closes 10/10 packs + the tuning engine), **E = ENGINE
+  EDGE** (explicit acid accent flag decision + P.2 minBLEP cost-optimisation pass), **K =
+  FINISH KNICKS** (fill toggle + chains/scenes/song undo capture v2 + boot template +
+  BWF/iXML/acid/ID3 WAV metadata + multi-tab note + FINISH close: README + docs/12 section 7
+  statuses + owner-pass ask).
+- Contracts: `verify/_t_wave.md` (COMMITTED 23e6645 + refinement 371afad; authors
+  A/B/C/E1/F dispatched as deleg_203e9bc0: av_tune.js / engine+av_seq_sched.js / av_tune_ui.js
+  +av_midi.js / verify/cdp_tune.mjs+cdp_smoke.mjs / packs/perfect-tunings.avbank.json).
+  Staged next: `verify/_e_wave.md` + `verify/_k_wave.md` (committed with this addendum).
+  Chain scripts: `cache/finish/` (sweep.py [--expect 22->23], battery.sh [incl. tune],
+  triage_t.sh).
+- Per-part tuning is PAGE-SIDE by decision (no pattern-schema change): the sched emits
+  opts.tune = avTuneTrackSlot(track) (guarded) at the DOWN site. Scoped MTS = the STANDARD
+  MIDI Tuning Standard SysEx receive; MTS-ESP (Oddsound) interop = recorded option (its own
+  SysEx family; needs the spec -- do not invent it).
+- Resume if interrupted: children land ARTIFACTS on disk only -- check src/av_tune.js,
+  src/av_tune_ui.js, src/av_dsp.js/av_voiceproc.js/av_engine.js/av_note.js/av_seq_sched.js
+  edits (markers: setTuning / tuning / tune), verify/cdp_tune.mjs, packs/perfect-tunings
+  .avbank.json; then integrate per _t_wave.md section 9 (styles block -> build.py js_parts ->
+  body.html card -> app_core boot + 1.12.0 -> _t_integrate.py counted-assert pass).
+- Nothing else in flight. Owner-pass (his machine, after the final deploy): real launchQueue
+  arrival (install PWA -> open a file WITH it) + real FSA dir-picker click.
