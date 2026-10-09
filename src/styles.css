@@ -1953,3 +1953,26 @@ header.av-head.av-console .avc-center { display: flex; align-items: center; gap:
 .av-import-detail-key { color: var(--text-3); text-transform: uppercase; letter-spacing: .08em; font-size: 9px; min-width: 64px; padding-top: 1px; }
 .av-import-detail-val { color: var(--text-2); min-width: 0; overflow-wrap: anywhere; }
 .av-import-detail-meta { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 96px; overflow-y: auto; background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px; padding: 5px 7px; }
+
+/* R20: work persistence -- sessions browser v2 + project recents (av_session_ui.js / av_files_ui.js)
+   classes per verify/_r20_wave.md s.3/s.4. Appended to src/styles.css at integration. */
+.av-sessions-tools { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.av-sessions-search { flex: 1 1 auto; min-width: 0; background: #0a0e11; border: 1px solid var(--hair); border-radius: 5px; color: var(--text); font-family: var(--mono); font-size: 11px; padding: 4px 8px; outline: none; }
+.av-sessions-search:focus { border-color: var(--teal-deep); }
+.av-sessions-sort { width: auto; }
+.av-sessions-tags { display: inline-flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
+.av-sessions-tags-list { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 0; overflow-wrap: anywhere; }
+.av-sessions-tags-none { opacity: .65; }
+.av-sessions-tag { color: var(--teal); }
+.av-sessions-tags-sep { color: var(--text-3); }
+.av-sessions-tags-input { width: 260px; max-width: 100%; background: #0a0e11; border: 1px solid var(--hair); border-radius: 5px; color: var(--text); font-family: var(--mono); font-size: 10.5px; padding: 3px 7px; outline: none; }
+.av-sessions-prev { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sessions-prev-part { white-space: nowrap; }
+.av-files-recent { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.av-files-recent-title { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-files-recent-list { display: flex; flex-direction: column; gap: 4px; }
+.av-files-recent-empty { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin: 2px 0; }
+.av-files-recent-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 5px 8px; border: 1px solid var(--hair); border-radius: 6px; background: rgba(6, 9, 12, .35); font-size: 12px; min-width: 0; }
+.av-files-recent-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.av-files-recent-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-files-recent-acts { display: inline-flex; gap: 4px; margin-left: auto; }

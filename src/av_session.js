@@ -20,12 +20,14 @@
      avSessionExport() -> {v, sessions:[record...]}
      avSessionImport(payloadOrRecord) -> {ok, imported, skipped}   tolerant; id-dedupe
      avSessionTouch() -> bool             mark dirty (best-effort; the fingerprint also works)
+     avSessionSetTags(id, tags) -> Promise  set a session's tags (max 8, each max 24 chars,
+                                          lowercase-trimmed); persists via the record write path
      avSessionClasses() -> string[]       [] — this module mounts nothing
      avSessionHydrate() -> Promise<mode>  (extra: boot hydrate, idempotent, never rejects)
      window.__avSession -> { version, init, capture, apply, save, list, load, delete, versions,
                              restore, autosave, state, recover, export: avSessionExport,
                              import: avSessionImport }
-                           + extras: touch, dismiss, classes, hydrate
+                           + extras: touch, dismiss, classes, hydrate, setTags, flush
 
    STATE SCHEMA (v1, JSON-safe by construction):
      { v:1, name, savedAt,
@@ -43,6 +45,10 @@
    { id, name, createdAt, updatedAt, current, versions:[{ v, savedAt, state }] } (ring <= 16,
    newest last) plus the SINGLE record id `__autosave` { state, savedAt, name }. LS fallback key
    `av-sessions-ls` (JSON { v, sessions, autosave }; per session = meta + newest version only).
+   The AUTOSAVE CHOICE (R20) persists separately in localStorage key `av-sessions-autosave`
+   (JSON { v:1, on }): the seed never writes it, only an explicit avSessionAutosave(on) call
+   does; without localStorage the choice cannot persist (honest). Session TAGS (R20) ride the
+   record: an additive `tags` array (max 8, lowercase-trimmed, each max 24 chars).
    No storage at all -> memory last resort. Every receipt names the tier it actually used
    (`idb | ls | mem`) and a memory-only write is `volatile:true`. "Nothing durable → not saved":
    a refused durable write rolls the memory change back and resolves ok:false; only memory mode
@@ -67,12 +73,18 @@
      (6) takesMeta is NOT applied — carried metadata (`carried` names it), never a skip.
      ok = at least one leg present AND zero skips AND seqOk (bank's full-acceptance law).
 
-   DIRTY + AUTOSAVE (§2.1): dirty = the cheap fingerprint changed — fingerprint =
-   avSeqPatternExport() string + JSON of { params, mod.macros } + avTakesList().length (guarded,
-   never throws). avSessionTouch() marks dirty eagerly. Save/load/restore/recover re-base the
-   fingerprint. The autosave tick (timer at `ms`, only while on) writes the ONE `__autosave`
-   record ({ state, savedAt, name }) only when dirty; a landed write stamps lastAutosaveAt; a
-   refused write stays dirty (honest). Boot performs no write (the baseline is set post-hydrate).
+   DIRTY + AUTOSAVE (R20): dirty = the fingerprint changed -- the fingerprint now covers the
+   FULL avSessionCapture() surface: avSeqPatternExport() (full pattern copy, steps included) +
+   JSON of { params, mod.macros } + takesMeta JSON + JSON of { chains, song, scenes } + prefs
+   JSON (every leg guarded, never throws). avSessionTouch() marks dirty eagerly. Save/load/
+   restore/recover re-base the fingerprint. SEEDING: at hydrate end autosave seeds ON when the
+   store holds >= 1 session or the persisted choice is on; a virgin store seeds OFF; after the
+   FIRST successful avSessionSave with no explicit choice yet, autosave flips ON (an explicit
+   off outranks). The tick (timer at `ms`, only while on) writes the ONE `__autosave` record
+   ({ state, savedAt, name }) only when dirty; a landed write stamps lastAutosaveAt; a refused
+   write stays dirty (honest). A document `visibilitychange` -> hidden flush writes that same
+   ONE record immediately when on and dirty, then rearms (guarded, silent). Boot performs no
+   write (the baseline is set post-hydrate).
 
    RECOVERY: hydrate finds the `__autosave` record -> recovery.available with savedAt/name; the
    offer NEVER auto-applies. avSessionRecover() = apply its state + clear the record durably +
@@ -103,6 +115,10 @@ const AV_SESSION_VERSIONS_MAX = 16;                 /* the ring bound (§2.1) */
 const AV_SESSION_AUTOSAVE_DEF_MS = 45000;
 const AV_SESSION_AUTOSAVE_MIN_MS = 5000;
 const AV_SESSION_AUTOSAVE_MAX_MS = 600000;
+const AV_SESSION_AUTO_LS = "av-sessions-autosave";  /* the EXPLICIT autosave choice (localStorage;
+                                                       JSON {v:1,on}; the only persisted choice) */
+const AV_SESSION_TAG_MAX = 8;                       /* session tags (R20): max 8 per session */
+const AV_SESSION_TAG_LEN = 24;                      /* max 24 chars each (lowercase-trimmed)   */
 const AV_SESSION_OPEN_CAP_MS = 1800;                /* hung-open give-up (the av_store cap) */
 const AV_SESSION_NAME_CAP = 40;
 const AV_SESSION_ID_CAP = 64;
@@ -132,6 +148,8 @@ const avSession = {
   autoRec: null,             /* the latest __autosave record seen/written {id,state,savedAt,name} */
   recovery: null,            /* {available,savedAt,name,at,state} — the offer (never auto-applied) */
   auto: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS },
+  autoChoice: null,          /* the EXPLICIT on/off choice (true|false) or null (never chosen) */
+  flushBound: false,         /* the visibilitychange listener is bound once per page */
   timer: null,
   lastAutosaveAt: 0,
   baseFp: null,              /* the dirty baseline fingerprint (post-hydrate) */
@@ -639,13 +657,25 @@ function avSessionApply(state) {
 
 /* ---------- dirty fingerprint (§2.1) ---------- */
 
+/* the dirty fingerprint (R20 coverage law): it must flip on EVERY surface avSessionCapture()
+   writes -- pattern (the full export copy, steps included), params, mod.macros, takesMeta,
+   seq chains/song/scenes and prefs. Each leg is typeof-guarded and never throws; an absent
+   module contributes a stable empty leg (absent is not dirty). */
 function avSessionFingerprint() {
-  let a = "", b = "", c = "";
+  let a = "", b = "", c = "", d = "", e = "";
   try { a = (typeof avSeqPatternExport === "function") ? String(avSeqPatternExport() || "") : ""; } catch (e) { a = ""; }
   try { b = JSON.stringify({ params: avSessionParamsSnap(), mod: { macros: avSessionMacrosSnap() } }); } catch (e) { b = ""; }
-  try { c = (typeof avTakesList === "function") ? String(avTakesList().length | 0) : ""; } catch (e) { c = ""; }
+  try { c = JSON.stringify(avSessionTakesSnap()); } catch (e) { c = ""; }
+  try {
+    const f = avSessionSeqFns();
+    d = JSON.stringify({ chains: avSessionSeqCall(f.chainsSnap), song: avSessionSeqCall(f.songSnap), scenes: avSessionSeqCall(f.scenesSnap) });
+  } catch (e) { d = ""; }
+  try { e = JSON.stringify(avSessionPrefsSnap()); } catch (e) { e = ""; }
   if (typeof b !== "string") b = "";
-  return a + "\n" + b + "\n" + c;
+  if (typeof c !== "string") c = "";
+  if (typeof d !== "string") d = "";
+  if (typeof e !== "string") e = "";
+  return a + "\n" + b + "\n" + c + "\n" + d + "\n" + e;
 }
 
 function avSessionDirty() {
@@ -743,6 +773,27 @@ function avSessionDbRemove(db, id) {
 
 /* ---------- record normalisation (garbage in -> null / cleaned record out) ---------- */
 
+/* session tags (R20, additive meta): <= 8 tags, each <= 24 chars, lowercase-trimmed, deduped;
+   garbage in -> [] (never throws) */
+function avSessionTagsNorm(v) {
+  const out = [];
+  try {
+    if (!Array.isArray(v)) return out;
+    for (let i = 0; i < v.length && out.length < AV_SESSION_TAG_MAX; i++) {
+      let t = "";
+      try {
+        t = String(v[i] == null ? "" : v[i]).replace(/[\u0000-\u001f\u007f]/g, "");
+        t = t.replace(/\s+/g, " ").trim().toLowerCase().slice(0, AV_SESSION_TAG_LEN);
+      } catch (e) { t = ""; }
+      if (!t) continue;
+      let dup = false;
+      for (let j = 0; j < out.length; j++) if (out[j] === t) { dup = true; break; }
+      if (!dup) out.push(t);
+    }
+  } catch (e) { return []; }
+  return out;
+}
+
 function avSessionVersionNorm(raw) {
   if (!avSessionObj(raw)) return null;
   if (!avSessionObj(raw.state)) return null;
@@ -781,6 +832,7 @@ function avSessionRecordNorm(raw) {
     createdAt: createdAt,
     updatedAt: updatedAt,
     current: avSessionBit(raw.current) === 1,
+    tags: avSessionTagsNorm(raw.tags),
     versions: versions,
   };
 }
@@ -791,7 +843,7 @@ function avSessionRecordForStore(rec) {
   try {
     const out = {
       id: rec.id, name: rec.name, createdAt: rec.createdAt, updatedAt: rec.updatedAt,
-      current: rec.current === true, versions: [],
+      current: rec.current === true, tags: avSessionTagsNorm(rec.tags), versions: [],
     };
     for (let i = 0; i < rec.versions.length; i++) {
       const vv = rec.versions[i];
@@ -887,6 +939,7 @@ function avSessionHydrate() {
     st.hydratePromise = avSessionHydrateRun().catch(function (e) {
       st.lastError = "hydrate:" + avSessionErrMsg(e);
       st.hydrated = true;
+      try { avSessionAutoSeed(); } catch (e2) { /* seed is best effort */ }
       return st.backend;
     });
     return st.hydratePromise;
@@ -1007,6 +1060,7 @@ async function avSessionHydrateRun() {
   }
   st.hydrated = true;
   avSessionMarkBaseline();
+  avSessionAutoSeed();                  /* the seeding law (R20): choice, else store-count */
   return st.backend;
 }
 
@@ -1163,10 +1217,25 @@ function avSessionInit() {
     const st = avSession;
     if (!st.inited) {
       st.inited = true;
+      avSessionBindVisibility();          /* R20: the hidden flush listener (guarded) */
       avSessionHydrate();                 /* best-effort boot hydrate; idempotent by promise */
     }
     return true;
   } catch (e) { return false; }
+}
+
+/* bind the visibilitychange listener ONCE (guarded: plain node has no document) */
+function avSessionBindVisibility() {
+  const st = avSession;
+  if (st.flushBound) return false;
+  try {
+    if (typeof document !== "undefined" && document && typeof document.addEventListener === "function") {
+      document.addEventListener("visibilitychange", avSessionVisibilityHandler);
+      st.flushBound = true;
+      return true;
+    }
+  } catch (e) { /* no DOM reachable */ }
+  return false;
 }
 
 function avSessionSave(name) {
@@ -1189,7 +1258,7 @@ async function avSessionSaveRun(name) {
   let created = false, prevName = null, prevUpdatedAt = 0, prevLen = 0, prevCurrentId = st.currentId;
   if (!rec) {
     const id = avSessionNextId();
-    rec = { id: id, name: nm || "Session", createdAt: now, updatedAt: now, current: true, versions: [] };
+    rec = { id: id, name: nm || "Session", createdAt: now, updatedAt: now, current: true, tags: [], versions: [] };
     st.sessions[id] = rec;
     st.currentId = id;
     created = true;
@@ -1227,10 +1296,79 @@ async function avSessionSaveRun(name) {
     return bad;
   }
   avSessionMarkBaseline();
+  /* the after-first-save law (R20): while no explicit choice exists, a successful save flips
+     autosave ON; an explicit off outranks it and is never overridden */
+  if (st.autoChoice == null && st.auto.on !== true) {
+    st.auto.on = true;
+    avSessionAutosaveRearm();
+  }
   const receipt = { ok: true, id: rec.id, name: rec.name, version: nextV, savedAt: now, backend: put.backend, volatile: !!put.volatile, versions: rec.versions.length };
   st.lastSave = receipt;
   st.lastError = null;
   return receipt;
+}
+
+/* avSessionSetTags(id, tags) -> Promise<{ok,id,tags,backend,volatile,error}>  set the tags on a
+   session's meta (normalised: <= 8 tags, <= 24 chars each, lowercase-trimmed) and persist them
+   through the existing record write path; a refused durable write rolls the memory change back
+   ("nothing durable -> not saved"). Never throws. */
+function avSessionSetTags(id, tags) {
+  try {
+    avSessionEnsure();
+    return Promise.resolve(avSessionSetTagsRun(id, tags)).catch(function (e) {
+      return { ok: false, id: String(id == null ? "" : id), tags: [], error: avSessionErrMsg(e) };
+    });
+  } catch (e) {
+    return Promise.resolve({ ok: false, id: String(id == null ? "" : id), tags: [], error: avSessionErrMsg(e) });
+  }
+}
+
+async function avSessionSetTagsRun(id, tags) {
+  const st = avSession;
+  await avSessionHydrate();
+  const rec = avSessionFind(id);
+  if (!rec) return { ok: false, id: String(id == null ? "" : id), tags: [], error: "no-session" };
+  const next = avSessionTagsNorm(tags);
+  const prev = Array.isArray(rec.tags) ? rec.tags.slice() : [];
+  rec.tags = next;
+  const put = await avSessionCommitRecord(rec);
+  if (!put || put.ok !== true) {
+    rec.tags = prev;                                    /* the rollback law */
+    st.lastError = (put && put.error) || "tags";
+    return { ok: false, id: rec.id, tags: prev.slice(), backend: (put && put.backend) || st.backend, volatile: !!(put && put.volatile), error: (put && put.error) || "write failed" };
+  }
+  st.lastError = null;
+  return { ok: true, id: rec.id, tags: next.slice(), backend: put.backend, volatile: !!put.volatile };
+}
+
+/* R20 row meta for the session browser: engine kind / pattern bars / take count read off the
+   NEWEST version's state; null when absent (the UI renders the honest "--" fallback). */
+function avSessionRowMeta(rec) {
+  const out = { engine: null, bars: null, takes: null };
+  try {
+    if (!rec || !rec.versions || !rec.versions.length) return out;
+    const state = rec.versions[rec.versions.length - 1].state;
+    if (!avSessionObj(state)) return out;
+    const params = state.params;
+    if (avSessionObj(params)) {
+      const k = params["engine.kind"];
+      if (typeof k === "string" && k) out.engine = k.slice(0, 24);
+    }
+    const sq = state.seq;
+    const pat = avSessionObj(sq) ? sq.pattern : null;
+    if (avSessionObj(pat) && Array.isArray(pat.tracks)) {
+      let maxLen = 0;
+      for (let i = 0; i < pat.tracks.length; i++) {
+        const tr = pat.tracks[i];
+        const n = Math.round(Number(tr ? tr.len : 0));
+        if (isFinite(n) && n > maxLen) maxLen = n;
+      }
+      /* the house law: 16 steps = one bar (avFamilyBars); the longest track is the cycle */
+      if (maxLen > 0) out.bars = Math.max(1, Math.round(maxLen / 16));
+    }
+    if (Array.isArray(state.takesMeta)) out.takes = state.takesMeta.length;
+  } catch (e) { /* absent fields stand */ }
+  return out;
 }
 
 function avSessionList() {
@@ -1242,6 +1380,7 @@ function avSessionList() {
       const rec = st.sessions[ids[i]];
       if (!rec) continue;
       const newest = rec.versions.length ? rec.versions[rec.versions.length - 1] : null;
+      const meta = avSessionRowMeta(rec);
       out.push({
         id: rec.id,
         name: rec.name,
@@ -1249,6 +1388,10 @@ function avSessionList() {
         updatedAt: rec.updatedAt,
         version: newest ? newest.v : 0,
         current: (rec.current === true) || (rec.id === st.currentId),
+        engine: meta.engine,
+        bars: meta.bars,
+        takes: meta.takes,
+        tags: avSessionTagsNorm(rec.tags),
       });
     }
   } catch (e) { /* [] */ }
@@ -1372,14 +1515,67 @@ async function avSessionRestoreRun(id, version) {
   return receipt;
 }
 
-/* ---------- autosave (ONE timer; one __autosave record; dirty-only writes) ---------- */
+/* ---------- autosave (R20: ONE timer; one __autosave record; dirty-only writes; the seeding
+   law; the persisted explicit choice; the visibilitychange hidden flush) ---------- */
+
+/* the EXPLICIT autosave choice: localStorage key `av-sessions-autosave` (JSON {v:1,on});
+   true / false / null (null = no explicit choice yet). Never throws. */
+function avSessionAutoChoiceRead() {
+  try {
+    const ls = avSessionLs();
+    if (!ls) return null;
+    const raw = ls.getItem(AV_SESSION_AUTO_LS);
+    if (raw == null) return null;
+    const s = String(raw).trim();
+    if (s === "1") return true;
+    if (s === "0") return false;
+    let obj = null;
+    try { obj = JSON.parse(s); } catch (e) { obj = null; }
+    if (avSessionObj(obj)) {
+      if (obj.on === true || obj.on === 1 || obj.on === "1") return true;
+      if (obj.on === false || obj.on === 0 || obj.on === "0") return false;
+    }
+  } catch (e) { /* no storage -> no persisted choice */ }
+  return null;
+}
+
+function avSessionAutoChoiceWrite(on) {
+  try {
+    const ls = avSessionLs();
+    if (!ls) return false;
+    ls.setItem(AV_SESSION_AUTO_LS, JSON.stringify({ v: 1, on: on === true }));
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the seeding law (R20): the persisted EXPLICIT choice wins; otherwise autosave seeds ON when
+   the store already holds >= 1 session; a virgin store seeds OFF. Runs once at hydrate end. */
+function avSessionAutoSeed() {
+  const st = avSession;
+  try {
+    if (st.autoChoice == null) st.autoChoice = avSessionAutoChoiceRead();
+    if (st.autoChoice !== null) st.auto.on = (st.autoChoice === true);
+    else {
+      let count = 0;
+      try { count = Object.keys(st.sessions).length; } catch (e) { count = 0; }
+      st.auto.on = count >= 1;
+    }
+    avSessionAutosaveRearm();
+    return st.auto.on === true;
+  } catch (e) { return false; }
+}
 
 function avSessionAutosave(on, ms) {
   try {
     avSessionEnsure();
     const st = avSession;
     let changed = false;
-    if (on !== undefined && on !== null) { st.auto.on = !!on; changed = true; }
+    if (on !== undefined && on !== null) {
+      st.auto.on = !!on;
+      st.autoChoice = !!on;               /* the explicit choice persists across loads */
+      avSessionAutoChoiceWrite(st.autoChoice);
+      changed = true;
+    }
     if (ms !== undefined && ms !== null) {
       const n = Number(ms);
       if (isFinite(n)) st.auto.ms = Math.max(AV_SESSION_AUTOSAVE_MIN_MS, Math.min(AV_SESSION_AUTOSAVE_MAX_MS, Math.round(n)));
@@ -1399,34 +1595,61 @@ function avSessionAutosaveRearm() {
   st.timer = avSessionTimer(avSessionAutosaveTick, st.auto.ms);
 }
 
+/* the dirty-only write shared by the tick and the hidden flush: ONE __autosave record; the
+   fingerprint re-bases ONLY on a landed write (a refused write stays dirty, honest). */
+function avSessionAutosaveWrite() {
+  const st = avSession;
+  const fp = avSessionFingerprint();
+  const dirty = st.touchDirty === true || (st.baseFp != null && fp !== st.baseFp);
+  if (!dirty) return false;
+  const stateObj = avSessionCapture();
+  const rec = { id: AV_SESSION_AUTOSAVE_ID, state: stateObj, savedAt: avSessionNow(), name: stateObj.name };
+  avSessionCommitAutoRec(rec).then(function (r) {
+    if (r && r.ok === true) {
+      st.lastAutosaveAt = rec.savedAt;
+      st.baseFp = fp;
+      st.touchDirty = false;
+      if (st.recovery && st.recovery.available === true) {   /* refresh the pending offer */
+        st.recovery.savedAt = rec.savedAt;
+        st.recovery.name = rec.name;
+        st.recovery.state = rec.state;
+      }
+    } else {
+      st.lastError = "autosave:" + ((r && r.error) || "write failed");   /* stays dirty */
+    }
+  }, function () { st.lastError = "autosave:write failed"; });
+  return true;
+}
+
 function avSessionAutosaveTick() {
   const st = avSession;
   st.timer = null;
   try {
-    if (st.auto.on === true) {
-      const fp = avSessionFingerprint();
-      const dirty = st.touchDirty === true || (st.baseFp != null && fp !== st.baseFp);
-      if (dirty) {
-        const stateObj = avSessionCapture();
-        const rec = { id: AV_SESSION_AUTOSAVE_ID, state: stateObj, savedAt: avSessionNow(), name: stateObj.name };
-        avSessionCommitAutoRec(rec).then(function (r) {
-          if (r && r.ok === true) {
-            st.lastAutosaveAt = rec.savedAt;
-            st.baseFp = fp;
-            st.touchDirty = false;
-            if (st.recovery && st.recovery.available === true) {   /* refresh the pending offer */
-              st.recovery.savedAt = rec.savedAt;
-              st.recovery.name = rec.name;
-              st.recovery.state = rec.state;
-            }
-          } else {
-            st.lastError = "autosave:" + ((r && r.error) || "write failed");   /* stays dirty */
-          }
-        }, function () { st.lastError = "autosave:write failed"; });
-      }
-    }
+    if (st.auto.on === true) avSessionAutosaveWrite();
   } catch (e) { st.lastError = "autosave:" + avSessionErrMsg(e); }
   if (st.auto.on === true) st.timer = avSessionTimer(avSessionAutosaveTick, st.auto.ms);
+}
+
+/* visibilitychange -> hidden flush (R20): while auto is on and the state is dirty, run the same
+   ONE write immediately, then rearm. Reads document.visibilityState per event (rigs stub it).
+   Guarded, silent, never throws outward. */
+function avSessionVisibilityFlush() {
+  const st = avSession;
+  try {
+    if (st.auto.on !== true) return false;
+    const wrote = avSessionAutosaveWrite();
+    if (wrote) avSessionAutosaveRearm();
+    return wrote;
+  } catch (e) { return false; }
+}
+
+function avSessionVisibilityHandler() {
+  try {
+    let vis = "";
+    try { if (typeof document !== "undefined" && document) vis = String(document.visibilityState || ""); } catch (e) { vis = ""; }
+    if (vis !== "hidden") return false;
+    return avSessionVisibilityFlush();
+  } catch (e) { return false; }
 }
 
 /* ---------- state / recovery ---------- */
@@ -1463,7 +1686,7 @@ function avSessionState() {
       current: current,
       dirty: avSessionDirty(),
       lastAutosaveAt: st.lastAutosaveAt,
-      autosave: { on: st.auto.on === true, ms: st.auto.ms },
+      autosave: { on: st.auto.on === true, ms: st.auto.ms, choice: (st.autoChoice === true) ? true : (st.autoChoice === false ? false : null) },
       recovery: hasRec
         ? { available: true, savedAt: rec.savedAt, name: rec.name, at: rec.at }
         : { available: false, savedAt: null, name: null, at: null },
@@ -1476,7 +1699,7 @@ function avSessionState() {
       version: AV_SESSION_VERSION, init: false, inited: false, hydrated: false, backend: null,
       volatile: false, modes: AV_SESSION_MODES.slice(), note: null, notes: [], count: 0,
       current: null, dirty: false, lastAutosaveAt: 0,
-      autosave: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS },
+      autosave: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS, choice: null },
       recovery: { available: false, savedAt: null, name: null, at: null },
       lastError: "state", lastSave: null, lastLoad: null,
     };
@@ -1619,6 +1842,8 @@ if (typeof window !== "undefined" && window) {
       dismiss: avSessionDismissRecovery,
       classes: avSessionClasses,
       hydrate: avSessionHydrate,
+      setTags: avSessionSetTags,
+      flush: avSessionVisibilityFlush,
     };
   } catch (e) { /* no window — node harness only */ }
 }

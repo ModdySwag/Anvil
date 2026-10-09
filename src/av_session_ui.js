@@ -52,6 +52,14 @@
    - restore-file reads via file.arrayBuffer() with a FileReader fallback; the input value is
      reset so the same file can be picked again.
 
+   BROWSER V2 (R20): the search + sort controls are CLIENT-SIDE view filters over the rows
+   (never a module call); search matches name + tags (case-insensitive substring); sort values
+   newest | name | updated ("newest" = the module's own order; "name"/"updated" mirror the
+   import manager's comparators). Tags commit through the pinned avSessionSetTags (typeof
+   guarded, quick meta writes outside the module-op gate); the editor is inline per row and
+   Enter/blur commits while Escape cancels. ONE shared rerender serves the list, the filters
+   and the tag editor.
+
    OBSERVABLES: avSessionUiInit() -> bool (false without host, never throws, idempotent,
    dataset marker avSessionUiWired='1') · avSessionUiSync() -> bool (repaint) ·
    avSessionUiClasses() -> string[] (the NEW css classes; the parent styles them) ·
@@ -61,6 +69,7 @@
    stamp) · window.__avSessionUiLastRestore = { name, bytes, restored, skipped, errors, at }.
 
    ID INVENTORY (rig + parent rely on these):
+    #av-sessions-search (browser v2 search) | #av-sessions-sort (newest | name | updated)
      #av-sessions-status
      #av-sessions-recovery · #av-sessions-recovery-at · #av-sessions-recover · #av-sessions-dismiss
      #av-sessions-count · #av-sessions-storage
@@ -70,7 +79,8 @@
      #av-sessions-progress · #av-sessions-report · #av-sessions-warnings · #av-sessions-foot
    CARD HOOKS: `.av-sessions[data-av-sessions="1"]` · `.av-sessions-session[data-id]` (state
    class `av-sessions-cur`) · `.av-sessions-ver[data-id][data-ver]` ·
-   `[data-act=load|del|restore]`.
+   `[data-act=load|del|restore|tags]` plus `.av-sessions-tags[data-id]` /
+   `.av-sessions-tags-input[data-id]` / `.av-sessions-prev[data-id]` (browser v2 rows).
    ONE writer (child sa-C). Never throws. */
 
 "use strict";
@@ -83,6 +93,10 @@ const AV_SESSION_UI_LIST_MAX = 32;                    /* sessions rendered (boun
 const AV_SESSION_UI_VERS_MAX = 16;                    /* versions rendered per session (ring bound) */
 const AV_SESSION_UI_NAME_MAX = 64;
 const AV_SESSION_UI_POLL_MS = 1200;
+const AV_SESSION_UI_TAG_MAX = 8;                      /* tags per session (mirrors the module cap) */
+const AV_SESSION_UI_TAG_LEN = 24;                     /* chars per tag (mirrors the module cap)    */
+const AV_SESSION_UI_SEARCH_MAX = 64;                  /* the search field cap (view filter only)   */
+const AV_SESSION_UI_SORTS = ["newest", "name", "updated"];   /* the pinned sort values (R20)        */
 
 /* UI-local state only — every module fact is read through the pinned av* APIs per paint */
 const avSessionUiState = {
@@ -104,6 +118,8 @@ const avSessionUiState = {
   warnings: [], warnKey: "",
   /* paint memos */
   sessKey: "", asKey: "",
+  /* browser v2 (R20): client-side view filters + the tag inline editor + tags-write counter */
+  search: "", sort: "newest", tagEditId: "", tagDraft: "", lastRows: 0, tagsBusy: 0,
   /* poll signature sentinel so the first poll always syncs */
   pollSig: "\u0000",
 };
@@ -272,6 +288,81 @@ function avSessionUiCountBits(r) {
   return bits;
 }
 
+/* ---------- browser v2 helpers (pure; R20) ---------- */
+
+/* tags normalizer (mirrors the module law: max 8 tags, each max 24 chars, lowercase-trimmed,
+   deduped); array in -> clean array out (never throws) */
+function avSessionUiTagsNorm(v) {
+  const out = [];
+  try {
+    if (!Array.isArray(v)) return out;
+    for (let i = 0; i < v.length && out.length < AV_SESSION_UI_TAG_MAX; i++) {
+      let t = "";
+      try {
+        t = String(v[i] == null ? "" : v[i]).replace(/[\u0000-\u001f\u007f]/g, "");
+        t = t.replace(/\s+/g, " ").trim().toLowerCase().slice(0, AV_SESSION_UI_TAG_LEN);
+      } catch (e) { t = ""; }
+      if (!t) continue;
+      let dup = false;
+      for (let j = 0; j < out.length; j++) if (out[j] === t) { dup = true; break; }
+      if (!dup) out.push(t);
+    }
+  } catch (e) { return []; }
+  return out;
+}
+
+/* editor input -> tags: comma or semicolon separated, then the same normalizer */
+function avSessionUiTagsParse(v) {
+  try {
+    if (Array.isArray(v)) return avSessionUiTagsNorm(v);
+    return avSessionUiTagsNorm(String(v == null ? "" : v).split(/[,;]/));
+  } catch (e) { return []; }
+}
+
+/* the import manager's name comparator, mirrored (lowercase compare, id tiebreak) */
+function avSessionUiByName(a, b) {
+  const an = String((a && a.name) || "").toLowerCase(), bn = String((b && b.name) || "").toLowerCase();
+  if (an < bn) return -1;
+  if (an > bn) return 1;
+  const ai = String((a && a.id) || ""), bi = String((b && b.id) || "");
+  return ai < bi ? -1 : (ai > bi ? 1 : 0);
+}
+
+/* the visible rows: search (name + tags, case-insensitive substring) + sort over the module's
+   list; "newest" = the module's own order (the current order; never re-sorted). A filter or
+   sort failure falls back to the module order. Never throws. */
+function avSessionUiViewRows(list) {
+  const s = avSessionUiState;
+  const out = [];
+  try {
+    const src = Array.isArray(list) ? list : [];
+    const q = String(s.search || "").toLowerCase();
+    for (let i = 0; i < src.length; i++) {
+      const r = src[i];
+      if (!r || typeof r !== "object") continue;
+      if (q) {
+        let hit = String(r.name || "").toLowerCase().indexOf(q) >= 0;
+        if (!hit) {
+          const tags = Array.isArray(r.tags) ? r.tags : [];
+          for (let j = 0; j < tags.length; j++) {
+            if (String(tags[j] || "").toLowerCase().indexOf(q) >= 0) { hit = true; break; }
+          }
+        }
+        if (!hit) continue;
+      }
+      out.push(r);
+    }
+  } catch (e) { return []; }
+  try {
+    if (s.sort === "name") out.sort(avSessionUiByName);
+    else if (s.sort === "updated") out.sort(function (a, b) {
+      const d = avSessionUiNum(b.updatedAt, 0) - avSessionUiNum(a.updatedAt, 0);
+      return d !== 0 ? d : avSessionUiByName(a, b);
+    });
+  } catch (e) { /* the module order stands */ }
+  return out;
+}
+
 /* ---------- guarded DOM access (no throw, no noise) ---------- */
 
 function avSessionUiHost() {
@@ -423,6 +514,46 @@ function avSessionUiVerRowHTML(id, ver, busy) {
     "</div>";
 }
 
+/* the R20 tags line: the stored tags + the inline editor (Enter/blur commits, Esc cancels) */
+function avSessionUiTagsRowHTML(view, s) {
+  const idEsc = avSessionUiEsc(view.id);
+  const editing = !!(s && s.tagEditId === view.id);
+  let html = '<div class="av-sessions-tags" data-id="' + idEsc + '">';
+  if (editing) {
+    html += '<input type="text" class="av-sessions-tags-input" data-id="' + idEsc + '" value="' + avSessionUiEsc((s && s.tagDraft) || "") + '" spellcheck="false" autocomplete="off" maxlength="220" placeholder="tag, tag \u2014 Enter saves, Esc cancels" aria-label="Session tags, comma separated">';
+  } else {
+    const tags = Array.isArray(view.tags) ? view.tags : [];
+    let inner = "";
+    for (let i = 0; i < tags.length; i++) {
+      inner += (i ? '<span class="av-sessions-tags-sep"> \u00b7 </span>' : "") + '<span class="av-sessions-tag">' + avSessionUiEsc(tags[i]) + "</span>";
+    }
+    html += '<span class="av-sessions-tags-list' + (tags.length ? "" : " av-sessions-tags-none") + '">' + (inner || "--") + "</span>";
+    html += '<button type="button" class="av-btn mini av-sessions-btn av-sessions-tags-btn" data-act="tags" data-id="' + idEsc + '" title="Edit tags (comma separated, up to 8, 24 chars each)">TAGS</button>';
+  }
+  html += "</div>";
+  return html;
+}
+
+/* the R20 preview line: engine kind / pattern bars / take count / saved + updated stamps;
+   honest "--" when a field is absent */
+function avSessionUiPrevRowHTML(view) {
+  const idEsc = avSessionUiEsc(view.id);
+  const eng = (typeof view.engine === "string" && view.engine) ? avSessionUiClean(view.engine, 24) : "--";
+  const barsN = (typeof view.bars === "number" && isFinite(view.bars)) ? view.bars : null;
+  const bars = (barsN != null) ? (Math.round(barsN) + (Math.round(barsN) === 1 ? " bar" : " bars")) : "--";
+  const takesN = (typeof view.takes === "number" && isFinite(view.takes)) ? view.takes : null;
+  const takes = (takesN != null) ? (Math.round(takesN) + (Math.round(takesN) === 1 ? " take" : " takes")) : "--";
+  const saved = view.atText ? ("saved " + view.atText) : "saved --";
+  const upd = view.updText ? ("updated " + view.updText) : "updated --";
+  const parts = [["eng", eng], ["bars", bars], ["takes", takes], ["saved", saved], ["upd", upd]];
+  let html = '<div class="av-sessions-prev" data-id="' + idEsc + '">';
+  for (let i = 0; i < parts.length; i++) {
+    html += '<span class="av-sessions-prev-part av-sessions-prev-' + parts[i][0] + '">' + avSessionUiEsc(parts[i][1]) + "</span>";
+  }
+  html += "</div>";
+  return html;
+}
+
 function avSessionUiSessionRowHTML(view, opBusy) {
   const idEsc = avSessionUiEsc(view.id);
   const loadBusy = !!(opBusy && opBusy.kind === "load" && opBusy.id === view.id);
@@ -436,7 +567,9 @@ function avSessionUiSessionRowHTML(view, opBusy) {
     ' title="Load this session\u2019s newest version \u2014 it replaces the working state">' + (loadBusy ? "\u2026" : "LOAD") + "</button>" +
     '<button type="button" class="av-btn mini av-sessions-btn av-sessions-session-del" data-act="del" data-id="' + idEsc + '"' + (delBusy ? " disabled" : "") +
     ' title="Delete this session (every version)">\u2715</button>' +
-    "</div>";
+    "</div>" +
+    avSessionUiTagsRowHTML(view, avSessionUiState) +
+    avSessionUiPrevRowHTML(view);
   if (view.vers && view.vers.length) {
     html += '<div class="av-sessions-vers" data-id="' + idEsc + '">';
     for (let i = 0; i < view.vers.length; i++) {
@@ -469,6 +602,12 @@ function avSessionUiBodyHTML() {
     '<div class="av-sessions-row">' +
     '<input type="text" class="av-sessions-name" id="av-sessions-name" spellcheck="false" autocomplete="off" maxlength="64" placeholder="session name" aria-label="Session name">' +
     '<button type="button" class="av-btn mini av-sessions-btn av-sessions-save" id="av-sessions-save" title="Save the current working state (new session, or a new version of the current one)">SAVE</button>' +
+    "</div>" +
+    '<div class="av-sessions-tools">' +
+    '<input type="search" class="av-sessions-search" id="av-sessions-search" spellcheck="false" autocomplete="off" maxlength="64" placeholder="search name or tags\u2026" aria-label="Search sessions by name or tag">' +
+    '<select class="av-select av-sessions-sort" id="av-sessions-sort" aria-label="Sort the sessions list">' +
+    '<option value="newest" selected>newest</option><option value="name">name</option><option value="updated">updated</option>' +
+    "</select>" +
     "</div>" +
     '<div class="av-sessions-list" id="av-sessions-list"></div>' +
     '<p class="av-sessions-none av-note av-dim" id="av-sessions-none">No sessions yet \u2014 press SAVE to keep the current working state.</p>' +
@@ -705,11 +844,14 @@ function avSessionUiAutosaveSet(on, ms) {
       avSessionUiSync();
       return false;
     }
-    const wantOn = !!on;
+    /* on === null: an interval-only change -- it must NOT become an explicit on/off choice
+       (the module records a choice only when `on` is passed; R20) */
+    const touchOn = !(on === null || on === undefined);
+    const wantOn = touchOn ? !!on : s.autosaveOn;
     const wantMs = avSessionUiInt(ms, 5000, 600000, s.autosaveMs);
     let refused = false;
     let r = null;
-    try { r = avSessionAutosave(wantOn, wantMs); } catch (e) { refused = true; r = null; }
+    try { r = touchOn ? avSessionAutosave(wantOn, wantMs) : avSessionAutosave(undefined, wantMs); } catch (e) { refused = true; r = null; }
     if (!refused && r && typeof r === "object") {
       const onF = avSessionUiFlagFrom(r, ["on"]);
       s.autosaveOn = (onF !== null) ? onF : wantOn;
@@ -747,7 +889,7 @@ function avSessionUiAutosaveMsChange(el) {
   try {
     const secs = avSessionUiInt(el ? el.value : null, AV_SESSION_UI_AS_OPTS[0], AV_SESSION_UI_AS_OPTS[AV_SESSION_UI_AS_OPTS.length - 1], null);
     if (secs == null) return false;
-    const ok = avSessionUiAutosaveSet(s.autosaveOn, secs * 1000);
+    const ok = avSessionUiAutosaveSet(null, secs * 1000);   /* interval only -- not a choice */
     if (ok) {
       s.lastMsg = "autosave interval set \u2014 every " + secs + " s" + (s.autosaveOn ? "" : " (autosave is off)");
       s.lastMsgKind = "msg";
@@ -1064,6 +1206,149 @@ function avSessionUiDismiss() {
   } catch (e) { return false; }
 }
 
+/* ---------- browser v2 actions (R20: search / sort / tags) ---------- */
+
+function avSessionUiSearchSet(v) {
+  const s = avSessionUiState;
+  try {
+    const t = String(v == null ? "" : v).slice(0, AV_SESSION_UI_SEARCH_MAX);
+    if (t === s.search) return false;
+    s.search = t;
+    avSessionUiSync();                    /* the ONE shared rerender */
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiSortSet(v) {
+  const s = avSessionUiState;
+  try {
+    const raw = String(v == null ? "" : v);
+    let t = "newest";
+    for (let i = 0; i < AV_SESSION_UI_SORTS.length; i++) if (AV_SESSION_UI_SORTS[i] === raw) t = raw;
+    if (t === s.sort) return false;
+    s.sort = t;
+    avSessionUiSync();                    /* the ONE shared rerender */
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the row's current tags from the module list (client truth for the compare step); null when
+   the row is absent */
+function avSessionUiTagsOf(id) {
+  try {
+    const list = avSessionUiListRead();
+    for (let i = 0; i < list.length; i++) {
+      const r = list[i];
+      if (r && typeof r === "object" && avSessionUiStrField(r, ["id"]) === id) return avSessionUiTagsNorm(r.tags);
+    }
+  } catch (e) { /* absent */ }
+  return null;
+}
+
+function avSessionUiTagsFocus(id) {
+  try {
+    const host = avSessionUiHost();
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    const nodes = host.querySelectorAll(".av-sessions-tags-input");
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      if (n && typeof n.getAttribute === "function" && String(n.getAttribute("data-id") || "") === id && typeof n.focus === "function") {
+        n.focus();
+        return true;
+      }
+    }
+  } catch (e) { /* focus is a nicety */ }
+  return false;
+}
+
+function avSessionUiTagsOpen(id) {
+  const s = avSessionUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    if (avSessionUiBusy()) return false;
+    const cur = avSessionUiTagsOf(id);
+    if (cur === null) return false;             /* the row is gone -- never invent one */
+    s.tagEditId = id;
+    s.tagDraft = cur.join(", ");
+    avSessionUiSync();
+    avSessionUiTagsFocus(id);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiTagsCancel() {
+  const s = avSessionUiState;
+  try {
+    if (!s.tagEditId) return false;
+    s.tagEditId = "";
+    s.tagDraft = "";
+    avSessionUiSync();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* commit the open editor: unchanged -> just close; changed -> avSessionSetTags */
+function avSessionUiTagsCommit(input) {
+  const s = avSessionUiState;
+  try {
+    const id = s.tagEditId;
+    if (!id) return false;
+    let value = s.tagDraft;
+    if (input && typeof input.value === "string") value = input.value;
+    const next = avSessionUiTagsParse(value);
+    const cur = avSessionUiTagsOf(id) || [];
+    s.tagEditId = "";
+    s.tagDraft = "";
+    if (next.join("\u0001") === cur.join("\u0001")) {   /* nothing changed: just close */
+      avSessionUiSync();
+      return true;
+    }
+    return avSessionUiTagsSave(id, next);
+  } catch (e) { return false; }
+}
+
+/* the module call: avSessionSetTags(id, tags) through the pinned name (typeof-guarded); tag
+   commits are quick meta writes -- they never take the module-op gate */
+function avSessionUiTagsSave(id, list) {
+  const s = avSessionUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    if (typeof avSessionSetTags !== "function") {
+      avSessionUiMissingNote("avSessionSetTags", "tag editing is unavailable");
+      s.lastMsg = "this build cannot save tags (avSessionSetTags is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    const next = avSessionUiTagsParse(list);
+    s.tagsBusy = (s.tagsBusy || 0) + 1;
+    s.lastMsg = "saving tags\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = avSessionSetTags(id, next); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "tags failed") }; }
+    avSessionUiSettle(p, function (r) { avSessionUiTagsSettle(id, next, r); });
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiTagsSettle(id, want, r) {
+  const s = avSessionUiState;
+  s.tagsBusy = Math.max(0, (s.tagsBusy || 0) - 1);
+  if (avSessionUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+    s.lastMsg = "the tags were not saved \u2014 " + why;
+    s.lastMsgKind = "err";
+    avSessionUiWarn("tags.fail", "the tags were not saved \u2014 " + why);
+  } else {
+    const got = (r && typeof r === "object" && Array.isArray(r.tags)) ? avSessionUiTagsNorm(r.tags) : (Array.isArray(want) ? want : []);
+    s.lastMsg = "tags saved" + (got.length ? " \u2014 " + avSessionUiClean(got.join(" \u00b7 "), 120) : " (cleared)");
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("tags.fail");
+  }
+  avSessionUiSync();
+}
+
 /* ---------- paint ---------- */
 
 function avSessionUiIdleText() {
@@ -1089,6 +1374,7 @@ function avSessionUiStatusText() {
   if (s.backupBusy) return { text: "building the backup zip\u2026", kind: "msg" };
   if (s.restoreFileBusy) return { text: "restoring from file\u2026", kind: "msg" };
   if (s.recovering) return { text: "recovering the autosaved snapshot\u2026", kind: "msg" };
+  if (s.tagsBusy > 0) return { text: "saving tags\u2026", kind: "msg" };
   if (s.lastMsg) return { text: s.lastMsg, kind: (s.lastMsgKind === "err") ? "err" : "msg" };
   return { text: avSessionUiIdleText(), kind: "msg" };
 }
@@ -1187,17 +1473,33 @@ function avSessionUiPaintList(host) {
     const box = host.querySelector("#av-sessions-list");
     const none = host.querySelector("#av-sessions-none");
     const list = avSessionUiListRead();
+    let rawN = 0;
+    for (let i = 0; i < list.length; i++) {
+      const r0 = list[i];
+      if (r0 && typeof r0 === "object" && avSessionUiStrField(r0, ["id"])) rawN += 1;
+    }
+    const rows = avSessionUiViewRows(list);
+    if (s.tagEditId) {                    /* the edited row vanished (or was filtered out) */
+      let alive = false;
+      for (let i = 0; i < rows.length; i++) if (avSessionUiStrField(rows[i], ["id"]) === s.tagEditId) { alive = true; break; }
+      if (!alive) { s.tagEditId = ""; s.tagDraft = ""; }
+    }
     const views = [];
-    let key = "op:" + (s.opBusy ? s.opBusy.kind + ":" + s.opBusy.id + ":" + (s.opBusy.ver == null ? "" : s.opBusy.ver) : "") + "|";
-    for (let i = 0; i < list.length && views.length < AV_SESSION_UI_LIST_MAX; i++) {
-      const r = list[i];
-      if (!r || typeof r !== "object") continue;
+    let key = "op:" + (s.opBusy ? s.opBusy.kind + ":" + s.opBusy.id + ":" + (s.opBusy.ver == null ? "" : s.opBusy.ver) : "") +
+      "|q:" + s.search + "|so:" + s.sort + "|ed:" + s.tagEditId + "|";
+    for (let i = 0; i < rows.length && views.length < AV_SESSION_UI_LIST_MAX; i++) {
+      const r = rows[i];
       const id = avSessionUiStrField(r, ["id"]);
       if (!id) continue;
       const name = avSessionUiClean(avSessionUiStrField(r, ["name"]) || "untitled", 48);
       const atText = avSessionUiWhen(r.savedAt != null ? r.savedAt : r.updatedAt);
+      const updText = avSessionUiWhen(r.updatedAt);
       const v = Math.max(1, Math.round(avSessionUiNum(r.version, 1)));
       const cur = r.current === true;
+      const tags = avSessionUiTagsNorm(r.tags);
+      const engine = (typeof r.engine === "string" && r.engine) ? r.engine : null;
+      const bars = (typeof r.bars === "number" && isFinite(r.bars)) ? r.bars : null;
+      const takes = (typeof r.takes === "number" && isFinite(r.takes)) ? r.takes : null;
       const vers = [];
       if (typeof avSessionVersions === "function") {
         let raw = null;
@@ -1214,19 +1516,27 @@ function avSessionUiPaintList(host) {
           }
         }
       }
-      const view = { id: id, name: name, atText: atText, v: v, cur: cur, vers: vers };
+      const view = { id: id, name: name, atText: atText, updText: updText, v: v, cur: cur, tags: tags, engine: engine, bars: bars, takes: takes, vers: vers };
       views.push(view);
-      key += id + "|" + name + "|" + atText + "|" + v + "|" + (cur ? 1 : 0);
+      key += id + "|" + name + "|" + atText + "|" + updText + "|" + v + "|" + (cur ? 1 : 0) + "|" + (engine || "") + "|" + (bars == null ? "" : bars) + "|" + (takes == null ? "" : takes) + "|" + tags.join(",") + "|";
       for (let j = 0; j < vers.length; j++) key += ">v" + vers[j].n + "@" + vers[j].atText + "#" + vers[j].bytesText;
       key += "||";
     }
+    s.lastRows = views.length;
     if (box && key !== s.sessKey) {
       s.sessKey = key;
       let html = "";
       for (let i = 0; i < views.length; i++) html += avSessionUiSessionRowHTML(views[i], s.opBusy);
       box.innerHTML = html;
     }
-    if (none) none.hidden = views.length > 0;
+    if (none) {
+      none.hidden = views.length > 0;
+      const searching = String(s.search || "") !== "";
+      const txt = (views.length === 0 && rawN > 0 && searching)
+        ? "no sessions match \u2014 clear the search"
+        : "No sessions yet \u2014 press SAVE to keep the current working state.";
+      if (none.textContent !== txt) none.textContent = txt;
+    }
     return true;
   } catch (e) { return false; }
 }
@@ -1342,6 +1652,18 @@ function avSessionUiPaintWarnings(host) {
   } catch (e) { return false; }
 }
 
+/* the browser v2 controls: search + sort (write-on-change only; never clobber a focused field) */
+function avSessionUiPaintTools(host) {
+  const s = avSessionUiState;
+  try {
+    const inp = host.querySelector("#av-sessions-search");
+    if (inp) avSessionUiSetValue(inp, s.search);
+    const sel = host.querySelector("#av-sessions-sort");
+    if (sel) avSessionUiSetValue(sel, s.sort);
+    return true;
+  } catch (e) { return false; }
+}
+
 /* full repaint: mirrors first (guarded), then every control (write-on-change only) */
 function avSessionUiSync() {
   const host = avSessionUiHost();
@@ -1359,6 +1681,7 @@ function avSessionUiSync() {
     avSessionUiStateSync();
     avSessionUiStorageNote();
     avSessionUiPaintName(host);
+    avSessionUiPaintTools(host);
     avSessionUiPaintSave(host);
     avSessionUiPaintStatus(host);
     avSessionUiPaintRecovery(host);
@@ -1383,7 +1706,7 @@ function avSessionUiListSig() {
     let out = "";
     for (let i = 0; i < l.length && i < AV_SESSION_UI_LIST_MAX; i++) {
       const r = l[i] || {};
-      out += String(r.id) + ":" + String(r.name) + ":" + String(r.version) + ":" + (r.current === true ? 1 : 0) + ":" + String(r.updatedAt) + "|";
+      out += String(r.id) + ":" + String(r.name) + ":" + String(r.version) + ":" + (r.current === true ? 1 : 0) + ":" + String(r.updatedAt) + ":" + (Array.isArray(r.tags) ? r.tags.join(",") : "") + "|";
     }
     return out;
   } catch (e) { return ""; }
@@ -1456,6 +1779,7 @@ function avSessionUiClick(e) {
       if (!id) return;
       if (what === "load") { avSessionUiLoad(id); return; }
       if (what === "del") { avSessionUiDelete(id); return; }
+      if (what === "tags") { avSessionUiTagsOpen(id); return; }
       if (what === "restore") {
         const ver = String(act.getAttribute("data-ver") || "");
         avSessionUiRestore(id, ver);
@@ -1471,6 +1795,48 @@ function avSessionUiChange(e) {
     if (!t) return;
     if (t.closest("#av-sessions-autosave-ms")) { avSessionUiAutosaveMsChange(t); return; }
     if (t.closest("#av-sessions-restore-file")) { avSessionUiFileChange(t); return; }
+    if (t.closest("#av-sessions-sort")) { avSessionUiSortSet(t.value); return; }
+    if (t.closest(".av-sessions-tags-input")) { avSessionUiTagsCommit(t); return; }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+/* delegated input events: the search field (per keystroke) + the tags draft mirror */
+function avSessionUiInput(e) {
+  const s = avSessionUiState;
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest("#av-sessions-search")) { avSessionUiSearchSet(t.value); return; }
+    if (t.closest(".av-sessions-tags-input")) { if (s.tagEditId) s.tagDraft = String(t.value == null ? "" : t.value); return; }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+/* delegated keydown: Enter commits the tags draft, Escape cancels it */
+function avSessionUiKeydown(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (!t.closest(".av-sessions-tags-input")) return;
+    const key = String((e && e.key) || "");
+    if (key === "Enter") {
+      try { if (e && typeof e.preventDefault === "function") e.preventDefault(); } catch (x) { /* ok */ }
+      avSessionUiTagsCommit(t);
+      return;
+    }
+    if (key === "Escape") {
+      try { if (e && typeof e.preventDefault === "function") e.preventDefault(); } catch (x) { /* ok */ }
+      avSessionUiTagsCancel();
+      return;
+    }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+/* delegated focusout: leaving the tags editor commits it (unchanged drafts just close) */
+function avSessionUiFocusOut(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest(".av-sessions-tags-input")) avSessionUiTagsCommit(t);
   } catch (err) { /* a listener never throws outward */ }
 }
 
@@ -1481,6 +1847,9 @@ function avSessionUiWire(host) {
     if (host.dataset) host.dataset.avSessionUiWired = "1";
     host.addEventListener("click", avSessionUiClick);
     host.addEventListener("change", avSessionUiChange);
+    host.addEventListener("input", avSessionUiInput);
+    host.addEventListener("keydown", avSessionUiKeydown);
+    host.addEventListener("focusout", avSessionUiFocusOut);
     return true;
   } catch (e) { return false; }
 }
@@ -1542,7 +1911,9 @@ function avSessionUiSnap() {
       backup: !!s.backupBusy,
       restoreFile: !!s.restoreFileBusy,
       recovering: !!s.recovering,
+      tags: s.tagsBusy > 0,
     },
+    view: { search: s.search, sort: s.sort, editing: s.tagEditId || null, rows: s.lastRows },
     status: s.lastMsg, statusKind: s.lastMsgKind,
     warnings: s.warnings.map(function (w) { return w.text; }),
     classes: avSessionUiClasses(),
@@ -1572,6 +1943,11 @@ function avSessionUiClasses() {
     "av-sessions-progress", "av-sessions-report",
     "av-sessions-warnings", "av-sessions-warn-head", "av-sessions-warn-item",
     "av-sessions-foot",
+    "av-sessions-tools", "av-sessions-search", "av-sessions-sort",
+    "av-sessions-tags", "av-sessions-tags-list", "av-sessions-tags-none", "av-sessions-tag",
+    "av-sessions-tags-sep", "av-sessions-tags-input", "av-sessions-tags-btn",
+    "av-sessions-prev", "av-sessions-prev-part", "av-sessions-prev-eng", "av-sessions-prev-bars",
+    "av-sessions-prev-takes", "av-sessions-prev-saved", "av-sessions-prev-upd",
   ];
 }
 
@@ -1594,6 +1970,7 @@ if (typeof window !== "undefined") {
       recover: function () { return avSessionUiRecover(); },
       dismiss: function () { return avSessionUiDismiss(); },
       autosave: function (on, ms) { return avSessionUiAutosaveSet(on, ms); },
+      setTags: function (id, tags) { return avSessionUiTagsSave(id, tags); },
     };
   } catch (e) { /* no window — nothing to publish */ }
 }

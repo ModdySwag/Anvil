@@ -54,9 +54,17 @@
    every read path through avLibSourceNorm (absent or invalid -> dropped) and survives a
    replaceDup fold; old records hydrate cleanly, nothing else changes.
 
+   R20 addition (verify/_r20_wave.md section 6; the same additive law): the record vocabulary
+   gains kind "song" - the Song Bundle's project payload (bytes = the avProjBuild text). Its
+   LOAD route (avLibLoadRun -> avLibLoadSong) decodes the stored bytes to utf-8 text and
+   applies the project through the guarded avProjOpenText; the receipt is {ok, id,
+   kind:"song", applied, warnings, error?}. avLibKindNorm accepts "song"; every read path
+   (meta / rec / payload / item views + the missing scan's want rows) carries it exactly like
+   the other kinds, and a replaceDup fold moves it like any other kind.
+
    Record shape: { id, v: 1, name, kind, format, ext, size, at, meta, bytes (ArrayBuffer), via }
      id = "l" + Date.now().toString(36) + "-" + slug(name); slug [a-z0-9-], cap 40.
-     kind = "sample" | "pattern" | "kit" | "refs" (R15c). via = the backend the record was
+     kind = "sample" | "pattern" | "kit" | "refs" (R15c) | "song" (R20). via = the backend the record was
      actually written through.
 
    Backends "idb" | "ls" | "mem" (always reportable). IndexedDB is the durable home; no
@@ -98,6 +106,11 @@
                    notes?, pattern?, meta} so the UI can offer the seq action for ALS items
                    (the seq application itself stays the ONE avMid flow, driven from
                    meta.pattern by its caller).
+     song (R20) -> the stored bytes decode to utf-8 text (TextDecoder; a bounded manual
+                   fallback) -> the guarded avProjOpenText(name, text) applies the project
+                   through the injected session module. NO session sample/seq change rides
+                   here - the project apply owns every effect. Receipt {ok, id, kind:"song",
+                   applied, warnings, error?}.
 
    Every cross-module call is typeof-guarded PER CALL. Never throws: every public entry point
    resolves a receipt / returns a sane value; try/catch wraps every reach. Promise plumbing
@@ -153,6 +166,8 @@ const AV_LIB_MISSING_WANT_MAX = 32;             /* referencing records listed pe
 const AV_LIB_REC_ID_RE = /^r[a-z0-9-]{0,63}$/;  /* "r" + time36 (+ "-<seq>" on collision) */
 /* R19 section 3: pack provenance rides inside source (additive; the exporting pack's id) */
 const AV_LIB_PACK_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;  /* source.pack slug (cap 64) */
+/* R20 section 6: the song route carries the avProjOpenText warnings, bounded here */
+const AV_LIB_SONG_WARN_MAX = 16;                /* warnings kept on a song load receipt */
 
 /* ---------- state (the in-memory view the UI renders from) ---------- */
 
@@ -306,10 +321,11 @@ function avLibMakeId(name) {
   return id;
 }
 
-/* the record kind vocabulary: sample | pattern | kit | refs ("" = not persistable) */
+/* the record kind vocabulary: sample | pattern | kit | refs (R15c) | song (R20); "" = not
+   persistable */
 function avLibKindNorm(v) {
   try {
-    if (v === "sample" || v === "pattern" || v === "kit" || v === "refs") return v;
+    if (v === "sample" || v === "pattern" || v === "kit" || v === "refs" || v === "song") return v;
   } catch (e) { /* none */ }
   return "";
 }
@@ -426,8 +442,8 @@ function avLibExactBuf(u8) {
 }
 
 /* the import item (section 2 shape) -> the record fields this module persists.
-   result != "imported" items are SKIPPED (null); only sample/pattern/kit/refs kinds are
-   material. */
+   result != "imported" items are SKIPPED (null); only sample/pattern/kit/refs/song kinds
+   are material. */
 function avLibItemNorm(item) {
   try {
     if (!item || typeof item !== "object" || Array.isArray(item)) return null;
@@ -1786,6 +1802,7 @@ async function avLibLoadRun(id) {
   if (rec.kind === "sample") return avLibLoadSample(rec);
   if (rec.kind === "kit") return avLibLoadKit(rec);      /* R15c: EXS24 kits */
   if (rec.kind === "refs") return avLibLoadRefs(rec);    /* R15c: ALS / Serum refs */
+  if (rec.kind === "song") return avLibLoadSong(rec);    /* R20: song bundle project payload */
   return { ok: false, id: rec.id, kind: "", error: "unknown kind" };
 }
 
@@ -2163,6 +2180,88 @@ function avLibLoadRefs(rec) {
     return out;
   } catch (e) {
     return { ok: false, id: (rec && rec.id) ? rec.id : "", kind: "refs", refs: 0, error: "meta read failed" };
+  }
+}
+
+/* R20 section 6: bytes -> utf-8 text for the song route (TextDecoder first, then a bounded
+   manual decoder mirroring the av_pack.js reader; null when undecodable) */
+function avLibUtf8Text(bytes) {
+  let u8 = null;
+  try {
+    if (bytes && typeof ArrayBuffer !== "undefined" && (bytes instanceof ArrayBuffer)) u8 = new Uint8Array(bytes);
+    else if (bytes && typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView && ArrayBuffer.isView(bytes)) u8 = bytes;
+  } catch (e) { u8 = null; }
+  if (!u8 || typeof u8.length !== "number" || !u8.length) return null;
+  try { if (typeof TextDecoder === "function") return new TextDecoder("utf-8", { fatal: false }).decode(u8); } catch (e2) { /* manual below */ }
+  try {
+    let s = "";
+    let i = 0;
+    while (i < u8.length) {
+      const c = u8[i++];
+      if (c < 0x80) { s += String.fromCharCode(c); continue; }
+      let cp = -1;
+      let need = 0;
+      if (c >= 0xC2 && c <= 0xDF) { cp = c & 0x1F; need = 1; }
+      else if (c >= 0xE0 && c <= 0xEF) { cp = c & 0x0F; need = 2; }
+      else if (c >= 0xF0 && c <= 0xF4) { cp = c & 0x07; need = 3; }
+      if (cp < 0 || i + need > u8.length) { s += "\uFFFD"; continue; }
+      let bad = false;
+      for (let k = 0; k < need; k++) {
+        const cc = u8[i + k];
+        if ((cc & 0xC0) !== 0x80) { bad = true; break; }
+        cp = (cp << 6) | (cc & 0x3F);
+      }
+      if (bad) { s += "\uFFFD"; continue; }
+      i += need;
+      if (cp > 0xFFFF) {
+        cp -= 0x10000;
+        s += String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 0x3FF));
+      } else s += String.fromCharCode(cp);
+    }
+    return s;
+  } catch (e3) { return null; }
+}
+
+/* the song route (R20 section 6): the stored bytes decode to utf-8 text and the project
+   applies through the guarded avProjOpenText(name, text) (the global first, then the
+   __avProj facade; absent -> honest refusal). The receipt carries the project open shape's
+   applied / warnings (bounded by AV_LIB_SONG_WARN_MAX); NO session sample/seq change rides
+   here - the project apply owns every effect. NEVER throws. Receipt {ok, id, kind:"song",
+   applied, warnings, error?}. */
+function avLibLoadSong(rec) {
+  const out = { ok: false, id: (rec && rec.id) ? rec.id : "", kind: "song", applied: 0, warnings: [] };
+  try {
+    let open = null;
+    try { if (typeof avProjOpenText === "function") open = avProjOpenText; } catch (e) { open = null; }
+    if (typeof open !== "function") {
+      try {
+        const w = (typeof window !== "undefined") ? window : null;
+        if (w && w.__avProj && typeof w.__avProj.openText === "function") open = w.__avProj.openText;
+      } catch (e2) { open = null; }
+    }
+    if (typeof open !== "function") { out.error = "project module absent"; return out; }
+    const text = avLibUtf8Text(rec && rec.bytes);
+    if (typeof text !== "string" || !text) { out.error = "no project text"; return out; }
+    let r = null;
+    try { r = open(avLibStr(rec.name, "song.anvl", AV_LIB_NAME_MAX), text); } catch (e3) { r = null; }
+    if (!r || typeof r !== "object") { out.error = "open refused"; return out; }
+    out.applied = Math.round(avLibNum(r.applied, 0, 0, 0x7FFFFFFF));
+    let warns = null;
+    try { warns = Array.isArray(r.warnings) ? r.warnings : null; } catch (e4) { warns = null; }
+    if (warns) {
+      const list = [];
+      for (let i = 0; i < warns.length && i < AV_LIB_SONG_WARN_MAX; i++) {
+        const s = avLibStr(warns[i], "", 200);
+        if (s) list.push(s);
+      }
+      out.warnings = list;
+    }
+    if (r.ok !== true) { out.error = avLibStr(r.error, "", 200) || "apply refused"; return out; }
+    out.ok = true;
+    return out;
+  } catch (e) {
+    out.error = avLibErrMsg(e);
+    return out;
   }
 }
 

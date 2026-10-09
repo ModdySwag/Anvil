@@ -13,6 +13,12 @@
        <video>; rendered with { download: true } so the clip is also delivered through the
        core's own avVideoDownload path — see the deviation note in the wave report).
 
+     RECENT   - a fourth block inside PROJECT (R20 section 4): the recent projects list
+       (rows [data-av-proj-recent="<id>"] + OPEN/FORGET, an empty state, refreshed after
+       save/open/forget AND by the ONE document-level 'av-proj-changed' listener (av_proj.js
+       emits it after every public op settles - facade / File menu / card alike); a name-only
+       row refuses OPEN honestly - the pick-file fallback).
+
    BUSY DISCIPLINE (pinned): ONE module op at a time — while any job runs every action button
    is disabled, a second click is refused with an honest status line, and jobs are never
    queued. Buffers only span one job; receipts are stored in a public (JSON-safe) projection.
@@ -38,15 +44,18 @@
      SHARE    #av-files-card-make · #av-files-card-copy · #av-files-card-png
               #av-files-card-preview (img) · #av-files-cstat
      VIDEO    #av-files-video-run · #av-files-video-preview (muted video) · #av-files-vstat
+     RECENT   #av-files-recent-list - #av-files-recent-empty
+              [data-av-proj-recent="<id>"] rows - [data-av-proj-act=open|forget] buttons
    CARD HOOKS: [data-av-files-act=save|open|samples|card-make|card-copy|card-png|video-run]
    · [data-av-files-sec=project|share|video] · dataset avFilesUiWired='1' on the host ·
    class av-files-busy + dataset avFilesBusy on the card while a job runs.
 
    OBSERVABLES: avFilesUiInit() -> bool (false without #av-files-host; idempotent;
-   re-mountable) · avFilesUiSync() -> bool · avFilesUiSnap() -> the honest card state (busy
-   flags · last receipts · previews present · cores present) · avFilesUiClasses() -> string[]
-   (the NEW css classes; the parent styles them) · window.__avFilesUi = { version, state,
-   sync, snap, init } (state = the snapshot fn).
+   re-mountable) . avFilesUiSync() -> bool . avFilesUiSnap() -> the honest card state (busy
+   flags . last receipts . previews present . cores present . recent rows) .
+   avFilesUiRecentRefresh() -> Promise<bool> (one guarded avProjRecents() read -> repaint) .
+   avFilesUiClasses() -> string[] (the NEW css classes; the parent styles them) .
+   window.__avFilesUi = { version, state, sync, snap, init, refreshRecent }
 
    ONE writer (child sa-D). The three cores are consumed through the pinned §2.1/§2.2/§2.3
    names with typeof guards ONLY — avProjSave/Open/ImportSamples · avCardPng/Share/CopyLink ·
@@ -54,7 +63,7 @@
 
 "use strict";
 
-const AV_FILES_UI_VERSION = "s4.0";
+const AV_FILES_UI_VERSION = "r20.0";
 const AV_FILES_UI_URL_CAP = 160;               /* share-link text cap in the SHARE line */
 
 /* ---------- the seven action controls (one source of truth: markup + busy + delegation) ---------- */
@@ -88,6 +97,7 @@ const AV_FILES_UI_JOB_WORDS = {
   save: "saving the project", open: "opening a project", samples: "importing samples",
   cardMake: "building the share card", cardCopy: "copying the share link",
   cardSave: "delivering the share card", video: "rendering the clip",
+  recent: "working the recent list",
 };
 
 /* job -> the start line set when the job begins (status line) */
@@ -96,6 +106,7 @@ const AV_FILES_UI_JOB_START = {
   cardMake: "building the share card\u2026", cardCopy: "copying the share link\u2026",
   cardSave: "delivering the share card\u2026",
   video: "rendering the clip (realtime \u2014 it takes as long as the clip)\u2026",
+  recent: "working the recent list\u2026",
 };
 
 /* the NEW css classes this card introduces (the parent styles them; av-files-host excluded —
@@ -107,13 +118,15 @@ const AV_FILES_UI_CLASSES = [
   "av-files-row", "av-files-controls", "av-files-btn",
   "av-files-prev-row", "av-files-preview", "av-files-card-preview", "av-files-video-preview",
   "av-files-stat", "av-files-note", "av-files-foot", "av-files-busy",
+  "av-files-recent", "av-files-recent-title", "av-files-recent-list", "av-files-recent-empty",
+  "av-files-recent-row", "av-files-recent-name", "av-files-recent-meta", "av-files-recent-acts",
 ];
 
 /* UI-local state only — every core fact is read through the pinned apis per call */
 const avFilesUiState = {
   inited: false, mounts: 0,
   /* one module op at a time: busy[job] flags + the running job name */
-  busy: { save: false, open: false, samples: false, cardMake: false, cardCopy: false, cardSave: false, video: false },
+  busy: { save: false, open: false, samples: false, cardMake: false, cardCopy: false, cardSave: false, video: false, recent: false },
   busyJob: "",
   jobSeq: 0, doneSeq: 0,
   /* last receipts, keyed the way the snapshot presents them (JSON-safe projections only) */
@@ -129,6 +142,11 @@ const avFilesUiState = {
   noteText: "",
   /* write-on-change memos so idle syncs never touch the DOM */
   memos: { text: {}, cls: {} },
+  /* the RECENT PROJECTS mirror (R20 section 4): one guarded avProjRecents() read repaints */
+  recent: { loaded: false, count: 0, ids: [], html: "" },
+  recentSeq: 0,
+  /* the ONE document-level 'av-proj-changed' listener (R20 fan-out) is bound */
+  projChgBound: false,
 };
 
 /* ---------- small pure helpers (no DOM; harness-covered) ---------- */
@@ -487,7 +505,7 @@ function avFilesUiSettle(p, cb) {
 function avFilesUiBusy() {
   const s = avFilesUiState;
   return !!(s.busy.save || s.busy.open || s.busy.samples || s.busy.cardMake ||
-            s.busy.cardCopy || s.busy.cardSave || s.busy.video);
+            s.busy.cardCopy || s.busy.cardSave || s.busy.video || s.busy.recent);
 }
 
 function avFilesUiJobWord(job) {
@@ -525,7 +543,7 @@ function avFilesUiMissing(job, why) {
 /* start ONE job: marks busy, disables the controls, runs, settles exactly once.
    The run fn is the raw core call (typeof-guarded by the caller); a synchronous throw
    becomes an honest refusal receipt. */
-function avFilesUiJob(jobKey, run, settle) {
+function avFilesUiJob(jobKey, run, settle, startMsg) {
   const s = avFilesUiState;
   try {
     if (avFilesUiBusy()) return avFilesUiBusyRefuse();
@@ -533,7 +551,7 @@ function avFilesUiJob(jobKey, run, settle) {
     s.busyJob = jobKey;
     s.jobSeq += 1;
     s.videoProgress = null;
-    avFilesUiSetStatus(AV_FILES_UI_JOB_START[jobKey] || "working\u2026");
+    avFilesUiSetStatus(startMsg || AV_FILES_UI_JOB_START[jobKey] || "working\u2026");
     avFilesUiSync();                                  /* paints busy before the core runs */
     let out = null;
     try { out = run(); } catch (e) { out = { ok: false, error: avFilesUiErrText(e, "the action failed") }; }
@@ -558,6 +576,7 @@ function avFilesUiJob(jobKey, run, settle) {
 
 function avFilesUiSettleSave(r0) {
   try {
+    avFilesUiRecentRefresh();   /* the recent rows follow every save (R20 section 4) */
     const s = avFilesUiState;
     const r = avFilesUiReceipt(r0);
     if (!avFilesUiOK(r)) {
@@ -584,6 +603,7 @@ function avFilesUiSettleSave(r0) {
 
 function avFilesUiSettleOpen(r0) {
   try {
+    avFilesUiRecentRefresh();   /* the recent rows follow every open (R20 section 4) */
     const s = avFilesUiState;
     const r = avFilesUiReceipt(r0);
     if (!avFilesUiOK(r)) {
@@ -763,6 +783,139 @@ function avFilesUiVideoProgress(phase, frac) {
   } catch (e) { return false; }
 }
 
+/* ---------- the RECENT project rows (R20 section 4) ----------
+
+   One guarded avProjRecents() read -> the whole block repainted (the list HTML is only touched
+   when it actually changes). Rows are [data-av-proj-recent="<id>"] with
+   [data-av-proj-handle="1|0"]; each row's OPEN + FORGET buttons are av-btn mini and ride the
+   SAME delegated click (data-av-proj-act) and the SAME busy discipline (the "recent" lane).
+   A row without a stored handle renders name-only and its OPEN refuses honestly (the
+   pick-file fallback line). Refreshed after save/open/forget and once on init. */
+
+const AV_FILES_UI_RECENT_ROWS_MAX = 16;
+
+function avFilesUiRecentMetaOf(it) {
+  const parts = [];
+  try {
+    if (it && typeof it.at === "string" && it.at.length >= 10) parts.push(it.at.slice(0, 10));
+    if (it && typeof it.size === "number" && isFinite(it.size) && it.size > 0) parts.push(avFilesUiFmtBytes(it.size));
+    if (it && typeof it.via === "string" && it.via) parts.push("via " + it.via);
+    const has = !!(it && it.handle === true);
+    parts.push(has ? "handle ready" : "no stored handle \u2014 pick the file to reopen");
+    if (it && typeof it.note === "string" && it.note) parts.push(it.note);
+  } catch (e) { /* the partial meta stands */ }
+  return parts.join(" \u00b7 ");
+}
+
+function avFilesUiRecentRowHTML(it) {
+  const id = avFilesUiEsc(String((it && it.id) || ""));
+  const name = avFilesUiEsc(String((it && it.name) || "untitled"));
+  const has = !!(it && it.handle === true);
+  const openTitle = has
+    ? "OPEN \u2014 reopen this project (the browser re-asks for file permission only when it needs to)."
+    : "OPEN \u2014 no stored handle in this browser; reopen the file with OPEN .anvl (the pick-file fallback).";
+  return '<div class="av-files-recent-row" data-av-proj-recent="' + id + '" data-av-proj-handle="' + (has ? "1" : "0") + '">' +
+    '<span class="av-files-recent-name" title="' + name + '">' + name + '</span>' +
+    '<span class="av-files-recent-meta av-dim">' + avFilesUiEsc(avFilesUiRecentMetaOf(it)) + '</span>' +
+    '<span class="av-files-recent-acts">' +
+    '<button type="button" class="av-btn mini av-files-btn" data-av-proj-act="open" title="' + openTitle + '">OPEN</button>' +
+    '<button type="button" class="av-btn mini av-files-btn" data-av-proj-act="forget" title="FORGET \u2014 remove this entry from the recent list; the file on disk is never touched.">FORGET</button>' +
+    '</span></div>';
+}
+
+function avFilesUiRecentPaint(emptyText) {
+  const host = avFilesUiHost();
+  if (!host) return false;
+  try {
+    const s = avFilesUiState;
+    const list = (typeof host.querySelector === "function") ? host.querySelector("#av-files-recent-list") : null;
+    if (list) {
+      const html = s.recent.html || "";
+      if (list.innerHTML !== html) list.innerHTML = html;
+    }
+    const emp = (typeof host.querySelector === "function") ? host.querySelector("#av-files-recent-empty") : null;
+    if (emp) {
+      const txt = String(emptyText == null ? "" : emptyText);
+      if (emp.textContent !== txt) emp.textContent = txt;
+      if (emp.hidden !== !txt) emp.hidden = !txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFilesUiRecentRefresh() {
+  const s = avFilesUiState;
+  return new Promise(function (resolve) {
+    let done = false;
+    const finish = function (v) { if (!done) { done = true; resolve(v); } };
+    try {
+      const host = avFilesUiHost();
+      if (!host) return finish(false);
+      const fn = (typeof avProjRecents === "function") ? avProjRecents : null;
+      if (!fn) {
+        s.recent = { loaded: true, count: 0, ids: [], html: "" };
+        avFilesUiRecentPaint("recent projects need the project module (av_proj.js) \u2014 recents are unavailable");
+        return finish(false);
+      }
+      const seq = (s.recentSeq += 1);
+      let p = null;
+      try { p = fn(); } catch (e) { p = null; }
+      avFilesUiSettle(p, function (r) {
+        if (s.recentSeq !== seq) return finish(false);
+        const ok = !!(r && typeof r === "object" && r.ok === true);
+        const items = (ok && Array.isArray(r.items)) ? r.items : [];
+        const ids = [];
+        let html = "";
+        for (let i = 0; i < items.length && i < AV_FILES_UI_RECENT_ROWS_MAX; i++) {
+          const it = items[i];
+          if (!it || typeof it !== "object" || typeof it.id !== "string" || !it.id) continue;
+          ids.push(String(it.id));
+          html += avFilesUiRecentRowHTML(it);
+        }
+        s.recent = { loaded: true, count: ok ? ((typeof r.count === "number" && isFinite(r.count)) ? Math.floor(r.count) : ids.length) : 0, ids: ids, html: html };
+        avFilesUiRecentPaint(ok ? (ids.length ? "" : "no saved projects yet \u2014 SAVE .anvl records the projects you save here.") : "recents are unavailable right now");
+        finish(true);
+      });
+    } catch (e) { finish(false); }
+  });
+}
+
+function avFilesUiSettleRecentOpen(r0) {
+  try {
+    avFilesUiSettleOpen(r0);   /* the open renderer + its refresh (the recent row follows) */
+  } catch (e) { /* settle never throws */ }
+}
+
+function avFilesUiSettleRecentForget(r0) {
+  try {
+    const r = avFilesUiReceipt(r0);
+    if (!avFilesUiOK(r)) {
+      avFilesUiSetStatus("forget refused \u2014 " + avFilesUiErrText(r, "the entry was not removed"), "err");
+    } else {
+      const name = avFilesUiStrField(r, ["name"]) || "the project";
+      const note = avFilesUiStrField(r, ["note"]);
+      avFilesUiSetStatus("forgot " + name + " \u2014 removed from the recent list; the file on disk was never touched" + (note ? " (" + note + ")" : ""));
+    }
+    avFilesUiRecentRefresh();
+  } catch (e) { /* settle never throws */ }
+}
+
+function avFilesUiRecentOpen(id) {
+  if (avFilesUiBusy()) return avFilesUiBusyRefuse();
+  if (typeof avProjOpenRecent !== "function") return avFilesUiMissing("open", "the project module (av_proj.js) is not present \u2014 reopening recents is unavailable");
+  const rid = String(id == null ? "" : id);
+  if (!rid) return false;
+  return avFilesUiJob("recent", function () { return avProjOpenRecent(rid); }, avFilesUiSettleRecentOpen, "reopening the project\u2026");
+}
+
+function avFilesUiRecentForget(id) {
+  if (avFilesUiBusy()) return avFilesUiBusyRefuse();
+  if (typeof avProjForgetRecent !== "function") return avFilesUiMissing("open", "the project module (av_proj.js) is not present \u2014 forgetting recents is unavailable");
+  const rid = String(id == null ? "" : id);
+  if (!rid) return false;
+  return avFilesUiJob("recent", function () { return avProjForgetRecent(rid); }, avFilesUiSettleRecentForget, "forgetting the project\u2026");
+}
+
 /* ---------- the seven actions (each core reach typeof-guarded per call) ---------- */
 
 function avFilesUiActSave() {
@@ -834,6 +987,17 @@ function avFilesUiClick(ev) {
   try {
     const t = ev && ev.target;
     if (!t || typeof t.closest !== "function") return;
+    /* the RECENT rows first (R20): row-scoped OPEN / FORGET */
+    const rbtn = t.closest("[data-av-proj-act]");
+    if (rbtn) {
+      if (rbtn.disabled === true) return;
+      const ract = String((rbtn.getAttribute && rbtn.getAttribute("data-av-proj-act")) || "");
+      const rrow = (typeof rbtn.closest === "function") ? rbtn.closest("[data-av-proj-recent]") : null;
+      const rid = (rrow && rrow.getAttribute) ? String(rrow.getAttribute("data-av-proj-recent") || "") : "";
+      if (ract === "open") avFilesUiRecentOpen(rid);
+      else if (ract === "forget") avFilesUiRecentForget(rid);
+      return;
+    }
     const btn = t.closest("[data-av-files-act]");
     if (!btn) return;
     if (btn.disabled === true) return;
@@ -848,6 +1012,32 @@ function avFilesUiWire(host) {
     if (host.dataset && host.dataset.avFilesUiWired === "1") return true;   /* one delegation per host element */
     if (host.dataset) host.dataset.avFilesUiWired = "1";
     host.addEventListener("click", avFilesUiClick);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the project-layer fan-out listener (R20 section 4 gap) ---------- */
+
+/* ANY project-layer settle (the facade, the File menu, the palette, this card's own buttons,
+   the launcher) makes av_proj.js dispatch 'av-proj-changed' on the document; this listener
+   repaints the RECENT block - one guarded read per event, never a job, never a throw */
+function avFilesUiProjChanged() {
+  try {
+    const p = avFilesUiRecentRefresh();
+    if (p && typeof p.catch === "function") p.catch(function () { /* the refresh never surfaces */ });
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* bind ONCE per document (idempotent: re-mounts reuse the existing listener; the state bit
+   survives host re-wiring); a bind failure is silent - this card's own settles still refresh */
+function avFilesUiBindProjChanged() {
+  const s = avFilesUiState;
+  try {
+    if (s.projChgBound) return true;
+    const d = avFilesUiDoc();
+    if (!d || typeof d.addEventListener !== "function") return false;
+    d.addEventListener("av-proj-changed", avFilesUiProjChanged);
+    s.projChgBound = true;
     return true;
   } catch (e) { return false; }
 }
@@ -880,6 +1070,11 @@ function avFilesUiBodyHTML() {
     '<div class="av-files-sec-title">PROJECT</div>' +
     '<div class="av-files-row av-files-controls">' + avFilesUiActsHTML(["save", "open", "samples"]) + "</div>" +
     '<div class="av-files-stat av-dim" id="av-files-pstat" role="status">project file: idle</div>' +
+    '<div class="av-files-recent">' +
+    '<div class="av-files-recent-title av-dim">RECENT PROJECTS</div>' +
+    '<div class="av-files-recent-list" id="av-files-recent-list"></div>' +
+    '<p class="av-files-recent-empty av-dim" id="av-files-recent-empty">no saved projects yet \u2014 SAVE .anvl records the projects you save here.</p>' +
+    "</div>" +
     "</section>" +
 
     '<section class="av-files-sec" data-av-files-sec="share">' +
@@ -935,9 +1130,11 @@ function avFilesUiInit() {
     }
     avFilesUiEnsureRootId(card);
     avFilesUiWire(host);
+    avFilesUiBindProjChanged();   /* ONE document listener: every project-layer settle repaints RECENT */
     s.inited = true;
     s.mounts += 1;
     avFilesUiSync();
+    avFilesUiRecentRefresh();   /* one guarded read -> the RECENT block (never a job) */
     return true;
   } catch (e) { return false; }
 }
@@ -965,7 +1162,7 @@ function avFilesUiSnap() {
     host: !!host,
     wired: !!(host && host.dataset && host.dataset.avFilesUiWired === "1"),
     card: false,
-    sections: { project: false, share: false, video: false },
+    sections: { project: false, share: false, video: false, recent: false },
     controls: { save: false, open: false, samples: false, cardMake: false, cardCopy: false, cardSave: false, videoRun: false },
     cores: cores,
     busy: {
@@ -974,7 +1171,7 @@ function avFilesUiSnap() {
       flags: {
         save: !!s.busy.save, open: !!s.busy.open, samples: !!s.busy.samples,
         cardMake: !!s.busy.cardMake, cardCopy: !!s.busy.cardCopy,
-        cardSave: !!s.busy.cardSave, video: !!s.busy.video,
+        cardSave: !!s.busy.cardSave, video: !!s.busy.video, recent: !!s.busy.recent,
       },
     },
     previews: { card: !!s.preview.cardUrl, video: !!s.preview.videoUrl, cardBytes: s.preview.cardBytes, videoBytes: s.preview.videoBytes },
@@ -987,6 +1184,7 @@ function avFilesUiSnap() {
     statusKind: s.statusKind,
     note: s.noteText || "",
     jobs: { started: s.jobSeq, done: s.doneSeq },
+    recent: { loaded: !!s.recent.loaded, count: s.recent.count, ids: s.recent.ids.slice(0, AV_FILES_UI_RECENT_ROWS_MAX) },
     classes: avFilesUiClasses(),
   };
   try {
@@ -995,6 +1193,7 @@ function avFilesUiSnap() {
       out.sections.project = !!host.querySelector("[data-av-files-sec=\"project\"]") || !!host.querySelector(".av-files");
       out.sections.share = !!host.querySelector("[data-av-files-sec=\"share\"]") || !!host.querySelector(".av-files");
       out.sections.video = !!host.querySelector("[data-av-files-sec=\"video\"]") || !!host.querySelector(".av-files");
+      out.sections.recent = !!host.querySelector(".av-files-recent");
       out.controls.save = !!host.querySelector("#av-files-save");
       out.controls.open = !!host.querySelector("#av-files-open");
       out.controls.samples = !!host.querySelector("#av-files-samples");
@@ -1027,6 +1226,7 @@ if (typeof window !== "undefined") {
       sync: function () { return avFilesUiSync(); },
       snap: function () { return avFilesUiSnap(); },
       init: function () { return avFilesUiInit(); },
+      refreshRecent: function () { return avFilesUiRecentRefresh(); },
     };
   } catch (e) { /* no window — nothing to publish */ }
 }

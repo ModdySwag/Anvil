@@ -52,6 +52,12 @@
 //      restored, sample removed, fake FS + window pickers restored) · FSA discipline (fake records
 //      every call, zero real reaches) · zero page errors · sha256 before === after.
 //  10. freeze pin leg: sha === pinned once EXPECT_SHA is set (null until the parent pins).
+//  11. (R20) recents through the STUB fs seam (the R18b setFs precedent, handles upgraded to the FSA
+//      shape): a plain save REUSES the stored handle (picker count flat, one write lands) and upserts
+//      a [data-av-proj-recent] row (OPEN + FORGET .mini); Save As ({saveAs:true}) performs a picker
+//      call (stub-counted) and becomes the new current; the row OPEN reapplies the stored project
+//      (master + pattern witness, no picker reach); FORGET removes row + av-projects-store record; a
+//      seeded null-handle row renders and its OPEN behaves honestly (the picker fallback).
 //
 // RIG-OWN MATH (never planted literals where the app computes): the PNG/EBML magic compares run on
 // bytes read from the actual blobs; the URL construction is checked against location.origin +
@@ -94,7 +100,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    S4: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = '1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa';
+const EXPECT_SHA = '354b74ddfaaf42788378a5089ceb7b3590c0c65036187ad743082c2d1ffc55fe';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -223,6 +229,9 @@ const S4W_HELPERS = `window.__s4w = (function () {
   W.num = function (x) { return (typeof x === 'number' && isFinite(x)) ? x : null; };
   W.safe = function (x) { try { return JSON.parse(JSON.stringify(x)); } catch (e) { return null; } };
   W.J = function (x) { try { return JSON.stringify(x); } catch (e) { return String(x); } };
+  /* non-enumerable definition (the R18b stub law): value fields stay cloneable, methods never reach
+     the structured clone into av-projects-store */
+  W.ne = function (o, k, v) { try { Object.defineProperty(o, k, { value: v, enumerable: false, configurable: true, writable: true }); } catch (e) { } return o; };
   W.light = function (x) {
     if (x === undefined || x === null) return null;
     if (typeof x !== 'object') return x;
@@ -279,7 +288,42 @@ const S4W_HELPERS = `window.__s4w = (function () {
   };
   W.fs = function () { return W._fs; };
   W.fakeInstall = function () {
-    const F = { calls: [], saves: [], opens: [], queue: [] };
+    const F = { calls: [], saves: [], opens: [], writes: [], queue: [], perm: 'granted' };
+    /* one FSA-shaped file handle (R20): value fields enumerable; methods NON-enumerable so the
+       handle stays structured-cloneable when the app puts it into av-projects-store (the R18b law).
+       createWritable/close count a landed write in F.writes (reuse witness); getFile serves the
+       handle's current text (reopen witness) */
+    F.mkFileHandle = function (entry) {
+      const h = { kind: 'file', isFile: true, isDirectory: false, name: entry ? entry.name : 'unnamed' };
+      W.ne(h, 'queryPermission', function () { return Promise.resolve(F.perm); });
+      W.ne(h, 'requestPermission', function () { F.perm = 'granted'; return Promise.resolve('granted'); });
+      W.ne(h, 'getFile', function () {
+        try { return Promise.resolve(new File([(entry && entry.text) ? entry.text : ''], h.name, { type: 'application/json' })); }
+        catch (e) { return Promise.reject(e); }
+      });
+      if (entry) W.ne(h, 'createWritable', function () {
+        return Promise.resolve({
+          write: function (data) {
+            try {
+              if (typeof data === 'string') entry.text = data;
+              else if (data && typeof data.byteLength === 'number') {
+                const u = new Uint8Array(data.buffer ? data.buffer : data, data.byteOffset || 0, data.byteLength);
+                let s = '';
+                for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
+                entry.text = s;
+              }
+            } catch (e) { }
+            return Promise.resolve();
+          },
+          close: function () {
+            entry.closed = true; entry.bytes = entry.text ? entry.text.length : 0;
+            try { F.writes.push({ idx: entry.idx, name: entry.name, bytes: entry.bytes, at: Date.now() }); } catch (e) { }
+            return Promise.resolve();
+          },
+        });
+      });
+      return h;
+    };
     F.record = function (fn, extra) {
       const rec = { fn: fn, at: Date.now() };
       if (extra) { for (const k in extra) rec[k] = extra[k]; }
@@ -288,28 +332,9 @@ const S4W_HELPERS = `window.__s4w = (function () {
     };
     F.save = async function (opts) {
       const rec = F.record('save', { suggestedName: (opts && opts.suggestedName) ? String(opts.suggestedName) : null });
-      const entry = { name: rec.suggestedName || 'unnamed', text: null, bytes: 0, closed: false, at: Date.now() };
+      const entry = { idx: F.saves.length, name: rec.suggestedName || 'unnamed', text: null, bytes: 0, closed: false, at: Date.now() };
       F.saves.push(entry);
-      return {
-        name: entry.name,
-        createWritable: async function () {
-          return {
-            write: function (data) {
-              try {
-                if (typeof data === 'string') entry.text = data;
-                else if (data && typeof data.byteLength === 'number') {
-                  const u = new Uint8Array(data.buffer ? data.buffer : data, data.byteOffset || 0, data.byteLength);
-                  let s = '';
-                  for (let i = 0; i < u.length; i++) s += String.fromCharCode(u[i]);
-                  entry.text = s;
-                }
-              } catch (e) { }
-              return Promise.resolve();
-            },
-            close: function () { entry.closed = true; entry.bytes = entry.text ? entry.text.length : 0; return Promise.resolve(); },
-          };
-        },
-      };
+      return F.mkFileHandle(entry);
     };
     F.open = async function (opts) {
       const rec = F.record('open', { multiple: !!(opts && opts.multiple) });
@@ -332,7 +357,11 @@ const S4W_HELPERS = `window.__s4w = (function () {
     if (typeof File === 'function' && src instanceof File) file = src;
     else if (typeof File === 'function') file = new File([String(src == null ? '' : src)], name, { type: 'application/json' });
     else file = { name: name, text: async function () { return String(src == null ? '' : src); } };
-    return { name: name, getFile: async function () { return file; } };
+    const h = { kind: 'file', isFile: true, isDirectory: false, name: name };
+    W.ne(h, 'getFile', function () { return Promise.resolve(file); });
+    W.ne(h, 'queryPermission', function () { return Promise.resolve('granted'); });
+    W.ne(h, 'requestPermission', function () { return Promise.resolve('granted'); });
+    return h;
   };
   W.pickSpies = function () {
     const out = { ok: false, save: false, open: false };
@@ -473,9 +502,10 @@ const S4W_HELPERS = `window.__s4w = (function () {
   };
   W.projState = function () { try { const P = (typeof window !== 'undefined') ? window.__avProj : null; return (P && typeof P.state === 'function') ? W.light(P.state()) : null; } catch (e) { return null; } };
   W.fsRecap = function () {
-    const F = W._fs || { calls: [], saves: [], opens: [] };
+    const F = W._fs || { calls: [], saves: [], opens: [], writes: [] };
     return {
       calls: F.calls.length, saves: F.saves.length, opens: F.opens.length,
+      writes: (F.writes ? F.writes.length : 0), writeIdx: (F.writes ? F.writes.slice(-4).map(function (w) { return w.idx; }) : []),
       saveNames: F.saves.slice(0, 4).map(function (s) { return s.name; }),
       closed: F.saves.slice(0, 4).map(function (s) { return s.closed === true; }),
       kinds: F.calls.slice(0, 12).map(function (c) { return c.fn; }),
@@ -922,6 +952,312 @@ const S4W_HELPERS = `window.__s4w = (function () {
     out.vs = W.vidStart();
     return out;
   };
+  W.fsSnap = function () {
+    const F = W._fs;
+    if (!F) return { picks: -1, opens: -1, writes: -1, lastWrite: null };
+    const lw = F.writes.length ? F.writes[F.writes.length - 1] : null;
+    return { picks: F.saves.length, opens: F.opens.length, writes: F.writes.length,
+      lastWrite: lw ? { idx: lw.idx, name: lw.name, bytes: lw.bytes } : null };
+  };
+  /* the av-projects-store accessor (contract-pinned name; create-if-missing v1, the av_sources
+     precedent): reads the fallback row's record (the recents legs ride the app's own paths) */
+  W.idbOpen = function () {
+    return new Promise(function (res) {
+      let done = false;
+      const fin = function (v) { if (!done) { done = true; res(v); } };
+      try {
+        if (typeof indexedDB === 'undefined' || !indexedDB) return fin({ db: null, why: 'no idb' });
+        const rq = indexedDB.open('av-projects-store', 1);
+        rq.onupgradeneeded = function () {
+          try {
+            const db = rq.result;
+            if (db && db.objectStoreNames && !db.objectStoreNames.contains('recents')) db.createObjectStore('recents', { keyPath: 'id' });
+            if (db && db.objectStoreNames && !db.objectStoreNames.contains('state')) db.createObjectStore('state', { keyPath: 'key' });
+          } catch (e) { }
+        };
+        rq.onsuccess = function () { fin({ db: rq.result || null, why: rq.result ? null : 'no db' }); };
+        rq.onerror = function () { fin({ db: null, why: 'open error' }); };
+        rq.onblocked = function () { fin({ db: null, why: 'blocked' }); };
+        setTimeout(function () { fin({ db: null, why: 'hung' }); }, 2500);
+      } catch (e) { fin({ db: null, why: String((e && e.message) || e) }); }
+    });
+  };
+  W.idbSeedRecent = async function (rec) {
+    try {
+      const o = await W.idbOpen();
+      if (!o.db) return { ok: false, why: o.why };
+      const r = await new Promise(function (res) {
+        try {
+          const tx = o.db.transaction('recents', 'readwrite');
+          tx.objectStore('recents').put(rec);
+          tx.oncomplete = function () { res({ ok: true }); };
+          tx.onerror = function () { res({ ok: false, why: 'tx error' }); };
+          tx.onabort = function () { res({ ok: false, why: 'aborted' }); };
+        } catch (e) { res({ ok: false, why: String((e && e.message) || e) }); }
+      });
+      try { o.db.close(); } catch (e) { }
+      return r;
+    } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
+  };
+  W.idbGetRecent = async function (id) {
+    try {
+      const o = await W.idbOpen();
+      if (!o.db) return { found: null, why: o.why };
+      const r = await new Promise(function (res) {
+        try {
+          const tx = o.db.transaction('recents', 'readonly');
+          const g = tx.objectStore('recents').get(String(id));
+          g.onsuccess = function () { res({ found: !!g.result, rec: g.result ? W.light(g.result) : null }); };
+          g.onerror = function () { res({ found: null, why: 'get error' }); };
+        } catch (e) { res({ found: null, why: String((e && e.message) || e) }); }
+      });
+      try { o.db.close(); } catch (e) { }
+      return r;
+    } catch (e) { return { found: null, why: String((e && e.message) || e) }; }
+  };
+  W.recAll = function () {
+    const out = [];
+    try {
+      const rows = document.querySelectorAll('[data-av-proj-recent]');
+      for (let i = 0; i < rows.length; i++) out.push({ id: String(rows[i].getAttribute('data-av-proj-recent') || ''), text: String(rows[i].textContent || '').trim().slice(0, 200) });
+    } catch (e) { /* [] */ }
+    return out;
+  };
+  W.recFind = function (re) {
+    try {
+      const rows = W.recAll();
+      for (let i = 0; i < rows.length; i++) if (new RegExp(re, 'i').test(rows[i].text)) return { id: rows[i].id, text: rows[i].text, n: rows.length };
+      return { id: null, text: null, n: rows.length };
+    } catch (e) { return { err: String((e && e.message) || e), id: null, text: null }; }
+  };
+  W.recFindSub = function (sub) {
+    try {
+      const s = String(sub == null ? '' : sub).toLowerCase();
+      if (!s) return { id: null, text: null };
+      const rows = W.recAll();
+      for (let i = 0; i < rows.length; i++) if (rows[i].text.toLowerCase().indexOf(s) >= 0) return rows[i];
+      return { id: null, text: null, n: rows.length };
+    } catch (e) { return { err: String((e && e.message) || e), id: null, text: null }; }
+  };
+  W.recById = function (id) {
+    try {
+      const row = document.querySelector('[data-av-proj-recent="' + String(id) + '"]');
+      return { found: !!row, text: row ? String(row.textContent || '').trim().slice(0, 200) : null };
+    } catch (e) { return { found: null, err: String((e && e.message) || e) }; }
+  };
+  W.recRowInfo = function (id) {
+    try {
+      let row = null;
+      try { row = document.querySelector('#av-files [data-av-proj-recent="' + String(id) + '"]'); } catch (e0) { row = null; }
+      if (!row) { try { row = document.querySelector('[data-av-proj-recent="' + String(id) + '"]'); } catch (e1) { row = null; } }
+      if (!row) return null;
+      const btns = Array.prototype.slice.call(row.querySelectorAll('button'));
+      return {
+        id: String(row.getAttribute('data-av-proj-recent') || ''),
+        text: String(row.textContent || '').trim().slice(0, 200),
+        buttons: btns.length,
+        open: btns.some(function (b2) { return /open/i.test(String(b2.textContent || '')); }),
+        forget: btns.some(function (b2) { return /forget/i.test(String(b2.textContent || '')); }),
+        mini: btns.filter(function (b2) { try { return b2.classList && b2.classList.contains('mini'); } catch (e) { return false; } }).length,
+      };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  };
+  W.recBtnXY = function (id, pats) {
+    try {
+      const row = document.querySelector('[data-av-proj-recent="' + String(id) + '"]');
+      if (!row) return { found: false, why: 'no row' };
+      const btns = Array.prototype.slice.call(row.querySelectorAll('button'));
+      let b2 = null;
+      const arr = Array.isArray(pats) ? pats : [String(pats || '')];
+      for (let p = 0; p < arr.length && !b2; p++) {
+        for (let i = 0; i < btns.length; i++) {
+          const t = String(btns[i].textContent || '').trim();
+          if (new RegExp(arr[p], 'i').test(t)) { b2 = btns[i]; break; }
+        }
+      }
+      if (!b2) return { found: false, why: 'no button', buttons: btns.map(function (x) { return String(x.textContent || '').trim().slice(0, 24); }) };
+      if (b2.scrollIntoView) b2.scrollIntoView({ block: 'center', inline: 'center' });
+      const r = b2.getBoundingClientRect();
+      if (!r.width || !r.height) return { found: false, why: 'not visible' };
+      return { found: true, x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2), label: String(b2.textContent || '').trim().slice(0, 24), title: String(b2.getAttribute('title') || '').slice(0, 80) };
+    } catch (e) { return { found: false, why: String((e && e.message) || e) }; }
+  };
+  /* 3r-a: Save As ({saveAs:true}) always picks (stub-counted) and the save upserts a NEW
+     [data-av-proj-recent] row for the picked file name (OPEN + FORGET .mini) */
+  W.legRec1 = async function (name) {
+    const out = { stage: 'rec1' };
+    try {
+      out.mk = W.markerSet(0.42);
+      out.pl = W.patLoad('RIG PAT 1', 0);
+      const F = W._fs;
+      const picks0 = F ? F.saves.length : -1, writes0 = F ? F.writes.length : -1;
+      out.rowsBefore = W.recAll().length;
+      const r = await avProjSave({ name: name || 'RIG RECENT', saveAs: true });
+      out.ok = !!(r && r.ok === true);
+      out.via = (r && typeof r.via === 'string') ? r.via : null;
+      out.name = (r && typeof r.name === 'string') ? r.name : null;
+      out.error = (r && r.error) ? String(r.error).slice(0, 120) : null;
+      out.picks0 = picks0; out.picks1 = F ? F.saves.length : -1;
+      out.writes0 = writes0; out.writes1 = F ? F.writes.length : -1;
+      out.asIdx = (F && F.saves.length) ? F.saves.length - 1 : -1;
+      W.recMate = { master: W.paramGet('master'), pat: W.patSnap() };
+      out.mate = { master: W.recMate.master, patOk: !!W.recMate.pat };
+      let found = null;
+      for (let i = 0; i < 40; i++) {
+        found = W.recFindSub(out.name || '');
+        if (found && found.id) break;
+        await new Promise(function (res) { setTimeout(res, 200); });
+      }
+      out.row = (found && found.id) ? { id: found.id, text: String(found.text || '').slice(0, 160) } : null;
+      out.rowsAfter = W.recAll().length;
+      out.rowInfo = (found && found.id) ? W.recRowInfo(found.id) : null;
+    } catch (e) { out.err = String((e && e.message) || e); }
+    return out;
+  };
+  /* 3r-b: the plain save REUSES the stored (Save As) handle: picker flat, one write lands on the
+     Save As entry - the new handle really became current; then mutate away so 3r-c must restore */
+  W.legRec2 = async function () {
+    const out = { stage: 'rec2' };
+    try {
+      const F = W._fs;
+      const picks0 = F ? F.saves.length : -1;
+      const w0 = F ? F.writes.length : -1;
+      const r = await avProjSave({ name: 'RIG B2' });
+      out.ok = !!(r && r.ok === true);
+      out.via = (r && typeof r.via === 'string') ? r.via : null;
+      out.name = (r && typeof r.name === 'string') ? r.name : null;
+      out.error = (r && r.error) ? String(r.error).slice(0, 120) : null;
+      out.picks0 = picks0; out.picks1 = F ? F.saves.length : -1;
+      const w2 = F ? F.writes.length : -1;
+      const lw = (F && F.writes.length) ? F.writes[F.writes.length - 1] : null;
+      out.reuse = { wrote: (w0 >= 0 && w2 === w0 + 1), idx: lw ? lw.idx : null, asIdx: (F && F.saves.length) ? F.saves.length - 1 : -1 };
+      out.rows = W.recAll().length;
+      out.mutPat = W.patLoad('RIG PAT 2', 1);
+      out.mutMaster = W.markerSet(0.95);
+    } catch (e) { out.err = String((e && e.message) || e); }
+    return out;
+  };
+  W.legRecOpen = function (id) {
+    const F = W._fs;
+    W._recOpenBase = { picks: F ? F.saves.length : -1, opens: F ? F.opens.length : -1 };
+    return W.recBtnXY(id, ['^open$', 'open']);
+  };
+  W.legRecRead = async function (id) {
+    const out = { stage: 'rec3' };
+    try {
+      const F = W._fs;
+      const base = W._recOpenBase || { picks: -1, opens: -1 };
+      const want = W.recMate || null;
+      let hit = false;
+      for (let i = 0; i < 60; i++) {
+        if (want && W.paramGet('master') === want.master && W.patEq(want.pat)) { hit = true; break; }
+        await new Promise(function (res) { setTimeout(res, 200); });
+      }
+      out.restored = hit;
+      out.master = W.paramGet('master');
+      out.patBack = want ? W.patEq(want.pat) : false;
+      out.lastOpen = W.safe(window.__avProjLastOpen || null);
+      out.picks = (F ? F.saves.length : -1) - base.picks;
+      out.opens = (F ? F.opens.length : -1) - base.opens;
+      const row = id ? W.recRowInfo(id) : null;
+      out.row = row ? { text: row.text } : null;
+    } catch (e) { out.err = String((e && e.message) || e); }
+    return out;
+  };
+  /* 3r-d: the app's OWN fallback row: a save that cannot reach any picker (the stored handle
+     denied + no picker seam) lands via the download fallback and upserts a null-handle recent */
+  W.legRec4a = async function (name) {
+    const out = { stage: 'rec4a' };
+    try {
+      const F = W._fs;
+      out.picks0 = F ? F.saves.length : -1;
+      out.writes0 = F ? F.writes.length : -1;
+      F.perm = 'denied';
+      try { out.fsNull = (avProjSetFs(null) === true); } catch (e) { out.fsNull = false; }
+      out.hide = W.pickHideSave();
+      const r = await avProjSave({ name: name || 'RIG FALLBACK' });
+      out.ok = !!(r && r.ok === true);
+      out.via = (r && typeof r.via === 'string') ? r.via : null;
+      out.name = (r && typeof r.name === 'string') ? r.name : null;
+      out.error = (r && r.error) ? String(r.error).slice(0, 120) : null;
+      out.picks1 = F ? F.saves.length : -1;
+      out.writes1 = F ? F.writes.length : -1;
+      out.unhide = W.pickUnhideSave();
+      F.perm = 'granted';
+      /* re-inject in the seam's CONTRACT shape ({ showOpenFilePicker, showSaveFilePicker } — the
+         exact object fakeInstall passed): avProjSetFs REFUSES a bare recorder (its pick fns are
+         named F.open / F.save), and a refused re-inject leaves the seam null for every later leg
+         (4a falls to the hidden input + one real window-picker reach; 9d fails) */
+      try { out.fsBack = (avProjSetFs({ showOpenFilePicker: F.open, showSaveFilePicker: F.save }) === true); } catch (e) { out.fsBack = false; }
+      /* the refresh triggers: the pinned sync + one reusing save (dedupe by name keeps the count) */
+      try { if (typeof avFilesUiSync === 'function') avFilesUiSync(); } catch (e) { }
+      const r2 = await avProjSave({ name: 'RIG RECENT' });
+      out.saveOk = !!(r2 && r2.ok === true);
+      let row = null;
+      for (let i = 0; i < 50; i++) {
+        row = W.recFindSub('rig-fallback');
+        if (row && row.id) break;
+        await new Promise(function (res) { setTimeout(res, 250); });
+      }
+      out.row = (row && row.id) ? { id: row.id, text: String(row.text || '').slice(0, 160) } : null;
+      out.rowInfo = (row && row.id) ? W.recRowInfo(row.id) : null;
+      out.idb = (row && row.id) ? await W.idbGetRecent(row.id) : null;
+      W._rec4Base = { opens: F ? F.opens.length : -1, status: '', note: '', pstat: '' };
+      try { W._rec4Base.status = String((W.domGet('av-files-status') || {}).textContent || ''); } catch (e) { }
+      try { W._rec4Base.note = String((W.domGet('av-files-note') || {}).textContent || ''); } catch (e) { }
+      try { W._rec4Base.pstat = String((W.domGet('av-files-pstat') || {}).textContent || ''); } catch (e) { }
+      /* R20 rigfix: set a distinctive master BEFORE the refused-open click so "nothing applied"
+         is witnessed (the fallback file carries 0.42; a wrong apply would knock 0.95 back). */
+      out.mk95 = W.markerSet(0.95);
+      out.coords = (row && row.id) ? W.recBtnXY(row.id, ['^open$', 'open']) : null;
+    } catch (e) { out.err = String((e && e.message) || e); }
+    return out;
+  };
+  W.legRec4b = async function () {
+    const out = { stage: 'rec4b' };
+    try {
+      const F = W._fs;
+      const base = W._rec4Base || { opens: -1, status: '', note: '', pstat: '' };
+      let settled = { opensMoved: false, ok: null, applied: null, status: '', note: '', pstat: '',
+        statusChanged: false, noteChanged: false, pstatChanged: false };
+      for (let i = 0; i < 40; i++) {
+        const opensNow = F ? F.opens.length : -1;
+        const lo = W.safe(window.__avProjLastOpen || null);
+        const st = String((W.domGet('av-files-status') || {}).textContent || '');
+        const nt = String((W.domGet('av-files-note') || {}).textContent || '');
+        const pt = String((W.domGet('av-files-pstat') || {}).textContent || '');
+        settled = { opensMoved: opensNow > base.opens, lastOpen: lo, ok: lo ? lo.ok : null, applied: lo ? lo.applied : null,
+          status: st.slice(0, 160), note: nt.slice(0, 160), pstat: pt.slice(0, 160),
+          statusChanged: st !== base.status, noteChanged: nt !== base.note, pstatChanged: pt !== base.pstat };
+        if (settled.opensMoved || settled.statusChanged || settled.noteChanged || settled.pstatChanged) break;
+        await new Promise(function (res) { setTimeout(res, 250); });
+      }
+      out.settled = settled;
+      out.master = W.paramGet('master');
+      out.rowStill = !!W.recFindSub('rig-fallback').id;
+    } catch (e) { out.err = String((e && e.message) || e); }
+    return out;
+  };
+  /* 3r-e: FORGET removes the row AND the av-projects-store record; siblings stay */
+  W.legRec5 = function (id) {
+    return W.recBtnXY(id, ['^forget$', 'forget']);
+  };
+  W.legRec5Read = async function (id) {
+    const out = { stage: 'rec5' };
+    try {
+      let gone = false;
+      for (let i = 0; i < 40; i++) {
+        gone = !W.recById(id).found;
+        if (gone) break;
+        await new Promise(function (res) { setTimeout(res, 250); });
+      }
+      out.rowGone = gone;
+      out.idb = await W.idbGetRecent(id);
+      out.siblingStill = !!W.recFindSub('rig-recent').id;
+      out.rows = W.recAll();
+    } catch (e) { out.err = String((e && e.message) || e); }
+    return out;
+  };
   W.cleanup = function () {
     const out = { steps: [] };
     const orig = W.orig || {};
@@ -1135,6 +1471,75 @@ async function main() {
     fo.open && fo.open.ok === false && fo.masterSame === true && fo.patSame === true,
     '3c foreign refusal: bad magic / v2 / wrong kind / garbage all ok:false · foreign file via the fake picker refused · nothing applied',
     J({ parses: fo.parses, open: fo.open, masterSame: fo.masterSame, patSame: fo.patSame, opens: fo.opens, err: fo.err }));
+
+  /* ── 3r. recents — R20 (stub fs seam: Save As · reuse · reopen · forget · fallback) ── */
+  console.log('── 3r. recents (R20) ──');
+  const rc1 = val(await ev('window.__s4w.legRec1()')) || {};
+  expected(rc1.ok === true && rc1.via === 'fsa' && typeof rc1.name === 'string' && /^anvil-project-.+\.anvl$/.test(rc1.name) &&
+    typeof rc1.picks0 === 'number' && rc1.picks1 === rc1.picks0 + 1 &&
+    typeof rc1.writes0 === 'number' && rc1.writes1 === rc1.writes0 + 1 &&
+    typeof rc1.rowsBefore === 'number' && rc1.rowsAfter === rc1.rowsBefore + 1 &&
+    !!rc1.row && typeof rc1.row.id === 'string' && rc1.row.id.length > 0 &&
+    !!rc1.rowInfo && rc1.rowInfo.open === true && rc1.rowInfo.forget === true && typeof rc1.rowInfo.mini === 'number' && rc1.rowInfo.mini >= 2,
+    '3r-a Save As + recents save: the picker runs exactly once (stub-counted) and the save upserts a NEW [data-av-proj-recent] row for the picked name (OPEN + FORGET .mini)',
+    J({ ok: rc1.ok, via: rc1.via, name: rc1.name, picks: [rc1.picks0, rc1.picks1], writes: [rc1.writes0, rc1.writes1], rows: [rc1.rowsBefore, rc1.rowsAfter], row: rc1.row, rowInfo: rc1.rowInfo, err: rc1.err || rc1.error }));
+
+  const rc2 = val(await ev('window.__s4w.legRec2()')) || {};
+  expected(rc2.ok === true && rc2.via === 'fsa' &&
+    typeof rc2.picks0 === 'number' && rc2.picks1 === rc2.picks0 &&
+    !!rc2.reuse && rc2.reuse.wrote === true && typeof rc2.reuse.idx === 'number' && rc2.reuse.idx === rc2.reuse.asIdx &&
+    typeof rc2.rows === 'number' && rc2.rows >= 1 &&
+    !!rc2.mutPat && rc2.mutPat.ok === true && !!rc2.mutMaster && rc2.mutMaster.ret === true && rc2.mutMaster.cur === 0.95,
+    '3r-b reuse: a plain save picks NOTHING (stub count flat) and writes straight through the Save As handle (the new handle really became current)',
+    J({ ok: rc2.ok, via: rc2.via, name: rc2.name, picks: [rc2.picks0, rc2.picks1], reuse: rc2.reuse, rows: rc2.rows, mutPat: rc2.mutPat, err: rc2.err || rc2.error }));
+
+  const ro = val(await ev(`window.__s4w.legRecOpen(${JSON.stringify((rc1.row && rc1.row.id) || '')})`)) || {};
+  note('recent OPEN target: ' + J({ found: ro.found, label: ro.label, why: ro.why || ro.err || null }));
+  let roClicked = false;
+  if (ro.found === true && typeof ro.x === 'number' && typeof ro.y === 'number') {
+    await mouse('mousePressed', ro.x, ro.y); await sleep(30); await mouse('mouseReleased', ro.x, ro.y); roClicked = true;
+  }
+  const rr = val(await ev(`window.__s4w.legRecRead(${JSON.stringify((rc1.row && rc1.row.id) || '')})`)) || {};
+  expected(ro.found === true && roClicked === true && rr.restored === true && rr.master === 0.42 && rr.patBack === true &&
+    !!rr.lastOpen && rr.lastOpen.ok === true && typeof rr.lastOpen.applied === 'number' && rr.lastOpen.applied >= 1 &&
+    rr.picks === 0 && rr.opens === 0,
+    '3r-c reopen recent: the row OPEN reapplies the stored project (master 0.42 + pattern witness · applied >= 1) with no picker reach',
+    J({ ro: { found: ro.found, label: ro.label, buttons: ro.buttons || null }, read: rr }));
+
+  const r4a = val(await ev('window.__s4w.legRec4a()')) || {};
+  note('fallback (download) save: ' + J({ ok: r4a.ok, via: r4a.via, name: r4a.name, hide: r4a.hide, unhide: r4a.unhide, fsBack: r4a.fsBack, row: r4a.row ? r4a.row.id : null, idb: r4a.idb }));
+  let fbClicked = false;
+  const fb = r4a.coords || {};
+  if (!!r4a.row && fb.found === true && typeof fb.x === 'number' && typeof fb.y === 'number') {
+    await mouse('mousePressed', fb.x, fb.y); await sleep(30); await mouse('mouseReleased', fb.x, fb.y); fbClicked = true;
+  }
+  const r4b = val(await ev('window.__s4w.legRec4b()')) || {};
+  const r4s = r4b.settled || {};
+  const fbBlob = String(r4s.status || '') + ' ' + String(r4s.note || '') + ' ' + String(r4s.pstat || '');
+  const fbHonest = r4s.opensMoved === true
+    ? (r4s.ok === false && r4s.applied === 0)
+    : ((r4s.statusChanged === true || r4s.noteChanged === true || r4s.pstatChanged === true) && /handle|picker|pick|file/i.test(fbBlob));
+  expected(r4a.ok === true && r4a.via === 'download' && typeof r4a.name === 'string' && /^anvil-project-.+\.anvl$/.test(r4a.name) &&
+    r4a.picks1 === r4a.picks0 && r4a.writes1 === r4a.writes0 && r4a.fsBack === true &&
+    !!r4a.row && typeof r4a.row.id === 'string' && /rig.fallback/i.test(String(r4a.row.text || '')) &&
+    !!r4a.rowInfo && r4a.rowInfo.open === true &&
+    !!r4a.idb && r4a.idb.found === true && !!r4a.idb.rec && r4a.idb.rec.handle === null &&
+    fbClicked === true && r4b.master === 0.95 && r4b.rowStill === true && fbHonest === true,
+    '3r-d fallback (no handle): a download-fallback save upserts a null-handle recent (name-only row, IDB handle null) and its OPEN behaves honestly (picker fallback reached -> ok:false applied 0, or an explicit note) with nothing applied',
+    J({ save: { ok: r4a.ok, via: r4a.via, name: r4a.name, picks: [r4a.picks0, r4a.picks1], writes: [r4a.writes0, r4a.writes1] }, row: r4a.row, idb: r4a.idb, coords: { found: fb.found, why: fb.why || null }, settled: r4s, honest: fbHonest, master: r4b.master, rowStill: r4b.rowStill }));
+
+  const rfId = (r4a.row && r4a.row.id) || '';
+  const rc5 = val(await ev(`window.__s4w.legRec5(${JSON.stringify(rfId)})`)) || {};
+  note('recent FORGET target: ' + J({ found: rc5.found, label: rc5.label, why: rc5.why || rc5.err || null }));
+  let fbForget = false;
+  if (rc5.found === true && typeof rc5.x === 'number' && typeof rc5.y === 'number') {
+    await mouse('mousePressed', rc5.x, rc5.y); await sleep(30); await mouse('mouseReleased', rc5.x, rc5.y); fbForget = true;
+  }
+  const r5r = val(await ev(`window.__s4w.legRec5Read(${JSON.stringify(rfId)})`)) || {};
+  expected(rc5.found === true && fbForget === true && r5r.rowGone === true &&
+    !!r5r.idb && r5r.idb.found === false && r5r.siblingStill === true,
+    '3r-e forget: the row FORGET removes the row AND its av-projects-store record; the sibling recent stays',
+    J({ coords: { found: rc5.found, label: rc5.label }, read: r5r }));
 
   /* ── 4. samples ── */
   console.log('── 4. samples ──');

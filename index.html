@@ -1976,6 +1976,29 @@ header.av-head.av-console .avc-center { display: flex; align-items: center; gap:
 .av-import-detail-val { color: var(--text-2); min-width: 0; overflow-wrap: anywhere; }
 .av-import-detail-meta { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 96px; overflow-y: auto; background: #0a0e11; border: 1px solid var(--hair); border-radius: 4px; padding: 5px 7px; }
 
+/* R20: work persistence -- sessions browser v2 + project recents (av_session_ui.js / av_files_ui.js)
+   classes per verify/_r20_wave.md s.3/s.4. Appended to src/styles.css at integration. */
+.av-sessions-tools { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+.av-sessions-search { flex: 1 1 auto; min-width: 0; background: #0a0e11; border: 1px solid var(--hair); border-radius: 5px; color: var(--text); font-family: var(--mono); font-size: 11px; padding: 4px 8px; outline: none; }
+.av-sessions-search:focus { border-color: var(--teal-deep); }
+.av-sessions-sort { width: auto; }
+.av-sessions-tags { display: inline-flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: wrap; }
+.av-sessions-tags-list { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 0; overflow-wrap: anywhere; }
+.av-sessions-tags-none { opacity: .65; }
+.av-sessions-tag { color: var(--teal); }
+.av-sessions-tags-sep { color: var(--text-3); }
+.av-sessions-tags-input { width: 260px; max-width: 100%; background: #0a0e11; border: 1px solid var(--hair); border-radius: 5px; color: var(--text); font-family: var(--mono); font-size: 10.5px; padding: 3px 7px; outline: none; }
+.av-sessions-prev { display: flex; flex-wrap: wrap; gap: 10px; font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-sessions-prev-part { white-space: nowrap; }
+.av-files-recent { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.av-files-recent-title { font-family: var(--mono); font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.av-files-recent-list { display: flex; flex-direction: column; gap: 4px; }
+.av-files-recent-empty { font-family: var(--mono); font-size: 10px; color: var(--text-3); margin: 2px 0; }
+.av-files-recent-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 5px 8px; border: 1px solid var(--hair); border-radius: 6px; background: rgba(6, 9, 12, .35); font-size: 12px; min-width: 0; }
+.av-files-recent-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.av-files-recent-meta { font-family: var(--mono); font-size: 10px; color: var(--text-3); }
+.av-files-recent-acts { display: inline-flex; gap: 4px; margin-left: auto; }
+
 </style>
 </head>
 
@@ -21236,9 +21259,17 @@ const AVRex = {
    every read path through avLibSourceNorm (absent or invalid -> dropped) and survives a
    replaceDup fold; old records hydrate cleanly, nothing else changes.
 
+   R20 addition (verify/_r20_wave.md section 6; the same additive law): the record vocabulary
+   gains kind "song" - the Song Bundle's project payload (bytes = the avProjBuild text). Its
+   LOAD route (avLibLoadRun -> avLibLoadSong) decodes the stored bytes to utf-8 text and
+   applies the project through the guarded avProjOpenText; the receipt is {ok, id,
+   kind:"song", applied, warnings, error?}. avLibKindNorm accepts "song"; every read path
+   (meta / rec / payload / item views + the missing scan's want rows) carries it exactly like
+   the other kinds, and a replaceDup fold moves it like any other kind.
+
    Record shape: { id, v: 1, name, kind, format, ext, size, at, meta, bytes (ArrayBuffer), via }
      id = "l" + Date.now().toString(36) + "-" + slug(name); slug [a-z0-9-], cap 40.
-     kind = "sample" | "pattern" | "kit" | "refs" (R15c). via = the backend the record was
+     kind = "sample" | "pattern" | "kit" | "refs" (R15c) | "song" (R20). via = the backend the record was
      actually written through.
 
    Backends "idb" | "ls" | "mem" (always reportable). IndexedDB is the durable home; no
@@ -21280,6 +21311,11 @@ const AVRex = {
                    notes?, pattern?, meta} so the UI can offer the seq action for ALS items
                    (the seq application itself stays the ONE avMid flow, driven from
                    meta.pattern by its caller).
+     song (R20) -> the stored bytes decode to utf-8 text (TextDecoder; a bounded manual
+                   fallback) -> the guarded avProjOpenText(name, text) applies the project
+                   through the injected session module. NO session sample/seq change rides
+                   here - the project apply owns every effect. Receipt {ok, id, kind:"song",
+                   applied, warnings, error?}.
 
    Every cross-module call is typeof-guarded PER CALL. Never throws: every public entry point
    resolves a receipt / returns a sane value; try/catch wraps every reach. Promise plumbing
@@ -21335,6 +21371,8 @@ const AV_LIB_MISSING_WANT_MAX = 32;             /* referencing records listed pe
 const AV_LIB_REC_ID_RE = /^r[a-z0-9-]{0,63}$/;  /* "r" + time36 (+ "-<seq>" on collision) */
 /* R19 section 3: pack provenance rides inside source (additive; the exporting pack's id) */
 const AV_LIB_PACK_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;  /* source.pack slug (cap 64) */
+/* R20 section 6: the song route carries the avProjOpenText warnings, bounded here */
+const AV_LIB_SONG_WARN_MAX = 16;                /* warnings kept on a song load receipt */
 
 /* ---------- state (the in-memory view the UI renders from) ---------- */
 
@@ -21488,10 +21526,11 @@ function avLibMakeId(name) {
   return id;
 }
 
-/* the record kind vocabulary: sample | pattern | kit | refs ("" = not persistable) */
+/* the record kind vocabulary: sample | pattern | kit | refs (R15c) | song (R20); "" = not
+   persistable */
 function avLibKindNorm(v) {
   try {
-    if (v === "sample" || v === "pattern" || v === "kit" || v === "refs") return v;
+    if (v === "sample" || v === "pattern" || v === "kit" || v === "refs" || v === "song") return v;
   } catch (e) { /* none */ }
   return "";
 }
@@ -21608,8 +21647,8 @@ function avLibExactBuf(u8) {
 }
 
 /* the import item (section 2 shape) -> the record fields this module persists.
-   result != "imported" items are SKIPPED (null); only sample/pattern/kit/refs kinds are
-   material. */
+   result != "imported" items are SKIPPED (null); only sample/pattern/kit/refs/song kinds
+   are material. */
 function avLibItemNorm(item) {
   try {
     if (!item || typeof item !== "object" || Array.isArray(item)) return null;
@@ -22968,6 +23007,7 @@ async function avLibLoadRun(id) {
   if (rec.kind === "sample") return avLibLoadSample(rec);
   if (rec.kind === "kit") return avLibLoadKit(rec);      /* R15c: EXS24 kits */
   if (rec.kind === "refs") return avLibLoadRefs(rec);    /* R15c: ALS / Serum refs */
+  if (rec.kind === "song") return avLibLoadSong(rec);    /* R20: song bundle project payload */
   return { ok: false, id: rec.id, kind: "", error: "unknown kind" };
 }
 
@@ -23345,6 +23385,88 @@ function avLibLoadRefs(rec) {
     return out;
   } catch (e) {
     return { ok: false, id: (rec && rec.id) ? rec.id : "", kind: "refs", refs: 0, error: "meta read failed" };
+  }
+}
+
+/* R20 section 6: bytes -> utf-8 text for the song route (TextDecoder first, then a bounded
+   manual decoder mirroring the av_pack.js reader; null when undecodable) */
+function avLibUtf8Text(bytes) {
+  let u8 = null;
+  try {
+    if (bytes && typeof ArrayBuffer !== "undefined" && (bytes instanceof ArrayBuffer)) u8 = new Uint8Array(bytes);
+    else if (bytes && typeof ArrayBuffer !== "undefined" && ArrayBuffer.isView && ArrayBuffer.isView(bytes)) u8 = bytes;
+  } catch (e) { u8 = null; }
+  if (!u8 || typeof u8.length !== "number" || !u8.length) return null;
+  try { if (typeof TextDecoder === "function") return new TextDecoder("utf-8", { fatal: false }).decode(u8); } catch (e2) { /* manual below */ }
+  try {
+    let s = "";
+    let i = 0;
+    while (i < u8.length) {
+      const c = u8[i++];
+      if (c < 0x80) { s += String.fromCharCode(c); continue; }
+      let cp = -1;
+      let need = 0;
+      if (c >= 0xC2 && c <= 0xDF) { cp = c & 0x1F; need = 1; }
+      else if (c >= 0xE0 && c <= 0xEF) { cp = c & 0x0F; need = 2; }
+      else if (c >= 0xF0 && c <= 0xF4) { cp = c & 0x07; need = 3; }
+      if (cp < 0 || i + need > u8.length) { s += "\uFFFD"; continue; }
+      let bad = false;
+      for (let k = 0; k < need; k++) {
+        const cc = u8[i + k];
+        if ((cc & 0xC0) !== 0x80) { bad = true; break; }
+        cp = (cp << 6) | (cc & 0x3F);
+      }
+      if (bad) { s += "\uFFFD"; continue; }
+      i += need;
+      if (cp > 0xFFFF) {
+        cp -= 0x10000;
+        s += String.fromCharCode(0xD800 + (cp >> 10), 0xDC00 + (cp & 0x3FF));
+      } else s += String.fromCharCode(cp);
+    }
+    return s;
+  } catch (e3) { return null; }
+}
+
+/* the song route (R20 section 6): the stored bytes decode to utf-8 text and the project
+   applies through the guarded avProjOpenText(name, text) (the global first, then the
+   __avProj facade; absent -> honest refusal). The receipt carries the project open shape's
+   applied / warnings (bounded by AV_LIB_SONG_WARN_MAX); NO session sample/seq change rides
+   here - the project apply owns every effect. NEVER throws. Receipt {ok, id, kind:"song",
+   applied, warnings, error?}. */
+function avLibLoadSong(rec) {
+  const out = { ok: false, id: (rec && rec.id) ? rec.id : "", kind: "song", applied: 0, warnings: [] };
+  try {
+    let open = null;
+    try { if (typeof avProjOpenText === "function") open = avProjOpenText; } catch (e) { open = null; }
+    if (typeof open !== "function") {
+      try {
+        const w = (typeof window !== "undefined") ? window : null;
+        if (w && w.__avProj && typeof w.__avProj.openText === "function") open = w.__avProj.openText;
+      } catch (e2) { open = null; }
+    }
+    if (typeof open !== "function") { out.error = "project module absent"; return out; }
+    const text = avLibUtf8Text(rec && rec.bytes);
+    if (typeof text !== "string" || !text) { out.error = "no project text"; return out; }
+    let r = null;
+    try { r = open(avLibStr(rec.name, "song.anvl", AV_LIB_NAME_MAX), text); } catch (e3) { r = null; }
+    if (!r || typeof r !== "object") { out.error = "open refused"; return out; }
+    out.applied = Math.round(avLibNum(r.applied, 0, 0, 0x7FFFFFFF));
+    let warns = null;
+    try { warns = Array.isArray(r.warnings) ? r.warnings : null; } catch (e4) { warns = null; }
+    if (warns) {
+      const list = [];
+      for (let i = 0; i < warns.length && i < AV_LIB_SONG_WARN_MAX; i++) {
+        const s = avLibStr(warns[i], "", 200);
+        if (s) list.push(s);
+      }
+      out.warnings = list;
+    }
+    if (r.ok !== true) { out.error = avLibStr(r.error, "", 200) || "apply refused"; return out; }
+    out.ok = true;
+    return out;
+  } catch (e) {
+    out.error = avLibErrMsg(e);
+    return out;
   }
 }
 
@@ -25196,6 +25318,15 @@ async function avImportFiles(files, opts) {
    avImportUiSetStatus tail-writes the overlay status line through the guarded avLibraryUiNote;
    avImportUiLibrary() appends a guarded avLibraryUiOpen() (the store-jump behavior is kept).
 
+   R20 -- SONG ROWS (verify/_r20_wave.md section 6; NO version bump): a row of kind "song"
+   (the Song Bundle's project payload) carries the LOAD action (label LOAD, title "apply this
+   song bundle's project" -> avLibLoad(id) -> the av_lib song route applies the project)
+   + DEL; NO SEND / CHOP / SEQ (a song item has no session entry and no pattern) and no
+   RELINK (a song record references nothing, so the missing-ref scan never flags it). The
+   R17 REN/EXP pair and the R21 info toggle append as on every kind. A loaded song reports
+   "loaded <name> . song . applied N" (+ " . N warnings" above zero) in the status line.
+   The manager's kind facet set stays as-is (song rows appear under "all").
+
    DOM CONTRACT (exact -- suites pin these):
      host      #av-import-host          parent-owned; absent -> avImportUiInit() returns false
      root      .av-import[data-av-import="1"] (id "av-import" only when no element owns it --
@@ -26213,14 +26344,16 @@ function avImportUiActBtnHTML(id, act, label, title, disabled) {
 }
 
 /* one library row -- the pinned load-type actions stay as-is (sample/pattern rows keep
-   LOAD|SEND|CHOP|SEQ|DEL, kit rows KIT|DEL, refs rows SEQ?|DEL); R17 appends the select
-   checkbox + the RENAME/EXPORT management actions on every kind */
+   LOAD|SEND|CHOP|SEQ|DEL, kit rows KIT|DEL, refs rows SEQ?|DEL, R20 song rows LOAD|DEL --
+   no SEND/CHOP/SEQ); R17 appends the select checkbox + the RENAME/EXPORT management actions
+   on every kind */
 function avImportUiLibRowHTML(it, sel) {
   const id = String(it.id || "");
   const kind = String(it.kind || "");
   const isPattern = (kind === "pattern");
   const isKit = (kind === "kit");
   const isRefs = (kind === "refs");
+  const isSong = (kind === "song");
   const name = String(it.name || id);
   const counts = (it.counts && typeof it.counts === "object") ? it.counts : {};
   let meta;
@@ -26269,6 +26402,10 @@ function avImportUiLibRowHTML(it, sel) {
     if (it.hasPattern === true) {
       html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", false);
     }
+    html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  } else if (isSong) {
+    /* R20 section 6: the song bundle row -- LOAD applies the project; no session entry rides */
+    html += avImportUiActBtnHTML(id, "load", "LOAD", "apply this song bundle's project", false);
     html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
   } else {
     html += avImportUiActBtnHTML(id, "load", "LOAD", "load this item into the session", false);
@@ -26666,6 +26803,13 @@ function avImportUiLoadLine(name, r) {
     }
     if (r.kind === "refs") {
       return "loaded " + name + " \u00b7 refs \u00b7 " + avImportUiNumOr(r.refs, 0) + " refs";
+    }
+    if (r.kind === "song") {
+      const applied = avImportUiNumOr(r.applied, 0);
+      const wn = (r.warnings && typeof r.warnings.length === "number") ? r.warnings.length : 0;
+      let line = "loaded " + name + " \u00b7 song \u00b7 applied " + applied;
+      if (wn > 0) line += " \u00b7 " + wn + " warning" + (wn === 1 ? "" : "s");
+      return line;
     }
     const eid = (r.entryId != null && String(r.entryId)) ? String(r.entryId) : "";
     return "loaded " + name + (eid ? " \u00b7 session entry " + avImportUiShort(eid, 40) : " \u00b7 session");
@@ -58366,12 +58510,14 @@ if (typeof window !== "undefined") {
      avSessionExport() -> {v, sessions:[record...]}
      avSessionImport(payloadOrRecord) -> {ok, imported, skipped}   tolerant; id-dedupe
      avSessionTouch() -> bool             mark dirty (best-effort; the fingerprint also works)
+     avSessionSetTags(id, tags) -> Promise  set a session's tags (max 8, each max 24 chars,
+                                          lowercase-trimmed); persists via the record write path
      avSessionClasses() -> string[]       [] — this module mounts nothing
      avSessionHydrate() -> Promise<mode>  (extra: boot hydrate, idempotent, never rejects)
      window.__avSession -> { version, init, capture, apply, save, list, load, delete, versions,
                              restore, autosave, state, recover, export: avSessionExport,
                              import: avSessionImport }
-                           + extras: touch, dismiss, classes, hydrate
+                           + extras: touch, dismiss, classes, hydrate, setTags, flush
 
    STATE SCHEMA (v1, JSON-safe by construction):
      { v:1, name, savedAt,
@@ -58389,6 +58535,10 @@ if (typeof window !== "undefined") {
    { id, name, createdAt, updatedAt, current, versions:[{ v, savedAt, state }] } (ring <= 16,
    newest last) plus the SINGLE record id `__autosave` { state, savedAt, name }. LS fallback key
    `av-sessions-ls` (JSON { v, sessions, autosave }; per session = meta + newest version only).
+   The AUTOSAVE CHOICE (R20) persists separately in localStorage key `av-sessions-autosave`
+   (JSON { v:1, on }): the seed never writes it, only an explicit avSessionAutosave(on) call
+   does; without localStorage the choice cannot persist (honest). Session TAGS (R20) ride the
+   record: an additive `tags` array (max 8, lowercase-trimmed, each max 24 chars).
    No storage at all -> memory last resort. Every receipt names the tier it actually used
    (`idb | ls | mem`) and a memory-only write is `volatile:true`. "Nothing durable → not saved":
    a refused durable write rolls the memory change back and resolves ok:false; only memory mode
@@ -58413,12 +58563,18 @@ if (typeof window !== "undefined") {
      (6) takesMeta is NOT applied — carried metadata (`carried` names it), never a skip.
      ok = at least one leg present AND zero skips AND seqOk (bank's full-acceptance law).
 
-   DIRTY + AUTOSAVE (§2.1): dirty = the cheap fingerprint changed — fingerprint =
-   avSeqPatternExport() string + JSON of { params, mod.macros } + avTakesList().length (guarded,
-   never throws). avSessionTouch() marks dirty eagerly. Save/load/restore/recover re-base the
-   fingerprint. The autosave tick (timer at `ms`, only while on) writes the ONE `__autosave`
-   record ({ state, savedAt, name }) only when dirty; a landed write stamps lastAutosaveAt; a
-   refused write stays dirty (honest). Boot performs no write (the baseline is set post-hydrate).
+   DIRTY + AUTOSAVE (R20): dirty = the fingerprint changed -- the fingerprint now covers the
+   FULL avSessionCapture() surface: avSeqPatternExport() (full pattern copy, steps included) +
+   JSON of { params, mod.macros } + takesMeta JSON + JSON of { chains, song, scenes } + prefs
+   JSON (every leg guarded, never throws). avSessionTouch() marks dirty eagerly. Save/load/
+   restore/recover re-base the fingerprint. SEEDING: at hydrate end autosave seeds ON when the
+   store holds >= 1 session or the persisted choice is on; a virgin store seeds OFF; after the
+   FIRST successful avSessionSave with no explicit choice yet, autosave flips ON (an explicit
+   off outranks). The tick (timer at `ms`, only while on) writes the ONE `__autosave` record
+   ({ state, savedAt, name }) only when dirty; a landed write stamps lastAutosaveAt; a refused
+   write stays dirty (honest). A document `visibilitychange` -> hidden flush writes that same
+   ONE record immediately when on and dirty, then rearms (guarded, silent). Boot performs no
+   write (the baseline is set post-hydrate).
 
    RECOVERY: hydrate finds the `__autosave` record -> recovery.available with savedAt/name; the
    offer NEVER auto-applies. avSessionRecover() = apply its state + clear the record durably +
@@ -58449,6 +58605,10 @@ const AV_SESSION_VERSIONS_MAX = 16;                 /* the ring bound (§2.1) */
 const AV_SESSION_AUTOSAVE_DEF_MS = 45000;
 const AV_SESSION_AUTOSAVE_MIN_MS = 5000;
 const AV_SESSION_AUTOSAVE_MAX_MS = 600000;
+const AV_SESSION_AUTO_LS = "av-sessions-autosave";  /* the EXPLICIT autosave choice (localStorage;
+                                                       JSON {v:1,on}; the only persisted choice) */
+const AV_SESSION_TAG_MAX = 8;                       /* session tags (R20): max 8 per session */
+const AV_SESSION_TAG_LEN = 24;                      /* max 24 chars each (lowercase-trimmed)   */
 const AV_SESSION_OPEN_CAP_MS = 1800;                /* hung-open give-up (the av_store cap) */
 const AV_SESSION_NAME_CAP = 40;
 const AV_SESSION_ID_CAP = 64;
@@ -58478,6 +58638,8 @@ const avSession = {
   autoRec: null,             /* the latest __autosave record seen/written {id,state,savedAt,name} */
   recovery: null,            /* {available,savedAt,name,at,state} — the offer (never auto-applied) */
   auto: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS },
+  autoChoice: null,          /* the EXPLICIT on/off choice (true|false) or null (never chosen) */
+  flushBound: false,         /* the visibilitychange listener is bound once per page */
   timer: null,
   lastAutosaveAt: 0,
   baseFp: null,              /* the dirty baseline fingerprint (post-hydrate) */
@@ -58985,13 +59147,25 @@ function avSessionApply(state) {
 
 /* ---------- dirty fingerprint (§2.1) ---------- */
 
+/* the dirty fingerprint (R20 coverage law): it must flip on EVERY surface avSessionCapture()
+   writes -- pattern (the full export copy, steps included), params, mod.macros, takesMeta,
+   seq chains/song/scenes and prefs. Each leg is typeof-guarded and never throws; an absent
+   module contributes a stable empty leg (absent is not dirty). */
 function avSessionFingerprint() {
-  let a = "", b = "", c = "";
+  let a = "", b = "", c = "", d = "", e = "";
   try { a = (typeof avSeqPatternExport === "function") ? String(avSeqPatternExport() || "") : ""; } catch (e) { a = ""; }
   try { b = JSON.stringify({ params: avSessionParamsSnap(), mod: { macros: avSessionMacrosSnap() } }); } catch (e) { b = ""; }
-  try { c = (typeof avTakesList === "function") ? String(avTakesList().length | 0) : ""; } catch (e) { c = ""; }
+  try { c = JSON.stringify(avSessionTakesSnap()); } catch (e) { c = ""; }
+  try {
+    const f = avSessionSeqFns();
+    d = JSON.stringify({ chains: avSessionSeqCall(f.chainsSnap), song: avSessionSeqCall(f.songSnap), scenes: avSessionSeqCall(f.scenesSnap) });
+  } catch (e) { d = ""; }
+  try { e = JSON.stringify(avSessionPrefsSnap()); } catch (e) { e = ""; }
   if (typeof b !== "string") b = "";
-  return a + "\n" + b + "\n" + c;
+  if (typeof c !== "string") c = "";
+  if (typeof d !== "string") d = "";
+  if (typeof e !== "string") e = "";
+  return a + "\n" + b + "\n" + c + "\n" + d + "\n" + e;
 }
 
 function avSessionDirty() {
@@ -59089,6 +59263,27 @@ function avSessionDbRemove(db, id) {
 
 /* ---------- record normalisation (garbage in -> null / cleaned record out) ---------- */
 
+/* session tags (R20, additive meta): <= 8 tags, each <= 24 chars, lowercase-trimmed, deduped;
+   garbage in -> [] (never throws) */
+function avSessionTagsNorm(v) {
+  const out = [];
+  try {
+    if (!Array.isArray(v)) return out;
+    for (let i = 0; i < v.length && out.length < AV_SESSION_TAG_MAX; i++) {
+      let t = "";
+      try {
+        t = String(v[i] == null ? "" : v[i]).replace(/[\u0000-\u001f\u007f]/g, "");
+        t = t.replace(/\s+/g, " ").trim().toLowerCase().slice(0, AV_SESSION_TAG_LEN);
+      } catch (e) { t = ""; }
+      if (!t) continue;
+      let dup = false;
+      for (let j = 0; j < out.length; j++) if (out[j] === t) { dup = true; break; }
+      if (!dup) out.push(t);
+    }
+  } catch (e) { return []; }
+  return out;
+}
+
 function avSessionVersionNorm(raw) {
   if (!avSessionObj(raw)) return null;
   if (!avSessionObj(raw.state)) return null;
@@ -59127,6 +59322,7 @@ function avSessionRecordNorm(raw) {
     createdAt: createdAt,
     updatedAt: updatedAt,
     current: avSessionBit(raw.current) === 1,
+    tags: avSessionTagsNorm(raw.tags),
     versions: versions,
   };
 }
@@ -59137,7 +59333,7 @@ function avSessionRecordForStore(rec) {
   try {
     const out = {
       id: rec.id, name: rec.name, createdAt: rec.createdAt, updatedAt: rec.updatedAt,
-      current: rec.current === true, versions: [],
+      current: rec.current === true, tags: avSessionTagsNorm(rec.tags), versions: [],
     };
     for (let i = 0; i < rec.versions.length; i++) {
       const vv = rec.versions[i];
@@ -59233,6 +59429,7 @@ function avSessionHydrate() {
     st.hydratePromise = avSessionHydrateRun().catch(function (e) {
       st.lastError = "hydrate:" + avSessionErrMsg(e);
       st.hydrated = true;
+      try { avSessionAutoSeed(); } catch (e2) { /* seed is best effort */ }
       return st.backend;
     });
     return st.hydratePromise;
@@ -59353,6 +59550,7 @@ async function avSessionHydrateRun() {
   }
   st.hydrated = true;
   avSessionMarkBaseline();
+  avSessionAutoSeed();                  /* the seeding law (R20): choice, else store-count */
   return st.backend;
 }
 
@@ -59509,10 +59707,25 @@ function avSessionInit() {
     const st = avSession;
     if (!st.inited) {
       st.inited = true;
+      avSessionBindVisibility();          /* R20: the hidden flush listener (guarded) */
       avSessionHydrate();                 /* best-effort boot hydrate; idempotent by promise */
     }
     return true;
   } catch (e) { return false; }
+}
+
+/* bind the visibilitychange listener ONCE (guarded: plain node has no document) */
+function avSessionBindVisibility() {
+  const st = avSession;
+  if (st.flushBound) return false;
+  try {
+    if (typeof document !== "undefined" && document && typeof document.addEventListener === "function") {
+      document.addEventListener("visibilitychange", avSessionVisibilityHandler);
+      st.flushBound = true;
+      return true;
+    }
+  } catch (e) { /* no DOM reachable */ }
+  return false;
 }
 
 function avSessionSave(name) {
@@ -59535,7 +59748,7 @@ async function avSessionSaveRun(name) {
   let created = false, prevName = null, prevUpdatedAt = 0, prevLen = 0, prevCurrentId = st.currentId;
   if (!rec) {
     const id = avSessionNextId();
-    rec = { id: id, name: nm || "Session", createdAt: now, updatedAt: now, current: true, versions: [] };
+    rec = { id: id, name: nm || "Session", createdAt: now, updatedAt: now, current: true, tags: [], versions: [] };
     st.sessions[id] = rec;
     st.currentId = id;
     created = true;
@@ -59573,10 +59786,79 @@ async function avSessionSaveRun(name) {
     return bad;
   }
   avSessionMarkBaseline();
+  /* the after-first-save law (R20): while no explicit choice exists, a successful save flips
+     autosave ON; an explicit off outranks it and is never overridden */
+  if (st.autoChoice == null && st.auto.on !== true) {
+    st.auto.on = true;
+    avSessionAutosaveRearm();
+  }
   const receipt = { ok: true, id: rec.id, name: rec.name, version: nextV, savedAt: now, backend: put.backend, volatile: !!put.volatile, versions: rec.versions.length };
   st.lastSave = receipt;
   st.lastError = null;
   return receipt;
+}
+
+/* avSessionSetTags(id, tags) -> Promise<{ok,id,tags,backend,volatile,error}>  set the tags on a
+   session's meta (normalised: <= 8 tags, <= 24 chars each, lowercase-trimmed) and persist them
+   through the existing record write path; a refused durable write rolls the memory change back
+   ("nothing durable -> not saved"). Never throws. */
+function avSessionSetTags(id, tags) {
+  try {
+    avSessionEnsure();
+    return Promise.resolve(avSessionSetTagsRun(id, tags)).catch(function (e) {
+      return { ok: false, id: String(id == null ? "" : id), tags: [], error: avSessionErrMsg(e) };
+    });
+  } catch (e) {
+    return Promise.resolve({ ok: false, id: String(id == null ? "" : id), tags: [], error: avSessionErrMsg(e) });
+  }
+}
+
+async function avSessionSetTagsRun(id, tags) {
+  const st = avSession;
+  await avSessionHydrate();
+  const rec = avSessionFind(id);
+  if (!rec) return { ok: false, id: String(id == null ? "" : id), tags: [], error: "no-session" };
+  const next = avSessionTagsNorm(tags);
+  const prev = Array.isArray(rec.tags) ? rec.tags.slice() : [];
+  rec.tags = next;
+  const put = await avSessionCommitRecord(rec);
+  if (!put || put.ok !== true) {
+    rec.tags = prev;                                    /* the rollback law */
+    st.lastError = (put && put.error) || "tags";
+    return { ok: false, id: rec.id, tags: prev.slice(), backend: (put && put.backend) || st.backend, volatile: !!(put && put.volatile), error: (put && put.error) || "write failed" };
+  }
+  st.lastError = null;
+  return { ok: true, id: rec.id, tags: next.slice(), backend: put.backend, volatile: !!put.volatile };
+}
+
+/* R20 row meta for the session browser: engine kind / pattern bars / take count read off the
+   NEWEST version's state; null when absent (the UI renders the honest "--" fallback). */
+function avSessionRowMeta(rec) {
+  const out = { engine: null, bars: null, takes: null };
+  try {
+    if (!rec || !rec.versions || !rec.versions.length) return out;
+    const state = rec.versions[rec.versions.length - 1].state;
+    if (!avSessionObj(state)) return out;
+    const params = state.params;
+    if (avSessionObj(params)) {
+      const k = params["engine.kind"];
+      if (typeof k === "string" && k) out.engine = k.slice(0, 24);
+    }
+    const sq = state.seq;
+    const pat = avSessionObj(sq) ? sq.pattern : null;
+    if (avSessionObj(pat) && Array.isArray(pat.tracks)) {
+      let maxLen = 0;
+      for (let i = 0; i < pat.tracks.length; i++) {
+        const tr = pat.tracks[i];
+        const n = Math.round(Number(tr ? tr.len : 0));
+        if (isFinite(n) && n > maxLen) maxLen = n;
+      }
+      /* the house law: 16 steps = one bar (avFamilyBars); the longest track is the cycle */
+      if (maxLen > 0) out.bars = Math.max(1, Math.round(maxLen / 16));
+    }
+    if (Array.isArray(state.takesMeta)) out.takes = state.takesMeta.length;
+  } catch (e) { /* absent fields stand */ }
+  return out;
 }
 
 function avSessionList() {
@@ -59588,6 +59870,7 @@ function avSessionList() {
       const rec = st.sessions[ids[i]];
       if (!rec) continue;
       const newest = rec.versions.length ? rec.versions[rec.versions.length - 1] : null;
+      const meta = avSessionRowMeta(rec);
       out.push({
         id: rec.id,
         name: rec.name,
@@ -59595,6 +59878,10 @@ function avSessionList() {
         updatedAt: rec.updatedAt,
         version: newest ? newest.v : 0,
         current: (rec.current === true) || (rec.id === st.currentId),
+        engine: meta.engine,
+        bars: meta.bars,
+        takes: meta.takes,
+        tags: avSessionTagsNorm(rec.tags),
       });
     }
   } catch (e) { /* [] */ }
@@ -59718,14 +60005,67 @@ async function avSessionRestoreRun(id, version) {
   return receipt;
 }
 
-/* ---------- autosave (ONE timer; one __autosave record; dirty-only writes) ---------- */
+/* ---------- autosave (R20: ONE timer; one __autosave record; dirty-only writes; the seeding
+   law; the persisted explicit choice; the visibilitychange hidden flush) ---------- */
+
+/* the EXPLICIT autosave choice: localStorage key `av-sessions-autosave` (JSON {v:1,on});
+   true / false / null (null = no explicit choice yet). Never throws. */
+function avSessionAutoChoiceRead() {
+  try {
+    const ls = avSessionLs();
+    if (!ls) return null;
+    const raw = ls.getItem(AV_SESSION_AUTO_LS);
+    if (raw == null) return null;
+    const s = String(raw).trim();
+    if (s === "1") return true;
+    if (s === "0") return false;
+    let obj = null;
+    try { obj = JSON.parse(s); } catch (e) { obj = null; }
+    if (avSessionObj(obj)) {
+      if (obj.on === true || obj.on === 1 || obj.on === "1") return true;
+      if (obj.on === false || obj.on === 0 || obj.on === "0") return false;
+    }
+  } catch (e) { /* no storage -> no persisted choice */ }
+  return null;
+}
+
+function avSessionAutoChoiceWrite(on) {
+  try {
+    const ls = avSessionLs();
+    if (!ls) return false;
+    ls.setItem(AV_SESSION_AUTO_LS, JSON.stringify({ v: 1, on: on === true }));
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the seeding law (R20): the persisted EXPLICIT choice wins; otherwise autosave seeds ON when
+   the store already holds >= 1 session; a virgin store seeds OFF. Runs once at hydrate end. */
+function avSessionAutoSeed() {
+  const st = avSession;
+  try {
+    if (st.autoChoice == null) st.autoChoice = avSessionAutoChoiceRead();
+    if (st.autoChoice !== null) st.auto.on = (st.autoChoice === true);
+    else {
+      let count = 0;
+      try { count = Object.keys(st.sessions).length; } catch (e) { count = 0; }
+      st.auto.on = count >= 1;
+    }
+    avSessionAutosaveRearm();
+    return st.auto.on === true;
+  } catch (e) { return false; }
+}
 
 function avSessionAutosave(on, ms) {
   try {
     avSessionEnsure();
     const st = avSession;
     let changed = false;
-    if (on !== undefined && on !== null) { st.auto.on = !!on; changed = true; }
+    if (on !== undefined && on !== null) {
+      st.auto.on = !!on;
+      st.autoChoice = !!on;               /* the explicit choice persists across loads */
+      avSessionAutoChoiceWrite(st.autoChoice);
+      changed = true;
+    }
     if (ms !== undefined && ms !== null) {
       const n = Number(ms);
       if (isFinite(n)) st.auto.ms = Math.max(AV_SESSION_AUTOSAVE_MIN_MS, Math.min(AV_SESSION_AUTOSAVE_MAX_MS, Math.round(n)));
@@ -59745,34 +60085,61 @@ function avSessionAutosaveRearm() {
   st.timer = avSessionTimer(avSessionAutosaveTick, st.auto.ms);
 }
 
+/* the dirty-only write shared by the tick and the hidden flush: ONE __autosave record; the
+   fingerprint re-bases ONLY on a landed write (a refused write stays dirty, honest). */
+function avSessionAutosaveWrite() {
+  const st = avSession;
+  const fp = avSessionFingerprint();
+  const dirty = st.touchDirty === true || (st.baseFp != null && fp !== st.baseFp);
+  if (!dirty) return false;
+  const stateObj = avSessionCapture();
+  const rec = { id: AV_SESSION_AUTOSAVE_ID, state: stateObj, savedAt: avSessionNow(), name: stateObj.name };
+  avSessionCommitAutoRec(rec).then(function (r) {
+    if (r && r.ok === true) {
+      st.lastAutosaveAt = rec.savedAt;
+      st.baseFp = fp;
+      st.touchDirty = false;
+      if (st.recovery && st.recovery.available === true) {   /* refresh the pending offer */
+        st.recovery.savedAt = rec.savedAt;
+        st.recovery.name = rec.name;
+        st.recovery.state = rec.state;
+      }
+    } else {
+      st.lastError = "autosave:" + ((r && r.error) || "write failed");   /* stays dirty */
+    }
+  }, function () { st.lastError = "autosave:write failed"; });
+  return true;
+}
+
 function avSessionAutosaveTick() {
   const st = avSession;
   st.timer = null;
   try {
-    if (st.auto.on === true) {
-      const fp = avSessionFingerprint();
-      const dirty = st.touchDirty === true || (st.baseFp != null && fp !== st.baseFp);
-      if (dirty) {
-        const stateObj = avSessionCapture();
-        const rec = { id: AV_SESSION_AUTOSAVE_ID, state: stateObj, savedAt: avSessionNow(), name: stateObj.name };
-        avSessionCommitAutoRec(rec).then(function (r) {
-          if (r && r.ok === true) {
-            st.lastAutosaveAt = rec.savedAt;
-            st.baseFp = fp;
-            st.touchDirty = false;
-            if (st.recovery && st.recovery.available === true) {   /* refresh the pending offer */
-              st.recovery.savedAt = rec.savedAt;
-              st.recovery.name = rec.name;
-              st.recovery.state = rec.state;
-            }
-          } else {
-            st.lastError = "autosave:" + ((r && r.error) || "write failed");   /* stays dirty */
-          }
-        }, function () { st.lastError = "autosave:write failed"; });
-      }
-    }
+    if (st.auto.on === true) avSessionAutosaveWrite();
   } catch (e) { st.lastError = "autosave:" + avSessionErrMsg(e); }
   if (st.auto.on === true) st.timer = avSessionTimer(avSessionAutosaveTick, st.auto.ms);
+}
+
+/* visibilitychange -> hidden flush (R20): while auto is on and the state is dirty, run the same
+   ONE write immediately, then rearm. Reads document.visibilityState per event (rigs stub it).
+   Guarded, silent, never throws outward. */
+function avSessionVisibilityFlush() {
+  const st = avSession;
+  try {
+    if (st.auto.on !== true) return false;
+    const wrote = avSessionAutosaveWrite();
+    if (wrote) avSessionAutosaveRearm();
+    return wrote;
+  } catch (e) { return false; }
+}
+
+function avSessionVisibilityHandler() {
+  try {
+    let vis = "";
+    try { if (typeof document !== "undefined" && document) vis = String(document.visibilityState || ""); } catch (e) { vis = ""; }
+    if (vis !== "hidden") return false;
+    return avSessionVisibilityFlush();
+  } catch (e) { return false; }
 }
 
 /* ---------- state / recovery ---------- */
@@ -59809,7 +60176,7 @@ function avSessionState() {
       current: current,
       dirty: avSessionDirty(),
       lastAutosaveAt: st.lastAutosaveAt,
-      autosave: { on: st.auto.on === true, ms: st.auto.ms },
+      autosave: { on: st.auto.on === true, ms: st.auto.ms, choice: (st.autoChoice === true) ? true : (st.autoChoice === false ? false : null) },
       recovery: hasRec
         ? { available: true, savedAt: rec.savedAt, name: rec.name, at: rec.at }
         : { available: false, savedAt: null, name: null, at: null },
@@ -59822,7 +60189,7 @@ function avSessionState() {
       version: AV_SESSION_VERSION, init: false, inited: false, hydrated: false, backend: null,
       volatile: false, modes: AV_SESSION_MODES.slice(), note: null, notes: [], count: 0,
       current: null, dirty: false, lastAutosaveAt: 0,
-      autosave: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS },
+      autosave: { on: false, ms: AV_SESSION_AUTOSAVE_DEF_MS, choice: null },
       recovery: { available: false, savedAt: null, name: null, at: null },
       lastError: "state", lastSave: null, lastLoad: null,
     };
@@ -59965,6 +60332,8 @@ if (typeof window !== "undefined" && window) {
       dismiss: avSessionDismissRecovery,
       classes: avSessionClasses,
       hydrate: avSessionHydrate,
+      setTags: avSessionSetTags,
+      flush: avSessionVisibilityFlush,
     };
   } catch (e) { /* no window — node harness only */ }
 }
@@ -59974,16 +60343,31 @@ if (typeof window !== "undefined" && window) {
    (sessions · installed packs · sample slots), plus a NEW store-method zip READER and the
    additive restore. This module is the ONE owner of the backup/restore path.
 
+   R20 extension (verify/_r20_wave.md section 5): the packed set grows additively to the
+   av-samples-store library items + the wt store + the code store + the user prefs LS key set
+   (AV_BACKUP_PREFS_KEYS - the 26 user-facing keys, enumerated from source); manifest.json
+   names every entry (the sha256 map + a new additive entries list); the restore side applies
+   what it can and reports named skips (prefs: a key that currently holds a value is KEPT -
+   additive). receipt shape stays additive: restored/skippedBy gain library/wt/code/prefs.
+
    Pins (verify/_s2_wave.md §2.2):
    - avBackupInit() -> boolean                idempotent; no DOM; nothing durable to bind here.
    - avBackupBuild(opts?) -> Promise<{ ok, name, bytes, buffer (ArrayBuffer), manifest, skipped, at }>
      writes `anvil-backup-<YYYYMMDD-HHMMSS>.zip` with avZipBuild (store-method entries only):
-       manifest.json      { v:1, app:'anvil', at (ISO), sha256: { '<entry>': '<hex>' }, counts:{sessions,packs,samples} }
+       manifest.json      { v:1, app:'anvil', at (ISO), sha256: { '<entry>': '<hex>' },
+                            entries: [ ...every content entry name... ],
+                            counts:{sessions,packs,samples,library,wt,code,prefs} }
                           (manifest.json itself carries no self-digest — it is the signature file)
        sessions.json      avSessionExport() payload (ALL sessions incl. versions)
        packs/<id>.json    one per INSTALLED pack (avStoreGet(id) payload — the full record incl. `pack`)
        samples/slot<n>-<name>.wav   one per non-empty sample slot (avWavEncode of {rate, ch1, ch2};
                           name + slot live in the WAV filename; 32f = bit-exact round trip of the float data)
+       library/<id>.json  one per av-samples-store item (R20): {v,id,name,kind,format,ext,size,
+                          at,meta,sha256,source,bytes64 (base64)} - own payload, no LS size cap
+       wt/<id>.json       one per wt-store table (R20): the avWtExportJson text verbatim
+       code/<id>.avmod    one per code-store module (R20): the avCodeExportText text verbatim
+       prefs/<key>.txt    one per PRESENT user prefs LS key (R20; AV_BACKUP_PREFS_KEYS - the
+                          26-key user-facing set): the raw LS value verbatim
        README.txt         what-this-is + the additive-restore hint
      Build opts (all optional): `now` (epoch ms — pins the stamp + manifest.at for harnesses),
      `date` (zip DOS timestamp: Date | number | null; null = avZipBuild's deterministic 1980 epoch).
@@ -59995,15 +60379,21 @@ if (typeof window !== "undefined" && window) {
      structural problem lands in `errors[]` and the entry is withheld, never thrown. ok:false only
      when the container itself is unreadable (bad/truncated/no EOCD, corrupt central directory,
      no CRC helper). `bytes` are zero-copy views into the source buffer — copy before mutating it.
-   - avBackupRestore(bufOrReadResult, mode?) -> Promise<{ ok, error, restored:{sessions,packs,samples},
-     skipped (flat total), skippedBy:{sessions,packs,samples}, errors: [], notes: [], at }>
+   - avBackupRestore(bufOrReadResult, mode?) -> Promise<{ ok, error,
+     restored:{sessions,packs,samples,library,wt,code,prefs},
+     skipped (flat total), skippedBy:{sessions,packs,samples,library,wt,code,prefs},
+     errors: [], notes: [], at }>
      ADDITIVE ONLY — nothing the user currently holds is ever deleted:
        sessions via avSessionImport(payload) (the session module's own id-dedupe law);
        packs via the store's OWN machinery — avStoreHydrate -> avStoreGet (collision: the installed
        copy is kept) -> avStoreRecordNorm -> avStoreCommit (never a re-implemented IDB schema);
        samples via av_sample's import hook avSampleImportFiles (WAVs are handed over as File objects
-       when File exists, else copies of the bytes). `mode` = 'all' (default) | 'sessions' | 'packs'
-       | 'samples'. manifest.sha256 is re-verified per entry: a mismatch withholds the entry +
+       when File exists, else copies of the bytes); R20 adds: library items via avLibAddItem (fresh
+       ids), wt tables via avWtImportJson + avWtLibrarySave, modules via avCodeImportText, prefs
+       via the LS whitelist (only an absent key is written; an existing value is kept + named).
+       `mode` = 'all' (default) | 'sessions' | 'packs'
+       | 'samples' | 'library' | 'wt' | 'code' | 'prefs' (R20 adds the last four). manifest.sha256
+       is re-verified per entry: a mismatch withholds the entry +
        errors[] (malformed digest = unverifiable = withheld). ok:true means the restore ran (fully or
        partially — read errors[]); ok:false = refused before any write (unreadable zip, missing/foreign
        manifest, unsupported version).
@@ -60041,6 +60431,31 @@ const AV_BACKUP_SAMPLE_NAME_RE = /^samples\/slot(\d+)(?:-([\s\S]+))?\.wav$/i;
 const AV_BACKUP_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;     /* same slug law as the pack store */
 const AV_BACKUP_SHA_RE = /^[0-9a-f]{64}$/i;
 const AV_BACKUP_SAFE_RE = /[\/\\:*?"<>|\u0000-\u001f]+/g;
+
+/* ---------- R20 coverage constants (verify/_r20_wave.md section 5) ---------- */
+
+const AV_BACKUP_LIB_DIR = "library/";     /* R20: one JSON entry per av-samples-store item */
+const AV_BACKUP_WT_DIR = "wt/";           /* R20: one .wt.json entry per wt-store table */
+const AV_BACKUP_CODE_DIR = "code/";       /* R20: one .avmod entry per code-store module */
+const AV_BACKUP_PREFS_DIR = "prefs/";     /* R20: one .txt entry per present prefs LS key */
+const AV_BACKUP_ENTRY_CAP = AV_BACKUP_MAX_ENTRIES - 16;   /* build headroom under the reader cap */
+
+/* R20: the user prefs LS key set - every user-facing key the page actually WRITES (the docs
+   count 26; the store-mirror keys are among them by design). av-store-url is read-only
+   (written nowhere) and av_family's radio keys (rbg-last / rbg-meta) belong to another app -
+   both stay out. The whitelist gates the RESTORE side too: a foreign zip can never write an
+   LS key outside this set. */
+const AV_BACKUP_PREFS_KEYS = Object.freeze([
+  "av-master", "av-keys-vol",                     /* the level knobs (app_core / av_tap) */
+  "av-a11y",                                      /* av_a11y.js accessibility prefs */
+  "av-zone", "av-fold", "av-float", "av-layouts", /* chrome: zone, card folds, floats, layouts */
+  "av-rail-w", "av-rail-open", "av-rail-sections",
+  "av-input-mode", "av-piano", "av-keys-pop",     /* keyboard / input mode */
+  "av-midi", "av-midi-cc",                        /* MIDI prefs + learned CC binds */
+  "av-first-run",                                 /* the lessons first-run gate */
+  "av-seq-pattern", "av-seq-chains", "av-seq-song", "av-seq-scenes",   /* the seq LS family */
+  "av-sessions-ls", "av-samples-ls", "av-packs-ls", "av-wt-ls", "av-code-ls", "av-receipts-ls",
+]);
 
 /* ---------- state (the report surface; JSON-safe by construction) ---------- */
 
@@ -60187,6 +60602,72 @@ function avBackupSafeName(s, dflt) {
     if (v.length > 80) v = v.slice(0, 80);
     return v || String(dflt || "sample");
   } catch (e) { return String(dflt || "sample"); }
+}
+
+/* ---------- R20 helpers: the LS reach + base64 (av_lib's own codec when loaded) ---------- */
+
+/* the page localStorage (guarded; absent/blocked -> null) */
+function avBackupLs() {
+  try { if (typeof localStorage !== "undefined" && localStorage) return localStorage; } catch (e) { /* blocked */ }
+  return null;
+}
+
+/* base64 ENCODE of a byte view: avLibB64Enc when av_lib is loaded (its own law), else a local
+   btoa chunker; null = honest refusal (nothing lands without a payload). */
+function avBackupB64Enc(u8) {
+  try {
+    const b0 = avBackupBytes(u8);
+    if (!b0) return null;
+    if (typeof avLibB64Enc === "function") {
+      const s0 = avLibB64Enc(b0);
+      if (typeof s0 === "string" && s0) return s0;
+    }
+  } catch (e) { /* the local encoder below */ }
+  try {
+    const b = avBackupBytes(u8);
+    if (!b) return null;
+    if (typeof btoa === "function") {
+      let s = "";
+      for (let i = 0; i < b.length; i += 0x8000) {
+        s += String.fromCharCode.apply(null, b.subarray(i, Math.min(i + 0x8000, b.length)));
+      }
+      return btoa(s);
+    }
+  } catch (e2) { /* refuse below */ }
+  return null;
+}
+
+/* base64 DECODE -> Uint8Array (avLibB64Dec when av_lib is loaded; else the local decoder);
+   null = the payload is not decodable (honest refusal, never a throw). */
+function avBackupB64Dec(str) {
+  try {
+    if (typeof avLibB64Dec === "function") {
+      const u = avLibB64Dec(str);
+      if (u && typeof u.length === "number" && u.length) return u;
+    }
+  } catch (e) { /* the local decoder below */ }
+  try {
+    const s = String(str == null ? "" : str).replace(/[\r\n\t ]+/g, "");
+    if (!s) return null;
+    const out = [];
+    let buffer = 0;
+    let bits = 0;
+    for (let i = 0; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      if (c === 61) break;                          /* '=' padding ends the stream */
+      let v = -1;
+      if (c >= 65 && c <= 90) v = c - 65;
+      else if (c >= 97 && c <= 122) v = c - 97 + 26;
+      else if (c >= 48 && c <= 57) v = c - 48 + 52;
+      else if (c === 43) v = 62;
+      else if (c === 47) v = 63;
+      else return null;
+      buffer = (buffer << 6) | v;
+      bits += 6;
+      if (bits >= 8) { bits -= 8; out.push((buffer >> bits) & 255); }
+    }
+    return out.length ? Uint8Array.from(out) : null;
+  } catch (e2) { return null; }
 }
 
 /* ---------- zip-reader internals (little-endian; shared-scope avZip* helpers, all guarded) ---------- */
@@ -60451,6 +60932,150 @@ async function avBackupBuildRun(opts, out) {
     }
   }
 
+  /* 3b) R20: the av-samples-store library items - one JSON entry per item (the record
+     fields + the bytes as base64; own payload, because the library's LS payload caps at
+     1.5 MiB and a backup must not). avLibList / avLibGet are the library's own read paths. */
+  const libItems = [];
+  if (typeof avLibList !== "function" || typeof avLibGet !== "function") {
+    avBackupPush(skipped, "library: av_lib.js is not loaded - no library items in this backup");
+  } else {
+    let listR = null;
+    try { listR = await avLibList(); } catch (e) { listR = null; }
+    const list = (listR && listR.ok === true && Array.isArray(listR.items)) ? listR.items : null;
+    if (!list) {
+      avBackupPush(skipped, "library: the item list is unavailable - no library items in this backup");
+    } else {
+      let entryCount = 2 + packItems.length + sampleItems.length;      /* manifest + sessions + ... */
+      for (let i = 0; i < list.length; i++) {
+        const mv = (list[i] && typeof list[i] === "object") ? list[i] : {};
+        const id = (typeof mv.id === "string") ? mv.id : "";
+        if (!id) continue;
+        if (entryCount + 1 > AV_BACKUP_ENTRY_CAP) {
+          avBackupPush(skipped, "library: " + avBackupSafeName(id, "item") + ": kept out (the reader entry cap)");
+          continue;
+        }
+        let g = null;
+        try { g = await avLibGet(id); } catch (e) { g = null; }
+        const rec = (g && g.ok === true && g.item && typeof g.item === "object") ? g.item : null;
+        if (!rec) { avBackupPush(skipped, "library: " + avBackupSafeName(id, "item") + ": record unavailable - skipped"); continue; }
+        const u8 = avBackupBytes(rec.bytes);
+        const b64 = (u8 && u8.length) ? avBackupB64Enc(u8) : null;
+        if (!b64) { avBackupPush(skipped, "library: " + avBackupSafeName(id, "item") + ": bytes could not be encoded - skipped"); continue; }
+        const payload = {
+          v: 1, id: id,
+          name: (typeof mv.name === "string") ? mv.name : id,
+          kind: (typeof mv.kind === "string") ? mv.kind : "sample",
+          format: (typeof mv.format === "string") ? mv.format : "",
+          ext: (typeof mv.ext === "string") ? mv.ext : "",
+          size: u8.length,
+          at: (typeof mv.at === "number") ? mv.at : 0,
+          meta: (mv.meta && typeof mv.meta === "object" && !Array.isArray(mv.meta)) ? mv.meta : null,
+          sha256: (typeof mv.sha256 === "string") ? mv.sha256 : "",
+          source: (mv.source && typeof mv.source === "object" && !Array.isArray(mv.source)) ? mv.source : null,
+          bytes64: b64,
+        };
+        const text = avBackupJson(payload);
+        if (text == null) { avBackupPush(skipped, "library: " + avBackupSafeName(id, "item") + ": payload is not JSON-safe - skipped"); continue; }
+        libItems.push({ name: AV_BACKUP_LIB_DIR + avBackupSafeName(id, "item") + ".json", text: text });
+        entryCount += 1;
+      }
+    }
+  }
+
+  /* 3c) R20: ALL user wt tables - the wt store's own export text, one entry per table */
+  const wtItems = [];
+  if (typeof avWtLibraryList !== "function") {
+    avBackupPush(skipped, "wt: av_wt.js is not loaded - no wt tables in this backup");
+  } else {
+    let wl = null;
+    try { wl = await avWtLibraryList(); } catch (e) { wl = null; }
+    if (!Array.isArray(wl)) {
+      avBackupPush(skipped, "wt: the table list is unavailable - no wt tables in this backup");
+    } else {
+      let entryCount = 2 + packItems.length + sampleItems.length + libItems.length;
+      for (let i = 0; i < wl.length; i++) {
+        const e = (wl[i] && typeof wl[i] === "object") ? wl[i] : {};
+        const id = (typeof e.id === "string") ? e.id : "";
+        if (!id) continue;
+        if (entryCount + 1 > AV_BACKUP_ENTRY_CAP) {
+          avBackupPush(skipped, "wt: " + avBackupSafeName(id, "wt") + ": kept out (the reader entry cap)");
+          continue;
+        }
+        let t = null;
+        try { if (typeof avWtLibraryLoad === "function") t = await avWtLibraryLoad(id); } catch (e2) { t = null; }
+        let json = null;
+        try { if (typeof avWtExportJson === "function") json = avWtExportJson(t); } catch (e3) { json = null; }
+        if (typeof json !== "string" || !json) {
+          avBackupPush(skipped, "wt: " + avBackupSafeName(id, "wt") + ": export unavailable - skipped");
+          continue;
+        }
+        wtItems.push({ name: AV_BACKUP_WT_DIR + avBackupSafeName(id, "wt") + ".json", text: json });
+        entryCount += 1;
+      }
+    }
+  }
+
+  /* 3d) R20: ALL user modules - the code store's own export text (.avmod), one entry each */
+  const codeItems = [];
+  try {
+    if (typeof avCodeStoreLoad === "function") {
+      const p = avCodeStoreLoad();
+      if (p && typeof p.then === "function") await p;
+    }
+  } catch (e) { /* the loaded view is read below */ }
+  if (typeof avCodeList !== "function" || typeof avCodeExportText !== "function") {
+    avBackupPush(skipped, "code: av_code.js is not loaded - no modules in this backup");
+  } else {
+    let list = null;
+    try { const cl = avCodeList(); if (Array.isArray(cl)) list = cl; } catch (e) { list = null; }
+    if (!list) {
+      avBackupPush(skipped, "code: the module list is unavailable - no modules in this backup");
+    } else {
+      let entryCount = 2 + packItems.length + sampleItems.length + libItems.length + wtItems.length;
+      for (let i = 0; i < list.length; i++) {
+        const rec = (list[i] && typeof list[i] === "object") ? list[i] : {};
+        const id = (typeof rec.id === "string") ? rec.id : "";
+        if (!id) continue;
+        if (entryCount + 1 > AV_BACKUP_ENTRY_CAP) {
+          avBackupPush(skipped, "code: " + avBackupSafeName(id, "module") + ": kept out (the reader entry cap)");
+          continue;
+        }
+        let text = null;
+        try { text = avCodeExportText(id); } catch (e2) { text = null; }
+        if (typeof text !== "string" || !text) {
+          avBackupPush(skipped, "code: " + avBackupSafeName(id, "module") + ": export unavailable - skipped");
+          continue;
+        }
+        codeItems.push({ name: AV_BACKUP_CODE_DIR + avBackupSafeName(id, "module") + ".avmod", text: text });
+        entryCount += 1;
+      }
+    }
+  }
+
+  /* 3e) R20: the user prefs LS set - one entry per PRESENT key (the whitelist vocabulary;
+     absent keys carry nothing; raw LS value verbatim as the entry text) */
+  const prefItems = [];
+  const prefsLs = avBackupLs();
+  if (!prefsLs) {
+    avBackupPush(skipped, "prefs: localStorage is unavailable - no preference keys in this backup");
+  } else {
+    let blocked = false;
+    let entryCount = 2 + packItems.length + sampleItems.length + libItems.length + wtItems.length + codeItems.length;
+    for (let i = 0; i < AV_BACKUP_PREFS_KEYS.length; i++) {
+      const key = AV_BACKUP_PREFS_KEYS[i];
+      let raw = null;
+      try { raw = prefsLs.getItem(key); } catch (e) { blocked = true; break; }
+      if (raw == null) continue;
+      if (entryCount + 1 > AV_BACKUP_ENTRY_CAP) {
+        avBackupPush(skipped, "prefs: " + key + ": kept out (the reader entry cap)");
+        continue;
+      }
+      prefItems.push({ name: AV_BACKUP_PREFS_DIR + key + ".txt", text: String(raw) });
+      entryCount += 1;
+    }
+    if (blocked) avBackupPush(skipped, "prefs: localStorage reads are blocked - the preference keys could not be read");
+  }
+
   /* 4) entry payloads (text entries as strings; WAVs as their ArrayBuffers) + digests */
   const data = [];                        /* [{ name, text }] — WAVs handled separately below */
   const sessText = avBackupJson(sessionsPayload);
@@ -60467,16 +61092,25 @@ async function avBackupBuildRun(opts, out) {
     data.push({ name: AV_BACKUP_PACK_DIR + packItems[i].id + ".json", text: t });
   }
   const packsCount = data.length - 1;                    /* entries after sessions.json so far */
-  const counts = { sessions: sessionsCount, packs: packsCount, samples: sampleItems.length };
+  for (let i = 0; i < libItems.length; i++) data.push(libItems[i]);      /* R20 groups in order: */
+  for (let i = 0; i < wtItems.length; i++) data.push(wtItems[i]);        /* library, wt, code,   */
+  for (let i = 0; i < codeItems.length; i++) data.push(codeItems[i]);    /* prefs                */
+  for (let i = 0; i < prefItems.length; i++) data.push(prefItems[i]);
+  const counts = { sessions: sessionsCount, packs: packsCount, samples: sampleItems.length,
+    library: libItems.length, wt: wtItems.length, code: codeItems.length, prefs: prefItems.length };
   let atIso = "";
   try { atIso = new Date(now).toISOString(); } catch (e) { atIso = ""; }
   const readme = "Anvil backup — " + counts.sessions + " session(s), " + counts.packs + " installed pack(s), " +
-    counts.samples + " sample slot(s).\n" +
+    counts.samples + " sample slot(s), " + counts.library + " library item(s), " + counts.wt + " wt table(s), " +
+    counts.code + " module(s), " + counts.prefs + " preference key(s).\n" +
     "Restore: open Anvil → SESSIONS card → RESTORE (backup zip), or call avBackupRestore(buffer) in the console. " +
     "Restore is additive — nothing you currently have is deleted; a session or pack whose id you already hold is left untouched.\n" +
+    "R20 coverage: library items restore through the library's own add path (fresh ids), wt tables and modules " +
+    "through their stores, preference keys only when currently absent (an existing value is kept).\n" +
     "Built " + (atIso || String(now)) + " · app: anvil · schema v1 · sample WAVs are 32-bit float.\n";
 
-  /* digests cover every content entry; manifest.json itself is the signature file (no self-digest) */
+  /* digests cover every content entry; manifest.json itself is the signature file (no self-digest);
+     the additive entries list names every content entry (R20: the manifest names every entry) */
   const shaMap = {};
   let shaNotes = 0;
   if (avBackupSubtle()) {
@@ -60495,11 +61129,17 @@ async function avBackupBuildRun(opts, out) {
   } else {
     avBackupPush(skipped, "sha256: crypto.subtle is unavailable — the manifest carries no digests");
   }
-  const manifest = { v: 1, app: AV_BACKUP_APP, at: atIso, sha256: shaMap, counts: counts };
+  const entryNames = [];
+  for (let i = 0; i < data.length; i++) entryNames.push(data[i].name);
+  for (let i = 0; i < sampleItems.length; i++) {
+    entryNames.push(AV_BACKUP_SAMPLE_DIR + "slot" + sampleItems[i].slot + "-" + sampleItems[i].name + ".wav");
+  }
+  entryNames.push(AV_BACKUP_README);
+  const manifest = { v: 1, app: AV_BACKUP_APP, at: atIso, sha256: shaMap, counts: counts, entries: entryNames };
   const manText = avBackupJson(manifest);
   if (manText == null) { out.ok = false; out.error = "manifest is not JSON-safe — build refused"; return; }
 
-  /* 5) assemble in the pinned layout order: manifest, sessions, packs, samples, README */
+  /* 5) assemble: manifest, sessions, packs, library, wt, code, prefs (all in `data`), samples, README */
   const zipEntries = [{ name: AV_BACKUP_MANIFEST, data: manText }];
   for (let i = 0; i < data.length; i++) zipEntries.push({ name: data[i].name, data: data[i].text });
   for (let i = 0; i < sampleItems.length; i++) {
@@ -60532,15 +61172,18 @@ function avBackupRestore(input, mode) {
   return new Promise(function (resolve) {
     const out = {
       ok: false, error: null,
-      restored: { sessions: 0, packs: 0, samples: 0 },
+      restored: { sessions: 0, packs: 0, samples: 0, library: 0, wt: 0, code: 0, prefs: 0 },
       skipped: 0,                                   /* flat total (the card reads a number) */
-      skippedBy: { sessions: 0, packs: 0, samples: 0 },
+      skippedBy: { sessions: 0, packs: 0, samples: 0, library: 0, wt: 0, code: 0, prefs: 0 },
       errors: [], notes: [], at: 0,
     };
     let done = false;
     const finish = function () {
       if (done) return; done = true;
-      try { out.skipped = out.skippedBy.sessions + out.skippedBy.packs + out.skippedBy.samples; } catch (e) { /* ok */ }
+      try {
+        out.skipped = out.skippedBy.sessions + out.skippedBy.packs + out.skippedBy.samples +
+          out.skippedBy.library + out.skippedBy.wt + out.skippedBy.code + out.skippedBy.prefs;
+      } catch (e) { /* ok */ }
       try { out.at = avBackupNow(); } catch (e) { /* ok */ }
       try { avBackupStore.busy = Math.max(0, avBackupStore.busy - 1); } catch (e) { /* ok */ }
       try {
@@ -60609,9 +61252,11 @@ async function avBackupRestoreRun(input, mode, out) {
     return;
   }
 
-  /* 2) mode ('all' default; a subset selector is allowed, additive either way) */
+  /* 2) mode ('all' default; a subset selector is allowed, additive either way; R20 adds the
+     library / wt / code / prefs selectors) */
   let only = null;
-  if (mode === "sessions" || mode === "packs" || mode === "samples") only = mode;
+  if (mode === "sessions" || mode === "packs" || mode === "samples"
+      || mode === "library" || mode === "wt" || mode === "code" || mode === "prefs") only = mode;
   else if (mode != null && mode !== "all") out.notes.push("mode " + String(mode) + " is unknown — restoring everything");
 
   /* 3) manifest.sha256 re-verification (mismatch/malformed -> the entry is withheld) */
@@ -60810,6 +61455,182 @@ async function avBackupRestoreRun(input, mode, out) {
     }
   }
 
+  /* 6b) R20: library items - through av_lib's OWN add path (fresh ids; the record's bytes are
+     decoded from the entry's own base64 payload; additive keep-both, never an overwrite) */
+  if (!only || only === "library") {
+    const libEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_LIB_DIR.length) !== AV_BACKUP_LIB_DIR) continue;
+      if (nm.slice(-5) === ".json") libEntries.push(read.entries[i]);
+      else {
+        out.skippedBy.library += 1;
+        avBackupPush(out.errors, "library: unrecognized entry " + nm + " - ignored");
+      }
+    }
+    if (libEntries.length) {
+      if (typeof avLibAddItem !== "function") {
+        out.skippedBy.library += libEntries.length;
+        avBackupPush(out.errors, "library: av_lib.js is not loaded - library items not restored (they stay in the zip)");
+      } else {
+        let added = 0;
+        for (let i = 0; i < libEntries.length; i++) {
+          const le = libEntries[i];
+          if (shaBad[le.name]) { out.skippedBy.library += 1; continue; }
+          let pay = null;
+          try { pay = JSON.parse(avBackupUtf8Decode(le.bytes)); } catch (e) { pay = null; }
+          if (!pay || typeof pay !== "object" || Array.isArray(pay)) {
+            out.skippedBy.library += 1;
+            avBackupPush(out.errors, "library: " + le.name + ": payload is not a JSON object - skipped");
+            continue;
+          }
+          const b64 = (typeof pay.bytes64 === "string") ? pay.bytes64 : "";
+          const u8 = b64 ? avBackupB64Dec(b64) : null;
+          if (!u8 || !u8.length) {
+            out.skippedBy.library += 1;
+            avBackupPush(out.errors, "library: " + le.name + ": bytes are undecodable - skipped");
+            continue;
+          }
+          const item = {
+            name: (typeof pay.name === "string") ? pay.name : "",
+            kind: (typeof pay.kind === "string") ? pay.kind : "",
+            format: (typeof pay.format === "string") ? pay.format : "",
+            ext: (typeof pay.ext === "string") ? pay.ext : "",
+            meta: (pay.meta && typeof pay.meta === "object" && !Array.isArray(pay.meta)) ? pay.meta : null,
+            sha256: (typeof pay.sha256 === "string") ? pay.sha256 : "",
+            result: "imported",               /* avLibItemNorm persists only imported items */
+            source: (pay.source && typeof pay.source === "object" && !Array.isArray(pay.source)) ? pay.source : null,
+            bytes: u8,
+          };
+          let r = null;
+          try { r = await avLibAddItem(item, u8); } catch (e) { r = null; }
+          if (r && r.ok === true) { out.restored.library += 1; added += 1; }
+          else {
+            out.skippedBy.library += 1;
+            const why = (r && typeof r.error === "string" && r.error) ? r.error : "unknown";
+            avBackupPush(out.errors, "library: " + le.name + ": the library refused the add (" + why + ")");
+          }
+        }
+        if (added) out.notes.push("library: " + added + " item(s) restored (fresh ids - the library mints them)");
+      }
+    }
+  }
+
+  /* 6c) R20: wt tables - through avWtImportJson + avWtLibrarySave (fresh ids, additive) */
+  if (!only || only === "wt") {
+    const wtEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_WT_DIR.length) === AV_BACKUP_WT_DIR && nm.slice(-5) === ".json") wtEntries.push(read.entries[i]);
+    }
+    if (wtEntries.length) {
+      if (typeof avWtImportJson !== "function" || typeof avWtLibrarySave !== "function") {
+        out.skippedBy.wt += wtEntries.length;
+        avBackupPush(out.errors, "wt: the wt store is not loaded - wt tables not restored (they stay in the zip)");
+      } else {
+        let added = 0;
+        for (let i = 0; i < wtEntries.length; i++) {
+          const we = wtEntries[i];
+          if (shaBad[we.name]) { out.skippedBy.wt += 1; continue; }
+          const text = avBackupUtf8Decode(we.bytes);
+          let t = null;
+          try { t = avWtImportJson(text); } catch (e) { t = null; }
+          if (!t || t.error) {
+            out.skippedBy.wt += 1;
+            avBackupPush(out.errors, "wt: " + we.name + ": " + ((t && t.error) ? String(t.error) : "not a table") + " - skipped");
+            continue;
+          }
+          let s = null;
+          try { s = await avWtLibrarySave(t); } catch (e) { s = null; }
+          if (s && s.ok === true) { out.restored.wt += 1; added += 1; }
+          else {
+            out.skippedBy.wt += 1;
+            const why = (s && typeof s.error === "string" && s.error) ? s.error : "unknown";
+            avBackupPush(out.errors, "wt: " + we.name + ": the wt store refused the save (" + why + ")");
+          }
+        }
+        if (added) out.notes.push("wt: " + added + " table(s) restored (fresh ids - the wt store mints them)");
+      }
+    }
+  }
+
+  /* 6d) R20: modules - through avCodeImportText (the store's own law: an id already loaded
+     refuses honestly, named in errors[]) */
+  if (!only || only === "code") {
+    const codeEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_CODE_DIR.length) === AV_BACKUP_CODE_DIR && nm.slice(-6) === ".avmod") codeEntries.push(read.entries[i]);
+    }
+    if (codeEntries.length) {
+      if (typeof avCodeImportText !== "function") {
+        out.skippedBy.code += codeEntries.length;
+        avBackupPush(out.errors, "code: av_code.js is not loaded - modules not restored (they stay in the zip)");
+      } else {
+        let added = 0;
+        for (let i = 0; i < codeEntries.length; i++) {
+          const ce = codeEntries[i];
+          if (shaBad[ce.name]) { out.skippedBy.code += 1; continue; }
+          const text = avBackupUtf8Decode(ce.bytes);
+          let s = null;
+          try { s = await avCodeImportText(text); } catch (e) { s = null; }
+          if (s && s.ok === true) { out.restored.code += 1; added += 1; }
+          else {
+            out.skippedBy.code += 1;
+            const why = (s && typeof s.error === "string" && s.error) ? s.error : "unknown";
+            avBackupPush(out.errors, "code: " + ce.name + ": the code store refused the import (" + why + ")");
+          }
+        }
+        if (added) out.notes.push("code: " + added + " module(s) restored");
+      }
+    }
+  }
+
+  /* 6e) R20: prefs - the whitelisted LS keys ONLY; a key that currently holds a value KEEPS it
+     (additive: named in notes, counted as skipped); only an absent key is written */
+  if (!only || only === "prefs") {
+    const prefEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_PREFS_DIR.length) === AV_BACKUP_PREFS_DIR && nm.slice(-4) === ".txt") prefEntries.push(read.entries[i]);
+    }
+    if (prefEntries.length) {
+      const ls = avBackupLs();
+      const kept = [];
+      let wrote = 0;
+      for (let i = 0; i < prefEntries.length; i++) {
+        const pe = prefEntries[i];
+        if (shaBad[pe.name]) { out.skippedBy.prefs += 1; continue; }
+        const key = pe.name.slice(AV_BACKUP_PREFS_DIR.length, pe.name.length - 4);
+        if (AV_BACKUP_PREFS_KEYS.indexOf(key) < 0) {
+          out.skippedBy.prefs += 1;
+          avBackupPush(out.errors, "prefs: " + pe.name + ": not a known preference key - skipped");
+          continue;
+        }
+        if (!ls) { out.skippedBy.prefs += 1; continue; }
+        let present = true;
+        try { present = (ls.getItem(key) !== null); } catch (e) { present = true; }
+        if (present) { out.skippedBy.prefs += 1; kept.push(key); continue; }
+        let ok = false;
+        try { ls.setItem(key, avBackupUtf8Decode(pe.bytes)); ok = true; } catch (e) { ok = false; }
+        if (ok) { out.restored.prefs += 1; wrote += 1; }
+        else {
+          out.skippedBy.prefs += 1;
+          avBackupPush(out.errors, "prefs: " + key + ": the write was refused (storage blocked/quota) - skipped");
+        }
+      }
+      if (!ls) {
+        avBackupPush(out.errors, "prefs: localStorage is unavailable - preference keys not restored (they stay in the zip)");
+      } else if (wrote) {
+        out.notes.push("prefs: " + wrote + " key(s) restored");
+      }
+      if (kept.length) {
+        out.notes.push("prefs: " + kept.length + " key(s) kept their current values (additive restore): " +
+          kept.slice(0, 8).join(", ") + (kept.length > 8 ? " ..." : ""));
+      }
+    }
+  }
+
   out.ok = true;
 }
 
@@ -60838,11 +61659,23 @@ function avBackupState() {
       lastBuild: st.lastBuild ? { name: st.lastBuild.name, bytes: st.lastBuild.bytes, at: st.lastBuild.at, counts: st.lastBuild.counts } : null,
       lastRestore: st.lastRestore ? {
         at: st.lastRestore.at, ok: !!st.lastRestore.ok,
-        restored: { sessions: st.lastRestore.restored.sessions, packs: st.lastRestore.restored.packs, samples: st.lastRestore.restored.samples },
+        restored: {
+          sessions: st.lastRestore.restored.sessions, packs: st.lastRestore.restored.packs,
+          samples: st.lastRestore.restored.samples,
+          library: avBackupInt(st.lastRestore.restored.library),
+          wt: avBackupInt(st.lastRestore.restored.wt),
+          code: avBackupInt(st.lastRestore.restored.code),
+          prefs: avBackupInt(st.lastRestore.restored.prefs),
+        },
         skipped: (typeof st.lastRestore.skipped === "number") ? st.lastRestore.skipped : 0,
         skippedBy: st.lastRestore.skippedBy ? {
-          sessions: st.lastRestore.skippedBy.sessions, packs: st.lastRestore.skippedBy.packs, samples: st.lastRestore.skippedBy.samples,
-        } : { sessions: 0, packs: 0, samples: 0 },
+          sessions: st.lastRestore.skippedBy.sessions, packs: st.lastRestore.skippedBy.packs,
+          samples: st.lastRestore.skippedBy.samples,
+          library: avBackupInt(st.lastRestore.skippedBy.library),
+          wt: avBackupInt(st.lastRestore.skippedBy.wt),
+          code: avBackupInt(st.lastRestore.skippedBy.code),
+          prefs: avBackupInt(st.lastRestore.skippedBy.prefs),
+        } : { sessions: 0, packs: 0, samples: 0, library: 0, wt: 0, code: 0, prefs: 0 },
         errorCount: st.lastRestore.errorCount, errors: st.lastRestore.errors.slice(), notes: st.lastRestore.notes.slice(),
       } : null,
       lastError: st.lastError,
@@ -60923,6 +61756,14 @@ if (typeof window !== "undefined") {
    - restore-file reads via file.arrayBuffer() with a FileReader fallback; the input value is
      reset so the same file can be picked again.
 
+   BROWSER V2 (R20): the search + sort controls are CLIENT-SIDE view filters over the rows
+   (never a module call); search matches name + tags (case-insensitive substring); sort values
+   newest | name | updated ("newest" = the module's own order; "name"/"updated" mirror the
+   import manager's comparators). Tags commit through the pinned avSessionSetTags (typeof
+   guarded, quick meta writes outside the module-op gate); the editor is inline per row and
+   Enter/blur commits while Escape cancels. ONE shared rerender serves the list, the filters
+   and the tag editor.
+
    OBSERVABLES: avSessionUiInit() -> bool (false without host, never throws, idempotent,
    dataset marker avSessionUiWired='1') · avSessionUiSync() -> bool (repaint) ·
    avSessionUiClasses() -> string[] (the NEW css classes; the parent styles them) ·
@@ -60932,6 +61773,7 @@ if (typeof window !== "undefined") {
    stamp) · window.__avSessionUiLastRestore = { name, bytes, restored, skipped, errors, at }.
 
    ID INVENTORY (rig + parent rely on these):
+    #av-sessions-search (browser v2 search) | #av-sessions-sort (newest | name | updated)
      #av-sessions-status
      #av-sessions-recovery · #av-sessions-recovery-at · #av-sessions-recover · #av-sessions-dismiss
      #av-sessions-count · #av-sessions-storage
@@ -60941,7 +61783,8 @@ if (typeof window !== "undefined") {
      #av-sessions-progress · #av-sessions-report · #av-sessions-warnings · #av-sessions-foot
    CARD HOOKS: `.av-sessions[data-av-sessions="1"]` · `.av-sessions-session[data-id]` (state
    class `av-sessions-cur`) · `.av-sessions-ver[data-id][data-ver]` ·
-   `[data-act=load|del|restore]`.
+   `[data-act=load|del|restore|tags]` plus `.av-sessions-tags[data-id]` /
+   `.av-sessions-tags-input[data-id]` / `.av-sessions-prev[data-id]` (browser v2 rows).
    ONE writer (child sa-C). Never throws. */
 
 "use strict";
@@ -60954,6 +61797,10 @@ const AV_SESSION_UI_LIST_MAX = 32;                    /* sessions rendered (boun
 const AV_SESSION_UI_VERS_MAX = 16;                    /* versions rendered per session (ring bound) */
 const AV_SESSION_UI_NAME_MAX = 64;
 const AV_SESSION_UI_POLL_MS = 1200;
+const AV_SESSION_UI_TAG_MAX = 8;                      /* tags per session (mirrors the module cap) */
+const AV_SESSION_UI_TAG_LEN = 24;                     /* chars per tag (mirrors the module cap)    */
+const AV_SESSION_UI_SEARCH_MAX = 64;                  /* the search field cap (view filter only)   */
+const AV_SESSION_UI_SORTS = ["newest", "name", "updated"];   /* the pinned sort values (R20)        */
 
 /* UI-local state only — every module fact is read through the pinned av* APIs per paint */
 const avSessionUiState = {
@@ -60975,6 +61822,8 @@ const avSessionUiState = {
   warnings: [], warnKey: "",
   /* paint memos */
   sessKey: "", asKey: "",
+  /* browser v2 (R20): client-side view filters + the tag inline editor + tags-write counter */
+  search: "", sort: "newest", tagEditId: "", tagDraft: "", lastRows: 0, tagsBusy: 0,
   /* poll signature sentinel so the first poll always syncs */
   pollSig: "\u0000",
 };
@@ -61143,6 +61992,81 @@ function avSessionUiCountBits(r) {
   return bits;
 }
 
+/* ---------- browser v2 helpers (pure; R20) ---------- */
+
+/* tags normalizer (mirrors the module law: max 8 tags, each max 24 chars, lowercase-trimmed,
+   deduped); array in -> clean array out (never throws) */
+function avSessionUiTagsNorm(v) {
+  const out = [];
+  try {
+    if (!Array.isArray(v)) return out;
+    for (let i = 0; i < v.length && out.length < AV_SESSION_UI_TAG_MAX; i++) {
+      let t = "";
+      try {
+        t = String(v[i] == null ? "" : v[i]).replace(/[\u0000-\u001f\u007f]/g, "");
+        t = t.replace(/\s+/g, " ").trim().toLowerCase().slice(0, AV_SESSION_UI_TAG_LEN);
+      } catch (e) { t = ""; }
+      if (!t) continue;
+      let dup = false;
+      for (let j = 0; j < out.length; j++) if (out[j] === t) { dup = true; break; }
+      if (!dup) out.push(t);
+    }
+  } catch (e) { return []; }
+  return out;
+}
+
+/* editor input -> tags: comma or semicolon separated, then the same normalizer */
+function avSessionUiTagsParse(v) {
+  try {
+    if (Array.isArray(v)) return avSessionUiTagsNorm(v);
+    return avSessionUiTagsNorm(String(v == null ? "" : v).split(/[,;]/));
+  } catch (e) { return []; }
+}
+
+/* the import manager's name comparator, mirrored (lowercase compare, id tiebreak) */
+function avSessionUiByName(a, b) {
+  const an = String((a && a.name) || "").toLowerCase(), bn = String((b && b.name) || "").toLowerCase();
+  if (an < bn) return -1;
+  if (an > bn) return 1;
+  const ai = String((a && a.id) || ""), bi = String((b && b.id) || "");
+  return ai < bi ? -1 : (ai > bi ? 1 : 0);
+}
+
+/* the visible rows: search (name + tags, case-insensitive substring) + sort over the module's
+   list; "newest" = the module's own order (the current order; never re-sorted). A filter or
+   sort failure falls back to the module order. Never throws. */
+function avSessionUiViewRows(list) {
+  const s = avSessionUiState;
+  const out = [];
+  try {
+    const src = Array.isArray(list) ? list : [];
+    const q = String(s.search || "").toLowerCase();
+    for (let i = 0; i < src.length; i++) {
+      const r = src[i];
+      if (!r || typeof r !== "object") continue;
+      if (q) {
+        let hit = String(r.name || "").toLowerCase().indexOf(q) >= 0;
+        if (!hit) {
+          const tags = Array.isArray(r.tags) ? r.tags : [];
+          for (let j = 0; j < tags.length; j++) {
+            if (String(tags[j] || "").toLowerCase().indexOf(q) >= 0) { hit = true; break; }
+          }
+        }
+        if (!hit) continue;
+      }
+      out.push(r);
+    }
+  } catch (e) { return []; }
+  try {
+    if (s.sort === "name") out.sort(avSessionUiByName);
+    else if (s.sort === "updated") out.sort(function (a, b) {
+      const d = avSessionUiNum(b.updatedAt, 0) - avSessionUiNum(a.updatedAt, 0);
+      return d !== 0 ? d : avSessionUiByName(a, b);
+    });
+  } catch (e) { /* the module order stands */ }
+  return out;
+}
+
 /* ---------- guarded DOM access (no throw, no noise) ---------- */
 
 function avSessionUiHost() {
@@ -61294,6 +62218,46 @@ function avSessionUiVerRowHTML(id, ver, busy) {
     "</div>";
 }
 
+/* the R20 tags line: the stored tags + the inline editor (Enter/blur commits, Esc cancels) */
+function avSessionUiTagsRowHTML(view, s) {
+  const idEsc = avSessionUiEsc(view.id);
+  const editing = !!(s && s.tagEditId === view.id);
+  let html = '<div class="av-sessions-tags" data-id="' + idEsc + '">';
+  if (editing) {
+    html += '<input type="text" class="av-sessions-tags-input" data-id="' + idEsc + '" value="' + avSessionUiEsc((s && s.tagDraft) || "") + '" spellcheck="false" autocomplete="off" maxlength="220" placeholder="tag, tag \u2014 Enter saves, Esc cancels" aria-label="Session tags, comma separated">';
+  } else {
+    const tags = Array.isArray(view.tags) ? view.tags : [];
+    let inner = "";
+    for (let i = 0; i < tags.length; i++) {
+      inner += (i ? '<span class="av-sessions-tags-sep"> \u00b7 </span>' : "") + '<span class="av-sessions-tag">' + avSessionUiEsc(tags[i]) + "</span>";
+    }
+    html += '<span class="av-sessions-tags-list' + (tags.length ? "" : " av-sessions-tags-none") + '">' + (inner || "--") + "</span>";
+    html += '<button type="button" class="av-btn mini av-sessions-btn av-sessions-tags-btn" data-act="tags" data-id="' + idEsc + '" title="Edit tags (comma separated, up to 8, 24 chars each)">TAGS</button>';
+  }
+  html += "</div>";
+  return html;
+}
+
+/* the R20 preview line: engine kind / pattern bars / take count / saved + updated stamps;
+   honest "--" when a field is absent */
+function avSessionUiPrevRowHTML(view) {
+  const idEsc = avSessionUiEsc(view.id);
+  const eng = (typeof view.engine === "string" && view.engine) ? avSessionUiClean(view.engine, 24) : "--";
+  const barsN = (typeof view.bars === "number" && isFinite(view.bars)) ? view.bars : null;
+  const bars = (barsN != null) ? (Math.round(barsN) + (Math.round(barsN) === 1 ? " bar" : " bars")) : "--";
+  const takesN = (typeof view.takes === "number" && isFinite(view.takes)) ? view.takes : null;
+  const takes = (takesN != null) ? (Math.round(takesN) + (Math.round(takesN) === 1 ? " take" : " takes")) : "--";
+  const saved = view.atText ? ("saved " + view.atText) : "saved --";
+  const upd = view.updText ? ("updated " + view.updText) : "updated --";
+  const parts = [["eng", eng], ["bars", bars], ["takes", takes], ["saved", saved], ["upd", upd]];
+  let html = '<div class="av-sessions-prev" data-id="' + idEsc + '">';
+  for (let i = 0; i < parts.length; i++) {
+    html += '<span class="av-sessions-prev-part av-sessions-prev-' + parts[i][0] + '">' + avSessionUiEsc(parts[i][1]) + "</span>";
+  }
+  html += "</div>";
+  return html;
+}
+
 function avSessionUiSessionRowHTML(view, opBusy) {
   const idEsc = avSessionUiEsc(view.id);
   const loadBusy = !!(opBusy && opBusy.kind === "load" && opBusy.id === view.id);
@@ -61307,7 +62271,9 @@ function avSessionUiSessionRowHTML(view, opBusy) {
     ' title="Load this session\u2019s newest version \u2014 it replaces the working state">' + (loadBusy ? "\u2026" : "LOAD") + "</button>" +
     '<button type="button" class="av-btn mini av-sessions-btn av-sessions-session-del" data-act="del" data-id="' + idEsc + '"' + (delBusy ? " disabled" : "") +
     ' title="Delete this session (every version)">\u2715</button>' +
-    "</div>";
+    "</div>" +
+    avSessionUiTagsRowHTML(view, avSessionUiState) +
+    avSessionUiPrevRowHTML(view);
   if (view.vers && view.vers.length) {
     html += '<div class="av-sessions-vers" data-id="' + idEsc + '">';
     for (let i = 0; i < view.vers.length; i++) {
@@ -61340,6 +62306,12 @@ function avSessionUiBodyHTML() {
     '<div class="av-sessions-row">' +
     '<input type="text" class="av-sessions-name" id="av-sessions-name" spellcheck="false" autocomplete="off" maxlength="64" placeholder="session name" aria-label="Session name">' +
     '<button type="button" class="av-btn mini av-sessions-btn av-sessions-save" id="av-sessions-save" title="Save the current working state (new session, or a new version of the current one)">SAVE</button>' +
+    "</div>" +
+    '<div class="av-sessions-tools">' +
+    '<input type="search" class="av-sessions-search" id="av-sessions-search" spellcheck="false" autocomplete="off" maxlength="64" placeholder="search name or tags\u2026" aria-label="Search sessions by name or tag">' +
+    '<select class="av-select av-sessions-sort" id="av-sessions-sort" aria-label="Sort the sessions list">' +
+    '<option value="newest" selected>newest</option><option value="name">name</option><option value="updated">updated</option>' +
+    "</select>" +
     "</div>" +
     '<div class="av-sessions-list" id="av-sessions-list"></div>' +
     '<p class="av-sessions-none av-note av-dim" id="av-sessions-none">No sessions yet \u2014 press SAVE to keep the current working state.</p>' +
@@ -61576,11 +62548,14 @@ function avSessionUiAutosaveSet(on, ms) {
       avSessionUiSync();
       return false;
     }
-    const wantOn = !!on;
+    /* on === null: an interval-only change -- it must NOT become an explicit on/off choice
+       (the module records a choice only when `on` is passed; R20) */
+    const touchOn = !(on === null || on === undefined);
+    const wantOn = touchOn ? !!on : s.autosaveOn;
     const wantMs = avSessionUiInt(ms, 5000, 600000, s.autosaveMs);
     let refused = false;
     let r = null;
-    try { r = avSessionAutosave(wantOn, wantMs); } catch (e) { refused = true; r = null; }
+    try { r = touchOn ? avSessionAutosave(wantOn, wantMs) : avSessionAutosave(undefined, wantMs); } catch (e) { refused = true; r = null; }
     if (!refused && r && typeof r === "object") {
       const onF = avSessionUiFlagFrom(r, ["on"]);
       s.autosaveOn = (onF !== null) ? onF : wantOn;
@@ -61618,7 +62593,7 @@ function avSessionUiAutosaveMsChange(el) {
   try {
     const secs = avSessionUiInt(el ? el.value : null, AV_SESSION_UI_AS_OPTS[0], AV_SESSION_UI_AS_OPTS[AV_SESSION_UI_AS_OPTS.length - 1], null);
     if (secs == null) return false;
-    const ok = avSessionUiAutosaveSet(s.autosaveOn, secs * 1000);
+    const ok = avSessionUiAutosaveSet(null, secs * 1000);   /* interval only -- not a choice */
     if (ok) {
       s.lastMsg = "autosave interval set \u2014 every " + secs + " s" + (s.autosaveOn ? "" : " (autosave is off)");
       s.lastMsgKind = "msg";
@@ -61935,6 +62910,149 @@ function avSessionUiDismiss() {
   } catch (e) { return false; }
 }
 
+/* ---------- browser v2 actions (R20: search / sort / tags) ---------- */
+
+function avSessionUiSearchSet(v) {
+  const s = avSessionUiState;
+  try {
+    const t = String(v == null ? "" : v).slice(0, AV_SESSION_UI_SEARCH_MAX);
+    if (t === s.search) return false;
+    s.search = t;
+    avSessionUiSync();                    /* the ONE shared rerender */
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiSortSet(v) {
+  const s = avSessionUiState;
+  try {
+    const raw = String(v == null ? "" : v);
+    let t = "newest";
+    for (let i = 0; i < AV_SESSION_UI_SORTS.length; i++) if (AV_SESSION_UI_SORTS[i] === raw) t = raw;
+    if (t === s.sort) return false;
+    s.sort = t;
+    avSessionUiSync();                    /* the ONE shared rerender */
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the row's current tags from the module list (client truth for the compare step); null when
+   the row is absent */
+function avSessionUiTagsOf(id) {
+  try {
+    const list = avSessionUiListRead();
+    for (let i = 0; i < list.length; i++) {
+      const r = list[i];
+      if (r && typeof r === "object" && avSessionUiStrField(r, ["id"]) === id) return avSessionUiTagsNorm(r.tags);
+    }
+  } catch (e) { /* absent */ }
+  return null;
+}
+
+function avSessionUiTagsFocus(id) {
+  try {
+    const host = avSessionUiHost();
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    const nodes = host.querySelectorAll(".av-sessions-tags-input");
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      if (n && typeof n.getAttribute === "function" && String(n.getAttribute("data-id") || "") === id && typeof n.focus === "function") {
+        n.focus();
+        return true;
+      }
+    }
+  } catch (e) { /* focus is a nicety */ }
+  return false;
+}
+
+function avSessionUiTagsOpen(id) {
+  const s = avSessionUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    if (avSessionUiBusy()) return false;
+    const cur = avSessionUiTagsOf(id);
+    if (cur === null) return false;             /* the row is gone -- never invent one */
+    s.tagEditId = id;
+    s.tagDraft = cur.join(", ");
+    avSessionUiSync();
+    avSessionUiTagsFocus(id);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiTagsCancel() {
+  const s = avSessionUiState;
+  try {
+    if (!s.tagEditId) return false;
+    s.tagEditId = "";
+    s.tagDraft = "";
+    avSessionUiSync();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* commit the open editor: unchanged -> just close; changed -> avSessionSetTags */
+function avSessionUiTagsCommit(input) {
+  const s = avSessionUiState;
+  try {
+    const id = s.tagEditId;
+    if (!id) return false;
+    let value = s.tagDraft;
+    if (input && typeof input.value === "string") value = input.value;
+    const next = avSessionUiTagsParse(value);
+    const cur = avSessionUiTagsOf(id) || [];
+    s.tagEditId = "";
+    s.tagDraft = "";
+    if (next.join("\u0001") === cur.join("\u0001")) {   /* nothing changed: just close */
+      avSessionUiSync();
+      return true;
+    }
+    return avSessionUiTagsSave(id, next);
+  } catch (e) { return false; }
+}
+
+/* the module call: avSessionSetTags(id, tags) through the pinned name (typeof-guarded); tag
+   commits are quick meta writes -- they never take the module-op gate */
+function avSessionUiTagsSave(id, list) {
+  const s = avSessionUiState;
+  try {
+    if (typeof id !== "string" || !id) return false;
+    if (typeof avSessionSetTags !== "function") {
+      avSessionUiMissingNote("avSessionSetTags", "tag editing is unavailable");
+      s.lastMsg = "this build cannot save tags (avSessionSetTags is missing)";
+      s.lastMsgKind = "err";
+      avSessionUiSync();
+      return false;
+    }
+    const next = avSessionUiTagsParse(list);
+    s.tagsBusy = (s.tagsBusy || 0) + 1;
+    s.lastMsg = "saving tags\u2026";
+    s.lastMsgKind = "msg";
+    avSessionUiSync();
+    let p = null;
+    try { p = avSessionSetTags(id, next); } catch (e) { p = { ok: false, error: String((e && e.message) || e || "tags failed") }; }
+    avSessionUiSettle(p, function (r) { avSessionUiTagsSettle(id, next, r); });
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSessionUiTagsSettle(id, want, r) {
+  const s = avSessionUiState;
+  s.tagsBusy = Math.max(0, (s.tagsBusy || 0) - 1);
+  if (avSessionUiOK(r) === false) {
+    const why = (r && typeof r === "object" && r.error) ? avSessionUiErrText(r.error) : "refused";
+    s.lastMsg = "the tags were not saved \u2014 " + why;
+    s.lastMsgKind = "err";
+    avSessionUiWarn("tags.fail", "the tags were not saved \u2014 " + why);
+  } else {
+    const got = (r && typeof r === "object" && Array.isArray(r.tags)) ? avSessionUiTagsNorm(r.tags) : (Array.isArray(want) ? want : []);
+    s.lastMsg = "tags saved" + (got.length ? " \u2014 " + avSessionUiClean(got.join(" \u00b7 "), 120) : " (cleared)");
+    s.lastMsgKind = "msg";
+    avSessionUiWarnDropKey("tags.fail");
+  }
+  avSessionUiSync();
+}
+
 /* ---------- paint ---------- */
 
 function avSessionUiIdleText() {
@@ -61960,6 +63078,7 @@ function avSessionUiStatusText() {
   if (s.backupBusy) return { text: "building the backup zip\u2026", kind: "msg" };
   if (s.restoreFileBusy) return { text: "restoring from file\u2026", kind: "msg" };
   if (s.recovering) return { text: "recovering the autosaved snapshot\u2026", kind: "msg" };
+  if (s.tagsBusy > 0) return { text: "saving tags\u2026", kind: "msg" };
   if (s.lastMsg) return { text: s.lastMsg, kind: (s.lastMsgKind === "err") ? "err" : "msg" };
   return { text: avSessionUiIdleText(), kind: "msg" };
 }
@@ -62058,17 +63177,33 @@ function avSessionUiPaintList(host) {
     const box = host.querySelector("#av-sessions-list");
     const none = host.querySelector("#av-sessions-none");
     const list = avSessionUiListRead();
+    let rawN = 0;
+    for (let i = 0; i < list.length; i++) {
+      const r0 = list[i];
+      if (r0 && typeof r0 === "object" && avSessionUiStrField(r0, ["id"])) rawN += 1;
+    }
+    const rows = avSessionUiViewRows(list);
+    if (s.tagEditId) {                    /* the edited row vanished (or was filtered out) */
+      let alive = false;
+      for (let i = 0; i < rows.length; i++) if (avSessionUiStrField(rows[i], ["id"]) === s.tagEditId) { alive = true; break; }
+      if (!alive) { s.tagEditId = ""; s.tagDraft = ""; }
+    }
     const views = [];
-    let key = "op:" + (s.opBusy ? s.opBusy.kind + ":" + s.opBusy.id + ":" + (s.opBusy.ver == null ? "" : s.opBusy.ver) : "") + "|";
-    for (let i = 0; i < list.length && views.length < AV_SESSION_UI_LIST_MAX; i++) {
-      const r = list[i];
-      if (!r || typeof r !== "object") continue;
+    let key = "op:" + (s.opBusy ? s.opBusy.kind + ":" + s.opBusy.id + ":" + (s.opBusy.ver == null ? "" : s.opBusy.ver) : "") +
+      "|q:" + s.search + "|so:" + s.sort + "|ed:" + s.tagEditId + "|";
+    for (let i = 0; i < rows.length && views.length < AV_SESSION_UI_LIST_MAX; i++) {
+      const r = rows[i];
       const id = avSessionUiStrField(r, ["id"]);
       if (!id) continue;
       const name = avSessionUiClean(avSessionUiStrField(r, ["name"]) || "untitled", 48);
       const atText = avSessionUiWhen(r.savedAt != null ? r.savedAt : r.updatedAt);
+      const updText = avSessionUiWhen(r.updatedAt);
       const v = Math.max(1, Math.round(avSessionUiNum(r.version, 1)));
       const cur = r.current === true;
+      const tags = avSessionUiTagsNorm(r.tags);
+      const engine = (typeof r.engine === "string" && r.engine) ? r.engine : null;
+      const bars = (typeof r.bars === "number" && isFinite(r.bars)) ? r.bars : null;
+      const takes = (typeof r.takes === "number" && isFinite(r.takes)) ? r.takes : null;
       const vers = [];
       if (typeof avSessionVersions === "function") {
         let raw = null;
@@ -62085,19 +63220,27 @@ function avSessionUiPaintList(host) {
           }
         }
       }
-      const view = { id: id, name: name, atText: atText, v: v, cur: cur, vers: vers };
+      const view = { id: id, name: name, atText: atText, updText: updText, v: v, cur: cur, tags: tags, engine: engine, bars: bars, takes: takes, vers: vers };
       views.push(view);
-      key += id + "|" + name + "|" + atText + "|" + v + "|" + (cur ? 1 : 0);
+      key += id + "|" + name + "|" + atText + "|" + updText + "|" + v + "|" + (cur ? 1 : 0) + "|" + (engine || "") + "|" + (bars == null ? "" : bars) + "|" + (takes == null ? "" : takes) + "|" + tags.join(",") + "|";
       for (let j = 0; j < vers.length; j++) key += ">v" + vers[j].n + "@" + vers[j].atText + "#" + vers[j].bytesText;
       key += "||";
     }
+    s.lastRows = views.length;
     if (box && key !== s.sessKey) {
       s.sessKey = key;
       let html = "";
       for (let i = 0; i < views.length; i++) html += avSessionUiSessionRowHTML(views[i], s.opBusy);
       box.innerHTML = html;
     }
-    if (none) none.hidden = views.length > 0;
+    if (none) {
+      none.hidden = views.length > 0;
+      const searching = String(s.search || "") !== "";
+      const txt = (views.length === 0 && rawN > 0 && searching)
+        ? "no sessions match \u2014 clear the search"
+        : "No sessions yet \u2014 press SAVE to keep the current working state.";
+      if (none.textContent !== txt) none.textContent = txt;
+    }
     return true;
   } catch (e) { return false; }
 }
@@ -62213,6 +63356,18 @@ function avSessionUiPaintWarnings(host) {
   } catch (e) { return false; }
 }
 
+/* the browser v2 controls: search + sort (write-on-change only; never clobber a focused field) */
+function avSessionUiPaintTools(host) {
+  const s = avSessionUiState;
+  try {
+    const inp = host.querySelector("#av-sessions-search");
+    if (inp) avSessionUiSetValue(inp, s.search);
+    const sel = host.querySelector("#av-sessions-sort");
+    if (sel) avSessionUiSetValue(sel, s.sort);
+    return true;
+  } catch (e) { return false; }
+}
+
 /* full repaint: mirrors first (guarded), then every control (write-on-change only) */
 function avSessionUiSync() {
   const host = avSessionUiHost();
@@ -62230,6 +63385,7 @@ function avSessionUiSync() {
     avSessionUiStateSync();
     avSessionUiStorageNote();
     avSessionUiPaintName(host);
+    avSessionUiPaintTools(host);
     avSessionUiPaintSave(host);
     avSessionUiPaintStatus(host);
     avSessionUiPaintRecovery(host);
@@ -62254,7 +63410,7 @@ function avSessionUiListSig() {
     let out = "";
     for (let i = 0; i < l.length && i < AV_SESSION_UI_LIST_MAX; i++) {
       const r = l[i] || {};
-      out += String(r.id) + ":" + String(r.name) + ":" + String(r.version) + ":" + (r.current === true ? 1 : 0) + ":" + String(r.updatedAt) + "|";
+      out += String(r.id) + ":" + String(r.name) + ":" + String(r.version) + ":" + (r.current === true ? 1 : 0) + ":" + String(r.updatedAt) + ":" + (Array.isArray(r.tags) ? r.tags.join(",") : "") + "|";
     }
     return out;
   } catch (e) { return ""; }
@@ -62327,6 +63483,7 @@ function avSessionUiClick(e) {
       if (!id) return;
       if (what === "load") { avSessionUiLoad(id); return; }
       if (what === "del") { avSessionUiDelete(id); return; }
+      if (what === "tags") { avSessionUiTagsOpen(id); return; }
       if (what === "restore") {
         const ver = String(act.getAttribute("data-ver") || "");
         avSessionUiRestore(id, ver);
@@ -62342,6 +63499,48 @@ function avSessionUiChange(e) {
     if (!t) return;
     if (t.closest("#av-sessions-autosave-ms")) { avSessionUiAutosaveMsChange(t); return; }
     if (t.closest("#av-sessions-restore-file")) { avSessionUiFileChange(t); return; }
+    if (t.closest("#av-sessions-sort")) { avSessionUiSortSet(t.value); return; }
+    if (t.closest(".av-sessions-tags-input")) { avSessionUiTagsCommit(t); return; }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+/* delegated input events: the search field (per keystroke) + the tags draft mirror */
+function avSessionUiInput(e) {
+  const s = avSessionUiState;
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest("#av-sessions-search")) { avSessionUiSearchSet(t.value); return; }
+    if (t.closest(".av-sessions-tags-input")) { if (s.tagEditId) s.tagDraft = String(t.value == null ? "" : t.value); return; }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+/* delegated keydown: Enter commits the tags draft, Escape cancels it */
+function avSessionUiKeydown(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (!t.closest(".av-sessions-tags-input")) return;
+    const key = String((e && e.key) || "");
+    if (key === "Enter") {
+      try { if (e && typeof e.preventDefault === "function") e.preventDefault(); } catch (x) { /* ok */ }
+      avSessionUiTagsCommit(t);
+      return;
+    }
+    if (key === "Escape") {
+      try { if (e && typeof e.preventDefault === "function") e.preventDefault(); } catch (x) { /* ok */ }
+      avSessionUiTagsCancel();
+      return;
+    }
+  } catch (err) { /* a listener never throws outward */ }
+}
+
+/* delegated focusout: leaving the tags editor commits it (unchanged drafts just close) */
+function avSessionUiFocusOut(e) {
+  try {
+    const t = (e && e.target && typeof e.target.closest === "function") ? e.target : null;
+    if (!t) return;
+    if (t.closest(".av-sessions-tags-input")) avSessionUiTagsCommit(t);
   } catch (err) { /* a listener never throws outward */ }
 }
 
@@ -62352,6 +63551,9 @@ function avSessionUiWire(host) {
     if (host.dataset) host.dataset.avSessionUiWired = "1";
     host.addEventListener("click", avSessionUiClick);
     host.addEventListener("change", avSessionUiChange);
+    host.addEventListener("input", avSessionUiInput);
+    host.addEventListener("keydown", avSessionUiKeydown);
+    host.addEventListener("focusout", avSessionUiFocusOut);
     return true;
   } catch (e) { return false; }
 }
@@ -62413,7 +63615,9 @@ function avSessionUiSnap() {
       backup: !!s.backupBusy,
       restoreFile: !!s.restoreFileBusy,
       recovering: !!s.recovering,
+      tags: s.tagsBusy > 0,
     },
+    view: { search: s.search, sort: s.sort, editing: s.tagEditId || null, rows: s.lastRows },
     status: s.lastMsg, statusKind: s.lastMsgKind,
     warnings: s.warnings.map(function (w) { return w.text; }),
     classes: avSessionUiClasses(),
@@ -62443,6 +63647,11 @@ function avSessionUiClasses() {
     "av-sessions-progress", "av-sessions-report",
     "av-sessions-warnings", "av-sessions-warn-head", "av-sessions-warn-item",
     "av-sessions-foot",
+    "av-sessions-tools", "av-sessions-search", "av-sessions-sort",
+    "av-sessions-tags", "av-sessions-tags-list", "av-sessions-tags-none", "av-sessions-tag",
+    "av-sessions-tags-sep", "av-sessions-tags-input", "av-sessions-tags-btn",
+    "av-sessions-prev", "av-sessions-prev-part", "av-sessions-prev-eng", "av-sessions-prev-bars",
+    "av-sessions-prev-takes", "av-sessions-prev-saved", "av-sessions-prev-upd",
   ];
 }
 
@@ -62465,6 +63674,7 @@ if (typeof window !== "undefined") {
       recover: function () { return avSessionUiRecover(); },
       dismiss: function () { return avSessionUiDismiss(); },
       autosave: function (on, ms) { return avSessionUiAutosaveSet(on, ms); },
+      setTags: function (id, tags) { return avSessionUiTagsSave(id, tags); },
     };
   } catch (e) { /* no window — nothing to publish */ }
 }
@@ -71900,6 +73110,10 @@ if (typeof window !== "undefined") {
    I/O core — save/open of full session projects through a File System Access seam with an anchor /
    download fallback, plus direct sample import from disk.
 
+   R20 (verify/_r20_wave.md section 4, extended ADDITIVELY): the av-projects-store IDB v1 keeps
+   recent projects + the current save target; a plain Save reuses the stored handle, Save As
+   always picks, opens upsert recents. Boot templates stay deferred (recorded in the report).
+
    THE PIECES:
      avProjBuild  the envelope — compact JSON text of { magic:"anvl", v:1, app:"anvil",
                   kind:"project", at:<ISO>, name, state:<avSessionCapture() output verbatim> }
@@ -71915,24 +73129,52 @@ if (typeof window !== "undefined") {
                   re-implemented here.
      avProjImportSamples  FSA multi-open (audio types) -> avSampleImportFiles(files); fallback =
                   ONE hidden <input type="file" multiple accept="audio/*">, appended once, reused.
+     store        av-projects-store v1 (R20 section 4): store `recents` (keyPath "id"; record
+                  {id, name, at, size, handle|null, via}; cap 8, oldest rotated out) + store
+                  `state` (keyPath "key"; the ONE `current` record {handle, name, at} behind
+                  Save-reuse). Handles are structured-cloneable (the av_sources_store precedent);
+                  a handle that cannot be structured-cloned persists as null and the record says
+                  so. A record that never reaches the DB is session-only and says so.
+     save reuse   a plain avProjSave reuses the stored current handle: queryPermission ->
+                  requestPermission -> write straight through (NO picker); denied/absent -> the
+                  picker. avProjSave({ saveAs: true }) / avProjSaveAs always picks and becomes
+                  the new current. Save success upserts a recent (dedupe by name).
+     recents      avProjRecents() -> Promise<{ok, count, items:[{id, name, at, size, via,
+                  handle, note}]}> (newest first). avProjOpenRecent(id) -> Promise<receipt>:
+                  resolve -> permission regrant -> read -> the SAME open/apply path; refusals
+                  stay honest (no stored handle / denied / unreadable). avProjForgetRecent(id)
+                  -> Promise<{ok, id, name, removed}> (the file on disk is never touched).
 
    PUBLIC SURFACE (classic-script globals, ONE namespace avProj* / AV_PROJ_*):
      avProjInit() -> bool               idempotent; no DOM; nothing to bind
      avProjSetFs(fs|null) -> bool       injection seam { showOpenFilePicker, showSaveFilePicker };
                                         resolved per call; window FSA is the default. An injected
-                                        fs is NEVER merged with window — a fake records every call.
+                                        fs is NEVER merged with window - a fake records every call.
      avProjBuild(state?, meta?) -> {ok, error?, name, text}   pure; deterministic bytes
      avProjParse(text) -> {ok, error?, project}               pure; magic/v/kind/state validation
      avProjSave(opts?) -> Promise<receipt>   { ok, error?, name, bytes, via:"fsa"|"download",
-                                               warnings[] } — opts: name, at, state (test seam)
+                                               warnings[] } - opts: name, at, state (test seam),
+                                               saveAs (always the picker; becomes the new current).
+                                               A plain Save reuses the stored current handle
+                                               (queryPermission -> requestPermission); only a
+                                               denied/absent handle reaches the picker.
+     avProjSaveAs(opts?) -> Promise<receipt> avProjSave with { saveAs: true } merged in
      avProjOpen(opts?) -> Promise<receipt>   { ok, error?, name, applied, skipped, warnings[] }
-                                        — opts.state: raw file TEXT | parsed payload | bare state
+                                        - opts.state: raw file TEXT | parsed payload | bare state
      avProjImportSamples() -> Promise<receipt>  { ok, error?, added, errors, count, max,
                                                   via:"fsa"|"input" }
+     avProjRecents() -> Promise<{ok, count, items:[{id, name, at, size, via, handle, note}]}>
+                                        newest first; `handle` is a bool (JSON-safe rows)
+     avProjOpenRecent(id) -> Promise<receipt>   the avProjOpen receipt shape; the record's stored
+                                        handle is re-granted (query/request) and re-read; honest
+                                        refusals (no such recent / no stored handle / denied)
+     avProjForgetRecent(id) -> Promise<{ok, id, name, removed, error?, note?}>
      avProjState() -> { version, init, fsKind:"window"|"injected"|"none", lastSave, lastOpen,
-                        lastError }
+                        lastError, backend:"idb"|"mem", note, recentsLoaded, recentCount,
+                        recents:[rows], current:{name, at, hasHandle}|null }
      avProjClasses() -> []              mounts nothing (the UI card owns markup)
-     window.__avProj = { version, init, setFs, build, parse, save, open, samples, state }
+     window.__avProj = { version, init, setFs, build, parse, save, saveAs, open, samples,
+                         recents, openRecent, forget, state }
      observables: window.__avProjLastSave = { name, bytes, via, at }
                   window.__avProjLastOpen = { name, ok, applied, skipped, at }
 
@@ -71952,7 +73194,7 @@ if (typeof window !== "undefined") {
 
 /* ---------- pins (§2.1) ---------- */
 
-const AV_PROJ_VERSION = "s4.0";
+const AV_PROJ_VERSION = "r20.0";
 const AV_PROJ_MAGIC = "anvl";
 const AV_PROJ_APP = "anvil";
 const AV_PROJ_KIND = "project";
@@ -71967,6 +73209,15 @@ const AV_PROJ_TEXT_CAP = 16777216;                 /* 16 MiB — refuse absurd t
 const AV_PROJ_EPOCH_ISO = "1970-01-01T00:00:00.000Z";   /* the deterministic `at` of last resort */
 const AV_PROJ_ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,9})?(Z|[+-]\d{2}:?\d{2})?$/;
 const AV_PROJ_CLASSES = Object.freeze([]);         /* this module mounts nothing */
+/* R20 section 4: the projects store (pinned names + shape) */
+const AV_PROJ_DB = "av-projects-store";            /* pinned IDB name (v1) */
+const AV_PROJ_DB_VER = 1;                          /* create-if-missing only; NO version bump */
+const AV_PROJ_OS_RECENTS = "recents";              /* object store, keyPath "id" */
+const AV_PROJ_OS_STATE = "state";                  /* object store, keyPath "key" */
+const AV_PROJ_STATE_KEY = "current";               /* the ONE state record behind Save-reuse */
+const AV_PROJ_RECENT_CAP = 8;                      /* recents cap - oldest rotated out */
+const AV_PROJ_OPEN_CAP_MS = 1800;                  /* hung IDB open give-up (mirrors av_sources) */
+const AV_PROJ_REC_ID_MAX = 96;                     /* recent id length guard */
 
 /* ---------- module state (no DOM nodes; the input element is the one browser object held) ---- */
 
@@ -71978,6 +73229,16 @@ const avProj = {
   lastSave: null,
   lastOpen: null,
   lastError: null,
+  /* R20: the av-projects-store state */
+  db: null,              /* the shared IDB connection */
+  dbGaveUp: false,       /* a hung open gave up - the honest "mem" tier stands */
+  backend: "mem",        /* "idb" | "mem" - promoted never demoted */
+  backendNote: null,
+  recentsLoaded: false,
+  loadP: null,
+  recents: {},           /* id -> rec {id, name, at, size, handle, via, note, sessionOnly} */
+  current: null,         /* {handle, name, at} - the Save-reuse target (session truth) */
+  seq: 0,                /* recent-id collision counter */
 };
 
 /* ---------- guarded environment reaches (plain node has none of these) ---------- */
@@ -71999,6 +73260,20 @@ function avProjDoc() {
 
 function avProjNow() {
   try { return Date.now(); } catch (e) { return 0; }
+}
+function avProjTimer(fn, ms) {
+  try { if (typeof setTimeout === "function") return setTimeout(fn, ms); } catch (e) { /* no timers */ }
+  return null;
+}
+
+function avProjClear(t) {
+  try { if (t != null && typeof clearTimeout === "function") clearTimeout(t); } catch (e) { /* no timers */ }
+}
+
+function avProjIdb() {
+  try { if (typeof indexedDB !== "undefined" && indexedDB) return indexedDB; } catch (e) { /* none */ }
+  try { const w = avProjWin(); if (w && w.indexedDB) return w.indexedDB; } catch (e) { /* none */ }
+  return null;
 }
 
 /* ---------- tiny value laws (garbage in, sane value out — never throw) ---------- */
@@ -72199,6 +73474,392 @@ function avProjAudioTypes() {
   }];
 }
 
+/* ---------- the av-projects-store (R20 section 4): recents + the current save target ----------
+
+   IDB "av-projects-store" v1 (pinned), two stores:
+     recents   keyPath "id"    record {id, name, at, size, handle|null, via}
+     state     keyPath "key"   the ONE "current" record {key, handle, name, at} behind Save
+   Handles are structured-cloneable (the av_sources_store precedent); a handle that cannot be
+   cloned persists as null and the record says so. "mem" = the record never reached the DB
+   (session-only, reported honestly). Every op ensures ONE lazy load first. */
+
+function avProjDbOpen() {
+  return new Promise(function (res) {
+    try {
+      const st = avProj;
+      if (st.db) return res(st.db);
+      if (st.dbGaveUp) return res(null);
+      const idb = avProjIdb();
+      if (!idb) return res(null);
+      let settled = false;
+      const give = function (v) { if (!settled) { settled = true; res(v); } };
+      /* a hung open (blocked upgrade in another tab) must not wedge the module: give up after
+         AV_PROJ_OPEN_CAP_MS; a late success closes its handle and stays honest */
+      const timer = avProjTimer(function () { st.dbGaveUp = true; give(null); }, AV_PROJ_OPEN_CAP_MS);
+      const rq = idb.open(AV_PROJ_DB, AV_PROJ_DB_VER);
+      rq.onupgradeneeded = function () {
+        try {
+          const db = rq.result;
+          if (!db.objectStoreNames || !db.objectStoreNames.contains(AV_PROJ_OS_RECENTS)) db.createObjectStore(AV_PROJ_OS_RECENTS, { keyPath: "id" });
+          if (!db.objectStoreNames || !db.objectStoreNames.contains(AV_PROJ_OS_STATE)) db.createObjectStore(AV_PROJ_OS_STATE, { keyPath: "key" });
+        } catch (e) { /* upgrade raced */ }
+      };
+      rq.onsuccess = function () {
+        avProjClear(timer);
+        if (st.dbGaveUp) { try { rq.result.close(); } catch (e) { /* ignore */ } return give(null); }
+        const db = rq.result;
+        st.db = db;
+        try { db.onclose = function () { if (avProj.db === db) avProj.db = null; }; } catch (e) { /* fine */ }
+        give(db);
+      };
+      rq.onerror = function () { avProjClear(timer); give(null); };
+      rq.onblocked = function () { avProjClear(timer); give(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+function avProjDbAll(db, os) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(os, "readonly");
+      const rq = tx.objectStore(os).getAll();
+      rq.onsuccess = function () { res(Array.isArray(rq.result) ? rq.result : []); };
+      rq.onerror = function () { res(null); };
+      tx.onerror = function () { res(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+function avProjDbGet(db, os, key) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(os, "readonly");
+      const rq = tx.objectStore(os).get(key);
+      rq.onsuccess = function () { res((rq.result === undefined) ? null : rq.result); };
+      rq.onerror = function () { res(null); };
+      tx.onerror = function () { res(null); };
+    } catch (e) { res(null); }
+  });
+}
+
+/* put one record; resolves false when the value cannot be structured-cloned (stub handles) */
+function avProjDbPut(db, os, rec) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(os, "readwrite");
+      let settled = false;
+      const done = function (v) { if (!settled) { settled = true; res(v); } };
+      try { tx.objectStore(os).put(rec); }
+      catch (ePut) { done(false); try { tx.abort(); } catch (e2) { /* ignore */ } return; }
+      tx.oncomplete = function () { done(true); };
+      tx.onerror = function () { done(false); };
+      tx.onabort = function () { done(false); };
+    } catch (e) { res(false); }
+  });
+}
+
+function avProjDbDel(db, os, key) {
+  return new Promise(function (res) {
+    try {
+      const tx = db.transaction(os, "readwrite");
+      tx.objectStore(os).delete(key);
+      tx.oncomplete = function () { res(true); };
+      tx.onerror = function () { res(false); };
+      tx.onabort = function () { res(false); };
+    } catch (e) { res(false); }
+  });
+}
+
+/* ---------- record + id laws ---------- */
+
+function avProjHandleNorm(v) {
+  try { if (v && typeof v === "object" && !Array.isArray(v)) return v; } catch (e) { /* none */ }
+  return null;
+}
+
+function avProjViaNorm(v) {
+  try { if (v === "fsa" || v === "download") return v; } catch (e) { /* none */ }
+  return null;
+}
+
+function avProjRecIdNorm(v) {
+  try {
+    if (typeof v !== "string") return "";
+    return v.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, AV_PROJ_REC_ID_MAX);
+  } catch (e) { return ""; }
+}
+
+function avProjRecNorm(raw) {
+  try {
+    if (!avProjObj(raw)) return null;
+    const id = avProjRecIdNorm(raw.id);
+    if (!id) return null;
+    return {
+      id: id,
+      name: avProjCleanName(raw.name) || "untitled",
+      at: avProjIso(raw.at),
+      size: (typeof raw.size === "number" && isFinite(raw.size) && raw.size >= 0) ? Math.floor(raw.size) : 0,
+      handle: avProjHandleNorm(raw.handle),
+      via: avProjViaNorm(raw.via),
+      note: null,
+      sessionOnly: false,
+    };
+  } catch (e) { return null; }
+}
+
+function avProjCurrentNorm(raw) {
+  try {
+    if (!avProjObj(raw)) return null;
+    if (raw.key !== AV_PROJ_STATE_KEY) return null;
+    return { handle: avProjHandleNorm(raw.handle), name: avProjCleanName(raw.name), at: avProjIso(raw.at) };
+  } catch (e) { return null; }
+}
+
+/* a recent id: "p" + time36 + "-" + slug (+ "-<seq>" on collision) - house style */
+function avProjMakeRecId(name) {
+  const st = avProj;
+  let id = "p" + avProjNow().toString(36) + "-" + avProjSlug(name);
+  try {
+    while (st.recents[id]) {
+      st.seq += 1;
+      id = "p" + avProjNow().toString(36) + "-" + avProjSlug(name) + "-" + st.seq;
+      if (st.seq > 100000) break;
+    }
+  } catch (e) { /* the base id stands */ }
+  return id;
+}
+
+/* ---------- permission probes (the av_sources D8 pattern; a stubbed STRING value is honoured) --- */
+
+function avProjPermNorm(p) {
+  try { if (p === "granted" || p === "prompt" || p === "denied") return p; } catch (e) { /* none */ }
+  return "unknown";
+}
+
+function avProjPermFnV(handle, name) {
+  try {
+    const v = handle[name];
+    if (typeof v === "function") return { has: true, fn: v, val: null };
+    if (typeof v === "string") return { has: true, fn: null, val: v };   /* a stubbed state value */
+  } catch (e) { /* read refused */ }
+  return { has: false, fn: null, val: null };
+}
+
+async function avProjPermCall(handle, d, mode) {
+  try {
+    if (d && d.fn) return avProjPermNorm(await d.fn.call(handle, { mode: mode }));
+    if (d && d.val !== null) return avProjPermNorm(d.val);
+  } catch (e) { /* unknown */ }
+  return "unknown";
+}
+
+/* "granted" -> the stored handle may be written straight through; "picker" -> the caller goes
+   to the picker (an honest refusal for a reopen); "assume" -> the handle has NO permission
+   surface at all (a stub / compat object): the write itself is then the permission test */
+async function avProjPermGo(handle, mode) {
+  try {
+    if (!handle || typeof handle !== "object") return "picker";
+    const m = (mode === "readwrite") ? "readwrite" : "read";
+    const q = avProjPermFnV(handle, "queryPermission");
+    const r = avProjPermFnV(handle, "requestPermission");
+    if (!q.has && !r.has) return "assume";
+    let v = "prompt";
+    if (q.has) v = await avProjPermCall(handle, q, m);
+    if (v === "granted") return "granted";
+    if (v === "denied") return "picker";
+    if (r.has) {
+      const v2 = await avProjPermCall(handle, r, m);
+      if (v2 === "granted") return "granted";
+    }
+    return "picker";
+  } catch (e) { return "assume"; }
+}
+
+/* write through a stored handle: AbortError keeps the module's calm cancel; a permission failure
+   sends the caller back to the picker; anything else falls through with a warning */
+async function avProjReuseWrite(handle, text) {
+  try {
+    if (!handle || typeof handle.createWritable !== "function") return { ok: false, kind: "error", error: "no writable", cancelled: false };
+    const w = await handle.createWritable();
+    await w.write(text);
+    await w.close();
+    return { ok: true, kind: "ok", error: null, cancelled: false };
+  } catch (e) {
+    const nm = avProjErrName(e);
+    if (nm === "AbortError") return { ok: false, kind: "cancel", error: "cancelled", cancelled: true };
+    if (nm === "NotAllowedError" || nm === "SecurityError") return { ok: false, kind: "perm", error: avProjErrMsg(e), cancelled: false };
+    return { ok: false, kind: "error", error: avProjErrMsg(e), cancelled: false };
+  }
+}
+
+/* ---------- lazy load (hydrate once; every op ensures it) ---------- */
+
+async function avProjLoadRun() {
+  const st = avProj;
+  const db = await avProjDbOpen();
+  if (db) {
+    st.backend = "idb";
+    const raws = await avProjDbAll(db, AV_PROJ_OS_RECENTS);
+    if (raws && Array.isArray(raws)) {
+      for (let i = 0; i < raws.length; i++) {
+        const rec = avProjRecNorm(raws[i]);
+        if (rec && !st.recents[rec.id]) st.recents[rec.id] = rec;
+      }
+    }
+    if (!st.current) {
+      const curRaw = await avProjDbGet(db, AV_PROJ_OS_STATE, AV_PROJ_STATE_KEY);
+      if (curRaw) st.current = avProjCurrentNorm(curRaw);
+    }
+  } else if (!st.backendNote) {
+    st.backendNote = "IndexedDB unavailable - recents are session-only";
+  }
+  st.recentsLoaded = true;
+  return true;
+}
+
+function avProjEnsureLoad() {
+  const st = avProj;
+  if (st.recentsLoaded) return Promise.resolve(true);
+  if (st.loadP) return st.loadP;
+  st.loadP = Promise.resolve(avProjLoadRun()).catch(function () { st.loadP = null; return false; });
+  return st.loadP;
+}
+
+function avProjFindRec(id) {
+  try {
+    const rid = avProjRecIdNorm(id);
+    if (!rid) return null;
+    const rec = avProj.recents[rid];
+    return avProjObj(rec) ? rec : null;
+  } catch (e) { return null; }
+}
+
+/* ---------- persist (full first incl. the handle, then handle:null so the row still lists) ---- */
+
+async function avProjPersistCurrent() {
+  try {
+    const st = avProj;
+    const cur = st.current;
+    if (!cur) return { tier: "mem", handleSaved: false };
+    const db = await avProjDbOpen();
+    if (!db) return { tier: "mem", handleSaved: false };
+    st.backend = "idb";
+    const handle = avProjHandleNorm(cur.handle);
+    if (handle) {
+      const okFull = await avProjDbPut(db, AV_PROJ_OS_STATE, { key: AV_PROJ_STATE_KEY, handle: handle, name: cur.name || null, at: cur.at || null });
+      if (okFull) return { tier: "idb", handleSaved: true };
+    }
+    const okBare = await avProjDbPut(db, AV_PROJ_OS_STATE, { key: AV_PROJ_STATE_KEY, handle: null, name: cur.name || null, at: cur.at || null });
+    if (okBare) return { tier: "idb", handleSaved: false };
+    return { tier: "mem", handleSaved: false };
+  } catch (e) { return { tier: "mem", handleSaved: false }; }
+}
+
+async function avProjPersistRecent(rec) {
+  try {
+    if (!rec || !rec.id) return { tier: "mem", handleSaved: false };
+    const st = avProj;
+    const db = await avProjDbOpen();
+    if (!db) return { tier: "mem", handleSaved: false };
+    st.backend = "idb";
+    const handle = avProjHandleNorm(rec.handle);
+    if (handle) {
+      const okFull = await avProjDbPut(db, AV_PROJ_OS_RECENTS, { id: rec.id, name: rec.name, at: rec.at, size: rec.size, handle: handle, via: rec.via });
+      if (okFull) return { tier: "idb", handleSaved: true };
+    }
+    const okBare = await avProjDbPut(db, AV_PROJ_OS_RECENTS, { id: rec.id, name: rec.name, at: rec.at, size: rec.size, handle: null, via: rec.via });
+    if (okBare) return { tier: "idb", handleSaved: false };
+    return { tier: "mem", handleSaved: false };
+  } catch (e) { return { tier: "mem", handleSaved: false }; }
+}
+
+/* remove one recent (memory first - the session truth; the DB delete is best-effort) */
+async function avProjDeleteRec(id) {
+  try {
+    const st = avProj;
+    const rid = avProjRecIdNorm(id);
+    if (!rid) return false;
+    if (st.recents[rid]) delete st.recents[rid];
+    const db = await avProjDbOpen();
+    if (!db) return false;
+    st.backend = "idb";
+    return await avProjDbDel(db, AV_PROJ_OS_RECENTS, rid);
+  } catch (e) { return false; }
+}
+
+/* ---------- recents (order + upsert) ---------- */
+
+/* recents order: newest `at` first (a null at sorts oldest); name then id break ties */
+function avProjRcSortRows(rows) {
+  try {
+    rows.sort(function (a, b) {
+      const aa = (typeof a.at === "string") ? a.at : "";
+      const bb = (typeof b.at === "string") ? b.at : "";
+      if (aa !== bb) return (aa < bb) ? 1 : -1;
+      if (a.name !== b.name) return (a.name < b.name) ? -1 : 1;
+      return (a.id < b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+    });
+  } catch (e) { /* the previous order stands */ }
+  return rows;
+}
+
+/* upsert a recent (dedupe by name - the existing record keeps its id; cap 8, the oldest `at`
+   rotated out). The returned rec is the session truth: its handle stays in memory even when the
+   DB refused the structured clone (the note says so). */
+async function avProjUpsertRecent(info) {
+  try {
+    const st = avProj;
+    await avProjEnsureLoad();
+    const src = avProjObj(info) ? info : {};
+    const name = avProjCleanName(src.name) || "untitled";
+    let rec = null;
+    const ids = Object.keys(st.recents);
+    for (let i = 0; i < ids.length; i++) {
+      const r = st.recents[ids[i]];
+      if (r && r.name === name) { rec = r; break; }
+    }
+    const handle = (src.handle !== undefined) ? avProjHandleNorm(src.handle) : (rec ? rec.handle : null);
+    const at = avProjIso(src.at) || (rec ? rec.at : null);
+    const size = (typeof src.size === "number" && isFinite(src.size) && src.size >= 0) ? Math.floor(src.size) : (rec ? rec.size : 0);
+    const via = avProjViaNorm(src.via) || (rec ? rec.via : null);
+    if (!rec) {
+      rec = { id: avProjMakeRecId(name), name: name, at: at, size: size, handle: handle, via: via, note: null, sessionOnly: false };
+      st.recents[rec.id] = rec;
+    } else {
+      rec.name = name; rec.at = at; rec.size = size; rec.handle = handle; rec.via = via;
+      rec.note = null; rec.sessionOnly = false;
+    }
+    /* rotate: drop the oldest (by at, then id) that is not the record just upserted; this
+       ordering is OLDEST FIRST (the display order is newest first - never reuse it here) */
+    const keys = Object.keys(st.recents);
+    if (keys.length > AV_PROJ_RECENT_CAP) {
+      const all = [];
+      for (let i = 0; i < keys.length; i++) { if (st.recents[keys[i]]) all.push(st.recents[keys[i]]); }
+      all.sort(function (a, b) {
+        const aa = (typeof a.at === "string") ? a.at : "";
+        const bb = (typeof b.at === "string") ? b.at : "";
+        if (aa !== bb) return (aa < bb) ? -1 : 1;
+        return (a.id < b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+      });
+      const excess = all.length - AV_PROJ_RECENT_CAP;
+      let dropped = 0;
+      for (let i = 0; i < all.length && dropped < excess; i++) {
+        if (all[i].id === rec.id) continue;
+        await avProjDeleteRec(all[i].id);
+        dropped += 1;
+      }
+    }
+    const persisted = await avProjPersistRecent(rec);
+    if (persisted.tier !== "idb") {
+      rec.note = "record is session-only (IndexedDB unavailable)";
+      rec.sessionOnly = true;
+    } else if (!persisted.handleSaved && avProjHandleNorm(rec.handle)) {
+      rec.note = "handle not persistable - pick the file again after reload";
+    }
+    return rec;
+  } catch (e) { return null; }
+}
+
 /* ---------- payload validation (§2.1: magic/v/kind/state; never throw) ---------- */
 
 function avProjValidatePayload(p) {
@@ -72335,6 +73996,25 @@ function avProjRecordOpen(name, ok, applied, skipped) {
   } catch (e) { /* nicety */ }
 }
 
+/* ---------- project-layer change fan-out (R20 section 4 recents gap) ----------
+   ONE silent document-level CustomEvent after every public op settles. The PROJECT & SHARE
+   card (av_files_ui.js) listens for 'av-proj-changed' and repaints its RECENT block, so a save
+   or open driven by the File menu, the palette, a rig facade or the launcher refreshes the card
+   exactly like the card's own buttons do. kind is 'save' | 'open' | 'recent' | 'forget'
+   (informative only; listeners must not depend on it). Never throws, never logs; no document
+   (node harness) is a quiet no-op. */
+function avProjEmitChanged(kind) {
+  try {
+    const doc = avProjDoc();
+    if (!doc || typeof doc.dispatchEvent !== "function" || typeof CustomEvent !== "function") return false;
+    const k = (kind === "save" || kind === "open" || kind === "recent" || kind === "forget") ? kind : "change";
+    doc.dispatchEvent(new CustomEvent("av-proj-changed", {
+      detail: { kind: k },
+    }));
+    return true;
+  } catch (e) { return false; }
+}
+
 function avProjSaveRefuse(error, name, bytes, warnings, via) {
   const receipt = { ok: false, error: error, name: name, bytes: bytes, via: via, warnings: warnings };
   if (error !== "cancelled") avProj.lastError = error;   /* a cancel is calm, not an error */
@@ -72352,13 +74032,16 @@ function avProjSaveOk(name, bytes, via, warnings, at) {
 /* ---------- avProjSave (§2.1) — capture -> build -> FSA save / download fallback ---------- */
 
 function avProjSave(opts) {
+  let out = null;
   try {
-    return Promise.resolve(avProjSaveRun(opts)).catch(function (e) {
+    out = Promise.resolve(avProjSaveRun(opts)).catch(function (e) {
       return avProjSaveRefuse(avProjErrMsg(e), null, 0, [], null);
     });
   } catch (e) {
-    return Promise.resolve(avProjSaveRefuse(avProjErrMsg(e), null, 0, [], null));
+    out = Promise.resolve(avProjSaveRefuse(avProjErrMsg(e), null, 0, [], null));
   }
+  /* R20 fan-out: every save / save-as settle (File menu, palette, card, facade) tells the card; the receipt is unchanged */
+  return out.then(function (r) { avProjEmitChanged("save"); return r; });
 }
 
 async function avProjSaveRun(opts) {
@@ -72385,8 +74068,34 @@ async function avProjSaveRun(opts) {
   const text = b.text;
   const bytes = avProjUtf8Len(text);
   if (bytes > AV_PROJ_TEXT_CAP) return avProjSaveRefuse("too large", name, bytes, warnings, null);
-  /* 3) FSA save through the seam — AbortError is a calm cancel and never falls back */
+  /* 3) the FSA save: a plain Save reuses the stored current handle (queryPermission ->
+        requestPermission -> write straight through; only a denied/absent handle reaches the
+        picker). { saveAs: true } always picks and becomes the new current (R20 section 4).
+        AbortError stays a calm cancel and never falls back. */
+  const wantSaveAs = (o.saveAs === true);
   const pick = avProjPicker("save");
+  if (!wantSaveAs) {
+    await avProjEnsureLoad();
+    const ch = avProjHandleNorm(avProj.current ? avProj.current.handle : null);
+    if (ch) {
+      const perm = await avProjPermGo(ch, "readwrite");
+      if (perm !== "picker") {
+        const wr = await avProjReuseWrite(ch, text);
+        if (wr.ok) {
+          const fname = avProjCleanName(ch.name) || name;
+          avProj.current = { handle: ch, name: fname, at: at };
+          await avProjPersistCurrent();
+          const receipt = avProjSaveOk(fname, bytes, "fsa", warnings, at);
+          await avProjUpsertRecent({ name: fname, at: at, size: bytes, handle: ch, via: "fsa" });
+          return receipt;
+        }
+        if (wr.cancelled) return avProjSaveRefuse("cancelled", name, bytes, [], null);
+        if (wr.kind !== "perm") {
+          avProjPush(warnings, "stored handle write failed (" + (wr.error || "error") + ") - pick the file again");
+        }
+      }
+    }
+  }
   if (pick) {
     let handle = null, pickerNote = "";
     try {
@@ -72407,29 +74116,41 @@ async function avProjSaveRun(opts) {
         if (avProjErrName(e) === "AbortError") return avProjSaveRefuse("cancelled", name, bytes, [], null);
         avProjPush(warnings, "fsa write failed (" + (avProjErrName(e) || "error") + ") — downloaded instead");
       }
-      if (wrote) return avProjSaveOk(name, bytes, "fsa", warnings, at);
+      if (wrote) {
+        const fname = avProjCleanName(handle.name) || name;
+        avProj.current = { handle: handle, name: fname, at: at };
+        await avProjPersistCurrent();
+        const receipt = avProjSaveOk(fname, bytes, "fsa", warnings, at);
+        await avProjUpsertRecent({ name: fname, at: at, size: bytes, handle: handle, via: "fsa" });
+        return receipt;
+      }
     } else if (handle && !pickerNote) {
       avProjPush(warnings, "fsa handle refused — downloaded instead");
     } else if (!handle && !pickerNote) {
       avProjPush(warnings, "save picker returned nothing — downloaded instead");
     }
   }
-  /* 4) the download fallback (via records the truth) */
+  /* 4) the download fallback (via records the truth; the recent row lists name-only) */
   const landed = avProjDownloadFallback(text, name, warnings);
   if (!landed) return avProjSaveRefuse("no save path", name, bytes, warnings, null);
-  return avProjSaveOk(name, bytes, "download", warnings, at);
+  const receipt = avProjSaveOk(name, bytes, "download", warnings, at);
+  await avProjUpsertRecent({ name: name, at: at, size: bytes, handle: null, via: "download" });
+  return receipt;
 }
 
 /* ---------- avProjOpen (§2.1) — FSA open -> parse -> avSessionApply(state) ---------- */
 
 function avProjOpen(opts) {
+  let out = null;
   try {
-    return Promise.resolve(avProjOpenRun(opts)).catch(function (e) {
+    out = Promise.resolve(avProjOpenRun(opts)).catch(function (e) {
       return avProjOpenRefuse(avProjErrMsg(e), null, []);
     });
   } catch (e) {
-    return Promise.resolve(avProjOpenRefuse(avProjErrMsg(e), null, []));
+    out = Promise.resolve(avProjOpenRefuse(avProjErrMsg(e), null, []));
   }
+  /* R20 fan-out: every open settle repaints the card (a picker open upserts a recent) */
+  return out.then(function (r) { avProjEmitChanged("open"); return r; });
 }
 
 function avProjOpenRefuse(error, name, warnings) {
@@ -72437,6 +74158,26 @@ function avProjOpenRefuse(error, name, warnings) {
   avProj.lastOpen = avProjClone(receipt) || receipt;
   if (error !== "cancelled") avProj.lastError = error;
   avProjRecordOpen(name, false, 0, []);
+  return receipt;
+}
+
+/* the apply half shared by every open route (picker / opts.state / recents): parse done, the
+   project in - apply through the session module and record the receipt */
+function avProjOpenFinish(project, name, warnings) {
+  const applyFn = avProjApplyFn();
+  if (!applyFn) return avProjOpenRefuse("no session module", name, warnings);
+  let ap = null;
+  try { ap = applyFn(project.state); } catch (e) { ap = null; }
+  if (!avProjObj(ap)) return avProjOpenRefuse("apply failed", name, warnings);
+  const applied = (typeof ap.applied === "number" && isFinite(ap.applied)) ? ap.applied : 0;
+  const skipped = avProjStringList(ap.skipped);      /* mirrors avSessionApply's receipt */
+  const ok = ap.ok === true;
+  let errText = null;
+  if (!ok && typeof ap.error === "string" && ap.error) errText = ap.error.slice(0, AV_PROJ_MSG_CAP);
+  const receipt = { ok: ok, error: ok ? null : (errText || "apply refused"), name: name, applied: applied, skipped: skipped, warnings: warnings };
+  avProj.lastOpen = avProjClone(receipt) || receipt;
+  avProj.lastError = receipt.error;
+  avProjRecordOpen(name, ok, applied, skipped);
   return receipt;
 }
 
@@ -72483,6 +74224,7 @@ async function avProjOpenRun(opts) {
   const warnings = [];
   let project = null;
   let fileBase = null;
+  let pickedHandle = null, pickedFile = null;
   /* the opts.state test seam (§2.1: skips the picker) — raw text keeps the FULL pipeline */
   if (typeof o.state === "string") {
     const p = avProjParse(o.state);
@@ -72520,23 +74262,23 @@ async function avProjOpenRun(opts) {
     const p = avProjParse(text);
     if (!p.ok) return avProjOpenRefuse(p.error || "parse failed", fileBase, warnings);
     project = p.project;
+    pickedHandle = handle;
+    pickedFile = file;
   }
   const name = project.name || fileBase || null;
-  /* apply through the session module — its OWN laws apply, nothing re-implemented here */
-  const applyFn = avProjApplyFn();
-  if (!applyFn) return avProjOpenRefuse("no session module", name, warnings);
-  let ap = null;
-  try { ap = applyFn(project.state); } catch (e) { ap = null; }
-  if (!avProjObj(ap)) return avProjOpenRefuse("apply failed", name, warnings);
-  const applied = (typeof ap.applied === "number" && isFinite(ap.applied)) ? ap.applied : 0;
-  const skipped = avProjStringList(ap.skipped);      /* mirrors avSessionApply's receipt */
-  const ok = ap.ok === true;
-  let errText = null;
-  if (!ok && typeof ap.error === "string" && ap.error) errText = ap.error.slice(0, AV_PROJ_MSG_CAP);
-  const receipt = { ok: ok, error: ok ? null : (errText || "apply refused"), name: name, applied: applied, skipped: skipped, warnings: warnings };
-  avProj.lastOpen = avProjClone(receipt) || receipt;
-  avProj.lastError = receipt.error;
-  avProjRecordOpen(name, ok, applied, skipped);
+  const receipt = avProjOpenFinish(project, name, warnings);
+  /* open success upserts a recent with its handle and re-targets Save (R20 section 4) */
+  if (receipt.ok && (pickedHandle || fileBase)) {
+    const oname = avProjCleanName(pickedFile ? pickedFile.name : null) ||
+                  avProjCleanName(pickedHandle ? pickedHandle.name : null) ||
+                  project.name || name || "untitled";
+    const osize = (pickedFile && typeof pickedFile.size === "number" && isFinite(pickedFile.size)) ? pickedFile.size : 0;
+    if (pickedHandle) {
+      avProj.current = { handle: pickedHandle, name: oname, at: project.at || null };
+      await avProjPersistCurrent();
+    }
+    await avProjUpsertRecent({ name: oname, at: project.at, size: osize, handle: pickedHandle || null, via: "fsa" });
+  }
   return receipt;
 }
 
@@ -72678,7 +74420,7 @@ async function avProjImportSamplesRun() {
    The read half of avProjOpenRun for text that arrives from outside (the PWA launchQueue consumer):
    parse -> apply through the injected session module (avSessionApply) -> record. Receipt shape
    matches avProjOpenRun's; never throws. */
-function avProjOpenText(name, text) {
+function avProjOpenTextRun(name, text) {
   const warnings = [];
   const nm = avProjCleanName(name) || "launched.anvl";
   if (typeof text !== "string" || !text) return avProjOpenRefuse("the launched file was empty", nm, warnings);
@@ -72701,6 +74443,112 @@ function avProjOpenText(name, text) {
   avProj.lastError = receipt.error;
   avProjRecordOpen(pname, ok, applied, skipped);
   return receipt;
+}
+
+/* the public File Handling entry stays synchronous and receipt-identical; the wrapper adds the
+   R20 fan-out emit so a launched .anvl refreshes the card's RECENT block too */
+function avProjOpenText(name, text) {
+  let receipt = null;
+  try { receipt = avProjOpenTextRun(name, text); }
+  catch (e) { receipt = avProjOpenRefuse(avProjErrMsg(e), null, []); }
+  avProjEmitChanged("open");
+  return receipt;
+}
+
+/* ---------- R20 section 4: the recents ops + Save As ---------- */
+
+async function avProjRecentsRun() {
+  await avProjEnsureLoad();
+  const st = avProj;
+  const ids = Object.keys(st.recents);
+  const rows = [];
+  for (let i = 0; i < ids.length; i++) {
+    const rec = st.recents[ids[i]];
+    if (!rec) continue;
+    const handle = avProjHandleNorm(rec.handle);
+    let note = rec.note || null;
+    if (!handle && !note) note = "no stored handle in this browser - pick the project file to reopen";
+    rows.push({
+      id: rec.id, name: rec.name, at: rec.at, size: rec.size, via: rec.via,
+      handle: !!handle, note: note,
+    });
+  }
+  avProjRcSortRows(rows);
+  return { ok: true, count: rows.length, items: rows };
+}
+
+function avProjRecents() {
+  try { return Promise.resolve(avProjRecentsRun()).catch(function (e) { return { ok: false, count: 0, items: [], error: avProjErrMsg(e) }; }); }
+  catch (e) { return Promise.resolve({ ok: false, count: 0, items: [], error: "error" }); }
+}
+
+async function avProjOpenRecentRun(id) {
+  const warnings = [];
+  await avProjEnsureLoad();
+  const rec = avProjFindRec(id);
+  if (!rec) return avProjOpenRefuse("no such recent project", null, warnings);
+  const handle = avProjHandleNorm(rec.handle);
+  if (!handle) return avProjOpenRefuse("no stored handle in this browser - pick the project file to reopen", rec.name, warnings);
+  const perm = await avProjPermGo(handle, "read");
+  if (perm === "picker") return avProjOpenRefuse("permission denied - pick the project file to reopen", rec.name, warnings);
+  let file = null;
+  try { if (typeof handle.getFile === "function") file = await handle.getFile(); } catch (e) { file = null; }
+  if (!file) return avProjOpenRefuse("cannot read the stored file - pick the project file to reopen", rec.name, warnings);
+  const text = await avProjFileText(file);
+  if (typeof text !== "string") return avProjOpenRefuse("cannot read the stored file - pick the project file to reopen", rec.name, warnings);
+  const p = avProjParse(text);
+  if (!p.ok) return avProjOpenRefuse(p.error || "parse failed", rec.name, warnings);
+  const project = p.project;
+  const nm = project.name || avProjBaseName(rec.name) || rec.name;
+  const receipt = avProjOpenFinish(project, nm, warnings);
+  if (receipt.ok) {
+    /* the reopened file becomes the current save target; the recent refreshes its size/at */
+    if (!avProj.current || avProjHandleNorm(avProj.current.handle) !== handle) {
+      avProj.current = { handle: handle, name: rec.name, at: project.at || rec.at || null };
+      await avProjPersistCurrent();
+    }
+    const fsize = (file && typeof file.size === "number" && isFinite(file.size)) ? file.size : rec.size;
+    await avProjUpsertRecent({ name: rec.name, at: project.at || rec.at, size: fsize, handle: handle });
+  }
+  return receipt;
+}
+
+function avProjOpenRecent(id) {
+  let out = null;
+  try { out = Promise.resolve(avProjOpenRecentRun(id)).catch(function (e) { return avProjOpenRefuse(avProjErrMsg(e), null, []); }); }
+  catch (e) { out = Promise.resolve(avProjOpenRefuse(avProjErrMsg(e), null, [])); }
+  /* R20 fan-out: a reopen refreshes the recent record (size/at) - tell the card */
+  return out.then(function (r) { avProjEmitChanged("recent"); return r; });
+}
+
+async function avProjForgetRecentRun(id) {
+  await avProjEnsureLoad();
+  const rid = avProjRecIdNorm(id);
+  const rec = avProjFindRec(rid);
+  if (!rec) return { ok: false, error: "no such recent project", id: rid, name: null, removed: false };
+  const persisted = await avProjDeleteRec(rid);
+  const out = { ok: true, error: null, id: rec.id, name: rec.name, removed: true };
+  if (!persisted) out.note = "removed for this session only";
+  return out;
+}
+
+function avProjForgetRecent(id) {
+  let out = null;
+  try { out = Promise.resolve(avProjForgetRecentRun(id)).catch(function (e) { return { ok: false, error: avProjErrMsg(e), id: "", name: null, removed: false }; }); }
+  catch (e) { out = Promise.resolve({ ok: false, error: "error", id: "", name: null, removed: false }); }
+  /* R20 fan-out: a removal changes the recent list - tell the card */
+  return out.then(function (r) { avProjEmitChanged("forget"); return r; });
+}
+
+/* Save As: always the picker (or the download fallback when no picker exists); on success the
+   picked file becomes the new current save target */
+function avProjSaveAs(opts) {
+  try {
+    const o = avProjObj(opts) ? opts : {};
+    return avProjSave({ name: o.name, at: o.at, state: o.state, saveAs: true });
+  } catch (e) {
+    return Promise.resolve(avProjSaveRefuse(avProjErrMsg(e), null, 0, [], null));
+  }
 }
 
 /* ---------- avProjInit / avProjSetFs / avProjState / avProjClasses (§2.1) ---------- */
@@ -72726,6 +74574,18 @@ function avProjSetFs(fs) {
 function avProjState() {
   try {
     const st = avProj;
+    const rows = [];
+    const ids = Object.keys(st.recents);
+    for (let i = 0; i < ids.length; i++) {
+      const rec = st.recents[ids[i]];
+      if (!rec) continue;
+      rows.push({
+        id: rec.id, name: rec.name, at: rec.at, size: rec.size,
+        via: rec.via, handle: !!avProjHandleNorm(rec.handle), note: rec.note || null,
+      });
+    }
+    avProjRcSortRows(rows);
+    const cur = avProjObj(st.current) ? st.current : null;
     return {
       version: AV_PROJ_VERSION,
       init: st.inited === true,
@@ -72733,9 +74593,19 @@ function avProjState() {
       lastSave: st.lastSave ? avProjClone(st.lastSave) : null,
       lastOpen: st.lastOpen ? avProjClone(st.lastOpen) : null,
       lastError: st.lastError,
+      backend: st.backend,
+      note: st.backendNote,
+      recentsLoaded: st.recentsLoaded === true,
+      recentCount: rows.length,
+      recents: rows,
+      current: cur ? { name: cur.name || null, at: cur.at || null, hasHandle: !!avProjHandleNorm(cur.handle) } : null,
     };
   } catch (e) {
-    return { version: AV_PROJ_VERSION, init: false, fsKind: "none", lastSave: null, lastOpen: null, lastError: "state" };
+    return {
+      version: AV_PROJ_VERSION, init: false, fsKind: "none", lastSave: null, lastOpen: null,
+      lastError: "state", backend: "mem", note: null, recentsLoaded: false, recentCount: 0,
+      recents: [], current: null,
+    };
   }
 }
 
@@ -72755,8 +74625,12 @@ if (typeof window !== "undefined" && window) {
       parse: avProjParse,
       openText: avProjOpenText,
       save: avProjSave,
+      saveAs: avProjSaveAs,
       open: avProjOpen,
       samples: avProjImportSamples,
+      recents: avProjRecents,
+      openRecent: avProjOpenRecent,
+      forget: avProjForgetRecent,
       state: avProjState,
     };
   } catch (e) { /* no window — node harness only */ }
@@ -75597,6 +77471,12 @@ if (typeof window !== "undefined") {
        <video>; rendered with { download: true } so the clip is also delivered through the
        core's own avVideoDownload path — see the deviation note in the wave report).
 
+     RECENT   - a fourth block inside PROJECT (R20 section 4): the recent projects list
+       (rows [data-av-proj-recent="<id>"] + OPEN/FORGET, an empty state, refreshed after
+       save/open/forget AND by the ONE document-level 'av-proj-changed' listener (av_proj.js
+       emits it after every public op settles - facade / File menu / card alike); a name-only
+       row refuses OPEN honestly - the pick-file fallback).
+
    BUSY DISCIPLINE (pinned): ONE module op at a time — while any job runs every action button
    is disabled, a second click is refused with an honest status line, and jobs are never
    queued. Buffers only span one job; receipts are stored in a public (JSON-safe) projection.
@@ -75622,15 +77502,18 @@ if (typeof window !== "undefined") {
      SHARE    #av-files-card-make · #av-files-card-copy · #av-files-card-png
               #av-files-card-preview (img) · #av-files-cstat
      VIDEO    #av-files-video-run · #av-files-video-preview (muted video) · #av-files-vstat
+     RECENT   #av-files-recent-list - #av-files-recent-empty
+              [data-av-proj-recent="<id>"] rows - [data-av-proj-act=open|forget] buttons
    CARD HOOKS: [data-av-files-act=save|open|samples|card-make|card-copy|card-png|video-run]
    · [data-av-files-sec=project|share|video] · dataset avFilesUiWired='1' on the host ·
    class av-files-busy + dataset avFilesBusy on the card while a job runs.
 
    OBSERVABLES: avFilesUiInit() -> bool (false without #av-files-host; idempotent;
-   re-mountable) · avFilesUiSync() -> bool · avFilesUiSnap() -> the honest card state (busy
-   flags · last receipts · previews present · cores present) · avFilesUiClasses() -> string[]
-   (the NEW css classes; the parent styles them) · window.__avFilesUi = { version, state,
-   sync, snap, init } (state = the snapshot fn).
+   re-mountable) . avFilesUiSync() -> bool . avFilesUiSnap() -> the honest card state (busy
+   flags . last receipts . previews present . cores present . recent rows) .
+   avFilesUiRecentRefresh() -> Promise<bool> (one guarded avProjRecents() read -> repaint) .
+   avFilesUiClasses() -> string[] (the NEW css classes; the parent styles them) .
+   window.__avFilesUi = { version, state, sync, snap, init, refreshRecent }
 
    ONE writer (child sa-D). The three cores are consumed through the pinned §2.1/§2.2/§2.3
    names with typeof guards ONLY — avProjSave/Open/ImportSamples · avCardPng/Share/CopyLink ·
@@ -75638,7 +77521,7 @@ if (typeof window !== "undefined") {
 
 "use strict";
 
-const AV_FILES_UI_VERSION = "s4.0";
+const AV_FILES_UI_VERSION = "r20.0";
 const AV_FILES_UI_URL_CAP = 160;               /* share-link text cap in the SHARE line */
 
 /* ---------- the seven action controls (one source of truth: markup + busy + delegation) ---------- */
@@ -75672,6 +77555,7 @@ const AV_FILES_UI_JOB_WORDS = {
   save: "saving the project", open: "opening a project", samples: "importing samples",
   cardMake: "building the share card", cardCopy: "copying the share link",
   cardSave: "delivering the share card", video: "rendering the clip",
+  recent: "working the recent list",
 };
 
 /* job -> the start line set when the job begins (status line) */
@@ -75680,6 +77564,7 @@ const AV_FILES_UI_JOB_START = {
   cardMake: "building the share card\u2026", cardCopy: "copying the share link\u2026",
   cardSave: "delivering the share card\u2026",
   video: "rendering the clip (realtime \u2014 it takes as long as the clip)\u2026",
+  recent: "working the recent list\u2026",
 };
 
 /* the NEW css classes this card introduces (the parent styles them; av-files-host excluded —
@@ -75691,13 +77576,15 @@ const AV_FILES_UI_CLASSES = [
   "av-files-row", "av-files-controls", "av-files-btn",
   "av-files-prev-row", "av-files-preview", "av-files-card-preview", "av-files-video-preview",
   "av-files-stat", "av-files-note", "av-files-foot", "av-files-busy",
+  "av-files-recent", "av-files-recent-title", "av-files-recent-list", "av-files-recent-empty",
+  "av-files-recent-row", "av-files-recent-name", "av-files-recent-meta", "av-files-recent-acts",
 ];
 
 /* UI-local state only — every core fact is read through the pinned apis per call */
 const avFilesUiState = {
   inited: false, mounts: 0,
   /* one module op at a time: busy[job] flags + the running job name */
-  busy: { save: false, open: false, samples: false, cardMake: false, cardCopy: false, cardSave: false, video: false },
+  busy: { save: false, open: false, samples: false, cardMake: false, cardCopy: false, cardSave: false, video: false, recent: false },
   busyJob: "",
   jobSeq: 0, doneSeq: 0,
   /* last receipts, keyed the way the snapshot presents them (JSON-safe projections only) */
@@ -75713,6 +77600,11 @@ const avFilesUiState = {
   noteText: "",
   /* write-on-change memos so idle syncs never touch the DOM */
   memos: { text: {}, cls: {} },
+  /* the RECENT PROJECTS mirror (R20 section 4): one guarded avProjRecents() read repaints */
+  recent: { loaded: false, count: 0, ids: [], html: "" },
+  recentSeq: 0,
+  /* the ONE document-level 'av-proj-changed' listener (R20 fan-out) is bound */
+  projChgBound: false,
 };
 
 /* ---------- small pure helpers (no DOM; harness-covered) ---------- */
@@ -76071,7 +77963,7 @@ function avFilesUiSettle(p, cb) {
 function avFilesUiBusy() {
   const s = avFilesUiState;
   return !!(s.busy.save || s.busy.open || s.busy.samples || s.busy.cardMake ||
-            s.busy.cardCopy || s.busy.cardSave || s.busy.video);
+            s.busy.cardCopy || s.busy.cardSave || s.busy.video || s.busy.recent);
 }
 
 function avFilesUiJobWord(job) {
@@ -76109,7 +78001,7 @@ function avFilesUiMissing(job, why) {
 /* start ONE job: marks busy, disables the controls, runs, settles exactly once.
    The run fn is the raw core call (typeof-guarded by the caller); a synchronous throw
    becomes an honest refusal receipt. */
-function avFilesUiJob(jobKey, run, settle) {
+function avFilesUiJob(jobKey, run, settle, startMsg) {
   const s = avFilesUiState;
   try {
     if (avFilesUiBusy()) return avFilesUiBusyRefuse();
@@ -76117,7 +78009,7 @@ function avFilesUiJob(jobKey, run, settle) {
     s.busyJob = jobKey;
     s.jobSeq += 1;
     s.videoProgress = null;
-    avFilesUiSetStatus(AV_FILES_UI_JOB_START[jobKey] || "working\u2026");
+    avFilesUiSetStatus(startMsg || AV_FILES_UI_JOB_START[jobKey] || "working\u2026");
     avFilesUiSync();                                  /* paints busy before the core runs */
     let out = null;
     try { out = run(); } catch (e) { out = { ok: false, error: avFilesUiErrText(e, "the action failed") }; }
@@ -76142,6 +78034,7 @@ function avFilesUiJob(jobKey, run, settle) {
 
 function avFilesUiSettleSave(r0) {
   try {
+    avFilesUiRecentRefresh();   /* the recent rows follow every save (R20 section 4) */
     const s = avFilesUiState;
     const r = avFilesUiReceipt(r0);
     if (!avFilesUiOK(r)) {
@@ -76168,6 +78061,7 @@ function avFilesUiSettleSave(r0) {
 
 function avFilesUiSettleOpen(r0) {
   try {
+    avFilesUiRecentRefresh();   /* the recent rows follow every open (R20 section 4) */
     const s = avFilesUiState;
     const r = avFilesUiReceipt(r0);
     if (!avFilesUiOK(r)) {
@@ -76347,6 +78241,139 @@ function avFilesUiVideoProgress(phase, frac) {
   } catch (e) { return false; }
 }
 
+/* ---------- the RECENT project rows (R20 section 4) ----------
+
+   One guarded avProjRecents() read -> the whole block repainted (the list HTML is only touched
+   when it actually changes). Rows are [data-av-proj-recent="<id>"] with
+   [data-av-proj-handle="1|0"]; each row's OPEN + FORGET buttons are av-btn mini and ride the
+   SAME delegated click (data-av-proj-act) and the SAME busy discipline (the "recent" lane).
+   A row without a stored handle renders name-only and its OPEN refuses honestly (the
+   pick-file fallback line). Refreshed after save/open/forget and once on init. */
+
+const AV_FILES_UI_RECENT_ROWS_MAX = 16;
+
+function avFilesUiRecentMetaOf(it) {
+  const parts = [];
+  try {
+    if (it && typeof it.at === "string" && it.at.length >= 10) parts.push(it.at.slice(0, 10));
+    if (it && typeof it.size === "number" && isFinite(it.size) && it.size > 0) parts.push(avFilesUiFmtBytes(it.size));
+    if (it && typeof it.via === "string" && it.via) parts.push("via " + it.via);
+    const has = !!(it && it.handle === true);
+    parts.push(has ? "handle ready" : "no stored handle \u2014 pick the file to reopen");
+    if (it && typeof it.note === "string" && it.note) parts.push(it.note);
+  } catch (e) { /* the partial meta stands */ }
+  return parts.join(" \u00b7 ");
+}
+
+function avFilesUiRecentRowHTML(it) {
+  const id = avFilesUiEsc(String((it && it.id) || ""));
+  const name = avFilesUiEsc(String((it && it.name) || "untitled"));
+  const has = !!(it && it.handle === true);
+  const openTitle = has
+    ? "OPEN \u2014 reopen this project (the browser re-asks for file permission only when it needs to)."
+    : "OPEN \u2014 no stored handle in this browser; reopen the file with OPEN .anvl (the pick-file fallback).";
+  return '<div class="av-files-recent-row" data-av-proj-recent="' + id + '" data-av-proj-handle="' + (has ? "1" : "0") + '">' +
+    '<span class="av-files-recent-name" title="' + name + '">' + name + '</span>' +
+    '<span class="av-files-recent-meta av-dim">' + avFilesUiEsc(avFilesUiRecentMetaOf(it)) + '</span>' +
+    '<span class="av-files-recent-acts">' +
+    '<button type="button" class="av-btn mini av-files-btn" data-av-proj-act="open" title="' + openTitle + '">OPEN</button>' +
+    '<button type="button" class="av-btn mini av-files-btn" data-av-proj-act="forget" title="FORGET \u2014 remove this entry from the recent list; the file on disk is never touched.">FORGET</button>' +
+    '</span></div>';
+}
+
+function avFilesUiRecentPaint(emptyText) {
+  const host = avFilesUiHost();
+  if (!host) return false;
+  try {
+    const s = avFilesUiState;
+    const list = (typeof host.querySelector === "function") ? host.querySelector("#av-files-recent-list") : null;
+    if (list) {
+      const html = s.recent.html || "";
+      if (list.innerHTML !== html) list.innerHTML = html;
+    }
+    const emp = (typeof host.querySelector === "function") ? host.querySelector("#av-files-recent-empty") : null;
+    if (emp) {
+      const txt = String(emptyText == null ? "" : emptyText);
+      if (emp.textContent !== txt) emp.textContent = txt;
+      if (emp.hidden !== !txt) emp.hidden = !txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFilesUiRecentRefresh() {
+  const s = avFilesUiState;
+  return new Promise(function (resolve) {
+    let done = false;
+    const finish = function (v) { if (!done) { done = true; resolve(v); } };
+    try {
+      const host = avFilesUiHost();
+      if (!host) return finish(false);
+      const fn = (typeof avProjRecents === "function") ? avProjRecents : null;
+      if (!fn) {
+        s.recent = { loaded: true, count: 0, ids: [], html: "" };
+        avFilesUiRecentPaint("recent projects need the project module (av_proj.js) \u2014 recents are unavailable");
+        return finish(false);
+      }
+      const seq = (s.recentSeq += 1);
+      let p = null;
+      try { p = fn(); } catch (e) { p = null; }
+      avFilesUiSettle(p, function (r) {
+        if (s.recentSeq !== seq) return finish(false);
+        const ok = !!(r && typeof r === "object" && r.ok === true);
+        const items = (ok && Array.isArray(r.items)) ? r.items : [];
+        const ids = [];
+        let html = "";
+        for (let i = 0; i < items.length && i < AV_FILES_UI_RECENT_ROWS_MAX; i++) {
+          const it = items[i];
+          if (!it || typeof it !== "object" || typeof it.id !== "string" || !it.id) continue;
+          ids.push(String(it.id));
+          html += avFilesUiRecentRowHTML(it);
+        }
+        s.recent = { loaded: true, count: ok ? ((typeof r.count === "number" && isFinite(r.count)) ? Math.floor(r.count) : ids.length) : 0, ids: ids, html: html };
+        avFilesUiRecentPaint(ok ? (ids.length ? "" : "no saved projects yet \u2014 SAVE .anvl records the projects you save here.") : "recents are unavailable right now");
+        finish(true);
+      });
+    } catch (e) { finish(false); }
+  });
+}
+
+function avFilesUiSettleRecentOpen(r0) {
+  try {
+    avFilesUiSettleOpen(r0);   /* the open renderer + its refresh (the recent row follows) */
+  } catch (e) { /* settle never throws */ }
+}
+
+function avFilesUiSettleRecentForget(r0) {
+  try {
+    const r = avFilesUiReceipt(r0);
+    if (!avFilesUiOK(r)) {
+      avFilesUiSetStatus("forget refused \u2014 " + avFilesUiErrText(r, "the entry was not removed"), "err");
+    } else {
+      const name = avFilesUiStrField(r, ["name"]) || "the project";
+      const note = avFilesUiStrField(r, ["note"]);
+      avFilesUiSetStatus("forgot " + name + " \u2014 removed from the recent list; the file on disk was never touched" + (note ? " (" + note + ")" : ""));
+    }
+    avFilesUiRecentRefresh();
+  } catch (e) { /* settle never throws */ }
+}
+
+function avFilesUiRecentOpen(id) {
+  if (avFilesUiBusy()) return avFilesUiBusyRefuse();
+  if (typeof avProjOpenRecent !== "function") return avFilesUiMissing("open", "the project module (av_proj.js) is not present \u2014 reopening recents is unavailable");
+  const rid = String(id == null ? "" : id);
+  if (!rid) return false;
+  return avFilesUiJob("recent", function () { return avProjOpenRecent(rid); }, avFilesUiSettleRecentOpen, "reopening the project\u2026");
+}
+
+function avFilesUiRecentForget(id) {
+  if (avFilesUiBusy()) return avFilesUiBusyRefuse();
+  if (typeof avProjForgetRecent !== "function") return avFilesUiMissing("open", "the project module (av_proj.js) is not present \u2014 forgetting recents is unavailable");
+  const rid = String(id == null ? "" : id);
+  if (!rid) return false;
+  return avFilesUiJob("recent", function () { return avProjForgetRecent(rid); }, avFilesUiSettleRecentForget, "forgetting the project\u2026");
+}
+
 /* ---------- the seven actions (each core reach typeof-guarded per call) ---------- */
 
 function avFilesUiActSave() {
@@ -76418,6 +78445,17 @@ function avFilesUiClick(ev) {
   try {
     const t = ev && ev.target;
     if (!t || typeof t.closest !== "function") return;
+    /* the RECENT rows first (R20): row-scoped OPEN / FORGET */
+    const rbtn = t.closest("[data-av-proj-act]");
+    if (rbtn) {
+      if (rbtn.disabled === true) return;
+      const ract = String((rbtn.getAttribute && rbtn.getAttribute("data-av-proj-act")) || "");
+      const rrow = (typeof rbtn.closest === "function") ? rbtn.closest("[data-av-proj-recent]") : null;
+      const rid = (rrow && rrow.getAttribute) ? String(rrow.getAttribute("data-av-proj-recent") || "") : "";
+      if (ract === "open") avFilesUiRecentOpen(rid);
+      else if (ract === "forget") avFilesUiRecentForget(rid);
+      return;
+    }
     const btn = t.closest("[data-av-files-act]");
     if (!btn) return;
     if (btn.disabled === true) return;
@@ -76432,6 +78470,32 @@ function avFilesUiWire(host) {
     if (host.dataset && host.dataset.avFilesUiWired === "1") return true;   /* one delegation per host element */
     if (host.dataset) host.dataset.avFilesUiWired = "1";
     host.addEventListener("click", avFilesUiClick);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the project-layer fan-out listener (R20 section 4 gap) ---------- */
+
+/* ANY project-layer settle (the facade, the File menu, the palette, this card's own buttons,
+   the launcher) makes av_proj.js dispatch 'av-proj-changed' on the document; this listener
+   repaints the RECENT block - one guarded read per event, never a job, never a throw */
+function avFilesUiProjChanged() {
+  try {
+    const p = avFilesUiRecentRefresh();
+    if (p && typeof p.catch === "function") p.catch(function () { /* the refresh never surfaces */ });
+  } catch (e) { /* a listener never throws outward */ }
+}
+
+/* bind ONCE per document (idempotent: re-mounts reuse the existing listener; the state bit
+   survives host re-wiring); a bind failure is silent - this card's own settles still refresh */
+function avFilesUiBindProjChanged() {
+  const s = avFilesUiState;
+  try {
+    if (s.projChgBound) return true;
+    const d = avFilesUiDoc();
+    if (!d || typeof d.addEventListener !== "function") return false;
+    d.addEventListener("av-proj-changed", avFilesUiProjChanged);
+    s.projChgBound = true;
     return true;
   } catch (e) { return false; }
 }
@@ -76464,6 +78528,11 @@ function avFilesUiBodyHTML() {
     '<div class="av-files-sec-title">PROJECT</div>' +
     '<div class="av-files-row av-files-controls">' + avFilesUiActsHTML(["save", "open", "samples"]) + "</div>" +
     '<div class="av-files-stat av-dim" id="av-files-pstat" role="status">project file: idle</div>' +
+    '<div class="av-files-recent">' +
+    '<div class="av-files-recent-title av-dim">RECENT PROJECTS</div>' +
+    '<div class="av-files-recent-list" id="av-files-recent-list"></div>' +
+    '<p class="av-files-recent-empty av-dim" id="av-files-recent-empty">no saved projects yet \u2014 SAVE .anvl records the projects you save here.</p>' +
+    "</div>" +
     "</section>" +
 
     '<section class="av-files-sec" data-av-files-sec="share">' +
@@ -76519,9 +78588,11 @@ function avFilesUiInit() {
     }
     avFilesUiEnsureRootId(card);
     avFilesUiWire(host);
+    avFilesUiBindProjChanged();   /* ONE document listener: every project-layer settle repaints RECENT */
     s.inited = true;
     s.mounts += 1;
     avFilesUiSync();
+    avFilesUiRecentRefresh();   /* one guarded read -> the RECENT block (never a job) */
     return true;
   } catch (e) { return false; }
 }
@@ -76549,7 +78620,7 @@ function avFilesUiSnap() {
     host: !!host,
     wired: !!(host && host.dataset && host.dataset.avFilesUiWired === "1"),
     card: false,
-    sections: { project: false, share: false, video: false },
+    sections: { project: false, share: false, video: false, recent: false },
     controls: { save: false, open: false, samples: false, cardMake: false, cardCopy: false, cardSave: false, videoRun: false },
     cores: cores,
     busy: {
@@ -76558,7 +78629,7 @@ function avFilesUiSnap() {
       flags: {
         save: !!s.busy.save, open: !!s.busy.open, samples: !!s.busy.samples,
         cardMake: !!s.busy.cardMake, cardCopy: !!s.busy.cardCopy,
-        cardSave: !!s.busy.cardSave, video: !!s.busy.video,
+        cardSave: !!s.busy.cardSave, video: !!s.busy.video, recent: !!s.busy.recent,
       },
     },
     previews: { card: !!s.preview.cardUrl, video: !!s.preview.videoUrl, cardBytes: s.preview.cardBytes, videoBytes: s.preview.videoBytes },
@@ -76571,6 +78642,7 @@ function avFilesUiSnap() {
     statusKind: s.statusKind,
     note: s.noteText || "",
     jobs: { started: s.jobSeq, done: s.doneSeq },
+    recent: { loaded: !!s.recent.loaded, count: s.recent.count, ids: s.recent.ids.slice(0, AV_FILES_UI_RECENT_ROWS_MAX) },
     classes: avFilesUiClasses(),
   };
   try {
@@ -76579,6 +78651,7 @@ function avFilesUiSnap() {
       out.sections.project = !!host.querySelector("[data-av-files-sec=\"project\"]") || !!host.querySelector(".av-files");
       out.sections.share = !!host.querySelector("[data-av-files-sec=\"share\"]") || !!host.querySelector(".av-files");
       out.sections.video = !!host.querySelector("[data-av-files-sec=\"video\"]") || !!host.querySelector(".av-files");
+      out.sections.recent = !!host.querySelector(".av-files-recent");
       out.controls.save = !!host.querySelector("#av-files-save");
       out.controls.open = !!host.querySelector("#av-files-open");
       out.controls.samples = !!host.querySelector("#av-files-samples");
@@ -76611,6 +78684,7 @@ if (typeof window !== "undefined") {
       sync: function () { return avFilesUiSync(); },
       snap: function () { return avFilesUiSnap(); },
       init: function () { return avFilesUiInit(); },
+      refreshRecent: function () { return avFilesUiRecentRefresh(); },
     };
   } catch (e) { /* no window — nothing to publish */ }
 }
@@ -83836,10 +85910,13 @@ try { avConsoleInit(); } catch (e) { /* console boots best-effort */ }
      avPackDetect(bytes) -> Promise<{ok, manifest?, error?}>        (R16 reader; never throws)
      avPackBuild(o) -> Promise<{ok, name, bytes, manifest, counts, refused, error?}>
                         o = {ids:[libId...], name?, author?, license?, tags?}
+     avPackBuildSong(o) -> Promise<{ok, name, bytes, manifest, counts, refused, notes, error?}>
+                        o = {name?} - the R20 Song Bundle (item kind "song"; the caps are
+                        AVPACK_SONG_ITEM_MAX per item + AVPACK_SONG_ITEMS_MAX items total)
      avPackImportBytes(bytes, packName, o) -> Promise<receipt>
                         receipt = {ok, pack:{id,name}|null, counts:{items,imported,refused},
                                    items:[{key,name,kind,result,reason}], errors:[...]}
-     window.__avPack = {version, validate, detect, build, importBytes}
+     window.__avPack = {version, validate, detect, build, importBytes, song}
 
    Container (section 2): a stored-method ZIP written by src/av_zipc.js avZipBuild (entries
    in order, opts date null = the deterministic 1980 DOS stamp), read by the R16 clean-room
@@ -83853,7 +85930,8 @@ try { avConsoleInit(); } catch (e) { /* console boots best-effort */ }
    epoch ms), app:"anvil-app", items:[...]}.
    item rows: {key (slug, unique), kind, format (<=12), name (leaf <=120), path
    ("items/<key>.<ext>"), sha256 (64-hex lower), size (finite >=0)} + optional meta (object).
-   kinds vocabulary = ["sample","kit","refs","pattern","wt","module"]. Rules: every item's
+   kinds vocabulary = ["sample","kit","refs","pattern","wt","module"] (R20 adds "song" - the
+   same array on BOTH sides: here and in verify/avpack_schema.mjs). Rules: every item's
    sha256 is verified against the extracted bytes BEFORE commit; a mismatch or missing member
    = that item REFUSED (named), never landed; duplicate keys = manifest invalid; unknown
    extra keys are tolerated (forward compat) but never required.
@@ -83863,15 +85941,28 @@ try { avConsoleInit(); } catch (e) { /* console boots best-effort */ }
    a `wt` record loads from the wt-store (avWtLibraryLoad -> avWtExportJson, the .wt.json
    exchange text) and a `module` record from the code store (avCodeExportText, the .avmod
    exchange text) when their stores hold the id. Import routes (pin 5): sample/kit/refs/
-   pattern -> avLibAddItem with source {name: packName, path: item.path, size, at,
+   pattern/song -> avLibAddItem with source {name: packName, path: item.path, size, at,
    pack: manifest.id}; wt -> avWtImportJson + avWtLibrarySave; module -> avCodeImportText.
    Per-item honest results ("imported" / "refused" + reason); ONE receipt. avPackBuild is
    busy-guarded; library records are never mutated (bytes are read-only).
 
+   R20 Song Bundle (verify/_r20_wave.md section 5): avPackBuildSong() writes ONE zip (the
+   same avZipBuild store-method container) carrying the live project payload as item kind
+   "song" (name "project.anvl", bytes = the avProjBuild text as UTF-8 bytes) + the library
+   items referenced by the live sample slots (slot entry name -> library item by lowercase
+   basename, the kit resolution law) + ALL user wt tables + ALL user modules + a manifest
+   whose extra "packs" key lists the installed pack ids as refs only (never pack bytes).
+   Caps: AVPACK_SONG_ITEM_MAX (96 MiB) per item + AVPACK_SONG_ITEMS_MAX (600) items total;
+   over budget = an honest refusal naming the item (receipt.refused holds the names,
+   receipt.notes the reasons). A project that cannot be built is fatal (no bundle). The
+   receipt is {ok, name, bytes, manifest, counts {project, samples, wt, modules, packs},
+   refused, notes, error}. Facade: window.__avPack.song (busy-guarded like avPackBuild).
+
    Laws: "use strict"; ASCII-only source; DOM-free top level (parse-safe); classic script
    (no modules/imports); ONE avPack* / AVPACK_* family of top-level names; no randomness; no
-   network; never throws outward - every public entry resolves an honest value. R19 scope
-   note: Song Bundle (kind "song") and backup coverage are R20 - not here. */
+   network; never throws outward - every public entry resolves an honest value. R20 scope
+   note: kind "song" + avPackBuildSong live here; backup coverage (av_backup.js) and the
+   song item's LOAD route (av_lib.js) are sibling files of this wave. */
 
 "use strict";
 
@@ -83882,7 +85973,7 @@ const avPackVersion = "r19.0";
 const AVPACK_APP = "anvil-app";
 const AVPACK_MANIFEST = "manifest.json";
 const AVPACK_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;        /* pack id + item key slug (cap 64) */
-const AVPACK_KINDS = ["sample", "kit", "refs", "pattern", "wt", "module"];
+const AVPACK_KINDS = ["sample", "kit", "refs", "pattern", "wt", "module", "song"];
 const AVPACK_SHA_RE = /^[0-9a-f]{64}$/;                  /* an accepted content hash */
 const AVPACK_PATH_RE = /^items\/([a-z0-9][a-z0-9-]{0,63})\.([a-z0-9]{1,12})$/;
 const AVPACK_NAME_MAX = 80;                              /* manifest.name cap */
@@ -83897,6 +85988,10 @@ const AVPACK_EXT_MAX = 12;                               /* path extension cap *
 const AVPACK_ERR_MAX = 64;                               /* validation stops after this many */
 const AVPACK_REASON_MAX = 96;                            /* one refusal reason line cap */
 const AVPACK_SRCNAME_MAX = 120;                          /* source.name cap (the pack file leaf) */
+const AVPACK_SONG_ITEM_MAX = 96 * 1024 * 1024;           /* R20 Song Bundle: per-item byte cap */
+const AVPACK_SONG_ITEMS_MAX = 600;                       /* R20 Song Bundle: item count cap */
+const AVPACK_SONG_PROJECT = "project.anvl";              /* the pinned project item name */
+const AVPACK_SONG_FORMAT = "anvl";                       /* the project item format (+ path ext) */
 
 const avPackState = { busy: false };                     /* build busy law: one build at a time */
 
@@ -84471,16 +86566,420 @@ async function avPackBuildRun(o) {
   return { ok: true, name: name, bytes: buf, manifest: manifest, counts: counts, refused: refused };
 }
 
+/* ---------- R20: avPackBuildSong - the Song Bundle (item kind "song") ---------- */
+
+/* The song build options (the only pinned knob is name; default "song"). */
+function avPackSongOpts(o) {
+  const r = { name: "song" };
+  try {
+    const src = (o && typeof o === "object" && !Array.isArray(o)) ? o : null;
+    if (src) {
+      const nm = avPackStr(src.name, "", AVPACK_NAME_MAX);
+      if (nm) r.name = nm;
+    }
+  } catch (e) { /* the default stands */ }
+  return r;
+}
+
+/* The lowercase-basename compare form (the kit resolution law). avLibBaseLower when the
+   library is loaded; otherwise the identical local clone, so the law holds either way. */
+function avPackSongBaseLower(s) {
+  try {
+    if (typeof avLibBaseLower === "function") return String(avLibBaseLower(s) || "");
+  } catch (e) { /* the clone below */ }
+  try {
+    const t = String(s == null ? "" : s);
+    const parts = t.split(/[\\/]+/);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (parts[i]) return parts[i].toLowerCase().replace(/[\u0000-\u001f\u007f]/g, "");
+    }
+  } catch (e2) { /* none */ }
+  return "";
+}
+
+/* One library record by id - the avPackLoadOne rung-1 read, direct (no ladder: a song
+   bundle's sample references are library ids by construction). Only sample/kit/refs/
+   pattern; a "song" row referenced by a slot refuses honestly. */
+async function avPackSongLibOne(id) {
+  if (typeof avLibGet !== "function") return { ok: false, error: "library absent" };
+  let g = null;
+  try { g = await avLibGet(id); } catch (e) { g = null; }
+  if (!g || g.ok !== true || !g.item || typeof g.item !== "object") return { ok: false, error: "no record" };
+  const it = g.item;
+  const kind = (typeof it.kind === "string" && (it.kind === "sample" || it.kind === "kit"
+    || it.kind === "refs" || it.kind === "pattern")) ? it.kind : "";
+  if (!kind) return { ok: false, error: "unsupported kind" };
+  const kb = avPackU8(it.bytes);
+  if (!kb || kb.byteLength < 1) return { ok: false, error: "no bytes" };
+  return {
+    ok: true, kind: kind,
+    name: avPackStr(it.name, id, AVPACK_LEAF_MAX),
+    format: avPackToken(it.format, "", AVPACK_FORMAT_MAX),
+    ext: avPackExtOf(it.ext),
+    meta: (it.meta && typeof it.meta === "object" && !Array.isArray(it.meta)) ? it.meta : null,
+    bytes: it.bytes,
+  };
+}
+
+/* One wt table by id - the avPackLoadOne rung-2 read, direct (the wt store only). */
+async function avPackSongWtOne(id) {
+  if (typeof avWtLibraryLoad !== "function") return { ok: false, error: "wt core absent" };
+  let t = null;
+  try { t = await avWtLibraryLoad(id); } catch (e) { t = null; }
+  if (!t || typeof t !== "object") return { ok: false, error: "no table" };
+  let json = null;
+  try { if (typeof avWtExportJson === "function") json = avWtExportJson(t); } catch (e2) { json = null; }
+  const u8 = (typeof json === "string" && json) ? avPackUtf8Encode(json) : null;
+  if (!u8 || u8.byteLength < 1) return { ok: false, error: "wt export refused" };
+  return {
+    ok: true, kind: "wt",
+    name: avPackStr(t.name, id, AVPACK_LEAF_MAX),
+    format: "wt", ext: "json", meta: null, bytes: u8,
+  };
+}
+
+/* One module by id - the avPackLoadOne rung-3 read, direct (the code store only). Sync: the
+   caller awaits avCodeStoreLoad() once, then avCodeList() + this per id. */
+function avPackSongModOne(id) {
+  if (typeof avCodeExportText !== "function") return { ok: false, error: "code core absent" };
+  let text = null;
+  try { text = avCodeExportText(id); } catch (e) { text = null; }
+  if (typeof text !== "string" || !text) return { ok: false, error: "module export refused" };
+  const u8 = avPackUtf8Encode(text);
+  if (!u8 || u8.byteLength < 1) return { ok: false, error: "module export refused" };
+  let nm = id;
+  try {
+    const o2 = JSON.parse(text);
+    if (o2 && typeof o2.name === "string" && o2.name) nm = o2.name;
+  } catch (e2) { /* the id stands */ }
+  return {
+    ok: true, kind: "module",
+    name: avPackStr(nm, id, AVPACK_LEAF_MAX),
+    format: "avmod", ext: "avmod", meta: null, bytes: u8,
+  };
+}
+
+/* The meta rides only when it is a non-empty plain object (the avPackBuildRun rule). */
+function avPackSongMeta(v) {
+  try {
+    if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+    for (const k in v) {
+      if (Object.prototype.hasOwnProperty.call(v, k)) return v;
+    }
+  } catch (e) { /* null */ }
+  return null;
+}
+
+/* Busy-guarded public Song Bundle build (the avPackBuild idiom; never throws). */
+function avPackBuildSong(o) {
+  const st = avPackState;
+  let busy = false;
+  try { busy = st.busy === true; } catch (e) { busy = false; }
+  if (busy) {
+    return Promise.resolve({
+      ok: false, name: "", bytes: null, manifest: null,
+      counts: { project: 0, samples: 0, wt: 0, modules: 0, packs: 0 },
+      refused: [], notes: [], error: "busy",
+    });
+  }
+  try { st.busy = true; } catch (e) { /* the guard is best-effort */ }
+  return (async function () {
+    try { return await avPackBuildSongRun(o); }
+    catch (e) {
+      return {
+        ok: false, name: "", bytes: null, manifest: null,
+        counts: { project: 0, samples: 0, wt: 0, modules: 0, packs: 0 },
+        refused: [], notes: [],
+        error: avPackCap(avPackErrText(e), AVPACK_REASON_MAX),
+      };
+    } finally { try { st.busy = false; } catch (e2) { /* clears on the next call */ } }
+  })();
+}
+
+async function avPackBuildSongRun(o) {
+  const src = avPackSongOpts(o);
+  const refused = [];               /* item names - the pinned receipt shape */
+  const notes = [];                 /* "name: reason" lines (honesty for the refusals) */
+  const counts = { project: 0, samples: 0, wt: 0, modules: 0, packs: 0 };
+  const taken = Object.create(null);
+  const rows = [];                  /* manifest item rows (one per zip item) */
+  const zipped = [];                /* {path, bytes} in row order */
+  let total = 0;
+
+  /* The shared cap/sha/key gate (true = the item was added). Caps: 96 MiB per item + the
+     600-item total; over budget => an honest refusal naming the item. */
+  const add = async function (one, label) {
+    if (avPackSize(one.bytes) > AVPACK_SONG_ITEM_MAX) {
+      refused.push(label);
+      notes.push(label + ": over the 96 MiB item cap");
+      return false;
+    }
+    if (total >= AVPACK_SONG_ITEMS_MAX) {
+      refused.push(label);
+      notes.push(label + ": over the " + AVPACK_SONG_ITEMS_MAX + "-item cap");
+      return false;
+    }
+    const sha = await avPackShaHex(one.bytes);
+    if (!sha) {
+      refused.push(label);
+      notes.push(label + ": no sha256 (crypto unavailable)");
+      return false;
+    }
+    const key = avPackKeyFor(one.name || label, taken);
+    const ext = avPackExtOf(one.ext) || avPackExtOf(one.format) || "bin";
+    const row = {
+      key: key, kind: one.kind, format: one.format,
+      name: avPackLeaf(one.name, label),
+      path: "items/" + key + "." + ext,
+      sha256: sha,
+      size: avPackSize(one.bytes),
+    };
+    const meta = avPackSongMeta(one.meta);
+    if (meta) row.meta = meta;      /* the meta rides by reference; never mutated */
+    rows.push(row);
+    zipped.push({ path: row.path, bytes: one.bytes });
+    total += 1;
+    return true;
+  };
+
+  /* 1) the project payload - fatal when it cannot be built (a bundle without its project
+     is a heap of refs, not a Song Bundle) */
+  let pj = null;
+  try { if (typeof avProjBuild === "function") pj = avProjBuild(); } catch (e) { pj = null; }
+  const pjText = (pj && pj.ok === true && typeof pj.text === "string") ? pj.text : "";
+  const pjBytes = pjText ? avPackUtf8Encode(pjText) : null;      /* bytes, not a string */
+  const pjSha = (pjBytes && pjBytes.byteLength) ? await avPackShaHex(pjBytes) : "";
+  let pjFatal = "";
+  if (!pjText) pjFatal = (pj && pj.error) ? String(pj.error) : "the project payload could not be built";
+  else if (!pjBytes || !pjBytes.byteLength) pjFatal = "the project text did not encode";
+  else if (avPackSize(pjBytes) > AVPACK_SONG_ITEM_MAX) pjFatal = "over the 96 MiB item cap";
+  else if (!pjSha) pjFatal = "no sha256 (crypto unavailable)";
+  if (pjFatal) {
+    refused.push(AVPACK_SONG_PROJECT);
+    notes.push(AVPACK_SONG_PROJECT + ": " + avPackCap(pjFatal, AVPACK_REASON_MAX));
+    return {
+      ok: false, name: src.name, bytes: null, manifest: null,
+      counts: counts, refused: refused, notes: notes,
+      error: avPackCap("project: " + pjFatal, AVPACK_REASON_MAX),
+    };
+  }
+  taken["project"] = 1;                                         /* the pinned key */
+  rows.push({
+    key: "project", kind: "song", format: AVPACK_SONG_FORMAT,
+    name: AVPACK_SONG_PROJECT, path: "items/project.anvl",
+    sha256: pjSha, size: avPackSize(pjBytes),
+  });
+  zipped.push({ path: "items/project.anvl", bytes: pjBytes });
+  counts.project = 1;
+  total = 1;
+
+  /* 2) the library items referenced by the live sample slots (resolve slot entry names to
+     library items by lowercase basename - the kit resolution law; newest-first list order,
+     two slots on the same item pack it once) */
+  let store = null;
+  try { store = (typeof avSampleStore !== "undefined" && avSampleStore) ? avSampleStore : null; } catch (e) { store = null; }
+  const sent = (store && Array.isArray(store.sent)) ? store.sent : null;
+  if (sent) {
+    let libItems = null;
+    let libTried = false;
+    const seenLib = Object.create(null);
+    for (let slot = 0; slot < sent.length && slot < 4; slot++) {
+      const rec = sent[slot];
+      if (!rec || typeof rec !== "object") continue;
+      const nm = avPackStr(rec.name, "", AVPACK_LEAF_MAX) || avPackStr(rec.id, "slot " + slot, AVPACK_LEAF_MAX);
+      const k0 = avPackSongBaseLower(rec.name) || avPackSongBaseLower(rec.id);
+      if (!libTried) {
+        libTried = true;
+        try {
+          if (typeof avLibList === "function") {
+            const lr = await avLibList();
+            if (lr && lr.ok === true && Array.isArray(lr.items)) libItems = lr.items;
+          }
+        } catch (e) { libItems = null; }
+      }
+      if (!libItems) {
+        refused.push(nm);
+        notes.push(nm + ": the library list is unavailable");
+        continue;
+      }
+      let hitId = "";
+      if (k0) {
+        for (let i = 0; i < libItems.length; i++) {
+          const it = libItems[i];
+          if (!it || typeof it.id !== "string") continue;
+          if (avPackSongBaseLower(it.name) === k0) { hitId = it.id; break; }
+        }
+      }
+      if (!hitId) {
+        refused.push(nm);
+        notes.push(nm + ": no library item matches the slot name");
+        continue;
+      }
+      if (seenLib[hitId]) continue;                             /* packed once */
+      let one = null;
+      try { one = await avPackSongLibOne(hitId); } catch (e) { one = null; }
+      if (!one || one.ok !== true) {
+        refused.push(nm);
+        notes.push(nm + ": " + ((one && one.error) ? String(one.error) : "no record"));
+        continue;
+      }
+      seenLib[hitId] = 1;
+      if (await add(one, nm)) counts.samples += 1;
+    }
+  }
+
+  /* 3) ALL user wt tables (the wt store's own export text) */
+  let wtList = null;
+  try { if (typeof avWtLibraryList === "function") wtList = await avWtLibraryList(); } catch (e) { wtList = null; }
+  if (!Array.isArray(wtList)) {
+    notes.push("wt: the wt table list is unavailable - no wt tables were packed");
+  } else {
+    const seenWt = Object.create(null);
+    for (let i = 0; i < wtList.length; i++) {
+      const e = wtList[i];
+      if (!e || typeof e.id !== "string" || !e.id || seenWt[e.id]) continue;
+      seenWt[e.id] = 1;
+      const nm = avPackStr(e.name, e.id, AVPACK_LEAF_MAX);
+      let one = null;
+      try { one = await avPackSongWtOne(e.id); } catch (e2) { one = null; }
+      if (!one || one.ok !== true) {
+        refused.push(nm);
+        notes.push(nm + ": " + ((one && one.error) ? String(one.error) : "no table"));
+        continue;
+      }
+      if (await add(one, nm)) counts.wt += 1;
+    }
+  }
+
+  /* 4) ALL user modules (the code store's own export text; the store's loaded view first) */
+  try {
+    if (typeof avCodeStoreLoad === "function") {
+      const p = avCodeStoreLoad();
+      if (p && typeof p.then === "function") await p;
+    }
+  } catch (e) { /* the loaded view is read below */ }
+  let codeList = null;
+  try {
+    if (typeof avCodeList === "function") {
+      const cl = avCodeList();
+      if (Array.isArray(cl)) codeList = cl;
+    }
+  } catch (e2) { codeList = null; }
+  if (!codeList) {
+    notes.push("modules: the code store list is unavailable - no modules were packed");
+  } else {
+    const seenMod = Object.create(null);
+    for (let i = 0; i < codeList.length; i++) {
+      const rec = codeList[i];
+      if (!rec || typeof rec.id !== "string" || !rec.id || seenMod[rec.id]) continue;
+      seenMod[rec.id] = 1;
+      const nm = avPackStr(rec.name, rec.id, AVPACK_LEAF_MAX);
+      let one = null;
+      try { one = avPackSongModOne(rec.id); } catch (e3) { one = null; }
+      if (!one || one.ok !== true) {
+        refused.push(nm);
+        notes.push(nm + ": " + ((one && one.error) ? String(one.error) : "no module"));
+        continue;
+      }
+      if (await add(one, nm)) counts.modules += 1;
+    }
+  }
+
+  /* 5) the installed pack ids - manifest refs only, never pack bytes */
+  const packs = [];
+  try {
+    let list = [];
+    if (typeof avStoreStatus === "function") {
+      const stt = avStoreStatus();
+      if (stt && Array.isArray(stt.installed)) list = stt.installed;
+    }
+    if (!Array.isArray(list) || !list.length) {
+      if (typeof avStoreInstalled === "function") {
+        const l2 = avStoreInstalled();
+        if (Array.isArray(l2) && l2.length) list = l2;
+      }
+    }
+    const seenPk = Object.create(null);
+    for (let i = 0; i < list.length; i++) {
+      const id = (list[i] && typeof list[i].id === "string") ? list[i].id : "";
+      if (!id || seenPk[id]) continue;
+      seenPk[id] = 1;
+      packs.push(avPackCap(id, 64));
+    }
+  } catch (e) { /* no refs is honest (counts.packs stays 0) */ }
+  counts.packs = packs.length;
+
+  /* 6) the manifest (the R19 v1 shape + the extra "packs" ref list; unknown extra keys are
+     tolerated by the validator on both sides), then the ONE zip */
+  const manifest = {
+    v: 1,
+    id: avPackSlug(src.name, 64) || "song",
+    name: src.name,
+    author: "",
+    license: "",
+    tags: [],
+    at: Date.now(),
+    app: AVPACK_APP,
+    packs: packs,
+    items: rows,
+  };
+  const chk = avPackValidateManifest(manifest);
+  if (!chk || chk.ok !== true) {
+    return {
+      ok: false, name: src.name, bytes: null, manifest: null,
+      counts: counts, refused: refused, notes: notes,
+      error: "manifest invalid: " + avPackCap((chk && chk.errors && chk.errors[0]) ? chk.errors[0] : "", 60),
+    };
+  }
+  let buf = null;
+  try {
+    if (typeof avZipBuild === "function") {
+      const entries = [{ name: AVPACK_MANIFEST, data: JSON.stringify(manifest) }];
+      for (let i = 0; i < zipped.length; i++) entries.push({ name: zipped[i].path, data: zipped[i].bytes });
+      buf = avZipBuild(entries, { date: null });      /* date null = deterministic DOS stamp */
+    }
+  } catch (e) { buf = null; }
+  if (!buf || typeof buf.byteLength !== "number" || buf.byteLength < 1) {
+    return {
+      ok: false, name: src.name, bytes: null, manifest: manifest,
+      counts: counts, refused: refused, notes: notes,
+      error: (typeof avZipBuild === "function") ? "zip writer refused" : "zip writer absent",
+    };
+  }
+  counts.bytes = buf.byteLength;
+  return { ok: true, name: src.name, bytes: buf, manifest: manifest, counts: counts, refused: refused, notes: notes, error: null };
+}
+
 /* ---------- avPackImportBytes: one receipt; sha verified BEFORE commit ---------- */
 
-/* the per-item route: sample/kit/refs/pattern -> avLibAddItem (source carries pack),
+/* the per-item route: sample/kit/refs/pattern/song -> avLibAddItem (source carries pack),
    wt -> avWtImportJson + avWtLibrarySave, module -> avCodeImportText */
 async function avPackRouteItem(row, itemBytes, srcName, manifest, at) {
   const kind = row.kind;
-  if (kind === "sample" || kind === "kit" || kind === "refs" || kind === "pattern") {
+  if (kind === "sample" || kind === "kit" || kind === "refs" || kind === "pattern" || kind === "song") {
     if (typeof avLibAddItem !== "function") return { ok: false, reason: "library absent" };
     const dot = row.path.lastIndexOf(".");
     const ext = (dot >= 0) ? avPackExtOf(row.path.slice(dot + 1)) : "";
+    /* R18a dedupe (the av_import.js avImportWrite law; non-blocking keep-both): the sha
+       runs ONCE pre-commit and a hit flags the rec with dupOf {id, name} of the earlier
+       record - the write below still happens (flag + replace; never a modal). */
+    let dup = null;
+    let sha = "";
+    try {
+      const bl = (itemBytes && typeof itemBytes.byteLength === "number") ? itemBytes.byteLength : -1;
+      if (itemBytes && bl !== 0) sha = await avPackShaHex(itemBytes);
+    } catch (e0) { sha = ""; }
+    if (typeof sha !== "string") sha = "";
+    if (sha) {
+      try {
+        if (typeof avLibFindSha === "function") {
+          const f = await avLibFindSha(sha);
+          if (f && f.ok === true && f.hit === true && typeof f.id === "string" && f.id) {
+            dup = { id: f.id, name: avPackCap(f.name, 120) };
+          }
+        }
+      } catch (e1) { dup = null; }
+    }
     const rec = {
       name: row.name, kind: kind, format: row.format, ext: ext, meta: row.meta,
       result: "imported",           /* avLibItemNorm persists only imported items */
@@ -84491,6 +86990,7 @@ async function avPackRouteItem(row, itemBytes, srcName, manifest, at) {
         pack: manifest.id,          /* the R19 provenance slug (av_lib avLibSourceNorm keeps it) */
       },
     };
+    if (dup) rec.dupOf = { id: dup.id, name: dup.name };
     let r = null;
     try { r = await avLibAddItem(rec); } catch (e) { r = null; }
     if (r && r.ok === true) return { ok: true, id: (typeof r.id === "string") ? r.id : "" };
@@ -84620,6 +87120,7 @@ if (typeof window !== "undefined") {
     validate: avPackValidateManifest,
     detect: avPackDetect,
     build: avPackBuild,
+    song: avPackBuildSong,
     importBytes: avPackImportBytes,
   };
 }
@@ -86755,7 +89256,7 @@ if (typeof window !== "undefined" && window) {
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.10.0", phase: "R21 · library overlay", built: "2026-10-09" });
+const ANVIL = Object.freeze({ version: "1.11.0", phase: "R20 · work persistence", built: "2026-10-09" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------

@@ -64,7 +64,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    S2: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = '1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa';
+const EXPECT_SHA = '354b74ddfaaf42788378a5089ceb7b3590c0c65036187ad743082c2d1ffc55fe';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -297,6 +297,20 @@ async function main() {
     return true;
   };
 
+  /* rig reload cycle (R20 legs): Page.navigate -> re-wait data-av-ready -> re-inject the rig
+     helpers (the script context dies on the navigate). Returns {ready, rein}; callers gate on it. */
+  const rigReload = async () => {
+    await send('Page.navigate', { url: url });
+    await sleep(350);
+    const ready = await waitReady(160);
+    await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false }).catch(() => { });
+    await send('Page.bringToFront').catch(() => { });
+    await ev(SEQI_HELPERS);
+    await ev(S2W_HELPERS);
+    const rein = val(await ev(`!!(window.__seqi && window.__seqi.v === 1 && window.__s2w && window.__s2w.v === 1 && typeof window.__s2w.wit === 'function')`)) === true;
+    return { ready: ready === true, rein: rein === true };
+  };
+
   /* ── 1. boot + the sessions card mounted into #av-sessions / #av-sessions-host ── */
   const ready1 = await waitReady(120);
   check('1 boot: data-av-ready flips', ready1);
@@ -403,6 +417,17 @@ async function main() {
     (save2.error === undefined || save2.error === null) && (rigId != null) && l2.some(s => s && (s.id === rigId || s.name === 'RIG')),
     JSON.stringify({ receiptKeys: save2 ? Object.keys(save2) : null, id: rigId, list: l2.map(s => s && { id: s.id, name: s.name, version: s.version }) }).slice(0, 400));
 
+  /* R20 sec 3: after the FIRST avSessionSave with no explicit choice made, the autosave default
+     flips ON. Witness it on the live state (the virgin store read OFF at 1e - this must now be on,
+     and the choice surface stays null: the seed never writes the explicit-choice key). */
+  let flip2g = null;
+  for (let i = 0; i < 12 && !(flip2g && flip2g.on === true); i++) {
+    flip2g = val(await ev(`(() => { try { const s = avSessionState() || {}; const a = s.autosave || {}; return { on: a.on === true, ms: (a.ms !== undefined) ? a.ms : null, choice: (a.choice !== undefined) ? a.choice : 'missing', count: (s.count !== undefined) ? s.count : null }; } catch (e) { return { on: null }; } })()`)) || {};
+    if (!(flip2g && flip2g.on === true)) await sleep(250);
+  }
+  check('2g autosave default: after the first avSessionSave the auto state flips ON (witnessed \u00b7 no explicit choice written)',
+    !!(flip2g && flip2g.on === true && (flip2g.choice === null || flip2g.choice === 'missing')), JSON.stringify(flip2g));
+
   const mutR = await ev(`(() => {
     const H = window.__seqi;
     const c = H.clear('RIG CUT');
@@ -461,6 +486,130 @@ async function main() {
   check('3 avSessionRestore(id, 1) -> state equals the v1 snapshot again (export equal · bpm 137 · macro0 0.37)',
     (rs3.error === undefined || rs3.error === null) && rs3.ok !== false && eqStr(w0.export, w3.export) && w3.bpm === 137 && near(w3.macros && w3.macros[0], 0.37, 0.002),
     JSON.stringify({ receipt: rs3, exportEqual: eqStr(w0.export, w3.export), bpm: w3.bpm, macro0: w3.macros ? w3.macros[0] : null }).slice(0, 400));
+
+  /* ── 3b. autosave rules (default · flush · explicit off) — R20 sec 3 ──
+     The default flip above must survive a reload (the seed reads the non-virgin store; nothing
+     has written the explicit-choice key yet). The visibilitychange flush: on document hidden,
+     while auto is on and the state is dirty, the SAME __autosave record is written immediately
+     and the timer rearms — witness lastAutosaveAt move well before the interval could elapse
+     (twice: the second flush right after the first write's rearm proves no tick did it). The
+     stub is then deleted and the normal state reasserted. An explicit off outranks everything
+     and must survive its own reload. */
+  console.log('\u2500\u2500 3b. autosave rules (default \u00b7 flush \u00b7 explicit off) \u2500\u2500');
+
+  const rl3a = await rigReload();
+  check('3b reload 1: data-av-ready + rig helpers re-injected after the navigate', rl3a.ready === true && rl3a.rein === true, JSON.stringify(rl3a));
+  if (!rl3a.ready) { console.error('APP NOT READY AFTER RELOAD (3b)'); process.exit(1); }
+  let fl3b = null;
+  for (let i = 0; i < 40 && !(fl3b && fl3b.on === true); i++) {
+    fl3b = val(await ev(`(() => { try { const s = avSessionState() || {}; const a = s.autosave || {}; return { on: a.on === true, ms: (a.ms !== undefined) ? a.ms : null, choice: (a.choice !== undefined) ? a.choice : 'missing', count: (s.count !== undefined) ? s.count : null }; } catch (e) { return { on: null }; } })()`)) || {};
+    if (!(fl3b && fl3b.on === true)) await sleep(250);
+  }
+  check('3b autosave default survives reload: still ON after the navigate (seeded from the stored session \u00b7 no explicit enable ever made)',
+    !!(fl3b && fl3b.on === true && Number(fl3b.count) >= 1), JSON.stringify(fl3b));
+
+  /* the flush leg: mutate dirty while auto is on; stub document.visibilityState to hidden via
+     defineProperty (the handler reads that property per event); dispatch a PLAIN Event. */
+  const flusMut = val(await ev(`(() => { const H = window.__seqi; const c = H.clear('RIG FLUSH CUT'); const b = H.commit('bpm', 151); return { clear: !!(c && c.ok === true), bpm: b }; })()`)) || {};
+  note('3b flush prep: dirty mutation while auto is on -> ' + JSON.stringify(flusMut));
+  const fl0 = val(await ev(`(() => { try { const s = avSessionState() || {}; const a = s.autosave || {}; return { at: (s.lastAutosaveAt !== undefined) ? s.lastAutosaveAt : null, ms: (a.ms !== undefined) ? a.ms : null, on: a.on === true, dirty: (s.dirty !== undefined) ? s.dirty : null, vis: String(document.visibilityState) }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`)) || {};
+  const msFlush = (isFinite(Number(fl0.ms)) && Number(fl0.ms) > 0) ? Number(fl0.ms) : 45000;
+  const wFlush1 = Math.max(1200, Math.min(4000, msFlush - 1000));
+  const tFlush1 = Date.now();
+  const f1 = val(await ev(`(() => {
+    const out = { stub: false, dispatched: false, err: null };
+    try {
+      Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+      out.stub = String(document.visibilityState) === 'hidden';
+      document.dispatchEvent(new Event('visibilitychange'));
+      out.dispatched = true;
+    } catch (e) { out.err = String((e && e.message) || e); }
+    return out;
+  })()`)) || {};
+  let atFlush1 = null, tMove1 = null;
+  for (let i = 0; i < Math.ceil(wFlush1 / 200) + 8 && atFlush1 == null; i++) {
+    const r = val(await ev(`(() => { try { const s = avSessionState() || {}; return { at: (s.lastAutosaveAt !== undefined) ? s.lastAutosaveAt : null }; } catch (e) { return { at: null }; } })()`)) || {};
+    const at = (r && r.at !== undefined) ? r.at : null;
+    if (at != null && at !== fl0.at) { atFlush1 = at; tMove1 = Date.now(); }
+    else await sleep(200);
+  }
+  const elFlush1 = (tMove1 != null) ? (tMove1 - tFlush1) : null;
+  check('3c visibilitychange flush: lastAutosaveAt moves after the hidden dispatch (elapsed < the interval \u2014 before it could elapse)',
+    fl0.err === undefined && fl0.on === true && fl0.dirty === true && f1.stub === true && f1.dispatched === true && atFlush1 != null && elFlush1 != null && elFlush1 < msFlush && elFlush1 <= wFlush1,
+    JSON.stringify({ stub: f1.stub, dispatched: f1.dispatched, before: fl0.at, moved: atFlush1, dirty: fl0.dirty, ms: msFlush, elapsed: elFlush1, window: wFlush1, nativeVis: fl0.vis }));
+
+  /* flush #2 - the re-arm proof: the flush above rearmed the ONE timer at its write; a second
+     hidden dispatch right after a fresh mutation must move the record again well before that
+     interval could elapse (no interval tick could have done it). */
+  const flusMut2 = val(await ev(`(() => { const H = window.__seqi; return { bpm: H.commit('bpm', 159) }; })()`)) || {};
+  const wFlush2 = Math.max(1000, Math.min(3000, msFlush - 1200));
+  const tFlush2 = Date.now();
+  const f2 = val(await ev(`(() => { const out = { dispatched: false, err: null }; try { document.dispatchEvent(new Event('visibilitychange')); out.dispatched = true; } catch (e) { out.err = String((e && e.message) || e); } return out; })()`)) || {};
+  let atFlush2 = null, tMove2 = null;
+  for (let i = 0; i < Math.ceil(wFlush2 / 200) + 8 && atFlush2 == null; i++) {
+    const r = val(await ev(`(() => { try { const s = avSessionState() || {}; return { at: (s.lastAutosaveAt !== undefined) ? s.lastAutosaveAt : null }; } catch (e) { return { at: null }; } })()`)) || {};
+    const at = (r && r.at !== undefined) ? r.at : null;
+    if (at != null && at !== atFlush1) { atFlush2 = at; tMove2 = Date.now(); }
+    else await sleep(200);
+  }
+  const elFlush2 = (tMove2 != null) ? (tMove2 - tFlush2) : null;
+  const gapFlush2 = (tMove2 != null && tMove1 != null) ? (tMove2 - tMove1) : null;
+  const gapBound2 = Math.max(900, msFlush - 700);
+  check('3c flush re-arm proof: a second hidden dispatch moves the record again (gap since the first write < the interval \u2014 no interval tick could have done it)',
+    flusMut2.bpm === true && f2.dispatched === true && atFlush2 != null && elFlush2 != null && elFlush2 <= wFlush2 && gapFlush2 != null && gapFlush2 < gapBound2,
+    JSON.stringify({ bpm: flusMut2.bpm, dispatched: f2.dispatched, at2: atFlush2, elapsed2: elFlush2, window2: wFlush2, gapSinceMove1: gapFlush2, gapBound: gapBound2, ms: msFlush }));
+
+  /* restore the stub (delete the own property - the native getter is back) and reassert the
+     normal state: with a visible visibilityState a plain dispatch must NOT flush. */
+  const rst = val(await ev(`(() => {
+    const out = { own: null, vis: null, err: null };
+    try { delete document.visibilityState; } catch (e) { out.err = String((e && e.message) || e); }
+    try { out.own = Object.prototype.hasOwnProperty.call(document, 'visibilityState'); } catch (e) { out.own = null; }
+    try { out.vis = String(document.visibilityState); } catch (e) { out.vis = null; }
+    return out;
+  })()`)) || {};
+  check('3c stub restore: delete document.visibilityState \u2014 the own property is gone and the native value is back',
+    rst.err == null && rst.own === false && rst.vis != null && fl0.vis != null && rst.vis === fl0.vis,
+    JSON.stringify({ restore: rst, native: fl0.vis }));
+  const gMut = val(await ev(`(() => { const H = window.__seqi; return { bpm: H.commit('bpm', 163) }; })()`)) || {};
+  const tGuard = Date.now();
+  await ev(`(() => { try { document.dispatchEvent(new Event('visibilitychange')); } catch (e) { } return true; })()`);
+  let movedGuard = false;
+  const wGuard = Math.max(800, Math.min(2000, msFlush - 1500));
+  while (Date.now() < tGuard + wGuard) {
+    const r = val(await ev(`(() => { try { const s = avSessionState() || {}; return { at: (s.lastAutosaveAt !== undefined) ? s.lastAutosaveAt : null }; } catch (e) { return { at: null }; } })()`)) || {};
+    if (r.at != null && r.at !== atFlush2) movedGuard = true;
+    await sleep(200);
+  }
+  check('3c normal-state reassert: with the native visibilityState visible a plain dispatch does NOT flush (the handler reads document.visibilityState)',
+    fl0.vis !== 'hidden' ? (gMut.bpm === true && movedGuard === false) : true,
+    JSON.stringify({ nativeVis: fl0.vis, bpm: gMut.bpm, moved: movedGuard, window: wGuard }));
+  if (fl0.vis === 'hidden') note('native visibilityState read hidden - the visible-guard sub-test could not run (stub restore verified above)');
+
+  /* explicit off: avSessionAutosave(false) -> {on:false}; the second reload must keep it OFF
+     even though the store holds a session (the explicit choice outranks the seed). */
+  let off3d = null;
+  for (let i = 0; i < 8; i++) {
+    const r = val(await ev(`(() => { try { const c = avSessionAutosave(false); const s = avSessionState() || {}; const a = s.autosave || {}; return { callOff: !!(c && c.on === false), stateOn: a.on === true, choice: (a.choice !== undefined) ? a.choice : 'missing', ms: (a.ms !== undefined) ? a.ms : null }; } catch (e) { return { error: String((e && e.message) || e) }; } })()`)) || {};
+    off3d = r;
+    if (r && r.callOff === true && r.stateOn === false) break;
+    await sleep(200);
+  }
+  check('3d explicit off: avSessionAutosave(false) -> {on:false} \u00b7 the live state reads off \u00b7 the choice persists off',
+    !!(off3d && off3d.callOff === true && off3d.stateOn === false && off3d.choice === false), JSON.stringify(off3d));
+
+  const rl3d = await rigReload();
+  check('3d reload 2: data-av-ready + rig helpers re-injected after the navigate', rl3d.ready === true && rl3d.rein === true, JSON.stringify(rl3d));
+  if (!rl3d.ready) { console.error('APP NOT READY AFTER RELOAD (3d)'); process.exit(1); }
+  let off3b = null;
+  for (let i = 0; i < 40; i++) {
+    const r = val(await ev(`(() => { try { const s = avSessionState() || {}; const a = s.autosave || {}; return { on: a.on === true, ms: (a.ms !== undefined) ? a.ms : null, choice: (a.choice !== undefined) ? a.choice : 'missing', count: (s.count !== undefined) ? s.count : null }; } catch (e) { return { on: null }; } })()`)) || {};
+    off3b = r;
+    if (r && r.on === false && Number(r.count) >= 1) break;
+    await sleep(250);
+  }
+  check('3d explicit off persists across reload: OFF after the navigate while the store still holds the session (the explicit choice outranks the seed)',
+    !!(off3b && off3b.on === false && Number(off3b.count) >= 1), JSON.stringify(off3b));
 
   /* ── 4. autosave -> reload -> recovery ── */
   console.log('── 4. autosave -> reload -> recovery ──');
@@ -686,6 +835,200 @@ async function main() {
     }
     console.log('   · download artifact: ' + dlPath + '  sha256=' + dlSha);
   }
+
+  /* ── 6b. browser v2 (tags · search · sort) — R20 sec 3 ──
+     A second session (RIG TWO) is imported beside RIG so the view has two rows (avSessionImport
+     is the exported seam; the clone carries a real captured state and a newer updatedAt). The
+     tag is added through the RIG TWO row's inline editor (TAGS button -> the
+     .av-sessions-tags-input editor -> Enter commits through avSessionSetTags), then the card is
+     reloaded: the tag must persist (session meta + row DOM). Search must narrow by name and by
+     tag. Sort: "newest" = the module order (never re-sorted); "name" = the import comparator
+     (ascending - same order as newest for these two prefix names); "updated" = updatedAt desc,
+     which flips the two rows (the exact reverse); back to "newest" restores byte-for-byte. */
+  console.log('\u2500\u2500 6b. browser v2 (tags \u00b7 search \u00b7 sort) \u2500\u2500');
+
+  const v2Fix = val(await ev(`(() => {
+    try {
+      if (typeof avSessionExport !== 'function' || typeof avSessionImport !== 'function') return { ok: false, why: 'no export/import' };
+      const ex = avSessionExport();
+      const rec0 = (ex && Array.isArray(ex.sessions)) ? ex.sessions.find(function (r) { return r && r.id === ${JSON.stringify(rigId)}; }) : null;
+      if (!rec0 || !Array.isArray(rec0.versions) || !rec0.versions.length) return { ok: false, why: 'no source record' };
+      const now = Date.now();
+      const src = rec0.versions[rec0.versions.length - 1];
+      const st = JSON.parse(JSON.stringify(src.state));
+      st.name = 'RIG TWO';
+      const clone = { id: 'rigtwo', name: 'RIG TWO', createdAt: now, updatedAt: now, current: false, versions: [{ v: 1, savedAt: now, state: st }] };
+      const imp = avSessionImport({ v: (ex && ex.v) || 1, sessions: [clone] });
+      return { ok: !!(imp && imp.ok === true), imported: imp && imp.imported, skipped: imp && imp.skipped, ids: (imp && imp.ids) || [], exV: ex && ex.v };
+    } catch (e) { return { ok: false, error: String((e && e.message) || e) }; }
+  })()`)) || {};
+  const rigTwoId = (v2Fix.ids && v2Fix.ids[0]) ? String(v2Fix.ids[0]) : 'rigtwo';
+  let v2List = [];
+  for (let i = 0; i < 20; i++) {
+    v2List = val(await ev(`(typeof avSessionList === 'function') ? avSessionList() : null`)) || [];
+    if (Array.isArray(v2List) && v2List.some(s => s && s.id === rigTwoId) && v2List.some(s => s && s.id === rigId)) break;
+    await sleep(250);
+  }
+  check('6b fixture: a second session (RIG TWO) imported beside RIG (avSessionImport seam \u00b7 id-dedupe clean)',
+    v2Fix.ok === true && v2Fix.imported === 1 && v2Fix.skipped === 0 && Array.isArray(v2List) && v2List.some(s => s && s.id === rigTwoId) && v2List.some(s => s && s.id === rigId),
+    JSON.stringify({ fix: { ok: v2Fix.ok, imported: v2Fix.imported, skipped: v2Fix.skipped, ids: v2Fix.ids, error: v2Fix.error }, list: v2List.map(s => s && { id: s.id, name: s.name, v: s.version }) }).slice(0, 420));
+
+  /* presented rows: rows filtered out by the v2 view leave the DOM (a hidden-row impl would
+     still be counted); the name rides .av-sessions-session-name. */
+  const v2Rows = async () => val(await ev(`(function () {
+    const rows = Array.prototype.slice.call(document.querySelectorAll('#av-sessions-list .av-sessions-session[data-id]'));
+    const vis = rows.filter(function (el) { try { if (el.hidden === true || el.hasAttribute('hidden')) return false; const cs = getComputedStyle(el); return cs.display !== 'none' && cs.visibility !== 'hidden'; } catch (e) { return true; } });
+    const nm = function (el) {
+      const n = el.querySelector('.av-sessions-session-name');
+      if (n) { const t = String(n.textContent || '').trim(); if (t) return t; }
+      const t2 = String(el.textContent || '');
+      if (t2.indexOf('RIG TWO') >= 0) return 'RIG TWO';
+      if (t2.indexOf('RIG') >= 0) return 'RIG';
+      return '';
+    };
+    return { all: rows.length, n: vis.length, names: vis.map(nm) };
+  })()`)) || {};
+  const v2MetaTags = async (id) => val(await ev(`(() => { try { const l = (typeof avSessionList === 'function') ? avSessionList() : null; const r = Array.isArray(l) ? l.find(function (x) { return x && x.id === ${JSON.stringify(id)}; }) : null; if (!r) return null; return Array.isArray(r.tags) ? r.tags.map(String) : null; } catch (e) { return null; } })()`));
+  const v2RowHas = async (id, text) => val(await ev(`(() => {
+    try {
+      const parts = Array.prototype.slice.call(document.querySelectorAll('#av-sessions-list [data-id="' + ${JSON.stringify(id)} + '"]'));
+      if (!parts.length) return null;
+      const t = ${JSON.stringify(text.toLowerCase())};
+      for (let p = 0; p < parts.length; p++) {
+        const node = parts[p];
+        const h = String(node.outerHTML || '').toLowerCase();
+        if (h.indexOf(t) >= 0) return true;
+        const nodes = node.querySelectorAll('*');
+        for (let i = 0; i < nodes.length; i++) {
+          const e = nodes[i];
+          if (String(e.textContent || '').trim().toLowerCase() === t) return true;
+          const ds = e.dataset || {};
+          for (const k in ds) { if (String(ds[k]).toLowerCase() === t) return true; }
+        }
+      }
+      return false;
+    } catch (e) { return null; }
+  })()`));
+
+  /* the tag goes on RIG TWO through the row's inline editor: TAGS opens it (sync repaint),
+     Enter commits the draft through avSessionSetTags (change/focusout also commit). */
+  const TAG = 'solo';
+  const v2TagEvidence = async () => {
+    const meta = await v2MetaTags(rigTwoId);
+    const dom = await v2RowHas(rigTwoId, TAG);
+    return { meta: meta, dom: dom, has: (Array.isArray(meta) && meta.indexOf(TAG) >= 0) || dom === true };
+  };
+  const TAG_DRIVE = `(() => {
+    const out = { row: false, clicked: false, input: false, committed: false, before: null, err: null };
+    const TAGV = ${JSON.stringify(TAG)};
+    const RID = ${JSON.stringify(rigTwoId)};
+    try {
+      const rows = Array.prototype.slice.call(document.querySelectorAll('#av-sessions-list .av-sessions-session[data-id]'));
+      const row = rows.find(function (el) { return String(el.getAttribute('data-id') || '') === RID; }) || null;
+      if (!row) { out.err = 'no-row'; return out; }
+      out.row = true;
+      try {
+        const l = (typeof avSessionList === 'function') ? avSessionList() : [];
+        const r0 = Array.isArray(l) ? l.find(function (x) { return x && x.id === RID; }) : null;
+        out.before = (r0 && Array.isArray(r0.tags)) ? r0.tags.slice() : null;
+      } catch (e) { }
+      const btn = document.querySelector('[data-act="tags"][data-id="' + RID + '"]') || document.querySelector('.av-sessions-tags-btn[data-id="' + RID + '"]');
+      if (btn) { try { btn.click(); out.clicked = true; } catch (e) { } }
+      const inp = document.querySelector('.av-sessions-tags-input[data-id="' + RID + '"]');
+      if (inp) {
+        out.input = true;
+        try { inp.focus && inp.focus(); } catch (e) { }
+        try { inp.value = TAGV; } catch (e) { }
+        try { inp.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) { }
+        try { inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', keyCode: 13, which: 13, bubbles: true })); } catch (e) { }
+        try { inp.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) { }
+        try { inp.blur && inp.blur(); } catch (e) { }
+        out.committed = true;
+      }
+      return out;
+    } catch (e) { out.err = String((e && e.message) || e); return out; }
+  })()`;
+  let v2r0 = null, tagDrive = null, tagEv = null;
+  for (let i = 0; i < 30; i++) { v2r0 = await v2Rows(); if (v2r0 && v2r0.n === 2) break; await sleep(300); }
+  tagDrive = val(await ev(TAG_DRIVE)) || {};
+  tagEv = await v2TagEvidence();
+  for (let i = 0; i < 10 && !tagEv.has; i++) { await sleep(300); tagEv = await v2TagEvidence(); }
+  if (!tagEv.has) {                                    /* one clean retry: the editor reopens */
+    const again = val(await ev(TAG_DRIVE)) || {};
+    note('6b tag drive retry: ' + JSON.stringify(again));
+    for (let i = 0; i < 10 && !tagEv.has; i++) { await sleep(300); tagEv = await v2TagEvidence(); }
+  }
+  check('6b tags: the tag "solo" added through the RIG TWO row\u2019s inline editor is witnessed (session meta tags array and/or the row DOM chips)',
+    tagEv.has === true, JSON.stringify({ drive: tagDrive, meta: tagEv.meta, dom: tagEv.dom, rows: v2r0 }));
+
+  const rl6b = await rigReload();
+  check('6b reload: data-av-ready + rig helpers re-injected after the navigate', rl6b.ready === true && rl6b.rein === true, JSON.stringify(rl6b));
+  if (!rl6b.ready) { console.error('APP NOT READY AFTER RELOAD (6b)'); process.exit(1); }
+  let tagPersist = { meta: null, dom: null, has: false }, v2r1 = null;
+  for (let i = 0; i < 40; i++) {
+    tagPersist = await v2TagEvidence();
+    v2r1 = await v2Rows();
+    if (tagPersist.has && v2r1.n === 2) break;
+    await sleep(300);
+  }
+  check('6b tags persist across reload: the RIG TWO row still carries "solo" after the navigate (session meta tags + row DOM)',
+    Array.isArray(tagPersist.meta) && tagPersist.meta.indexOf(TAG) >= 0 && tagPersist.dom === true && !!(v2r1 && v2r1.n === 2),
+    JSON.stringify({ meta: tagPersist.meta, dom: tagPersist.dom, rows: v2r1 }));
+
+  const v2Surf = val(await ev(`(() => {
+    const s = document.getElementById('av-sessions-search');
+    const so = document.getElementById('av-sessions-sort');
+    const vals = so ? Array.prototype.map.call(so.querySelectorAll('option'), function (o) { return String(o.value); }) : [];
+    return { search: !!s, searchTag: s ? String(s.tagName).toLowerCase() : null, sort: !!so, values: vals };
+  })()`)) || {};
+  check('6b controls: #av-sessions-search input + #av-sessions-sort select with the pinned values (newest \u00b7 name \u00b7 updated)',
+    v2Surf.search === true && v2Surf.searchTag === 'input' && v2Surf.sort === true && ['newest', 'name', 'updated'].every(v => (v2Surf.values || []).indexOf(v) >= 0),
+    JSON.stringify(v2Surf));
+
+  const setV2Search = (q) => ev(`(() => { const s = document.getElementById('av-sessions-search'); if (!s) return { missing: true }; s.value = ${JSON.stringify(q)}; s.dispatchEvent(new Event('input', { bubbles: true })); s.dispatchEvent(new Event('keyup', { bubbles: true })); s.dispatchEvent(new Event('change', { bubbles: true })); return { ok: true }; })()`);
+  const v2WaitRows = async (wantN, wantFirst, tries) => {
+    let last = null;
+    for (let i = 0; i < tries; i++) {
+      last = await v2Rows();
+      if (last && last.n === wantN && (wantFirst == null || (last.names || [])[0] === wantFirst)) return { ok: true, r: last };
+      await sleep(250);
+    }
+    return { ok: false, r: last };
+  };
+  await setV2Search('two');
+  const sTwo = await v2WaitRows(1, 'RIG TWO', 40);
+  check('6b search (name): "two" narrows the rows to RIG TWO \u2014 one presented row',
+    sTwo.ok === true && sTwo.r && sTwo.r.n === 1 && (sTwo.r.names || [])[0] === 'RIG TWO',
+    JSON.stringify(sTwo.r));
+  await setV2Search('solo');
+  const sSolo = await v2WaitRows(1, 'RIG TWO', 40);
+  check('6b search (tags): the tag "solo" narrows to the RIG TWO row \u2014 search matches name + tags',
+    sSolo.ok === true && sSolo.r && sSolo.r.n === 1 && (sSolo.r.names || [])[0] === 'RIG TWO',
+    JSON.stringify(sSolo.r));
+  await setV2Search('');
+  const sClear = await v2WaitRows(2, null, 40);
+  check('6b search clears: all rows presented again (2)', sClear.ok === true && sClear.r && sClear.r.n === 2, JSON.stringify(sClear.r));
+
+  const ordNewest = sClear.r;
+  const setV2Sort = (v) => ev(`(() => { const s = document.getElementById('av-sessions-sort'); if (!s) return { missing: true }; s.value = ${JSON.stringify(v)}; s.dispatchEvent(new Event('change', { bubbles: true })); return { ok: true }; })()`);
+  const ordOf = (wantJoin, tries) => (async () => {
+    let last = null;
+    for (let i = 0; i < tries; i++) {
+      last = await v2Rows();
+      if (last && last.n === 2 && (last.names || []).join() === wantJoin) return { ok: true, r: last };
+      await sleep(250);
+    }
+    return { ok: false, r: last };
+  })();
+  await setV2Sort('name');
+  const ordName = await ordOf('RIG,RIG TWO', 40);
+  await setV2Sort('updated');
+  const ordUpd = await ordOf('RIG TWO,RIG', 40);
+  await setV2Sort('newest');
+  const ordBack = await ordOf((ordNewest.names || []).join(), 40);
+  check('6b sort: "newest" = the module order after the reload [RIG TWO, RIG] (IDB key readback) \u00b7 "name" = the import comparator flips it (the exact reverse) [RIG, RIG TWO] \u00b7 "updated" = [RIG TWO, RIG] \u00b7 back to "newest" restores byte-for-byte',
+    (ordNewest.names || []).join() === 'RIG TWO,RIG' && ordName.ok === true && ordUpd.ok === true && ordBack.ok === true,
+    JSON.stringify({ newest: ordNewest.names, name: ordName.r && ordName.r.names, updated: ordUpd.r && ordUpd.r.names, back: ordBack.r && ordBack.r.names }));
 
   /* ── 7. cleanup — the page left clean; then zero errors · screenshot · freeze ── */
   console.log('── 7. seal ──');

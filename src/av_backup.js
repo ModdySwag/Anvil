@@ -2,16 +2,31 @@
    (sessions · installed packs · sample slots), plus a NEW store-method zip READER and the
    additive restore. This module is the ONE owner of the backup/restore path.
 
+   R20 extension (verify/_r20_wave.md section 5): the packed set grows additively to the
+   av-samples-store library items + the wt store + the code store + the user prefs LS key set
+   (AV_BACKUP_PREFS_KEYS - the 26 user-facing keys, enumerated from source); manifest.json
+   names every entry (the sha256 map + a new additive entries list); the restore side applies
+   what it can and reports named skips (prefs: a key that currently holds a value is KEPT -
+   additive). receipt shape stays additive: restored/skippedBy gain library/wt/code/prefs.
+
    Pins (verify/_s2_wave.md §2.2):
    - avBackupInit() -> boolean                idempotent; no DOM; nothing durable to bind here.
    - avBackupBuild(opts?) -> Promise<{ ok, name, bytes, buffer (ArrayBuffer), manifest, skipped, at }>
      writes `anvil-backup-<YYYYMMDD-HHMMSS>.zip` with avZipBuild (store-method entries only):
-       manifest.json      { v:1, app:'anvil', at (ISO), sha256: { '<entry>': '<hex>' }, counts:{sessions,packs,samples} }
+       manifest.json      { v:1, app:'anvil', at (ISO), sha256: { '<entry>': '<hex>' },
+                            entries: [ ...every content entry name... ],
+                            counts:{sessions,packs,samples,library,wt,code,prefs} }
                           (manifest.json itself carries no self-digest — it is the signature file)
        sessions.json      avSessionExport() payload (ALL sessions incl. versions)
        packs/<id>.json    one per INSTALLED pack (avStoreGet(id) payload — the full record incl. `pack`)
        samples/slot<n>-<name>.wav   one per non-empty sample slot (avWavEncode of {rate, ch1, ch2};
                           name + slot live in the WAV filename; 32f = bit-exact round trip of the float data)
+       library/<id>.json  one per av-samples-store item (R20): {v,id,name,kind,format,ext,size,
+                          at,meta,sha256,source,bytes64 (base64)} - own payload, no LS size cap
+       wt/<id>.json       one per wt-store table (R20): the avWtExportJson text verbatim
+       code/<id>.avmod    one per code-store module (R20): the avCodeExportText text verbatim
+       prefs/<key>.txt    one per PRESENT user prefs LS key (R20; AV_BACKUP_PREFS_KEYS - the
+                          26-key user-facing set): the raw LS value verbatim
        README.txt         what-this-is + the additive-restore hint
      Build opts (all optional): `now` (epoch ms — pins the stamp + manifest.at for harnesses),
      `date` (zip DOS timestamp: Date | number | null; null = avZipBuild's deterministic 1980 epoch).
@@ -23,15 +38,21 @@
      structural problem lands in `errors[]` and the entry is withheld, never thrown. ok:false only
      when the container itself is unreadable (bad/truncated/no EOCD, corrupt central directory,
      no CRC helper). `bytes` are zero-copy views into the source buffer — copy before mutating it.
-   - avBackupRestore(bufOrReadResult, mode?) -> Promise<{ ok, error, restored:{sessions,packs,samples},
-     skipped (flat total), skippedBy:{sessions,packs,samples}, errors: [], notes: [], at }>
+   - avBackupRestore(bufOrReadResult, mode?) -> Promise<{ ok, error,
+     restored:{sessions,packs,samples,library,wt,code,prefs},
+     skipped (flat total), skippedBy:{sessions,packs,samples,library,wt,code,prefs},
+     errors: [], notes: [], at }>
      ADDITIVE ONLY — nothing the user currently holds is ever deleted:
        sessions via avSessionImport(payload) (the session module's own id-dedupe law);
        packs via the store's OWN machinery — avStoreHydrate -> avStoreGet (collision: the installed
        copy is kept) -> avStoreRecordNorm -> avStoreCommit (never a re-implemented IDB schema);
        samples via av_sample's import hook avSampleImportFiles (WAVs are handed over as File objects
-       when File exists, else copies of the bytes). `mode` = 'all' (default) | 'sessions' | 'packs'
-       | 'samples'. manifest.sha256 is re-verified per entry: a mismatch withholds the entry +
+       when File exists, else copies of the bytes); R20 adds: library items via avLibAddItem (fresh
+       ids), wt tables via avWtImportJson + avWtLibrarySave, modules via avCodeImportText, prefs
+       via the LS whitelist (only an absent key is written; an existing value is kept + named).
+       `mode` = 'all' (default) | 'sessions' | 'packs'
+       | 'samples' | 'library' | 'wt' | 'code' | 'prefs' (R20 adds the last four). manifest.sha256
+       is re-verified per entry: a mismatch withholds the entry +
        errors[] (malformed digest = unverifiable = withheld). ok:true means the restore ran (fully or
        partially — read errors[]); ok:false = refused before any write (unreadable zip, missing/foreign
        manifest, unsupported version).
@@ -69,6 +90,31 @@ const AV_BACKUP_SAMPLE_NAME_RE = /^samples\/slot(\d+)(?:-([\s\S]+))?\.wav$/i;
 const AV_BACKUP_ID_RE = /^[a-z0-9][a-z0-9-]{0,63}$/;     /* same slug law as the pack store */
 const AV_BACKUP_SHA_RE = /^[0-9a-f]{64}$/i;
 const AV_BACKUP_SAFE_RE = /[\/\\:*?"<>|\u0000-\u001f]+/g;
+
+/* ---------- R20 coverage constants (verify/_r20_wave.md section 5) ---------- */
+
+const AV_BACKUP_LIB_DIR = "library/";     /* R20: one JSON entry per av-samples-store item */
+const AV_BACKUP_WT_DIR = "wt/";           /* R20: one .wt.json entry per wt-store table */
+const AV_BACKUP_CODE_DIR = "code/";       /* R20: one .avmod entry per code-store module */
+const AV_BACKUP_PREFS_DIR = "prefs/";     /* R20: one .txt entry per present prefs LS key */
+const AV_BACKUP_ENTRY_CAP = AV_BACKUP_MAX_ENTRIES - 16;   /* build headroom under the reader cap */
+
+/* R20: the user prefs LS key set - every user-facing key the page actually WRITES (the docs
+   count 26; the store-mirror keys are among them by design). av-store-url is read-only
+   (written nowhere) and av_family's radio keys (rbg-last / rbg-meta) belong to another app -
+   both stay out. The whitelist gates the RESTORE side too: a foreign zip can never write an
+   LS key outside this set. */
+const AV_BACKUP_PREFS_KEYS = Object.freeze([
+  "av-master", "av-keys-vol",                     /* the level knobs (app_core / av_tap) */
+  "av-a11y",                                      /* av_a11y.js accessibility prefs */
+  "av-zone", "av-fold", "av-float", "av-layouts", /* chrome: zone, card folds, floats, layouts */
+  "av-rail-w", "av-rail-open", "av-rail-sections",
+  "av-input-mode", "av-piano", "av-keys-pop",     /* keyboard / input mode */
+  "av-midi", "av-midi-cc",                        /* MIDI prefs + learned CC binds */
+  "av-first-run",                                 /* the lessons first-run gate */
+  "av-seq-pattern", "av-seq-chains", "av-seq-song", "av-seq-scenes",   /* the seq LS family */
+  "av-sessions-ls", "av-samples-ls", "av-packs-ls", "av-wt-ls", "av-code-ls", "av-receipts-ls",
+]);
 
 /* ---------- state (the report surface; JSON-safe by construction) ---------- */
 
@@ -215,6 +261,72 @@ function avBackupSafeName(s, dflt) {
     if (v.length > 80) v = v.slice(0, 80);
     return v || String(dflt || "sample");
   } catch (e) { return String(dflt || "sample"); }
+}
+
+/* ---------- R20 helpers: the LS reach + base64 (av_lib's own codec when loaded) ---------- */
+
+/* the page localStorage (guarded; absent/blocked -> null) */
+function avBackupLs() {
+  try { if (typeof localStorage !== "undefined" && localStorage) return localStorage; } catch (e) { /* blocked */ }
+  return null;
+}
+
+/* base64 ENCODE of a byte view: avLibB64Enc when av_lib is loaded (its own law), else a local
+   btoa chunker; null = honest refusal (nothing lands without a payload). */
+function avBackupB64Enc(u8) {
+  try {
+    const b0 = avBackupBytes(u8);
+    if (!b0) return null;
+    if (typeof avLibB64Enc === "function") {
+      const s0 = avLibB64Enc(b0);
+      if (typeof s0 === "string" && s0) return s0;
+    }
+  } catch (e) { /* the local encoder below */ }
+  try {
+    const b = avBackupBytes(u8);
+    if (!b) return null;
+    if (typeof btoa === "function") {
+      let s = "";
+      for (let i = 0; i < b.length; i += 0x8000) {
+        s += String.fromCharCode.apply(null, b.subarray(i, Math.min(i + 0x8000, b.length)));
+      }
+      return btoa(s);
+    }
+  } catch (e2) { /* refuse below */ }
+  return null;
+}
+
+/* base64 DECODE -> Uint8Array (avLibB64Dec when av_lib is loaded; else the local decoder);
+   null = the payload is not decodable (honest refusal, never a throw). */
+function avBackupB64Dec(str) {
+  try {
+    if (typeof avLibB64Dec === "function") {
+      const u = avLibB64Dec(str);
+      if (u && typeof u.length === "number" && u.length) return u;
+    }
+  } catch (e) { /* the local decoder below */ }
+  try {
+    const s = String(str == null ? "" : str).replace(/[\r\n\t ]+/g, "");
+    if (!s) return null;
+    const out = [];
+    let buffer = 0;
+    let bits = 0;
+    for (let i = 0; i < s.length; i++) {
+      const c = s.charCodeAt(i);
+      if (c === 61) break;                          /* '=' padding ends the stream */
+      let v = -1;
+      if (c >= 65 && c <= 90) v = c - 65;
+      else if (c >= 97 && c <= 122) v = c - 97 + 26;
+      else if (c >= 48 && c <= 57) v = c - 48 + 52;
+      else if (c === 43) v = 62;
+      else if (c === 47) v = 63;
+      else return null;
+      buffer = (buffer << 6) | v;
+      bits += 6;
+      if (bits >= 8) { bits -= 8; out.push((buffer >> bits) & 255); }
+    }
+    return out.length ? Uint8Array.from(out) : null;
+  } catch (e2) { return null; }
 }
 
 /* ---------- zip-reader internals (little-endian; shared-scope avZip* helpers, all guarded) ---------- */
@@ -479,6 +591,150 @@ async function avBackupBuildRun(opts, out) {
     }
   }
 
+  /* 3b) R20: the av-samples-store library items - one JSON entry per item (the record
+     fields + the bytes as base64; own payload, because the library's LS payload caps at
+     1.5 MiB and a backup must not). avLibList / avLibGet are the library's own read paths. */
+  const libItems = [];
+  if (typeof avLibList !== "function" || typeof avLibGet !== "function") {
+    avBackupPush(skipped, "library: av_lib.js is not loaded - no library items in this backup");
+  } else {
+    let listR = null;
+    try { listR = await avLibList(); } catch (e) { listR = null; }
+    const list = (listR && listR.ok === true && Array.isArray(listR.items)) ? listR.items : null;
+    if (!list) {
+      avBackupPush(skipped, "library: the item list is unavailable - no library items in this backup");
+    } else {
+      let entryCount = 2 + packItems.length + sampleItems.length;      /* manifest + sessions + ... */
+      for (let i = 0; i < list.length; i++) {
+        const mv = (list[i] && typeof list[i] === "object") ? list[i] : {};
+        const id = (typeof mv.id === "string") ? mv.id : "";
+        if (!id) continue;
+        if (entryCount + 1 > AV_BACKUP_ENTRY_CAP) {
+          avBackupPush(skipped, "library: " + avBackupSafeName(id, "item") + ": kept out (the reader entry cap)");
+          continue;
+        }
+        let g = null;
+        try { g = await avLibGet(id); } catch (e) { g = null; }
+        const rec = (g && g.ok === true && g.item && typeof g.item === "object") ? g.item : null;
+        if (!rec) { avBackupPush(skipped, "library: " + avBackupSafeName(id, "item") + ": record unavailable - skipped"); continue; }
+        const u8 = avBackupBytes(rec.bytes);
+        const b64 = (u8 && u8.length) ? avBackupB64Enc(u8) : null;
+        if (!b64) { avBackupPush(skipped, "library: " + avBackupSafeName(id, "item") + ": bytes could not be encoded - skipped"); continue; }
+        const payload = {
+          v: 1, id: id,
+          name: (typeof mv.name === "string") ? mv.name : id,
+          kind: (typeof mv.kind === "string") ? mv.kind : "sample",
+          format: (typeof mv.format === "string") ? mv.format : "",
+          ext: (typeof mv.ext === "string") ? mv.ext : "",
+          size: u8.length,
+          at: (typeof mv.at === "number") ? mv.at : 0,
+          meta: (mv.meta && typeof mv.meta === "object" && !Array.isArray(mv.meta)) ? mv.meta : null,
+          sha256: (typeof mv.sha256 === "string") ? mv.sha256 : "",
+          source: (mv.source && typeof mv.source === "object" && !Array.isArray(mv.source)) ? mv.source : null,
+          bytes64: b64,
+        };
+        const text = avBackupJson(payload);
+        if (text == null) { avBackupPush(skipped, "library: " + avBackupSafeName(id, "item") + ": payload is not JSON-safe - skipped"); continue; }
+        libItems.push({ name: AV_BACKUP_LIB_DIR + avBackupSafeName(id, "item") + ".json", text: text });
+        entryCount += 1;
+      }
+    }
+  }
+
+  /* 3c) R20: ALL user wt tables - the wt store's own export text, one entry per table */
+  const wtItems = [];
+  if (typeof avWtLibraryList !== "function") {
+    avBackupPush(skipped, "wt: av_wt.js is not loaded - no wt tables in this backup");
+  } else {
+    let wl = null;
+    try { wl = await avWtLibraryList(); } catch (e) { wl = null; }
+    if (!Array.isArray(wl)) {
+      avBackupPush(skipped, "wt: the table list is unavailable - no wt tables in this backup");
+    } else {
+      let entryCount = 2 + packItems.length + sampleItems.length + libItems.length;
+      for (let i = 0; i < wl.length; i++) {
+        const e = (wl[i] && typeof wl[i] === "object") ? wl[i] : {};
+        const id = (typeof e.id === "string") ? e.id : "";
+        if (!id) continue;
+        if (entryCount + 1 > AV_BACKUP_ENTRY_CAP) {
+          avBackupPush(skipped, "wt: " + avBackupSafeName(id, "wt") + ": kept out (the reader entry cap)");
+          continue;
+        }
+        let t = null;
+        try { if (typeof avWtLibraryLoad === "function") t = await avWtLibraryLoad(id); } catch (e2) { t = null; }
+        let json = null;
+        try { if (typeof avWtExportJson === "function") json = avWtExportJson(t); } catch (e3) { json = null; }
+        if (typeof json !== "string" || !json) {
+          avBackupPush(skipped, "wt: " + avBackupSafeName(id, "wt") + ": export unavailable - skipped");
+          continue;
+        }
+        wtItems.push({ name: AV_BACKUP_WT_DIR + avBackupSafeName(id, "wt") + ".json", text: json });
+        entryCount += 1;
+      }
+    }
+  }
+
+  /* 3d) R20: ALL user modules - the code store's own export text (.avmod), one entry each */
+  const codeItems = [];
+  try {
+    if (typeof avCodeStoreLoad === "function") {
+      const p = avCodeStoreLoad();
+      if (p && typeof p.then === "function") await p;
+    }
+  } catch (e) { /* the loaded view is read below */ }
+  if (typeof avCodeList !== "function" || typeof avCodeExportText !== "function") {
+    avBackupPush(skipped, "code: av_code.js is not loaded - no modules in this backup");
+  } else {
+    let list = null;
+    try { const cl = avCodeList(); if (Array.isArray(cl)) list = cl; } catch (e) { list = null; }
+    if (!list) {
+      avBackupPush(skipped, "code: the module list is unavailable - no modules in this backup");
+    } else {
+      let entryCount = 2 + packItems.length + sampleItems.length + libItems.length + wtItems.length;
+      for (let i = 0; i < list.length; i++) {
+        const rec = (list[i] && typeof list[i] === "object") ? list[i] : {};
+        const id = (typeof rec.id === "string") ? rec.id : "";
+        if (!id) continue;
+        if (entryCount + 1 > AV_BACKUP_ENTRY_CAP) {
+          avBackupPush(skipped, "code: " + avBackupSafeName(id, "module") + ": kept out (the reader entry cap)");
+          continue;
+        }
+        let text = null;
+        try { text = avCodeExportText(id); } catch (e2) { text = null; }
+        if (typeof text !== "string" || !text) {
+          avBackupPush(skipped, "code: " + avBackupSafeName(id, "module") + ": export unavailable - skipped");
+          continue;
+        }
+        codeItems.push({ name: AV_BACKUP_CODE_DIR + avBackupSafeName(id, "module") + ".avmod", text: text });
+        entryCount += 1;
+      }
+    }
+  }
+
+  /* 3e) R20: the user prefs LS set - one entry per PRESENT key (the whitelist vocabulary;
+     absent keys carry nothing; raw LS value verbatim as the entry text) */
+  const prefItems = [];
+  const prefsLs = avBackupLs();
+  if (!prefsLs) {
+    avBackupPush(skipped, "prefs: localStorage is unavailable - no preference keys in this backup");
+  } else {
+    let blocked = false;
+    let entryCount = 2 + packItems.length + sampleItems.length + libItems.length + wtItems.length + codeItems.length;
+    for (let i = 0; i < AV_BACKUP_PREFS_KEYS.length; i++) {
+      const key = AV_BACKUP_PREFS_KEYS[i];
+      let raw = null;
+      try { raw = prefsLs.getItem(key); } catch (e) { blocked = true; break; }
+      if (raw == null) continue;
+      if (entryCount + 1 > AV_BACKUP_ENTRY_CAP) {
+        avBackupPush(skipped, "prefs: " + key + ": kept out (the reader entry cap)");
+        continue;
+      }
+      prefItems.push({ name: AV_BACKUP_PREFS_DIR + key + ".txt", text: String(raw) });
+      entryCount += 1;
+    }
+    if (blocked) avBackupPush(skipped, "prefs: localStorage reads are blocked - the preference keys could not be read");
+  }
+
   /* 4) entry payloads (text entries as strings; WAVs as their ArrayBuffers) + digests */
   const data = [];                        /* [{ name, text }] — WAVs handled separately below */
   const sessText = avBackupJson(sessionsPayload);
@@ -495,16 +751,25 @@ async function avBackupBuildRun(opts, out) {
     data.push({ name: AV_BACKUP_PACK_DIR + packItems[i].id + ".json", text: t });
   }
   const packsCount = data.length - 1;                    /* entries after sessions.json so far */
-  const counts = { sessions: sessionsCount, packs: packsCount, samples: sampleItems.length };
+  for (let i = 0; i < libItems.length; i++) data.push(libItems[i]);      /* R20 groups in order: */
+  for (let i = 0; i < wtItems.length; i++) data.push(wtItems[i]);        /* library, wt, code,   */
+  for (let i = 0; i < codeItems.length; i++) data.push(codeItems[i]);    /* prefs                */
+  for (let i = 0; i < prefItems.length; i++) data.push(prefItems[i]);
+  const counts = { sessions: sessionsCount, packs: packsCount, samples: sampleItems.length,
+    library: libItems.length, wt: wtItems.length, code: codeItems.length, prefs: prefItems.length };
   let atIso = "";
   try { atIso = new Date(now).toISOString(); } catch (e) { atIso = ""; }
   const readme = "Anvil backup — " + counts.sessions + " session(s), " + counts.packs + " installed pack(s), " +
-    counts.samples + " sample slot(s).\n" +
+    counts.samples + " sample slot(s), " + counts.library + " library item(s), " + counts.wt + " wt table(s), " +
+    counts.code + " module(s), " + counts.prefs + " preference key(s).\n" +
     "Restore: open Anvil → SESSIONS card → RESTORE (backup zip), or call avBackupRestore(buffer) in the console. " +
     "Restore is additive — nothing you currently have is deleted; a session or pack whose id you already hold is left untouched.\n" +
+    "R20 coverage: library items restore through the library's own add path (fresh ids), wt tables and modules " +
+    "through their stores, preference keys only when currently absent (an existing value is kept).\n" +
     "Built " + (atIso || String(now)) + " · app: anvil · schema v1 · sample WAVs are 32-bit float.\n";
 
-  /* digests cover every content entry; manifest.json itself is the signature file (no self-digest) */
+  /* digests cover every content entry; manifest.json itself is the signature file (no self-digest);
+     the additive entries list names every content entry (R20: the manifest names every entry) */
   const shaMap = {};
   let shaNotes = 0;
   if (avBackupSubtle()) {
@@ -523,11 +788,17 @@ async function avBackupBuildRun(opts, out) {
   } else {
     avBackupPush(skipped, "sha256: crypto.subtle is unavailable — the manifest carries no digests");
   }
-  const manifest = { v: 1, app: AV_BACKUP_APP, at: atIso, sha256: shaMap, counts: counts };
+  const entryNames = [];
+  for (let i = 0; i < data.length; i++) entryNames.push(data[i].name);
+  for (let i = 0; i < sampleItems.length; i++) {
+    entryNames.push(AV_BACKUP_SAMPLE_DIR + "slot" + sampleItems[i].slot + "-" + sampleItems[i].name + ".wav");
+  }
+  entryNames.push(AV_BACKUP_README);
+  const manifest = { v: 1, app: AV_BACKUP_APP, at: atIso, sha256: shaMap, counts: counts, entries: entryNames };
   const manText = avBackupJson(manifest);
   if (manText == null) { out.ok = false; out.error = "manifest is not JSON-safe — build refused"; return; }
 
-  /* 5) assemble in the pinned layout order: manifest, sessions, packs, samples, README */
+  /* 5) assemble: manifest, sessions, packs, library, wt, code, prefs (all in `data`), samples, README */
   const zipEntries = [{ name: AV_BACKUP_MANIFEST, data: manText }];
   for (let i = 0; i < data.length; i++) zipEntries.push({ name: data[i].name, data: data[i].text });
   for (let i = 0; i < sampleItems.length; i++) {
@@ -560,15 +831,18 @@ function avBackupRestore(input, mode) {
   return new Promise(function (resolve) {
     const out = {
       ok: false, error: null,
-      restored: { sessions: 0, packs: 0, samples: 0 },
+      restored: { sessions: 0, packs: 0, samples: 0, library: 0, wt: 0, code: 0, prefs: 0 },
       skipped: 0,                                   /* flat total (the card reads a number) */
-      skippedBy: { sessions: 0, packs: 0, samples: 0 },
+      skippedBy: { sessions: 0, packs: 0, samples: 0, library: 0, wt: 0, code: 0, prefs: 0 },
       errors: [], notes: [], at: 0,
     };
     let done = false;
     const finish = function () {
       if (done) return; done = true;
-      try { out.skipped = out.skippedBy.sessions + out.skippedBy.packs + out.skippedBy.samples; } catch (e) { /* ok */ }
+      try {
+        out.skipped = out.skippedBy.sessions + out.skippedBy.packs + out.skippedBy.samples +
+          out.skippedBy.library + out.skippedBy.wt + out.skippedBy.code + out.skippedBy.prefs;
+      } catch (e) { /* ok */ }
       try { out.at = avBackupNow(); } catch (e) { /* ok */ }
       try { avBackupStore.busy = Math.max(0, avBackupStore.busy - 1); } catch (e) { /* ok */ }
       try {
@@ -637,9 +911,11 @@ async function avBackupRestoreRun(input, mode, out) {
     return;
   }
 
-  /* 2) mode ('all' default; a subset selector is allowed, additive either way) */
+  /* 2) mode ('all' default; a subset selector is allowed, additive either way; R20 adds the
+     library / wt / code / prefs selectors) */
   let only = null;
-  if (mode === "sessions" || mode === "packs" || mode === "samples") only = mode;
+  if (mode === "sessions" || mode === "packs" || mode === "samples"
+      || mode === "library" || mode === "wt" || mode === "code" || mode === "prefs") only = mode;
   else if (mode != null && mode !== "all") out.notes.push("mode " + String(mode) + " is unknown — restoring everything");
 
   /* 3) manifest.sha256 re-verification (mismatch/malformed -> the entry is withheld) */
@@ -838,6 +1114,182 @@ async function avBackupRestoreRun(input, mode, out) {
     }
   }
 
+  /* 6b) R20: library items - through av_lib's OWN add path (fresh ids; the record's bytes are
+     decoded from the entry's own base64 payload; additive keep-both, never an overwrite) */
+  if (!only || only === "library") {
+    const libEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_LIB_DIR.length) !== AV_BACKUP_LIB_DIR) continue;
+      if (nm.slice(-5) === ".json") libEntries.push(read.entries[i]);
+      else {
+        out.skippedBy.library += 1;
+        avBackupPush(out.errors, "library: unrecognized entry " + nm + " - ignored");
+      }
+    }
+    if (libEntries.length) {
+      if (typeof avLibAddItem !== "function") {
+        out.skippedBy.library += libEntries.length;
+        avBackupPush(out.errors, "library: av_lib.js is not loaded - library items not restored (they stay in the zip)");
+      } else {
+        let added = 0;
+        for (let i = 0; i < libEntries.length; i++) {
+          const le = libEntries[i];
+          if (shaBad[le.name]) { out.skippedBy.library += 1; continue; }
+          let pay = null;
+          try { pay = JSON.parse(avBackupUtf8Decode(le.bytes)); } catch (e) { pay = null; }
+          if (!pay || typeof pay !== "object" || Array.isArray(pay)) {
+            out.skippedBy.library += 1;
+            avBackupPush(out.errors, "library: " + le.name + ": payload is not a JSON object - skipped");
+            continue;
+          }
+          const b64 = (typeof pay.bytes64 === "string") ? pay.bytes64 : "";
+          const u8 = b64 ? avBackupB64Dec(b64) : null;
+          if (!u8 || !u8.length) {
+            out.skippedBy.library += 1;
+            avBackupPush(out.errors, "library: " + le.name + ": bytes are undecodable - skipped");
+            continue;
+          }
+          const item = {
+            name: (typeof pay.name === "string") ? pay.name : "",
+            kind: (typeof pay.kind === "string") ? pay.kind : "",
+            format: (typeof pay.format === "string") ? pay.format : "",
+            ext: (typeof pay.ext === "string") ? pay.ext : "",
+            meta: (pay.meta && typeof pay.meta === "object" && !Array.isArray(pay.meta)) ? pay.meta : null,
+            sha256: (typeof pay.sha256 === "string") ? pay.sha256 : "",
+            result: "imported",               /* avLibItemNorm persists only imported items */
+            source: (pay.source && typeof pay.source === "object" && !Array.isArray(pay.source)) ? pay.source : null,
+            bytes: u8,
+          };
+          let r = null;
+          try { r = await avLibAddItem(item, u8); } catch (e) { r = null; }
+          if (r && r.ok === true) { out.restored.library += 1; added += 1; }
+          else {
+            out.skippedBy.library += 1;
+            const why = (r && typeof r.error === "string" && r.error) ? r.error : "unknown";
+            avBackupPush(out.errors, "library: " + le.name + ": the library refused the add (" + why + ")");
+          }
+        }
+        if (added) out.notes.push("library: " + added + " item(s) restored (fresh ids - the library mints them)");
+      }
+    }
+  }
+
+  /* 6c) R20: wt tables - through avWtImportJson + avWtLibrarySave (fresh ids, additive) */
+  if (!only || only === "wt") {
+    const wtEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_WT_DIR.length) === AV_BACKUP_WT_DIR && nm.slice(-5) === ".json") wtEntries.push(read.entries[i]);
+    }
+    if (wtEntries.length) {
+      if (typeof avWtImportJson !== "function" || typeof avWtLibrarySave !== "function") {
+        out.skippedBy.wt += wtEntries.length;
+        avBackupPush(out.errors, "wt: the wt store is not loaded - wt tables not restored (they stay in the zip)");
+      } else {
+        let added = 0;
+        for (let i = 0; i < wtEntries.length; i++) {
+          const we = wtEntries[i];
+          if (shaBad[we.name]) { out.skippedBy.wt += 1; continue; }
+          const text = avBackupUtf8Decode(we.bytes);
+          let t = null;
+          try { t = avWtImportJson(text); } catch (e) { t = null; }
+          if (!t || t.error) {
+            out.skippedBy.wt += 1;
+            avBackupPush(out.errors, "wt: " + we.name + ": " + ((t && t.error) ? String(t.error) : "not a table") + " - skipped");
+            continue;
+          }
+          let s = null;
+          try { s = await avWtLibrarySave(t); } catch (e) { s = null; }
+          if (s && s.ok === true) { out.restored.wt += 1; added += 1; }
+          else {
+            out.skippedBy.wt += 1;
+            const why = (s && typeof s.error === "string" && s.error) ? s.error : "unknown";
+            avBackupPush(out.errors, "wt: " + we.name + ": the wt store refused the save (" + why + ")");
+          }
+        }
+        if (added) out.notes.push("wt: " + added + " table(s) restored (fresh ids - the wt store mints them)");
+      }
+    }
+  }
+
+  /* 6d) R20: modules - through avCodeImportText (the store's own law: an id already loaded
+     refuses honestly, named in errors[]) */
+  if (!only || only === "code") {
+    const codeEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_CODE_DIR.length) === AV_BACKUP_CODE_DIR && nm.slice(-6) === ".avmod") codeEntries.push(read.entries[i]);
+    }
+    if (codeEntries.length) {
+      if (typeof avCodeImportText !== "function") {
+        out.skippedBy.code += codeEntries.length;
+        avBackupPush(out.errors, "code: av_code.js is not loaded - modules not restored (they stay in the zip)");
+      } else {
+        let added = 0;
+        for (let i = 0; i < codeEntries.length; i++) {
+          const ce = codeEntries[i];
+          if (shaBad[ce.name]) { out.skippedBy.code += 1; continue; }
+          const text = avBackupUtf8Decode(ce.bytes);
+          let s = null;
+          try { s = await avCodeImportText(text); } catch (e) { s = null; }
+          if (s && s.ok === true) { out.restored.code += 1; added += 1; }
+          else {
+            out.skippedBy.code += 1;
+            const why = (s && typeof s.error === "string" && s.error) ? s.error : "unknown";
+            avBackupPush(out.errors, "code: " + ce.name + ": the code store refused the import (" + why + ")");
+          }
+        }
+        if (added) out.notes.push("code: " + added + " module(s) restored");
+      }
+    }
+  }
+
+  /* 6e) R20: prefs - the whitelisted LS keys ONLY; a key that currently holds a value KEEPS it
+     (additive: named in notes, counted as skipped); only an absent key is written */
+  if (!only || only === "prefs") {
+    const prefEntries = [];
+    for (let i = 0; i < read.entries.length; i++) {
+      const nm = read.entries[i].name;
+      if (nm.slice(0, AV_BACKUP_PREFS_DIR.length) === AV_BACKUP_PREFS_DIR && nm.slice(-4) === ".txt") prefEntries.push(read.entries[i]);
+    }
+    if (prefEntries.length) {
+      const ls = avBackupLs();
+      const kept = [];
+      let wrote = 0;
+      for (let i = 0; i < prefEntries.length; i++) {
+        const pe = prefEntries[i];
+        if (shaBad[pe.name]) { out.skippedBy.prefs += 1; continue; }
+        const key = pe.name.slice(AV_BACKUP_PREFS_DIR.length, pe.name.length - 4);
+        if (AV_BACKUP_PREFS_KEYS.indexOf(key) < 0) {
+          out.skippedBy.prefs += 1;
+          avBackupPush(out.errors, "prefs: " + pe.name + ": not a known preference key - skipped");
+          continue;
+        }
+        if (!ls) { out.skippedBy.prefs += 1; continue; }
+        let present = true;
+        try { present = (ls.getItem(key) !== null); } catch (e) { present = true; }
+        if (present) { out.skippedBy.prefs += 1; kept.push(key); continue; }
+        let ok = false;
+        try { ls.setItem(key, avBackupUtf8Decode(pe.bytes)); ok = true; } catch (e) { ok = false; }
+        if (ok) { out.restored.prefs += 1; wrote += 1; }
+        else {
+          out.skippedBy.prefs += 1;
+          avBackupPush(out.errors, "prefs: " + key + ": the write was refused (storage blocked/quota) - skipped");
+        }
+      }
+      if (!ls) {
+        avBackupPush(out.errors, "prefs: localStorage is unavailable - preference keys not restored (they stay in the zip)");
+      } else if (wrote) {
+        out.notes.push("prefs: " + wrote + " key(s) restored");
+      }
+      if (kept.length) {
+        out.notes.push("prefs: " + kept.length + " key(s) kept their current values (additive restore): " +
+          kept.slice(0, 8).join(", ") + (kept.length > 8 ? " ..." : ""));
+      }
+    }
+  }
+
   out.ok = true;
 }
 
@@ -866,11 +1318,23 @@ function avBackupState() {
       lastBuild: st.lastBuild ? { name: st.lastBuild.name, bytes: st.lastBuild.bytes, at: st.lastBuild.at, counts: st.lastBuild.counts } : null,
       lastRestore: st.lastRestore ? {
         at: st.lastRestore.at, ok: !!st.lastRestore.ok,
-        restored: { sessions: st.lastRestore.restored.sessions, packs: st.lastRestore.restored.packs, samples: st.lastRestore.restored.samples },
+        restored: {
+          sessions: st.lastRestore.restored.sessions, packs: st.lastRestore.restored.packs,
+          samples: st.lastRestore.restored.samples,
+          library: avBackupInt(st.lastRestore.restored.library),
+          wt: avBackupInt(st.lastRestore.restored.wt),
+          code: avBackupInt(st.lastRestore.restored.code),
+          prefs: avBackupInt(st.lastRestore.restored.prefs),
+        },
         skipped: (typeof st.lastRestore.skipped === "number") ? st.lastRestore.skipped : 0,
         skippedBy: st.lastRestore.skippedBy ? {
-          sessions: st.lastRestore.skippedBy.sessions, packs: st.lastRestore.skippedBy.packs, samples: st.lastRestore.skippedBy.samples,
-        } : { sessions: 0, packs: 0, samples: 0 },
+          sessions: st.lastRestore.skippedBy.sessions, packs: st.lastRestore.skippedBy.packs,
+          samples: st.lastRestore.skippedBy.samples,
+          library: avBackupInt(st.lastRestore.skippedBy.library),
+          wt: avBackupInt(st.lastRestore.skippedBy.wt),
+          code: avBackupInt(st.lastRestore.skippedBy.code),
+          prefs: avBackupInt(st.lastRestore.skippedBy.prefs),
+        } : { sessions: 0, packs: 0, samples: 0, library: 0, wt: 0, code: 0, prefs: 0 },
         errorCount: st.lastRestore.errorCount, errors: st.lastRestore.errors.slice(), notes: st.lastRestore.notes.slice(),
       } : null,
       lastError: st.lastError,

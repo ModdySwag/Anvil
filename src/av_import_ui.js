@@ -117,6 +117,15 @@
    avImportUiSetStatus tail-writes the overlay status line through the guarded avLibraryUiNote;
    avImportUiLibrary() appends a guarded avLibraryUiOpen() (the store-jump behavior is kept).
 
+   R20 -- SONG ROWS (verify/_r20_wave.md section 6; NO version bump): a row of kind "song"
+   (the Song Bundle's project payload) carries the LOAD action (label LOAD, title "apply this
+   song bundle's project" -> avLibLoad(id) -> the av_lib song route applies the project)
+   + DEL; NO SEND / CHOP / SEQ (a song item has no session entry and no pattern) and no
+   RELINK (a song record references nothing, so the missing-ref scan never flags it). The
+   R17 REN/EXP pair and the R21 info toggle append as on every kind. A loaded song reports
+   "loaded <name> . song . applied N" (+ " . N warnings" above zero) in the status line.
+   The manager's kind facet set stays as-is (song rows appear under "all").
+
    DOM CONTRACT (exact -- suites pin these):
      host      #av-import-host          parent-owned; absent -> avImportUiInit() returns false
      root      .av-import[data-av-import="1"] (id "av-import" only when no element owns it --
@@ -1134,14 +1143,16 @@ function avImportUiActBtnHTML(id, act, label, title, disabled) {
 }
 
 /* one library row -- the pinned load-type actions stay as-is (sample/pattern rows keep
-   LOAD|SEND|CHOP|SEQ|DEL, kit rows KIT|DEL, refs rows SEQ?|DEL); R17 appends the select
-   checkbox + the RENAME/EXPORT management actions on every kind */
+   LOAD|SEND|CHOP|SEQ|DEL, kit rows KIT|DEL, refs rows SEQ?|DEL, R20 song rows LOAD|DEL --
+   no SEND/CHOP/SEQ); R17 appends the select checkbox + the RENAME/EXPORT management actions
+   on every kind */
 function avImportUiLibRowHTML(it, sel) {
   const id = String(it.id || "");
   const kind = String(it.kind || "");
   const isPattern = (kind === "pattern");
   const isKit = (kind === "kit");
   const isRefs = (kind === "refs");
+  const isSong = (kind === "song");
   const name = String(it.name || id);
   const counts = (it.counts && typeof it.counts === "object") ? it.counts : {};
   let meta;
@@ -1190,6 +1201,10 @@ function avImportUiLibRowHTML(it, sel) {
     if (it.hasPattern === true) {
       html += avImportUiActBtnHTML(id, "seq", "SEQ", "load the pattern into the sequencer", false);
     }
+    html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
+  } else if (isSong) {
+    /* R20 section 6: the song bundle row -- LOAD applies the project; no session entry rides */
+    html += avImportUiActBtnHTML(id, "load", "LOAD", "apply this song bundle's project", false);
     html += avImportUiActBtnHTML(id, "del", "DEL", "remove it from the local library", false);
   } else {
     html += avImportUiActBtnHTML(id, "load", "LOAD", "load this item into the session", false);
@@ -1587,6 +1602,13 @@ function avImportUiLoadLine(name, r) {
     }
     if (r.kind === "refs") {
       return "loaded " + name + " \u00b7 refs \u00b7 " + avImportUiNumOr(r.refs, 0) + " refs";
+    }
+    if (r.kind === "song") {
+      const applied = avImportUiNumOr(r.applied, 0);
+      const wn = (r.warnings && typeof r.warnings.length === "number") ? r.warnings.length : 0;
+      let line = "loaded " + name + " \u00b7 song \u00b7 applied " + applied;
+      if (wn > 0) line += " \u00b7 " + wn + " warning" + (wn === 1 ? "" : "s");
+      return line;
     }
     const eid = (r.entryId != null && String(r.entryId)) ? String(r.entryId) : "";
     return "loaded " + name + (eid ? " \u00b7 session entry " + avImportUiShort(eid, 40) : " \u00b7 session");

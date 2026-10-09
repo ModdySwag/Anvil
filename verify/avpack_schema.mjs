@@ -7,8 +7,9 @@
 
    What it is:
      - The section-2 rules table as code: manifest.json v1 shape, every cap, the slug regex,
-       the kinds vocabulary, the sha256 form, and the container path laws (relative paths only:
-       no leading "/", no ".." segments; items live at items/<key>.<ext>).
+       the kinds vocabulary (R20 extends it with "song" - both sides), the sha256 form, and
+       the container path laws (relative paths only: no leading "/", no ".." segments;
+       items live at items/<key>.<ext>).
      - validateManifest(m) -> { ok, errors, manifest? } - never throws; every error is a
        path-bearing string. parseManifestText(text) covers the byte boundary (BOM strip +
        JSON.parse + the same validation).
@@ -53,8 +54,10 @@ const AVPACK_SLUG = /^[a-z0-9][a-z0-9-]{0,63}$/;       /* id (and item key) slug
 const AVPACK_SHA256_HEX = /^[0-9a-f]{64}$/;            /* sha256 fields: 64-hex lower */
 const AVPACK_PATH_RE = /^items\/([a-z0-9][a-z0-9-]{0,63})\.([a-z0-9]{1,12})$/;  /* item path shape - the ext is the [a-z0-9] format-token shape (mirrors src/av_pack.js) */
 
-/* kinds vocabulary - the table's exact list; a closed set (unknown kinds are invalid). */
-const AVPACK_KINDS = Object.freeze(["sample", "kit", "refs", "pattern", "wt", "module"]);
+/* kinds vocabulary - the table's exact list; a closed set (unknown kinds are invalid).
+   R20 (verify/_r20_wave.md section 5) adds "song" - the same array as src/av_pack.js
+   AVPACK_KINDS (the both-sides rule; the drift probe below enforces it on every fixture). */
+const AVPACK_KINDS = Object.freeze(["sample", "kit", "refs", "pattern", "wt", "module", "song"]);
 
 /* Every cap / bound the table states, in one frozen place. */
 const AVPACK_CAPS = Object.freeze({
@@ -260,11 +263,17 @@ function fixtureList() {
   }), true);
   add("positive", "unknown extra keys tolerated (manifest + item)", () => mOf({ futureKey: { a: 1 }, items: [Object.assign(baseItem(), { extraRow: "x" })] }), true);
   add("positive", "item meta object present", () => iOf({ meta: { dur: 1.5, src: "scan" } }), true);
-  add("positive", "all six kinds accepted", () => mOf({
-    items: ["sample", "kit", "refs", "pattern", "wt", "module"].map((k, i) => ({
+  add("positive", "all seven kinds accepted", () => mOf({
+    items: ["sample", "kit", "refs", "pattern", "wt", "module", "song"].map((k, i) => ({
       key: "k" + i, kind: k, format: "dat", name: "Item " + i,
       path: "items/k" + i + ".dat", sha256: "0".repeat(63) + "a", size: i,
     })),
+  }), true);
+  add("positive", 'song kind accepted (the R20 Song Bundle project row shape)', () => mOf({
+    items: [{
+      key: "project", kind: "song", format: "anvl", name: "project.anvl",
+      path: "items/project.anvl", sha256: "b".repeat(64), size: 4096,
+    }],
   }), true);
   add("positive", "id 64 chars (slug max)", () => mOf({ id: "a" + "b".repeat(63) }), true);
   add("positive", "id starts with a digit", () => mOf({ id: "0pack" }), true);
@@ -304,7 +313,7 @@ function fixtureList() {
   add("negative", "key uppercase refused", () => iOf({ key: "KICK", path: "items/KICK.wav" }), false);
   add("negative", "key missing refused", delItem("key"), false);
   add("negative", "duplicate keys refused (named)", () => mOf({ items: [baseItem(), baseItem()] }), false, /duplicate/);
-  add("negative", "kind unknown refused (vocabulary named)", () => iOf({ kind: "song" }), false, /kind/);
+  add("negative", "kind unknown refused (vocabulary named)", () => iOf({ kind: "stem" }), false, /kind/);
   add("negative", "kind missing refused", delItem("kind"), false);
   add("negative", "kind non-string refused", () => iOf({ kind: 3 }), false);
   add("negative", "format 13 chars refused", () => iOf({ format: "f".repeat(13) }), false);

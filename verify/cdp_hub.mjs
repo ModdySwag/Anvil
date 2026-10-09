@@ -43,6 +43,14 @@
 //       the format + pack facets, incremental rows (65 synthetic WAVs, cleaned up), bulk load
 //       and the inspector.
 //
+//   13. (R20) the Song Bundle round-trip: set bpm 137 + a rig pattern (the sessions/bounce witness
+//       style: the canonical avSeqPatternExport() string + avParams.bpm) -> __avPack.song builds ONE
+//       zip (manifest kind "song" = project.anvl + the referenced sample names; counts.project 1) ->
+//       those sample names leave the library -> the zip imports back through the pack route (the song
+//       row lands; the samples land again; ONE bundle receipt) -> the song row LOADs (the project
+//       applies: bpm + pattern witness) -> a second import of the same bundle reports honestly per
+//       the existing dup law.
+//
 // Launch skeleton follows cdp_import.mjs / cdp_smoke.mjs VERBATIM (candidates Chrome/Edge/Brave,
 // free-port scan, fresh temp --user-data-dir, 1440x900 metrics override, autoplay allowed, ONE
 // browser, explicit exit, process.on('exit') kills ONLY processes whose command line carries OUR
@@ -68,7 +76,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* freeze pin: the parent sets this to the frozen sha at the R17 freeze (64-hex); null until then.
    Pinned run = +1 check (the freeze check); unpinned run reports one FEWER check — mirroring
    cdp_import's structure with its pin absent. */
-const EXPECT_SHA = '1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa';
+const EXPECT_SHA = '354b74ddfaaf42788378a5089ceb7b3590c0c65036187ad743082c2d1ffc55fe';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -2278,6 +2286,298 @@ async function main() {
   check('row action: the surviving sample LOADs end-to-end (48 kHz native, 0.05 s preserved)',
     loadClicked === true && !!loadId && !!loadedR && loadedR.rate === 48000 && loadedR.frames === 2400
     && Math.abs(loadedR.secs - 0.05) < 0.002, JSON.stringify(loadedR));
+
+  /* ── 26b. R20 song bundle round-trip (contract: verify/_r20_wave.md sections 5-7) ──
+     Working state = bpm 137 + a rig pattern (the sessions/bounce witness style: the canonical
+     avSeqPatternExport() string + avParams.bpm read live). __avPack.song builds ONE zip from the
+     LIVE state; the manifest's sample names leave the library; the zip imports back through the
+     pack route (the song row lands + the samples land again); the song row LOADs (the project
+     applies); a second import of the same bundle reports honestly per the existing dup law.
+     Fixtures are synthesized IN-PAGE (no disk files). ── */
+  const r20Open = await openLibrary();
+  note('R20 overlay open: ' + JSON.stringify(r20Open));
+  const r20InitR = await ev(`(() => {
+    try {
+      const H = { v: 1 };
+      H.step = function (o) { return Object.assign({ on: 0, note: 'c2', vel: 0.9, gate: 0.5, slide: 0, accent: 0, oct: 0, prob: 100, cond: '', ratchet: 1, micro: 0 }, o || {}); };
+      H.off = function () { const a = []; for (let i = 0; i < 64; i++) a.push(H.step({ on: 0 })); return a; };
+      H.pattern = function (name, stepsOn) {
+        const steps = [];
+        for (let s = 0; s < 16; s++) steps.push(stepsOn === false ? H.step({ on: 0 }) : H.step({ on: 1, note: 'c2', vel: 0.9, gate: 0.5 }));
+        const all = steps.concat(H.off().slice(16));
+        const tracks = [];
+        for (let t = 0; t < 4; t++) tracks.push({ len: 16, speed: 1, mute: 0, steps: (t === 0 ? all.slice() : H.off()) });
+        return { v: 1, name: name || 'RIG SONG PAT', bpm: 120, grid: '16', swing: 50, rng: 305419896, tracks: tracks, plocks: [] };
+      };
+      H.loadPattern = function (P) {
+        let ok = false, why = '';
+        try {
+          if (typeof avSeqPatternImport === 'function') { ok = avSeqPatternImport(JSON.stringify(P)) === true; why = ok ? 'import' : 'import-refused'; }
+          if (!ok && typeof avSeqLoad === 'function') { ok = avSeqLoad(P) === true; why = why + '+load' + (ok ? '' : '-refused'); }
+        } catch (e) { ok = false; why = 'threw: ' + ((e && e.message) || e); }
+        if (ok) { try { if (typeof avSeqSetPattern === 'function' && typeof avSeqSnap === 'function') avSeqSetPattern(avSeqSnap()); } catch (e2) { } }
+        return { ok: ok, why: why };
+      };
+      H.commit = function (path, v) {
+        try { if (typeof avApplyParam === 'function') { avApplyParam(path, v); return true; } } catch (e) { }
+        return false;
+      };
+      H.wit = function () {
+        const out = { export: null, bpm: null, name: null };
+        try { out.export = (typeof avSeqPatternExport === 'function') ? String(avSeqPatternExport()) : null; } catch (e) { out.export = null; }
+        try { if (typeof avParams !== 'undefined' && avParams && typeof avParams.bpm === 'number') out.bpm = avParams.bpm; } catch (e) { }
+        try { if (typeof avSeqSnap === 'function') out.name = String((avSeqSnap() || {}).name || ''); } catch (e) { }
+        return out;
+      };
+      H.wa = null; H.built = null; H.songId = null; H.songName = '';
+      H.setup = function () {
+        const a = H.loadPattern(H.pattern('RIG SONG PAT', true));
+        const b = H.commit('bpm', 137);
+        H.wa = H.wit();
+        return { load: a, bpm: b, wa: H.wa };
+      };
+      H.mutate = function () {
+        const a = H.loadPattern(H.pattern('RIG SONG MUT', false));
+        const b = H.commit('bpm', 94);
+        return { load: a, bpm: b, wm: H.wit() };
+      };
+      window.__r20 = H;
+      return { ok: true, seq: { export: typeof avSeqPatternExport, load: typeof avSeqLoad, import: typeof avSeqPatternImport },
+               zipp: (typeof AVZIP === 'object' && AVZIP) ? typeof AVZIP.list : 'absent',
+               pack: (typeof window.__avPack === 'object' && window.__avPack) ? typeof window.__avPack.song : 'absent' };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`);
+  note('R20 song fixtures: ' + JSON.stringify((r20InitR && r20InitR.value) || {}));
+  const r20Su = ((await ev('window.__r20.setup()')).value) || {};
+  note('R20 working state: ' + JSON.stringify(r20Su));
+
+  const r20Build = ((await ev(`(async () => {
+    try {
+      const B = window.__avPack;
+      if (!B || typeof B.song !== 'function') return { missing: true, avPack: (window.__avPack ? 'present' : 'absent') };
+      const r = await B.song();
+      if (!r || typeof r !== 'object') return { bad: true, got: String(r) };
+      const c = (r.counts && typeof r.counts === 'object') ? r.counts : {};
+      let u8 = null;
+      try {
+        if (r.bytes instanceof ArrayBuffer) u8 = new Uint8Array(r.bytes);
+        else if (r.bytes && ArrayBuffer.isView(r.bytes)) u8 = new Uint8Array(r.bytes.buffer, r.bytes.byteOffset, r.bytes.byteLength);
+      } catch (e0) { u8 = null; }
+      const pk = !!u8 && u8.length > 4 && u8[0] === 0x50 && u8[1] === 0x4B;
+      let zOk = null, zNames = null;
+      try {
+        if (u8 && typeof AVZIP !== 'undefined' && AVZIP && typeof AVZIP.list === 'function') {
+          const lr = AVZIP.list(u8);
+          zOk = !!(lr && lr.ok === true);
+          zNames = (lr && Array.isArray(lr.entries)) ? lr.entries.map(function (e2) { return String(e2.name); }) : null;
+        }
+      } catch (e1) { /* the names stay null */ }
+      let man = null;
+      try {
+        if (u8 && Array.isArray(zNames) && typeof AVZIP !== 'undefined' && AVZIP && typeof AVZIP.extract === 'function') {
+          const mi = zNames.indexOf('manifest.json');
+          if (mi >= 0) {
+            const ex = await AVZIP.extract(u8, mi);
+            if (ex && ex.ok === true && ex.bytes) {
+              let txt = null;
+              try { txt = (typeof avPackUtf8Decode === 'function') ? avPackUtf8Decode(ex.bytes) : null; } catch (e4) { txt = null; }
+              if (txt == null) { try { txt = new TextDecoder().decode(ex.bytes); } catch (e5) { txt = null; } }
+              if (txt) man = JSON.parse(txt);
+            }
+          }
+        }
+      } catch (e2) { man = null; }
+      const rows = (man && Array.isArray(man.items)) ? man.items.map(function (x) {
+        return { key: String((x && x.key) || ''), name: String((x && x.name) || ''), path: String((x && x.path) || ''),
+                 kind: String((x && x.kind) || ''), size: (x && typeof x.size === 'number') ? x.size : -1 };
+      }) : null;
+      window.__r20.built = { bytes: r.bytes, name: String(r.name == null ? '' : r.name), manifest: man };
+      return { ok: r.ok === true, error: String(r.error || ''), name: String(r.name == null ? '' : r.name), len: u8 ? u8.length : -1,
+               pk: pk, zipOk: zOk, zNames: zNames,
+               counts: { project: c.project, samples: c.samples, wt: c.wt, modules: c.modules, packs: c.packs },
+               refused: Array.isArray(r.refused) ? r.refused.slice(0, 8).map(String) : null,
+               notes: Array.isArray(r.notes) ? r.notes.slice(0, 8).map(String) : null,
+               man: man ? { v: man.v, id: String(man.id == null ? '' : man.id), app: String(man.app == null ? '' : man.app),
+                            packsN: Array.isArray(man.packs) ? man.packs.length : null } : null,
+               rows: rows };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)).value) || {};
+  const r20Rows = Array.isArray(r20Build.rows) ? r20Build.rows : null;
+  const r20SampleRows = r20Rows ? r20Rows.filter(function (x) { return x.kind === 'sample'; }) : [];
+  const r20SongRows = r20Rows ? r20Rows.filter(function (x) { return x.kind === 'song'; }) : [];
+  const r20Names = Array.isArray(r20Build.zNames) ? r20Build.zNames : [];
+  const r20NoPackBytes = r20Names.every(function (n) { return !/\.avpack$/i.test(String(n)); });
+  const r20ProjEntry = r20Names.some(function (n) { return /(^|\/)project\.anvl$/i.test(String(n)); });
+  check('R20 song build: __avPack.song -> ONE zip (PK) · manifest kind "song" = project.anvl · counts.project 1 · counts.samples === the manifest rows · no pack bytes',
+    !!r20Su.load && r20Su.load.ok === true && r20Su.bpm === true && !!r20Su.wa && r20Su.wa.bpm === 137
+    && typeof r20Su.wa.export === 'string' && r20Su.wa.export.length > 20
+    && !r20Build.missing && !r20Build.bad && r20Build.ok === true && r20Build.pk === true && r20Build.zipOk === true
+    && typeof r20Build.len === 'number' && r20Build.len > 512
+    && !!r20Build.counts && r20Build.counts.project === 1
+    && typeof r20Build.counts.samples === 'number' && r20Build.counts.samples === r20SampleRows.length
+    && typeof r20Build.counts.wt === 'number' && typeof r20Build.counts.modules === 'number' && typeof r20Build.counts.packs === 'number'
+    && Array.isArray(r20Build.refused) && r20Build.refused.every(function (x) { return typeof x === 'string'; })
+    && r20Build.refused.indexOf('project.anvl') < 0
+    && !!r20Build.man && r20Build.man.v === 1
+    && r20SongRows.length === 1 && r20SongRows[0].name === 'project.anvl'
+    && r20ProjEntry === true && r20NoPackBytes === true,
+    JSON.stringify({ setup: r20Su, build: { ok: r20Build.ok, pk: r20Build.pk, zip: r20Build.zipOk, len: r20Build.len, name: r20Build.name, counts: r20Build.counts, refused: r20Build.refused, man: r20Build.man, err: r20Build.err || r20Build.error || null }, rows: r20Rows, zN: r20Names.length }));
+
+  /* the referenced sample names leave the library; the zip imports back through the pack route */
+  const r20SampleNames = r20SampleRows.map(function (x) { return x.name; });
+  const r20RemoveNames = (names) => waitFor(`(async () => {
+    try {
+      if (typeof avLibRemove !== 'function' || typeof avLibList !== 'function') return null;
+      const want = ${JSON.stringify(names.map(function (s) { return String(s).toLowerCase(); }))};
+      const l0 = await avLibList();
+      const items0 = (l0 && l0.items) || [];
+      for (let i = 0; i < items0.length; i++) {
+        const it = items0[i];
+        if (it && want.indexOf(String(it.name).toLowerCase()) >= 0) { const r = await avLibRemove(String(it.id)); if (!(r && r.ok === true)) return null; }
+      }
+      const l1 = await avLibList();
+      const left = (l1 && l1.items) || [];
+      for (let i = 0; i < left.length; i++) { if (want.indexOf(String(left[i].name).toLowerCase()) >= 0) return null; }
+      return { ok: true, removed: want.length };
+    } catch (e) { return null; }
+  })()`, 15000);
+  const r20Del = (r20Build.ok === true && r20SampleNames.length > 0) ? await r20RemoveNames(r20SampleNames) : null;
+  const r20Imp = (r20Build.ok === true && r20Build.pk === true && (r20SampleNames.length === 0 || !!(r20Del && r20Del.ok === true)))
+    ? await r19Import('song bundle import', `[new File([window.__r20.built.bytes], 'rig-r20-song.zip')]`)
+    : null;
+  const r20Final = (r20Imp && r20Imp.via !== null) ? (((await ev(`(async () => {
+    try {
+      const B = window.__r20 || {};
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      const items = (l && l.items) || [];
+      const songHits = items.filter(function (i) { return i && String(i.kind) === 'song'; });
+      const song = items.filter(function (i) { return i && String(i.name) === 'project.anvl'; })[0] || songHits[0] || null;
+      const songId = song ? String(song.id) : '';
+      B.songId = songId; B.songName = song ? String(song.name) : '';
+      const reland = ${JSON.stringify(r20SampleNames)}.map(function (nm) {
+        const low = String(nm).toLowerCase();
+        const hit = items.filter(function (i) { return i && String(i.name).toLowerCase() === low; })[0] || null;
+        return { name: nm, back: !!hit, srcPack: (hit && hit.source && typeof hit.source === 'object') ? String(hit.source.pack == null ? '' : hit.source.pack) : null };
+      });
+      const songSrc = (song && song.source && typeof song.source === 'object')
+        ? { pack: String(song.source.pack == null ? '' : song.source.pack), name: String(song.source.name == null ? '' : song.source.name),
+            path: String(song.source.path == null ? '' : song.source.path) } : null;
+      let rowActs = [];
+      if (songId) {
+        const row = document.querySelector('#av-import-lib [data-av-import-lib="' + songId + '"]');
+        if (row) {
+          rowActs = Array.prototype.map.call(row.querySelectorAll('[data-av-import-act]'), function (b2) {
+            return { act: String(b2.getAttribute('data-av-import-act') || ''), label: String(b2.textContent || '').trim().slice(0, 16),
+                     title: String(b2.getAttribute('title') || '').slice(0, 80) };
+          });
+        }
+      }
+      const st = (typeof avImportUiState !== 'undefined' && avImportUiState && Array.isArray(avImportUiState.reportItems)) ? avImportUiState.reportItems : [];
+      const bundle = st.filter(function (x) { return x && String(x.kind) === 'bundle'; })[0] || st[st.length - 1] || null;
+      const bm = (bundle && bundle.meta && typeof bundle.meta === 'object') ? bundle.meta : {};
+      return { songId: songId, songName: song ? String(song.name) : '', songKind: song ? String(song.kind) : null,
+               songSrc: songSrc, rowActs: rowActs, songHits: songHits.length,
+               reland: reland,
+               report: { n: st.length, name: bundle ? String(bundle.name) : '', kind: bundle ? String(bundle.kind) : '', result: bundle ? String(bundle.result) : '' },
+               meta: { pack: String(bm.pack == null ? '' : bm.pack), items: (typeof bm.items === 'number') ? bm.items : null,
+                       installed: (typeof bm.installed === 'number') ? bm.installed : null, refused: (typeof bm.refused === 'number') ? bm.refused : null } };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)).value) || {}) : {};
+  const r20WantItems = r20Rows ? r20Rows.length : -1;
+  const r20RelandOk = Array.isArray(r20Final.reland) && r20Final.reland.every(function (r) { return r.back === true; });
+  check('R20 song import: the zip imports back through the pack route — the song row lands (kind "song" = project.anvl) · the referenced samples land again · ONE bundle receipt (meta honest)',
+    !!r20Imp && r20Imp.via !== null && (r20SampleNames.length === 0 || !!(r20Del && r20Del.ok === true))
+    && !!r20Final && typeof r20Final.songId === 'string' && r20Final.songId.length > 0
+    && String(r20Final.songKind) === 'song' && String(r20Final.songName) === 'project.anvl'
+    && r20RelandOk === true
+    && !!r20Final.report && r20Final.report.n === 1 && r20Final.report.kind === 'bundle' && r20Final.report.result === 'imported'
+    && !!r20Final.meta && String(r20Final.meta.pack).length >= 1 && String(r20Final.meta.pack) === String(r20Build.man && r20Build.man.id)
+    && !!r20Final.songSrc && String(r20Final.songSrc.pack) === String(r20Build.man && r20Build.man.id)
+    && r20Final.meta.items === r20WantItems
+    && r20Final.meta.installed === r20WantItems && r20Final.meta.refused === 0,
+    JSON.stringify({ imp: r20Imp && { via: r20Imp.via, count: r20Imp.count }, del: r20Del, sampleNames: r20SampleNames, final: r20Final }));
+
+  /* the song row LOADs: mutate away, then the row control must apply the stored project */
+  const r20SongId = (r20Final && r20Final.songId) || '';
+  const r20Mut = ((await ev('window.__r20.mutate()')).value) || {};
+  const r20LoadClicked = r20SongId ? await clickSel(`[data-av-import-lib="${r20SongId}"] [data-av-import-act="load"]`, 900) : false;
+  const r20WaExport = String((r20Su.wa && r20Su.wa.export) || '');
+  const r20Applied = await waitFor(`(() => {
+    try {
+      const w = window.__r20.wit();
+      if (!w || w.bpm !== 137 || w.export !== ${JSON.stringify(r20WaExport)}) return null;
+      const lo = window.__avProjLastOpen || null;
+      return { w: w, lastOpen: lo ? { ok: lo.ok, applied: lo.applied, name: String(lo.name == null ? '' : lo.name) } : null };
+    } catch (e) { return null; }
+  })()`, 12000);
+  const r20Acts = (r20Final && Array.isArray(r20Final.rowActs)) ? r20Final.rowActs : [];
+  const r20LoadBtn = r20Acts.filter(function (a) { return a && a.act === 'load'; })[0] || null;
+  const r20Forbidden = ['send', 'chop', 'seq', 'relink'];
+  const r20NoExtras = r20Acts.length > 0 && r20Acts.every(function (a) { return a && r20Forbidden.indexOf(String(a.act)) < 0; });
+  const r20WantActs = ['load', 'rename', 'export', 'del'];
+  const r20ActsOk = r20WantActs.every(function (w) { return r20Acts.some(function (a) { return a && a.act === w; }); });
+  check('R20 song LOAD: the row LOAD applies the project (bpm back to 137 + the saved pattern export witness · applied >= 1) · row actions LOAD/REN/EXP/DEL present, no SEND/CHOP/SEQ/RELINK extras',
+    !!r20Mut && r20Mut.bpm === true && !!r20Mut.wm && r20Mut.wm.bpm === 94 && r20Mut.wm.export !== r20WaExport
+    && r20LoadClicked === true && !!r20Applied
+    && r20Applied.w.bpm === 137 && r20Applied.w.export === r20WaExport
+    && !!r20Applied.lastOpen && r20Applied.lastOpen.ok === true
+    && typeof r20Applied.lastOpen.applied === 'number' && r20Applied.lastOpen.applied >= 1
+    && r20ActsOk === true && !!r20LoadBtn && r20NoExtras === true
+    && /load/i.test(String(r20LoadBtn.label || '')) && /apply/i.test(String(r20LoadBtn.title || '')),
+    JSON.stringify({ mut: r20Mut, clicked: r20LoadClicked, applied: r20Applied, acts: r20Acts }));
+
+  /* the dup law: a second import of the SAME bundle bytes reports honestly (never a silent copy) */
+  const r20DupBefore = await receiptsNow();
+  const r20Dup = (await ev(`(async () => {
+    try {
+      const B = window.__r20;
+      if (!B || !B.built || !B.built.bytes) return { noFixture: true };
+      if (!window.__avImport || typeof window.__avImport.importFiles !== 'function') return { missing: true };
+      const f = new File([B.built.bytes], 'rig-r20-song.zip');
+      const r = await window.__avImport.importFiles([f]);
+      window.__r20DupReceipt = r || null;
+      return { ok: !!(r && r.ok), at: (r && typeof r.at === 'number') ? r.at : null };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)).value || {};
+  await sleep(700);
+  const r20DupAfter = await receiptsNow();
+  const r20DupR = ((await ev(`(async () => {
+    try {
+      const raw = window.__r20DupReceipt || null;
+      const items = (raw && Array.isArray(raw.items)) ? raw.items : [];
+      const row = items.filter(function (x) { return x && String(x.kind) === 'bundle'; })[0] || items[0] || null;
+      const meta = (row && row.meta && typeof row.meta === 'object') ? row.meta : {};
+      const itemDup = (row && row.dup && typeof row.dup === 'object') ? { id: String(row.dup.id == null ? '' : row.dup.id), name: String(row.dup.name == null ? '' : row.dup.name) } : null;
+      const counts = (raw && raw.counts && typeof raw.counts === 'object') ? raw.counts : {};
+      const l = (typeof avLibList === 'function') ? await avLibList() : null;
+      const items2 = (l && l.items) || [];
+      const songs = items2.filter(function (i) { return i && String(i.kind) === 'song'; });
+      const songByName = items2.filter(function (i) { return i && String(i.name) === 'project.anvl'; });
+      const dupOfIds = songByName.filter(function (i) { return i && i.dupOf && typeof i.dupOf === 'object'; })
+        .map(function (i) { return String(i.dupOf.id == null ? '' : i.dupOf.id); });
+      return { hasRaw: !!raw, ok: raw ? raw.ok === true : null,
+               row: row ? { kind: String(row.kind || ''), result: String(row.result || ''), reason: String(row.reason || ''),
+                            dupName: itemDup ? itemDup.name : null } : null,
+               meta: { items: (typeof meta.items === 'number') ? meta.items : null, installed: (typeof meta.installed === 'number') ? meta.installed : null,
+                       refused: (typeof meta.refused === 'number') ? meta.refused : null, dups: (typeof meta.dups === 'number') ? meta.dups : null },
+               counts: { total: counts.total, imported: counts.imported, refused: counts.refused, dups: (typeof counts.dups === 'number') ? counts.dups : null, bundles: counts.bundles },
+               songsN: songs.length, songByNameN: songByName.length, dupOfIds: dupOfIds,
+               statusText: String((document.getElementById('av-import-status') || {}).textContent || '').slice(0, 160),
+               errors: (raw && Array.isArray(raw.errors)) ? raw.errors.slice(0, 4).map(String) : [] };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)).value) || {};
+  const r20DupReason = String((r20DupR.row && r20DupR.row.reason) || '') + ' ' + (r20DupR.errors || []).join(' ') + ' ' + String((r20DupR.row && r20DupR.row.dupName) || '');
+  const r20DupMarked = !!((r20DupR.meta && r20DupR.meta.dups >= 1) || (r20DupR.counts && r20DupR.counts.dups >= 1)
+    || (r20DupR.dupOfIds && r20DupR.dupOfIds.length >= 1) || (r20DupR.row && r20DupR.row.dupName)
+    || /dup/i.test(String(r20DupR.statusText || '')));
+  const r20DupHonest = r20DupR.hasRaw === true && (
+    (r20DupR.row && r20DupR.row.result !== 'imported' && r20DupReason.trim().length > 0) ||
+    (r20DupR.row && r20DupR.row.result === 'imported' && r20DupMarked === true) ||
+    (!r20DupR.row && Array.isArray(r20DupR.errors) && r20DupR.errors.length > 0));
+  check('R20 dup law: a second import of the same song bundle reports honestly (refused/dup-marked per the existing law — never a silent second copy)',
+    !!r20Dup && !r20Dup.noFixture && !r20Dup.missing && r20DupHonest === true
+    && r20DupR.songByNameN >= 1 && r20DupR.songByNameN <= 2,
+    JSON.stringify({ before: r20DupBefore, after: r20DupAfter, drive: r20Dup, read: r20DupR, marked: r20DupMarked, honest: r20DupHonest }));
 
   /* ── 27. zero page errors ── */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));

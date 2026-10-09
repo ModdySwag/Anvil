@@ -3,7 +3,7 @@
    of that is wired. `?avtest=1` runs runtime proofs of the tap chain and the knob commit path. */
 "use strict";
 
-const ANVIL = Object.freeze({ version: "1.10.0", phase: "R21 · library overlay", built: "2026-10-09" });
+const ANVIL = Object.freeze({ version: "1.11.0", phase: "R20 · work persistence", built: "2026-10-09" });
 window.ANVIL = ANVIL;
 
 /* ---------- the value store ----------
