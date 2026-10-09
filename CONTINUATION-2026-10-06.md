@@ -2683,7 +2683,26 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   spans 11 scales (12edo = identity, intentionally skipped). Cents shapes documented (13
   just-major with closing 2/1; 12 12edo). Per-part tuning stays page-side (avTuneTrackSlot at
   the sched emission; no pattern-schema change). TUNE card carries LS `av-tune-pref` v1.
-- NEXT (this session): battery 26 suites + bench (detached) -> stress x2 -> deploy (index.html +
-  sw.js + packs/perfect-tunings.avbank.json + packs/index.json) -> live verify + live tune
-  probe -> close addendum 75 -> E wave (ENGINE EDGE: accent flag + P.2 minBLEP) -> K wave
-  (FINISH KNICKS: fill/undo/template/WAV-meta + the FINISH close).
+## Resume addendum 75 - 2026-10-09 (T wave CLOSED: TUNING STUDIO + PERFECT TUNINGS SHIPPED + LIVE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen **`c6bc282c`** (4,506,520 B; sw `8a19a9ef`;
+  worklet changed by design) at moddys.net/anvil -- deploy uploaded 4 (index, sw, the new pack,
+  the index) with **0 not in sync**; live sha = frozen on all four files (independently re-read).
+- GATES: battery **26/26 + bench ALL exit=0 first-lap** (knee 96/128 monotone; 128 @ 52.61 %
+  budget = +0.8 pp raw vs the R20 family, no gate movement; realtime light 64 / fat 48;
+  ratio 1.003); stress x2 -- run1 **341** raw (UNIQUE lap: `query user` = console **Active**
+  during it -- the recorded load class; same cluster signature) / run2 **44** family-normal
+  (verified-envelope = the cycle-1 @ uni-3 cold signature both runs); heap PASS both; 0 page
+  errors. Records: verify/stress-t-run1/2.log + last-cdp_bench.*.
+- LIVE PROBE (browser, read + recorded): ANVIL **v1.12.0 "T1 - tuning studio"**; the TUNE card
+  mounted + styled (screenshot `renders/t-live-tune.png` read: Just Major (5-limit), ROOT C4,
+  MORPH 100%, PART 1-4 GLOBAL, IMPORT .SCL/.KBM + EXPORT .SCL, MTS LIVE RECEIVE); selecting
+  just-major live wrote `av-tune-pref` + engine `tune.active = 1 / "just-major"`; `__avTune`
+  builtinIds = **12**; live `packs/index.json` = **10 packs** incl. perfect-tunings.
+- Pins: 23 (22 swept to c6bc282c + cdp_tune pinned). Carried items now cleared by this wave:
+  PERFECT TUNINGS + the tuning engine. Remaining owed: P.2 minBLEP + the explicit acid
+  accent-flag decision (both staged as wave E), P4 fill/undo knicks + boot template + WAV
+  metadata + README + $7 benches (wave K), owner-pass items (final).
+- NEXT (this session): **E wave (ENGINE EDGE)** dispatch from this tree -- EG minBLEP pass /
+  EH accent flag (av_acid + av_seq_sched opts merge + av_seq_acid) / ER cdp_seq legs; then
+  E close; then **K wave**; then the FINISH close (README + docs/12 section 7 + owner-pass ask).
