@@ -12,6 +12,13 @@
    initialised in initVoiceK/initEngineK (monomorphic shape); no NaN paths, no throws; alloc-free render;
    the minBLEP oscillator reuses the shared AVDSP.blep tables/deposit scheme (P1.x, no duplicate tables).
 
+   E WAVE DECISION (verify/_e_wave.md section 1): a sequenced note's accent is EXPLICIT. The scheduler
+   emits opts.acc {0|1} from the step's accent flag (T-wave plumbing -> v.acc; sentinel -1 = absent) and
+   the accent trigger predicate is
+     acc = (v.acc === 0 || v.acc === 1) ? v.acc : ((v.vel >= 0.8) ? 1 : 0)
+   -- the explicit flag is AUTHORITATIVE for sequenced notes; with no flag (keyboard/MIDI/legacy
+   note-on paths) the legacy velocity threshold (vel >= 0.8, P2 contract 3.1) applies UNCHANGED.
+
    VOICE FIELDS (all live on v.k, created by the parent, filled by initVoiceK; per-note reset in initVoice):
      ph                 oscillator phase 0..1 (saw and square share it; contract 3.1 "same phase")
      t2x                2x step counter (minBLEP ring bookkeeping)
@@ -183,8 +190,11 @@ const AVACID = (function () {
     }
 
     const midi = v.noteMidi;
-    /* accent trigger: velocity >= 0.8 in P2 (contract 3.1; T2 L85 ecosystem conventions 80/127) */
-    const acc = (v.vel >= 0.8) ? 1 : 0;
+    /* accent trigger (E wave decision): the EXPLICIT per-note flag wins when the voice carries
+       one (opts.acc -> v.acc 0|1; T-wave plumbing, sentinel -1 = absent); absent -> the legacy
+       P2 velocity threshold (contract 3.1; T2 L85 ecosystem conventions 80/127). The scheduler
+       emits the flag for every sequenced note, so there the step's ACC column is authoritative. */
+    const acc = (v.acc === 0 || v.acc === 1) ? v.acc : ((v.vel >= 0.8) ? 1 : 0);
 
     /* accent sweep-capacitor memory (T2 L82): lazy discharge since the last accent, then charge.
        The depth of THIS accent reads the cap BEFORE this accent's charge (rising consecutive accents). */

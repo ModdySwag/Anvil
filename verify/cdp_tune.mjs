@@ -67,7 +67,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
    authoring. A valid --sha <hex> becomes the run-time expectation while the constant is null,
    and echoes/overrides the constant once pinned (cdp_hub semantics, verbatim). The rig never
    loosens the before === after check. */
-const EXPECT_SHA = 'c6bc282ce4c7dd033ba8d67f32e6cb28e48a8affd6f1a60619c63bade148d624';
+const EXPECT_SHA = 'dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -521,32 +521,43 @@ async function main() {
      flows (rms > 0.001, ~100 ms steps, 3 s deadline - the first read used to race the audio path),
      then FFT the settled window. A timeout keeps the raw read as the honest failure evidence. */
   const measureE4 = async () => {
-    let dn = (await ev(`(() => { const ok = avNoteDown('e4', 1.0); return { ok: ok === true }; })()`)).value;
-    if (!dn || dn.ok !== true) {
-      await ev(`(() => { try { avNoteUp('e4'); } catch (e) { /* retry path */ } return true; })()`);
-      await sleep(220);
-      dn = (await ev(`(() => { const ok = avNoteDown('e4', 1.0); return { ok: ok === true, retry: true }; })()`)).value;
+    /* full-capture retry: the first touch after boot can race the audio path (a dry capture);
+       up to 3 attempts, each = fire -> poll flow (rms>0.001, 3 s) -> settle -> re-check -> FFT. */
+    let last = null;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      let dn = (await ev(`(() => { const ok = avNoteDown('e4', 1.0); return { ok: ok === true }; })()`)).value;
+      if (!dn || dn.ok !== true) {
+        await ev(`(() => { try { avNoteUp('e4'); } catch (e) { /* retry path */ } return true; })()`);
+        await sleep(220);
+        dn = (await ev(`(() => { const ok = avNoteDown('e4', 1.0); return { ok: ok === true, retry: true }; })()`)).value;
+      }
+      if (!dn || dn.ok !== true) return { err: 'note-down refused', dn: dn };
+      let flow = null, rmsLast = null;
+      const t0 = Date.now();
+      while (Date.now() - t0 < 3000) {
+        rmsLast = (await ev('window.__tuneWit && typeof window.__tuneWit.rms === "function" ? window.__tuneWit.rms() : null')).value || null;
+        if (rmsLast && rmsLast.ok === true && typeof rmsLast.rms === 'number' && rmsLast.rms > 0.001) { flow = rmsLast; break; }
+        await sleep(100);
+      }
+      const flowMs = flow ? (Date.now() - t0) : null;
+      if (flow) {
+        await sleep(250);                                  /* a short settle inside the steady sustain */
+        const settle = (await ev('window.__tuneWit && typeof window.__tuneWit.rms === "function" ? window.__tuneWit.rms() : null')).value || null;
+        if (settle && settle.ok === true && typeof settle.rms === 'number' && settle.rms > 0.001) {
+          const read = (await ev('window.__tuneWit ? window.__tuneWit.read(80, 1200) : null')).value;
+          const up = (await ev(`(() => { const ok = avNoteUp('e4'); return { ok: ok === true }; })()`)).value;
+          await sleep(240);
+          return { dn: dn, read: read, up: up, flowMs: flowMs, rmsFlow: flow.rms, peakFlow: flow.peakAmp, attempts: attempt };
+        }
+        last = { flowMs: flowMs, rmsSettle: settle, rmsFlow: flow.rms };
+      } else {
+        last = { flowMs: null, rmsPoll: rmsLast };
+      }
+      await ev(`(() => { try { avNoteUp('e4'); } catch (e) { /* attempt reset */ } return true; })()`);
+      await sleep(320);                                    /* let the tail drain before the next touch */
     }
-    if (!dn || dn.ok !== true) return { err: 'note-down refused', dn: dn };
-    let flow = null, rmsLast = null;
-    const t0 = Date.now();
-    while (Date.now() - t0 < 3000) {
-      rmsLast = (await ev('window.__tuneWit && typeof window.__tuneWit.rms === "function" ? window.__tuneWit.rms() : null')).value || null;
-      if (rmsLast && rmsLast.ok === true && typeof rmsLast.rms === 'number' && rmsLast.rms > 0.001) { flow = rmsLast; break; }
-      await sleep(100);
-    }
-    if (!flow) {
-      const raw = (await ev('window.__tuneWit ? window.__tuneWit.read(80, 1200) : null')).value;
-      const up = (await ev(`(() => { const ok = avNoteUp('e4'); return { ok: ok === true }; })()`)).value;
-      await sleep(240);
-      return { dn: dn, read: raw, up: up, flowMs: null, rmsPoll: rmsLast, err: 'no audio reached the witness within 3000 ms - the raw read is kept' };
-    }
-    const flowMs = Date.now() - t0;
-    await sleep(250);                                    /* a short settle inside the steady sustain */
-    const read = (await ev('window.__tuneWit ? window.__tuneWit.read(80, 1200) : null')).value;
-    const up = (await ev(`(() => { const ok = avNoteUp('e4'); return { ok: ok === true }; })()`)).value;
-    await sleep(240);
-    return { dn: dn, read: read, up: up, flowMs: flowMs, rmsFlow: flow.rms, peakFlow: flow.peakAmp };
+    const raw = (await ev('window.__tuneWit ? window.__tuneWit.read(80, 1200) : null')).value;
+    return { dn: { ok: true }, read: raw, up: { ok: true }, flowMs: null, attempts: 3, last: last, err: 'no audio reached the witness across 3 attempts - the raw read is kept' };
   };
 
   /* ---- T6. spectrum witness: just-major e4 (expected recomputed from the fixture) ---- */

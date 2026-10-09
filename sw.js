@@ -37,7 +37,7 @@
 
 "use strict";
 
-const SW_VERSION = "c6bc282c";
+const SW_VERSION = "dc240f75";
 const SW_ASSETS = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./inbox.html"];
 const SW_CACHE = "anvil-" + SW_VERSION;
 const SW_PREFIX = "anvil-";

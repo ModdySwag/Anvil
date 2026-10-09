@@ -45,10 +45,13 @@
      (avPlockApplyAt(step, tSec), guarded): step = monotonic step mod the pattern cycle length
      (max track len), tSec = the boundary's analytic audio time; avPlockTransportStart/Stop
      bracket play/stop and the snapshot's plocks array is pushed via avPlockLoad when present.
-     Track tuning (T wave): the 'on' emission asks the page-side TUNE card for the track's bank
-     slot via a guarded avTuneTrackSlot(ev.track) sibling call; a valid int 0..7 rides
-     avNoteDown as its optional opts ({ tune: slot }, 4th param). No card / no assignment keeps
-     the original 2-arg call exactly (guarded, never cached across emissions, never throws).
+     Emission opts (E wave decision + T wave ride the SAME object): the 'on' emission ALWAYS
+     passes an opts object as the 4th avNoteDown param carrying the step's accent flag
+     explicitly - acc: 1|0 from ev.flags.accent (the flag is authoritative for sequenced notes;
+     verify/_e_wave.md section 1). Track tuning (T wave): the page-side TUNE card's guarded
+     avTuneTrackSlot(ev.track) sibling call contributes tune (a valid int 0..7) to the same
+     object when present; no card / no assignment omits tune alone (acc still rides). Both are
+     re-evaluated every emission, never cached across emissions, never throws.
      Trace: bounded ring window.__avSeqTrace (256 × {t,type,note,step,track}, t = planned time);
      window.__avSeq debug handle (playing, patternName, lastEvents, + setFill/traceCount). */
 
@@ -498,19 +501,22 @@ function avSeqSchedSlideAbort() {
 function avSeqSchedEmit(ev) {
   try {
     if (ev.type === "on") {
-      /* T wave: per-track microtuning (page-side). avTuneTrackSlot is the TUNE card's guarded
-         sibling hook - a valid int 0..7 becomes the optional opts { tune }; anything else keeps
-         the original 2-arg avNoteDown call exactly (re-evaluated every emission, never cached,
-         never throws). The track index rides the event itself (ev.track, set by the planner). */
-      let to = null;
+      /* E wave decision: the step's accent flag is emitted EXPLICITLY - opts ALWAYS carries
+         acc: 1|0 from ev.flags.accent (the flag is authoritative for sequenced notes;
+         verify/_e_wave.md section 1). T wave: per-track microtuning rides the SAME object -
+         avTuneTrackSlot is the TUNE card's guarded sibling hook; a valid int 0..7 adds
+         opts.tune, anything else omits tune alone (acc still rides; re-evaluated every
+         emission, never cached, never throws). The track index rides the event itself
+         (ev.track, set by the planner). */
+      const opts = { acc: (ev.flags && ev.flags.accent) ? 1 : 0 };
       try {
         if (typeof avTuneTrackSlot === "function") {
           const ts = avTuneTrackSlot(ev.track);
-          if (typeof ts === "number" && isFinite(ts) && Math.floor(ts) === ts && ts >= 0 && ts <= 7) to = { tune: ts | 0 };
+          if (typeof ts === "number" && isFinite(ts) && Math.floor(ts) === ts && ts >= 0 && ts <= 7) opts.tune = ts | 0;
         }
-      } catch (e2) { to = null; }
+      } catch (e2) { /* tuning absent; the accent flag still rides */ }
       const took = (typeof avNoteDown === "function")
-        ? (to ? (avNoteDown(ev.note, ev.vel, undefined, to) === true) : (avNoteDown(ev.note, ev.vel) === true))
+        ? (avNoteDown(ev.note, ev.vel, undefined, opts) === true)
         : false;
       if (took) {
         avSeqSchedHeldMap().set(ev.note, { step: ev.step, track: ev.track });

@@ -900,11 +900,28 @@ const AVDSP = (function () {
   function blepDeposit(ring, t, j, p) {
     let sub = (p * BLEP_SUBS) | 0;
     if (sub >= BLEP_SUBS) sub = BLEP_SUBS - 1;
-    const base = sub * BLEP_N;
     const i0 = t < BLEP_W ? BLEP_W - t : 0;
-    for (let i = i0; i < BLEP_N; i++) {
-      const idx = (t - BLEP_W + i) & BLEP_MASK;
-      ring[idx] += j * blepTab[base + i];
+    /* EG cost pass: running table index + incremental ring index, unrolled x4 over the taps.
+       Every tap still performs ring[idx] += j * blepTab[..] in ascending i order; a deposit's
+       taps write distinct ring slots (65 < RL), so the x4 grouping cannot reorder float adds. */
+    const beg = sub * BLEP_N;
+    let i = beg + i0;
+    const end = beg + BLEP_N;
+    const endU = end - 3;
+    let idx = (t - BLEP_W + i0) & BLEP_MASK;
+    for (; i < endU; i += 4) {
+      ring[idx] += j * blepTab[i];
+      idx = (idx + 1) & BLEP_MASK;
+      ring[idx] += j * blepTab[i + 1];
+      idx = (idx + 1) & BLEP_MASK;
+      ring[idx] += j * blepTab[i + 2];
+      idx = (idx + 1) & BLEP_MASK;
+      ring[idx] += j * blepTab[i + 3];
+      idx = (idx + 1) & BLEP_MASK;
+    }
+    for (; i < end; i++) {
+      ring[idx] += j * blepTab[i];
+      idx = (idx + 1) & BLEP_MASK;
     }
   }
 
@@ -917,30 +934,61 @@ const AVDSP = (function () {
   function voiceStep2x(eng, v) {
     const t = v.t2x;
     v.t2x = t + 1;
+    /* EG cost pass: per-slot-invariant ring indices hoisted out of the unison loops */
+    const tMask = t & BLEP_MASK;
+    const rd = t >= BLEP_W;
+    const rIdx = (t - BLEP_W) & BLEP_MASK;
     let o1 = 0;
     const t1 = eng.osc1Type, u1 = v.uni1, ph1 = v.ph1, inc1v = v.inc1v;
     if (t1 < 3) {
-      const pw = eng.cPw;
-      const E = (t1 === 1) ? 0.5 : pw;             /* square edge phase; pulse duty edge */
-      const jW = (t1 === 0) ? -2 : 2;              /* saw drops at the wrap; square/pulse rise */
-      for (let i = 0; i < u1; i++) {
-        const dt = inc1v[i], phOld = ph1[i];
-        let ph = phOld + dt;
-        const phRaw = ph;
-        let pW = -1, pH = -1;
-        if (phRaw >= 1) { ph = phRaw - 1; pW = ph / dt; }
-        if (t1 !== 0 && phOld < E && phRaw >= E) pH = (phRaw - E) / dt;
-        if (pW >= 0) blepDeposit(v.bR1[i], t, jW, pW);
-        if (pH >= 0) blepDeposit(v.bR1[i], t, -2, pH);
-        const naive = (t1 === 0) ? (2 * ph - 1) : (ph < E ? 1 : -1);
-        const nb = v.bN1[i];
-        nb[t & BLEP_MASK] = naive;
-        if (t >= BLEP_W) {
-          const b = (t - BLEP_W) & BLEP_MASK;
-          o1 += nb[b] + v.bR1[i][b];
-          v.bR1[i][b] = 0;
+      const bR1 = v.bR1, bN1 = v.bN1;
+      if (t1 === 0) {
+        /* saw: only the wrap edge exists - no duty comparison on this path */
+        for (let i = 0; i < u1; i++) {
+          const dt = inc1v[i], phOld = ph1[i];
+          let ph = phOld + dt;
+          const phRaw = ph;
+          const rb = bR1[i];
+          if (phRaw >= 1) {
+            ph = phRaw - 1;
+            const pW = ph / dt;
+            if (pW >= 0) blepDeposit(rb, t, -2, pW);
+          }
+          const naive = 2 * ph - 1;
+          const nb = bN1[i];
+          nb[tMask] = naive;
+          if (rd) {
+            o1 += nb[rIdx] + rb[rIdx];
+            rb[rIdx] = 0;
+          }
+          ph1[i] = ph;
         }
-        ph1[i] = ph;
+      } else {
+        /* square / pulse: wrap edge + the duty-phase edge */
+        const E = (t1 === 1) ? 0.5 : eng.cPw;        /* square edge phase; pulse duty edge */
+        for (let i = 0; i < u1; i++) {
+          const dt = inc1v[i], phOld = ph1[i];
+          let ph = phOld + dt;
+          const phRaw = ph;
+          const rb = bR1[i];
+          if (phRaw >= 1) {
+            ph = phRaw - 1;
+            const pW = ph / dt;
+            if (pW >= 0) blepDeposit(rb, t, 2, pW);
+          }
+          if (phOld < E && phRaw >= E) {
+            const pH = (phRaw - E) / dt;
+            if (pH >= 0) blepDeposit(rb, t, -2, pH);
+          }
+          const naive = (ph < E) ? 1 : -1;
+          const nb = bN1[i];
+          nb[tMask] = naive;
+          if (rd) {
+            o1 += nb[rIdx] + rb[rIdx];
+            rb[rIdx] = 0;
+          }
+          ph1[i] = ph;
+        }
       }
     } else if (t1 === 3) {
       for (let i = 0; i < u1; i++) {
@@ -985,17 +1033,21 @@ const AVDSP = (function () {
         const phOld = v.phSub;
         let ph = phOld + dt;
         const phRaw = ph;
-        let pW = -1, pH = -1;
-        if (phRaw >= 1) { ph = phRaw - 1; pW = ph / dt; }
-        if (phOld < 0.5 && phRaw >= 0.5) pH = (phRaw - 0.5) / dt;
-        if (pW >= 0) blepDeposit(v.bRS, t, 2, pW);
-        if (pH >= 0) blepDeposit(v.bRS, t, -2, pH);
+        const rb = v.bRS, nb = v.bNS;
+        if (phRaw >= 1) {
+          ph = phRaw - 1;
+          const pW = ph / dt;
+          if (pW >= 0) blepDeposit(rb, t, 2, pW);
+        }
+        if (phOld < 0.5 && phRaw >= 0.5) {
+          const pH = (phRaw - 0.5) / dt;
+          if (pH >= 0) blepDeposit(rb, t, -2, pH);
+        }
         const naive = (ph < 0.5) ? 1 : -1;
-        v.bNS[t & BLEP_MASK] = naive;
-        if (t >= BLEP_W) {
-          const b = (t - BLEP_W) & BLEP_MASK;
-          so = v.bNS[b] + v.bRS[b];
-          v.bRS[b] = 0;
+        nb[tMask] = naive;
+        if (rd) {
+          so = nb[rIdx] + rb[rIdx];
+          rb[rIdx] = 0;
         }
         v.phSub = ph;
       }

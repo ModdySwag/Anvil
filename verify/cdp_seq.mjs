@@ -44,6 +44,34 @@
 //   8. UNDO/REDO: a real grid-cell click edits the pattern (via the UI's snapshot path);
 //      avUndo() restores the pre-edit snapshot (deep-equal) and avRedo() reapplies it.
 //   9. zero page errors · screenshot renders/p4-seq-suite.png · freeze sha256 before === after.
+// 10. WAVE E ACCENT WITNESS (contract verify/_e_wave.md section 3; the section-11 block below):
+//     the recorded P4 follow-up decision -- a step's accent flag is the EXPLICIT truth for
+//     SEQUENCED notes (av_seq_sched emits opts.acc = flags.accent ? 1 : 0 at the DOWN site;
+//     av_acid honours v.acc 0|1 and falls back to the legacy vel >= 0.8 threshold without it, so
+//     keyboard/MIDI/legacy paths stay as they were). Legs on the rig's OWN master-tap analyser
+//     (__seqt; panel reads are never witnesses), every capture polled to flow (rms > 0.001)
+//     before any peak read (the T-wave lesson: the first read used to race the audio path),
+//     then settled:
+//       (a) sequenced flag 1 vs flag 0 at equal emitted vel 1.0 -> the flagged render's peak
+//           materially exceeds the unflagged (AVACID ampBoost + env change): ratio gate
+//           ACCENT_RATIO_MIN = 1.15, a PRE-RUN FLOOR pinned from the first real run, never
+//           loosened (measured-then-pinned law);
+//       (b) default-vel unflagged: vel 0.8 flag 0 vs vel 0.5 flag 0 -> the peak ratio stays in
+//           the pure-gain band (v.vel scales the kind output after the module; the OLD implicit
+//           accent would stack ~1.9x ampBoost on the 0.8 render and read ~3x): the auto-accent
+//           is gone;
+//       (c) legacy path: a plain avNoteDown at vel 0.9 (no opts) still accents, witnessed
+//           against an explicit acc:0 render of the same note/velocity.
+//     AUDIT (SPEC pass, E wave): EVERY pre-E check was re-read for the old implicit-accent
+//     assumption. Sections 4-7 measure the drum witness patch (kind=drum; accent semantics live
+//     ONLY in av_acid), the round-trip/p-lock/undo sections assert snapshots/params/DOM, and no
+//     check has ever rendered a default-vel acid step -- so NO existing expectation changes with
+//     the decision: zero SPEC fixes were required, nothing was loosened, and the audit is
+//     recorded here (never silently): 30 pre-E checks audited clean. The E legs run a
+//     deterministic acid patch with fx muted (the T6 clean-patch discipline) on their own kind
+//     switch, restoring every value they set.
+//     CHECKS: 30 before the E wave; +4 accent-leg checks (3 ratio/band gates + 1 capture
+//     sanity) => 34 unpinned, 35 pinned (the freeze pin pair stays LAST, per the contract).
 import { spawn, execSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -62,7 +90,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    P4: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = 'c6bc282ce4c7dd033ba8d67f32e6cb28e48a8affd6f1a60619c63bade148d624';
+const EXPECT_SHA = 'dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -309,7 +337,13 @@ const HELPERS = `(() => {
       let on = 1, prob = 100;
       if (o.prob0Odd && (s % 2 === 1)) prob = 0;
       if (o.onSteps) on = (o.onSteps.indexOf(s) >= 0) ? 1 : 0;
-      steps.push(H.step({ on: on, prob: prob }));
+      const cell = { on: on, prob: prob };
+      /* WAVE E: per-step note/vel/accent overrides for the accent-witness legs; absent keeps
+         every pre-E caller's step shape byte-identical */
+      if (o.note != null) cell.note = o.note;
+      if (o.vel != null) cell.vel = o.vel;
+      if (o.accent != null) cell.accent = o.accent;
+      steps.push(H.step(cell));
     }
     const all = steps.concat(H.off().slice(16));
     const tracks = [];
@@ -340,6 +374,33 @@ const RUN_STRAIGHT_MS = 17500;   /* 8 bars = 16 s + slack */
 const RUN_SWING_MS = 6800;       /* ~3 bars */
 const RUN_PROB_MS = 4800;        /* 2 bars + slack */
 const RUN_PLOCK_MS = 4800;
+
+/* ---------- WAVE E accent witness constants (verify/_e_wave.md section 3) ----------
+   The polled peak method: poll the witness until the note audio actually FLOWED, settle,
+   then measure (the T-wave lesson -- cdp_tune T6: the first read used to race the audio path). */
+const ACC_MIN_RMS = 0.001;          /* flow gate: a capture counts as audible only once the    */
+                                    /* master tap reads rms > 0.001                             */
+const ACC_SETTLE_MS = 250;          /* settle inside the audible note before the peak read      */
+const ACC_GAP_MS = 220;             /* release + floor gap between captures (the T6 gap)        */
+const ACC_FLOW_DEADLINE_MS = 3000;  /* per-attempt flow deadline; a dry attempt retries ONCE    */
+const ACC_HOLD_MS = 2500;           /* seq captures hold this long after the first flow -- a    */
+                                    /* one-step 16-loop at 120 bpm repeats every 2 s, so the    */
+                                    /* peak always spans >= 2 hits of the same step             */
+const ACC_QUIET_DEADLINE_MS = 2500; /* pre-fire quiet gate deadline (a previous release tail    */
+                                    /* must never read as 'flow' for the next capture)          */
+const ACCENT_RATIO_MIN = 1.15;      /* <<< PRE-RUN FLOOR >>> measured-then-pinned: the parent   */
+                                    /* pins the measured first-run value here (AVACID ampBoost  */
+                                    /* alone reads ~1.9-2.4x, so 1.15 is conservative); it is   */
+                                    /* NEVER loosened later                                     */
+const ACC_RATIO_SANE_MAX = 6;       /* sanity cap so a broken/quiet render cannot auto-pass     */
+                                    /* via a huge ratio (expected reads ~2-3)                   */
+const ACC_VEL_GAIN = 1.6;           /* = 0.8 / 0.5 -- the default-vel band leg's pure gain      */
+                                    /* ratio: v.vel scales the kind output linearly AFTER the   */
+                                    /* module (y0 * v.vel * v.fade), so two unflagged renders    */
+                                    /* differ by exactly the velocity ratio                     */
+const ACC_VEL_BAND_REL = 0.15;      /* tight band around the gain ratio; the OLD implicit       */
+                                    /* accent reads ~3x and cannot sit inside it (pinned on the */
+                                    /* first real run)                                          */
 
 const shotPath = path.join(here, '..', 'renders', 'p4-seq-suite.png');
 
@@ -407,6 +468,93 @@ async function main() {
   const pullSamples = async () => {
     const r = await ev(`window.__seqt.pull()`);
     return (r.value && Array.isArray(r.value.samples)) ? r.value.samples : [];
+  };
+
+  /* WAVE E -- the polled peak helpers (the T-wave lesson: poll the witness until the note
+     audio actually flows, then settle, then read; never read a fresh capture blindly).
+     Every peak is the rig's OWN master-tap RMS (__seqt) -- panel reads are never witnesses. */
+  const freshPeak = async () => {
+    const r = await ev(`(() => { const p = window.__seqt.pull(); let m = 0; for (const s of p.samples) if (s[1] > m) m = s[1]; return { m: m, n: p.n }; })()`);
+    return (r.value && typeof r.value.m === 'number') ? r.value : { m: 0, n: 0 };
+  };
+  const waitQuiet = async () => {
+    /* pre-fire quiet gate: poll until the witness floor is silent again (the previous note's
+       release tail must not read as 'flow' for the next capture); best effort, deadline'd */
+    const t0 = Date.now();
+    let last = { m: 0, n: 0 };
+    while (Date.now() - t0 < ACC_QUIET_DEADLINE_MS) {
+      last = await freshPeak();
+      if (last.m < ACC_MIN_RMS) return { ok: true, floor: last.m, ms: Date.now() - t0 };
+      await sleep(60);
+    }
+    return { ok: false, floor: last.m, ms: Date.now() - t0 };
+  };
+  /* one sequenced render: load -> quiet gate -> real PLAY click -> poll to flow (rms > 0.001,
+     the T-wave lesson) -> hold ACC_HOLD_MS beyond the first flow -> STOP -> peak = max RMS over
+     the captured window. One retry on a dry capture (the retry re-runs the same measurement;
+     it never relaxes an assertion). */
+  const seqRenderPeak = async (P) => {
+    let last = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await stopTransport();
+      const loadR = await ev(`window.__seqh.load(${JSON.stringify(P)})`);
+      if (!(loadR.value && loadR.value.ok === true)) return { ok: false, why: 'load refused: ' + JSON.stringify(loadR.value), attempt: attempt };
+      await ev(`window.__seqt.clear()`);
+      const quiet = await waitQuiet();
+      await ev(`window.__seqt.clear()`);
+      const clicked = await clickSel('#av-seq-host #av-seq-play', 250);
+      let flow = null; const t0 = Date.now();
+      while (Date.now() - t0 < ACC_FLOW_DEADLINE_MS) {
+        const m = await freshPeak();
+        if (m.m > ACC_MIN_RMS) { flow = { ms: Date.now() - t0, rms: m.m }; break; }
+        await sleep(60);
+      }
+      if (flow) {
+        await sleep(ACC_HOLD_MS);
+        await clickSel('#av-seq-host #av-seq-stop', 220);
+        const samples = await pullSamples();
+        const det = detectOnsets(samples);
+        return { ok: true, peak: det.max, hits: det.onsets.length, n: samples.length, flowMs: flow.ms, flowRms: flow.rms, quiet: quiet, clicked: clicked === true, attempt: attempt };
+      }
+      await clickSel('#av-seq-host #av-seq-stop', 200);
+      last = { dry: true, quiet: quiet, clicked: clicked === true };
+      note('accent seq capture dry (attempt ' + attempt + ') -- retrying once');
+    }
+    return { ok: false, why: 'no rms > ' + ACC_MIN_RMS + ' within ' + ACC_FLOW_DEADLINE_MS + ' ms on both attempts', last: last };
+  };
+  /* one direct-note render (the legacy / explicit-flag paths): fire avNoteDown (opts when
+     given), poll to flow, settle ACC_SETTLE_MS, read the peak, release. One retry on dry. */
+  const directRenderPeak = async (noteName, velv, opts) => {
+    const optsExpr = opts ? (', undefined, ' + JSON.stringify(opts)) : '';
+    let last = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await ev(`window.__seqt.clear()`);
+      const quiet = await waitQuiet();
+      await ev(`window.__seqt.clear()`);
+      const dn = (await ev(`(() => { try { return avNoteDown(${JSON.stringify(noteName)}, ${velv}${optsExpr}) === true; } catch (e) { return false; } })()`)).value === true;
+      if (dn) {
+        let flow = null; const t0 = Date.now();
+        while (Date.now() - t0 < ACC_FLOW_DEADLINE_MS) {
+          const m = await freshPeak();
+          if (m.m > ACC_MIN_RMS) { flow = { ms: Date.now() - t0, rms: m.m }; break; }
+          await sleep(60);
+        }
+        if (flow) {
+          await sleep(ACC_SETTLE_MS);
+          const pk = await freshPeak();
+          await ev(`(() => { try { avNoteUp(${JSON.stringify(noteName)}); } catch (e) { } return true; })()`);
+          await sleep(ACC_GAP_MS);
+          return { ok: true, peak: pk.m, n: pk.n, flowMs: flow.ms, flowRms: flow.rms, quiet: quiet, attempt: attempt };
+        }
+        last = { dry: true, quiet: quiet };
+      } else {
+        last = { refused: true, quiet: quiet };
+      }
+      await ev(`(() => { try { avNoteUp(${JSON.stringify(noteName)}); } catch (e) { } return true; })()`);
+      await sleep(ACC_GAP_MS);
+      note('accent direct capture dry (attempt ' + attempt + ') -- retrying once');
+    }
+    return { ok: false, why: 'no flow (or the note bus refused) on both attempts', last: last };
   };
 
   /* ── 1. boot ── */
@@ -758,7 +906,135 @@ async function main() {
     }
   }
 
-  /* ── 11. restore the witness patch (engine kind + kick decay) ── */
+  /* 11. ACCENT WITNESS (WAVE E decision: the explicit sequenced accent flag + the legacy
+     fallback). The scheduler emits opts.acc = flags.accent ? 1 : 0 for sequenced notes; av_acid
+     honours v.acc 0|1 and falls back to the legacy vel >= 0.8 threshold without it. Legs (a)-(c)
+     witness that contract on the rig's OWN master-tap analyser (__seqt; panel reads are never
+     witnesses), with the polled peak method (flow -> settle -> measure, the T-wave lesson).
+     The section switches the engine to a deterministic acid patch with fx muted (the T6
+     clean-patch discipline), then restores every value it set; section 12 restores engine.kind. */
+  if (armed) {
+    await stopTransport();
+    /* deterministic acid patch (module defaults, pinned) + fx muted; prev values captured */
+    const AC_PINS = [
+      ['acid.cutoff', 800], ['acid.reso', 0.7], ['acid.envMod', 0.5], ['acid.decay', 0.5],
+      ['acid.accent', 0.6], ['acid.accentDecay', 0.2], ['acid.volume', 0.8], ['acid.veg', 1.5],
+      ['acid.softAttack', 0.003],
+    ];
+    const AC_FX = ['fx.drive', 'fx.aw', 'fx.mod', 'fx.delay', 'fx.verb', 'fx.conv', 'fx.dyn'];
+    const prepR = await ev(`(() => {
+      const PINS = ${JSON.stringify(AC_PINS)};
+      const FX = ${JSON.stringify(AC_FX)};
+      const prevs = [], applied = [], fx = [];
+      for (let i = 0; i < PINS.length; i++) {
+        let prev = null, ok = false;
+        try { prev = (typeof avParams !== 'undefined') ? avParams[PINS[i][0]] : null; } catch (e) { prev = null; }
+        prevs.push([PINS[i][0], (typeof prev === 'number' && isFinite(prev)) ? prev : null]);
+        try { ok = (typeof avApplyParam === 'function') ? (avApplyParam(PINS[i][0], PINS[i][1]) === true) : false; } catch (e) { ok = false; }
+        applied.push([PINS[i][0], ok === true]);
+      }
+      for (let i = 0; i < FX.length; i++) {
+        const rec = { mod: FX[i], on: false, mix: false };
+        let onPrev = null, mixPrev = null;
+        try { onPrev = (typeof avParams !== 'undefined') ? avParams[FX[i] + '.on'] : null; } catch (e) { onPrev = null; }
+        try { mixPrev = (typeof avParams !== 'undefined') ? avParams[FX[i] + '.mix'] : null; } catch (e) { mixPrev = null; }
+        prevs.push([FX[i] + '.on', (typeof onPrev === 'number') ? onPrev : null]);
+        prevs.push([FX[i] + '.mix', (typeof mixPrev === 'number') ? mixPrev : null]);
+        try { rec.on = (typeof avApplyParam === 'function') ? (avApplyParam(FX[i] + '.on', 0) === true) : false; } catch (e) { rec.on = false; }
+        try { rec.mix = (typeof avApplyParam === 'function') ? (avApplyParam(FX[i] + '.mix', 0) === true) : false; } catch (e) { rec.mix = false; }
+        fx.push(rec);
+      }
+      let kindOk = false, mirror = null;
+      try { kindOk = (typeof avApplyParam === 'function') ? (avApplyParam('engine.kind', 'acid') === true) : false; } catch (e) { kindOk = false; }
+      try { mirror = (typeof avParams !== 'undefined') ? avParams['engine.kind'] : null; } catch (e) { mirror = null; }
+      return { kindOk: kindOk === true, mirror: mirror, applied: applied, fx: fx, prevs: prevs };
+    })()`);
+    const prep = prepR.value || {};
+    const prepKindOk = prep.kindOk === true;
+    note('accent witness prep: ' + JSON.stringify({ kindOk: prep.kindOk, mirror: prep.mirror, applied: prep.applied, fx: prep.fx }));
+    await sleep(350);   /* kind switch + the 15 ms param smoothing settle */
+
+    /* the four one-step patterns (step 0 on, all else off; the pattern builder gained the
+       note/vel/accent overrides -- absent options keep every pre-E caller byte-identical).
+       (a) flag 1 vs flag 0 both at st.vel 1.0 => the planner emits vel 1.0 for BOTH, so the
+       only difference is the accent flag; (b) flag 0 at vel 0.8 vs 0.5 (the default-vel case);
+       (c) below is the direct-note legacy path. */
+    const patOf = async (o) => (await ev(`window.__seqh.pattern(${JSON.stringify(o)})`)).value;
+    const P_ON  = await patOf({ onSteps: [0], note: 'c2', vel: 1, accent: 1, swing: 50 });
+    const P_OFF = await patOf({ onSteps: [0], note: 'c2', vel: 1, accent: 0, swing: 50 });
+    const P_HI  = await patOf({ onSteps: [0], note: 'c2', vel: 0.8, accent: 0, swing: 50 });
+    const P_LO  = await patOf({ onSteps: [0], note: 'c2', vel: 0.5, accent: 0, swing: 50 });
+    const patsOk = !!(P_ON && P_OFF && P_HI && P_LO);
+
+    const accOn  = patsOk ? await seqRenderPeak(P_ON)  : { ok: false, why: 'pattern build failed' };
+    const accOff = patsOk ? await seqRenderPeak(P_OFF) : { ok: false, why: 'pattern build failed' };
+    const accHi  = patsOk ? await seqRenderPeak(P_HI)  : { ok: false, why: 'pattern build failed' };
+    const accLo  = patsOk ? await seqRenderPeak(P_LO)  : { ok: false, why: 'pattern build failed' };
+    await stopTransport();
+    const legA = await directRenderPeak('c2', 0.9, null);           /* legacy: no opts -> vel threshold */
+    const legB = await directRenderPeak('c2', 0.9, { acc: 0 });     /* explicit 0 -> no accent          */
+
+    const ratio3 = (a, b) => (a && a.ok === true && b && b.ok === true
+      && typeof a.peak === 'number' && typeof b.peak === 'number' && b.peak > 0) ? (a.peak / b.peak) : null;
+    const aRatio = ratio3(accOn, accOff);
+    const vRatio = ratio3(accHi, accLo);
+    const lRatio = ratio3(legA, legB);
+    note('accent witness raw: flag1=' + fx3(accOn && accOn.peak) + ' flag0=' + fx3(accOff && accOff.peak)
+      + ' vel0.8=' + fx3(accHi && accHi.peak) + ' vel0.5=' + fx3(accLo && accLo.peak)
+      + ' legacy=' + fx3(legA && legA.peak) + ' explicit0=' + fx3(legB && legB.peak));
+
+    check('accent witness (E decision): sequenced flag 1 vs flag 0 at equal emitted vel 1.0 -> flagged peak materially above (ratio >= ' + ACCENT_RATIO_MIN + ')',
+      !!(prepKindOk === true && accOn && accOn.ok === true && accOff && accOff.ok === true
+         && accOn.peak > ACC_MIN_RMS && accOff.peak > ACC_MIN_RMS
+         && aRatio != null && isFinite(aRatio) && aRatio >= ACCENT_RATIO_MIN && aRatio <= ACC_RATIO_SANE_MAX),
+      JSON.stringify({ kindOk: prepKindOk, onPeak: accOn && accOn.peak, offPeak: accOff && accOff.peak,
+        ratio: aRatio != null ? Number(aRatio.toFixed(3)) : null,
+        min: ACCENT_RATIO_MIN, saneMax: ACC_RATIO_SANE_MAX, on: accOn, off: accOff }));
+
+    check('accent witness (default-vel unflagged): vel 0.8 flag 0 vs vel 0.5 flag 0 -> peak ratio inside the pure-gain band (' + ACC_VEL_GAIN + ' +- ' + Math.round(ACC_VEL_BAND_REL * 100) + '%; the old implicit accent reads ~3x)',
+      !!(prepKindOk === true && accHi && accHi.ok === true && accLo && accLo.ok === true
+         && accHi.peak > ACC_MIN_RMS && accLo.peak > ACC_MIN_RMS
+         && vRatio != null && isFinite(vRatio) && Math.abs(vRatio - ACC_VEL_GAIN) <= ACC_VEL_GAIN * ACC_VEL_BAND_REL),
+      JSON.stringify({ kindOk: prepKindOk, hiPeak: accHi && accHi.peak, loPeak: accLo && accLo.peak,
+        ratio: vRatio != null ? Number(vRatio.toFixed(3)) : null,
+        gainRatio: ACC_VEL_GAIN, bandRel: ACC_VEL_BAND_REL, hi: accHi, lo: accLo }));
+
+    check('accent witness (legacy path): plain avNoteDown vel 0.9 (no opts) still accents vs an explicit acc:0 render (ratio >= ' + ACCENT_RATIO_MIN + ')',
+      !!(prepKindOk === true && legA && legA.ok === true && legB && legB.ok === true
+         && legA.peak > ACC_MIN_RMS && legB.peak > ACC_MIN_RMS
+         && lRatio != null && isFinite(lRatio) && lRatio >= ACCENT_RATIO_MIN && lRatio <= ACC_RATIO_SANE_MAX),
+      JSON.stringify({ kindOk: prepKindOk, legacyPeak: legA && legA.peak, explicitPeak: legB && legB.peak,
+        ratio: lRatio != null ? Number(lRatio.toFixed(3)) : null,
+        min: ACCENT_RATIO_MIN, saneMax: ACC_RATIO_SANE_MAX, legacy: legA, explicit: legB }));
+
+    const sixR = [['flag1', accOn], ['flag0', accOff], ['vel0.8', accHi], ['vel0.5', accLo], ['legacy', legA], ['explicit0', legB]];
+    check('accent witness sanity: all six renders flowed on the master tap (peak rms > ' + ACC_MIN_RMS + ' -- the ratio gates are never vacuous)',
+      prepKindOk === true && sixR.every(e => e[1] && e[1].ok === true && typeof e[1].peak === 'number' && e[1].peak > ACC_MIN_RMS),
+      JSON.stringify(sixR.map(e => ({ leg: e[0], ok: e[1] ? e[1].ok : false,
+        peak: (e[1] && typeof e[1].peak === 'number') ? Number(e[1].peak.toFixed(4)) : null,
+        flowMs: (e[1] && e[1].flowMs != null) ? e[1].flowMs : null,
+        hits: (e[1] && e[1].hits != null) ? e[1].hits : null,
+        why: (e[1] && e[1].ok !== true) ? e[1].why : undefined }))));
+
+    /* restore every param this section set (fx + the acid pins); engine.kind is restored by
+       section 12 (the witness-patch restore) */
+    const prevs = Array.isArray(prep.prevs) ? prep.prevs : [];
+    await ev(`(() => {
+      const P = ${JSON.stringify(prevs)};
+      for (let i = 0; i < P.length; i++) {
+        try { if (P[i][1] != null && typeof avApplyParam === 'function') avApplyParam(P[i][0], P[i][1]); } catch (e) { /* best effort */ }
+      }
+      return true;
+    })()`);
+    note('accent witness restored: ' + prevs.length + ' params rolled back (fx + acid pins)');
+  } else {
+    check('accent witness (E decision): sequenced flag 1 vs flag 0 at equal emitted vel 1.0 -> flagged peak materially above (ratio >= ' + ACCENT_RATIO_MIN + ')', false, 'witness not armed');
+    check('accent witness (default-vel unflagged): vel 0.8 flag 0 vs vel 0.5 flag 0 -> peak ratio inside the pure-gain band (' + ACC_VEL_GAIN + ' +- ' + Math.round(ACC_VEL_BAND_REL * 100) + '%; the old implicit accent reads ~3x)', false, 'witness not armed');
+    check('accent witness (legacy path): plain avNoteDown vel 0.9 (no opts) still accents vs an explicit acc:0 render (ratio >= ' + ACCENT_RATIO_MIN + ')', false, 'witness not armed');
+    check('accent witness sanity: all six renders flowed on the master tap (peak rms > ' + ACC_MIN_RMS + ' -- the ratio gates are never vacuous)', false, 'witness not armed');
+  }
+
+  /* ── 12. restore the witness patch (engine kind + kick decay) ── */
   await stopTransport();
   await ev(`(() => {
     try { if (typeof avApplyParam === 'function') avApplyParam('engine.kind', ${JSON.stringify(kindPrev)}); } catch (e) { }
@@ -767,10 +1043,10 @@ async function main() {
   })()`);
   note('witness patch restored: engine.kind=' + JSON.stringify(kindPrev) + ' kick.decay=' + JSON.stringify(kickPrev));
 
-  /* ── 12. zero page errors ── */
+  /* ── 13. zero page errors ── */
   check('zero page errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 
-  /* ── 13. screenshot renders/p4-seq-suite.png ── */
+  /* ── 14. screenshot renders/p4-seq-suite.png ── */
   await ev(`(() => { const el = document.getElementById('av-seq-host'); if (el && el.scrollIntoView) el.scrollIntoView({ block: 'start' }); return true; })()`);
   await sleep(250);
   const rectR2 = await ev(`(() => { const el = document.getElementById('av-seq-host'); if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.left + window.scrollX, y: r.top + window.scrollY, w: r.width, h: r.height }; })()`);
@@ -787,7 +1063,7 @@ async function main() {
   }
   check('screenshot: renders/p4-seq-suite.png (the sequencer card, scale 2)', shotOk, shotInfo);
 
-  /* ── 14. freeze sha before/after ── */
+  /* ── 15. freeze sha before/after ── */
   const shaAfter = shaOf(page);
   console.log('index.html sha256 (after): ' + shaAfter);
   check('freeze: index.html sha256 before === after (unchanged by the run)', shaAfter === shaBefore, shaAfter);

@@ -9,18 +9,22 @@
    builds no DOM (child C owns the card); it exposes semantics + validation only.
 
    THE MAPPING (verified against src/av_acid.js at P2 SHA bytes; line refs are that file):
-     accent step  -> emitted gain 1.0 (§2 pin). AVACID accents on a VELOCITY threshold at note-on:
-                     `acc = (v.vel >= 0.8) ? 1 : 0` (L187) — gain 1.0 always enters the accent path.
-                     Entry path: lazy cap discharge L190-197; charge kext.cap = cap+(1-cap)*0.5
-                     (CAP_RISE, L198); depth k.accAmt = acid.accent*(1+0.6*capBefore) (CAP_EXTRA,
-                     L201; acid.accent default 0.6); VCA k.ampBoost = 1+accAmt*1.5 (AMP_BOOST, L202);
-                     fast attack 0.0004 s + MEG decay forced to acid.accentDecay (L207-213);
-                     resonance emphasis x(1+accAmt*0.22) (L390) + sweep boost via the lagged `sw`
-                     (L364, L372). Consecutive accents RISE (cap memory, T2 L82) — the P2 T3 run
-                     measured 0.273 < 0.310 < 0.316 < 0.342; ref: verify/p2-acid-node-out.log.
-       NOTE (reported, not silently patched): the entry is velocity-thresholded and INCLUSIVE, so
-       a non-accent step emitted at vel >= 0.8 (the core's default vel IS 0.8) also enters the
-       accent path. The lane maps vel -> gain faithfully and accent -> 1.0; it never lies.
+     accent step  -> emitted gain 1.0 (§2 pin) AND the explicit accent flag (E decision,
+                     verify/_e_wave.md section 1): av_seq_sched emits opts.acc = 1 for flagged
+                     steps and opts.acc = 0 for the rest, and AVACID honours the explicit flag
+                     when the voice carries one (av_acid.js initVoice predicate:
+                     acc = (v.acc === 0 || v.acc === 1) ? v.acc : ((v.vel >= 0.8) ? 1 : 0)).
+                     So for SEQUENCED notes the ACC column is authoritative at ANY velocity -
+                     the old auto-accent at the core's default vel 0.8 is gone by decision. The
+                     legacy `v.vel >= 0.8` threshold applies ONLY to flagless note-ons
+                     (keyboard/MIDI/legacy avNoteDown); `avSeqAcidAccEnters` reports it.
+                     Entry path: lazy cap discharge; charge kext.cap = cap+(1-cap)*0.5
+                     (CAP_RISE); depth k.accAmt = acid.accent*(1+0.6*capBefore) (CAP_EXTRA;
+                     acid.accent default 0.6); VCA k.ampBoost = 1+accAmt*1.5 (AMP_BOOST); fast
+                     attack 0.0004 s + MEG decay forced to acid.accentDecay; resonance emphasis
+                     x(1+accAmt*0.22) + sweep boost via the lagged `sw`. Consecutive accents
+                     RISE (cap memory, T2 L82) - the P2 T3 run measured 0.273 < 0.310 < 0.316
+                     < 0.342; ref: verify/p2-acid-node-out.log.
      slide step   -> the sched's (B) legato emission does the reorder (on(k+1) before off(k)); this
                      lane owns the glide WINDOW: `avSeqAcidSlideBegin()/End()` set `voice.glide` to
                      the 303 stock 0.06 s via the avApplyParam funnel during the pair and restore
@@ -50,7 +54,8 @@
      avSeqAcidColValue(col, v) -> bool            legal value per column (UI write guard)
      avSeqAcidCycleCol(col, cur, dir?) -> value | false   click-cycle semantics per column
      avSeqAcidOctShift(oct) -> semitones | false  the validated oct*12 the planner applies
-     avSeqAcidAccEnters(gain) -> 0|1 | false      the exact AVACID entry predicate (vel >= 0.8)
+     avSeqAcidAccEnters(gain) -> 0|1 | false      LEGACY AVACID entry predicate (vel >= 0.8);
+                                                  sequenced notes use the explicit flag now
      avSeqAcidSlideBegin(label?) -> bool          arm the slide window (voice.glide := 0.06)
      avSeqAcidSlideEnd() -> bool                  release (restore captured prior; default 0)
      avSeqAcidSlideAbort() -> bool                force-restore + reset (panic safety)
@@ -68,8 +73,10 @@ const AV_SEQ_ACID_COLS = ["accent", "slide", "oct"];
 const AV_SEQ_ACID_CLS_COLS = "av-seq-acid-cols";
 const AV_SEQ_ACID_CLS_CELL = "av-seq-acid-cell";
 
-/* accent law (§2 pin): an accent step emits gain 1.0; AVACID enters the accent path at
-   velocity >= 0.8 (src/av_acid.js L187, verified) */
+/* accent law (§2 pin + E decision): an accent step emits gain 1.0 AND opts.acc = 1 (the step
+   flag is authoritative for sequenced notes; verify/_e_wave.md section 1). ACC_VEL is the
+   LEGACY engine entry threshold (vel >= 0.8) that still governs flagless note-ons and is what
+   avSeqAcidAccEnters reports; it no longer decides sequenced-note accents. */
 const AV_SEQ_ACID_ACCENT_GAIN = 1.0;
 const AV_SEQ_ACID_ACC_VEL = 0.8;
 
@@ -223,8 +230,9 @@ function avSeqAcidResolve(step) {
     vel = avSeqAcidClamp(vel, AV_SEQ_ACID_VEL_MIN, AV_SEQ_ACID_VEL_MAX);
     /* §2 pin: accent step => gain 1.0; otherwise the step's own velocity (gain law) */
     const gain = accent === 1 ? AV_SEQ_ACID_ACCENT_GAIN : vel;
-    /* the exact AVACID entry predicate (src/av_acid.js L187): predicted accent depth per note */
-    const acc = avSeqAcidAccEnters(gain) === 1 ? 1 : 0;
+    /* E decision: the entry the ENGINE takes for this sequenced step is the EXPLICIT flag
+       (the scheduler emits opts.acc and AVACID honours it) - not the legacy vel rule. */
+    const acc = accent;
     return {
       model: "avSeqAcid",
       v: AV_SEQ_ACID_VERSION,
@@ -249,8 +257,11 @@ function avSeqAcidOctShift(oct) {
   } catch (e) { return false; }
 }
 
-/* the exact AVACID accent-entry predicate, mirrored from src/av_acid.js L187 (v.vel >= 0.8).
-   0|1 for a number gain; false for garbage. */
+/* the LEGACY AVACID accent-entry predicate (v.vel >= 0.8), still mirrored from src/av_acid.js
+   for the non-seq paths. E decision (verify/_e_wave.md section 1): SEQUENCED notes never run
+   it - the scheduler emits the step's explicit accent flag (opts.acc 0|1) and the engine
+   honours that. This helper keeps reporting the legacy predicate for GENERAL gain values
+   (keyboard/MIDI/legacy note-ons; P2 numeric tests). 0|1 for a number gain; false for garbage. */
 function avSeqAcidAccEnters(gain) {
   const g = avSeqAcidNumber(gain);
   if (g === null) return false;

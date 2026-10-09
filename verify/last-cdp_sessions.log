@@ -1,7 +1,7 @@
-index.html sha256 (before): c6bc282ce4c7dd033ba8d67f32e6cb28e48a8affd6f1a60619c63bade148d624
+index.html sha256 (before): dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9580 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-1791531671780
-download dir C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-dl-1791531671780
+cdp port 9580 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-1791535665399
+download dir C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-dl-1791535665399
  ok   1 boot: data-av-ready flips
  ok   1b card mounted: #av-sessions + #av-sessions-host + .av-sessions root + wired marker (avSessionUiWired=1)  -> {"host":true,"card":true,"root":true,"wired":true}
  ok   1c controls: SAVE · LOAD · RESTORE present in the sessions card (tolerant label scan)  -> {"host":true,"controls":11,"save":4,"load":1,"restore":2,"backup":3,"recover":3,"dismiss":1,"selects":2,"inputs":3}
@@ -15,21 +15,21 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-dl-1791531671780
  ok   2 avSessionSave("RIG"): receipt · session created + listed  -> {"receiptKeys":["ok","id","name","version","savedAt","backend","volatile","versions"],"id":"s1","list":[{"id":"s1","name":"RIG","version":1}]}
  ok   2g autosave default: after the first avSessionSave the auto state flips ON (witnessed · no explicit choice written)  -> {"on":true,"ms":45000,"choice":null,"count":1}
  ok   2 mutate: state differs from v1 (cleared pattern · bpm 94 · macro0 0.81)  -> {"bpm":94,"macro0":0.81,"exportChanged":true}
- ok   2 avSessionLoad(id): receipt (load of the newest version)  -> {"ok":true,"id":"s1","name":"RIG","version":1,"savedAt":1791531672763,"applied":227,"skipped":[],"carried":["prefs.metro.countIn"],"seqOk":true,"marked":true,"backend":"idb","error":null}
+ ok   2 avSessionLoad(id): receipt (load of the newest version)  -> {"ok":true,"id":"s1","name":"RIG","version":1,"savedAt":1791535666483,"applied":227,"skipped":[],"carried":["prefs.metro.countIn"],"seqOk":true,"marked":true,"backend":"idb","error":null}
  ok   2 round-trip: avSeqPatternExport() equal after load (canonical string deep-equal)  -> len 29480 vs 29480 · equal=true
  ok   2 round-trip: bpm equal (avParams.bpm 94 -> restored 137)  -> w1.bpm=137 (pattern bpm 120)
  ok   2 round-trip: macro0 equal (avModPayload probe restored to 0.37)  -> macro0=0.37
  ok   2 round-trip: param mirror restored (master 0.77 · filter.cutoff 1234)  -> {"master":0.77,"cutoff":1234}
  ok   2 avSessionLoad marks current (state.current.id = the rig session)  -> {"id":"s1","name":"RIG"}
 ── 3. versions ──
- ok   3 second save -> new VERSION of the current session (avSessionVersions(id).length >= 2)  -> {"receiptKeys":["ok","id","name","version","savedAt","backend","volatile","versions"],"versions":[{"version":1,"savedAt":1791531672763,"bytes":33720},{"version":2,"savedAt":1791531672780,"bytes":33722}]}
- ok   3 avSessionRestore(id, 1) -> state equals the v1 snapshot again (export equal · bpm 137 · macro0 0.37)  -> {"receipt":{"ok":true,"id":"s1","name":"RIG","version":1,"savedAt":1791531672763,"applied":227,"skipped":[],"carried":["prefs.metro.countIn"],"seqOk":true,"marked":true,"backend":"idb","error":null},"exportEqual":true,"bpm":137,"macro0":0.37}
+ ok   3 second save -> new VERSION of the current session (avSessionVersions(id).length >= 2)  -> {"receiptKeys":["ok","id","name","version","savedAt","backend","volatile","versions"],"versions":[{"version":1,"savedAt":1791535666483,"bytes":33720},{"version":2,"savedAt":1791535666507,"bytes":33722}]}
+ ok   3 avSessionRestore(id, 1) -> state equals the v1 snapshot again (export equal · bpm 137 · macro0 0.37)  -> {"receipt":{"ok":true,"id":"s1","name":"RIG","version":1,"savedAt":1791535666483,"applied":227,"skipped":[],"carried":["prefs.metro.countIn"],"seqOk":true,"marked":true,"backend":"idb","error":null},"exportEqual":true,"bpm":137,"macro0":0.37}
 ── 3b. autosave rules (default · flush · explicit off) ──
  ok   3b reload 1: data-av-ready + rig helpers re-injected after the navigate  -> {"ready":true,"rein":true}
  ok   3b autosave default survives reload: still ON after the navigate (seeded from the stored session · no explicit enable ever made)  -> {"on":true,"ms":45000,"choice":null,"count":1}
    · 3b flush prep: dirty mutation while auto is on -> {"clear":true,"bpm":true}
- ok   3c visibilitychange flush: lastAutosaveAt moves after the hidden dispatch (elapsed < the interval — before it could elapse)  -> {"stub":true,"dispatched":true,"before":0,"moved":1791531675107,"dirty":true,"ms":45000,"elapsed":3,"window":4000,"nativeVis":"visible"}
- ok   3c flush re-arm proof: a second hidden dispatch moves the record again (gap since the first write < the interval — no interval tick could have done it)  -> {"bpm":true,"dispatched":true,"at2":1791531675110,"elapsed2":2,"window2":3000,"gapSinceMove1":2,"gapBound":44300,"ms":45000}
+ ok   3c visibilitychange flush: lastAutosaveAt moves after the hidden dispatch (elapsed < the interval — before it could elapse)  -> {"stub":true,"dispatched":true,"before":0,"moved":1791535669027,"dirty":true,"ms":45000,"elapsed":21,"window":4000,"nativeVis":"visible"}
+ ok   3c flush re-arm proof: a second hidden dispatch moves the record again (gap since the first write < the interval — no interval tick could have done it)  -> {"bpm":true,"dispatched":true,"at2":1791535669049,"elapsed2":2,"window2":3000,"gapSinceMove1":3,"gapBound":44300,"ms":45000}
  ok   3c stub restore: delete document.visibilityState — the own property is gone and the native value is back  -> {"restore":{"own":false,"vis":"visible","err":null},"native":"visible"}
  ok   3c normal-state reassert: with the native visibilityState visible a plain dispatch does NOT flush (the handler reads document.visibilityState)  -> {"nativeVis":"visible","bpm":true,"moved":false,"window":2000}
  ok   3d explicit off: avSessionAutosave(false) -> {on:false} · the live state reads off · the choice persists off  -> {"callOff":true,"stateOn":false,"choice":false,"ms":45000}
@@ -38,27 +38,27 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-dl-1791531671780
 ── 4. autosave -> reload -> recovery ──
  ok   4 autosave on: {on:true} · the 1500 ms request clamps to the 5000 floor (returned ms feeds the wait)  -> {"on":true,"ms":5000}
  ok   4 mutated while autosave is on (cleared pattern · bpm 142 · macro0 0.66)  -> {"bpm":142,"macro0":0.66}
- ok   4 autosave tick wrote the record (lastAutosaveAt moved — polled, not raw-slept)  -> before=0 after=1791531682536 waited=5000ms (clamped ms=5000)
+ ok   4 autosave tick wrote the record (lastAutosaveAt moved — polled, not raw-slept)  -> before=0 after=1791535676475 waited=5000ms (clamped ms=5000)
    · Page.navigate reload — re-waiting data-av-ready, re-injecting helpers (script context dies)
  ok   4 after Page.navigate reload: data-av-ready flips again + helpers re-injected (script context died)  -> {"ready":true,"reinjected":true}
- ok   4 recovery offer after reload: available true · savedAt sane · name sane · NEVER auto-applied  -> {"meta":{"avail":true,"savedAt":1791531682536,"name":"RIG","at":1791531682749},"saneSaved":true,"saneName":true,"notAutoApplied":true,"preBpm":120}
- ok   4 avSessionRecover(): witnesses match the mutated state (export equal · bpm 142 · macro0 0.66)  -> {"receipt":{"ok":true,"applied":227,"skipped":[],"carried":["prefs.metro.countIn"],"seqOk":true,"savedAt":1791531682536,"cleared":true,"backend":"idb","error":null},"err":null,"exportEqual":true,"bpm":142,"macro0":0.66}
+ ok   4 recovery offer after reload: available true · savedAt sane · name sane · NEVER auto-applied  -> {"meta":{"avail":true,"savedAt":1791535676475,"name":"RIG","at":1791535676666},"saneSaved":true,"saneName":true,"notAutoApplied":true,"preBpm":120}
+ ok   4 avSessionRecover(): witnesses match the mutated state (export equal · bpm 142 · macro0 0.66)  -> {"receipt":{"ok":true,"applied":227,"skipped":[],"carried":["prefs.metro.countIn"],"seqOk":true,"savedAt":1791535676475,"cleared":true,"backend":"idb","error":null},"err":null,"exportEqual":true,"bpm":142,"macro0":0.66}
  ok   4 recovery cleared after avSessionRecover() (state.recovery.available false)
 ── 5. sessions survive the reload ──
  ok   5 sessions survive reload: avSessionList() after navigate still holds the saved session (id / name RIG)  -> [{"id":"s1","name":"RIG","version":2}]
- ok   5 versions survive reload: avSessionVersions(id).length >= 2 after the navigate  -> [{"version":1,"savedAt":1791531672763,"bytes":33720},{"version":2,"savedAt":1791531672780,"bytes":33722}]
+ ok   5 versions survive reload: avSessionVersions(id).length >= 2 after the navigate  -> [{"version":1,"savedAt":1791535666483,"bytes":33720},{"version":2,"savedAt":1791535666507,"bytes":33722}]
 ── 6. backup e2e ──
- ok   6 avBackupBuild(): ok · name · buffer · manifest  -> {"ok":true,"name":"anvil-backup-20261009-181122.zip","bytes":70024,"bufLen":70024,"hasManifest":true,"sha":"9c46ef56a98fc7cd1d9a7b32c57656242dff08518e7df02fbaf3386cf90baf61","keys":["ok","error","name","bytes","buffer","manifest","skipped","at"],"why":null}
+ ok   6 avBackupBuild(): ok · name · buffer · manifest  -> {"ok":true,"name":"anvil-backup-20261009-191756.zip","bytes":70024,"bufLen":70024,"hasManifest":true,"sha":"2a65fd6ec81e6975d0bd36321a2cba02e7a5a3ff788605d3fe385b6842bd763c","keys":["ok","error","name","bytes","buffer","manifest","skipped","at"],"why":null}
  ok   6 avBackupRead(buffer): ok · entries present (manifest.json · sessions.json · README.txt + any packs/samples) · reader errors none  -> {"ok":true,"why":null,"n":7,"names":["manifest.json","sessions.json","prefs/av-master.txt","prefs/av-keys-vol.txt","prefs/av-zone.txt","prefs/av-rail-sections.txt","README.txt"],"errors":[]}
  ok   6 manifest sha256s verified with REAL recomputed digests (crypto.subtle per entry) · sessions.json claimed · no phantom keys  -> {"claimed":["sessions.json","prefs/av-master.txt","prefs/av-keys-vol.txt","prefs/av-zone.txt","prefs/av-rail-sections.txt","README.txt"],"bad":[],"phantom":[],"sessClaim":true,"shaKeys":["sessions.json","prefs/av-master.txt","prefs/av-keys-vol.txt","prefs/av-zone.txt","prefs/av-rail-sections.txt","README.txt"],"counts":{"sessions":1,"packs":0,"samples":0,"library":0,"wt":0,"code":0,"prefs":4}}
  ok   6 restore leg: avSessionDelete(id) true -> the session is gone from the list  -> {"deleted":true,"gone":true}
  ok   6 avBackupRestore(buffer): ok · sessions back (avSessionList holds id + name RIG)  -> {"restore":{"ok":true,"err":null,"restored":{"sessions":1,"packs":0,"samples":0,"library":0,"wt":0,"code":0,"prefs":0},"skipped":4,"errors":[]},"list":["RIG"]}
- ok   6 restored session carries its version ring (avSessionVersions(id).length >= 2 — sessions.json holds versions)  -> [{"version":1,"savedAt":1791531672763,"bytes":33720},{"version":2,"savedAt":1791531672780,"bytes":33722}]
+ ok   6 restored session carries its version ring (avSessionVersions(id).length >= 2 — sessions.json holds versions)  -> [{"version":1,"savedAt":1791535666483,"bytes":33720},{"version":2,"savedAt":1791535666507,"bytes":33722}]
    · backup download: button scan -> {"n":1,"label":"BACKUP NOW"} · clicked=true
    · backup download: rig-driving from the built buffer -> true
- ok   6 download leg: the backup zip lands on disk (CDP download dir · rig-buffer)  -> {"dir":"C:\\Users\\Moddy\\AppData\\Local\\Temp\\anvil-sessions-dl-1791531671780","seen":["anvil-backup-20261009-181122.zip"]}
- ok   6 download leg: landed file sha256 === the built buffer sha256 (the rig-driven artifact is the artifact)  -> {"file":"anvil-backup-20261009-181122.zip","size":70024,"sha":"9c46ef56a98fc7cd","bufSha":"9c46ef56a98fc7cd"}
-   · download artifact: C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-dl-1791531671780\anvil-backup-20261009-181122.zip  sha256=9c46ef56a98fc7cd1d9a7b32c57656242dff08518e7df02fbaf3386cf90baf61
+ ok   6 download leg: the backup zip lands on disk (CDP download dir · rig-buffer)  -> {"dir":"C:\\Users\\Moddy\\AppData\\Local\\Temp\\anvil-sessions-dl-1791535665399","seen":["anvil-backup-20261009-191756.zip"]}
+ ok   6 download leg: landed file sha256 === the built buffer sha256 (the rig-driven artifact is the artifact)  -> {"file":"anvil-backup-20261009-191756.zip","size":70024,"sha":"2a65fd6ec81e6975","bufSha":"2a65fd6ec81e6975"}
+   · download artifact: C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-dl-1791535665399\anvil-backup-20261009-191756.zip  sha256=2a65fd6ec81e6975d0bd36321a2cba02e7a5a3ff788605d3fe385b6842bd763c
 ── 6b. browser v2 (tags · search · sort) ──
  ok   6b fixture: a second session (RIG TWO) imported beside RIG (avSessionImport seam · id-dedupe clean)  -> {"fix":{"ok":true,"imported":1,"skipped":0,"ids":["rigtwo"]},"list":[{"id":"s1","name":"RIG","v":2},{"id":"rigtwo","name":"RIG TWO","v":1}]}
  ok   6b tags: the tag "solo" added through the RIG TWO row’s inline editor is witnessed (session meta tags array and/or the row DOM chips)  -> {"drive":{"row":true,"clicked":true,"input":true,"committed":true,"before":[],"err":null},"meta":["solo"],"dom":true,"rows":{"all":2,"n":2,"names":["RIG","RIG TWO"]}}
@@ -72,10 +72,10 @@ download dir C:\Users\Moddy\AppData\Local\Temp\anvil-sessions-dl-1791531671780
 ── 7. seal ──
  ok   7 page left clean: rig sessions deleted · autosave back off (false) · recovery cleared · transport stopped  -> {"killed":["RIG TWO:rigtwo","RIG:s1"],"before":{"version":"s2.0","init":true,"inited":true,"hydrated":true,"backend":"idb","volatile":false,"modes":["idb","ls","mem"],"note":null,"notes":[],"count":2,"current":{"id":"s1","name":"RIG"},"dirty":false,"lastAutosaveAt":0,"autosave":{"on":true,"ms":45000,"choice":true},"recovery":{"available":false,"savedAt":null,"name":null,"at":null},"lastError":null,"lastSave":null,"la
  ok   7 zero page errors (exceptions · Log errors · console.error)  -> page errors=0
- ok   7 screenshot: renders/s2-sessions-suite.png (the sessions card, scale 2)  -> 160477 bytes · clip 1048×659 @2x
-index.html sha256 (after): c6bc282ce4c7dd033ba8d67f32e6cb28e48a8affd6f1a60619c63bade148d624
- ok   7 freeze: index.html sha256 before === after (unchanged by the run)  -> c6bc282ce4c7dd033ba8d67f32e6cb28e48a8affd6f1a60619c63bade148d624
- ok   7 freeze: index.html sha256 = pinned  -> pinned c6bc282ce4c7…
+ ok   7 screenshot: renders/s2-sessions-suite.png (the sessions card, scale 2)  -> 159570 bytes · clip 1048×659 @2x
+index.html sha256 (after): dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca
+ ok   7 freeze: index.html sha256 before === after (unchanged by the run)  -> dc240f751700f44931d9e0012c87296b54d64cd0f13237af1cb656dd0e52c8ca
+ ok   7 freeze: index.html sha256 = pinned  -> pinned dc240f751700…
 
 60 passed, 0 failed
 SESSIONS PASSED

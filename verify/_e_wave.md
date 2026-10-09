@@ -12,7 +12,8 @@ Owner scope: the two engine-side owed items after the R17-R21 program closed.
    steady cost (~+20 % since P1.x; hot unison-7 stress windows) while every alias gate stays
    green and the audio remains output-preserving.
 
-State at open: T wave must be CLOSED first (its frozen sha fills in below at open time).
+State at open: T wave CLOSED at `c6bc282c` (4,506,520 B; sw `8a19a9ef`) -- start from that
+tree.
 This wave changes the WORKLET again by design (av_dsp + av_acid edits) — record both shas.
 
 ## 1. Deliverables

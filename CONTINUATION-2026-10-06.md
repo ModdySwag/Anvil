@@ -2706,3 +2706,33 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
 - NEXT (this session): **E wave (ENGINE EDGE)** dispatch from this tree -- EG minBLEP pass /
   EH accent flag (av_acid + av_seq_sched opts merge + av_seq_acid) / ER cdp_seq legs; then
   E close; then **K wave**; then the FINISH close (README + docs/12 section 7 + owner-pass ask).
+- E DISPATCHED (deleg_f53eff5f): EG `av_dsp.js` minBLEP pass (output-preserving, baseline
+  digests first) - EH accent flag (`av_acid.js` predicate + `av_seq_sched.js` opts merge
+  `{tune, acc}` at the DOWN site + `av_seq_acid.js` mirror) - ER `cdp_seq.mjs` accent legs
+  (threshold left for parent calibration). Contract `verify/_e_wave.md` (start from c6bc282c).
+  K contract staged at `verify/_k_wave.md`. Chain scripts: `cache/finish/` (sweep.py 23,
+  battery.sh, deploy_t.sh, stress_chain.sh).
+
+## Resume addendum 76 - 2026-10-09 (E wave CLOSED: ENGINE EDGE -- accent flag + P.2 minBLEP SHIPPED + LIVE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen **`dc240f75`** (sw `b1c70d33`; worklet
+  `eda74827` -- changed by design) at moddys.net/anvil -- 0 not in sync; live sha = frozen;
+  leak **11/11 LIVE**.
+- **P.2 minBLEP pass**: bit-identical (5 patches x 3 lengths + 536,640 deposit cases, digests
+  equal; rejected candidates recorded in EG's report); node render -4.9 % .. -9.4 %; bench
+  knee UNCHANGED 96/128 monotone with the knee cell **981.87 -> 902.67 us (33.85 % vs 36.82 %
+  budget = -8.1 %)** -- the P.2 win visible in the publishable metric.
+- **Accent decision (explicit flag)**: av_acid predicate = flag when 0|1 else legacy vel>=0.8;
+  sched ALWAYS emits `{acc}` (+tune when the track slot is valid); av_seq_acid mirror updated.
+  Harnesses 39/0 + 39/0. cdp_seq accent legs first-lap green with the physical reads
+  (ratio 2.055 flagged-vs-off / in-band 1.6+-15 % default-vel / 1.823 legacy) -- thresholds
+  confirmed by measurement (ACCENT_RATIO_MIN 1.15 stands, never loosened).
+- GATES: battery **26/26 + bench + alias ALL exit=0** (alias floors at the P1.x record);
+  stress x2 raw **256 / 60** (console Active both laps -- load class; same clusters; heap
+  PASS); cdp_tune **18/18** after the T6 first-capture race fix (full-capture retry x3 in the
+  rig; strength preserved). Pins 23 swept to dc240f75. Version label still "T1" (engine-only
+  wave -- the K wave carries the next app_core bump; recorded).
+- NEXT: **K wave (FINISH KNICKS)** dispatch -- KI fill toggle (sched setter + UI) + undo v2
+  (chains/song/scenes capture + restore + push audit) / KS boot template + multitab note /
+  KL avWavMeta (BWF/iXML/acid/ID3) + import fold / KR rig legs (cdp_seq, cdp_sessions,
+  cdp_import); then the FINISH close (README + docs/12 section 7 statuses + owner-pass ask).
