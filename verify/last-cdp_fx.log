@@ -1,6 +1,6 @@
-index.html sha256 (before): 095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085
+index.html sha256 (before): 1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791500292160
+cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791503093318
  ok   boot: data-av-ready flips
  ok   fx rack mounted: #av-fx-host + card root + 7 strips
  ok   exports: avFxInit + avFxSnap + avFxClasses + avFxInventory + window.__avFx (p3.0)  -> {"init":true,"snap":true,"classes":true,"inventory":true,"handle":true,"version":"p3.0"}
@@ -12,11 +12,11 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791500292
  ok   real drag on the VERB MIX knob lands on 1 (mirror 1 · aria-valuenow 1 · readout 100%)  -> {"drags":1,"value":1,"mirror":1,"aria":"1","readout":"100%"}
  ok   engine ready (the live tier is up before the tail witness)  -> worklet
  ok   tail witness: rig's OWN AnalyserNode armed on the master tap (avMasterFor)  -> {"ok":true,"sr":48000,"fft":2048}
- ok   tail witness: silent control window BEFORE the note (RMS < 0.005)  -> control max=0.00000 over 33 samples
- ok   tail: note started through the ONE note path (avNoteDown('c4', 1.0))  -> {"ok":true,"t":4808.399999976158}
- ok   tail: note released (avNoteUp('c4'))  -> {"ok":true,"t":6112.699999988079}
- ok   tail witness: the held note is LOUD on the master tap (RMS > 0.02)  -> hold max=0.1693
- ok   REVERB TAIL WITNESSED: tail RMS after note-off (t+250..t+1000 ms) sits above the silent control window  -> tail max=0.0609 vs control max=0.00000 · tail mean=0.0216 · headless engine, tail table=worklet
+ ok   tail witness: silent control window BEFORE the note (RMS < 0.005)  -> control max=0.00000 over 34 samples
+ ok   tail: note started through the ONE note path (avNoteDown('c4', 1.0))  -> {"ok":true,"t":4813.300000011921}
+ ok   tail: note released (avNoteUp('c4'))  -> {"ok":true,"t":6126.300000011921}
+ ok   tail witness: the held note is LOUD on the master tap (RMS > 0.02)  -> hold max=0.1685
+ ok   REVERB TAIL WITNESSED: tail RMS after note-off (t+250..t+1000 ms) sits above the silent control window  -> tail max=0.0656 vs control max=0.00000 · tail mean=0.0222 · headless engine, tail table=worklet
  ok   param round-trip: every mounted module path accepted (40 paths — wheel/change through the bound handler, avApplyParam true, mirror echo, visual repaint, restore)  -> 40/40 ok
    · round-trip sample (first knob): {"path":"fx.drive.mix","kind":"knob","ok":true,"stage":"","wheel":{"from":1,"to":0.99,"dir":"down"},"accept":{"v":0,"returned":true,"echo":true},"restored":true,"visual":true}
  ok   §3 path sweep: unmounted module paths accepted for delivery (12/12 — predelay · spread · duck · bpm · stages · down · eqLo/eqMid/eqHi · comp.att/rel/makeup)  -> 12/12 ok
@@ -28,8 +28,8 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-fxui-1791500292
  ok   wet sanity: verb ON mix 1 CHANGES the render vs dry (maxAbsDiff > 0 — the chain is live, not dead)  -> {"ok":true,"lenEq":true,"lenA":144000,"lenB":144000,"maxAbsDiff":0.6657574027776718,"dL":0.5387839302420616,"dR":0.6657574027776718,"firstDiff":0}
  ok   zero page errors
  ok   screenshot: renders/p3-fx-suite.png (the FX rack card, scale 2)  -> 320201 bytes · clip 1010×1030 @2x
-index.html sha256 (after): 095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 095b7e5d8dc07960cfc01f3410e905eb43e8cb97dbe00029e5fc4705246b5085
- ok   freeze: index.html sha256 = pinned  -> pinned 095b7e5d8dc0…
+index.html sha256 (after): 1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 1bbfe2cfe0631b60cba80b80176e451256accf31e97f72c41db57d79dddb54aa
+ ok   freeze: index.html sha256 = pinned  -> pinned 1bbfe2cfe063…
 
 27 passed, 0 failed

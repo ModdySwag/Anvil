@@ -2536,6 +2536,45 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
 - Carried: quiet bench re-run - P.2 minBLEP - P4 follow-ups - PERFECT TUNINGS - README refresh -
   owner-pass items. Nothing else in flight.
 
+## Resume addendum 70 - 2026-10-09 (R21 CLOSED: LIBRARY overlay + hub slimming SHIPPED + LIVE)
+
+- DELIVERED + DEPLOYED + LIVE-VERIFIED: frozen `1bbfe2cf` (4,238,455 B; sw `8cd2c52e`) at
+  moddys.net/anvil (scoped --verify = 0 not in sync; live sha = frozen on both files). Gates:
+  smoke **78** - hub **49** - cockpit **21** - platform **52** - import **24** - avpack selftest +
+  file PASS - battery **25 suites ALL exit=0 + bench exit=0** (QUIET window this lap: realtime
+  light 64 - fat 64; offline knee 96/128 monotone; ratio 0.996) - leak **11/11 LIVE** - pins 22
+  swept - zero page errors.
+- SHIPPED: `src/av_library_ui.js` (NEW overlay shell r21.0: Esc/away close, search-first focus +
+  focus return, palette cmd lib.open, facade `__avLibrary`, z 1610) + `src/av_import_ui.js` (card
+  strip `#av-import-libsum`/`#av-import-libopen`; manager mount API with ALL ids preserved;
+  format/pack facets; incremental step 60 / ceiling 400 + show more; inspector `#av-import-detail`;
+  bulk bar cap 50, export = ONE zip via avZipBuild; `avLibraryUiNote` mirror; `avImportUiLibrary()`
+  opens the overlay) + styles (+2,722 B) + ANVIL 1.10.0 "R21 - library overlay".
+- LIVE EVIDENCE (captures read + record): renders/r21-live-hub.png (slimmer card: strip "0 items -
+  0 B" + OPEN LIBRARY, no inline list) + renders/r21-live-library.png (overlay open; LIBRARY head +
+  close + status; search-focused; facets + bulk + LIBRARY list inside); probe R21-PROBE ok (boot
+  closed - REAL strip click opens + focus - Esc closes).
+- Authors A/B/D1/D2 (deleg_b96639f7); rigfixes + the reload-wait flake record (addendum 69).
+- Commits: this close commit (logs + renders + addenda 70/71). NEXT: **R20 work persistence** -
+  authors dispatched with this commit.
+- Carried: quiet bench re-run (moot - this lap WAS the quiet window light 64/fat 64) - P.2 minBLEP -
+  P4 follow-ups - PERFECT TUNINGS - README refresh - owner-pass items (launch arrival + dir-picker).
+
+## Resume addendum 71 - 2026-10-09 (R20 OPENED: work persistence - contract + authors dispatched)
+
+- R21 closed first (addendum 70). R20 = docs/12 section 5 (the LAST roadmap item): autosave
+  default-on-after-first-save + visibilitychange flush + fingerprint coverage; project handle reuse
+  + Save As + RECENT projects (IDB `av-projects-store`); session browser v2 (previews/tags/search/
+  sort); Song Bundle (avpack kind `song`) + backup coverage extension (samples/wt/code/LS prefs).
+  Contract `verify/_r20_wave.md` (the wave SSOT; committed with this addendum).
+- Authors (dispatched): A `av_session.js`+`av_session_ui.js` - B `av_proj.js`+`av_files_ui.js` -
+  C `av_pack.js`+`verify/avpack_schema.mjs`+`av_backup.js` - D `av_lib.js`+`av_import_ui.js` -
+  E1 `verify/cdp_sessions.mjs` - E2 `verify/cdp_s4.mjs`+`verify/cdp_hub.mjs`. Parent: styles,
+  app_core 1.11.0 "R20 - work persistence", triage (cache/r20/triage_r20.sh: smoke/sessions/s4/
+  hub/cockpit/platform/import/avpack), sweep (cache/r20/sweep_r20.py), battery (cache/r20/
+  battery_r20.sh), deploy + live + close.
+- Carried: unchanged. Nothing else in flight.
+
 ## OWNER ASK (2026-10-09) - IMPORT & LIBRARY redesign = wave R21 (STAGED; next after the R19 close)
 
 - Ask (recorded intent): full access to ALL loaded files but STREAMLINED navigation - the hub
