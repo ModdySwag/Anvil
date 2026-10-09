@@ -72,6 +72,10 @@ function avSynthDefaults() {
     "lfo.toPitch": 0,
     /* engine + kind panels (§3.1–3.3) */
     "engine.kind": "va",
+    /* R23: the kind-filter gate (one engine filter, one set of values -- filter.mode / cutoff /
+       reso / envAmt above). 0 = off: the string/drum/grain/sampler voices render unfiltered and
+       the new stage is skipped entirely; the va and acid cores never read it. */
+    "filter.on": 0,
     "acid.wave": 0,
     "acid.cutoff": 800,
     "acid.reso": 0.5,
@@ -320,6 +324,20 @@ const AV_SYNTH_SAMPLER_KNOBS = [
   { path: "sampler.vol", label: "VOL", opts: { min: 0, max: 1, step: 0.01, def: 0.8, fmt: "pct" } },
 ];
 
+/* R23: the shared engine filter appended to the kind panels (string / drum / grain / sampler).
+   One engine filter, one set of values: these controls drive the same filter.* params the VA
+   core reads. The pick and the three knob specs are the VA group's exact specs (reconciled
+   against AV_SYNTH_ROWS), led by the filter.on gate at the head of the knob row:
+     filter.on 0 = off (kind voices render unfiltered, the new stage is skipped) / 1 = on.
+   The group is append-only per panel; the VA and ACID panels are untouched. */
+const AV_SYNTH_KIND_FILTER_SELECT = { path: "filter.mode", label: "FILTER", aria: "Filter mode", options: ["lp12", "lp24", "bp", "hp"] };
+const AV_SYNTH_KIND_FILTER_KNOBS = [
+  { path: "filter.on", label: "ON", opts: { min: 0, max: 1, step: 1, def: 0, fmt: "int", hint: "0 = off, 1 = on" } },
+  { path: "filter.cutoff", label: "CUTOFF", opts: { min: 20, max: 20000, step: 1, def: 800, curve: "log", fmt: "hz" } },
+  { path: "filter.reso", label: "RESO", opts: { min: 0, max: 1, step: 0.01, def: 0.3, fmt: "pct" } },
+  { path: "filter.envAmt", label: "ENV AMT", opts: { min: -4, max: 4, step: 0.1, def: 2, unit: "oct" } },
+];
+
 /* local escaper (same rules as avKnobEsc): this part carries no extra dependency on other parts */
 const avSynthEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -337,6 +355,13 @@ function avSynthSelectHTML(spec) {
 /* one knob from a spec row, one knob row from a spec table (value pre-read from the mirror) */
 const avSynthKnobSpecHTML = (k) => avKnobHTML(k.path, k.label, Object.assign({ value: avParams[k.path] }, k.opts));
 const avSynthKnobSpecRowHTML = (cls, knobs) => avKnobRowHTML(knobs.map(avSynthKnobSpecHTML), cls);
+
+/* R23: the appended FILTER group for the kind panels -- the VA filter pick row (built with
+   avSynthSelectHTML) plus the shared filter knob row led by the ON gate (avSynthKnobSpecRowHTML),
+   so the four kind groups look native and can never drift from one another. */
+const avSynthKindFilterHTML = () =>
+  '<div class="av-synth-selects">' + avSynthSelectHTML(AV_SYNTH_KIND_FILTER_SELECT) + "</div>" +
+  avSynthKnobSpecRowHTML("av-synth-filter", AV_SYNTH_KIND_FILTER_KNOBS);
 
 /* one drum voice block: caption + the three compact cells (tune · decay · level) */
 function avSynthDrumVoiceHTML(v) {
@@ -381,25 +406,30 @@ function avSynthBodyHTML() {
   const strPicks = AV_SYNTH_STRING_SELECTS.map(s => avSynthSelectHTML(s)).join("");
   const str = avSynthPanelHTML("string", kind === "string",
     '<div class="av-synth-selects">' + strPicks + "</div>" +
-    avSynthKnobSpecRowHTML("av-synth-string", AV_SYNTH_STRING_KNOBS));
+    avSynthKnobSpecRowHTML("av-synth-string", AV_SYNTH_STRING_KNOBS) +
+    avSynthKindFilterHTML());
 
   /* drum — the 11-voice kit grid + split/volume */
   const kit = AV_SYNTH_DRUM_VOICES.map(avSynthDrumVoiceHTML).join("");
   const drum = avSynthPanelHTML("drum", kind === "drum",
     '<div class="av-drum-kit">' + kit + "</div>" +
-    avSynthKnobSpecRowHTML("av-drum-globals", AV_SYNTH_DRUM_GLOBALS));
+    avSynthKnobSpecRowHTML("av-drum-globals", AV_SYNTH_DRUM_GLOBALS) +
+    avSynthKindFilterHTML());
 
   /* grain — the P3 granular voice knobs (§5, KIND 4) */
   const grain = avSynthPanelHTML("grain", kind === "grain",
-    avSynthKnobSpecRowHTML("av-synth-grain", AV_SYNTH_GRAIN_KNOBS));
+    avSynthKnobSpecRowHTML("av-synth-grain", AV_SYNTH_GRAIN_KNOBS) +
+    avSynthKindFilterHTML());
 
   /* sampler — the P3 sampler voice knobs (§6, KIND 5) */
   const smpl = avSynthPanelHTML("sampler", kind === "sampler",
-    avSynthKnobSpecRowHTML("av-synth-sampler", AV_SYNTH_SAMPLER_KNOBS));
+    avSynthKnobSpecRowHTML("av-synth-sampler", AV_SYNTH_SAMPLER_KNOBS) +
+    avSynthKindFilterHTML());
 
   /* fm — the operators live on the FM card; the panel keeps the kind switch legible */
   const fmp = avSynthPanelHTML("fm", kind === "fm",
-    '<p class="av-note av-dim">Six-operator FM — the operator grid, algorithms and envelopes live on the FM card above.</p>');
+    '<p class="av-note av-dim">Six-operator FM — the operator grid, algorithms and envelopes live on the FM card above.</p>' +
+    avSynthKindFilterHTML());
 
   return engineRow + va + acid + str + drum + grain + smpl + fmp;
 }

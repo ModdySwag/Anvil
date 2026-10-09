@@ -1,6 +1,6 @@
-index.html sha256 (before): 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
+index.html sha256 (before): 6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1791544603481
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1791549139982
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
    - Page.setDownloadBehavior unavailable
 == 0. boot ==
@@ -8,24 +8,24 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
    - settle 1400 ms for the decoration pass 2 (module init + 1200 ms)
 == A. a11y module + state() ==
  ok   A1 module: window.__avA11y {version, init, state, setPref, toggle} + avA11yAnnounce fn  -> {"has":true,"version":"1.0.0","init":"function","state":"function","setPref":"function","toggle":"function","announce":"function","proof":"function","classes":"function"}
- ok   A2 state(): inited/skip/live true + counts.sliders === DOM .av-knob[data-knob] total (sliders 192 vs DOM 192)  -> {"inited":true,"skip":true,"live":true,"sliders":192,"domKnobs":192,"counts":{"sliders":192,"knobsTabbed":192,"canvases":6,"liveRegions":4,"roleButtons":2,"labeled":460,"unnamed":0},"errN":0}
+ ok   A2 state(): inited/skip/live true + counts.sliders === DOM .av-knob[data-knob] total (sliders 212 vs DOM 212)  -> {"inited":true,"skip":true,"live":true,"sliders":212,"domKnobs":212,"counts":{"sliders":212,"knobsTabbed":212,"canvases":6,"liveRegions":4,"roleButtons":2,"labeled":465,"unnamed":0},"errN":0}
  ok   A3 fresh-load defaults: contrast false + motion system + no av-contrast / av-reduce-motion on body + stored prefs default-or-absent  -> {"cls":"","contrast":false,"motion":"system","systemReduced":false,"reduceActive":false,"ls":null}
  ok   A4 module UI: #av-a11y-host inside header.av-head + real buttons #av-a11y-contrast / #av-a11y-motion (title + aria-pressed)  -> {"host":true,"inHead":true,"hostCls":"av-a11y","contrast":{"tag":"BUTTON","pressed":"false","title":true,"label":"High contrast"},"motion":{"tag":"BUTTON","pressed":"false","title":true,"label":"Reduce motion"}}
 == B. skip link (real Tab + Enter) ==
  ok   B1 skip link: #av-a11y-skip anchor -> #av-main + main.av-main carries id="av-main"  -> {"skip":true,"tag":"A","cls":"av-a11y-skip","href":"#av-main","first":"av-a11y-skip","mainId":"av-main","rect":{"x":12,"y":-64,"w":158,"h":36},"text":"Skip to main content"}
- ok   B2 skip link is the first focusable: fresh-load Tab -> activeElement #av-a11y-skip  -> {"before":{"id":null,"tag":"BODY","cls":"","txt":"Skip to main content FileEditViewWorkspaceHelpANVIL · v1.14."},"after":{"id":"av-a11y-skip","tag":"A","cls":"av-a11y-skip","txt":"Skip to main content"}}
+ ok   B2 skip link is the first focusable: fresh-load Tab -> activeElement #av-a11y-skip  -> {"before":{"id":null,"tag":"BODY","cls":"","txt":"Skip to main content FileEditViewWorkspaceHelpANVIL · v1.15."},"after":{"id":"av-a11y-skip","tag":"A","cls":"av-a11y-skip","txt":"Skip to main content"}}
  ok   B3 skip link Enter: focus lands on #av-main  -> {"id":"av-main","tag":"MAIN","hash":"","scrollY":0}
 == C. knobs (tabindex/role/aria + keyboard witness on master) ==
    - knob selftest present: true
- ok   C1 knobs: every .av-knob[data-knob] carries tabindex=0 + role=slider (n=192)  -> {"n":192,"bad":[]}
- ok   C2 knobs: numeric aria-valuemin/max/valuenow on every knob (min <= now <= max)  -> {"n":192,"bad":[]}
+ ok   C1 knobs: every .av-knob[data-knob] carries tabindex=0 + role=slider (n=212)  -> {"n":212,"bad":[]}
+ ok   C2 knobs: numeric aria-valuemin/max/valuenow on every knob (min <= now <= max)  -> {"n":212,"bad":[]}
  ok   C3 master knob ArrowUp (real CDP key): value rises ~step (+0.0100) and aria-valuenow matches the store  -> {"set":{"ok":true,"committed":0.5,"focused":true,"val":0.5,"aria":"0.5"},"v0":0.5,"v1":0.51,"step":0.01,"aria":"0.51","delta":0.010000000000000009,"readout":"51%"}
  ok   C4 master knob Shift+ArrowUp (real CDP key): ~10x step delta (+0.1000) and aria-valuenow matches the store  -> {"v1":0.51,"v2":0.61,"step":0.01,"aria":"0.61","delta":0.09999999999999998,"readout":"61%"}
  ok   C5 master knob End (real CDP key): value clamps to max ("1.2") and aria-valuenow matches  -> {"v":1.2,"max":"1.2","aria":"1.2","readout":"120%"}
  ok   C6 master knob restore: start value (0.8) restored through the commit path (readback matches)  -> {"orig":0.8,"restored":0.8,"aria":"0.8"}
 == D. names (visible buttons + counts.unnamed) ==
  ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 237 visible of 522  -> {"total":522,"visible":237,"bad":[]}
- ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":460,"counts":{"sliders":192,"knobsTabbed":192,"canvases":6,"liveRegions":4,"roleButtons":2,"labeled":460,"unnamed":0}}
+ ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":465,"counts":{"sliders":212,"knobsTabbed":212,"canvases":6,"liveRegions":4,"roleButtons":2,"labeled":465,"unnamed":0}}
 == E. live regions + announce ==
  ok   E1 live regions: >= 3 pinned-selector elements (.av-fam-status / #av-deliver-status / .av-session-status) carry role=status or aria-live (live 4 of 4)  -> {"found":4,"live":4,"sample":["av-deliver-status","av-fam-hub-status","av-fam-res-status","av-fam-radio-status"]}
  ok   E2 announce: avA11yAnnounce("a11y-rig-probe") writes #av-a11y-live textContent  -> {"fn":true,"exists":true,"text":"a11y-rig-probe"}
@@ -37,20 +37,20 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   F3 contrast reload: class + aria-pressed + state RESTORED from prefs  -> {"ready":true,"inited":true,"cls":"av-contrast","pressed":"true","contrast":true,"ls":{"contrast":true,"motion":"system"}}
  ok   F4 contrast reset: default clean (class off + aria-pressed "false" + state false + prefs contrast false)  -> {"click":true,"cls":"","pressed":"false","contrast":false,"ls":{"contrast":false,"motion":"system"}}
 == G. motion (emulated reduce + the manual toggle) ==
- ok   G1 motion premise: 2 element(s) under main animate in normal mode (nonzero transitionDuration)  -> {"ok":true,"total":3964,"nz":2,"sample":["av-studio-meter-bar","av-studio-meter-rms"]}
- ok   G2 motion emulated (prefers-reduced-motion: reduce): 0 elements under main with a nonzero transitionDuration (all <= 0.0001 s)  -> {"count":{"ok":true,"total":3963,"nz":0,"sample":[]},"cls":"av-reduce-motion","matchMedia":true,"motion":"system","reduceActive":true}
- ok   G3 motion manual: #av-a11y-motion click -> av-reduce-motion class + aria-pressed "true" + 0 animated elements  -> {"click":true,"cls":"av-reduce-motion","pressed":"true","motion":"reduce","count":{"ok":true,"total":3963,"nz":0,"sample":[]}}
+ ok   G1 motion premise: 2 element(s) under main animate in normal mode (nonzero transitionDuration)  -> {"ok":true,"total":4169,"nz":2,"sample":["av-studio-meter-bar","av-studio-meter-rms"]}
+ ok   G2 motion emulated (prefers-reduced-motion: reduce): 0 elements under main with a nonzero transitionDuration (all <= 0.0001 s)  -> {"count":{"ok":true,"total":4168,"nz":0,"sample":[]},"cls":"av-reduce-motion","matchMedia":true,"motion":"system","reduceActive":true}
+ ok   G3 motion manual: #av-a11y-motion click -> av-reduce-motion class + aria-pressed "true" + 0 animated elements  -> {"click":true,"cls":"av-reduce-motion","pressed":"true","motion":"reduce","count":{"ok":true,"total":4168,"nz":0,"sample":[]}}
  ok   G4 motion persisted: prefs motion "reduce" in av-a11y localStorage + state().motion reduce  -> {"ls":{"contrast":false,"motion":"reduce"},"motion":"reduce"}
- ok   G5 motion reset: back to system (class off + aria-pressed "false" + count restored >= 1)  -> {"click":true,"cls":"","pressed":"false","motion":"system","count":{"ok":true,"total":3963,"nz":2,"sample":["av-studio-meter-bar","av-studio-meter-rms"]},"ls":{"contrast":false,"motion":"system"}}
+ ok   G5 motion reset: back to system (class off + aria-pressed "false" + count restored >= 1)  -> {"click":true,"cls":"","pressed":"false","motion":"system","count":{"ok":true,"total":4168,"nz":2,"sample":["av-studio-meter-bar","av-studio-meter-rms"]},"ls":{"contrast":false,"motion":"system"}}
 == H. seal (prefs default - zero errors - freeze - pin) ==
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 183d1588b3c6...
+index.html sha256 (after):  6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 6ac4425b8d42...
 
 RESULT: 32 passed, 0 failed
 A11Y-RESULT 32/32
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","sha256After":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","pinned":"183d1588b3c694e72abc95f3542a788139f6de980369c2c40c99021dff197f25","passed":32,"failed":0,"checks":32,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e","sha256After":"6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e","pinned":"6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e","passed":32,"failed":0,"checks":32,"verdict":"pass"}
 A11Y PASSED

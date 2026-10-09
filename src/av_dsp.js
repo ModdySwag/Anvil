@@ -33,7 +33,12 @@
      opts ({ tune int 0..7, acc 0|1 }); EVERY reinitVoice path (fresh/steal/pending) carries the
      note's own opts; v.tuneOff (semitone offset vs 12-EDO) joins the pitch calc after the MPE
      add and is CONSTANT per voice (glide/ramp never sweep it - by design); stats() gains the
-     additive `tune` block. eng.tune (the master-tune semitone param) is a DIFFERENT thing. */
+     additive `tune` block. eng.tune (the master-tune semitone param) is a DIFFERENT thing.
+   - R23 (verify/_r23_wave.md): ONE param `filter.on` (0|1, default 0) gates the new kind-voice
+     filter stage: kind cores (1..6 + user kinds >= 64; ACID excluded - it owns its 303 ladder)
+     run the VA core's filter application on the SAME per-voice slots (v.a1/a2/a3/ic1a/ic2a/
+     ic1b/ic2b/fk + the v.lad ladder branch) after their stepVoice return; at filter.on === 0
+     the stage is skipped entirely (bit-identical). VA/acid cores and params untouched. */
 "use strict";
 
 const AVDSP = (function () {
@@ -432,6 +437,7 @@ const AVDSP = (function () {
       ring: new Float64Array(256), ringI: 0, ringN: 0, underruns: 0, budgetUs: 128e6 / sr,
       /* P2 kind machinery */
       kind: 0, kext: {}, tDrive: 0, cDrive: 0,
+      filterOn: 0,                /* R23: filter.on gate for the kind-voice filter stage (default 0) */
       /* P3: sample registry + zone table + mod matrix + FX chain (message/setup-time writes) */
       samples: [null, null, null, null], zones: new Float64Array(144),
       modMacros: new Float64Array(8), modSlots: new Float64Array(128),
@@ -595,6 +601,23 @@ const AVDSP = (function () {
         return true;
       }
       case "filter.drive": { const n = Number(value); if (!isFinite(n)) return false; eng.tDrive = cl(n, 0, 1); return true; }
+      /* R23: filter.on (0 | 1, default 0) gates the kind-voice filter stage. Read DIRECTLY per
+         sample (a strict gate, the FX st.on precedent), never smoothed: at 0 the stage is
+         skipped entirely. On a 0 -> 1 flip every live non-acid kind voice's coefficients are
+         primed here so the first filtered sample already runs the current cutoff. */
+      case "filter.on": {
+        const n = Number(value); if (!isFinite(n)) return false;
+        const bon = (n >= 0.5) ? 1 : 0;
+        if (bon === 1 && eng.filterOn !== 1) {
+          const vs = eng.voices;
+          for (let vi = 0; vi < eng.maxVoices; vi++) {
+            const v = vs[vi];
+            if (v.state !== 0 && v.kindId > 0 && v.kindId !== 1) recomputeFilter(eng, v);
+          }
+        }
+        eng.filterOn = bon;
+        return true;
+      }
       default: {
         /* P3 FX params: fx.<prefix>.* dispatch to the registered module state */
         if (path.slice(0, 3) === "fx.") {
@@ -757,6 +780,11 @@ const AVDSP = (function () {
       const m0 = kindModOf(v.kindId);
       if (m0 && typeof m0.initVoice === "function") { try { m0.initVoice(eng, v); } catch (e) { } }
     }
+    /* R23: kind filter prime at note start. The per-voice filter STATE (ic1a/ic2a/ic1b/ic2b +
+       the v.lad ladder) is already zeroed above for every voice (the VA law); this adds the
+       coefficient prime so a kind note's first filtered sample runs the live cutoff instead of
+       stale slots. filter.on === 1 only; VA + ACID never reach it. */
+    if (eng.filterOn === 1 && v.kindId > 0 && v.kindId !== 1) recomputeFilter(eng, v);
   }
 
   function releaseVoice(eng, v) {
@@ -1087,6 +1115,37 @@ const AVDSP = (function () {
     return x - v.fk * v1 - v2;
   }
 
+  /* R23 kind filter stage (verify/_r23_wave.md): the VA core's filter block, mirrored
+     operation-for-operation (ladder branch + TPT SVF on the SAME per-voice slots) so kind
+     voices run the SAME engine filter. Called from voiceFrame ONLY, and only when
+     filter.on === 1 and kindId is not ACID (1); the VA/acid cores never call it (pin 2).
+     Every kind stepVoice yields one base-rate sample per output frame, so this stage applies
+     once per output sample (no kind core yields 2x samples - see the R23 audit report). */
+  function kindFilterApply(eng, v, x) {
+    /* ladder24: the AVLADDER kernel owns the filter when wired (mode index 4) */
+    if (eng.filterMode === 4 && v.lad && typeof AVLADDER !== "undefined" && AVLADDER && typeof AVLADDER.process === "function") {
+      return AVLADDER.process(v.lad, x, v.lad.g, v.lad.k);
+    }
+    /* TPT SVF, one stage; lp24 cascades a second stage (byte-for-byte the voiceStep2x block) */
+    let v3 = x - v.ic2a;
+    const v1 = v.a1 * v.ic1a + v.a2 * v3;
+    const v2 = v.ic2a + v.a2 * v.ic1a + v.a3 * v3;
+    v.ic1a = 2 * v1 - v.ic1a;
+    v.ic2a = 2 * v2 - v.ic2a;
+    const mo = eng.filterMode;
+    if (mo === 1 || mo === 4) {   /* 4 = ladder24 fallback when AVLADDER is absent */
+      v3 = v2 - v.ic2b;
+      const w1 = v.a1 * v.ic1b + v.a2 * v3;
+      const w2 = v.ic2b + v.a2 * v.ic1b + v.a3 * v3;
+      v.ic1b = 2 * w1 - v.ic1b;
+      v.ic2b = 2 * w2 - v.ic2b;
+      return w2;
+    }
+    if (mo === 0) return v2;
+    if (mo === 2) return v1;
+    return x - v.fk * v1 - v2;
+  }
+
   /* ---- P3 mod matrix (contract verify/_p3_wave.md section 4; v1 application) ----
      Wire: avEngineMod -> eng.modMacros[8] (0..1) + eng.modSlots[128] ([srcIdx, dstIdx, amt, curve] x32).
      v1 evaluation lives at the recomputeFilter / computePitch cadence:
@@ -1199,7 +1258,14 @@ const AVDSP = (function () {
     if (v.kindId > 0) {
       const m0 = kindModOf(v.kindId);
       if (!m0) { v.state = 0; return 0; }
-      const y0 = m0.stepVoice(eng, v);
+      /* R23: engine-filter stage for kind voices (filter.on === 1 AND only; ACID kindId 1 owns
+         its 303 filter and stays excluded, pin 2). Coeffs refresh at the VA cadence BEFORE the
+         core so this frame already sees the current cutoff; at filter.on === 0 the whole stage
+         is skipped and every kind render stays bit-identical. */
+      const kfOn = (eng.filterOn === 1 && v.kindId !== 1);
+      if (kfOn && (eng.osCount & 15) === 0) recomputeFilter(eng, v);
+      let y0 = m0.stepVoice(eng, v);
+      if (kfOn) y0 = kindFilterApply(eng, v, y0);
       if (v.state === 3) {
         v.fade += v.fadeStep;
         if (v.fade <= 0) {

@@ -192,6 +192,44 @@ async function main() {
   check('synth card: knobs + selects mounted + bound (85 knobs)', syn.host === true && syn.knobs >= 85 && syn.bound === true && syn.sels >= 3, JSON.stringify(syn));
   check('synth card: ENGINE select offers all seven kinds', JSON.stringify(syn.engOpts) === JSON.stringify(['va', 'acid', 'string', 'drum', 'grain', 'sampler', 'fm']), JSON.stringify(syn.engOpts));
 
+  /* 6c1. R23 kind filter: the engine FILTER group reaches every kind panel - the filter.mode
+     pick plus the filter.on / filter.cutoff / filter.reso / filter.envAmt knobs, each mounted +
+     bound INSIDE its own panel (per-panel scoped queries only, never document-wide), with
+     filter.on reading its pinned default 0 on a fresh boot */
+  const r23R = await ev(`(() => {
+    const host = document.getElementById('av-synth-knobs');
+    const kinds = ['string', 'drum', 'grain', 'sampler'];
+    const paths = ['filter.on', 'filter.cutoff', 'filter.reso', 'filter.envAmt'];
+    const panels = {};
+    for (let i = 0; i < kinds.length; i++) {
+      const k = kinds[i];
+      const p = host ? host.querySelector('.av-synth-panel[data-kind="' + k + '"]') : null;
+      const rec = { panel: !!p, mode: false, found: [], unbound: [], onDef: null, onAria: null };
+      if (p) {
+        /* the FILTER mode pick rides the va idiom (select data-param); a knob-shaped carriage
+           would carry data-knob - either way the query stays scoped to THIS panel */
+        rec.mode = !!(p.querySelector('select[data-param="filter.mode"]') || p.querySelector('[data-knob="filter.mode"]'));
+        for (let j = 0; j < paths.length; j++) {
+          const kn = p.querySelector('.av-knob[data-knob="' + paths[j] + '"]');
+          if (!kn) continue;
+          if (kn.dataset.knobBound === '1') rec.found.push(paths[j]);
+          else rec.unbound.push(paths[j]);
+          if (paths[j] === 'filter.on') { rec.onDef = kn.getAttribute('data-def'); rec.onAria = parseFloat(kn.getAttribute('aria-valuenow')); }
+        }
+      }
+      panels[k] = rec;
+    }
+    const mounted = kinds.every(k => panels[k].panel === true && panels[k].mode === true && panels[k].found.length === paths.length && panels[k].unbound.length === 0);
+    const onDefault0 = (typeof avParams === 'object' && avParams) ? avParams['filter.on'] : null;
+    const onReads0 = kinds.every(k => panels[k].onDef === '0' && panels[k].onAria === 0);
+    return { mounted: mounted, onDefault0: onDefault0, onReads0: onReads0, panels: panels };
+  })()`);
+  const r23 = r23R.value || {};
+  check('R23 kind filter: FILTER group mounted + bound in all four kind panels (mode pick + filter.on / cutoff / reso / envAmt knobs inside each panel)',
+    r23.mounted === true, JSON.stringify(r23.panels));
+  check('R23 kind filter: filter.on reads its default 0 on a fresh boot (engine mirror + every panel on-knob at data-def 0)',
+    r23.onDefault0 === 0 && r23.onReads0 === true, JSON.stringify({ onDefault0: r23.onDefault0, onReads0: r23.onReads0 }));
+
   /* 6d. the P3 FX rack + mod matrix cards */
   const p3R = await ev(`(() => {
     const fx = document.getElementById('av-fx-host');
@@ -810,9 +848,9 @@ async function main() {
     return info;
   })()`);
   const r8 = r8R.value || {};
-  check('R8 mod drag: 14 chips + drag begins (body class, 4 target halos) + drop on filter.cutoff assigns env1->cutoff with the mod ring shown + unmapped knob refused',
+  check('R8 mod drag: 14 chips + drag begins (body class, 14 target halos) + drop on filter.cutoff assigns env1->cutoff with the mod ring shown + unmapped knob refused',
     r8.chips === 14 && r8.knob === true && r8.dt === true
-    && r8.dragging === true && r8.targets === 4 && r8.hover === true
+    && r8.dragging === true && r8.targets === 14 && r8.hover === true
     && r8.dragging2 === false && r8.targets2 === 0
     && r8.slots === r8.slots0 + 1 && r8.s1 === 'env1->cutoff'
     && r8.ringShown === true && r8.ringDisp === 'block' && (r8.modAttr || '').indexOf('env1:') === 0

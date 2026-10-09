@@ -2816,3 +2816,33 @@ user packs (.avpack)** -> R20 persistence. Resume phrase "continue anvil". Nothi
   FSA dir-picker link; real two-tab check) + a live glance at resize / min-max / preview /
   narrow-window header.
 - Nothing else in flight. Resume phrase "continue anvil".
+
+## Resume addendum 80 - 2026-10-10 (R23 ENGINE FILTER: SHIPPED + LIVE)
+
+- Owner ask: the filter "seems to be missing" -> "add it to the synth engine section". Truth:
+  nothing was removed; the filter group had only ever existed on the va panel (acid has its own);
+  the string/drum/grain/sampler/fm engines had no filter stage at all.
+- SHIPPED (frozen `6ac4425b` index / `a7e8916a` sw; app 1.15.0 "R23 - engine filter"): the engine
+  filter wired into the kind voices behind a new `filter.on` param (DEFAULT 0 = every existing
+  kind sound BIT-IDENTICAL; va + acid paths untouched); FILTER groups (ON + mode + CUTOFF/RESO/
+  ENV AMT) on the string/drum/grain/sampler/fm panels; smoke +2 checks (81); the R8 mod-drag
+  target count recalibrated 4 -> 14 (fixture calibration, not a loosening); worklet sha changed
+  by design.
+- Bit-exactness: worklet harness old-vs-new (cache/scratch/r23/), 162/162 -- all kinds identical
+  at off incl. state vectors; va/acid identical even at on; engage/modes/determinism/flip green.
+- Known limits (documented, carried): kind-filter cutoff reads ~1 octave below the VA knob at the
+  same value (fs2 coeffs applied at base rate -- the pins required slot reuse); ENV AMT and
+  LFO-to-cut are inert for kind voices (kind cores own their envelopes); mono-return filtering
+  only (grain/sampler stereo pairs stay unfiltered); a USER kind still renders a blank card
+  (pre-existing hole, reported, not fixed).
+- BATTERY: 27/27 suites exit=0 (smoke 81/81; hub 68/68; fit 49/49); bench exit=0 (knee 96/128
+  monotone; realtime 64/48; ratio 0.999); alias exit=0 (VA -58.18 / WT -91.21 bit-identical);
+  stress x2 asserts-not-met load-class (raw 68 / 64 -- the quietest lap yet). LEAK 11/11 file +
+  LIVE; live = frozen on both files; live reads 1.15.0.
+- NOTE: this lap stress logs overwrote verify/stress-r22-run*.log (the copied chain kept the r22
+  log names) -- the R22 numbers stand in addendum 79.
+- D wave (ANVIL FOR WINDOWS desktop + installer + GitHub + downloads publish) was in flight at
+  this close -- see verify/_d_wave.md + the D reports; the desktop ships as Anvil 1.15.0
+  (version.json updated at D integration). Public-push prep: secret scan CLEAN (553 files /
+  4079 objects); ModdySwag/Anvil name free; owner standing grant: build + publish to the end.
+- Nothing else in flight from R23. Resume phrase "continue anvil".
