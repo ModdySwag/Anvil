@@ -14,8 +14,8 @@ instrument and a sibling of Pattern Forge.
 A look at the Windows build:
 
 ![Anvil - the cockpit: the SYNTH zone, the module rail and the console](https://raw.githubusercontent.com/ModdySwag/Anvil/main/screenshots/anvil-cockpit.jpg)
-![Anvil - the Import & Library overlay: search, facets, bulk actions](https://raw.githubusercontent.com/ModdySwag/Anvil/main/screenshots/anvil-hub.jpg)
-![Anvil - the TUNE card and the scale library](https://raw.githubusercontent.com/ModdySwag/Anvil/main/screenshots/anvil-library.jpg)
+![Anvil - the store and the import hub: the pack catalog and the import card](https://raw.githubusercontent.com/ModdySwag/Anvil/main/screenshots/anvil-hub.jpg)
+![Anvil - the sequencer: the demo groove, the step grid and the generative tools](https://raw.githubusercontent.com/ModdySwag/Anvil/main/screenshots/anvil-seq.jpg)
 
 ## What's new
 

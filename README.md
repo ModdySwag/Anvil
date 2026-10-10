@@ -29,8 +29,8 @@ moddys.net/anvil is byte-identical to the built local file (checked 2026-10-09).
 The Windows build, captured from the app itself:
 
 ![Anvil - the cockpit: the SYNTH zone, the module rail and the console](screenshots/anvil-cockpit.jpg)
-![Anvil - the Import & Library overlay: search, facets, bulk actions](screenshots/anvil-hub.jpg)
-![Anvil - the TUNE card and the scale library](screenshots/anvil-library.jpg)
+![Anvil - the store and the import hub: the pack catalog and the import card](screenshots/anvil-hub.jpg)
+![Anvil - the sequencer: the demo groove, the step grid and the generative tools](screenshots/anvil-seq.jpg)
 
 ## Quick start
 

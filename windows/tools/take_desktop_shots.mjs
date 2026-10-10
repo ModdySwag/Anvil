@@ -5,11 +5,12 @@
 //   node windows/tools/take_desktop_shots.mjs --exe "<path>"  # a different build (e.g. installed)
 //   node windows/tools/take_desktop_shots.mjs --cdp 9371 --out <dir>
 //
-// The three shots (the D wave contract section 4):
+// The three shots (the D wave contract section 4; shot 3 retargeted from the R22 library overlay
+// to the SEQUENCER - a visual, well-populated surface):
 //   desktop-01-boot     the app right after boot (synth zone, default state)
 //   desktop-02-hub      the STORE zone with the import hub card (#av-import) revealed
-//   desktop-03-library  the R22 library overlay open: min/max chrome, the resize grip and a
-//                       sample row carrying the preview button ([data-av-import-act="preview"])
+//   desktop-03-seq      the SEQUENCER with the demo groove loaded (FIRST SOUND): the per-track
+//                       step grid, the step editor and the generative tools, mid-groove
 //
 // Default target is the STAGED exe (windows/stage/Anvil/Anvil.exe): the release flow runs shots
 // right after a build, before/without an install. The PF/RS reference tools defaulted to the
@@ -22,9 +23,8 @@
 // implemented), so the viewport comes from Emulation.setDeviceMetricsOverride plus a
 // window-dispatch resize nudge -- the app's own matchMedia mount switch needs the event.
 //
-// The library shot needs a sample row for the preview button to exist; on a fresh profile one is
-// imported through the app's own facade (avWavEncode + __avImport.importFiles). It is a small
-// 1-second WAV named shots-sample.wav and it persists in the app's library.
+// Shot 3 rides the app's own FIRST SOUND control (avLessonFirstRunGo - the first-run strip's
+// button): it loads the demo groove and starts the transport. No test fixtures involved.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -102,61 +102,19 @@ try {
   await sleep(900);
   await shot('desktop-02-hub');
 
-  /* 03 -- library overlay (R22): open, ensure the manager is mounted, ensure a sample row with
-     the preview button exists, capture with min/max chrome + grip visible */
-  await call(`(() => { try { if (window.__avLibrary && typeof window.__avLibrary.open === 'function') { window.__avLibrary.open(); return { ok: true }; } return { ok: false, why: 'no __avLibrary' }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`, 'library open');
-  let open = false;
-  for (let i = 0; i < 30 && !open; i++) {
-    const s = await ev(`window.__avLibrary && window.__avLibrary.snap ? window.__avLibrary.snap() : null`);
-    if (s && s.open === true && s.w > 0) open = true;
-    else await sleep(200);
-  }
-  console.log('library snap:', JSON.stringify(await ev(`window.__avLibrary && window.__avLibrary.snap ? window.__avLibrary.snap() : null`)));
+  /* 03 -- seq: the demo groove in the sequencer. Press the app's own FIRST SOUND control (the
+     first-run strip button - loads the demo pattern and starts the transport; no test fixtures),
+     open the SEQ zone and capture the per-track step grid, the step editor and the GEN tools
+     mid-groove. */
+  const demo = await call(`(() => { try { if (typeof avLessonFirstRunGo !== 'function') return { err: 'no avLessonFirstRunGo' }; return avLessonFirstRunGo(); } catch (e) { return { err: String(e) }; } })()`, 'first sound');
+  if (!demo || demo.loaded !== true) console.log('WARN: the demo groove did not load');
+  await sleep(1600);
 
-  const mgr = await ev(`!!document.querySelector('#av-library-body .av-import-manager')`);
-  if (mgr !== true) {
-    await call(`(() => { try { const body = document.getElementById('av-library-body'); if (typeof avImportUiManagerMount === 'function' && body) return { ok: avImportUiManagerMount(body) === true }; return { ok: false, why: 'no avImportUiManagerMount/#av-library-body' }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`, 'manager mount');
-    await sleep(600);
-  } else {
-    console.log('manager already mounted');
-  }
+  await call(`(() => { try { return { ok: avZoneShow('seq', { source: 'shots' }) === true }; } catch (e) { return { err: String(e) }; } })()`, 'seq zone');
+  await sleep(1200);
+  console.log('seq playing:', JSON.stringify(await ev(`(typeof avSeqIsPlaying === 'function') ? avSeqIsPlaying() : null`)));
 
-  let rows = await ev(`document.querySelectorAll('#av-library-body [data-av-import-lib], [data-av-import-lib]').length`);
-  if (!rows) {
-    const imp = await call(`(async () => {
-      try {
-        if (!window.__avImport || typeof window.__avImport.importFiles !== 'function') return { ok: false, why: 'no __avImport.importFiles' };
-        if (typeof avWavEncode !== 'function') return { ok: false, why: 'no avWavEncode' };
-        const sr = 48000, n = sr;
-        const l = new Float32Array(n), r = new Float32Array(n);
-        for (let i = 0; i < n; i++) { const s = 0.5 * Math.sin(2 * Math.PI * 220 * i / sr); l[i] = s; r[i] = s; }
-        const buf = avWavEncode({ l: l, r: r, sr: sr, bits: 16, dither: false });
-        if (!buf) return { ok: false, why: 'avWavEncode refused' };
-        const ret = window.__avImport.importFiles([new File([buf], 'shots-sample.wav', { type: 'audio/wav' })]);
-        if (ret && typeof ret.then === 'function') { try { await ret; } catch (e) { } }
-        return { ok: true, bytes: buf.byteLength };
-      } catch (e) { return { ok: false, err: String((e && e.message) || e) }; }
-    })()`, 'sample import');
-    if (imp && imp.ok === true) console.log('imported shots-sample.wav (' + imp.bytes + ' B) for the preview button');
-    for (let i = 0; i < 30; i++) {
-      rows = await ev(`document.querySelectorAll('#av-library-body [data-av-import-lib], [data-av-import-lib]').length`);
-      if (rows > 0) break;
-      await sleep(500);
-    }
-  }
-  console.log('library rows:', rows);
-
-  let preview = 0;
-  for (let i = 0; i < 20; i++) {
-    preview = await ev(`document.querySelectorAll('[data-av-import-act="preview"]').length`);
-    if (preview > 0) break;
-    await sleep(400);
-  }
-  console.log('preview buttons visible:', preview);
-  console.log('min/max chrome:', JSON.stringify(await ev(`({ min: !!document.getElementById('av-library-min'), max: !!document.getElementById('av-library-max'), grip: !!document.querySelector('.av-library-grip') })`)));
-
-  await sleep(900);
-  await shot('desktop-03-library');
+  await shot('desktop-03-seq');
 
   console.log('--- shell tail ---');
   console.log(out.split(/\r?\n/).filter(Boolean).slice(-4).join('\n'));
