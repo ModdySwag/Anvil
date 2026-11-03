@@ -1,5 +1,9 @@
 # Anvil - a MODDYS Foundry synthesizer (single-file web app)
 
+[![Licence: AGPL-3.0](https://img.shields.io/badge/licence-AGPL-3.0-0E8C7C?style=flat-square)](LICENSE)
+![Platform: Windows · web](https://img.shields.io/badge/platform-Windows%20%C2%B7%20web-0A7A6C?style=flat-square)
+[![Latest release](https://img.shields.io/github/v/release/ModdySwag/Anvil?color=FFB86B&label=release&style=flat-square)](https://github.com/ModdySwag/Anvil/releases)
+
 A synth-and-groovebox in one `index.html`: acid, wavetable, FM, string, drum, granular and
 sampler engines; a native step sequencer with chains, song rows and scenes; a seven-slot FX rack
 with a drag-to-modulate matrix; a tuning studio; an import pipeline and a searchable library for
@@ -128,7 +132,7 @@ and on the live site.
 [github.com/ModdySwag/Anvil](https://github.com/ModdySwag/Anvil) -
 [moddys.net](https://moddys.net)
 
-Anvil is free software under the **GNU AGPL-3.0-or-later** (see `LICENSE`). It is an original
+Anvil is free software under the **GNU AGPL-3.0-or-later** (see `LICENSE` for the licence text and `NOTICE` for the project statement). It is an original
 work: no third-party code text is included in the build. The acid and ladder filter designs
 follow published open references (Open303, MIT; MoogLadders, Unlicense) and are re-implemented
 as the project's own clean text.
