@@ -79,8 +79,14 @@ const avInspectorState = { ready: false, timer: 0, kind: "wavetable", poly: "pol
 
 /* ---------- small guards ---------- */
 
+/* ids on a screen DIV name the screen; the drawing surface is the canvas inside it */
 function avInspectorEl(id) {
-  try { return document.getElementById(id); } catch (e) { return null; }
+  try {
+    const e = document.getElementById(id);
+    if (!e) return null;
+    if (typeof e.getContext === "function") return e;
+    return e.querySelector("canvas") || e;
+  } catch (e) { return null; }
 }
 
 function avInspectorNum(v, d) {
@@ -283,6 +289,91 @@ function avInspectorPaintEnv() {
   } catch (e) { return false; }
 }
 
+/* the filter response screen: the lowpass magnitude from cutoff + reso, with a corner marker.
+   A screen with a job - drag across for cutoff, up for resonance; both ride avApplyParam. */
+function avInspectorFilterFreq(v) {
+  const t = Math.max(0, Math.min(1, v));
+  return 40 * Math.pow(300, t);
+}
+function avInspectorFilterPos(f) {
+  return Math.log(Math.max(40, Math.min(12000, f)) / 40) / Math.log(300);
+}
+function avInspectorPaintFilter() {
+  try {
+    const canvas = avInspectorEl("av-insp-filter");
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const w = canvas.width || 220, h = canvas.height || 84;
+    const ink = avInspectorClear(ctx, w, h, canvas);
+    const cut = avInspectorParam("filter.cutoff", 1200);
+    const reso = Math.max(0, Math.min(1, avInspectorParam("filter.reso", 0.2)));
+    const fc = Math.max(0, Math.min(1, avInspectorFilterPos(cut)));
+    const base = h - 6, top = 8;
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1.7;
+    ctx.beginPath();
+    for (let i = 0; i <= 140; i++) {
+      const t = i / 140;
+      let mag = 1 / Math.sqrt(1 + Math.pow(t / Math.max(0.02, fc), 4));
+      const bump = reso * 0.9 * Math.exp(-Math.pow((t - fc) / Math.max(0.03, 0.10 + reso * 0.10), 2));
+      mag = Math.min(1.35, mag + bump * (t > fc * 0.4 ? 1 : 0.35));
+      const y = base - mag * (base - top) * 0.72;
+      if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(t * w, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.moveTo(fc * w, top);
+    ctx.lineTo(fc * w, base);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    const lab = avInspectorEl("av-insp-filter-lab");
+    if (lab) {
+      const txt = "LP " + (cut >= 1000 ? (cut / 1000).toFixed(1) + "k" : String(Math.round(cut))) + " R" + Math.round(reso * 100);
+      if (lab.textContent !== txt) lab.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* one drag binder: pointer position -> the screen's parameters. The filter screen takes x for
+   cutoff and y for resonance; the envelope takes x across a/d/r with the sustain at the height. */
+function avInspectorBindScreen(canvas, kind) {
+  if (!canvas || typeof canvas.addEventListener !== "function") return false;
+  let drag = false;
+  const apply = function (e) {
+    const r = canvas.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const fx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    const fy = Math.max(0, Math.min(1, 1 - (e.clientY - r.top) / r.height));
+    try {
+      if (kind === "filter") {
+        avApplyParam("filter.cutoff", Math.round(avInspectorFilterFreq(fx)));
+        avApplyParam("filter.reso", Math.round(fy * 1000) / 1000);
+      } else {
+        const span = 1 / 3;
+        avApplyParam("env1.s", Math.round(fy * 1000) / 1000);
+        if (fx < span) avApplyParam("env1.a", Math.round((fx / span) * 2000) / 1000);
+        else if (fx < span * 2) avApplyParam("env1.d", Math.round(((fx - span) / span) * 3000) / 1000);
+        else avApplyParam("env1.r", Math.round(((fx - span * 2) / span) * 3000) / 1000);
+      }
+    } catch (e2) { /* a drag never throws */ }
+  };
+  canvas.addEventListener("pointerdown", function (e) {
+    drag = true;
+    try { canvas.setPointerCapture(e.pointerId); } catch (e2) { /* best-effort */ }
+    canvas.classList.add("av-insp-dragging");
+    apply(e);
+    e.preventDefault();
+  });
+  canvas.addEventListener("pointermove", function (e) { if (drag) apply(e); });
+  const up = function () { drag = false; canvas.classList.remove("av-insp-dragging"); };
+  canvas.addEventListener("pointerup", up);
+  canvas.addEventListener("pointercancel", up);
+  return true;
+}
+
 /* the mini scope: the master tap's left analyser, a flat dim line when the tap is cold */
 function avInspectorPaintScope() {
   try {
@@ -376,6 +467,12 @@ function avInspectorTick() {
     avInspectorPaintVoices();
     avInspectorPaintScope();
     avInspectorPaintEnv();
+    avInspectorPaintFilter();
+    if (!avInspectorState.screensBound) {
+      avInspectorState.screensBound = true;
+      avInspectorBindScreen(avInspectorEl("av-insp-filter"), "filter");
+      avInspectorBindScreen(avInspectorEl("av-insp-env"), "env");
+    }
     let shape = "saw";
     try { if (typeof avParams !== "undefined" && avParams) shape = avInspectorWaveBase(avParams["osc1.type"]); } catch (e) { shape = "saw"; }
     if (shape !== avInspectorState.waveKey) avInspectorPaintWave();
@@ -497,6 +594,10 @@ function avInspectorBodyHTML() {
       avInspectorCoreHTML() +
       '<div class="av-insp-screen" id="av-insp-wave">' +
         '<canvas width="220" height="84" aria-label="Oscillator shape"></canvas>' +
+      '</div>' +
+      '<div class="av-insp-screen" id="av-insp-filter">' +
+        '<canvas width="220" height="84" aria-label="Filter response - drag across for cutoff, up for resonance"></canvas>' +
+        '<span class="av-insp-screen-label" id="av-insp-filter-lab">FILTER</span>' +
       '</div>' +
       '<div class="av-insp-screen" id="av-insp-env">' +
         '<canvas width="220" height="84" aria-label="Amp envelope (attack, decay, sustain, release)"></canvas>' +
@@ -635,6 +736,12 @@ function avInspectorInit() {
     avInspectorMark();
     avInspectorPaintWave();
     avInspectorPaintEnv();
+    avInspectorPaintFilter();
+    if (!avInspectorState.screensBound) {
+      avInspectorState.screensBound = true;
+      avInspectorBindScreen(avInspectorEl("av-insp-filter"), "filter");
+      avInspectorBindScreen(avInspectorEl("av-insp-env"), "env");
+    }
     avInspectorPaintScope();
     avInspectorPaintNums();
     avInspectorPaintVoices();

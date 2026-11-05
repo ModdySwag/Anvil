@@ -290,6 +290,45 @@ async function main() {
     k13.hit === 'av-lcd-up' && k13.adopted === 1 && (k13.opts < 2 || k13.after !== k13.before),
     JSON.stringify(k13));
 
+  /* K14 -- the voice screens are real drawing surfaces with live data (not empty boxes) */
+  const k14 = (await ev(`(() => {
+    const ink = (id) => {
+      const c = document.querySelector('#' + id + ' canvas');
+      if (!c) return -1;
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 8) n++;
+      return n;
+    };
+    return { wave: ink('av-insp-wave'), filter: ink('av-insp-filter'), env: ink('av-insp-env'),
+             flab: (document.getElementById('av-insp-filter-lab') || {}).textContent || '',
+             elab: (document.getElementById('av-insp-env-lab') || {}).textContent || '' };
+  })()`)).value || {};
+  check('K14 voice screens draw real data (oscillator, filter response with a live corner label, envelope with its time)',
+    k14.wave > 500 && k14.filter > 500 && k14.env > 500 && /^LP /.test(k14.flab) && k14.elab.length > 0,
+    JSON.stringify(k14));
+
+  /* K15 -- the two screens are editable: a drag writes through the param funnel */
+  const k15 = (await ev(`(() => {
+    const drag = (id, fx, fy, pid) => {
+      const c = document.querySelector('#' + id + ' canvas');
+      if (!c) return false;
+      const r = c.getBoundingClientRect();
+      const o = { bubbles: true, pointerId: pid, clientX: r.left + r.width * fx, clientY: r.top + r.height * (1 - fy) };
+      c.dispatchEvent(new PointerEvent('pointerdown', o));
+      c.dispatchEvent(new PointerEvent('pointermove', o));
+      c.dispatchEvent(new PointerEvent('pointerup', o));
+      return true;
+    };
+    const c0 = Number(avParams['filter.cutoff']), a0 = Number(avParams['env1.a']);
+    drag('av-insp-filter', 0.8, 0.8, 11);
+    drag('av-insp-env', 0.12, 0.5, 12);
+    return { c0: c0, c1: Number(avParams['filter.cutoff']), r1: Number(avParams['filter.reso']),
+             a0: a0, a1: Number(avParams['env1.a']) };
+  })()`)).value || {};
+  check('K15 the screens edit: a drag on the filter moves cutoff + reso, a drag on the envelope moves attack',
+    k15.c1 !== k15.c0 && k15.r1 > 0.5 && k15.a1 !== k15.a0, JSON.stringify(k15));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

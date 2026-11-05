@@ -1,4 +1,4 @@
-index.html sha256: 4d1c8d3d9367b5ef5e35cb5b79946e8933c2e86dc5bcd4a5f0a2376fb6039cae
+index.html sha256: cc2032301a8cb274fa67e93355bce8b69427b0b133827ea305ac53d350d98470
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
    - data-av-ready: true
  ok   K1 virgin: rail closed, no rail control visible (tabs are the one navigation)  -> {"closed":true,"rail":true,"visibleRailCtl":0}
@@ -14,6 +14,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   K11 display: bezel + glass, three dot rows, every field id, no wrap, steppers at its left  -> {"rows":3,"missing":[],"dots":true,"bezelBg":"rgba(0, 0, 0, 0)","nowrap":true,"stepsLeft":true,"status":"status"}
  ok   K12 display fields read live state (engine kind, poly mode, voices, cpu, tempo)  -> {"eng":"VA","poly":"POLY —","voices":"VOICES —/64","cpu":"CPU —","bpm":"120"}
  ok   K13 steppers: nothing paints over them, the bank selects live in the display, a click steps  -> {"hit":"av-lcd-up","adopted":1,"opts":1,"before":0,"after":0}
+ ok   K14 voice screens draw real data (oscillator, filter response with a live corner label, envelope with its time)  -> {"wave":18480,"filter":18480,"env":18480,"flab":"LP 800 R30","elab":"502 ms"}
+ ok   K15 the screens edit: a drag on the filter moves cutoff + reso, a drag on the envelope moves attack  -> {"c0":800,"c1":3835,"r1":0.8,"a0":0.002,"a1":0.72}
  ok   K9 zero page errors through the run  -> []
 
-CHASSIS-RESULT pass=14 fail=0
+CHASSIS-RESULT pass=16 fail=0

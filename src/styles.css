@@ -3278,3 +3278,7 @@ body { --dock-h: 132px; }
   #av-lcd-bezel .av-lcd-row:nth-child(3) { display: none; }
   #av-panic, #av-learn { display: none; }
 }
+/* the editable screens (filter response, amp envelope): a real instrument affordance */
+#av-insp-filter, #av-insp-env { cursor: crosshair; touch-action: none; }
+#av-insp-filter.av-insp-dragging, #av-insp-env.av-insp-dragging { cursor: grabbing; }
+#av-insp-filter .av-insp-screen-label { color: var(--teal); }
