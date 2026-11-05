@@ -17,6 +17,10 @@ Gates green at the checkpoint: **cdp_chassis 11/11 (NEW) · smoke 81/81 · cockp
 Pins swept across 23 files.
 
 ### OPEN, in order
+0. **The display landed (`047e6fc`)** — the LCD is a real instrument display now: bezelled glass, three
+   25-cell dot rows (patch identity + edited mark · engine/poly/glide · voices, CPU, tempo), live on
+   every tick, with pack/preset steppers at its left. Rig legs K11-K13 pin it; chassis 14/14,
+   smoke 81/81, fit 49/49. The owner still has to eyeball it — size/feel is his call.
 1. ~~hub reload/receipt legs~~ **DONE** — the receipts tier is unioned now (LS summaries always join
    the read); hub **68/68** with the pin. No further work.
 2. **Full battery + bench** (32 suites) has NOT been run since the chassis landed — only the five
