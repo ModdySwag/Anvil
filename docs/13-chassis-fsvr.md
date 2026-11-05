@@ -183,3 +183,39 @@ become pairs; every number gets steppers.
 - **`.av-btn` is a fixed 26x26 icon box** — every text button in the new bands needs `.mini` or a
   scoped wide override (R17b/R18a class).
 - **Regressing the cockpit**: the old layout is one commit, so C1 is revertible whole.
+
+## 5b. Visual inventory — every screen, where it lives, what it does
+
+A "screen" is a dark inset panel that shows real engine data for the module it sits in; several are
+editable (that is the difference between a picture and an instrument). Metric: screens belong to the
+module they describe and to the inspector when they describe the selected voice — never decoration,
+never a chart of nothing.
+
+**Built (C1 / C1b):**
+| Screen | Home | Reads | Edits |
+|---|---|---|---|
+| Oscillator shape | inspector | live `osc1.type` | — (C2: draw a wavetable frame) |
+| Filter response + corner label | inspector | live `filter.cutoff` / `.reso` | drag: x cutoff, y resonance |
+| Amp envelope + time | inspector | live `env1.a/d/s/r` | drag: x attack/decay/release, y sustain |
+| Output scope | inspector | master tap analyser | — |
+| LCD dot display | band | bank, engine, poly, voices, CPU, tempo | pack/preset steppers |
+
+**Already existed (verified present, keep and restyle to the screen language in C4):** sample
+waveform (`av_sample`), chop slice waveform (`av_chop_ui`), LFO scope (`av_lfo`), deck oscilloscope
+/ spectrum / spectrogram (`av_deck_ui`), mix meters + LUFS/true-peak, comp take lanes, wavetable
+editor canvas, sequencer grid, tuning scale map.
+
+**Planned (C3, in this order):**
+1. **Filters group** — the same response screen inside the SOUND engine card beside the cutoff/reso
+   pots (the inspector one is the compact mirror; the card one is where you edit).
+2. **Envelopes group** — envelope screens for every envelope the engine has (amp, filter, aux), overlaid
+   in their operator colours; drag = the same three moves.
+3. **EFFECTS, per slot** — drive: input/output transfer curve; dyn: gain-reduction meter; delay:
+   tap timeline; verb/conv: decay tail; mod: LFO shape. Each slot gets the screen its block actually has.
+4. **MIX** — EQ response curve on the master chain, and per-track mini waveform in the strip.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), replacing the row list
+   view as the default and keeping the rows as the advanced view.
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+
+Rule: a screen never blocks a control, never carries chrome of its own beyond its inset, and always
+prints its own units (the filter screen prints `LP 800 R30`, the envelope prints its time).
