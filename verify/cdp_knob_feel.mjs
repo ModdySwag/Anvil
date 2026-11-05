@@ -255,14 +255,20 @@ async function main() {
   check('instrument and master are independent, readouts follow', bv.keys === 0.9 && bv.masterAfterKeys === 0.8 && bv.keysTxt === '90%' && bv.masterTxt === '66%', JSON.stringify(bv));
 
   /* ---------- 8. the knobs drive the real tap gains ------------------------------------- */
+  /* the gains GLIDE on the audio clock (avMasterApply, ~15 ms setTargetAtTime), and a fresh probe
+     context seeds its node from the store at creation — poll to the settle instead of a fixed wait */
   const gR = await ev(`(async () => {
     const c = new AudioContext(); void c.destination;
     await c.resume();
     avKnobCommit(document.querySelector('#av-levels .av-knob[data-knob="master"]'), 0.9);
     avKnobCommit(document.querySelector('.av-knob[data-knob="keys"]'), 0.75);
-    await new Promise(r => setTimeout(r, 320));
-    const mo = avMasterFor(c), ko = avKeysFor(c);
-    const out = { ctx: c.state, master: mo ? Number(mo.gain.value.toFixed(4)) : null, keys: ko ? Number(ko.gain.value.toFixed(4)) : null };
+    const read = () => ({ master: Number(avMasterFor(c).gain.value.toFixed(4)), keys: Number(avKeysFor(c).gain.value.toFixed(4)) });
+    let out = { ctx: c.state, master: null, keys: null };
+    for (let i = 0; i < 40; i++) {
+      await new Promise(r => setTimeout(r, 50));
+      out = Object.assign({ ctx: c.state }, read());
+      if (Math.abs(out.master - 0.9) < 0.02 && Math.abs(out.keys - 0.75) < 0.02) break;
+    }
     try { c.close(); } catch (e) {}
     return out;
   })()`);
