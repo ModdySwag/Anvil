@@ -116,7 +116,7 @@ receive them rather than retrofitted:
 | A/B compare (two mix states, one key) | MIX header, `A/B` pair | C4 |
 | Solo / mute / arm per track, per channel strip | MIX | C3 |
 | Snap, quantize, metronome + count-in levels, tempo tap | SEQUENCE + band BPM cluster | C3 |
-| CPU, voices, latency and buffer readout | band `out` group | C2 |
+| CPU, voices readout | band `out` group | C2 (done; latency/buffer has no LCD cell — see `_c2_wave.md` §5) |
 | Autosave + last-saved indicator, session versions | BROWSE/sessions + band edited dot | already built (R20), surfaces here |
 | Stems, master, MIDI, README export as separate targets | DELIVER | C3 |
 | Selection model: single, shift-range, ctrl-toggle on the mixer | MIX, inspector follows | C3 |
@@ -156,7 +156,7 @@ become pairs; every number gets steppers.
 | Wave | Scope | Gate |
 |---|---|---|
 | **C1** chassis | head band module, inspector column module, tab bar re-render to 9 pages, body.html restructure, rail demoted to opt-in icon rail, keyboard wheels, band/tab/inspector CSS | `cdp_chassis` NEW rig; cockpit ZONEMAP re-pinned; smoke/fit green |
-| **C2** inspector live | bind kind keys → engine kind, core pots → the live voice params, scope, launcher grid → sub-tabs | `cdp_chassis` legs |
+| **C2** inspector live — DONE, contract `verify/_c2_wave.md` | kind keys → engine kind, core pots → the live voice params, screens edit, scope, launcher grid → sub-tabs, the live wavetable frame on the oscillator screen, and POLY/MONO → `env.mono` with a real per-channel mono allocator (`stats().mono`) | `cdp_chassis` K16–K19 |
 | **C3** page fills | sub-tab systems per page, card migration, macros card | per-page density check |
 | **C4** control language | the class audit + conversion sweep; steppers, pairs, groups | overflow scan, `cdp_fit` |
 | **C5** density & a11y | advanced sections collapsed by default per page, focus order, tab semantics | `cdp_a11y`, `cdp_fit` |

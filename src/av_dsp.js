@@ -425,6 +425,9 @@ const AVDSP = (function () {
       e2a: 0.001, e2d: 0.5, e2s: 0.5, e2r: 0.3,
       lfoRate: 5, lfoStep: 5 / sr, lfoToCut: 0, lfoToPitch: 0,
       glide: 0, bend: 0, tune: 0,
+      /* C2: the voice mode. mono=0 is the shipped polyphonic allocator, byte-for-byte; mono=1
+         keeps ONE voice per channel (last-note priority, held-note stack) — see noteOn/noteOff. */
+      mono: 0, monoHeld: new Uint8Array(16 * 16), monoHeldN: new Uint8Array(16),
       pitchGen: 0,
       /* derived */
       s15: 1 - Math.exp(-1 / (0.015 * sr)),
@@ -582,6 +585,13 @@ const AVDSP = (function () {
       case "lfo.toCut": { const n = Number(value); if (!isFinite(n)) return false; eng.lfoToCut = cl(n, -1, 1); return true; }
       case "lfo.toPitch": { const n = Number(value); if (!isFinite(n)) return false; eng.lfoToPitch = cl(n, -1, 1); return true; }
       case "voice.glide": { const n = Number(value); if (!isFinite(n)) return false; eng.glide = cl(n, 0, 2); return true; }
+      /* C2: the inspector's POLY/MONO pair. 0/1 (any truthy number reads as mono). */
+      case "env.mono": {
+        const n = Number(value); if (!isFinite(n)) return false;
+        const m = n ? 1 : 0;
+        if (m !== eng.mono) { eng.monoHeldN.fill(0); eng.mono = m; }
+        return true;
+      }
       case "voice.bend": { const n = Number(value); if (!isFinite(n)) return false; eng.bend = cl(n, -12, 12); eng.pitchGen++; return true; }
       case "tune": { const n = Number(value); if (!isFinite(n)) return false; eng.tune = cl(n, -12, 12); eng.pitchGen++; return true; }
       case "engine.outScale": { const n = Number(value); if (!isFinite(n)) return false; eng.tOutScale = cl(n, 0.05, 1); return true; }
@@ -800,6 +810,39 @@ const AVDSP = (function () {
   }
 
   /* ---- notes ---- */
+
+  /* C2 MONO: the per-channel held-note stack (16 channels x 16 keys). Fixed-size typed arrays
+     allocated in create(); every operation is allocation-free, so note handling stays clean. */
+  function monoPush(eng, mc, m) {
+    const base = mc * 16;
+    const n = eng.monoHeldN[mc];
+    for (let i = 0; i < n; i++) if (eng.monoHeld[base + i] === m) return;   /* re-press: no-op */
+    if (n >= 16) {
+      for (let i = 1; i < 16; i++) eng.monoHeld[base + i - 1] = eng.monoHeld[base + i];
+      eng.monoHeldN[mc] = 15;
+    }
+    const k = eng.monoHeldN[mc];
+    eng.monoHeld[base + k] = m;
+    eng.monoHeldN[mc] = k + 1;
+  }
+
+  function monoTop(eng, mc) {
+    const n = eng.monoHeldN[mc];
+    return n > 0 ? eng.monoHeld[mc * 16 + n - 1] : -1;
+  }
+
+  function monoDrop(eng, mc, m) {
+    const base = mc * 16;
+    const n = eng.monoHeldN[mc];
+    for (let i = n - 1; i >= 0; i--) {
+      if (eng.monoHeld[base + i] !== m) continue;
+      for (let j = i; j < n - 1; j++) eng.monoHeld[base + j] = eng.monoHeld[base + j + 1];
+      eng.monoHeldN[mc] = n - 1;
+      return true;
+    }
+    return false;
+  }
+
   function noteOn(eng, midi, gain, ch, opts) {
     const m = Number(midi);
     if (!isFinite(m)) return false;
@@ -822,8 +865,22 @@ const AVDSP = (function () {
     const vs = eng.voices;
     const nv = eng.maxVoices;
     let v = null;
+    /* (0) C2 MONO: one voice per channel, last-note priority. Every key still down lives on the
+       stack so a release can return to the previous key (noteOff); the newest voice on the
+       channel takes the new note through the ordinary steal/retrigger path below. */
+    if (eng.mono) {
+      monoPush(eng, mc, m);
+      let bestSeq = -1;
+      for (let i = 0; i < nv; i++) {
+        const w = vs[i];
+        if (w.state === 0) continue;
+        const wch = (w.state === 3) ? w.pendingCh : w.mpeCh;
+        if (wch !== mc) continue;
+        if (w.seq > bestSeq) { bestSeq = w.seq; v = w; }
+      }
+    }
     /* (1) same-midi voice (retrigger; includes a pending steal of the same note) */
-    for (let i = 0; i < nv; i++) {
+    if (!v) for (let i = 0; i < nv; i++) {
       const w = vs[i];
       if (w.state === 0) continue;
       const held = (w.state === 3) ? w.pendingMidi : w.noteMidi;
@@ -878,6 +935,30 @@ const AVDSP = (function () {
     let mc = Math.floor(Number(ch));
     if (!isFinite(mc) || mc < 0 || mc > 15) mc = 0;
     const vs = eng.voices;
+    /* C2 MONO: drop the key from the held stack first. Another key still down -> the voice
+       returns to that key (last-note priority, a 1.5 ms fade and retrigger through the same
+       pending path a steal uses). Nothing left down -> an ordinary release follows. */
+    if (eng.mono) {
+      monoDrop(eng, mc, m);
+      const top = monoTop(eng, mc);
+      if (top >= 0) {
+        for (let i = 0; i < eng.maxVoices; i++) {
+          const v = vs[i];
+          if (v.state === 0) continue;
+          const vm = (v.state === 3) ? v.pendingMidi : v.noteMidi;
+          const vc = (v.state === 3) ? v.pendingCh : v.mpeCh;
+          if (vm !== m || vc !== mc) continue;
+          v.state = 3;
+          v.pending = 1;
+          v.pendingMidi = top;
+          v.pendingVel = v.vel;
+          v.pendingStart = (eng.glide > 0) ? m : top;
+          v.pendingCh = mc;
+          v.fadeStep = -1 / eng.fadeOutSamples;
+          return;
+        }
+      }
+    }
     for (let i = 0; i < eng.maxVoices; i++) {
       const v = vs[i];
       if (v.state === 1 && v.noteMidi === m && v.mpeCh === mc) { releaseVoice(eng, v); return; }
@@ -890,6 +971,7 @@ const AVDSP = (function () {
 
   function allOff(eng) {
     const vs = eng.voices;
+    try { if (eng.monoHeldN) eng.monoHeldN.fill(0); } catch (e0) { /* pre-C2 shape */ }
     for (let i = 0; i < eng.maxVoices; i++) {
       const v = vs[i];
       if (v.state === 1 || v.state === 3) releaseVoice(eng, v);
@@ -1549,6 +1631,7 @@ const AVDSP = (function () {
     return {
       active: active, released: released, total: active + released,
       maxVoices: eng.maxVoices, sr: eng.sr, os: OS, stolen: eng.stolen, msBoot: eng.msBoot,
+      mono: eng.mono ? 1 : 0,
       uwt: (eng.userWt || []).filter(Boolean).length,
       fxChain: eng.fx.map(function (e0) { return e0.mod && e0.mod.PREFIX; }).join(" "),
       mpe: (eng.mpe ? { on: eng.mpe.on, bend: eng.mpe.bendRange, active: (typeof AVM !== "undefined" && AVM && typeof AVM.activeCount === "function") ? AVM.activeCount(eng.mpe) : 0 } : null),

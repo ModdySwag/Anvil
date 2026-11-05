@@ -25,16 +25,22 @@
    Launchers: avZoneShow(page) then avZoneSub(page, sub) when data-sub is set and avZoneSub exists
    (the parent wires avZoneSub in this same wave; the call is typeof-guarded).
 
+   C2 (inspector live): the kind keys write engine.kind through the synth card's own commit; the six
+   core pots ride av_knob on real paths; the two screens edit through the param funnel; the scope
+   paints the master tap; the oscillator screen draws the LIVE wavetable frame when the va engine
+   plays an installed table; the POLY/MONO pair writes env.mono and av_dsp's mono allocator keeps
+   one voice per channel (last-note priority, held-note stack).
+
    Public surface (classic-script globals, ONE namespace):
      avInspectorInit() -> bool · avInspectorProof() -> string · avInspectorLaunch(page, sub) -> bool ·
      avInspectorKindSet(k) -> bool · avInspectorKind() -> string · avInspectorSelect() -> object.
-     window.__avInspector = { version:"c1.0", init, kind, kindSet, select, launch, proof }.
+     window.__avInspector = { version:"c2.0", init, kind, kindSet, select, launch, proof }.
    Proof: ?avtest=1 ONLY, deferred via setTimeout(..., 0), id "av-inspectortest".
    ASCII source only (glyph-free); the dark screens are 220x84 canvases. */
 
 "use strict";
 
-const AV_INSPECTOR_VERSION = "c1.0";
+const AV_INSPECTOR_VERSION = "c2.0";
 
 /* the seven pinned kinds: button key -> engine enum (av_synth AV_SYNTH_KINDS vocabulary) */
 const AV_INSP_KINDS = [
@@ -206,7 +212,44 @@ function avInspectorClear(ctx, w, h, canvas) {
   return avInspectorScreenInk(canvas, "#3fd0c9");
 }
 
-/* the oscillator screen: two cycles of the live osc shape (C1 preview; drag-to-edit is C2) */
+/* the live wavetable frame for the va engine (C2): osc2.type = wt.userN resolves to the installed
+   slot; the WT card's own frame is used when that card is showing the same table, otherwise frame
+   0 of the table. Returns { samples, name, index, count } or null (the static shape stands). */
+function avInspectorWtFrame() {
+  try {
+    if (typeof avParams === "undefined" || !avParams) return null;
+    if (avInspectorKind() !== "wavetable") return null;
+    const mm = /^wt\.user(\d{1,2})$/.exec(String(avParams["osc2.type"] == null ? "" : avParams["osc2.type"]));
+    if (!mm) return null;
+    const slot = Number(mm[1]);
+    const rec = (typeof avWtState !== "undefined" && avWtState && avWtState.installed) ? avWtState.installed[slot] : null;
+    const frames = rec ? rec.data : null;
+    if (!frames || !frames.length) return null;
+    let idx = 0;
+    try {
+      const ui = (typeof avWtUiState !== "undefined") ? avWtUiState : null;
+      if (ui && ui.table && ui.table.frames === frames && isFinite(Number(ui.frame))) idx = Math.floor(Number(ui.frame));
+    } catch (e2) { idx = 0; }
+    if (idx < 0) idx = 0;
+    if (idx > frames.length - 1) idx = frames.length - 1;
+    const s = frames[idx];
+    if (!s || typeof s.length !== "number" || s.length < 8) return null;
+    return { samples: s, name: String(rec.name || ""), index: idx, count: frames.length };
+  } catch (e) { return null; }
+}
+
+/* what the oscillator screen is showing: the wavetable frame identity, else the shape name */
+function avInspectorWaveKey() {
+  const wt = avInspectorWtFrame();
+  if (wt) return "wt:" + wt.name + ":" + wt.index + ":" + wt.samples.length;
+  try {
+    if (typeof avParams !== "undefined" && avParams) return avInspectorWaveBase(avParams["osc1.type"]);
+  } catch (e) { /* the default stands */ }
+  return "saw";
+}
+
+/* the oscillator screen: two cycles of the live osc shape, or one cycle of the live wavetable
+   frame when the va engine plays an installed table (C2) */
 function avInspectorPaintWave() {
   try {
     const canvas = avInspectorEl("av-insp-wave");
@@ -215,13 +258,29 @@ function avInspectorPaintWave() {
     if (!ctx) return false;
     const w = canvas.width || 220, h = canvas.height || 84;
     const ink = avInspectorClear(ctx, w, h, canvas);
+    const wt = avInspectorWtFrame();
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    if (wt) {
+      /* one cycle, straight from the frame the engine is reading */
+      const s = wt.samples, n = s.length;
+      for (let i = 0; i <= 200; i++) {
+        const k = Math.min(n - 1, Math.round((i / 200) * (n - 1)));
+        const x = (i / 200) * w;
+        const y = h / 2 - Math.max(-1, Math.min(1, Number(s[k]) || 0)) * h * 0.36;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      canvas.setAttribute("data-shape", "wt");
+      canvas.setAttribute("data-wt", wt.name + " #" + (wt.index + 1) + "/" + wt.count);
+      avInspectorState.waveKey = avInspectorWaveKey();
+      return true;
+    }
     let shape = "saw";
     try {
       if (typeof avParams !== "undefined" && avParams) shape = avInspectorWaveBase(avParams["osc1.type"]);
     } catch (e) { shape = "saw"; }
-    ctx.strokeStyle = ink;
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
     if (shape === "noise") {
       /* a fixed pseudo-random band (deterministic — no RNG) */
       for (let i = 0; i < 96; i++) {
@@ -240,6 +299,7 @@ function avInspectorPaintWave() {
     }
     ctx.stroke();
     canvas.setAttribute("data-shape", shape);
+    try { canvas.removeAttribute("data-wt"); } catch (e3) { /* no attribute host */ }
     avInspectorState.waveKey = shape;
     return true;
   } catch (e) { return false; }
@@ -468,14 +528,13 @@ function avInspectorTick() {
     avInspectorPaintScope();
     avInspectorPaintEnv();
     avInspectorPaintFilter();
+    avInspectorPaintPoly();
     if (!avInspectorState.screensBound) {
       avInspectorState.screensBound = true;
       avInspectorBindScreen(avInspectorEl("av-insp-filter"), "filter");
       avInspectorBindScreen(avInspectorEl("av-insp-env"), "env");
     }
-    let shape = "saw";
-    try { if (typeof avParams !== "undefined" && avParams) shape = avInspectorWaveBase(avParams["osc1.type"]); } catch (e) { shape = "saw"; }
-    if (shape !== avInspectorState.waveKey) avInspectorPaintWave();
+    if (avInspectorWaveKey() !== avInspectorState.waveKey) avInspectorPaintWave();
     return true;
   } catch (e) { return false; }
 }
@@ -663,20 +722,57 @@ function avInspectorBindEdit() {
   return true;
 }
 
+/* ---------- the POLY/MONO pair (C2: a live voice-mode control, not a label) ----------
+   The pair rides `env.mono`, the engine's own flag since the C2 mono pass: av_dsp keeps ONE
+   voice per channel (last-note priority, a held-note stack) and the band's LCD reads the same
+   param. The pair is painted from the mirror on every tick, so a preset or the LCD always shows
+   the engine's actual mode, never a stale local copy. */
+
+function avInspectorPolyMode() {
+  try {
+    if (typeof avParams !== "undefined" && avParams && isFinite(Number(avParams["env.mono"]))) {
+      return Number(avParams["env.mono"]) ? "mono" : "poly";
+    }
+  } catch (e) { /* the default stands */ }
+  return avInspectorState.poly === "mono" ? "mono" : "poly";
+}
+
+function avInspectorPaintPoly() {
+  try {
+    const row = avInspectorEl("av-insp-poly");
+    if (!row || typeof row.querySelectorAll !== "function") return false;
+    const m = avInspectorPolyMode();
+    row.querySelectorAll(".av-pair-key[data-poly]").forEach(function (x) {
+      x.setAttribute("aria-checked", x.getAttribute("data-poly") === m ? "true" : "false");
+    });
+    avInspectorState.poly = m;
+    return true;
+  } catch (e) { return false; }
+}
+
+function avInspectorPolySet(mode) {
+  const m = String(mode) === "mono" ? "mono" : "poly";
+  const v = m === "mono" ? 1 : 0;
+  try { if (typeof avParams !== "undefined" && avParams) avParams["env.mono"] = v; } catch (e0) { /* no mirror */ }
+  if (typeof avApplyParam === "function") {
+    try { avApplyParam("env.mono", v, { from: "inspector" }); } catch (e) { /* the mirror already has it */ }
+  } else {
+    try { window.dispatchEvent(new CustomEvent("av-param", { detail: { path: "env.mono", value: v, from: "inspector" } })); } catch (e2) { /* no fan-out */ }
+  }
+  avInspectorState.poly = m;
+  avInspectorPaintPoly();
+  return true;
+}
+
 function avInspectorBindPoly() {
   const row = avInspectorEl("av-insp-poly");
   if (!row || typeof row.querySelectorAll !== "function") return false;
   row.querySelectorAll(".av-pair-key[data-poly]").forEach(function (b) {
     b.addEventListener("click", function () {
-      try {
-        const m = b.getAttribute("data-poly") === "mono" ? "mono" : "poly";
-        avInspectorState.poly = m;
-        row.querySelectorAll(".av-pair-key[data-poly]").forEach(function (x) {
-          x.setAttribute("aria-checked", x.getAttribute("data-poly") === m ? "true" : "false");
-        });
-      } catch (e) { /* the pair is a local readout in C1 */ }
+      try { avInspectorPolySet(b.getAttribute("data-poly")); } catch (e) { /* the pair never throws */ }
     });
   });
+  avInspectorPaintPoly();
   return true;
 }
 
@@ -775,7 +871,7 @@ function avInspectorSelect() {
       out.values[e.path] = avInspectorParam(e.path, e.opts.def);
     }
     const row = avInspectorEl("av-insp-poly");
-    out.poly = avInspectorState.poly === "mono" ? "mono" : "poly";
+    out.poly = avInspectorPolyMode();
     if (row) {
       const on = row.querySelector('.av-pair-key[aria-checked="true"]');
       if (on) out.poly = on.getAttribute("data-poly") === "mono" ? "mono" : "poly";

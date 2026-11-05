@@ -12,6 +12,12 @@
 //   K7 density: every page's box scrollHeight <= C1_RATIO x page height at 1440x900 AND 1280x800
 //      (C1 bound is 2.2 -- the 1.2 target is C3's page-fill work; the leg reports every ratio either way)
 //   K8 reachability: every chrome card sits in a real page and, on a paged page, inside a declared sub
+//   K15 the two screens are editable (drags write through the param funnel)
+//   K16 the kind keys are live: a key writes engine.kind, the synth select and the LCD follow
+//   K17 the six core pots are live: drags on CUTOFF and LEVEL write the real engine paths
+//   K18 POLY/MONO is a live voice mode: env.mono reaches the engine, mono keeps one voice per channel
+//   K19 the scope and LEVEL see the engine: a sounding note inks the scope, LEVEL scales the tap
+//   K20 the oscillator screen draws the live wavetable frame of an installed table (C2)
 //   K9 zero page errors through the whole run
 //   K10 the transport surface survives (play, stop, bpm, preset keys resolve)
 // K7's second width also proves the 1180 px inspector collapse path.
@@ -328,6 +334,182 @@ async function main() {
   })()`)).value || {};
   check('K15 the screens edit: a drag on the filter moves cutoff + reso, a drag on the envelope moves attack',
     k15.c1 !== k15.c0 && k15.r1 > 0.5 && k15.a1 !== k15.a0, JSON.stringify(k15));
+
+  /* K16 -- the kind keys are LIVE: a key writes engine.kind through the synth card's own commit */
+  const k16 = (await ev(`(async () => {
+    const click = (k) => { const b = document.querySelector('.av-kind-key[data-kind="' + k + '"]'); if (!b) return false; b.click(); return true; };
+    const read = () => ({
+      param: String((typeof avParams !== 'undefined' && avParams['engine.kind']) || ''),
+      sel: (document.getElementById('av-synth-engine') || {}).value || '',
+      lcd: (document.getElementById('av-lcd-engine') || {}).textContent || '',
+      lit: Array.from(document.querySelectorAll('#av-insp-kinds .av-kind-key')).filter(b => b.getAttribute('aria-checked') === 'true').map(b => b.getAttribute('data-kind'))
+    });
+    const open = read();
+    const okClick = click('fm');
+    await new Promise(r => setTimeout(r, 400));
+    const fm = read();
+    click('wavetable');
+    await new Promise(r => setTimeout(r, 400));
+    const back = read();
+    return { okClick, open, fm, back };
+  })()`)).value || {};
+  check('K16 kind keys drive the engine kind (param + synth select + LCD + lit key)',
+    k16.okClick === true && k16.fm.param === 'fm' && k16.fm.sel === 'fm' && /^FM/.test(k16.fm.lcd)
+    && k16.fm.lit.length === 1 && k16.fm.lit[0] === 'fm' && k16.back.param === 'va' && k16.back.sel === 'va',
+    JSON.stringify(k16));
+
+  /* K17 -- the six core pots are LIVE: a real drag on CUTOFF and LEVEL writes the real paths */
+  const k17 = (await ev(`(async () => {
+    const drag = (id, dy) => {
+      const mount = document.getElementById(id);
+      const el = mount ? mount.querySelector('.av-knob[data-knob]') : null;
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      const x = r.left + r.width / 2, y = r.top + r.height / 2;
+      const o = (yy) => ({ bubbles: true, pointerId: 21, clientX: x, clientY: yy, button: 0, buttons: 1 });
+      el.dispatchEvent(new PointerEvent('pointerdown', o(y)));
+      for (let i = 1; i <= 8; i++) el.dispatchEvent(new PointerEvent('pointermove', o(y + (dy * i) / 8)));
+      el.dispatchEvent(new PointerEvent('pointerup', o(y + dy)));
+      return el.getAttribute('data-knob');
+    };
+    const c0 = Number(avParams['filter.cutoff']);
+    const l0 = Number(avParams['engine.outScale']);
+    const pathC = drag('av-insp-cutoff', -60);
+    const pathL = drag('av-insp-level', -40);
+    let c1 = c0, l1 = l0;
+    for (let i = 0; i < 40 && (c1 === c0 || l1 === l0); i++) {
+      await new Promise(r => setTimeout(r, 100));
+      c1 = Number(avParams['filter.cutoff']); l1 = Number(avParams['engine.outScale']);
+    }
+    const num = (document.querySelector('#av-insp-cutoff .av-insp-num') || {}).textContent || '';
+    return { pathC, pathL, c0, c1, l0, l1, num };
+  })()`)).value || {};
+  check('K17 core pots are live: drags on CUTOFF and LEVEL write filter.cutoff and engine.outScale',
+    k17.pathC === 'filter.cutoff' && k17.pathL === 'engine.outScale'
+    && isFinite(k17.c1) && k17.c1 !== k17.c0 && isFinite(k17.l1) && k17.l1 !== k17.l0,
+    JSON.stringify(k17));
+
+  /* K18 -- the POLY/MONO pair is a real control: env.mono lands on the engine, which keeps one
+     voice per channel (two held notes -> active 1 in mono, 2 in poly) */
+  const k18 = (await ev(`(async () => {
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const h = await avEngineEnsure();
+    if (!h) return { engine: false };
+    const stats = async () => { try { return (await h.stats()) || {}; } catch (e) { return {}; } };
+    const key = (m) => { const b = document.querySelector('.av-pair-key[data-poly="' + m + '"]'); if (!b) return false; b.click(); return true; };
+    h.allOff(); await sleep(250);
+    key('poly'); await sleep(150);
+    const envPoly = Number(avParams['env.mono']);
+    h.noteOn(60, 0.8); h.noteOn(64, 0.8);
+    const poly = await stats();
+    h.allOff(); await sleep(400);
+    const clicked = key('mono'); await sleep(200);
+    const envMono = Number(avParams['env.mono']);
+    let lcd = '', lit = '';
+    for (let i = 0; i < 25; i++) {
+      lcd = (document.getElementById('av-lcd-poly') || {}).textContent || '';
+      const on = document.querySelector('#av-insp-poly .av-pair-key[aria-checked="true"]');
+      lit = on && on.getAttribute ? on.getAttribute('data-poly') : '';
+      if (/^MONO/.test(lcd) && lit === 'mono') break;
+      await sleep(100);
+    }
+    h.noteOn(60, 0.8); h.noteOn(64, 0.8);
+    const mono2 = await stats();
+    h.noteOff(64); await sleep(400);
+    const back1 = await stats();
+    h.noteOff(60); await sleep(500);
+    const rel = await stats();
+    h.allOff(); await sleep(300);
+    key('poly'); await sleep(200);
+    const restored = Number(avParams['env.mono']);
+    return { engine: true, envPoly, poly: poly.active, statsMono: mono2.mono, mono2: mono2.active,
+             clicked, envMono, lcd, lit, back1: back1.active, rel: rel.active, restored };
+  })()`)).value || {};
+  check('K18 POLY/MONO is a live voice mode (mono keeps one voice per channel, held notes return)',
+    k18.engine === true && k18.envPoly === 0 && k18.poly === 2 && k18.clicked === true && k18.envMono === 1
+    && /^MONO/.test(k18.lcd) && k18.lit === 'mono' && k18.statsMono === 1 && k18.mono2 === 1
+    && k18.back1 === 1 && k18.rel === 0 && k18.restored === 0,
+    JSON.stringify(k18));
+
+  /* K19 -- the scope and the LEVEL pot see the live engine: a note inks the scope, LEVEL scales it */
+  const k19 = (await ev(`(async () => {
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const h = await avEngineEnsure();
+    if (!h) return { engine: false };
+    const read = () => {
+      const c = document.getElementById('av-insp-scope');
+      if (!c) return { ink: -1, spread: -1 };
+      const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      let ink = 0, spread = 0;
+      /* the glass is #0a0c0f and the grid is 7% white; the trace is the accent — count
+         pixels whose luminance clears 60 and measure how far they leave the centre line */
+      for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) {
+        const i = (y * c.width + x) * 4;
+        const lum = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        if (d[i + 3] > 8 && lum > 60) { ink++; const s = Math.abs(y - c.height / 2); if (s > spread) spread = s; }
+      }
+      return { ink: ink, spread: spread };
+    };
+    const rms = () => {
+      const a = avTap && avTap.analyserL;
+      if (!a) return -1;
+      const b = new Uint8Array(a.fftSize);
+      a.getByteTimeDomainData(b);
+      let s = 0; for (let i = 0; i < b.length; i++) { const v = (b[i] - 128) / 128; s += v * v; }
+      return Math.sqrt(s / b.length);
+    };
+    h.allOff(); await sleep(700);
+    const silent = read(), r0 = rms();
+    avApplyParam('engine.outScale', 1);
+    h.noteOn(57, 0.9); await sleep(900);
+    const loud = read(), r1 = rms();
+    avApplyParam('engine.outScale', 0.05); await sleep(900);
+    const r2 = rms();
+    h.allOff(); await sleep(300);
+    avApplyParam('engine.outScale', 0.25);
+    return { engine: true, silent, loud, r0, r1, r2 };
+  })()`)).value || {};
+  check('K19 scope + LEVEL are live: a sounding note inks the scope and the LEVEL pot scales the master tap',
+    k19.engine === true && k19.loud.spread > k19.silent.spread + 2 && k19.loud.ink > k19.silent.ink
+    && k19.r1 > Math.max(0.004, k19.r0 * 4) && k19.r2 < k19.r1 / 1.5,
+    JSON.stringify(k19));
+
+  /* K20 -- the oscillator screen draws the LIVE wavetable frame (C2): install a user table, point
+     osc2 at it, and the screen reports the table + frame it is drawing */
+  const k20 = (await ev(`(async () => {
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const h = await avEngineEnsure();
+    if (!h || !window.__avWt) return { engine: false };
+    const el = document.querySelector('#av-insp-wave canvas');
+    const prevType = String(avParams['osc2.type'] == null ? '' : avParams['osc2.type']);
+    const snap = __avWt.snap();
+    if (!el || !snap || !snap.freeSlots || !snap.freeSlots.length) return { engine: true, noSlot: true };
+    const slot = snap.freeSlots[0];
+    const t = __avWt.newTable('C2 RIG TABLE');
+    const ins = __avWt.install(t, slot);
+    const before = { shape: el.getAttribute('data-shape'), wt: el.getAttribute('data-wt') || '' };
+    avApplyParam('osc2.type', 'wt.user' + slot);
+    avApplyParam('osc2.level', 0.7);
+    avApplyParam('engine.kind', 'va');
+    await sleep(800);
+    const after = { shape: el.getAttribute('data-shape'), wt: el.getAttribute('data-wt') || '' };
+    let ink = 0;
+    const cv = el;
+    if (cv) {
+      const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+        if (lum > 60) ink++;
+      }
+    }
+    avApplyParam('osc2.type', prevType || 'saw');
+    avApplyParam('osc2.level', 0.5);
+    return { engine: true, ok: ins && ins.ok === true, slot: slot, before: before, after: after, ink: ink };
+  })()`)).value || {};
+  check('K20 the oscillator screen draws the live wavetable frame of the installed table',
+    k20.engine === true && k20.ok === true && k20.after.shape === 'wt'
+    && /^C2 RIG TABLE #1\//.test(k20.after.wt) && k20.ink > 200,
+    JSON.stringify(k20));
 
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));

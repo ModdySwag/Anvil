@@ -417,7 +417,7 @@ function avWtInstall(t, slot, frameIdx) {
     try { r = avEngineWt(s, name, mips); }
     catch (e) { avWtState.lastError = "send-threw"; return { ok: false, slot: s, error: "send-threw" }; }
     if (r !== true) { avWtState.lastError = "engine-refused"; return { ok: false, slot: s, error: "engine-refused" }; }
-    avWtState.installed[s] = { slot: s, name: name, at: Date.now(), frames: t.frames.length };
+    avWtState.installed[s] = { slot: s, name: name, at: Date.now(), frames: t.frames.length, data: t.frames };
     avWtState.lastError = null;
     return { ok: true, slot: s };
   } catch (e) {
