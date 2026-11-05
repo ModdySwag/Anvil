@@ -23,10 +23,11 @@ Pins swept across 23 files.
    smoke 81/81, fit 49/49. The owner still has to eyeball it — size/feel is his call.
 1. ~~hub reload/receipt legs~~ **DONE** — the receipts tier is unioned now (LS summaries always join
    the read); hub **68/68** with the pin. No further work.
-2. **Full battery + bench** (32 suites) has NOT been run since the chassis landed — only the five
-   rigs below. Several suites were only string-patched for the zone renames; they must all be run
-   and triaged for real BEFORE C2 opens.
-   Green at this close: chassis 11/11 · smoke 81/81 · cockpit 21/21 · fit 49/49 · hub 68/68.
+2. **Battery:** every red from the first battery is CLOSED (`b061c20`): import, knob_feel, m1, sample,
+   tune were rig-side (hidden-sub measures, an out-scoped duplicate master knob, old zone names) plus
+   one real app bug — the help key called a non-existent `avHelpToggle` (the opener is `avHelpOpen`).
+   A full battery re-run is IN FLIGHT to prove the rest of the tree; read `verify/battery_c1.log`
+   (`BATTERY-DONE` marker) and triage anything red before C2 opens.
 3. **Owner eye pass** on the live app: band balance, inspector density, tab look, dock wheels.
 4. **C2** inspector live (screens drag-to-edit, pot paths double-checked against the schema),
    **C3** page fills to the density gate (sound 1.53 · effects 1.86 · mix 2.14 · system 1.91 at
