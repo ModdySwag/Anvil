@@ -1,6 +1,47 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — the C programme (FSVR chassis rework), C1 landed 2026-11-06
+## SAVE 2026-11-06 08:22 — C1 IS CLOSED; C2 display work is IN FLIGHT in a SECOND live session
+
+Hermes died mid-wave at ~06:43 during the FSVR C1 rebuild. Resumed, finished C1, closed it. **A SECOND
+Hermes session has been alive on this same tree the whole time** (`8a7837c09cd9` is this one, the other
+is `da4ccc552971`) — it fixed the receipts bug, ran the battery, wrote the LCD display commit 047e6fc and
+commits b061c20/af5c8c1/1a437f4. Assume a co-writer: re-read a file before editing it, never hold a
+stale mental copy, and expect `index.html`/pins to move under a running suite.
+
+**STATE: C1 GREEN AND FROZEN at `cd12b6936eb1` (pins 19 files, all == live).** 29 suites run; every one
+green. Two ran red inside the loaded battery and green solo immediately after, on identical bytes:
+comp (engine ctx came up 44.1 kHz — the fake-input device under load; COMP PASSED solo) and seq (the
+recorded swing knife-edge, −15 ms on a ±20±6 window; 41/41 solo). Bench exit=0 (light 64 / fat 16,
+loaded class), alias exit=0 complete (VA −? / WT worst −91.2 dBc), stress asserts-not-met
+(underrunDeltas 78, drains PASS, 0 page errors, heap +0.9 MB) = the load class, quiet re-run owed.
+
+Closed on the way through (all committed, all proven):
+- receipts: `avLibReceiptListRun` union of the LS tier (mixed-tier boot read 0 after reload — the two hub
+  reload legs). hub 68/68.
+- s5 help: `#av-help` carried TWO click listeners (band create + av_help init) so every click toggled
+  twice. Marker `data-av-help-bound` set at band creation; s5 36/36.
+- hidden-sub-tab rig class: sample / m1 / tune / import measured 0 x 0 boxes and stale zone strings
+  after the C1 move. Rig-side reveal (`avZoneShow` + `avZoneSub`) + `sound`/`browse` zone names.
+- knob_feel: the master-tap witness now polls to the glide settle instead of a fixed 320 ms read.
+
+### OPEN, in order
+1. **C2 (inspector live) is mid-flight** — `src/av_inspector.js` + `src/styles.css` are the other
+   session's; read them before touching. LCD/CPU/voices readout already landed (047e6fc).
+2. Quiet re-runs owed: `cdp_stress` (and a fresh bench in a quiet window) once one session is alone.
+3. **Owner eye pass** on the live app: band balance, inspector density, tab look, dock wheels.
+4. C3 page fills to the density gate, C4 control language, C5 disclosure, C6 shots/pins/battery/
+   installer/deploy (v1.15.0 assets, README shots and the downloads card all refresh at C6).
+
+### Traps this session paid for
+- **Two sessions, one tree**: pins and `index.html` move mid-suite → every freeze leg lies. Countermeasure
+  that works: copy `index.html` to `_rigcheck.html` IN THE REPO ROOT (siblings must resolve; a copy under
+  `cache/scratch/` fails every page with ERR_FILE_NOT_FOUND) and run rigs against it with `--sha`.
+  Re-pin only in a quiet window.
+- A duplicated control binding is invisible to a click test that only reads the final state — audit
+  `DOMDebugger.getEventListeners` when a button "does nothing" but its function works when called.
+- `avKnobCommit` glides on the audio clock: any gain witness must poll, never sleep a fixed time.
+
+## (superseded) RESUME HERE — the C programme (FSVR chassis rework), C1 landed 2026-11-06
 
 Owner asked for Anvil to become a cohesive integrated program like **FSVR** (musica.studio's
 FS1R rebuild), with his own features intact and a layout that makes professional sense. Plan of
