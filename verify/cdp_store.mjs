@@ -403,6 +403,11 @@ async function main() {
   check('storage chip honest to the reported backend (' + (be.backend || '?') + ')',
     expMode ? expMode.test(be.mode) : true, JSON.stringify(be));
 
+  /* C1 chassis: the store card lives on the BROWSE page's PACKS sub — open both, or its
+     busy affordance is applied to a display:none row and never painted */
+  await ev(`(() => { if (typeof avZoneShow === 'function') avZoneShow('browse', { source: 'rig' }); if (typeof avZoneSub === 'function') avZoneSub('browse', 'packs', { silent: true }); return 1; })()`);
+  await sleep(200);
+
   /* ── 4. install — real click when a card is renderable (preferred), else the card's own
      install() verb (the entries seam blocks the click; the core path is identical) ── */
   const instSel = '#av-store-host [data-pack="rig-alpha"] [data-act="install"]';

@@ -26,8 +26,9 @@ Pins swept across 23 files.
 2. **Battery:** every red from the first battery is CLOSED (`b061c20`): import, knob_feel, m1, sample,
    tune were rig-side (hidden-sub measures, an out-scoped duplicate master knob, old zone names) plus
    one real app bug — the help key called a non-existent `avHelpToggle` (the opener is `avHelpOpen`).
-   A full battery re-run is IN FLIGHT to prove the rest of the tree; read `verify/battery_c1.log`
-   (`BATTERY-DONE` marker) and triage anything red before C2 opens.
+   Full battery re-run: **28 suites, all green** (`verify/battery_c1.log`, BATTERY-DONE). The one
+   late red (`cdp_store` busy-affordance) was the same hidden-sub class — the rig never navigated and
+   the card riffled a display:none row. Nothing is red.
 3. **Owner eye pass** on the live app: band balance, inspector density, tab look, dock wheels.
 4. **C2** inspector live (screens drag-to-edit, pot paths double-checked against the schema),
    **C3** page fills to the density gate (sound 1.53 · effects 1.86 · mix 2.14 · system 1.91 at
