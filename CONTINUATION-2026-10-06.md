@@ -17,13 +17,12 @@ Gates green at the checkpoint: **cdp_chassis 11/11 (NEW) · smoke 81/81 · cockp
 Pins swept across 23 files.
 
 ### OPEN, in order
-1. **hub 65/68** — the two reload/receipt legs. Cause found: the receipts tier is chosen per boot;
-   the run wrote to `ls`, the reload boot read `idb` and saw 0 (mixed-tier boot, not lost data —
-   a probe proved idb persists fine). Fix = union the tiers in `avLibReceiptListRun` (read the ls
-   tier too and merge by id, cap 20), or pin the tier per session in LS. Then re-run hub.
-2. **Full battery + bench** (32 suites) has NOT been run since the chassis landed — only the four
-   rigs above. Several suites were only string-patched for the zone renames; they must all be run
-   and triaged for real.
+1. ~~hub reload/receipt legs~~ **DONE** — the receipts tier is unioned now (LS summaries always join
+   the read); hub **68/68** with the pin. No further work.
+2. **Full battery + bench** (32 suites) has NOT been run since the chassis landed — only the five
+   rigs below. Several suites were only string-patched for the zone renames; they must all be run
+   and triaged for real BEFORE C2 opens.
+   Green at this close: chassis 11/11 · smoke 81/81 · cockpit 21/21 · fit 49/49 · hub 68/68.
 3. **Owner eye pass** on the live app: band balance, inspector density, tab look, dock wheels.
 4. **C2** inspector live (screens drag-to-edit, pot paths double-checked against the schema),
    **C3** page fills to the density gate (sound 1.53 · effects 1.86 · mix 2.14 · system 1.91 at
