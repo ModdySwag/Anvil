@@ -67,7 +67,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
    authoring. A valid --sha <hex> becomes the run-time expectation while the constant is null,
    and echoes/overrides the constant once pinned (cdp_hub semantics, verbatim). The rig never
    loosens the before === after check. */
-const EXPECT_SHA = '5a5268222d5a3bdd8654995209990aa3c45d9a8d40a4437fe377f9eeed0a8257';
+const EXPECT_SHA = '4d1c8d3d9367b5ef5e35cb5b79946e8933c2e86dc5bcd4a5f0a2376fb6039cae';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -341,8 +341,8 @@ async function main() {
              zone: zone ? zone.getAttribute('data-zone') : null,
              ready: document.documentElement.getAttribute('data-av-ready') === '1' };
   })()`)).value || {};
-  check('T1 boot: #av-tune card mounted into #av-tune-host (host children > 0) in the synth zone',
-    ready === true && t1R.ready === true && t1R.card === true && t1R.host === true && t1R.children > 0 && t1R.zone === 'synth',
+  check('T1 boot: #av-tune card mounted into #av-tune-host (host children > 0) in the sound zone',
+    ready === true && t1R.ready === true && t1R.card === true && t1R.host === true && t1R.children > 0 && t1R.zone === 'sound',
     JSON.stringify(t1R));
 
   /* ---- T2. boot: the pinned ids + the UI facade + zero page errors at boot ---- */
@@ -910,6 +910,14 @@ async function main() {
   await send('Page.navigate', { url });
   const ready14 = await waitReady();
   note('reloaded (avtest) - ready=' + ready14);
+  /* C1 chassis: the pane the library rows live in is behind SOUND > TUNING — open it so the rows paint */
+  const rev14 = await ev(`(() => {
+    const z = (typeof avZoneShow === 'function') ? avZoneShow('sound', { source: 'rig' }) : false;
+    const s = (typeof avZoneSub === 'function') ? avZoneSub('sound', 'tune', { silent: true }) : false;
+    return { z: z, s: s };
+  })()`);
+  note('T14 reveal: ' + JSON.stringify(rev14.value));
+  await sleep(300);
   const t14 = await waitFor(`(async () => {
     try {
       let pref = null;

@@ -3106,8 +3106,175 @@ body { --dock-h: 132px; }
   .av-band-grp[data-grp="identity"] .av-word { display: none; }
 }
 @media (max-width: 880px) {
-  #av-vol-pot, #av-vol-val { display: none; }
+  #av-vol-pot, #av-vol-val, .av-lcd-steps { display: none; }
   #av-potmode { display: none; }
   #av-panic { display: none; }
   #av-lcd { max-width: 150px; }
+}
+
+/* ===========================================================================
+   C1b — THE DISPLAY (program-specific instrument LCD: bezel, dot glass, fields
+   that read the engine, and the pack/preset steppers at its side)
+   =========================================================================== */
+#av-lcd-bezel {
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+  padding: 5px 5px 5px 7px;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #15191c 0%, #0b0e10 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -2px 6px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.05);
+  min-width: 0;
+}
+#av-lcd-bezel #av-lcd {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background-color: #b9e6c6;
+  background-image: radial-gradient(circle at 50% 50%, rgba(24,44,30,.34) 34%, rgba(24,44,30,0) 36%);
+  background-size: 7px 7px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.55), inset 0 0 10px rgba(26,60,36,.42);
+  overflow: hidden;
+}
+#av-lcd-bezel .av-lcd-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 15px;
+  font-family: "Consolas", "DejaVu Sans Mono", monospace;
+  font-size: 10.5px;
+  line-height: 15px;
+  letter-spacing: .09em;
+  color: #16281c;
+  text-transform: uppercase;
+  text-shadow: 0 0 1px rgba(22,40,28,.55);
+  white-space: nowrap;
+  overflow: hidden;
+}
+#av-lcd-bezel .av-lcd-slot { overflow: hidden; text-overflow: ellipsis; }
+#av-lcd-bezel .av-lcd-right { margin-left: auto; text-align: right; }
+#av-lcd-bezel .av-lcd-w5 { flex: 0 0 5ch; }
+#av-lcd-bezel .av-lcd-w7 { flex: 0 0 7ch; }
+#av-lcd-bezel .av-lcd-w10 { flex: 0 0 10ch; }
+#av-lcd-bezel .av-lcd-w13 { flex: 0 0 13ch; }
+#av-lcd-bezel .av-lcd-w15 { flex: 1 1 auto; min-width: 0; }
+#av-lcd-bezel select.av-bank-pack,
+#av-lcd-bezel select.av-bank-preset {
+  width: 100%;
+  max-width: 100%;
+  background: transparent;
+  border: 0;
+  color: #16281c;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: uppercase;
+  padding: 0;
+  height: 15px;
+  appearance: none;
+  cursor: pointer;
+}
+#av-lcd-bezel select:focus-visible { outline: 1px solid #16281c; outline-offset: 1px; }
+#av-lcd-bezel .av-lcd-edited {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: #16281c;
+  box-shadow: 0 0 4px rgba(22,40,28,.8);
+}
+#av-lcd-bezel .avc-bpm {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: #16281c;
+  cursor: ns-resize;
+}
+#av-lcd-bezel .avc-bpm-label, #av-lcd-bezel .avc-bpm-lab { opacity: .62; }
+#av-lcd-bezel #avc-bpm-val { font-weight: 700; }
+.av-lcd-steps { display: flex; flex-direction: column; gap: 3px; justify-content: center; }
+.av-lcd-step {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #2b343a;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #39434a 0%, #232a2f 100%);
+  color: #cfe6d6;
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.av-lcd-step:hover { border-color: var(--teal); color: #fff; }
+.av-lcd-step:active { transform: translateY(1px); }
+.av-lcd-step:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
+@media (max-width: 1020px) { .av-lcd-steps { display: none; } }
+
+/* C1b fixes: the display needs a real basis inside the band, and it must FIT the band height
+   (the band clips, so a stepper below its floor is unclickable). */
+.av-band-grp[data-grp="identity"] { flex: 1 1 auto; min-width: 0; }
+#av-lcd-bezel {
+  flex: 1 1 300px;
+  min-width: 190px;
+  max-width: 460px;
+  align-self: center;
+  height: 56px;
+  padding: 3px 4px 3px 6px;
+  gap: 4px;
+}
+#av-lcd-bezel #av-lcd { padding: 2px 5px; gap: 1px; }
+#av-lcd-bezel .av-lcd-row { height: 13px; line-height: 13px; font-size: 10px; }
+#av-lcd-bezel select.av-bank-pack, #av-lcd-bezel select.av-bank-preset { height: 13px; }
+.av-lcd-steps { gap: 2px; }
+.av-lcd-step { width: 17px; height: 17px; font-size: 8px; }
+/* C1b: the identity group is ONE row - a zero basis plus wrap stacked the display under the brand */
+.av-band-grp[data-grp="identity"] { flex: 1 1 420px; min-width: 0; flex-wrap: nowrap; align-items: center; }
+#av-lcd-bezel { max-width: none; }
+/* C1b: a knob halo overlaps the display's right edge - the bezel must win the hit test */
+#av-lcd-bezel { position: relative; z-index: 3; margin-right: 6px; }
+.av-band-grp[data-grp="identity"] { flex: 0 1 380px; }
+.av-band-grp[data-grp="pots"] { flex: 0 0 auto; }
+/* C1b: the display must END before the pots begin (measured 13px overlap) */
+.av-band-grp[data-grp="identity"] { flex: 0 1 340px; }
+.av-lcd-steps { position: relative; z-index: 4; }
+/* C1b: the whole identity group must sit above the pots group (a late sibling's knob wins otherwise) */
+.av-band-grp[data-grp="identity"] { position: relative; z-index: 6; }
+/* C1b: fixed display width - a flexed one grows under the pots' hit area (measured) */
+#av-lcd-bezel { flex: 0 0 150px; width: 150px; min-width: 150px; max-width: 150px; }
+/* the steppers stand at the display's LEFT edge (the pots own the right) */
+#av-lcd-bezel { padding: 3px 6px 3px 4px; }
+/* the volume pot's block is wider than its slot and paints over the display: order it explicitly */
+.av-band-pot, .av-band-mount { position: relative; z-index: 1; }
+#av-lcd-bezel { z-index: 30; }
+#av-lcd-bezel .av-lcd-steps { z-index: 31; }
+/* the identity group was shrinking to min-content (16px) and its children spilled under the pots:
+   it may grow, never shrink; the pots shrink instead */
+.av-band-grp[data-grp="identity"] { flex: 1 0 340px; }
+.av-band-grp[data-grp="pots"] { flex: 0 1 auto; min-width: 0; }
+/* C1b narrow: the display is a wide-window luxury - it sheds before the band can overflow */
+@media (max-width: 1100px) {
+  .av-band-grp[data-grp="identity"] { flex: 0 1 200px; }
+  #av-vol-pot, #av-vol-val, .av-lcd-steps { display: none; }
+  #av-lcd-bezel { flex: 0 0 118px; width: 118px; min-width: 118px; max-width: 118px; }
+}
+@media (max-width: 1000px) {
+  #av-lcd-bezel .av-lcd-row:nth-child(1) { display: none; }
+}
+@media (max-width: 900px) {
+  .av-band-grp[data-grp="identity"] { flex: 0 1 150px; }
+  #av-lcd-bezel { flex: 0 0 96px; width: 96px; min-width: 96px; max-width: 96px; }
+  #av-lcd-bezel .av-lcd-row:nth-child(3) { display: none; }
+  #av-panic, #av-learn { display: none; }
 }

@@ -109,7 +109,7 @@ async function main() {
   check('boot: data-av-ready flips and the app is wired', ready);
   if (!ready) { console.error('APP NOT READY'); process.exit(1); }
 
-  const setMaster = async (v) => { await ev(`avKnobCommit(document.querySelector('.av-knob[data-knob="master"]'), ${v})`); await sleep(260); };
+  const setMaster = async (v) => { await ev(`avKnobCommit(document.querySelector('#av-levels .av-knob[data-knob="master"]'), ${v})`); await sleep(260); };
   const master = async () => (await ev('avState.master')).value;
   const knobRect = async (sel) => (await ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); if (!el) return null; const b = el.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2, w: b.width, h: b.height, cx: Math.round(b.left + b.width / 2), cy: Math.round(b.top + b.height / 2) }; })()`)).value;
 
@@ -123,7 +123,7 @@ async function main() {
 
   /* ---------- 1. mount + first paint ---------- */
   const mount = await ev(`(() => {
-    const el = document.querySelector('.av-knob[data-knob="master"]');
+    const el = document.querySelector('#av-levels .av-knob[data-knob="master"]');
     const k = document.querySelector('.av-knob[data-knob="keys"]');
     if (!el || !k) return null;
     const w = el.closest('.av-knob-wrap');
@@ -144,7 +144,7 @@ async function main() {
 
   /* ---------- 2. the travel curve: fine at the start, faster the further you go --------- */
   await setMaster(0.05);
-  const from = await knobRect('.av-knob[data-knob="master"]');
+  const from = await knobRect('#av-levels .av-knob[data-knob="master"]');
   await drag({ x: from.x, y: from.y }, [[0, -5], [0, -5], [0, -5], [0, -5]]);   /* 20 px up */
   await sleep(420);
   const dSmall = (await master()) - 0.05;
@@ -158,7 +158,7 @@ async function main() {
 
   /* ---------- 3. twisting the rim works too -------------------------------------------- */
   await setMaster(0.05);
-  const c = await knobRect('.av-knob[data-knob="master"]');
+  const c = await knobRect('#av-levels .av-knob[data-knob="master"]');
   const R = 21;                                                    /* on the rim of the 62 px cap, not past it */
   await mouse('mousePressed', c.x + R, c.y);                       /* 3 o'clock */
   for (let i = 1; i <= 6; i++) {
@@ -173,7 +173,7 @@ async function main() {
 
   /* ---------- 4. the weight: it lags, then settles dead on the target ------------------- */
   await setMaster(0.05);
-  const f2 = await knobRect('.av-knob[data-knob="master"]');
+  const f2 = await knobRect('#av-levels .av-knob[data-knob="master"]');
   await mouse('mousePressed', f2.x, f2.y);
   let yy = f2.y;
   for (let i = 0; i < 6; i++) { yy -= 26; await mouse('mouseMoved', f2.x, yy); }   /* fast: no sleeps */
@@ -190,18 +190,18 @@ async function main() {
 
   /* ---------- 5. the mechanical stops + a drag is not a click --------------------------- */
   await setMaster(0.05);
-  const f3 = await knobRect('.av-knob[data-knob="master"]');
+  const f3 = await knobRect('#av-levels .av-knob[data-knob="master"]');
   await mouse('mousePressed', f3.x, f3.y);
   let y3 = f3.y;
   for (let i = 0; i < 8; i++) { y3 -= 120; await mouse('mouseMoved', f3.x, y3); await sleep(12); }
-  const stopSeen = (await ev(`document.querySelector('.av-knob[data-knob="master"]').classList.contains('at-stop')`)).value;
+  const stopSeen = (await ev(`document.querySelector('#av-levels .av-knob[data-knob="master"]').classList.contains('at-stop')`)).value;
   await mouse('mouseReleased', f3.x, y3);
   await sleep(420);
   const top1 = await master();
   check('it stops dead at the maximum', top1 === 1.2, `value ${top1} (max 1.2), stop felt: ${stopSeen}`);
   check('the stop does not add a phantom step after the drag', top1 === 1.2, `value stayed ${top1}`);
   await setMaster(0.05);
-  const f4 = await knobRect('.av-knob[data-knob="master"]');
+  const f4 = await knobRect('#av-levels .av-knob[data-knob="master"]');
   await mouse('mousePressed', f4.x, f4.y);
   let y4 = f4.y;
   for (let i = 0; i < 8; i++) { y4 += 120; await mouse('mouseMoved', f4.x, y4); await sleep(12); }
@@ -211,7 +211,7 @@ async function main() {
 
   /* ---------- 6. the rest of the pointer contract: click / wheel / keys / reset ---------- */
   await setMaster(0.5);
-  const c2 = await knobRect('.av-knob[data-knob="master"]');
+  const c2 = await knobRect('#av-levels .av-knob[data-knob="master"]');
   await mouse('mousePressed', c2.x, c2.y);
   await mouse('mouseReleased', c2.x, c2.y);
   await sleep(140);
@@ -227,7 +227,7 @@ async function main() {
   const wheelDown = await master();
   check('wheel steps too (down = down)', wheelDown === 0.49, `${shiftClick} -> ${wheelDown}`);
   const keysR = await ev(`(() => {
-    const el = document.querySelector('.av-knob[data-knob="master"]');
+    const el = document.querySelector('#av-levels .av-knob[data-knob="master"]');
     const kd = (key) => el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
     el.focus(); kd('ArrowUp'); const up = avState.master;
     kd('End'); const end = avState.master;
@@ -237,7 +237,7 @@ async function main() {
   const kv = keysR.value || {};
   check('arrow keys adjust, End/Home jump to the stops', kv.up === 0.5 && kv.end === 1.2 && kv.home === 0, JSON.stringify(kv));
   const dblR = await ev(`(() => {
-    const el = document.querySelector('.av-knob[data-knob="master"]');
+    const el = document.querySelector('#av-levels .av-knob[data-knob="master"]');
     el.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, cancelable: true }));
     return avState.master;
   })()`);
@@ -248,7 +248,7 @@ async function main() {
     const k = document.querySelector('.av-knob[data-knob="keys"]');
     avKnobCommit(k, 0.9);
     const a = { keys: avState.keysVol, master: avState.master, keysTxt: (document.querySelector('[data-kval="keys"]') || {}).textContent };
-    avKnobCommit(document.querySelector('.av-knob[data-knob="master"]'), 0.66);
+    avKnobCommit(document.querySelector('#av-levels .av-knob[data-knob="master"]'), 0.66);
     return { keys: a.keys, masterAfterKeys: a.master, keysTxt: a.keysTxt, masterTxt: (document.querySelector('[data-kval="master"]') || {}).textContent };
   })()`);
   const bv = bothR.value || {};
@@ -258,7 +258,7 @@ async function main() {
   const gR = await ev(`(async () => {
     const c = new AudioContext(); void c.destination;
     await c.resume();
-    avKnobCommit(document.querySelector('.av-knob[data-knob="master"]'), 0.9);
+    avKnobCommit(document.querySelector('#av-levels .av-knob[data-knob="master"]'), 0.9);
     avKnobCommit(document.querySelector('.av-knob[data-knob="keys"]'), 0.75);
     await new Promise(r => setTimeout(r, 320));
     const mo = avMasterFor(c), ko = avKeysFor(c);

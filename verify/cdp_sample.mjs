@@ -49,7 +49,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    P2: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = '5a5268222d5a3bdd8654995209990aa3c45d9a8d40a4437fe377f9eeed0a8257';
+const EXPECT_SHA = '4d1c8d3d9367b5ef5e35cb5b79946e8933c2e86dc5bcd4a5f0a2376fb6039cae';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -343,6 +343,16 @@ async function main() {
   }
   check('sample card mounted: #av-sample-host + drop zone + file input + list', hostOk);
   if (!hostOk) { console.error('SAMPLE HOST MISSING — parent adds #av-sample-host and calls avSampleInit()'); process.exit(1); }
+
+  /* C1 chassis: the card now lives in the SOUND page's SAMPLES sub-tab — open it (the user path)
+     before any leg measures a box, or every canvas reads 0 x 0 */
+  const revealSamples = await ev(`(() => {
+    const z = (typeof avZoneShow === 'function') ? avZoneShow('sound', { source: 'rig' }) : false;
+    const s = (typeof avZoneSub === 'function') ? avZoneSub('sound', 'samples', { silent: true }) : false;
+    return { z: z, s: s };
+  })()`);
+  note('revealed sound/samples sub-tab: ' + JSON.stringify(revealSamples.value));
+  await sleep(250);
 
   /* engine readiness is a NOTE here (preview prefers the engine ctx; the witness re-arms on
      whatever ctx the preview actually used, so the rig still works on the spn/fallback path) */

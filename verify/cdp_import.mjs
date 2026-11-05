@@ -61,7 +61,7 @@ const shaArg = argv.indexOf('--sha');
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
-const EXPECT_SHA = '5a5268222d5a3bdd8654995209990aa3c45d9a8d40a4437fe377f9eeed0a8257';
+const EXPECT_SHA = '4d1c8d3d9367b5ef5e35cb5b79946e8933c2e86dc5bcd4a5f0a2376fb6039cae';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -289,7 +289,7 @@ async function main() {
   })()`);
   const b = bootR.value || {};
   check('boot + card: SAMPLE PACKS mounted in the store zone (drop, pickers, slot, facade)',
-    ready === true && b.card === true && b.zone === 'store' && b.drop === true && b.file === true && b.dir === true && b.slot === true
+    ready === true && b.card === true && b.zone === 'browse' && b.drop === true && b.file === true && b.dir === true && b.slot === true
     && b.facade === 'function' && b.ver === 'r15b.0', JSON.stringify(b));
 
   /* ── 2. proof line (?avtest=1) ── */
@@ -397,7 +397,7 @@ async function main() {
   })()`);
   const ch = chopR.value || {};
   check('CHOP: the new session entry is selected in #av-chop-src (option present, synth zone revealed)',
-    ch.entry === true && ch.opt === true && ch.zone === 'synth', JSON.stringify(ch));
+    ch.entry === true && ch.opt === true && ch.zone === 'sound', JSON.stringify(ch));
 
   /* ── 11. SEQ on the mid row ── */
   const midId = await rowId('note.mid');

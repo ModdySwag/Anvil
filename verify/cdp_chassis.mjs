@@ -243,6 +243,53 @@ async function main() {
     .filter(id => !document.getElementById(id)))()`)).value || [];
   check('K10 transport surface resolves (play, stop, bpm, preset keys)', k10.length === 0, JSON.stringify(k10));
 
+  /* K11 -- the display: a bezelled instrument LCD with three dot rows and every field */
+  const k11 = (await ev(`(() => {
+    const bezel = document.getElementById('av-lcd-bezel');
+    const lcd = document.getElementById('av-lcd');
+    if (!bezel || !lcd) return { err: 'no display' };
+    const ids = ['av-lcd-pack','av-lcd-preset','av-lcd-engine','av-lcd-poly','av-lcd-voices','av-lcd-cpu'];
+    const rows = [...lcd.querySelectorAll('.av-lcd-row')];
+    return {
+      rows: rows.length, missing: ids.filter(i => !document.getElementById(i)),
+      dots: (getComputedStyle(lcd).backgroundImage || '').indexOf('gradient') >= 0,
+      bezelBg: getComputedStyle(bezel).backgroundColor,
+      nowrap: rows.every(r => getComputedStyle(r).whiteSpace === 'nowrap'),
+      stepsLeft: !!document.getElementById('av-lcd-up') && document.getElementById('av-lcd-up').getBoundingClientRect().left < lcd.getBoundingClientRect().left,
+      status: lcd.getAttribute('role')
+    };
+  })()`)).value || {};
+  check('K11 display: bezel + glass, three dot rows, every field id, no wrap, steppers at its left',
+    k11.rows === 3 && (k11.missing || []).length === 0 && k11.dots === true && k11.nowrap === true
+    && k11.stepsLeft === true && k11.status === 'status', JSON.stringify(k11));
+
+  /* K12 -- the display is live: fields carry values, not placeholders forever */
+  const k12 = (await ev(`(() => {
+    const t = (i) => (document.getElementById(i) || {}).textContent || '';
+    return { eng: t('av-lcd-engine'), poly: t('av-lcd-poly'), voices: t('av-lcd-voices'), cpu: t('av-lcd-cpu'), bpm: t('avc-bpm-val') };
+  })()`)).value || {};
+  check('K12 display fields read live state (engine kind, poly mode, voices, cpu, tempo)',
+    k12.eng.length > 0 && /^(POLY|MONO)/.test(k12.poly) && /^VOICES/.test(k12.voices) && /^CPU/.test(k12.cpu) && /^\d+$/.test(k12.bpm),
+    JSON.stringify(k12));
+
+  /* K13 -- the steppers are clickable (nothing paints over them) and step the preset */
+  const k13 = (await ev(`(() => {
+    const up = document.getElementById('av-lcd-up');
+    if (!up) return { err: 'no stepper' };
+    const r = up.getBoundingClientRect();
+    const hit = document.elementFromPoint(Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2));
+    const sel = document.querySelector('#av-lcd-preset select');
+    const before = sel ? sel.selectedIndex : null;
+    const opts = sel ? sel.options.length : 0;
+    up.click();
+    const after = sel ? sel.selectedIndex : null;
+    return { hit: hit ? hit.id : null, adopted: document.querySelectorAll('#av-lcd-preset select').length,
+             opts: opts, before: before, after: after };
+  })()`)).value || {};
+  check('K13 steppers: nothing paints over them, the bank selects live in the display, a click steps',
+    k13.hit === 'av-lcd-up' && k13.adopted === 1 && (k13.opts < 2 || k13.after !== k13.before),
+    JSON.stringify(k13));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

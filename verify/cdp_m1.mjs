@@ -120,7 +120,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    M1: the frozen sha of the integrated index.html is not known until build.py runs and the parent
    pins it — EXPECT_SHA stays null; the rig never loosens the before === after check. */
-const EXPECT_SHA = '5a5268222d5a3bdd8654995209990aa3c45d9a8d40a4437fe377f9eeed0a8257';
+const EXPECT_SHA = '4d1c8d3d9367b5ef5e35cb5b79946e8933c2e86dc5bcd4a5f0a2376fb6039cae';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -854,6 +854,9 @@ async function main() {
     '1c FM card: #av-fm + #av-fm-host mounted · 6 op tabs (data-op 1-6) · active op panel · #av-fm-status', J(fmc));
 
   /* ── 1d. FM card wired: select + knobs + algo view ── */
+  /* C1 chassis: the FM card sits in the SOUND page's FM sub-tab — open it so the algo view has a box */
+  await ev(`(() => { if (typeof avZoneShow === 'function') avZoneShow('sound', { source: 'rig' }); if (typeof avZoneSub === 'function') avZoneSub('sound', 'fm', { silent: true }); return 1; })()`);
+  await sleep(300);
   const fmw = val(await ev('window.__m1w.fmWired()')) || {};
   const viewPainted = (v) => {
     if (!v || v.found !== true) return false;
@@ -1071,6 +1074,9 @@ async function main() {
     J({ a: ws0, b: ws1 }));
 
   /* canvas interaction smoke: NEW (stubbed dialogs) -> control window -> stroke -> change */
+  /* C1 chassis: the WT card sits in the SOUND page's WAVETABLE sub-tab — open it before the stroke */
+  await ev(`(() => { if (typeof avZoneShow === 'function') avZoneShow('sound', { source: 'rig' }); if (typeof avZoneSub === 'function') avZoneSub('sound', 'wt', { silent: true }); return 1; })()`);
+  await sleep(300);
   const sigA = val(await ev('window.__m1w.wtSig()')) || {};
   const dlg1 = val(await ev('window.__m1w.dlgOn()'));
   const newClick = val(await ev('window.__m1w.clickId("av-wt-new")')) || {};

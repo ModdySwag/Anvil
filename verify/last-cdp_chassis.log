@@ -1,9 +1,9 @@
-index.html sha256: a4b62978bd15032509926df390e40b9b206d92b3e998c44d601ef25444461778
+index.html sha256: 4d1c8d3d9367b5ef5e35cb5b79946e8933c2e86dc5bcd4a5f0a2376fb6039cae
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
    - data-av-ready: true
  ok   K1 virgin: rail closed, no rail control visible (tabs are the one navigation)  -> {"closed":true,"rail":true,"visibleRailCtl":0}
  ok   K2 nine tabs in the pinned signal order, every aria-controls resolves  -> {"ids":["browse","perform","sound","shape","sequence","effects","mix","deliver","system"],"unresolved":[]}
- ok   K3 band: groups in contract order, LCD rows, four pot mounts, one pot-mode key lit, volume pot  -> {"grp":["transport","identity","pots","view","out"],"lcdRows":4,"pots":4,"checked":1,"vol":true}
+ ok   K3 band: groups in contract order, LCD rows, four pot mounts, one pot-mode key lit, volume pot  -> {"grp":["transport","identity","pots","view","out"],"lcdRows":3,"pots":4,"checked":1,"vol":true}
  ok   K4 inspector: seven kind keys, six core pots, eight+ launchers on real targets, both screens, EDIT  -> {"kinds":7,"pots":6,"launches":8,"bad":[],"wave":true,"env":true,"edit":true,"title":"SELECTED VOICE"}
  ok   K5 launcher click lands page + sub  -> {"zone":"sound","sub":"fm","shown":true}
  ok   K6 pitch wheel springs back to 0; mod wheel holds a raised value  -> {"pitchAfter":0,"modHeld":0.63}
@@ -11,6 +11,9 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   K7 W=1280: every page within 2.2x the page height  -> browse=0.65 perform=0.27 sound=1.53 shape=1.31 sequence=1.53 effects=1.86 mix=2.14 deliver=0.72 system=1.91
  ok   K8 every card sits in a real page (and inside a declared sub on a paged page)  -> {"n":28,"bad":[]}
  ok   K10 transport surface resolves (play, stop, bpm, preset keys)  -> []
+ ok   K11 display: bezel + glass, three dot rows, every field id, no wrap, steppers at its left  -> {"rows":3,"missing":[],"dots":true,"bezelBg":"rgba(0, 0, 0, 0)","nowrap":true,"stepsLeft":true,"status":"status"}
+ ok   K12 display fields read live state (engine kind, poly mode, voices, cpu, tempo)  -> {"eng":"VA","poly":"POLY —","voices":"VOICES —/64","cpu":"CPU —","bpm":"120"}
+ ok   K13 steppers: nothing paints over them, the bank selects live in the display, a click steps  -> {"hit":"av-lcd-up","adopted":1,"opts":1,"before":0,"after":0}
  ok   K9 zero page errors through the run  -> []
 
-CHASSIS-RESULT pass=11 fail=0
+CHASSIS-RESULT pass=14 fail=0

@@ -3129,10 +3129,177 @@ body { --dock-h: 132px; }
   .av-band-grp[data-grp="identity"] .av-word { display: none; }
 }
 @media (max-width: 880px) {
-  #av-vol-pot, #av-vol-val { display: none; }
+  #av-vol-pot, #av-vol-val, .av-lcd-steps { display: none; }
   #av-potmode { display: none; }
   #av-panic { display: none; }
   #av-lcd { max-width: 150px; }
+}
+
+/* ===========================================================================
+   C1b — THE DISPLAY (program-specific instrument LCD: bezel, dot glass, fields
+   that read the engine, and the pack/preset steppers at its side)
+   =========================================================================== */
+#av-lcd-bezel {
+  display: flex;
+  align-items: stretch;
+  gap: 5px;
+  padding: 5px 5px 5px 7px;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #15191c 0%, #0b0e10 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), inset 0 -2px 6px rgba(0,0,0,.85), 0 1px 0 rgba(255,255,255,.05);
+  min-width: 0;
+}
+#av-lcd-bezel #av-lcd {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  background-color: #b9e6c6;
+  background-image: radial-gradient(circle at 50% 50%, rgba(24,44,30,.34) 34%, rgba(24,44,30,0) 36%);
+  background-size: 7px 7px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.55), inset 0 0 10px rgba(26,60,36,.42);
+  overflow: hidden;
+}
+#av-lcd-bezel .av-lcd-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 15px;
+  font-family: "Consolas", "DejaVu Sans Mono", monospace;
+  font-size: 10.5px;
+  line-height: 15px;
+  letter-spacing: .09em;
+  color: #16281c;
+  text-transform: uppercase;
+  text-shadow: 0 0 1px rgba(22,40,28,.55);
+  white-space: nowrap;
+  overflow: hidden;
+}
+#av-lcd-bezel .av-lcd-slot { overflow: hidden; text-overflow: ellipsis; }
+#av-lcd-bezel .av-lcd-right { margin-left: auto; text-align: right; }
+#av-lcd-bezel .av-lcd-w5 { flex: 0 0 5ch; }
+#av-lcd-bezel .av-lcd-w7 { flex: 0 0 7ch; }
+#av-lcd-bezel .av-lcd-w10 { flex: 0 0 10ch; }
+#av-lcd-bezel .av-lcd-w13 { flex: 0 0 13ch; }
+#av-lcd-bezel .av-lcd-w15 { flex: 1 1 auto; min-width: 0; }
+#av-lcd-bezel select.av-bank-pack,
+#av-lcd-bezel select.av-bank-preset {
+  width: 100%;
+  max-width: 100%;
+  background: transparent;
+  border: 0;
+  color: #16281c;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: uppercase;
+  padding: 0;
+  height: 15px;
+  appearance: none;
+  cursor: pointer;
+}
+#av-lcd-bezel select:focus-visible { outline: 1px solid #16281c; outline-offset: 1px; }
+#av-lcd-bezel .av-lcd-edited {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: #16281c;
+  box-shadow: 0 0 4px rgba(22,40,28,.8);
+}
+#av-lcd-bezel .avc-bpm {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font: inherit;
+  letter-spacing: inherit;
+  color: #16281c;
+  cursor: ns-resize;
+}
+#av-lcd-bezel .avc-bpm-label, #av-lcd-bezel .avc-bpm-lab { opacity: .62; }
+#av-lcd-bezel #avc-bpm-val { font-weight: 700; }
+.av-lcd-steps { display: flex; flex-direction: column; gap: 3px; justify-content: center; }
+.av-lcd-step {
+  width: 20px;
+  height: 20px;
+  border: 1px solid #2b343a;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #39434a 0%, #232a2f 100%);
+  color: #cfe6d6;
+  font-size: 9px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.av-lcd-step:hover { border-color: var(--teal); color: #fff; }
+.av-lcd-step:active { transform: translateY(1px); }
+.av-lcd-step:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
+@media (max-width: 1020px) { .av-lcd-steps { display: none; } }
+
+/* C1b fixes: the display needs a real basis inside the band, and it must FIT the band height
+   (the band clips, so a stepper below its floor is unclickable). */
+.av-band-grp[data-grp="identity"] { flex: 1 1 auto; min-width: 0; }
+#av-lcd-bezel {
+  flex: 1 1 300px;
+  min-width: 190px;
+  max-width: 460px;
+  align-self: center;
+  height: 56px;
+  padding: 3px 4px 3px 6px;
+  gap: 4px;
+}
+#av-lcd-bezel #av-lcd { padding: 2px 5px; gap: 1px; }
+#av-lcd-bezel .av-lcd-row { height: 13px; line-height: 13px; font-size: 10px; }
+#av-lcd-bezel select.av-bank-pack, #av-lcd-bezel select.av-bank-preset { height: 13px; }
+.av-lcd-steps { gap: 2px; }
+.av-lcd-step { width: 17px; height: 17px; font-size: 8px; }
+/* C1b: the identity group is ONE row - a zero basis plus wrap stacked the display under the brand */
+.av-band-grp[data-grp="identity"] { flex: 1 1 420px; min-width: 0; flex-wrap: nowrap; align-items: center; }
+#av-lcd-bezel { max-width: none; }
+/* C1b: a knob halo overlaps the display's right edge - the bezel must win the hit test */
+#av-lcd-bezel { position: relative; z-index: 3; margin-right: 6px; }
+.av-band-grp[data-grp="identity"] { flex: 0 1 380px; }
+.av-band-grp[data-grp="pots"] { flex: 0 0 auto; }
+/* C1b: the display must END before the pots begin (measured 13px overlap) */
+.av-band-grp[data-grp="identity"] { flex: 0 1 340px; }
+.av-lcd-steps { position: relative; z-index: 4; }
+/* C1b: the whole identity group must sit above the pots group (a late sibling's knob wins otherwise) */
+.av-band-grp[data-grp="identity"] { position: relative; z-index: 6; }
+/* C1b: fixed display width - a flexed one grows under the pots' hit area (measured) */
+#av-lcd-bezel { flex: 0 0 150px; width: 150px; min-width: 150px; max-width: 150px; }
+/* the steppers stand at the display's LEFT edge (the pots own the right) */
+#av-lcd-bezel { padding: 3px 6px 3px 4px; }
+/* the volume pot's block is wider than its slot and paints over the display: order it explicitly */
+.av-band-pot, .av-band-mount { position: relative; z-index: 1; }
+#av-lcd-bezel { z-index: 30; }
+#av-lcd-bezel .av-lcd-steps { z-index: 31; }
+/* the identity group was shrinking to min-content (16px) and its children spilled under the pots:
+   it may grow, never shrink; the pots shrink instead */
+.av-band-grp[data-grp="identity"] { flex: 1 0 340px; }
+.av-band-grp[data-grp="pots"] { flex: 0 1 auto; min-width: 0; }
+/* C1b narrow: the display is a wide-window luxury - it sheds before the band can overflow */
+@media (max-width: 1100px) {
+  .av-band-grp[data-grp="identity"] { flex: 0 1 200px; }
+  #av-vol-pot, #av-vol-val, .av-lcd-steps { display: none; }
+  #av-lcd-bezel { flex: 0 0 118px; width: 118px; min-width: 118px; max-width: 118px; }
+}
+@media (max-width: 1000px) {
+  #av-lcd-bezel .av-lcd-row:nth-child(1) { display: none; }
+}
+@media (max-width: 900px) {
+  .av-band-grp[data-grp="identity"] { flex: 0 1 150px; }
+  #av-lcd-bezel { flex: 0 0 96px; width: 96px; min-width: 96px; max-width: 96px; }
+  #av-lcd-bezel .av-lcd-row:nth-child(3) { display: none; }
+  #av-panic, #av-learn { display: none; }
 }
 
 </style>
@@ -27473,15 +27640,16 @@ async function avLibReceiptListRun() {
       }
     }
   }
-  /* the LS snapshot (summaries) fills in when the database is not serving */
-  if (backend !== "idb") {
+  /* the LS snapshot ALWAYS joins: a boot that picks a different tier than the session that WROTE
+     would otherwise read 0 (mixed-tier boot; the records are real, the reader was in the wrong home) */
+  {
     const map = avLibReceiptLsLoad();
     const ids = Object.keys(map);
     for (let i = 0; i < ids.length; i++) {
       const norm = avLibReceiptNorm(map[ids[i]], false);
       if (norm) runs[norm.id] = norm;
     }
-    if (ids.length) backend = "ls";
+    if (ids.length && backend !== "idb") backend = "ls";
   }
   /* session-held runs join the list (they are the live ones) */
   const memIds = Object.keys(st.mem);
@@ -91357,6 +91525,29 @@ const avConsoleState = { ready: false, timer: 0, last: "", songOn: false, playOn
 function avConsoleEl(id) {
   try { return document.getElementById(id); } catch (e) { return null; }
 }
+/* the bank card mounts AFTER the band, so its selects are pulled into the display on every tick:
+   ids are assigned here and the bank's delegated change handler rides bubbling, so moving is safe */
+function avConsoleAdoptSelects() {
+  try {
+    const packBox = document.getElementById("av-lcd-pack");
+    const presetBox = document.getElementById("av-lcd-preset");
+    if (!packBox || !presetBox) return false;
+    const ps = document.getElementById("avc-pack") || document.querySelector("select.av-bank-pack");
+    const pr = document.getElementById("avc-preset") || document.querySelector("select.av-bank-preset");
+    if (ps && ps.id !== "avc-preset") {
+      ps.id = "avc-pack";
+      ps.className = "av-bank-pack";
+      if (ps.parentNode !== packBox) packBox.appendChild(ps);
+    }
+    if (pr && pr.id !== "avc-pack") {
+      pr.id = "avc-preset";
+      pr.className = "av-bank-preset";
+      if (pr.parentNode !== presetBox) presetBox.appendChild(pr);
+    }
+    return !!(document.getElementById("avc-pack") && document.getElementById("avc-preset"));
+  } catch (e) { return false; }
+}
+
 function avConsoleSetLast(a) { try { avConsoleState.last = String(a || ""); } catch (e) { /* ok */ } }
 
 function avConsoleIsPlaying() {
@@ -91602,40 +91793,45 @@ function avConsoleRefresh() {
       if (packEl && !(packEl.querySelector && packEl.querySelector("select")) && packEl.textContent !== bt.pack) packEl.textContent = bt.pack;
       if (presetEl && !(presetEl.querySelector && presetEl.querySelector("select")) && presetEl.textContent !== bt.preset) presetEl.textContent = bt.preset;
     }
-    /* the engine text + the poly readout (best-effort reads; a dash when the host has nothing) */
+    /* the bank card mounts after the band: keep pulling its selects into the display */
+    try { if (typeof avConsoleAdoptSelects === "function") avConsoleAdoptSelects(); } catch (e0) { /* the card keeps them */ }
+    /* the display's live fields. Every read is guarded; a dash is the honest value when the host
+       has nothing (a cold engine, a page booted with no audio yet). */
     const engEl = avConsoleEl("av-lcd-engine");
+    const polyEl = avConsoleEl("av-lcd-poly");
+    const voicesRow = avConsoleEl("av-lcd-voices");
+    const cpuRow = avConsoleEl("av-lcd-cpu");
+    let eng = null;
+    try {
+      eng = (window.__avEngine && typeof window.__avEngine === "object") ? window.__avEngine : null;
+    } catch (e3) { eng = null; }
     if (engEl) {
       let kind = "";
-      try { kind = (typeof avParams !== "undefined" && avParams && avParams["engine.kind"]) ? String(avParams["engine.kind"]) : ""; } catch (e3) { kind = ""; }
-      if (kind && engEl.textContent !== kind) engEl.textContent = kind;
+      try { kind = (typeof avParams !== "undefined" && avParams && avParams["engine.kind"]) ? String(avParams["engine.kind"]) : ""; } catch (e4) { kind = ""; }
+      let glide = 0;
+      try { glide = (typeof avParams !== "undefined" && avParams && isFinite(Number(avParams["env.glide"]))) ? Number(avParams["env.glide"]) : 0; } catch (e5) { glide = 0; }
+      const txt = (kind ? kind.toUpperCase() : "—") + (glide > 0.001 ? " GLIDE" : "");
+      if (engEl.textContent !== txt) engEl.textContent = txt;
     }
-    /* the bank card may render (or re-render) its selects after the band was built: pull them in */
-    try {
-      const packSlot = avConsoleEl("av-lcd-pack");
-      const presetSlot = avConsoleEl("av-lcd-preset");
-      if (packSlot && !packSlot.querySelector("select")) {
-        const s = document.querySelector("select.av-bank-pack");
-        if (s) { s.id = "avc-pack"; packSlot.appendChild(s); }
-      }
-      if (presetSlot && !presetSlot.querySelector("select")) {
-        const s2 = document.querySelector("select.av-bank-preset");
-        if (s2) { s2.id = "avc-preset"; presetSlot.appendChild(s2); }
-      }
-    } catch (e6) { /* the card keeps its own row */ }
-    /* the LEARN key mirrors the MIDI arm state */
-    const learnEl = avConsoleEl("av-learn");
-    if (learnEl) {
-      let armed = false;
-      try { armed = (typeof avMidiLearn !== "undefined" && avMidiLearn) ? avMidiLearn.armed === true : false; } catch (e5) { armed = false; }
-      if (learnEl.classList.contains("on") !== armed) learnEl.classList.toggle("on", armed);
-      learnEl.setAttribute("aria-pressed", armed ? "true" : "false");
-    }
-    const polyEl = avConsoleEl("av-lcd-poly");
     if (polyEl) {
-      let n = NaN;
-      try { n = (window.__avEngine && typeof window.__avEngine.voices === "number") ? window.__avEngine.voices : NaN; } catch (e4) { n = NaN; }
-      const txt = "POLY " + (isFinite(n) ? String(Math.max(0, Math.round(n))) : "-");
+      let mode = "POLY";
+      try { if (typeof avParams !== "undefined" && avParams && avParams["env.mono"]) mode = Number(avParams["env.mono"]) ? "MONO" : "POLY"; } catch (e6) { mode = "POLY"; }
+      const txt = mode + " " + (eng && isFinite(Number(eng.voices)) ? String(Math.max(0, Math.round(Number(eng.voices)))) : "—");
       if (polyEl.textContent !== txt) polyEl.textContent = txt;
+    }
+    if (voicesRow) {
+      let live = NaN;
+      let cap = NaN;
+      try { live = (eng && isFinite(Number(eng.voices))) ? Number(eng.voices) : NaN; } catch (e7) { live = NaN; }
+      try { cap = (eng && isFinite(Number(eng.maxVoices))) ? Number(eng.maxVoices) : NaN; } catch (e8) { cap = NaN; }
+      const txt = "VOICES " + (isFinite(live) ? String(Math.max(0, Math.round(live))) : "—") + "/" + (isFinite(cap) ? String(Math.round(cap)) : "—");
+      if (voicesRow.textContent !== txt) voicesRow.textContent = txt;
+    }
+    if (cpuRow) {
+      let load = NaN;
+      try { load = (eng && eng.stats && isFinite(Number(eng.stats.cpu))) ? Number(eng.stats.cpu) : NaN; } catch (e9) { load = NaN; }
+      const txt = "CPU " + (isFinite(load) ? String(Math.max(0, Math.min(100, Math.round(load)))) + "%" : "—");
+      if (cpuRow.textContent !== txt) cpuRow.textContent = txt;
     }
     return true;
   } catch (e) { return false; }
@@ -91920,65 +92116,95 @@ function avConsoleBuild(head) {
   try { if (typeof avKnobBind === "function") avKnobBind(volMount); } catch (e) { /* the pot stays readable */ }
   ident.appendChild(vol);
 
-  /* the LCD glass: pack / preset / engine rows, the edited dot, the poly readout, the tempo */
+  /* the LCD: a real instrument display - three 25-cell rows of dot-matrix glass in a bezel, with
+     the pack/preset steppers at its side. Every field is Anvil-specific and every one is LIVE:
+       r1  pack + preset identity + the edited mark      r2  engine kind + poly mode + glide
+       r3  voices in use / the cap, CPU load, the tempo
+     Nothing here is decorative: each field reads the engine or avState on every refresh tick. */
+  const bezel = document.createElement("div");
+  bezel.id = "av-lcd-bezel";
+  bezel.className = "av-lcd-bezel";
+
   const lcd = document.createElement("div");
   lcd.id = "av-lcd";
   lcd.className = "av-band-lcd";
-  lcd.setAttribute("aria-label", "Console readouts");
+  lcd.setAttribute("role", "status");
+  lcd.setAttribute("aria-label", "Instrument display - patch, engine, voices, load, tempo");
 
-  const rowPack = document.createElement("div");
-  rowPack.className = "av-lcd-row";
-  const packLab = document.createElement("span");
-  packLab.className = "av-lcd-lbl";
-  packLab.textContent = "PACK";
+  const row1 = document.createElement("div");
+  row1.className = "av-lcd-row";
   const packSlot = document.createElement("span");
   packSlot.id = "av-lcd-pack";
-  packSlot.className = "av-lcd-slot";
-  rowPack.appendChild(packLab);
-  rowPack.appendChild(packSlot);
-  lcd.appendChild(rowPack);
-
-  const rowPreset = document.createElement("div");
-  rowPreset.className = "av-lcd-row";
-  const presetLab = document.createElement("span");
-  presetLab.className = "av-lcd-lbl";
-  presetLab.textContent = "PRESET";
+  packSlot.className = "av-lcd-slot av-lcd-w7";
   const presetSlot = document.createElement("span");
   presetSlot.id = "av-lcd-preset";
-  presetSlot.className = "av-lcd-slot";
-  rowPreset.appendChild(presetLab);
-  rowPreset.appendChild(presetSlot);
-  lcd.appendChild(rowPreset);
-
-  const rowEng = document.createElement("div");
-  rowEng.className = "av-lcd-row av-lcd-row-sys";
-  const engLab = document.createElement("span");
-  engLab.className = "av-lcd-lbl";
-  engLab.textContent = "ENGINE";
-  const eng = document.createElement("span");
-  eng.id = "av-lcd-engine";
-  eng.className = "av-lcd-slot";
-  eng.textContent = "\u2014";
+  presetSlot.className = "av-lcd-slot av-lcd-w15";
   const edited = document.createElement("span");
   edited.id = "av-lcd-edited";
   edited.className = "av-lcd-edited";
   edited.hidden = true;
   edited.setAttribute("aria-hidden", "true");
   edited.title = "edited since the preset loaded";
+  row1.appendChild(packSlot);
+  row1.appendChild(presetSlot);
+  row1.appendChild(edited);
+  lcd.appendChild(row1);
+
+  const row2 = document.createElement("div");
+  row2.className = "av-lcd-row";
+  const eng = document.createElement("span");
+  eng.id = "av-lcd-engine";
+  eng.className = "av-lcd-slot av-lcd-w10";
+  eng.textContent = "—";
   const poly = document.createElement("span");
   poly.id = "av-lcd-poly";
-  poly.className = "av-lcd-poly";
-  poly.textContent = "POLY \u2014";
-  rowEng.appendChild(engLab);
-  rowEng.appendChild(eng);
-  rowEng.appendChild(edited);
-  rowEng.appendChild(poly);
-  lcd.appendChild(rowEng);
+  poly.className = "av-lcd-slot av-lcd-w15 av-lcd-right";
+  poly.textContent = "POLY —";
+  row2.appendChild(eng);
+  row2.appendChild(poly);
+  lcd.appendChild(row2);
 
-  /* the tempo: avc-bpm keeps role=slider, click halves / wheel / arrows and the
-     avApplyParam('bpm') funnel exactly as before */
-  const rowBpm = document.createElement("div");
-  rowBpm.className = "av-lcd-row av-lcd-row-bpm";
+  const row3 = document.createElement("div");
+  row3.className = "av-lcd-row";
+  const voicesEl = document.createElement("span");
+  voicesEl.id = "av-lcd-voices";
+  voicesEl.className = "av-lcd-slot av-lcd-w13";
+  voicesEl.textContent = "VOICES —";
+  const cpuEl = document.createElement("span");
+  cpuEl.id = "av-lcd-cpu";
+  cpuEl.className = "av-lcd-slot av-lcd-w5 av-lcd-right";
+  cpuEl.textContent = "CPU —";
+  row3.appendChild(voicesEl);
+  row3.appendChild(cpuEl);
+  lcd.appendChild(row3);
+
+  const steps = document.createElement("div");
+  steps.className = "av-lcd-steps";
+  const stepUp = document.createElement("button");
+  stepUp.type = "button";
+  stepUp.id = "av-lcd-up";
+  stepUp.className = "av-lcd-step";
+  stepUp.textContent = "▲";
+  stepUp.title = "Next preset";
+  stepUp.setAttribute("aria-label", "Next preset");
+  stepUp.addEventListener("click", function () { try { avConsolePresetStep(1); } catch (e) { /* ok */ } });
+  const stepDn = document.createElement("button");
+  stepDn.type = "button";
+  stepDn.id = "av-lcd-down";
+  stepDn.className = "av-lcd-step";
+  stepDn.textContent = "▼";
+  stepDn.title = "Previous preset";
+  stepDn.setAttribute("aria-label", "Previous preset");
+  stepDn.addEventListener("click", function () { try { avConsolePresetStep(-1); } catch (e) { /* ok */ } });
+  steps.appendChild(stepUp);
+  steps.appendChild(stepDn);
+
+  bezel.appendChild(steps);
+  bezel.appendChild(lcd);
+  ident.appendChild(bezel);
+
+  /* the tempo cell: avc-bpm keeps role=slider, click halves / wheel / arrows and the
+     avApplyParam('bpm') funnel exactly as before - it now lives inside the display */
   const bpm = document.createElement("div");
   bpm.className = "avc-window avc-bpm";
   bpm.id = "avc-bpm";
@@ -92006,9 +92232,7 @@ function avConsoleBuild(head) {
       avConsoleBpmSet(avConsoleBpm() + d * (e.shiftKey ? 10 : 1));
     } catch (e2) { /* ok */ }
   });
-  rowBpm.appendChild(bpm);
-  lcd.appendChild(rowBpm);
-  ident.appendChild(lcd);
+  row3.appendChild(bpm);
 
   /* 4 - view: placement only. Ask av_chrome for its own keys first - it CREATES + wires them and
      skips ids that already exist, so the band never holds a dead BROWSE / UNDO key. */
@@ -92123,6 +92347,10 @@ function avConsoleBuild(head) {
       el.title = title;
       el.setAttribute("aria-label", title);
       el.addEventListener("click", function () { try { fn(); } catch (e) { /* guarded */ } });
+      /* av_help binds #av-help from its own init (which can run after this build); the marker is
+         its own idempotence guard - without it the button ends up with TWO toggle listeners and a
+         click opens then immediately closes again */
+      try { if (id === "av-help" && el.dataset) el.dataset.avHelpBound = "1"; } catch (e) { /* fine */ }
     }
     if (el.parentNode !== view) view.appendChild(el);
     return el;

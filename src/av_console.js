@@ -39,6 +39,29 @@ const avConsoleState = { ready: false, timer: 0, last: "", songOn: false, playOn
 function avConsoleEl(id) {
   try { return document.getElementById(id); } catch (e) { return null; }
 }
+/* the bank card mounts AFTER the band, so its selects are pulled into the display on every tick:
+   ids are assigned here and the bank's delegated change handler rides bubbling, so moving is safe */
+function avConsoleAdoptSelects() {
+  try {
+    const packBox = document.getElementById("av-lcd-pack");
+    const presetBox = document.getElementById("av-lcd-preset");
+    if (!packBox || !presetBox) return false;
+    const ps = document.getElementById("avc-pack") || document.querySelector("select.av-bank-pack");
+    const pr = document.getElementById("avc-preset") || document.querySelector("select.av-bank-preset");
+    if (ps && ps.id !== "avc-preset") {
+      ps.id = "avc-pack";
+      ps.className = "av-bank-pack";
+      if (ps.parentNode !== packBox) packBox.appendChild(ps);
+    }
+    if (pr && pr.id !== "avc-pack") {
+      pr.id = "avc-preset";
+      pr.className = "av-bank-preset";
+      if (pr.parentNode !== presetBox) presetBox.appendChild(pr);
+    }
+    return !!(document.getElementById("avc-pack") && document.getElementById("avc-preset"));
+  } catch (e) { return false; }
+}
+
 function avConsoleSetLast(a) { try { avConsoleState.last = String(a || ""); } catch (e) { /* ok */ } }
 
 function avConsoleIsPlaying() {
@@ -284,40 +307,45 @@ function avConsoleRefresh() {
       if (packEl && !(packEl.querySelector && packEl.querySelector("select")) && packEl.textContent !== bt.pack) packEl.textContent = bt.pack;
       if (presetEl && !(presetEl.querySelector && presetEl.querySelector("select")) && presetEl.textContent !== bt.preset) presetEl.textContent = bt.preset;
     }
-    /* the engine text + the poly readout (best-effort reads; a dash when the host has nothing) */
+    /* the bank card mounts after the band: keep pulling its selects into the display */
+    try { if (typeof avConsoleAdoptSelects === "function") avConsoleAdoptSelects(); } catch (e0) { /* the card keeps them */ }
+    /* the display's live fields. Every read is guarded; a dash is the honest value when the host
+       has nothing (a cold engine, a page booted with no audio yet). */
     const engEl = avConsoleEl("av-lcd-engine");
+    const polyEl = avConsoleEl("av-lcd-poly");
+    const voicesRow = avConsoleEl("av-lcd-voices");
+    const cpuRow = avConsoleEl("av-lcd-cpu");
+    let eng = null;
+    try {
+      eng = (window.__avEngine && typeof window.__avEngine === "object") ? window.__avEngine : null;
+    } catch (e3) { eng = null; }
     if (engEl) {
       let kind = "";
-      try { kind = (typeof avParams !== "undefined" && avParams && avParams["engine.kind"]) ? String(avParams["engine.kind"]) : ""; } catch (e3) { kind = ""; }
-      if (kind && engEl.textContent !== kind) engEl.textContent = kind;
+      try { kind = (typeof avParams !== "undefined" && avParams && avParams["engine.kind"]) ? String(avParams["engine.kind"]) : ""; } catch (e4) { kind = ""; }
+      let glide = 0;
+      try { glide = (typeof avParams !== "undefined" && avParams && isFinite(Number(avParams["env.glide"]))) ? Number(avParams["env.glide"]) : 0; } catch (e5) { glide = 0; }
+      const txt = (kind ? kind.toUpperCase() : "—") + (glide > 0.001 ? " GLIDE" : "");
+      if (engEl.textContent !== txt) engEl.textContent = txt;
     }
-    /* the bank card may render (or re-render) its selects after the band was built: pull them in */
-    try {
-      const packSlot = avConsoleEl("av-lcd-pack");
-      const presetSlot = avConsoleEl("av-lcd-preset");
-      if (packSlot && !packSlot.querySelector("select")) {
-        const s = document.querySelector("select.av-bank-pack");
-        if (s) { s.id = "avc-pack"; packSlot.appendChild(s); }
-      }
-      if (presetSlot && !presetSlot.querySelector("select")) {
-        const s2 = document.querySelector("select.av-bank-preset");
-        if (s2) { s2.id = "avc-preset"; presetSlot.appendChild(s2); }
-      }
-    } catch (e6) { /* the card keeps its own row */ }
-    /* the LEARN key mirrors the MIDI arm state */
-    const learnEl = avConsoleEl("av-learn");
-    if (learnEl) {
-      let armed = false;
-      try { armed = (typeof avMidiLearn !== "undefined" && avMidiLearn) ? avMidiLearn.armed === true : false; } catch (e5) { armed = false; }
-      if (learnEl.classList.contains("on") !== armed) learnEl.classList.toggle("on", armed);
-      learnEl.setAttribute("aria-pressed", armed ? "true" : "false");
-    }
-    const polyEl = avConsoleEl("av-lcd-poly");
     if (polyEl) {
-      let n = NaN;
-      try { n = (window.__avEngine && typeof window.__avEngine.voices === "number") ? window.__avEngine.voices : NaN; } catch (e4) { n = NaN; }
-      const txt = "POLY " + (isFinite(n) ? String(Math.max(0, Math.round(n))) : "-");
+      let mode = "POLY";
+      try { if (typeof avParams !== "undefined" && avParams && avParams["env.mono"]) mode = Number(avParams["env.mono"]) ? "MONO" : "POLY"; } catch (e6) { mode = "POLY"; }
+      const txt = mode + " " + (eng && isFinite(Number(eng.voices)) ? String(Math.max(0, Math.round(Number(eng.voices)))) : "—");
       if (polyEl.textContent !== txt) polyEl.textContent = txt;
+    }
+    if (voicesRow) {
+      let live = NaN;
+      let cap = NaN;
+      try { live = (eng && isFinite(Number(eng.voices))) ? Number(eng.voices) : NaN; } catch (e7) { live = NaN; }
+      try { cap = (eng && isFinite(Number(eng.maxVoices))) ? Number(eng.maxVoices) : NaN; } catch (e8) { cap = NaN; }
+      const txt = "VOICES " + (isFinite(live) ? String(Math.max(0, Math.round(live))) : "—") + "/" + (isFinite(cap) ? String(Math.round(cap)) : "—");
+      if (voicesRow.textContent !== txt) voicesRow.textContent = txt;
+    }
+    if (cpuRow) {
+      let load = NaN;
+      try { load = (eng && eng.stats && isFinite(Number(eng.stats.cpu))) ? Number(eng.stats.cpu) : NaN; } catch (e9) { load = NaN; }
+      const txt = "CPU " + (isFinite(load) ? String(Math.max(0, Math.min(100, Math.round(load)))) + "%" : "—");
+      if (cpuRow.textContent !== txt) cpuRow.textContent = txt;
     }
     return true;
   } catch (e) { return false; }
@@ -602,65 +630,95 @@ function avConsoleBuild(head) {
   try { if (typeof avKnobBind === "function") avKnobBind(volMount); } catch (e) { /* the pot stays readable */ }
   ident.appendChild(vol);
 
-  /* the LCD glass: pack / preset / engine rows, the edited dot, the poly readout, the tempo */
+  /* the LCD: a real instrument display - three 25-cell rows of dot-matrix glass in a bezel, with
+     the pack/preset steppers at its side. Every field is Anvil-specific and every one is LIVE:
+       r1  pack + preset identity + the edited mark      r2  engine kind + poly mode + glide
+       r3  voices in use / the cap, CPU load, the tempo
+     Nothing here is decorative: each field reads the engine or avState on every refresh tick. */
+  const bezel = document.createElement("div");
+  bezel.id = "av-lcd-bezel";
+  bezel.className = "av-lcd-bezel";
+
   const lcd = document.createElement("div");
   lcd.id = "av-lcd";
   lcd.className = "av-band-lcd";
-  lcd.setAttribute("aria-label", "Console readouts");
+  lcd.setAttribute("role", "status");
+  lcd.setAttribute("aria-label", "Instrument display - patch, engine, voices, load, tempo");
 
-  const rowPack = document.createElement("div");
-  rowPack.className = "av-lcd-row";
-  const packLab = document.createElement("span");
-  packLab.className = "av-lcd-lbl";
-  packLab.textContent = "PACK";
+  const row1 = document.createElement("div");
+  row1.className = "av-lcd-row";
   const packSlot = document.createElement("span");
   packSlot.id = "av-lcd-pack";
-  packSlot.className = "av-lcd-slot";
-  rowPack.appendChild(packLab);
-  rowPack.appendChild(packSlot);
-  lcd.appendChild(rowPack);
-
-  const rowPreset = document.createElement("div");
-  rowPreset.className = "av-lcd-row";
-  const presetLab = document.createElement("span");
-  presetLab.className = "av-lcd-lbl";
-  presetLab.textContent = "PRESET";
+  packSlot.className = "av-lcd-slot av-lcd-w7";
   const presetSlot = document.createElement("span");
   presetSlot.id = "av-lcd-preset";
-  presetSlot.className = "av-lcd-slot";
-  rowPreset.appendChild(presetLab);
-  rowPreset.appendChild(presetSlot);
-  lcd.appendChild(rowPreset);
-
-  const rowEng = document.createElement("div");
-  rowEng.className = "av-lcd-row av-lcd-row-sys";
-  const engLab = document.createElement("span");
-  engLab.className = "av-lcd-lbl";
-  engLab.textContent = "ENGINE";
-  const eng = document.createElement("span");
-  eng.id = "av-lcd-engine";
-  eng.className = "av-lcd-slot";
-  eng.textContent = "\u2014";
+  presetSlot.className = "av-lcd-slot av-lcd-w15";
   const edited = document.createElement("span");
   edited.id = "av-lcd-edited";
   edited.className = "av-lcd-edited";
   edited.hidden = true;
   edited.setAttribute("aria-hidden", "true");
   edited.title = "edited since the preset loaded";
+  row1.appendChild(packSlot);
+  row1.appendChild(presetSlot);
+  row1.appendChild(edited);
+  lcd.appendChild(row1);
+
+  const row2 = document.createElement("div");
+  row2.className = "av-lcd-row";
+  const eng = document.createElement("span");
+  eng.id = "av-lcd-engine";
+  eng.className = "av-lcd-slot av-lcd-w10";
+  eng.textContent = "—";
   const poly = document.createElement("span");
   poly.id = "av-lcd-poly";
-  poly.className = "av-lcd-poly";
-  poly.textContent = "POLY \u2014";
-  rowEng.appendChild(engLab);
-  rowEng.appendChild(eng);
-  rowEng.appendChild(edited);
-  rowEng.appendChild(poly);
-  lcd.appendChild(rowEng);
+  poly.className = "av-lcd-slot av-lcd-w15 av-lcd-right";
+  poly.textContent = "POLY —";
+  row2.appendChild(eng);
+  row2.appendChild(poly);
+  lcd.appendChild(row2);
 
-  /* the tempo: avc-bpm keeps role=slider, click halves / wheel / arrows and the
-     avApplyParam('bpm') funnel exactly as before */
-  const rowBpm = document.createElement("div");
-  rowBpm.className = "av-lcd-row av-lcd-row-bpm";
+  const row3 = document.createElement("div");
+  row3.className = "av-lcd-row";
+  const voicesEl = document.createElement("span");
+  voicesEl.id = "av-lcd-voices";
+  voicesEl.className = "av-lcd-slot av-lcd-w13";
+  voicesEl.textContent = "VOICES —";
+  const cpuEl = document.createElement("span");
+  cpuEl.id = "av-lcd-cpu";
+  cpuEl.className = "av-lcd-slot av-lcd-w5 av-lcd-right";
+  cpuEl.textContent = "CPU —";
+  row3.appendChild(voicesEl);
+  row3.appendChild(cpuEl);
+  lcd.appendChild(row3);
+
+  const steps = document.createElement("div");
+  steps.className = "av-lcd-steps";
+  const stepUp = document.createElement("button");
+  stepUp.type = "button";
+  stepUp.id = "av-lcd-up";
+  stepUp.className = "av-lcd-step";
+  stepUp.textContent = "▲";
+  stepUp.title = "Next preset";
+  stepUp.setAttribute("aria-label", "Next preset");
+  stepUp.addEventListener("click", function () { try { avConsolePresetStep(1); } catch (e) { /* ok */ } });
+  const stepDn = document.createElement("button");
+  stepDn.type = "button";
+  stepDn.id = "av-lcd-down";
+  stepDn.className = "av-lcd-step";
+  stepDn.textContent = "▼";
+  stepDn.title = "Previous preset";
+  stepDn.setAttribute("aria-label", "Previous preset");
+  stepDn.addEventListener("click", function () { try { avConsolePresetStep(-1); } catch (e) { /* ok */ } });
+  steps.appendChild(stepUp);
+  steps.appendChild(stepDn);
+
+  bezel.appendChild(steps);
+  bezel.appendChild(lcd);
+  ident.appendChild(bezel);
+
+  /* the tempo cell: avc-bpm keeps role=slider, click halves / wheel / arrows and the
+     avApplyParam('bpm') funnel exactly as before - it now lives inside the display */
   const bpm = document.createElement("div");
   bpm.className = "avc-window avc-bpm";
   bpm.id = "avc-bpm";
@@ -688,9 +746,7 @@ function avConsoleBuild(head) {
       avConsoleBpmSet(avConsoleBpm() + d * (e.shiftKey ? 10 : 1));
     } catch (e2) { /* ok */ }
   });
-  rowBpm.appendChild(bpm);
-  lcd.appendChild(rowBpm);
-  ident.appendChild(lcd);
+  row3.appendChild(bpm);
 
   /* 4 - view: placement only. Ask av_chrome for its own keys first - it CREATES + wires them and
      skips ids that already exist, so the band never holds a dead BROWSE / UNDO key. */
@@ -805,6 +861,10 @@ function avConsoleBuild(head) {
       el.title = title;
       el.setAttribute("aria-label", title);
       el.addEventListener("click", function () { try { fn(); } catch (e) { /* guarded */ } });
+      /* av_help binds #av-help from its own init (which can run after this build); the marker is
+         its own idempotence guard - without it the button ends up with TWO toggle listeners and a
+         click opens then immediately closes again */
+      try { if (id === "av-help" && el.dataset) el.dataset.avHelpBound = "1"; } catch (e) { /* fine */ }
     }
     if (el.parentNode !== view) view.appendChild(el);
     return el;
