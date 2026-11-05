@@ -1,4 +1,4 @@
-index.html sha256: cc2032301a8cb274fa67e93355bce8b69427b0b133827ea305ac53d350d98470
+index.html sha256: cd12b6936eb1ef06efac431a3ab58a0170f43c39052c568fa2bf034569b60f10
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
    - data-av-ready: true
  ok   K1 virgin: rail closed, no rail control visible (tabs are the one navigation)  -> {"closed":true,"rail":true,"visibleRailCtl":0}

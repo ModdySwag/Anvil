@@ -67,7 +67,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
    authoring. A valid --sha <hex> becomes the run-time expectation while the constant is null,
    and echoes/overrides the constant once pinned (cdp_hub semantics, verbatim). The rig never
    loosens the before === after check. */
-const EXPECT_SHA = 'cc2032301a8cb274fa67e93355bce8b69427b0b133827ea305ac53d350d98470';
+const EXPECT_SHA = 'cd12b6936eb1ef06efac431a3ab58a0170f43c39052c568fa2bf034569b60f10';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -913,6 +913,7 @@ async function main() {
   /* C1 chassis: the pane the library rows live in is behind SOUND > TUNING — open it so the rows paint */
   const rev14 = await ev(`(() => {
     const z = (typeof avZoneShow === 'function') ? avZoneShow('sound', { source: 'rig' }) : false;
+    try { if (typeof avZoneSub === 'function') avZoneSub('sound', 'tune', { silent: true }); } catch (e0) { /* sub optional */ }
     const s = (typeof avZoneSub === 'function') ? avZoneSub('sound', 'tune', { silent: true }) : false;
     return { z: z, s: s };
   })()`);

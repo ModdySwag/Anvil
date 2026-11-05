@@ -15,7 +15,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   arrow keys adjust, End/Home jump to the stops  -> {"up":0.5,"end":1.2,"home":0}
  ok   double-click resets to the default  -> home(0) -> dblclick -> 0.8
  ok   instrument and master are independent, readouts follow  -> {"keys":0.9,"masterAfterKeys":0.8,"keysTxt":"90%","masterTxt":"66%"}
- ok   the knobs move the real master-tap gains  -> {"ctx":"running","master":0.9,"keys":0.75}
+ ok   the knobs move the real master-tap gains  -> {"ctx":"running","master":0.8988,"keys":0.7509}
 shots -> C:\Users\Moddy\anvil\renders\p0-knobs.png , C:\Users\Moddy\anvil\renders\p0-knobs-full.png
  ok   no console errors during the knob session
 

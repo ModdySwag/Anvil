@@ -1,9 +1,9 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   boot: data-av-ready flips
- ok   chips filled: version + tier + voices  -> {"ver":"v1.15.0","tier":"tap: armed · engine: booting","voices":true,"version":"1.15.0"}
+ ok   chips filled: version + tier + voices  -> {"ver":"v1.15.0","tier":"tap: armed · engine: worklet","voices":true,"version":"1.15.0"}
  ok   tap armed (installed + master node)  -> {"installed":true,"onNode":true}
  ok   TAP SELFTEST: viaTap + keysBus + masterNode + live  -> {"viaTap":true,"keysBus":true,"masterNode":true,"live":2,"ctxState":"running"}
- ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 55%"}
+ ok   two knobs mounted + bound on the LEVELS card  -> {"n":2,"paths":"keys,master","bound":true,"inLevels":true,"readouts":"100% 80%"}
  ok   KNOB SELFTEST ok  -> {"ok":true,"knobFound":true,"keysBound":true,"committed":true,"params":true,"state":true,"aria":true,"readout":true,"ctxState":"running","gain":0.55,"gainOk":true}
  ok   ENGINE SELFTEST ok (tier + allocation)  -> {"ok":true,"tier":"worklet","url":"data","sr":48000,"maxVoices":64,"allocated":true,"released":true,"voices":[0,1,0],"kinds":{"va":true,"acid":true,"string":true,"drum":true,"grain":true,"sampler":true,"fm":true},"fx":true,"mod":true,"drumNote":true,"kindsOk":true,"mpe":{"on":true,"expr":true,"voice":true,"off":true}}
  ok   layout: no horizontal overflow at 1440  -> scrollWidth 1440 vs innerWidth 1440 | offenders: av-a11y-live [-1..0]

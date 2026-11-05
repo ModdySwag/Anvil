@@ -874,7 +874,8 @@ function avConsoleBuild(head) {
     else if (typeof avPianoToggle === "function") avPianoToggle();
   });
   ensureKey("av-help", "?", "Help - shortcuts, the tour and the guides (?)", function () {
-    if (typeof avHelpToggle === "function") avHelpToggle();
+    if (typeof avHelpOpen === "function") avHelpOpen();
+    else if (typeof avHelpToggle === "function") avHelpToggle();
   });
 
   band.appendChild(gTransport);
