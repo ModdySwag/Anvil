@@ -1707,15 +1707,16 @@ async function avLibReceiptListRun() {
       }
     }
   }
-  /* the LS snapshot (summaries) fills in when the database is not serving */
-  if (backend !== "idb") {
+  /* the LS snapshot ALWAYS joins: a boot that picks a different tier than the session that WROTE
+     would otherwise read 0 (mixed-tier boot; the records are real, the reader was in the wrong home) */
+  {
     const map = avLibReceiptLsLoad();
     const ids = Object.keys(map);
     for (let i = 0; i < ids.length; i++) {
       const norm = avLibReceiptNorm(map[ids[i]], false);
       if (norm) runs[norm.id] = norm;
     }
-    if (ids.length) backend = "ls";
+    if (ids.length && backend !== "idb") backend = "ls";
   }
   /* session-held runs join the list (they are the live ones) */
   const memIds = Object.keys(st.mem);

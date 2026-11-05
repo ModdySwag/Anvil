@@ -76,7 +76,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* freeze pin: the parent sets this to the frozen sha at the R17 freeze (64-hex); null until then.
    Pinned run = +1 check (the freeze check); unpinned run reports one FEWER check — mirroring
    cdp_import's structure with its pin absent. */
-const EXPECT_SHA = '5a5268222d5a3bdd8654995209990aa3c45d9a8d40a4437fe377f9eeed0a8257';
+const EXPECT_SHA = 'e3c39cbd427a4cd28fa9c360eadddb54eedce92ac3ac02e4b97529aea86fd47b';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -475,9 +475,13 @@ async function main() {
     && !!rc2.c0 && rc2.c0.total === 1 && rc2.c0.imported === 1, JSON.stringify(rc2));
 
   /* ── 12/13. persistence leg: RELOAD (house law: navigate -> waitReady -> re-acquire) ── */
+  const lsPre = await ev(`(function () { try { return { n: (localStorage.getItem('av-receipts-ls') || '').length, keys: Object.keys(localStorage).length }; } catch (e) { return 'err:' + e.name; } })()`);
+  note('DIAG pre-reload ls: ' + JSON.stringify(lsPre.value));
   await send('Page.navigate', { url: baseUrl });
   const ready2 = await waitReady();
   note('reloaded (plain page) — ready=' + ready2);
+  const lsPost = await ev(`(function () { try { return { n: (localStorage.getItem('av-receipts-ls') || '').length, keys: Object.keys(localStorage).length, list: await0 }; } catch (e) { return 'err:' + e.name; } })()`.replace(', list: await0 ', ''));
+  note('DIAG post-reload ls: ' + JSON.stringify(lsPost.value));
   const pers1 = await waitFor(`(async () => {
     try {
       if (typeof avLibReceiptList !== 'function') return null;
@@ -2173,6 +2177,7 @@ async function main() {
       if (zone !== 'browse') return null;
       const rows = document.querySelectorAll('#av-import-runs [data-av-import-run]').length;
       const rep = document.querySelectorAll('#av-import-report [data-av-import-row]').length;
+      if (rows !== r.count) return null;   /* wait for the history repaint, not just the count */
       const l = await avLibList();
       const hit = (l.items || []).filter(i => i.name === 'drop-one.wav').length;
       return { count: r.count, zone: zone, rows: rows, rep: rep, hit: hit };
