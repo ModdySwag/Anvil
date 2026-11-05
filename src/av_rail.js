@@ -12,14 +12,15 @@ const AV_RAIL_OPEN_KEY = "av-rail-open";
 const AV_RAIL_SEC_KEY = "av-rail-sections";
 
 const AV_RAIL_GROUPS = [
-  { zone: "synth", label: "Synth", cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-wt", "Wavetable editor"]] },
-  { zone: "fx", label: "FX", cards: [["av-fx", "FX rack"]] },
-  { zone: "mod", label: "Mod", cards: [["av-mod", "Mod matrix"], ["av-lfo", "LFO"]] },
-  { zone: "seq", label: "Seq", cards: [["av-seq", "Sequencer"]] },
-  { zone: "studio", label: "Studio", cards: [["av-rec", "Recorder"], ["av-studio", "Studio"], ["av-sessions", "Sessions"], ["av-comp", "Takes & comping"], ["av-mix", "Mix & master"], ["av-deck", "Deck"], ["av-deliver", "Deliver"]] },
-  { zone: "store", label: "Store", cards: [["av-store", "Packs"], ["av-import", "Import & library"]] },
-  { zone: "code", label: "Code", cards: [["av-code", "CODE"]] },
-  { zone: "system", label: "System", cards: [["av-midi-card", "MIDI"], ["av-files", "Project & share"], ["av-family", "Family bridges"], ["av-roadmap", "Roadmap"]] },
+  { zone: "browse",   label: "Browse",   cards: [["av-store", "Packs"], ["av-import", "Import & library"], ["av-sessions", "Sessions"]] },
+  { zone: "perform",  label: "Perform",  cards: [["av-macros", "Macros"], ["av-perf", "Voice & feel"]] },
+  { zone: "sound",    label: "Sound",    cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-wt", "Wavetable editor"], ["av-tune", "Tuning studio"]] },
+  { zone: "shape",    label: "Shape",    cards: [["av-mod", "Mod matrix"], ["av-lfo", "LFO"]] },
+  { zone: "sequence", label: "Sequence", cards: [["av-seq", "Sequencer"]] },
+  { zone: "effects",  label: "Effects",  cards: [["av-fx", "FX rack"]] },
+  { zone: "mix",      label: "Mix",      cards: [["av-mix", "Mix & master"], ["av-comp", "Takes & comping"], ["av-rec", "Recorder"], ["av-studio", "Studio"]] },
+  { zone: "deliver",  label: "Deliver",  cards: [["av-deck", "Deck"], ["av-deliver", "Deliver"]] },
+  { zone: "system",   label: "System",   cards: [["av-midi-card", "MIDI"], ["av-files", "Project & share"], ["av-code", "CODE"], ["av-family", "Family bridges"], ["av-roadmap", "Roadmap"]] },
 ];
 
 const avRailState = { ready: false, el: null, grip: null, drag: null };
@@ -407,10 +408,12 @@ function avRailInit() {
     try {
       const w = parseFloat(localStorage.getItem(AV_RAIL_W_KEY));
       if (isFinite(w) && w > 0) avRailSetWidth(w);
-      if (localStorage.getItem(AV_RAIL_OPEN_KEY) === "0") avRailShow(false);
+      /* C1: the rail is the OPTIONAL second map - closed on a virgin profile, tabs are the one nav */
+      const openPref = localStorage.getItem(AV_RAIL_OPEN_KEY);
+      if (openPref === "0" || openPref === null) avRailShow(false);
     } catch (e) { /* defaults stand */ }
-    if (typeof avZoneShow === "function") { try { avZoneShow(window.__avZone ? window.__avZone.current() : "synth", { silent: true, source: "rail-init" }); } catch (e2) { /* sync best-effort */ } }
-    const cur = window.__avZone ? window.__avZone.current() : "synth";
+    if (typeof avZoneShow === "function") { try { avZoneShow(window.__avZone ? window.__avZone.current() : "sound", { silent: true, source: "rail-init" }); } catch (e2) { /* sync best-effort */ } }
+    const cur = window.__avZone ? window.__avZone.current() : "sound";
     const groups = document.querySelectorAll(".av-rail-group");
     for (let i = 0; i < groups.length; i++) groups[i].classList.toggle("on", groups[i].getAttribute("data-zone") === cur);
     return true;

@@ -13,12 +13,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Anvil — a MODDYS Foundry synthesizer</title>
-<meta name="description" content="Anvil: a flagship browser synthesizer — acid, wavetable and string engines, a drum kit, granular and sampler voices, an FX rack, a groovebox sequencer, a recording studio, a pack store, and a CODE section for your own DSP modules. S5 build.">
+<meta name="description" content="Anvil: a flagship browser synthesizer — acid, wavetable, FM, string, drum, granular and sampler engines, a groovebox sequencer, a studio and a pack store.">
 <meta name="author" content="Modtech (a.k.a. Moddy) — modtech@gmail.com">
 <meta name="copyright" content="© 2026 Modtech (Moddy). Released under the GNU AGPL-3.0-or-later licence.">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" href="icon-192.png">
 <meta name="theme-color" content="#16140f">
+<link rel="canonical" href="https://moddys.net/anvil/">
 <style>
 /* Anvil — theme tokens + Phase 0 shell styles.
    Palette per docs/02-ui-design-brief.md §9 ("Anvil Teal"): graphite base, one teal identity,
@@ -2047,95 +2048,1244 @@ header.av-head.av-console > .av-btn { flex: none; }
 header.av-head.av-console #av-a11y-host { flex: none; }
 header.av-head.av-console #av-a11y-host .av-btn { flex: none; }
 
+/* ===========================================================================
+   C1 CHASSIS (band, tabs, sub-tabs, inspector column, control language)
+   plan: docs/13-chassis-fsvr.md - pins: verify/_c1_wave.md
+   C1 CHASSIS (band, tabs, sub-tabs, inspector column, control language)
+   [hidden] guards: a class rule that sets display on .av-zone / .av-sub beats the UA
+   [hidden]{display:none}, which lays every page out stacked at 1/9 height. Pin it explicitly. */
+.av-zone[hidden], .av-sub[hidden], .av-subtabs[hidden] { display: none; }
+/* ============================================================================
+   C1 CHASSIS — bands, tabs, inspector, control language (FSVR read, Anvil skin).
+   Fragment: appended to src/styles.css verbatim by the parent. No @import, no fonts,
+   no new palette: every colour is an existing custom property, a graphite/steel grey
+   literal, or the ONE accent (--zone-accent). The LCD green is the single licensed
+   literal (the glass is the one place a display green belongs).
+
+   Prefix discipline: every selector starts with a pinned id/class, except the six
+   shell anchors the brief itself names -- .av-head, .av-work, .av-main, .av-zone,
+   .av-zone-box, .av-rail, #piano-dock -- which only the chassis may own.
+   No .av-card internals are restyled.
+
+   Hardware grammar: bands and wells are plates with 45-degree walls (a chamfered
+   hairline drawn by a 1px background ring under an inset fill pseudo), folder tabs,
+   graphite pot caps with one light pointer, lit = --zone-accent with white text.
+   ============================================================================ */
+
+/* local material tokens (greys only + the LCD green) */
+.av-head,
+.av-work,
+#piano-dock {
+  --ch-void: #05080b;
+  --ch-ink: #070c0f;
+  --ch-well: #0b1115;
+  --ch-floor: #0c1216;
+  --ch-plate-hi: #172027;
+  --ch-plate: #111920;
+  --ch-plate-lo: #0b1116;
+  --ch-steel-hi: #cdd6dc;
+  --ch-steel: #a7b2ba;
+  --ch-steel-lo: #6e7a82;
+  --ch-graph-hi: #3d4952;
+  --ch-graph: #29343c;
+  --ch-graph-lo: #111920;
+  --ch-lcd: #7fdc9a;
+  --ch-chamfer: polygon(7px 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%, 0 7px);
+}
+
+/* ---------------------------------------------------------------------------
+   1. SHELL — fixed band, work row, main, dock. The page still never scrolls.
+   --------------------------------------------------------------------------- */
+header.av-head {
+  flex: none;
+  height: 96px;
+  min-height: 96px;
+  display: block;
+  padding: 0;
+  border-bottom: 1px solid var(--ch-void);
+  background:
+    linear-gradient(180deg, var(--ch-plate-hi) 0%, var(--ch-plate) 58%, var(--ch-plate-lo) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 6px 16px rgba(0, 0, 0, .55);
+  position: relative;
+  z-index: 30;
+}
+
+#av-band {
+  height: 100%;
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+  padding: 9px 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.av-band-grp {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 0 10px;
+  background: var(--hair);
+  clip-path: var(--ch-chamfer);
+}
+.av-band-grp::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  background: linear-gradient(180deg, #1a232a 0%, #10171d 62%, #0a1015 100%);
+  clip-path: var(--ch-chamfer);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), inset 0 -10px 18px rgba(0, 0, 0, .45);
+}
+.av-band-grp[data-grp="identity"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 8px;
+}
+.av-band-grp[data-grp="brand"] { flex: none; }
+.av-band-grp[data-grp="pots"] { flex: none; gap: 6px; }
+.av-band-grp[data-grp="view"] { flex: none; gap: 5px; }
+.av-band-grp[data-grp="out"] { flex: none; gap: 7px; }
+
+.av-work {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  gap: 0;
+}
+.av-work .av-main { flex: 1 1 auto; min-width: 0; }
+.av-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  max-width: none;
+  margin: 0;
+}
+.av-zone { display: flex; flex-direction: column; min-height: 0; }
+.av-zone-box { padding: 12px 14px 18px; gap: 10px; }
+body.av-rail-closed .av-rail { display: none; }
+body.av-rail-closed .av-work { gap: 0; }
+
+/* the dock: 132px, wheels pinned to its far left, rail + keys beside them */
+body { --dock-h: 132px; }
+#piano-dock {
+  height: var(--dock-h, 132px);
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  column-gap: 0;
+}
+#piano-dock > #piano-rail { grid-column: 2; grid-row: 1; }
+#piano-dock > #piano-keys { grid-column: 2; grid-row: 2; }
+.av-wheels {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  width: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 0 10px;
+  border-right: 1px solid var(--ch-void);
+  background: linear-gradient(90deg, #0d1419 0%, #0a1014 100%);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, .03);
+}
+
+/* ---------------------------------------------------------------------------
+   2. BAND: brand, identity, pots, view, out.
+   --------------------------------------------------------------------------- */
+.av-band-grp .av-word { flex: none; font-size: 14px; letter-spacing: .26em; }
+.av-band-grp .av-chip { flex: none; font-size: 9.5px; padding: 2px 6px; }
+.av-band-transport { display: flex; align-items: center; gap: 4px; flex: none; }
+.av-band-transport #avc-bpm {
+  width: 52px;
+  height: 22px;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text);
+  background: var(--ch-ink);
+  border: 1px solid var(--ch-void);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, .8);
+}
+
+/* band keys: the .av-btn 26x26 icon box opens up for text, never wraps */
+#av-band .av-btn {
+  flex: none;
+  width: auto;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 10px;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  background: linear-gradient(180deg, #232d35 0%, #151d23 62%, #0d1318 100%);
+  border: 1px solid var(--ch-void);
+  border-radius: 3px;
+  box-shadow: 0 1px 0 var(--ch-void), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+#av-band .av-btn:hover { color: var(--text); border-color: var(--zone-accent); }
+#av-band .av-btn.mini { padding: 0 8px; font-size: 9px; }
+#av-band .av-btn.on,
+#av-band .av-btn[aria-pressed="true"] {
+  color: #fff;
+  background: var(--zone-accent);
+  border-color: var(--ch-void);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--zone-accent) 45%, transparent);
+}
+
+/* LCD — dark glass, three dot-matrix lines, one dot, one readout */
+#av-lcd {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  height: 100%;
+  max-height: 74px;
+  padding: 6px 40px 6px 10px;
+  border-radius: 2px;
+  background:
+    radial-gradient(120% 140% at 50% 0%, #0a1510 0%, #050a08 58%, #030605 100%);
+  box-shadow:
+    inset 0 0 0 1px var(--ch-void),
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    inset 0 2px 10px rgba(0, 0, 0, .9),
+    0 1px 0 rgba(255, 255, 255, .04);
+}
+.av-lcd-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 16px;
+  line-height: 16px;
+  min-width: 0;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ch-lcd);
+  text-shadow: 0 0 7px rgba(127, 220, 154, .30);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.av-lcd-row > span:first-child {
+  flex: none;
+  color: color-mix(in srgb, var(--ch-lcd) 52%, #050a08);
+  letter-spacing: .2em;
+}
+#av-lcd-pack,
+#av-lcd-preset,
+#av-lcd-engine {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#av-lcd select,
+.av-lcd-row select {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0 1px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-shadow: inherit;
+  cursor: pointer;
+  outline: none;
+}
+#av-lcd select:focus-visible { box-shadow: inset 0 -1px 0 var(--ch-lcd); }
+#av-lcd option { background: #060b08; color: var(--text); letter-spacing: .04em; }
+#av-lcd-edited {
+  position: absolute;
+  top: 7px;
+  right: 9px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2f4a39;
+  box-shadow: inset 0 0 0 1px #050a08;
+}
+#av-lcd-edited.on,
+#av-lcd-edited[data-on="1"] {
+  background: var(--ch-lcd);
+  box-shadow: 0 0 7px rgba(127, 220, 154, .75);
+}
+#av-lcd-poly {
+  position: absolute;
+  right: 9px;
+  bottom: 6px;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ch-lcd);
+  text-shadow: 0 0 6px rgba(127, 220, 154, .35);
+  white-space: nowrap;
+}
+
+/* pot-mode pair */
+#av-potmode {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ch-void);
+  border-radius: 3px;
+  background: var(--ch-ink);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .8);
+}
+#av-potmode-tone,
+#av-potmode-macros {
+  height: 20px;
+  padding: 0 7px;
+  border: 1px solid var(--ch-void);
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--ch-steel-hi) 0%, var(--ch-steel) 55%, var(--ch-steel-lo) 100%);
+  color: #0c1216;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7);
+}
+#av-potmode [aria-checked="true"] {
+  color: #fff;
+  background: var(--zone-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--zone-accent) 50%, transparent),
+              inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+
+/* pot mounts */
+.av-band-pot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 52px;
+  flex: none;
+}
+#av-pot-a,
+#av-pot-b,
+#av-pot-c,
+#av-pot-d { width: 40px; height: 40px; flex: none; }
+#av-pot-a .av-knob-wrap,
+#av-pot-b .av-knob-wrap,
+#av-pot-c .av-knob-wrap,
+#av-pot-d .av-knob-wrap { width: 40px !important; gap: 0; }
+#av-pot-a .av-knob-lbl,
+#av-pot-b .av-knob-lbl,
+#av-pot-c .av-knob-lbl,
+#av-pot-d .av-knob-lbl { display: none; }
+.av-band-pot-label {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.av-band-num {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* out group: scope, meters, panic, learn */
+#av-scope {
+  display: block;
+  width: 100px;
+  height: 62px;
+  flex: none;
+  border: 1px solid var(--ch-void);
+  border-radius: 2px;
+  background: #04080a;
+  box-shadow: inset 0 1px 8px rgba(0, 0, 0, .9), inset 0 0 0 1px rgba(255, 255, 255, .03);
+}
+#av-meter-l,
+#av-meter-r { flex: none; }
+.av-band-grp[data-grp="out"] .avc-vu { height: 62px; align-items: stretch; padding: 0; gap: 2px; }
+.av-band-grp[data-grp="out"] .avc-vu-bar { height: 62px; width: 8px; }
+#av-panic {
+  color: #fff;
+  letter-spacing: .16em;
+  background: linear-gradient(180deg, #2c363e 0%, #1a232a 100%);
+}
+#av-panic:hover { border-color: var(--zone-accent); color: #fff; background: var(--zone-accent); }
+#av-learn.on,
+#av-learn[aria-pressed="true"] { color: #fff; background: var(--zone-accent); }
+
+/* ---------------------------------------------------------------------------
+   3. FOLDER TABS — raised keys; the selected one is cut into the well floor.
+   --------------------------------------------------------------------------- */
+.av-zones {
+  flex: none;
+  height: 44px;
+  border-bottom: 1px solid var(--hair);
+  background: linear-gradient(180deg, #0d1318 0%, #080d10 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+.av-zones-in {
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 0 8px;
+  overflow: visible;
+  max-width: none;
+  margin: 0;
+  width: 100%;
+}
+.av-zone-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  margin: 0;
+  padding: 0 8px 3px;
+  border: 1px solid var(--hair);
+  border-bottom-color: var(--ch-void);
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(180deg, #1b242b 0%, #141c22 55%, #0e151a 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07), 0 -1px 0 rgba(255, 255, 255, .02);
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.av-zone-tab:hover { color: var(--text-2); border-color: var(--ch-steel-lo); }
+.av-zone-tab:focus-visible { outline: 1px solid var(--zone-accent); outline-offset: -3px; }
+.av-zone-tab::before { flex: none; opacity: .5; }
+.av-zone-tab[aria-selected="true"] {
+  height: 44px;
+  margin-bottom: -1px;
+  z-index: 2;
+  border-color: var(--hair);
+  border-bottom-color: transparent;
+  border-top-color: var(--hair);
+  border-radius: 5px 5px 0 0;
+  background: var(--ch-floor);
+  box-shadow: none;
+  color: var(--zone-accent);
+  text-shadow: none;
+}
+.av-zone-tab[aria-selected="true"]::before { opacity: 1; box-shadow: 0 0 6px var(--zone-accent); }
+
+/* ---------------------------------------------------------------------------
+   4. SUB-TABS — flat keys over the page body, the live one underlined.
+   --------------------------------------------------------------------------- */
+.av-subtabs {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  gap: 1px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--ch-floor);
+}
+.av-subtab {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  height: 27px;
+  padding: 0 11px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.av-subtab:hover { color: var(--text-2); background: rgba(255, 255, 255, .025); }
+.av-subtab:focus-visible { outline: 1px solid var(--zone-accent); outline-offset: -3px; }
+.av-subtab[aria-selected="true"] {
+  color: var(--text);
+  box-shadow: inset 0 -2px 0 var(--zone-accent);
+}
+.av-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.av-sub[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------------------
+   5. INSPECTOR — persistent well column (272px), 45-degree wall, own scroll.
+   --------------------------------------------------------------------------- */
+#av-inspector {
+  flex: none;
+  width: 272px;
+  min-width: 272px;
+  min-height: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 9px 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-left: 1px solid var(--ch-void);
+  background:
+    linear-gradient(180deg, #0f161b 0%, var(--ch-well) 22%, #090e12 100%);
+  box-shadow:
+    inset 1px 0 0 rgba(255, 255, 255, .04),
+    inset 6px 0 12px rgba(0, 0, 0, .55),
+    inset 0 0 30px rgba(0, 0, 0, .5);
+}
+#av-inspector::-webkit-scrollbar { width: 8px; }
+#av-inspector::-webkit-scrollbar-track { background: transparent; }
+#av-inspector::-webkit-scrollbar-thumb { background: #22303a; border-radius: 5px; border: 2px solid #0a1014; }
+
+#av-insp-title {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  padding: 0 1px;
+}
+.av-kind-keys {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(4, 26px);
+  gap: 5px;
+}
+.av-kind-key {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--ch-void);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #232d35 0%, #151d23 62%, #0d1318 100%);
+  box-shadow: 0 1px 0 var(--ch-void), inset 0 1px 0 rgba(255, 255, 255, .08);
+  cursor: pointer;
+  position: relative;
+}
+.av-kind-key:hover { border-color: var(--ch-steel-lo); }
+.av-kind-key:focus-visible { outline: 1px solid var(--zone-accent); outline-offset: 1px; }
+.av-kind-key::after {
+  content: attr(data-kind);
+  position: absolute;
+  inset: auto 0 -11px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--text-3);
+}
+.av-kind-key { margin-bottom: 11px; }
+.av-kind-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ch-steel);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .55);
+}
+.av-kind-key[aria-checked="true"] {
+  background: var(--zone-accent);
+  border-color: var(--ch-void);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--zone-accent) 55%, transparent);
+}
+.av-kind-key[aria-checked="true"] .av-kind-dot {
+  background: #fff;
+  box-shadow: 0 0 6px rgba(255, 255, 255, .8);
+}
+.av-kind-key[aria-checked="true"]::after { color: var(--text-2); }
+
+.av-insp-frame {
+  flex: none;
+  padding: 7px;
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #101820 0%, #0a1015 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04), inset 0 -8px 16px rgba(0, 0, 0, .4);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+#av-insp-core {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: auto;
+  gap: 8px 4px;
+}
+.av-insp-pot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+.av-insp-pot .av-knob-wrap { width: 50px !important; gap: 0; }
+.av-insp-pot .av-knob-lbl { display: none; }
+.av-insp-pot-label {
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.av-insp-num {
+  font-family: var(--mono);
+  font-size: 8.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+#av-insp-wave,
+#av-insp-env {
+  position: relative;
+  display: block;
+  width: 100%;
+  flex: none;
+  border: 1px solid var(--ch-void);
+  border-radius: 2px;
+  background: radial-gradient(120% 140% at 50% 0%, #07100c 0%, #040807 70%, #030605 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .04),
+    inset 0 0 0 1px rgba(0, 0, 0, .8),
+    inset 0 2px 9px rgba(0, 0, 0, .9);
+  cursor: pointer;
+  touch-action: none;
+}
+#av-insp-wave { height: 62px; }
+#av-insp-env { height: 74px; }
+#av-insp-wave:focus-visible,
+#av-insp-env:focus-visible { outline: 1px solid var(--zone-accent); outline-offset: 1px; }
+.av-insp-screen-label {
+  position: absolute;
+  top: 3px;
+  right: 5px;
+  z-index: 2;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .1em;
+  color: var(--text-3);
+  pointer-events: none;
+}
+#av-insp-edit {
+  flex: none;
+  width: 100%;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--ch-void);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #29343c 0%, #1a232a 100%);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 1px 0 var(--ch-void), inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+#av-insp-edit:hover { color: #fff; background: var(--zone-accent); }
+.av-insp-launch {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+.av-insp-launch[data-page] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  padding: 0 4px;
+  border: 1px solid var(--ch-void);
+  border-radius: 3px;
+  background: linear-gradient(180deg, #1e272e 0%, #121a20 100%);
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  box-shadow: 0 1px 0 var(--ch-void), inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+.av-insp-launch[data-page]:hover { color: #fff; border-color: var(--zone-accent); }
+.av-insp-launch[data-page]:focus-visible { outline: 1px solid var(--zone-accent); outline-offset: 1px; }
+#av-insp-voices {
+  flex: none;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+#av-insp-poly { flex: none; align-self: flex-start; }
+
+/* ---------------------------------------------------------------------------
+   6. PRIMITIVES — pot, fader, pair, num, group.
+   --------------------------------------------------------------------------- */
+
+/* pot: av_knob DOM untouched. Its parts are re-cut as a graphite cap with one
+   light pointer: .av-knob (cylinder), .av-knob-ring (steel arc), .av-knob-face
+   (cap), .av-knob-mark (pointer), .av-knob-lbl / .av-knob-val (legend). */
+.av-pot .av-knob,
+.av-pot.av-knob {
+  background: radial-gradient(circle at 50% 28%, var(--ch-graph-hi) 0%, #1b242b 54%, #0a0f13 100%);
+  border: 1px solid var(--ch-void);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 -2px 5px rgba(0, 0, 0, .65);
+}
+.av-pot .av-knob:hover,
+.av-pot.av-knob:hover {
+  box-shadow: 0 0 0 1px var(--ch-steel-lo), 0 2px 4px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+.av-pot .av-knob:focus-visible,
+.av-pot.av-knob:focus-visible { box-shadow: 0 0 0 2px var(--zone-accent), 0 2px 4px rgba(0, 0, 0, .7); }
+.av-pot .av-knob.dragging,
+.av-pot.av-knob.dragging { box-shadow: 0 0 0 2px var(--zone-accent), 0 0 12px rgba(0, 0, 0, .6); }
+.av-pot .av-knob-ring,
+.av-pot.av-knob .av-knob-ring {
+  inset: -2px;
+  background: conic-gradient(from 225deg,
+    var(--ch-steel) 0deg var(--knob-arc, 0deg),
+    #1d262d var(--knob-arc, 0deg) 270deg,
+    transparent 270deg 360deg);
+  opacity: 1;
+}
+.av-pot .av-knob-face,
+.av-pot.av-knob .av-knob-face {
+  inset: 12%;
+  background: radial-gradient(circle at 40% 26%, #4a565f 0%, #2b363e 52%, #161e24 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), inset 0 -2px 4px rgba(0, 0, 0, .5), 0 1px 2px rgba(0, 0, 0, .55);
+}
+.av-pot .av-knob-mark,
+.av-pot.av-knob .av-knob-mark {
+  left: calc(50% - .5px);
+  top: 5%;
+  width: 1px;
+  height: 30%;
+  border-radius: 1px;
+  background: var(--ch-steel-hi);
+  box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+  transform-origin: 50% 150%;
+}
+.av-pot .av-knob.at-min .av-knob-mark,
+.av-pot.av-knob .av-knob-mark { }
+.av-pot .av-knob.at-max .av-knob-mark,
+.av-pot.av-knob .av-knob-mark { }
+.av-pot .av-knob-lbl,
+.av-pot.av-knob + .av-knob-lbl {
+  color: var(--text-3);
+  font-size: 7.5px;
+  letter-spacing: .1em;
+}
+.av-pot .av-knob-val,
+.av-pot .av-knob-wrap .av-knob-val { color: var(--text-2); text-shadow: none; font-size: 9px; }
+.av-pot .av-knob.at-max .av-knob-mark { background: #fff; }
+
+/* fader: a vertical well track and a cap; --fader (0..1) places the cap */
+.av-fader {
+  position: relative;
+  flex: none;
+  width: 26px;
+  height: 96px;
+  touch-action: none;
+  cursor: ns-resize;
+  outline: none;
+}
+.av-fader::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - 3px);
+  top: 2px;
+  bottom: 2px;
+  width: 6px;
+  border-radius: 3px;
+  background: #05090b;
+  border: 1px solid var(--ch-void);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, .9);
+}
+.av-fader::after,
+.av-fader .av-fader-cap {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  height: 18px;
+  bottom: calc(var(--fader, .5) * (100% - 20px));
+  border-radius: 2px;
+  border: 1px solid var(--ch-void);
+  background:
+    linear-gradient(180deg, var(--ch-steel-hi) 0%, var(--ch-steel) 44%, var(--ch-steel-lo) 100%);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .75);
+}
+.av-fader::after {
+  background-image:
+    linear-gradient(180deg, var(--ch-steel-hi) 0%, var(--ch-steel) 44%, var(--ch-steel-lo) 100%),
+    repeating-linear-gradient(180deg, transparent 0 3px, rgba(0, 0, 0, .18) 3px 4px);
+  background-blend-mode: multiply;
+}
+.av-fader:focus-visible::after { box-shadow: 0 0 0 1px var(--zone-accent), 0 2px 3px rgba(0, 0, 0, .7); }
+
+/* two-choice pair: silver keys, the checked one lit */
+.av-pair {
+  display: inline-flex;
+  flex: none;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ch-void);
+  border-radius: 3px;
+  background: var(--ch-ink);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .8);
+}
+.av-pair-key {
+  height: 20px;
+  min-width: 30px;
+  padding: 0 8px;
+  border: 1px solid var(--ch-void);
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--ch-steel-hi) 0%, var(--ch-steel) 52%, var(--ch-steel-lo) 100%);
+  color: #0c1216;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 1px 0 var(--ch-void);
+}
+.av-pair-key:hover { filter: brightness(1.08); }
+.av-pair-key:focus-visible { outline: 1px solid var(--zone-accent); outline-offset: 1px; }
+.av-pair-key[aria-checked="true"] {
+  color: #fff;
+  background: var(--zone-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--zone-accent) 45%, transparent),
+              inset 0 1px 0 rgba(255, 255, 255, .35);
+}
+
+/* number: down stepper, editable value, up stepper */
+.av-num {
+  display: inline-flex;
+  align-items: stretch;
+  flex: none;
+  height: 18px;
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  background: var(--ch-ink);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .75);
+  overflow: hidden;
+}
+.av-num-down,
+.av-num-up {
+  flex: none;
+  width: 14px;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(180deg, #1d262d 0%, #121a20 100%);
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 7px;
+  line-height: 1;
+  cursor: pointer;
+}
+.av-num-down { border-right: 1px solid var(--hair); }
+.av-num-up { border-left: 1px solid var(--hair); }
+.av-num-down:hover,
+.av-num-up:hover { color: #fff; background: var(--zone-accent); }
+.av-num-down:focus-visible,
+.av-num-up:focus-visible { outline: 1px solid var(--zone-accent); outline-offset: -2px; }
+.av-num input,
+.av-num .av-num-val {
+  width: 46px;
+  min-width: 0;
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  outline: none;
+}
+.av-num input:focus { box-shadow: inset 0 0 0 1px var(--zone-accent); }
+.av-num input::-webkit-outer-spin-button,
+.av-num input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* group box: chamfered plate, title tab on the left top corner */
+.av-group {
+  position: relative;
+  isolation: isolate;
+  margin-top: 13px;
+  padding: 15px 11px 10px;
+  background: var(--hair);
+  clip-path: var(--ch-chamfer);
+  flex: none;
+  min-width: 0;
+}
+.av-group::before {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  z-index: -1;
+  clip-path: var(--ch-chamfer);
+  background: linear-gradient(180deg, #121a20 0%, #0d1419 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+.av-group-tab {
+  position: absolute;
+  top: -13px;
+  left: 10px;
+  z-index: 2;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 12px;
+  clip-path: polygon(5px 0, calc(100% - 5px) 0, 100% 100%, 0 100%);
+  background: var(--ch-steel-lo);
+  color: #0c1216;
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ---------------------------------------------------------------------------
+   7. WHEELS — pitch and mod, vertical, never a page-scroll gesture.
+   --------------------------------------------------------------------------- */
+.av-wheel { }
+#av-wheel-pitch,
+#av-wheel-mod {
+  position: relative;
+  flex: none;
+  width: 22px;
+  height: 96px;
+  border: 1px solid var(--ch-void);
+  border-radius: 3px;
+  background: #04080a;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, .9), inset 0 0 0 2px #0a1114;
+  touch-action: none;
+  cursor: ns-resize;
+  outline: none;
+}
+#av-wheel-pitch::before,
+#av-wheel-mod::before {
+  content: "";
+  position: absolute;
+  left: calc(50% - .5px);
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: #142026;
+}
+#av-wheel-pitch::after,
+#av-wheel-mod::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 26px;
+  bottom: calc(var(--wheel, 0) * (100% - 30px));
+  border-radius: 2px;
+  border: 1px solid var(--ch-void);
+  background:
+    repeating-linear-gradient(180deg, transparent 0 3px, rgba(0, 0, 0, .22) 3px 4px),
+    linear-gradient(180deg, var(--ch-graph-hi) 0%, var(--ch-graph) 46%, var(--ch-graph-lo) 100%);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .75), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+#av-wheel-pitch::after { background-color: #33404a; }
+#av-wheel-pitch:focus-visible::after,
+#av-wheel-mod:focus-visible::after { box-shadow: 0 0 0 1px var(--zone-accent), 0 2px 4px rgba(0, 0, 0, .75); }
+#av-wheel-pitch { --wheel: .5; }
+#av-wheel-mod { --wheel: 0; }
+
+/* ---------------------------------------------------------------------------
+   8. WIDTH — 1180 px strips the inspector to icons, 980 px drops it.
+   --------------------------------------------------------------------------- */
+@media (max-width: 1180px) {
+  #av-band { gap: 7px; padding: 8px; }
+  .av-band-grp { padding: 0 6px; gap: 5px; }
+  .av-band-grp[data-grp="pots"] { gap: 2px; }
+  .av-band-pot { width: 42px; }
+  #av-pot-a, #av-pot-b, #av-pot-c, #av-pot-d { width: 34px; height: 34px; }
+  #av-pot-a .av-knob-wrap,
+  #av-pot-b .av-knob-wrap,
+  #av-pot-c .av-knob-wrap,
+  #av-pot-d .av-knob-wrap { width: 34px !important; }
+  .av-band-num { font-size: 8px; }
+  .av-band-pot-label { font-size: 6.5px; letter-spacing: .04em; }
+  #av-scope { width: 96px; height: 54px; }
+  .av-band-grp[data-grp="out"] .avc-vu,
+  .av-band-grp[data-grp="out"] .avc-vu-bar { height: 54px; }
+  .av-zone-tab { padding: 0 5px; font-size: 9px; letter-spacing: .06em; }
+
+  #av-inspector {
+    width: 56px;
+    min-width: 56px;
+    padding: 8px 5px 10px;
+    gap: 6px;
+  }
+  #av-insp-title { display: none; }
+  .av-kind-keys { grid-template-columns: repeat(2, 26px); gap: 4px; justify-content: center; }
+  .av-kind-key { margin-bottom: 10px; }
+  .av-kind-key[aria-checked="true"]::after { color: var(--text-2); }
+  .av-insp-frame { padding: 4px; gap: 5px; }
+  #av-insp-core { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 2px; }
+  .av-insp-pot .av-knob-wrap { width: 34px !important; }
+  .av-insp-pot-label { display: none; }
+  .av-insp-num { display: none; }
+  #av-insp-wave { height: 46px; }
+  #av-insp-env { height: 54px; }
+  .av-insp-screen-label { font-size: 7px; }
+  #av-insp-edit {
+    height: 24px;
+    padding: 0 2px;
+    font-size: 7px;
+    letter-spacing: .04em;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .av-insp-launch { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+  .av-insp-launch[data-page] { height: 24px; font-size: 7.5px; letter-spacing: .04em; }
+  #av-insp-voices { display: none; }
+  #av-insp-poly .av-pair-key { min-width: 20px; padding: 0 3px; font-size: 7px; }
+}
+
+@media (max-width: 980px) {
+  #av-inspector { display: none; }
+  .av-zone-box { padding: 10px 10px 16px; }
+  .av-subtabs { padding: 0 8px; }
+}
+
+/* ---------------------------------------------------------------------------
+   9. REDUCED MOTION — the chassis never animates much, but it never jitters.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .av-band-grp,
+  .av-band-grp::before,
+  .av-group,
+  .av-group::before { transition: none; }
+}
+
+/* C1 band shedding: the band must fit the widths the app supports. At narrow widths the readouts
+   and the duplicates go first; the a11y pair is never shed (the fit rig requires it inside). */
+.av-band-grp { min-width: 0; }
+@media (max-width: 1240px) {
+  #av-lcd-pack, #av-lcd-preset { display: none; }
+  #av-tier, #av-voices { display: none; }
+  #av-scope { display: none; }
+}
+@media (max-width: 1020px) {
+  .av-band-grp[data-grp="pots"] .av-band-pot:not(:first-of-type) { display: none; }
+  #avc-preset-prev, #avc-preset-next, #avc-song, #avc-rec { display: none; }
+  #av-head-about { display: none; }
+  .av-band-grp[data-grp="identity"] .av-word { display: none; }
+}
+@media (max-width: 880px) {
+  #av-vol-pot, #av-vol-val { display: none; }
+  #av-potmode { display: none; }
+  #av-panic { display: none; }
+  #av-lcd { max-width: 150px; }
+}
+
 </style>
 </head>
 
 <body>
-<body>
-<header class="av-head">
-  <span class="av-word">Anvil</span>
-  <span class="av-chip av-hot" id="av-version">v0.1.0</span>
-  <span class="av-spacer"></span>
-  <span class="av-chip av-dim" id="av-tier">engine: pending</span>
-  <span class="av-chip av-dim" id="av-voices">voices: &mdash;</span>
-  <button class="av-btn" id="btn-piano" title="Piano dock — 61 keys at the bottom (Y)" aria-label="Piano dock">&#127929;</button>
-  <button class="av-btn" id="av-help" title="Help &mdash; shortcuts, the tour and the guides (?)" aria-label="Help">?</button>
-</header>
-<nav class="av-zones" id="av-zones" role="tablist" aria-label="Zones">
+<header class="av-head" id="av-head"></header>
+<nav class="av-zones" id="av-zones" role="tablist" aria-label="Pages">
   <div class="av-zones-in">
-    <button class="av-zone-tab" id="av-tab-synth" data-zone="synth" role="tab" aria-selected="true" aria-controls="av-zone-synth" title="Synth zone">Synth</button>
-    <button class="av-zone-tab" id="av-tab-fx" data-zone="fx" role="tab" aria-selected="false" aria-controls="av-zone-fx" title="FX zone">FX</button>
-    <button class="av-zone-tab" id="av-tab-mod" data-zone="mod" role="tab" aria-selected="false" aria-controls="av-zone-mod" title="Mod zone">Mod</button>
-    <button class="av-zone-tab" id="av-tab-seq" data-zone="seq" role="tab" aria-selected="false" aria-controls="av-zone-seq" title="Seq zone">Seq</button>
-    <button class="av-zone-tab" id="av-tab-studio" data-zone="studio" role="tab" aria-selected="false" aria-controls="av-zone-studio" title="Studio zone">Studio</button>
-    <button class="av-zone-tab" id="av-tab-store" data-zone="store" role="tab" aria-selected="false" aria-controls="av-zone-store" title="Store zone">Store</button>
-    <button class="av-zone-tab" id="av-tab-code" data-zone="code" role="tab" aria-selected="false" aria-controls="av-zone-code" title="Code zone">Code</button>
-    <button class="av-zone-tab" id="av-tab-system" data-zone="system" role="tab" aria-selected="false" aria-controls="av-zone-system" title="System zone">System</button>
+    <button class="av-zone-tab" id="av-tab-browse" data-zone="browse" role="tab" aria-selected="false" aria-controls="av-zone-browse" title="What you pick: packs, presets, imports and saved sessions">BROWSE</button>
+    <button class="av-zone-tab" id="av-tab-perform" data-zone="perform" role="tab" aria-selected="false" aria-controls="av-zone-perform" title="The performance: macro pots, poly and glide">PERFORM</button>
+    <button class="av-zone-tab" id="av-tab-sound" data-zone="sound" role="tab" aria-selected="true" aria-controls="av-zone-sound" title="The voice: engine, FM, drums, samples, chop, wavetable, tuning">SOUND</button>
+    <button class="av-zone-tab" id="av-tab-shape" data-zone="shape" role="tab" aria-selected="false" aria-controls="av-zone-shape" title="What moves it: the matrix and the LFO">SHAPE</button>
+    <button class="av-zone-tab" id="av-tab-sequence" data-zone="sequence" role="tab" aria-selected="false" aria-controls="av-zone-sequence" title="What plays it: the sequencer, scenes and the song arranger">SEQUENCE</button>
+    <button class="av-zone-tab" id="av-tab-effects" data-zone="effects" role="tab" aria-selected="false" aria-controls="av-zone-effects" title="What processes it: the FX rack">EFFECTS</button>
+    <button class="av-zone-tab" id="av-tab-mix" data-zone="mix" role="tab" aria-selected="false" aria-controls="av-zone-mix" title="Where it sums: mix and master, comping, the recorder and the studio">MIX</button>
+    <button class="av-zone-tab" id="av-tab-deliver" data-zone="deliver" role="tab" aria-selected="false" aria-controls="av-zone-deliver" title="What leaves the building: the deck display and the one-press deliver render">DELIVER</button>
+    <button class="av-zone-tab" id="av-tab-system" data-zone="system" role="tab" aria-selected="false" aria-controls="av-zone-system" title="The plumbing: MIDI, project, CODE, family bridges, roadmap">SYSTEM</button>
   </div>
 </nav>
 <div class="av-work">
   <aside id="av-rail" class="av-rail" aria-label="Module navigator"></aside>
   <main class="av-main">
-  <section class="av-zone" id="av-zone-synth" data-zone="synth" role="tabpanel" aria-labelledby="av-tab-synth">
+  <section class="av-zone" id="av-zone-browse" data-zone="browse" role="tabpanel" aria-labelledby="av-tab-browse" hidden>
+    <div class="av-zone-box">
+      <div class="av-subtabs" role="tablist" aria-label="Browse sections">
+        <button class="av-subtab" id="av-sub-browse-packs" data-sub="packs" role="tab" aria-selected="true" aria-controls="av-subpan-browse-packs">PACKS</button>
+        <button class="av-subtab" id="av-sub-browse-import" data-sub="import" role="tab" aria-selected="false" aria-controls="av-subpan-browse-import">IMPORT &amp; LIBRARY</button>
+        <button class="av-subtab" id="av-sub-browse-sessions" data-sub="sessions" role="tab" aria-selected="false" aria-controls="av-subpan-browse-sessions">SESSIONS</button>
+      </div>
+      <div class="av-sub" data-sub="packs" role="tabpanel" id="av-subpan-browse-packs" aria-labelledby="av-sub-browse-packs">
+  <section class="av-card" id="av-store">
+    <h2>Store</h2>
+    <div id="av-store-host"><p class="av-note av-dim">The pack store lands here &mdash; factory packs download once, verify sha-256 before they are stored, and stay available offline.</p></div>
+  </section>
+      </div>
+      <div class="av-sub" data-sub="import" role="tabpanel" id="av-subpan-browse-import" aria-labelledby="av-sub-browse-import" hidden>
+  <section class="av-card" id="av-import">
+    <h2>Import &amp; Library</h2>
+    <div id="av-import-host"><p class="av-note av-dim">The import hub lands here &mdash; drop files or folders anywhere and Anvil recognises WAV, MP3, AIFF, MIDI, REX2 and the pack formats, with honest notes for everything else. Imports stay in your local library.</p></div>
+  </section>
+      </div>
+      <div class="av-sub" data-sub="sessions" role="tabpanel" id="av-subpan-browse-sessions" aria-labelledby="av-sub-browse-sessions" hidden>
+  <section class="av-card" id="av-sessions">
+    <h2>Sessions</h2>
+    <div id="av-sessions-host"><p class="av-note av-dim">The sessions card lands here &mdash; versioned snapshots of the working state, autosave with crash recovery, and a one-press backup zip. Everything stays local.</p></div>
+  </section>
+      </div>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-perform" data-zone="perform" role="tabpanel" aria-labelledby="av-tab-perform" hidden>
+    <div class="av-zone-box">
+      <div class="av-subtabs" role="tablist" aria-label="Performance sections">
+        <button class="av-subtab" id="av-sub-perform-macros" data-sub="macros" role="tab" aria-selected="true" aria-controls="av-subpan-perform-macros">MACROS</button>
+        <button class="av-subtab" id="av-sub-perform-voice" data-sub="voice" role="tab" aria-selected="false" aria-controls="av-subpan-perform-voice">VOICE</button>
+      </div>
+      <div class="av-sub" data-sub="macros" role="tabpanel" id="av-subpan-perform-macros" aria-labelledby="av-sub-perform-macros">
+  <section class="av-card" id="av-macros">
+    <h2>Macros</h2>
+    <div id="av-macros-host"><p class="av-note av-dim">Four performance macros land here &mdash; each one drives any number of matrix destinations, so a whole gesture is one pot.</p></div>
+  </section>
+      </div>
+      <div class="av-sub" data-sub="voice" role="tabpanel" id="av-subpan-perform-voice" aria-labelledby="av-sub-perform-voice" hidden>
+  <section class="av-card" id="av-perf">
+    <h2>Voice &amp; feel</h2>
+    <div id="av-perf-host"><p class="av-note av-dim">Poly or mono, glide, velocity and key response for the performance land here.</p></div>
+  </section>
+      </div>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-sound" data-zone="sound" role="tabpanel" aria-labelledby="av-tab-sound">
     <div class="av-zone-box">
   <section class="av-card" id="av-levels">
     <h2>Levels</h2>
     <div id="av-levels-knobs"></div>
     <p class="av-note av-dim">Both knobs ride the master tap: <b>Instrument</b> sets the keys bus (what the instrument plays), <b>Master</b> is the final out. Drag or twist the rim &middot; wheel steps &middot; arrow keys when focused &middot; double-click resets.</p>
   </section>
+      <div class="av-subtabs" role="tablist" aria-label="Engine sections">
+        <button class="av-subtab" id="av-sub-sound-engine" data-sub="engine" role="tab" aria-selected="true" aria-controls="av-subpan-sound-engine">ENGINE</button>
+        <button class="av-subtab" id="av-sub-sound-fm" data-sub="fm" role="tab" aria-selected="false" aria-controls="av-subpan-sound-fm">FM</button>
+        <button class="av-subtab" id="av-sub-sound-drums" data-sub="drums" role="tab" aria-selected="false" aria-controls="av-subpan-sound-drums">DRUMS</button>
+        <button class="av-subtab" id="av-sub-sound-samples" data-sub="samples" role="tab" aria-selected="false" aria-controls="av-subpan-sound-samples">SAMPLES</button>
+        <button class="av-subtab" id="av-sub-sound-chop" data-sub="chop" role="tab" aria-selected="false" aria-controls="av-subpan-sound-chop">CHOP</button>
+        <button class="av-subtab" id="av-sub-sound-wt" data-sub="wt" role="tab" aria-selected="false" aria-controls="av-subpan-sound-wt">WAVETABLE</button>
+        <button class="av-subtab" id="av-sub-sound-tune" data-sub="tune" role="tab" aria-selected="false" aria-controls="av-subpan-sound-tune">TUNING</button>
+      </div>
+      <div class="av-sub" data-sub="engine" role="tabpanel" id="av-subpan-sound-engine" aria-labelledby="av-sub-sound-engine">
   <section class="av-card" id="av-synth">
     <h2>Synth</h2>
     <div id="av-synth-bank-host"></div>
     <div id="av-synth-knobs"></div>
     <p class="av-note av-dim">Play it from the piano dock below or your MIDI keys.</p>
   </section>
+      </div>
+      <div class="av-sub" data-sub="fm" role="tabpanel" id="av-subpan-sound-fm" aria-labelledby="av-sub-sound-fm" hidden>
   <section class="av-card" id="av-fm">
     <h2>FM</h2>
     <div id="av-fm-host"><p class="av-note av-dim">The FM engine lands here &mdash; six operators, eight algorithms and DX-style envelopes. Set the ENGINE select to fm and program the grid.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="drums" role="tabpanel" id="av-subpan-sound-drums" aria-labelledby="av-sub-sound-drums" hidden>
   <section class="av-card" id="av-drums">
     <h2>Drums</h2>
     <div id="av-pads-host"><p class="av-note av-dim">Kit pads land here &mdash; set the ENGINE select to DRUM and play the pads, the dock, or MIDI (notes below the split go to the kit).</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="samples" role="tabpanel" id="av-subpan-sound-samples" aria-labelledby="av-sub-sound-samples" hidden>
   <section class="av-card" id="av-sample">
     <h2>Samples</h2>
     <div id="av-sample-host"><p class="av-note av-dim">The sample core lands here &mdash; import WAVs, see the waveform, preview through the master tap.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="chop" role="tabpanel" id="av-subpan-sound-chop" aria-labelledby="av-sub-sound-chop" hidden>
   <section class="av-card" id="av-chop">
     <h2>Chop</h2>
     <div id="av-chop-host"><p class="av-note av-dim">The chop card lands here &mdash; detect transients, trim, fade and normalise the slices, map them to 16 pads and push the kit into the sampler.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="wt" role="tabpanel" id="av-subpan-sound-wt" aria-labelledby="av-sub-sound-wt" hidden>
   <section class="av-card" id="av-wt">
     <h2>Wavetable Editor</h2>
     <div id="av-wt-host"><p class="av-note av-dim">The wavetable editor lands here &mdash; draw or import a table, morph frames with spectral tools, and send it into the OSC2 wavetable oscillator. Your tables stay on this machine.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="tune" role="tabpanel" id="av-subpan-sound-tune" aria-labelledby="av-sub-sound-tune" hidden>
   <section class="av-card" id="av-tune">
     <h2>Tuning Studio</h2>
     <div id="av-tune-host"><p class="av-note av-dim">The tuning studio lands here &mdash; Scala .scl/.kbm scales, per-part tuning, MTS live receive and the equal/tuned morph. Your scales stay on this machine.</p></div>
   </section>
+      </div>
     </div>
   </section>
-  <section class="av-zone" id="av-zone-fx" data-zone="fx" role="tabpanel" aria-labelledby="av-tab-fx" hidden>
+  <section class="av-zone" id="av-zone-shape" data-zone="shape" role="tabpanel" aria-labelledby="av-tab-shape" hidden>
     <div class="av-zone-box">
-  <section class="av-card" id="av-fx">
-    <h2>FX Rack</h2>
-    <div id="av-fx-host"><p class="av-note av-dim">The rack lands here &mdash; seven modules inside the mixer worklet: drive &rarr; flavour &rarr; mod &rarr; delay &rarr; verb &rarr; conv &rarr; dyn. All off = bit-identical bypass.</p></div>
-  </section>
-    </div>
-  </section>
-  <section class="av-zone" id="av-zone-mod" data-zone="mod" role="tabpanel" aria-labelledby="av-tab-mod" hidden>
-    <div class="av-zone-box">
+      <div class="av-subtabs" role="tablist" aria-label="Modulation sections">
+        <button class="av-subtab" id="av-sub-shape-matrix" data-sub="matrix" role="tab" aria-selected="true" aria-controls="av-subpan-shape-matrix">MATRIX</button>
+        <button class="av-subtab" id="av-sub-shape-lfo" data-sub="lfo" role="tab" aria-selected="false" aria-controls="av-subpan-shape-lfo">LFO</button>
+      </div>
+      <div class="av-sub" data-sub="matrix" role="tabpanel" id="av-subpan-shape-matrix" aria-labelledby="av-sub-shape-matrix">
   <section class="av-card" id="av-mod">
     <h2>Mod Matrix</h2>
-    <div id="av-mod-host"><p class="av-note av-dim">The matrix lands here &mdash; 8 macro knobs and up to 32 routing slots (env / LFO / velocity / key / rand &rarr; cutoff, reso, pitch, osc levels, pan).</p></div>
+    <div id="av-mod-host"><p class="av-note av-dim">The matrix lands here &mdash; up to 32 routing slots (env / LFO / velocity / key / rand &rarr; cutoff, reso, pitch, osc levels, pan). Drag a source chip onto a knob to assign.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="lfo" role="tabpanel" id="av-subpan-shape-lfo" aria-labelledby="av-sub-shape-lfo" hidden>
   <section class="av-card" id="av-lfo">
     <h2>LFO</h2>
     <div id="av-lfo-host"><p class="av-note av-dim">The LFO lands here &mdash; shape, rate and the cutoff / pitch depths, with a live waveform scope.</p></div>
   </section>
+      </div>
     </div>
   </section>
-  <section class="av-zone" id="av-zone-seq" data-zone="seq" role="tabpanel" aria-labelledby="av-tab-seq" hidden>
+  <section class="av-zone" id="av-zone-sequence" data-zone="sequence" role="tabpanel" aria-labelledby="av-tab-sequence" hidden>
     <div class="av-zone-box">
   <section class="av-card" id="av-seq">
     <h2>Sequencer</h2>
@@ -2143,72 +3293,102 @@ header.av-head.av-console #av-a11y-host .av-btn { flex: none; }
   </section>
     </div>
   </section>
-  <section class="av-zone" id="av-zone-studio" data-zone="studio" role="tabpanel" aria-labelledby="av-tab-studio" hidden>
+  <section class="av-zone" id="av-zone-effects" data-zone="effects" role="tabpanel" aria-labelledby="av-tab-effects" hidden>
     <div class="av-zone-box">
-  <section class="av-card" id="av-rec">
-    <h2>Recorder</h2>
-    <div id="av-rec-host"><p class="av-note av-dim">Record the master output and grab a WAV.</p></div>
+  <section class="av-card" id="av-fx">
+    <h2>FX Rack</h2>
+    <div id="av-fx-host"><p class="av-note av-dim">The rack lands here &mdash; seven modules inside the mixer worklet: drive &rarr; flavour &rarr; mod &rarr; delay &rarr; verb &rarr; conv &rarr; dyn. All off = bit-identical bypass.</p></div>
   </section>
-  <section class="av-card" id="av-studio">
-    <h2>Studio</h2>
-    <div id="av-studio-host"><p class="av-note av-dim">The studio record core lands here &mdash; mic/line input riding the engine's own context, a count-in metronome, and lap takes that split at sequencer cycle boundaries. Nothing is uploaded.</p></div>
+    </div>
   </section>
-  <section class="av-card" id="av-sessions">
-    <h2>Sessions</h2>
-    <div id="av-sessions-host"><p class="av-note av-dim">The sessions card lands here &mdash; versioned snapshots of the working state, autosave with crash recovery, and a one-press backup zip. Everything stays local.</p></div>
-  </section>
-  <section class="av-card" id="av-comp">
-    <h2>Takes &amp; Comping</h2>
-    <div id="av-comp-host"><p class="av-note av-dim">The comp card lands here &mdash; take lanes from the studio's takes, pick-best comping with trims and equal-power crossfades, and a one-press WAV export. Nothing is uploaded.</p></div>
-  </section>
+  <section class="av-zone" id="av-zone-mix" data-zone="mix" role="tabpanel" aria-labelledby="av-tab-mix" hidden>
+    <div class="av-zone-box">
+      <div class="av-subtabs" role="tablist" aria-label="Mix sections">
+        <button class="av-subtab" id="av-sub-mix-mix" data-sub="mix" role="tab" aria-selected="true" aria-controls="av-subpan-mix-mix">MIX &amp; MASTER</button>
+        <button class="av-subtab" id="av-sub-mix-comp" data-sub="comp" role="tab" aria-selected="false" aria-controls="av-subpan-mix-comp">TAKES &amp; COMP</button>
+        <button class="av-subtab" id="av-sub-mix-rec" data-sub="rec" role="tab" aria-selected="false" aria-controls="av-subpan-mix-rec">RECORDER</button>
+        <button class="av-subtab" id="av-sub-mix-studio" data-sub="studio" role="tab" aria-selected="false" aria-controls="av-subpan-mix-studio">STUDIO</button>
+      </div>
+      <div class="av-sub" data-sub="mix" role="tabpanel" id="av-subpan-mix-mix" aria-labelledby="av-sub-mix-mix">
   <section class="av-card" id="av-mix">
     <h2>Mix &amp; Master</h2>
     <div id="av-mix-host"><p class="av-note av-dim">The mix desk lands here &mdash; per-track gain, pan, sends, ducking and insert FX; a verb + delay send pair; bus glue; and a master chain with LUFS / true-peak normalize targets and export dither. Render the mixdown offline, A/B it against a reference, and export the WAV. Nothing is uploaded.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="comp" role="tabpanel" id="av-subpan-mix-comp" aria-labelledby="av-sub-mix-comp" hidden>
+  <section class="av-card" id="av-comp">
+    <h2>Takes &amp; Comping</h2>
+    <div id="av-comp-host"><p class="av-note av-dim">The comp card lands here &mdash; take lanes from the studio's takes, pick-best comping with trims and equal-power crossfades, and a one-press WAV export. Nothing is uploaded.</p></div>
+  </section>
+      </div>
+      <div class="av-sub" data-sub="rec" role="tabpanel" id="av-subpan-mix-rec" aria-labelledby="av-sub-mix-rec" hidden>
+  <section class="av-card" id="av-rec">
+    <h2>Recorder</h2>
+    <div id="av-rec-host"><p class="av-note av-dim">Record the master output and grab a WAV.</p></div>
+  </section>
+      </div>
+      <div class="av-sub" data-sub="studio" role="tabpanel" id="av-subpan-mix-studio" aria-labelledby="av-sub-mix-studio" hidden>
+  <section class="av-card" id="av-studio">
+    <h2>Studio</h2>
+    <div id="av-studio-host"><p class="av-note av-dim">The studio record core lands here &mdash; mic/line input riding the engine's own context, a count-in metronome, and lap takes that split at sequencer cycle boundaries. Nothing is uploaded.</p></div>
+  </section>
+      </div>
+    </div>
+  </section>
+  <section class="av-zone" id="av-zone-deliver" data-zone="deliver" role="tabpanel" aria-labelledby="av-tab-deliver" hidden>
+    <div class="av-zone-box">
+      <div class="av-subtabs" role="tablist" aria-label="Deliver sections">
+        <button class="av-subtab" id="av-sub-deliver-deck" data-sub="deck" role="tab" aria-selected="true" aria-controls="av-subpan-deliver-deck">DECK</button>
+        <button class="av-subtab" id="av-sub-deliver-deliver" data-sub="deliver" role="tab" aria-selected="false" aria-controls="av-subpan-deliver-deliver">DELIVER</button>
+      </div>
+      <div class="av-sub" data-sub="deck" role="tabpanel" id="av-subpan-deliver-deck" aria-labelledby="av-sub-deliver-deck">
   <section class="av-card" id="av-deck">
     <h2>Deck</h2>
     <div id="av-deck-host"><p class="av-note av-dim">The deck lands here &mdash; a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS / true-peak meters, engine voice + CPU readouts and a note ticker. Display only &mdash; nothing is uploaded.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="deliver" role="tabpanel" id="av-subpan-deliver-deliver" aria-labelledby="av-sub-deliver-deliver" hidden>
   <section class="av-card" id="av-deliver">
     <h2>Deliver</h2>
     <div id="av-deliver-host"><p class="av-note av-dim">The Deliver card lands here &mdash; one press renders the pattern offline (stems &middot; master &middot; MIDI &middot; README) into a DAW-ready zip. Nothing plays live, nothing is uploaded.</p></div>
   </section>
-    </div>
-  </section>
-  <section class="av-zone" id="av-zone-store" data-zone="store" role="tabpanel" aria-labelledby="av-tab-store" hidden>
-    <div class="av-zone-box">
-  <section class="av-card" id="av-store">
-    <h2>Store</h2>
-    <div id="av-store-host"><p class="av-note av-dim">The pack store lands here &mdash; factory packs download once, verify sha-256 before they are stored, and stay available offline.</p></div>
-  </section>
-  <section class="av-card" id="av-import">
-    <h2>Import &amp; Library</h2>
-    <div id="av-import-host"><p class="av-note av-dim">The import hub lands here &mdash; drop files or folders anywhere and Anvil recognises WAV, MP3, AIFF, MIDI, REX2 and the pack formats, with honest notes for everything else. Imports stay in your local library.</p></div>
-  </section>
-    </div>
-  </section>
-  <section class="av-zone" id="av-zone-code" data-zone="code" role="tabpanel" aria-labelledby="av-tab-code" hidden>
-    <div class="av-zone-box">
-  <section class="av-card" id="av-code">
-    <h2>CODE &mdash; write your own modules</h2>
-    <div id="av-code-host"><p class="av-note av-dim">The CODE card lands here &mdash; write a sandboxed DSP module (an FX or a whole voice engine), run it live in the audio engine, and keep it in your own local library. Everything stays on this machine.</p></div>
-  </section>
+      </div>
     </div>
   </section>
   <section class="av-zone" id="av-zone-system" data-zone="system" role="tabpanel" aria-labelledby="av-tab-system" hidden>
     <div class="av-zone-box">
+      <div class="av-subtabs" role="tablist" aria-label="System sections">
+        <button class="av-subtab" id="av-sub-system-midi" data-sub="midi" role="tab" aria-selected="true" aria-controls="av-subpan-system-midi">MIDI</button>
+        <button class="av-subtab" id="av-sub-system-project" data-sub="project" role="tab" aria-selected="false" aria-controls="av-subpan-system-project">PROJECT</button>
+        <button class="av-subtab" id="av-sub-system-code" data-sub="code" role="tab" aria-selected="false" aria-controls="av-subpan-system-code">CODE</button>
+        <button class="av-subtab" id="av-sub-system-family" data-sub="family" role="tab" aria-selected="false" aria-controls="av-subpan-system-family">FAMILY</button>
+        <button class="av-subtab" id="av-sub-system-roadmap" data-sub="roadmap" role="tab" aria-selected="false" aria-controls="av-subpan-system-roadmap">ROADMAP</button>
+      </div>
+      <div class="av-sub" data-sub="midi" role="tabpanel" id="av-subpan-system-midi" aria-labelledby="av-sub-system-midi">
   <section class="av-card" id="av-midi-card">
     <h2>MIDI</h2>
     <div id="av-midi-body"><p class="av-note av-dim">The hardware deck lands here — enable Web MIDI and your keys play Anvil through the same note path as the piano dock.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="project" role="tabpanel" id="av-subpan-system-project" aria-labelledby="av-sub-system-project" hidden>
   <section class="av-card" id="av-files">
     <h2>Project &amp; Share</h2>
     <div id="av-files-host"><p class="av-note av-dim">The project &amp; share card lands here &mdash; save and open .anvl projects straight to disk (File System Access, with a download fallback), import samples from your drive, build a shareable patch card (PNG + offline QR link), and render a video clip of the deck with the mix printed in. Nothing is uploaded.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="code" role="tabpanel" id="av-subpan-system-code" aria-labelledby="av-sub-system-code" hidden>
+  <section class="av-card" id="av-code">
+    <h2>CODE &mdash; write your own modules</h2>
+    <div id="av-code-host"><p class="av-note av-dim">The CODE card lands here &mdash; write a sandboxed DSP module (an FX or a whole voice engine), run it live in the audio engine, and keep it in your own local library. Everything stays on this machine.</p></div>
+  </section>
+      </div>
+      <div class="av-sub" data-sub="family" role="tabpanel" id="av-subpan-system-family" aria-labelledby="av-sub-system-family" hidden>
   <section class="av-card" id="av-family">
     <h2>FAMILY &mdash; the MODDYS suite bridges</h2>
     <div id="av-family-host"><p class="av-note av-dim">The suite bridges land here &mdash; bounce a loop into the Music Hub inbox, import Resonance session packs, and jump to World Radio. Everything local; nothing is uploaded.</p></div>
   </section>
+      </div>
+      <div class="av-sub" data-sub="roadmap" role="tabpanel" id="av-subpan-system-roadmap" aria-labelledby="av-sub-system-roadmap" hidden>
   <section class="av-card" id="av-roadmap">
     <h2>Roadmap &mdash; from the plan</h2>
     <ul class="av-list">
@@ -2223,6 +3403,7 @@ header.av-head.av-console #av-a11y-host .av-btn { flex: none; }
 <footer class="av-foot">
   <span class="av-dim">Anvil &mdash; a MODDYS Foundry instrument &middot; S5 &middot; code + keys + help &middot; AGPL-3.0-or-later</span>
 </footer>
+      </div>
     </div>
   </section>
   </main>
@@ -2232,15 +3413,20 @@ header.av-head.av-console #av-a11y-host .av-btn { flex: none; }
   <section class="av-card">
     <h1>Phase S5 &mdash; CODE: write your own modules &middot; popout keyboard &middot; help</h1>
     <p class="av-note">This single file was assembled from <code>src/</code> by <code>build.py</code> &mdash; the Pattern&nbsp;Forge pipeline discipline: explicit part order, parser guard, sha256 identity.</p>
-    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix &mdash; plus the sample core, the tap recorder, the P4 step sequencer (4 tracks &middot; swing &middot; p-locks &middot; chains &middot; scenes) and the P5 pack store (nine factory banks &middot; 548 presets, sha-256-verified installs, offline-ready), plus the P6 Deliver card (one-press offline STEM + MIDI export &mdash; a DAW-ready zip), and the S1 studio record core (mic/line input riding the engine's own AudioContext, a count-in metronome, and lap takes that split at sequencer cycle boundaries), plus the S2 sessions layer (versioned snapshots with autosave + crash recovery, and a one-press backup zip of everything), plus the S2.1 comping layer (take lanes across the studio's takes, pick-best comping with trims and equal-power crossfades, rendered and exported as a fresh WAV), plus the S3 mix &amp; master layer (per-track gain / pan / send rails / ducking / insert FX, a verb + delay send pair, bus glue, the master chain with LUFS / true-peak normalize targets and export dither, an auto-mix assistant, and A/B reference compare), plus the DECK layer (a live oscilloscope, spectrum and spectrogram waterfall off the master tap, LUFS + true-peak meters, engine voice + CPU readouts and a note ticker), plus the S4 deliver extras (real .anvl project open/save via the File System Access API with a download fallback, direct sample import from disk, social share cards &mdash; a patch as a PNG with an offline QR link &mdash; and one-press video clip capture with the rendered audio printed in), plus the S5 layer (the CODE section &mdash; a documented sandboxed DSP module API where your own code runs live in the engine &mdash; the popout keyboard, the Ctrl-K command palette, a 60-second tour, and the lesson ladder). Plus the M2 layer &mdash; MPE per-note expression from MPE controllers (bend, slide, pressure, pan), the sample CHOP card, the generative toolkit (euclidean, mutate, humanize, fills, per-track clock divide and swing) and the song arranger (song rows, quantised scene transitions, arrangement MIDI export).</p>
+    <p class="av-note">Playing now: the P3 stack &mdash; VA (minBLEP + wavetable), ACID, STRING and DRUM engines, GRANULAR and SAMPLER voices, the five-module FX rack (drive &middot; mod &middot; delay &middot; verb &middot; dyn) and the 8-macro mod matrix, the sample core, the tap recorder, the P4 step sequencer, the P5 pack store, the P6 Deliver card, the S1 studio record core, the S2 sessions layer, the S2.1 comping layer, the S3 mix &amp; master layer, the DECK layer, the S4 deliver extras and the S5 layer (CODE, the popout keyboard, the Ctrl-K command palette, the tour and the lesson ladder).</p>
   </section>
 </div>
 
   <div id="piano-dock" aria-label="Piano — 61 keys">
+    <div class="av-wheels">
+      <div id="av-wheel-pitch" class="av-wheel" role="slider" tabindex="0" aria-label="Pitch bend" aria-valuemin="-1" aria-valuemax="1" aria-valuenow="0" title="Pitch wheel — drag or arrows, springs back"><span class="av-wheel-cap"></span></div>
+      <div id="av-wheel-mod" class="av-wheel" role="slider" tabindex="0" aria-label="Mod wheel" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0" title="Mod wheel — drag or arrows, holds"><span class="av-wheel-cap"></span></div>
+    </div>
+    <div class="av-dock-body">
     <div id="piano-rail">
       <button id="pk-close" class="av-btn mini" title="Hide the piano (Y)" aria-label="Hide the piano (Y)">✕</button>
       <button id="pk-pop" class="av-btn mini" title="Pop the keys out into their own window (always-on-top where the browser allows)" aria-label="Pop the keyboard out">⧉</button>
-      <button id="pk-return" class="av-btn mini" title="Bring the keys home" aria-label="Bring the keys home">⧉ BACK</button>
+      <button id="pk-return" class="av-btn mini" title="Bring the keys home" aria-label="Bring keys home">⧉ BACK</button>
       <div id="pk-modes" class="pk-modes" role="group" aria-label="Input mode — what the computer keyboard drives">
         <button class="pk-mode" data-mode="studio" title="STUDIO — single letters stay quiet; the KEYS chip or ` turns the typing keys into the dock">STUDIO</button>
         <button class="pk-mode" data-mode="keys" title="KEYS — typing keys play the dock: A-row white (A = C), W-row black (W = C♯), Z / X hop octaves, Esc hands back"><span class="pk-sw-led" id="pk-arm-led"></span>KEYS</button>
@@ -2255,6 +3441,7 @@ header.av-head.av-console #av-a11y-host .av-btn { flex: none; }
       <div class="pk-rail-note">click to play · hold to sustain · glide to sweep · ` flips STUDIO ↔ KEYS</div>
     </div>
     <div id="piano-keys"></div>
+    </div>
   </div>
 
 <script id="AV_JS">
@@ -32558,7 +33745,7 @@ function avImportUiReveal() {
    then open the full library overlay (R21, guarded -- the old store-jump behavior is kept) */
 function avImportUiLibrary() {
   try {
-    try { if (typeof avZoneShow === "function") avZoneShow("store", { source: "menu" }); } catch (e) { /* zone seam optional */ }
+    try { if (typeof avZoneShow === "function") avZoneShow("browse", { source: "menu" }); try { avZoneSub("browse", "import", { silent: true }); } catch (e0) { /* sub optional */ }; } catch (e) { /* zone seam optional */ }
     avImportUiReveal();
     try { if (typeof avLibraryUiOpen === "function") avLibraryUiOpen(); } catch (e2) { /* overlay optional */ }
     return true;
@@ -32587,7 +33774,7 @@ function avImportUiDocDrop(ev) {
         if (!res || !res.files || !res.files.length) return;
         if (res.truncated) s.walkNote = "folder walk capped at " + avImportUiFileCap() + " files";
         avImportUiImport(res.files);
-        try { if (typeof avZoneShow === "function") avZoneShow("store", { source: "drop" }); } catch (e) { /* zone seam optional */ }
+        try { if (typeof avZoneShow === "function") avZoneShow("browse", { source: "drop" }); try { avZoneSub("browse", "import", { silent: true }); } catch (e0) { /* sub optional */ }; } catch (e) { /* zone seam optional */ }
         avImportUiReveal();
       } catch (e2) { /* a listener never throws outward */ }
     }, function () { /* a stray unreadable drop is nothing */ });
@@ -32655,7 +33842,7 @@ function avImportUiOnClick(ev) {
       let opened = false;
       try { if (typeof avLibraryUiOpen === "function") opened = (avLibraryUiOpen() !== false); } catch (e2) { opened = false; }
       if (!opened) {
-        try { if (typeof avZoneShow === "function") avZoneShow("store", { source: "menu" }); } catch (e3) { /* zone seam optional */ }
+        try { if (typeof avZoneShow === "function") avZoneShow("browse", { source: "menu" }); try { avZoneSub("browse", "import", { silent: true }); } catch (e0) { /* sub optional */ }; } catch (e3) { /* zone seam optional */ }
         avImportUiReveal();
       }
       return;
@@ -88257,29 +89444,33 @@ if (typeof window !== "undefined") {
 }
 
 
-/* Anvil — the cockpit shell (R1): the fixed-window chassis.
-   Zones are the app's workflow stations, Serum-2 style: one visible at a time, tabs at the top,
-   internal pane scroll only — the page itself can never scroll. The header and the piano dock
-   stay put; the dock-tax lifts the BODY, not the content.
-   Deep link: ?z=<zone> · persistence: localStorage "av-zone" · shortcuts: Alt+1..8 ·
-   palette group "Zones". Harness seams: window.__avZoneAuto(sel) and a scrollIntoView wrapper
-   reveal the hidden zone that holds a target before scrolling to it (used by the suites). */
+/* Anvil — the cockpit shell (R1 · C1 chassis): the fixed-window chassis.
+   Pages are the app's workflow stations in SIGNAL ORDER — what you pick, what the performance
+   does, the voice, what moves it, what plays it, what processes it, where it sums, what leaves,
+   and the plumbing. One visible at a time, tabs at the top, internal pane scroll only — the page
+   itself can never scroll. Pages with more than one card carry SUB-TABS; only one sub renders.
+   The header, the inspector column and the piano dock stay put.
+   Deep link: ?z=<page>&s=<sub> · persistence: localStorage "av-zone" / "av-sub" ·
+   shortcuts: Alt+1..9 · palette group "Zones". Harness seams: window.__avZoneAuto(sel) and a
+   scrollIntoView wrapper reveal the hidden page that holds a target before scrolling to it. */
 "use strict";
 
-const AV_SHELL_VERSION = "r1.0";
-const AV_ZONE_DEFAULT = "synth";
+const AV_SHELL_VERSION = "c1.0";
+const AV_ZONE_DEFAULT = "sound";
 const AV_ZONE_LS_KEY = "av-zone";
+const AV_SUB_LS_KEY = "av-sub";
 
-/* tab order = workflow order (pins: verify/_r1_wave.md §Zone map) */
+/* tab order = signal order (plan of record: docs/13-chassis-fsvr.md §3) */
 const AV_ZONES = [
-  { id: "synth",  label: "Synth",  hint: "Engines - levels, synth, FM, drums, samples, chop, wavetable editor" },
-  { id: "fx",     label: "FX",     hint: "The FX rack - drive / flavour / mod / delay / verb / conv / dyn" },
-  { id: "mod",    label: "Mod",    hint: "The mod matrix - macros and routing slots" },
-  { id: "seq",    label: "Seq",    hint: "The groovebox - patterns, p-locks, chains, scenes, song" },
-  { id: "studio", label: "Studio", hint: "Record, sessions, comping, mix & master, deck, deliver" },
-  { id: "store",  label: "Store",  hint: "Factory packs and banks - install once, play offline" },
-  { id: "code",   label: "Code",   hint: "Write your own DSP modules - they run live in the engine" },
-  { id: "system", label: "System", hint: "MIDI, project & share, family bridges, about" },
+  { id: "browse",   label: "BROWSE",   hint: "What you pick - packs, presets, imports, saved sessions" },
+  { id: "perform",  label: "PERFORM",  hint: "The performance - macro pots, poly and glide" },
+  { id: "sound",    label: "SOUND",    hint: "The voice - engine, FM, drums, samples, chop, wavetable, tuning" },
+  { id: "shape",    label: "SHAPE",    hint: "What moves it - the mod matrix and the LFO" },
+  { id: "sequence", label: "SEQUENCE", hint: "What plays it - patterns, p-locks, chains, scenes, song" },
+  { id: "effects",  label: "EFFECTS",  hint: "What processes it - the FX rack" },
+  { id: "mix",      label: "MIX",      hint: "Where it sums - mix & master, comping, recorder, studio" },
+  { id: "deliver",  label: "DELIVER",  hint: "What leaves - the deck display and the deliver render" },
+  { id: "system",   label: "SYSTEM",   hint: "The plumbing - MIDI, project, CODE, family, roadmap" },
 ];
 
 const avShellState = { ready: false, zone: null, why: "boot" };
@@ -88289,6 +89480,84 @@ function avZonePanelEl(id) { return document.getElementById("av-zone-" + id); }
 function avZoneList() { return AV_ZONES.map(z => z.id); }
 function avZoneInfo(id) { for (let i = 0; i < AV_ZONES.length; i++) if (AV_ZONES[i].id === id) return AV_ZONES[i]; return null; }
 function avZoneCurrent() { return avShellState.zone; }
+
+/* ---------- sub-tabs (C1) ----------
+   A page with more than one card carries sub-tabs; exactly one sub renders. The chosen sub is
+   remembered per page (localStorage "av-sub") and restored on every show, so a page always comes
+   back the way it was left. Deep link: ?z=<page>&s=<sub>. A page with no subs is an honest no-op. */
+const avSubState = { map: null };
+
+function avSubMap() {
+  if (avSubState.map) return avSubState.map;
+  try {
+    const raw = localStorage.getItem(AV_SUB_LS_KEY);
+    const o = raw ? JSON.parse(raw) : null;
+    avSubState.map = (o && typeof o === "object") ? o : {};
+  } catch (e) { avSubState.map = {}; }
+  return avSubState.map;
+}
+function avSubPersist() {
+  try { localStorage.setItem(AV_SUB_LS_KEY, JSON.stringify(avSubMap())); } catch (e) { /* session only */ }
+}
+function avZoneSubList(zoneId) {
+  const p = avZonePanelEl(zoneId);
+  if (!p) return [];
+  return Array.prototype.map.call(p.querySelectorAll(".av-sub[data-sub]"), function (e) { return e.getAttribute("data-sub"); });
+}
+function avZoneSubCurrent(zoneId) {
+  const subs = avZoneSubList(zoneId);
+  if (!subs.length) return null;
+  const want = avSubMap()[zoneId];
+  return (want && subs.indexOf(want) >= 0) ? want : subs[0];
+}
+function avZoneSub(zoneId, sub, opts) {
+  try {
+    const p = avZonePanelEl(zoneId);
+    if (!p) return false;
+    const subs = avZoneSubList(zoneId);
+    if (!subs.length) return false;
+    const pick = (sub && subs.indexOf(sub) >= 0) ? sub : subs[0];
+    const tabs = p.querySelectorAll(".av-subtab[data-sub]");
+    for (let i = 0; i < tabs.length; i++) {
+      const on = tabs[i].getAttribute("data-sub") === pick;
+      tabs[i].setAttribute("aria-selected", on ? "true" : "false");
+      tabs[i].tabIndex = on ? 0 : -1;
+    }
+    const pans = p.querySelectorAll(".av-sub[data-sub]");
+    for (let i = 0; i < pans.length; i++) {
+      const on = pans[i].getAttribute("data-sub") === pick;
+      if (!!pans[i].hidden === on) pans[i].hidden = !on;
+    }
+    avSubMap()[zoneId] = pick;
+    avSubPersist();
+    if (!(opts && opts.silent)) {
+      try { window.dispatchEvent(new CustomEvent("av-sub-shown", { detail: { zone: zoneId, sub: pick } })); } catch (e3) { /* listeners best-effort */ }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function avZoneSubRestore(zoneId) {
+  const s = avZoneSubCurrent(zoneId);
+  if (s) avZoneSub(zoneId, s, { silent: true });
+  return s;
+}
+function avZoneSubWire() {
+  const nav = document.getElementById("av-zones");
+  let zones = 0;
+  for (let i = 0; i < AV_ZONES.length; i++) {
+    const zid = AV_ZONES[i].id;
+    const p = avZonePanelEl(zid);
+    if (!p) continue;
+    zones++;
+    const tabs = p.querySelectorAll(".av-subtab[data-sub]");
+    for (let j = 0; j < tabs.length; j++) {
+      (function (z, s) {
+        tabs[j].addEventListener("click", function () { avZoneSub(z, s, { source: "subtab" }); });
+      })(zid, tabs[j].getAttribute("data-sub"));
+    }
+  }
+  return zones === AV_ZONES.length;
+}
 
 /* ---------- show a zone (the ONE state transition) ---------- */
 function avZoneShow(id, opts) {
@@ -88310,6 +89579,7 @@ function avZoneShow(id, opts) {
     }
     avShellState.zone = id;
     avShellState.why = o.source || "api";
+    avZoneSubRestore(id);
     try { document.body.setAttribute("data-av-zone", id); } catch (e2) { /* body attr is cosmetic */ }
     try { window.dispatchEvent(new CustomEvent("av-zone-shown", { detail: { zone: id } })); } catch (e5) { /* listeners are best-effort */ }
     try { localStorage.setItem(AV_ZONE_LS_KEY, id); } catch (e3) { /* private mode - session only */ }
@@ -88326,11 +89596,19 @@ function avZoneReveal(el) {
   try {
     if (!el || !el.closest) return false;
     const zone = el.closest(".av-zone");
+    const sub = el.closest(".av-sub");
+    let shown = !!(zone && !zone.hidden);
     if (zone && zone.hidden) {
       const zid = zone.getAttribute("data-zone");
-      if (zid) return avZoneShow(zid, { source: "reveal", silent: true });
+      if (zid) shown = avZoneShow(zid, { source: "reveal", silent: true }) === true;
     }
-    return !!(zone && !zone.hidden);
+    /* a target inside a sub-tab must reveal the SUB as well, or it stays display:none */
+    if (shown && zone && sub) {
+      const zid2 = zone.getAttribute("data-zone");
+      const sid = sub.getAttribute("data-sub");
+      if (zid2 && sid) avZoneSub(zid2, sid, { silent: true });
+    }
+    return shown;
   } catch (e) { return false; }
 }
 function avZoneAuto(selOrEl) {
@@ -88357,9 +89635,14 @@ function avShellInstallScrollSeam() {
         const el = this;
         if (el && el.closest) {
           const zone = el.closest(".av-zone");
-          if (zone && zone.hidden) {
+          if (zone) {
             const zid = zone.getAttribute("data-zone");
-            if (zid) avZoneShow(zid, { source: "seam", silent: true });
+            if (zid) {
+              if (zone.hidden) avZoneShow(zid, { source: "seam", silent: true });
+              const sub = el.closest(".av-sub");
+              const sid = sub && sub.getAttribute("data-sub");
+              if (sid) avZoneSub(zid, sid, { silent: true });
+            }
           }
         }
       } catch (e) { /* never break a scroll */ }
@@ -88401,13 +89684,13 @@ function avShellWireTabs() {
   return wired === AV_ZONES.length;
 }
 
-/* Alt+1..8 switches zones (workflow muscle memory; registered on capture so it wins early) */
+/* Alt+1..9 switches pages (workflow muscle memory; registered on capture so it wins early) */
 function avShellWireKeys() {
   try {
     document.addEventListener("keydown", function (e) {
       try {
         if (!e || !e.altKey || e.ctrlKey || e.metaKey) return;
-        if (!/^[1-8]$/.test(e.key || "")) return;
+        if (!/^[1-9]$/.test(e.key || "")) return;
         const idx = Number(e.key) - 1;
         if (idx < 0 || idx >= AV_ZONES.length) return;
         avZoneShow(AV_ZONES[idx].id, { source: "key" });
@@ -88446,6 +89729,7 @@ function avShellInit() {
       return false;
     }
     avShellWireTabs();
+    avZoneSubWire();
     avShellWireKeys();
     avShellInstallScrollSeam();
     avShellEnsureProofHost();
@@ -88461,6 +89745,10 @@ function avShellInit() {
     } catch (e2) { /* boot default stands */ }
     avShellState.zone = null;
     if (!avZoneShow(def, { source: "boot", silent: true })) return false;
+    try {
+      const s = (typeof URLSearchParams === "function") ? new URLSearchParams(location.search).get("s") : null;
+      if (s) avZoneSub(def, s, { silent: true });
+    } catch (e6) { /* boot sub default stands */ }
     avShellState.ready = true;
     return true;
   } catch (e) {
@@ -88484,6 +89772,9 @@ window.__avZone = {
   current: function () { return avZoneCurrent(); },
   list: function () { return avZoneList(); },
   auto: function (sel) { return avZoneAuto(sel); },
+  sub: function (zone, s, opts) { return avZoneSub(zone, s, opts); },
+  subList: function (zone) { return avZoneSubList(zone); },
+  subCurrent: function (zone) { return avZoneSubCurrent(zone); },
   version: AV_SHELL_VERSION,
 };
 
@@ -88500,6 +89791,8 @@ const AV_CHROME_FOLD_KEY = "av-fold";
 /* id -> capabilities: init = first knob of the card resets to data-def; rnd = randomize allowed */
 const AV_CHROME_CARDS = [
   { id: "av-levels", init: true, rnd: false },
+  { id: "av-macros", init: true, rnd: false },
+  { id: "av-perf", init: false, rnd: false },
   { id: "av-synth", init: true, rnd: true },
   { id: "av-fm", init: true, rnd: true },
   { id: "av-fx", init: true, rnd: false },
@@ -88732,7 +90025,7 @@ function avChromeBuildHead(card) {
 function avChromeBuildEngineStrip() {
   try {
     if (document.getElementById("av-engine-strip")) return true;
-    const box = document.querySelector("#av-zone-synth .av-zone-box");
+    const box = document.querySelector("#av-zone-sound .av-zone-box");
     if (!box) return false;
     const strip = document.createElement("div");
     strip.id = "av-engine-strip";
@@ -88796,7 +90089,7 @@ function avChromeHeaderButton(id, label, title, onClick) {
 function avChromeBuildHeader() {
   avChromeHeaderButton("av-head-browse", "BROWSE", "Browse packs and presets (the Store zone)", function () {
     try {
-      if (typeof avZoneShow === "function") avZoneShow("store", { source: "browse" });
+      if (typeof avZoneShow === "function") avZoneShow("browse", { source: "browse" });
       const s = document.querySelector("#av-store-host .av-store-search");
       if (s && s.focus) { try { s.focus(); } catch (e) { /* focus is best-effort */ } }
     } catch (e) { /* browse stays clickable */ }
@@ -88873,8 +90166,8 @@ const AV_PANELS_VERSION = "r3.0";
 const AV_PANELS_LS = "av-float";
 const AV_ABOUT_ID = "av-about-pop";
 const AV_PANEL_ACCENTS = {
-  synth: "#2ED8C9", fx: "#E69F00", mod: "#CC79A7", seq: "#009E73",
-  studio: "#56B4E9", store: "#F0E442", code: "#E8794A", system: "#4C9FE0",
+  browse: "#F0E442", perform: "#CC79A7", sound: "#2ED8C9", shape: "#CC79A7",
+  sequence: "#009E73", effects: "#E69F00", mix: "#56B4E9", deliver: "#8C6BB1", system: "#4C9FE0",
 };
 const AV_PANEL_LAYOUTS = {
   sounddesign: { open: [["av-synth", 40, 84], ["av-fm", 500, 84], ["av-mod", 60, 428], ["av-fx", 560, 428]] },
@@ -89365,14 +90658,15 @@ const AV_RAIL_OPEN_KEY = "av-rail-open";
 const AV_RAIL_SEC_KEY = "av-rail-sections";
 
 const AV_RAIL_GROUPS = [
-  { zone: "synth", label: "Synth", cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-wt", "Wavetable editor"]] },
-  { zone: "fx", label: "FX", cards: [["av-fx", "FX rack"]] },
-  { zone: "mod", label: "Mod", cards: [["av-mod", "Mod matrix"], ["av-lfo", "LFO"]] },
-  { zone: "seq", label: "Seq", cards: [["av-seq", "Sequencer"]] },
-  { zone: "studio", label: "Studio", cards: [["av-rec", "Recorder"], ["av-studio", "Studio"], ["av-sessions", "Sessions"], ["av-comp", "Takes & comping"], ["av-mix", "Mix & master"], ["av-deck", "Deck"], ["av-deliver", "Deliver"]] },
-  { zone: "store", label: "Store", cards: [["av-store", "Packs"], ["av-import", "Import & library"]] },
-  { zone: "code", label: "Code", cards: [["av-code", "CODE"]] },
-  { zone: "system", label: "System", cards: [["av-midi-card", "MIDI"], ["av-files", "Project & share"], ["av-family", "Family bridges"], ["av-roadmap", "Roadmap"]] },
+  { zone: "browse",   label: "Browse",   cards: [["av-store", "Packs"], ["av-import", "Import & library"], ["av-sessions", "Sessions"]] },
+  { zone: "perform",  label: "Perform",  cards: [["av-macros", "Macros"], ["av-perf", "Voice & feel"]] },
+  { zone: "sound",    label: "Sound",    cards: [["av-levels", "Levels"], ["av-synth", "Synth engine"], ["av-fm", "FM"], ["av-drums", "Drums"], ["av-sample", "Samples"], ["av-chop", "Chop"], ["av-wt", "Wavetable editor"], ["av-tune", "Tuning studio"]] },
+  { zone: "shape",    label: "Shape",    cards: [["av-mod", "Mod matrix"], ["av-lfo", "LFO"]] },
+  { zone: "sequence", label: "Sequence", cards: [["av-seq", "Sequencer"]] },
+  { zone: "effects",  label: "Effects",  cards: [["av-fx", "FX rack"]] },
+  { zone: "mix",      label: "Mix",      cards: [["av-mix", "Mix & master"], ["av-comp", "Takes & comping"], ["av-rec", "Recorder"], ["av-studio", "Studio"]] },
+  { zone: "deliver",  label: "Deliver",  cards: [["av-deck", "Deck"], ["av-deliver", "Deliver"]] },
+  { zone: "system",   label: "System",   cards: [["av-midi-card", "MIDI"], ["av-files", "Project & share"], ["av-code", "CODE"], ["av-family", "Family bridges"], ["av-roadmap", "Roadmap"]] },
 ];
 
 const avRailState = { ready: false, el: null, grip: null, drag: null };
@@ -89760,10 +91054,12 @@ function avRailInit() {
     try {
       const w = parseFloat(localStorage.getItem(AV_RAIL_W_KEY));
       if (isFinite(w) && w > 0) avRailSetWidth(w);
-      if (localStorage.getItem(AV_RAIL_OPEN_KEY) === "0") avRailShow(false);
+      /* C1: the rail is the OPTIONAL second map - closed on a virgin profile, tabs are the one nav */
+      const openPref = localStorage.getItem(AV_RAIL_OPEN_KEY);
+      if (openPref === "0" || openPref === null) avRailShow(false);
     } catch (e) { /* defaults stand */ }
-    if (typeof avZoneShow === "function") { try { avZoneShow(window.__avZone ? window.__avZone.current() : "synth", { silent: true, source: "rail-init" }); } catch (e2) { /* sync best-effort */ } }
-    const cur = window.__avZone ? window.__avZone.current() : "synth";
+    if (typeof avZoneShow === "function") { try { avZoneShow(window.__avZone ? window.__avZone.current() : "sound", { silent: true, source: "rail-init" }); } catch (e2) { /* sync best-effort */ } }
+    const cur = window.__avZone ? window.__avZone.current() : "sound";
     const groups = document.querySelectorAll(".av-rail-group");
     for (let i = 0; i < groups.length; i++) groups[i].classList.toggle("on", groups[i].getAttribute("data-zone") === cur);
     return true;
@@ -90020,34 +91316,43 @@ if (typeof window !== "undefined" && window) {
 }
 
 
-/* Anvil — THE TRANSPORT CONSOLE (R11): the header rebuilt as a hardware-style digital console —
-   brand plate, a transport key deck (PLAY/PAUSE · STOP · SONG · REC with LED dots), a BPM segment
-   readout, and an OLED info window (pack / preset / engine / voices). Every existing header id is
-   preserved (suites query ids, never order): av-word stays the logotype, #av-version moves into the
-   plate, #av-tier + #av-voices MOVE into the OLED (their text updates are by id and keep landing),
-   and every other header button (BROWSE / undo / redo / ABOUT / NAV / a11y / pwa / help / piano) is
-   left exactly where it was — the console styles them as keycaps.
+/* Anvil - THE HEADER BAND (C1 sec 2.1): avConsoleBuild() emits the whole top band - one #av-band
+   with five groups in hardware order: transport | identity | pots | view | out. It replaces the
+   R11 console shell (deck / OLED / centred block are gone); the version string stays r11.0 because
+   the public surface does not move.
 
-   Wiring rides existing guarded funnels only: avSeqPlay/avSeqStop/avSeqIsPlaying (seq transport),
-   avSongPlay/avSongStop (song runner), avRecStart/avRecStop (the studio recorder). Space toggles
-   the transport globally from av_kb.js (which calls avConsoleTransportToggle). Never throws.
+   transport  avc-play avc-stop (large) + avc-song avc-rec avc-preset-prev avc-preset-next (mini),
+              the R14 preset step-and-apply kept. Space still toggles through avConsoleTransportToggle
+              (av_kb.js).
+   identity   the Anvil logotype, #av-version, the master-volume pot (#av-vol-pot, path "master" -
+              the same path the LEVELS card binds), #av-vol-val, the LCD (#av-lcd) with pack / preset
+              slots that WRAP the bank's own selects (#avc-pack / #avc-preset, ids assigned here),
+              an engine line, the edited dot and the poly readout, plus the avc-bpm slider (role
+              =slider, click halves / wheel / arrows, funnel avApplyParam('bpm')). #av-tier and
+              #av-voices move into the LCD's engine row by id.
+   pots       #av-potmode tone|macros radios; TONE binds env1.a / env1.r / filter.cutoff / filter.reso
+              (av_synth.js), MACROS binds mod.macro1..4 (av_mod.js). A mode switch rebuilds that one
+              group; every build ends in avKnobBind.
+   view       the eight av-head-* / av-help / a11y keys, placed only - av_chrome wires its own keys
+              (it is asked to build them here) and av_a11y binds an existing node. #btn-piano rides
+              along. A header MutationObserver re-homes late arrivals.
+   out        #av-scope (120x40, avTap.levels or a flat baseline), #av-meter-l / #av-meter-r wrapping
+              the avc-vu-l / avc-vu-r bars the VU meter writes, #av-panic (avNoteStopAll) and
+              #av-learn (avMidiLearnArm), both typeof-guarded.
 
-   Public surface: avConsoleInit() -> bool · avConsoleTransportToggle() -> bool|null ·
-   avConsoleRefresh() · avConsoleProof() -> string · window.__avConsole { version, init,
-   lastAction(), transportToggle(), refresh(), stepPreset(), vu(), vuTick() }.
+   Public surface: avConsoleInit() -> bool * avConsoleTransportToggle() -> bool|null *
+   avConsoleRefresh() * avConsoleProof() -> string * window.__avConsole { version, init,
+   lastAction(), transportToggle(), setBpm, bpm, refresh(), stepPreset(), potMode(), potBank(),
+   scope(), vu(), vuTick() }.
 
-   R14 (additions only — the version stays r11.0, the R12 precedent): PRV/NXT keycaps appended to
-   the deck after avc-rec call avConsolePresetStep(dir) — it steps the pack select's preset
-   selection (bubbling 'change', so the existing delegated bank handler mirrors it) and applies
-   the preset through avBankApplyPreset. The two-bar VU meter (.avc-vu, fills avc-vu-l / avc-vu-r)
-   sits between the deck and the BPM window; avConsoleVuTick paints it from avTap.levels, driven
-   by ONE flag-guarded rAF loop (avConsoleMeterStart). The proof object grows vu + step. */
+   R14 (kept): PRV/NXT step the pack select's preset and apply it through avBankApplyPreset; the VU
+   meter is painted from avTap.levels by ONE flag-guarded rAF loop, which also repaints the scope. */
 
 "use strict";
 
 const AV_CONSOLE_VERSION = "r11.0";
 
-const avConsoleState = { ready: false, timer: 0, last: "", songOn: false, playOn: false, recOn: false, vuL: -1, vuR: -1, meterOn: false };
+const avConsoleState = { ready: false, timer: 0, last: "", songOn: false, playOn: false, recOn: false, vuL: -1, vuR: -1, meterOn: false, pots: "tone", editedBound: false, obs: null, frame: 0 };
 
 function avConsoleEl(id) {
   try { return document.getElementById(id); } catch (e) { return null; }
@@ -90161,7 +91466,7 @@ function avConsolePresetStep(dir) {
         }
       }
     }
-  } catch (e) { /* never throws — the result reports what landed */ }
+  } catch (e) { /* never throws - the result reports what landed */ }
   /* ALWAYS: the lastAction + a repaint, refusal or not */
   avConsoleSetLast(d > 0 ? "preset-next" : "preset-prev");
   avConsoleRefresh();
@@ -90210,6 +91515,9 @@ function avConsoleMeterStart() {
     if (typeof requestAnimationFrame !== "function") { avConsoleState.meterOn = false; return false; }
     const frame = function () {
       try { avConsoleVuTick(); } catch (e) { /* a frame never throws */ }
+      /* the scope repaints every 3rd frame - a 120x40 strip needs nothing faster */
+      avConsoleState.frame = (avConsoleState.frame + 1) % 3;
+      if (!avConsoleState.frame) { try { avConsoleScopePaint(); } catch (e3) { /* ok */ } }
       try { requestAnimationFrame(frame); } catch (e2) { avConsoleState.meterOn = false; }
     };
     requestAnimationFrame(frame);
@@ -90288,27 +91596,615 @@ function avConsoleRefresh() {
       const b = String(avConsoleBpm());
       if (bpmEl.textContent !== b) bpmEl.textContent = b;
     }
+    /* the pack/preset slots WRAP the selects - only write text when no select lives inside */
     if (packEl || presetEl) {
       const bt = avConsoleBankText();
-      if (packEl && packEl.textContent !== bt.pack) packEl.textContent = bt.pack;
-      if (presetEl && presetEl.textContent !== bt.preset) presetEl.textContent = bt.preset;
+      if (packEl && !(packEl.querySelector && packEl.querySelector("select")) && packEl.textContent !== bt.pack) packEl.textContent = bt.pack;
+      if (presetEl && !(presetEl.querySelector && presetEl.querySelector("select")) && presetEl.textContent !== bt.preset) presetEl.textContent = bt.preset;
+    }
+    /* the engine text + the poly readout (best-effort reads; a dash when the host has nothing) */
+    const engEl = avConsoleEl("av-lcd-engine");
+    if (engEl) {
+      let kind = "";
+      try { kind = (typeof avParams !== "undefined" && avParams && avParams["engine.kind"]) ? String(avParams["engine.kind"]) : ""; } catch (e3) { kind = ""; }
+      if (kind && engEl.textContent !== kind) engEl.textContent = kind;
+    }
+    /* the bank card may render (or re-render) its selects after the band was built: pull them in */
+    try {
+      const packSlot = avConsoleEl("av-lcd-pack");
+      const presetSlot = avConsoleEl("av-lcd-preset");
+      if (packSlot && !packSlot.querySelector("select")) {
+        const s = document.querySelector("select.av-bank-pack");
+        if (s) { s.id = "avc-pack"; packSlot.appendChild(s); }
+      }
+      if (presetSlot && !presetSlot.querySelector("select")) {
+        const s2 = document.querySelector("select.av-bank-preset");
+        if (s2) { s2.id = "avc-preset"; presetSlot.appendChild(s2); }
+      }
+    } catch (e6) { /* the card keeps its own row */ }
+    /* the LEARN key mirrors the MIDI arm state */
+    const learnEl = avConsoleEl("av-learn");
+    if (learnEl) {
+      let armed = false;
+      try { armed = (typeof avMidiLearn !== "undefined" && avMidiLearn) ? avMidiLearn.armed === true : false; } catch (e5) { armed = false; }
+      if (learnEl.classList.contains("on") !== armed) learnEl.classList.toggle("on", armed);
+      learnEl.setAttribute("aria-pressed", armed ? "true" : "false");
+    }
+    const polyEl = avConsoleEl("av-lcd-poly");
+    if (polyEl) {
+      let n = NaN;
+      try { n = (window.__avEngine && typeof window.__avEngine.voices === "number") ? window.__avEngine.voices : NaN; } catch (e4) { n = NaN; }
+      const txt = "POLY " + (isFinite(n) ? String(Math.max(0, Math.round(n))) : "-");
+      if (polyEl.textContent !== txt) polyEl.textContent = txt;
     }
     return true;
   } catch (e) { return false; }
 }
 
-/* ---------- the build (idempotent; appends into header.av-head, moves nothing but the chips) ---------- */
+/* ---------- the build (C1 sec 2.1: the header band) ----------
+   One container #av-band inside header.av-head, five groups in hardware order
+   transport | identity | pots | view | out. Known ids are ADOPTED, never rebuilt: the transport
+   keys, the pack/preset selects, the view keys (their own script wires those), the a11y keys,
+   av-word / av-version / av-tier / av-voices, and the two VU bars (the meter writes them by id).
+   Nothing here throws. */
 
-function avConsoleMkKey(id, label, aria, fn) {
+function avConsoleMkKey(id, label, aria, fn, cls) {
   const b = document.createElement("button");
   b.type = "button";
   b.id = id;
-  b.className = "avc-key";
+  b.className = "av-btn " + (cls || "mini") + " avc-key";
   b.textContent = label;
   b.setAttribute("aria-label", aria);
   b.title = aria;
   b.addEventListener("click", function () { try { fn(); } catch (e) { /* key never throws */ } });
   return b;
+}
+
+/* view keys: id -> [label, aria]. av-head-* are created by av_chrome (it skips an id that already
+   exists, so the band only PLACES them); the a11y keys are created here because av_a11y binds an
+   existing node; av-help / btn-piano already exist in the markup. */
+const AV_CONSOLE_VIEW_KEYS = [
+  ["av-head-browse", "BROWSE", "Browse packs and presets"],
+  ["av-head-undo", "\u21B6", "Undo"],
+  ["av-head-redo", "\u21B7", "Redo"],
+  ["av-head-about", "ABOUT", "About this build"],
+  ["av-head-rail", "NAV", "Module navigator"],
+  ["av-help", "?", "Help"],
+  ["av-a11y-contrast", "CONTRAST", "High contrast"],
+  ["av-a11y-motion", "MOTION", "Reduce motion"],
+  ["btn-piano", "\uD83C\uDFB9", "Piano dock"]
+];
+
+/* the two pot banks. TONE rides the live voice paths (av_synth.js): env1.a / env1.r /
+   filter.cutoff / filter.reso. MACROS rides av_mod.js's knob paths mod.macro1..4
+   (AV_MOD_MACRO_PREFIX). */
+const AV_CONSOLE_POTS = {
+  tone: [
+    { slot: "a", path: "env1.a", label: "ATTACK", opts: { min: 0.001, max: 4, step: 0.001, def: 0.002, curve: "log", fmt: "ms" } },
+    { slot: "b", path: "env1.r", label: "RELEASE", opts: { min: 0.001, max: 8, step: 0.001, def: 0.2, curve: "log", fmt: "ms" } },
+    { slot: "c", path: "filter.cutoff", label: "CUTOFF", opts: { min: 20, max: 20000, step: 1, def: 800, curve: "log", fmt: "hz" } },
+    { slot: "d", path: "filter.reso", label: "RESO", opts: { min: 0, max: 1, step: 0.01, def: 0.3, fmt: "pct" } }
+  ],
+  macros: [
+    { slot: "a", path: "mod.macro1", label: "MAC 1", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct" } },
+    { slot: "b", path: "mod.macro2", label: "MAC 2", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct" } },
+    { slot: "c", path: "mod.macro3", label: "MAC 3", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct" } },
+    { slot: "d", path: "mod.macro4", label: "MAC 4", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct" } }
+  ]
+};
+
+/* the MOD card's state object - absent means the macro paths have nothing behind them */
+function avConsoleHasMod() {
+  try { return typeof avModState !== "undefined" && avModState !== null; } catch (e) { return false; }
+}
+
+function avConsoleMkGroup(grp, aria) {
+  const g = document.createElement("div");
+  g.className = "av-band-grp av-band-" + grp;
+  g.dataset.grp = grp;
+  g.setAttribute("role", "group");
+  g.setAttribute("aria-label", aria);
+  return g;
+}
+
+/* adopt the element with this id into `parent` (keeps its own handlers); null when it is not there
+   yet - the observer re-homes a late arrival */
+function avConsoleAdopt(parent, id) {
+  try {
+    const have = avConsoleEl(id);
+    if (!have) return null;
+    if (have.parentNode !== parent) parent.appendChild(have);
+    return have;
+  } catch (e) { return null; }
+}
+
+/* a readout line bound to a knob path (av_knob.js keeps every [data-kval] in sync) */
+function avConsoleNumLine(path) {
+  const d = document.createElement("div");
+  d.className = "av-band-num";
+  d.setAttribute("data-kval", path);
+  d.setAttribute("aria-hidden", "true");
+  return d;
+}
+
+/* the transport cluster - large PLAY / STOP, mini SONG / REC / PRV / NXT (ids + handlers kept) */
+function avConsoleFillTransport(g) {
+  const deck = document.createElement("div");
+  deck.className = "av-band-transport";
+  deck.appendChild(avConsoleMkKey("avc-play", "\u25B6 PLAY", "Play / pause (Space)", avConsoleTransportToggle, "av-band-big"));
+  deck.appendChild(avConsoleMkKey("avc-stop", "\u25A0 STOP", "Stop the transport", function () {
+    try { if (typeof avSeqStop === "function") avSeqStop(); } catch (e) { /* ok */ }
+    try { if (typeof avSongStop === "function" && avConsoleState.songOn) avSongStop(); } catch (e) { /* ok */ }
+    avConsoleState.songOn = false;
+    avConsoleSetLast("stop");
+    avConsoleRefresh();
+  }, "av-band-big"));
+  deck.appendChild(avConsoleMkKey("avc-song", "SONG", "Play / stop the song arrangement", avConsoleSongToggle));
+  deck.appendChild(avConsoleMkKey("avc-rec", "\u25CF REC", "Record (studio recorder)", avConsoleRecToggle));
+  deck.appendChild(avConsoleMkKey("avc-preset-prev", "PRV", "Previous preset (steps and applies)", function () { avConsolePresetStep(-1); }));
+  deck.appendChild(avConsoleMkKey("avc-preset-next", "NXT", "Next preset (steps and applies)", function () { avConsolePresetStep(1); }));
+  g.appendChild(deck);
+}
+
+/* the pot bank - rebuilt in place on a mode switch (that group only) */
+function avConsoleFillPots(g) {
+  g.innerHTML = "";
+  const mode = (avConsoleState.pots === "macros") ? "macros" : "tone";
+  const hasMod = avConsoleHasMod();
+
+  const keys = document.createElement("div");
+  keys.className = "av-potmode";
+  keys.id = "av-potmode";
+  keys.setAttribute("role", "radiogroup");
+  keys.setAttribute("aria-label", "Pot bank");
+  const mkMode = function (id, label, value, title) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.id = id;
+    b.className = "av-btn mini";
+    b.textContent = label;
+    b.title = title;
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", (mode === value) ? "true" : "false");
+    b.addEventListener("click", function () { avConsolePotMode(value); });
+    return b;
+  };
+  keys.appendChild(mkMode("av-potmode-tone", "TONE", "tone", "Pots: attack / release / cutoff / reso"));
+  const mk = mkMode("av-potmode-macros", "MACROS", "macros", "Pots: macros 1-4 (the MOD card)");
+  if (!hasMod) mk.title = "Pots: macros 1-4 (the MOD card - not loaded yet)";
+  keys.appendChild(mk);
+  g.appendChild(keys);
+
+  const list = AV_CONSOLE_POTS[mode];
+  for (let i = 0; i < list.length; i++) {
+    const spec = list[i];
+    const cell = document.createElement("div");
+    cell.className = "av-band-pot";
+    const lab = document.createElement("div");
+    lab.className = "av-band-pot-label";
+    lab.textContent = spec.label;
+    cell.appendChild(lab);
+    const mount = document.createElement("div");
+    mount.id = "av-pot-" + spec.slot;
+    mount.className = "av-band-mount";
+    if (mode === "macros" && !hasMod) {
+      mount.innerHTML = '<span class="av-band-gap" aria-hidden="true">\u2014</span>';
+    } else {
+      try {
+        const live = (typeof avParams !== "undefined" && avParams) ? avParams[spec.path] : undefined;
+        mount.innerHTML = avKnobHTML(spec.path, spec.label, Object.assign({ value: (typeof live === "number") ? live : spec.opts.def }, spec.opts));
+      } catch (e) { mount.innerHTML = '<span class="av-band-gap" aria-hidden="true">\u2014</span>'; }
+    }
+    cell.appendChild(mount);
+    cell.appendChild(avConsoleNumLine(spec.path));
+    g.appendChild(cell);
+  }
+  try { avKnobBind(g); } catch (e) { /* the pots stay readable */ }
+}
+
+/* mode switch: rebuild the pots group only */
+function avConsolePotMode(mode) {
+  const next = (mode === "macros") ? "macros" : "tone";
+  if (avConsoleState.pots === next) return next;
+  avConsoleState.pots = next;
+  try {
+    const g = document.querySelector('#av-band .av-band-grp[data-grp="pots"]');
+    if (g) avConsoleFillPots(g);
+  } catch (e) { /* rebuilt on the next build */ }
+  avConsoleSetLast("pots-" + next);
+  return next;
+}
+
+/* the scope: 120x40, a flat baseline at rest, otherwise the master tap's levels */
+function avConsoleScopePaint() {
+  try {
+    const cv = avConsoleEl("av-scope");
+    if (!cv || typeof cv.getContext !== "function") return false;
+    const ctx = cv.getContext("2d");
+    if (!ctx) return false;
+    const w = cv.width || 120, h = cv.height || 40, mid = h / 2;
+    ctx.clearRect(0, 0, w, h);
+    let l = 0, r = 0;
+    try {
+      if (typeof avTap !== "undefined" && avTap && avTap.levels) {
+        l = avConsoleVuClamp(avTap.levels.l);
+        r = avConsoleVuClamp(avTap.levels.r);
+      }
+    } catch (e) { l = 0; r = 0; }
+    ctx.strokeStyle = "rgba(46,216,201,0.35)";
+    ctx.beginPath();
+    ctx.moveTo(0, mid);
+    ctx.lineTo(w, mid);
+    ctx.stroke();
+    if (l > 0.001 || r > 0.001) {
+      /* one trace, its height driven by the two bars (no per-sample buffer is tapped here) */
+      const span = Math.max(0.001, (l + r) / 2);
+      ctx.strokeStyle = "#2ed8c9";
+      ctx.beginPath();
+      for (let x = 0; x < w; x++) {
+        const t = x / (w - 1);
+        const y = mid - (Math.sin(t * Math.PI * 2) * span * (mid - 2));
+        if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avConsoleBuild(head) {
+  /* keep the live version text across a rebuild (the old band is dropped below) */
+  let verText = "";
+  try { const v0 = head.querySelector("#av-version"); verText = v0 ? String(v0.textContent || "") : ""; } catch (e) { verText = ""; }
+  try { const old = avConsoleEl("av-band"); if (old && old.parentNode) old.parentNode.removeChild(old); } catch (e) { /* rebuilt below */ }
+  head.classList.add("av-console");
+
+  const band = document.createElement("div");
+  band.id = "av-band";
+  band.className = "av-band";
+
+  /* 1 - transport, 3 - pots: each group is built whole, then appended in contract order */
+  const gTransport = avConsoleMkGroup("transport", "Transport");
+  avConsoleFillTransport(gTransport);
+  const gPots = avConsoleMkGroup("pots", "Pots");
+  avConsoleFillPots(gPots);
+
+  /* 2 - identity: plate, volume pot, the LCD */
+  const ident = avConsoleMkGroup("identity", "Anvil identity and readouts");
+  const plate = document.createElement("div");
+  plate.className = "av-band-plate";
+  const word = head.querySelector(".av-word");
+  const wordEl = document.createElement("span");
+  wordEl.className = "av-word";
+  wordEl.textContent = "Anvil";
+  plate.appendChild(wordEl);
+  try { if (word && word.parentNode) word.parentNode.removeChild(word); } catch (e) { /* the fresh one stands */ }
+
+  /* #av-version: the markup carries one - keep its text, drop the old node (never two ids) */
+  const ver = document.createElement("span");
+  ver.className = "av-chip av-hot";
+  ver.id = "av-version";
+  ver.textContent = verText || "v0.1.0";
+  plate.appendChild(ver);
+  try {
+    const oldVer = avConsoleEl("av-version");
+    if (oldVer && oldVer !== ver) {
+      ver.textContent = oldVer.textContent || ver.textContent;
+      if (oldVer.parentNode) oldVer.parentNode.removeChild(oldVer);
+    }
+  } catch (e) { /* the fresh chip stands */ }
+
+  /* the power LED (avConsoleRefresh keeps its .on state) */
+  const power = document.createElement("span");
+  power.className = "avc-ledbig";
+  power.id = "avc-power";
+  power.setAttribute("aria-hidden", "true");
+  plate.appendChild(power);
+  ident.appendChild(plate);
+
+  /* the volume pot - the SAME master path the LEVELS card binds (app_core.js) */
+  const vol = document.createElement("div");
+  vol.className = "av-band-pot av-band-vol";
+  const volMount = document.createElement("div");
+  volMount.id = "av-vol-pot";
+  volMount.className = "av-band-mount";
+  let volLive = 0.8;
+  try { if (typeof avState !== "undefined" && avState && isFinite(Number(avState.master))) volLive = Number(avState.master); } catch (e) { volLive = 0.8; }
+  try {
+    volMount.innerHTML = avKnobHTML("master", "VOL", { min: 0, max: 1.2, step: 0.01, def: 0.8, value: volLive, fmt: "pct", size: "sm", w: 40 });
+  } catch (e) { /* the readout still shows */ }
+  const volVal = avConsoleNumLine("master");
+  volVal.id = "av-vol-val";
+  vol.appendChild(volMount);
+  vol.appendChild(volVal);
+  try { if (typeof avKnobBind === "function") avKnobBind(volMount); } catch (e) { /* the pot stays readable */ }
+  ident.appendChild(vol);
+
+  /* the LCD glass: pack / preset / engine rows, the edited dot, the poly readout, the tempo */
+  const lcd = document.createElement("div");
+  lcd.id = "av-lcd";
+  lcd.className = "av-band-lcd";
+  lcd.setAttribute("aria-label", "Console readouts");
+
+  const rowPack = document.createElement("div");
+  rowPack.className = "av-lcd-row";
+  const packLab = document.createElement("span");
+  packLab.className = "av-lcd-lbl";
+  packLab.textContent = "PACK";
+  const packSlot = document.createElement("span");
+  packSlot.id = "av-lcd-pack";
+  packSlot.className = "av-lcd-slot";
+  rowPack.appendChild(packLab);
+  rowPack.appendChild(packSlot);
+  lcd.appendChild(rowPack);
+
+  const rowPreset = document.createElement("div");
+  rowPreset.className = "av-lcd-row";
+  const presetLab = document.createElement("span");
+  presetLab.className = "av-lcd-lbl";
+  presetLab.textContent = "PRESET";
+  const presetSlot = document.createElement("span");
+  presetSlot.id = "av-lcd-preset";
+  presetSlot.className = "av-lcd-slot";
+  rowPreset.appendChild(presetLab);
+  rowPreset.appendChild(presetSlot);
+  lcd.appendChild(rowPreset);
+
+  const rowEng = document.createElement("div");
+  rowEng.className = "av-lcd-row av-lcd-row-sys";
+  const engLab = document.createElement("span");
+  engLab.className = "av-lcd-lbl";
+  engLab.textContent = "ENGINE";
+  const eng = document.createElement("span");
+  eng.id = "av-lcd-engine";
+  eng.className = "av-lcd-slot";
+  eng.textContent = "\u2014";
+  const edited = document.createElement("span");
+  edited.id = "av-lcd-edited";
+  edited.className = "av-lcd-edited";
+  edited.hidden = true;
+  edited.setAttribute("aria-hidden", "true");
+  edited.title = "edited since the preset loaded";
+  const poly = document.createElement("span");
+  poly.id = "av-lcd-poly";
+  poly.className = "av-lcd-poly";
+  poly.textContent = "POLY \u2014";
+  rowEng.appendChild(engLab);
+  rowEng.appendChild(eng);
+  rowEng.appendChild(edited);
+  rowEng.appendChild(poly);
+  lcd.appendChild(rowEng);
+
+  /* the tempo: avc-bpm keeps role=slider, click halves / wheel / arrows and the
+     avApplyParam('bpm') funnel exactly as before */
+  const rowBpm = document.createElement("div");
+  rowBpm.className = "av-lcd-row av-lcd-row-bpm";
+  const bpm = document.createElement("div");
+  bpm.className = "avc-window avc-bpm";
+  bpm.id = "avc-bpm";
+  bpm.innerHTML = '<span class="avc-bpm-lab">BPM</span><span id="avc-bpm-val" aria-label="Tempo">120</span>';
+  bpm.tabIndex = 0;
+  bpm.setAttribute("role", "slider");
+  bpm.setAttribute("aria-label", "Tempo - click top or bottom half to step, wheel, or arrow keys");
+  bpm.title = "Tempo - click top/bottom half to step, wheel, or arrow keys (Shift = 10)";
+  bpm.addEventListener("wheel", function (e) {
+    try { e.preventDefault(); avConsoleBpmSet(avConsoleBpm() + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 10 : 1)); } catch (e2) { /* ok */ }
+  }, { passive: false });
+  bpm.addEventListener("click", function (e) {
+    try {
+      const r = bpm.getBoundingClientRect();
+      const top = (e.clientY - r.top) < r.height / 2;
+      avConsoleBpmSet(avConsoleBpm() + (top ? 1 : -1));
+    } catch (e2) { /* ok */ }
+  });
+  bpm.addEventListener("keydown", function (e) {
+    try {
+      const k = e.key;
+      if (k !== "ArrowUp" && k !== "ArrowDown" && k !== "ArrowLeft" && k !== "ArrowRight") return;
+      e.preventDefault();
+      const d = (k === "ArrowUp" || k === "ArrowRight") ? 1 : -1;
+      avConsoleBpmSet(avConsoleBpm() + d * (e.shiftKey ? 10 : 1));
+    } catch (e2) { /* ok */ }
+  });
+  rowBpm.appendChild(bpm);
+  lcd.appendChild(rowBpm);
+  ident.appendChild(lcd);
+
+  /* 4 - view: placement only. Ask av_chrome for its own keys first - it CREATES + wires them and
+     skips ids that already exist, so the band never holds a dead BROWSE / UNDO key. */
+  try { if (typeof avChromeBuildHeader === "function") avChromeBuildHeader(); } catch (e) { /* the observer re-homes them */ }
+  const view = avConsoleMkGroup("view", "View");
+  for (let i = 0; i < AV_CONSOLE_VIEW_KEYS.length; i++) {
+    const id = AV_CONSOLE_VIEW_KEYS[i][0];
+    const have = avConsoleEl(id);
+    if (have) {
+      if (!have.classList.contains("av-btn")) have.classList.add("av-btn");
+      have.classList.add("mini");
+      view.appendChild(have);
+      continue;
+    }
+    /* only the a11y keys are safe to create here: av_a11y binds an existing node */
+    if (id === "av-a11y-contrast" || id === "av-a11y-motion") {
+      const spec = AV_CONSOLE_VIEW_KEYS[i];
+      const b = document.createElement("button");
+      b.type = "button";
+      b.id = id;
+      b.className = "av-btn mini av-a11y-btn";
+      b.textContent = spec[1];
+      b.setAttribute("aria-label", spec[2]);
+      b.title = spec[2];
+      view.appendChild(b);
+    }
+  }
+
+  /* 5 - out: scope, meters, panic, learn */
+  const out = avConsoleMkGroup("out", "Output");
+  const scope = document.createElement("canvas");
+  scope.id = "av-scope";
+  scope.className = "av-band-scope";
+  scope.width = 120;
+  scope.height = 40;
+  scope.setAttribute("aria-hidden", "true");
+  out.appendChild(scope);
+
+  const meters = document.createElement("div");
+  meters.className = "avc-vu av-band-vu";
+  meters.setAttribute("aria-hidden", "true");
+  const mkBar = function (id, barId) {
+    const wrap = document.createElement("span");
+    wrap.className = "avc-vu-bar";
+    wrap.id = id;
+    const have = avConsoleEl(barId);
+    if (have) {
+      wrap.appendChild(have);           /* the bar the meter writes - adopted, id kept */
+    } else {
+      const fill = document.createElement("i");
+      fill.className = "avc-vu-fill";
+      fill.id = barId;
+      wrap.appendChild(fill);
+    }
+    return wrap;
+  };
+  meters.appendChild(mkBar("av-meter-l", "avc-vu-l"));
+  meters.appendChild(mkBar("av-meter-r", "avc-vu-r"));
+  out.appendChild(meters);
+
+  const panic = document.createElement("button");
+  panic.type = "button";
+  panic.id = "av-panic";
+  panic.className = "av-btn mini av-band-panic";
+  panic.textContent = "PANIC";
+  panic.title = "All notes off";
+  panic.setAttribute("aria-label", "All notes off");
+  panic.addEventListener("click", function () {
+    try { if (typeof avNoteStopAll === "function") avNoteStopAll(); } catch (e) { /* ok */ }
+    avConsoleSetLast("panic");
+    avConsoleRefresh();
+  });
+  out.appendChild(panic);
+
+  const learn = document.createElement("button");
+  learn.type = "button";
+  learn.id = "av-learn";
+  learn.className = "av-btn mini";
+  learn.textContent = "LEARN";
+  learn.title = "MIDI learn - arm CC learn, then click the control to drive";
+  learn.setAttribute("aria-label", "MIDI learn");
+  learn.addEventListener("click", function () {
+    try {
+      if (typeof avMidiLearnArm === "function") avMidiLearnArm();
+      else if (typeof avMidiLearnToggle === "function") avMidiLearnToggle();
+    } catch (e) { /* ok */ }
+    avConsoleSetLast("learn");
+    avConsoleRefresh();
+  });
+  out.appendChild(learn);
+
+  /* contract order: transport | identity | pots | view | out */
+  /* the header markup is now EMPTY, so the legacy ids that other modules only adopt must be
+     CREATED here when absent (present ones were already adopted above and are left alone) */
+  const ensureChip = function (id, text) {
+    let el = avConsoleEl(id);
+    if (!el) { el = document.createElement("span"); el.id = id; el.textContent = text; }
+    el.className = "av-chip av-dim";
+    if (el.parentNode !== eng.parentNode) eng.parentNode.appendChild(el);
+    return el;
+  };
+  ensureChip("av-tier", "engine: pending");
+  ensureChip("av-voices", "voices: —");
+  const ensureKey = function (id, label, title, fn) {
+    let el = avConsoleEl(id);
+    if (!el) {
+      el = document.createElement("button");
+      el.type = "button";
+      el.id = id;
+      el.className = "av-btn mini";
+      el.textContent = label;
+      el.title = title;
+      el.setAttribute("aria-label", title);
+      el.addEventListener("click", function () { try { fn(); } catch (e) { /* guarded */ } });
+    }
+    if (el.parentNode !== view) view.appendChild(el);
+    return el;
+  };
+  ensureKey("btn-piano", "🎹", "Piano dock - 61 keys at the bottom (Y)", function () {
+    if (typeof avKbDockToggle === "function") avKbDockToggle();
+    else if (typeof avPianoToggle === "function") avPianoToggle();
+  });
+  ensureKey("av-help", "?", "Help - shortcuts, the tour and the guides (?)", function () {
+    if (typeof avHelpToggle === "function") avHelpToggle();
+  });
+
+  band.appendChild(gTransport);
+  band.appendChild(ident);
+  band.appendChild(gPots);
+  band.appendChild(view);
+  band.appendChild(out);
+  head.appendChild(band);
+
+  /* adopt the pack/preset selects into the LCD slots (ids assigned so the refresh and the step
+     keys keep finding them; the bank's delegated change handler rides bubbling, so moving is safe) */
+  try {
+    const ps = avConsoleEl("avc-pack") || document.querySelector("select.av-bank-pack");
+    const pr = avConsoleEl("avc-preset") || document.querySelector("select.av-bank-preset");
+    if (ps) { ps.id = "avc-pack"; packSlot.appendChild(ps); }
+    if (pr) { pr.id = "avc-preset"; presetSlot.appendChild(pr); }
+  } catch (e) { /* the bank card keeps the selects it owns; refresh retries */ }
+
+  /* the moved chips keep their ids - their text updates land by id */
+  try {
+    if (avConsoleAdopt(eng.parentNode, "av-tier")) { const t = avConsoleEl("av-tier"); t.className = "av-chip av-dim"; }
+    if (avConsoleAdopt(eng.parentNode, "av-voices")) { const v = avConsoleEl("av-voices"); v.className = "av-chip av-dim"; }
+  } catch (e) { /* chips stay where they are */ }
+
+  /* the edited dot follows the av-param fan-out; a preset pick clears it */
+  try {
+    if (!avConsoleState.editedBound) {
+      avConsoleState.editedBound = true;
+      window.addEventListener("av-param", function () {
+        try { const d = avConsoleEl("av-lcd-edited"); if (d) d.hidden = false; } catch (e) { /* ok */ }
+      });
+      document.addEventListener("change", function (e) {
+        try {
+          const t = e.target;
+          if (!t || !t.id || (t.id !== "avc-pack" && t.id !== "avc-preset")) return;
+          const d = avConsoleEl("av-lcd-edited");
+          if (d) d.hidden = true;
+        } catch (e2) { /* ok */ }
+      });
+    }
+  } catch (e) { /* the dot is a nicety */ }
+
+  /* re-home late arrivals (av_chrome may run after this script) */
+  try {
+    if (!avConsoleState.obs && typeof MutationObserver === "function") {
+      const onAdd = function (node) {
+        try {
+          const id = node && node.id;
+          if (!id) return;
+          if (id === "avc-pack") { const s2 = avConsoleEl("av-lcd-pack"); if (s2 && node.parentNode !== s2) s2.appendChild(node); return; }
+          if (id === "avc-preset") { const s3 = avConsoleEl("av-lcd-preset"); if (s3 && node.parentNode !== s3) s3.appendChild(node); return; }
+          for (let i = 0; i < AV_CONSOLE_VIEW_KEYS.length; i++) {
+            if (AV_CONSOLE_VIEW_KEYS[i][0] !== id) continue;
+            const g = document.querySelector('#av-band .av-band-grp[data-grp="view"]');
+            if (!g) return;
+            if (!node.classList.contains("av-btn")) node.classList.add("av-btn");
+            node.classList.add("mini");
+            if (node.parentNode !== g) g.appendChild(node);
+            return;
+          }
+        } catch (e) { /* the key stays where it landed */ }
+      };
+      avConsoleState.obs = new MutationObserver(function (recs) {
+        for (let i = 0; i < recs.length; i++) {
+          const added = recs[i].addedNodes || [];
+          for (let j = 0; j < added.length; j++) onAdd(added[j]);
+        }
+      });
+      avConsoleState.obs.observe(head, { childList: true });
+    }
+  } catch (e) { avConsoleState.obs = null; }
+  return band;
 }
 
 function avConsoleInit() {
@@ -90318,109 +92214,8 @@ function avConsoleInit() {
     const head = document.querySelector("header.av-head");
     if (!head) return false;
     if (avConsoleEl("avc-play")) { avConsoleState.ready = true; return true; }
-    head.classList.add("av-console");
 
-    /* the transport deck */
-    const deck = document.createElement("div");
-    deck.className = "avc-transport";
-    deck.setAttribute("role", "group");
-    deck.setAttribute("aria-label", "Transport");
-    deck.appendChild(avConsoleMkKey("avc-play", "\u25B6 PLAY", "Play / pause (Space)", avConsoleTransportToggle));
-    deck.appendChild(avConsoleMkKey("avc-stop", "\u25A0 STOP", "Stop the transport", function () {
-      try { if (typeof avSeqStop === "function") avSeqStop(); } catch (e) { /* ok */ }
-      try { if (typeof avSongStop === "function" && avConsoleState.songOn) avSongStop(); } catch (e) { /* ok */ }
-      avConsoleState.songOn = false;
-      avConsoleSetLast("stop");
-      avConsoleRefresh();
-    }));
-    deck.appendChild(avConsoleMkKey("avc-song", "SONG", "Play / stop the song arrangement", avConsoleSongToggle));
-    deck.appendChild(avConsoleMkKey("avc-rec", "\u25CF REC", "Record (studio recorder)", avConsoleRecToggle));
-
-    /* R14: PRV/NXT step the pack's preset selection and apply it (the bank API) */
-    deck.appendChild(avConsoleMkKey("avc-preset-prev", "PRV", "Previous preset (steps and applies)", function () { avConsolePresetStep(-1); }));
-    deck.appendChild(avConsoleMkKey("avc-preset-next", "NXT", "Next preset (steps and applies)", function () { avConsolePresetStep(1); }));
-
-    /* R14: the two-bar VU meter (built here, painted from avTap.levels by the meter loop) */
-    const vu = document.createElement("div");
-    vu.className = "avc-vu";
-    vu.setAttribute("aria-hidden", "true");
-    vu.innerHTML =
-      '<span class="avc-vu-bar"><i class="avc-vu-fill" id="avc-vu-l"></i></span>' +
-      '<span class="avc-vu-bar"><i class="avc-vu-fill" id="avc-vu-r"></i></span>';
-
-    /* the BPM segment window */
-    const bpm = document.createElement("div");
-    bpm.className = "avc-window avc-bpm";
-    bpm.innerHTML = '<span class="avc-bpm-lab">BPM</span><span id="avc-bpm-val" aria-label="Tempo">120</span>';
-    /* R12: the BPM window is a live control — click top/bottom half to step, wheel, arrow keys */
-    bpm.tabIndex = 0;
-    bpm.setAttribute("role", "slider");
-    bpm.setAttribute("aria-label", "Tempo - click top or bottom half to step, wheel, or arrow keys");
-    bpm.title = "Tempo - click top/bottom half to step, wheel, or arrow keys (Shift = 10)";
-    bpm.addEventListener("wheel", function (e) {
-      try { e.preventDefault(); avConsoleBpmSet(avConsoleBpm() + (e.deltaY < 0 ? 1 : -1) * (e.shiftKey ? 10 : 1)); } catch (e2) { /* ok */ }
-    }, { passive: false });
-    bpm.addEventListener("click", function (e) {
-      try {
-        const r = bpm.getBoundingClientRect();
-        const top = (e.clientY - r.top) < r.height / 2;
-        avConsoleBpmSet(avConsoleBpm() + (top ? 1 : -1));
-      } catch (e2) { /* ok */ }
-    });
-    bpm.addEventListener("keydown", function (e) {
-      try {
-        const k = e.key;
-        if (k !== "ArrowUp" && k !== "ArrowDown" && k !== "ArrowLeft" && k !== "ArrowRight") return;
-        e.preventDefault();
-        const d = (k === "ArrowUp" || k === "ArrowRight") ? 1 : -1;
-        avConsoleBpmSet(avConsoleBpm() + d * (e.shiftKey ? 10 : 1));
-      } catch (e2) { /* ok */ }
-    });
-
-    /* the OLED info window: PACK / PRESET + the moved engine/voices chips */
-    const oled = document.createElement("div");
-    oled.className = "avc-window avc-oled";
-    oled.setAttribute("aria-label", "Console readouts");
-    oled.innerHTML =
-      '<div class="avc-oled-row"><span class="avc-oled-lbl">PACK</span><span class="avc-val" id="avc-pack">\u2014</span></div>' +
-      '<div class="avc-oled-row"><span class="avc-oled-lbl">PRESET</span><span class="avc-val" id="avc-preset">\u2014</span></div>' +
-      '<div class="avc-oled-row avc-oled-sys" id="avc-sys"></div>';
-
-    /* the power LED next to the logotype */
-    const power = document.createElement("span");
-    power.className = "avc-ledbig";
-    power.id = "avc-power";
-    power.setAttribute("aria-hidden", "true");
-
-    const word = head.querySelector(".av-word");
-    if (word && word.parentNode !== head) { try { head.insertBefore(word, head.firstChild); } catch (e) { /* ok */ } }
-    const spacer = head.querySelector(".av-spacer");
-    const anchor = (spacer && spacer.parentNode === head) ? spacer : null;
-    /* R19 owner clip (2026-10-09): the BPM + OLED pair rides in ONE centred console block
-       ("centre this section") -- absolutely centred in the header at wide viewports so it never
-       drifts with the side clusters (falls back to the flow position below 1520px). */
-    const center = document.createElement("div");
-    center.className = "avc-center";
-    center.appendChild(bpm);
-    center.appendChild(oled);
-    if (anchor) {
-      head.insertBefore(deck, anchor);
-      head.insertBefore(vu, anchor);
-      head.insertBefore(center, anchor);
-    } else {
-      head.appendChild(deck); head.appendChild(vu); head.appendChild(center);
-    }
-    if (word) { try { head.insertBefore(power, word.nextSibling); } catch (e) { head.insertBefore(power, head.firstChild); } }
-    else head.insertBefore(power, head.firstChild);
-
-    /* move the engine + voices chips into the OLED sys row (ids preserved; text updates by id) */
-    try {
-      const sys = avConsoleEl("avc-sys");
-      const tier = avConsoleEl("av-tier");
-      const voices = avConsoleEl("av-voices");
-      if (sys && tier) sys.appendChild(tier);
-      if (sys && voices) sys.appendChild(voices);
-    } catch (e) { /* chips stay wherever they are — the console still works */ }
+    avConsoleBuild(head);
 
     /* one interval for every poll; never duplicated */
     if (!avConsoleState.timer) {
@@ -90451,10 +92246,17 @@ function avConsoleProof() {
   try { head = document.querySelector("header.av-head.av-console") !== null; } catch (e) { head = false; }
   let vu = false;
   try { vu = !!(avConsoleEl("avc-vu-l") && avConsoleEl("avc-vu-r")); } catch (e) { vu = false; }
+  let band = null;
+  try {
+    const b = avConsoleEl("av-band");
+    band = b ? Array.prototype.map.call(b.children, function (n) { return n.getAttribute("data-grp") || ""; }) : null;
+  } catch (e) { band = null; }
   return "CONSOLE SELFTEST " + JSON.stringify({
     v: AV_CONSOLE_VERSION,
     ready: avConsoleState.ready === true,
     head: head,
+    band: band,
+    pots: avConsoleState.pots,
     play: avConsoleState.playOn === true,
     rec: avConsoleState.recOn === true,
     last: avConsoleState.last,
@@ -90474,6 +92276,9 @@ if (typeof window !== "undefined" && window) {
       bpm: function () { return avConsoleBpm(); },
       refresh: function () { return avConsoleRefresh(); },
       stepPreset: function (dir) { return avConsolePresetStep(dir); },
+      potMode: function (m) { return avConsolePotMode(m); },
+      potBank: function () { return avConsoleState.pots; },
+      scope: function () { return avConsoleScopePaint(); },
       vu: function () { return avConsoleVuRead(); },
       vuTick: function () { return avConsoleVuTick(); },
     };
@@ -90482,6 +92287,791 @@ if (typeof window !== "undefined" && window) {
 
 /* boot: self-init at parse time (the header + chips are already in the DOM above the script) */
 try { avConsoleInit(); } catch (e) { /* console boots best-effort */ }
+
+
+/* Anvil — THE INSPECTOR COLUMN (C1 chassis, verify/_c1_wave.md 2.4): the persistent right-hand
+   column that carries the selected voice — the engine-kind key row, the six core pots on the live
+   voice, two dark screens (the oscillator shape and the live amp ADSR), the EDIT VOICE jump and the
+   deep-page launcher grid. One job: you never lose your place, or your voice, when a page changes.
+
+   Laws honoured here: classic script (no modules), page module — no DOM at top level, every DOM
+   reach is guarded and inside a function, never throws. ONE namespace (avInspector* / AV_INSP*).
+   The module SELF-MOUNTS: avInspectorInit() builds aside#av-inspector into .av-work after
+   main.av-main (before the dock) and is idempotent through the ready flag + a live-node check.
+   avInspectorInit() -> false and stays false when main.av-main is absent (plain page, no shell).
+
+   Kind keys ride the synth card's OWN commit — avSynthSetKind() when the card is loaded (it funnels
+   engine.kind through avSynthCommitValue -> avApplyParam and syncs the engine select), else the same
+   avApplyParam funnel with the avParams mirror-first law and the 'av-param' event fallback. The
+   button vocabulary is the pin's seven (acid · wavetable · fm · string · drum · granular · sampler);
+   the engine enum behind it is av_synth's list (va replaces wavetable, grain replaces granular).
+
+   Core pots are av_knob rotaries on REAL paths (see AV_INSP_CORE — provenance in the C1 report):
+   engine.outScale · mix.track.m1.pan · filter.cutoff · filter.reso · env1.a · env1.r. The value
+   lines are read-only text repainted from the avParams mirror on the 200 ms tick (drag-to-edit on
+   the screens is C2). Screens repaint from the mirror and the master tap analyser; the voice
+   counter mirrors the engine's own #av-voices readout (av_engine samples it ~2 Hz — one source,
+   never a second stats RPC).
+
+   Launchers: avZoneShow(page) then avZoneSub(page, sub) when data-sub is set and avZoneSub exists
+   (the parent wires avZoneSub in this same wave; the call is typeof-guarded).
+
+   Public surface (classic-script globals, ONE namespace):
+     avInspectorInit() -> bool · avInspectorProof() -> string · avInspectorLaunch(page, sub) -> bool ·
+     avInspectorKindSet(k) -> bool · avInspectorKind() -> string · avInspectorSelect() -> object.
+     window.__avInspector = { version:"c1.0", init, kind, kindSet, select, launch, proof }.
+   Proof: ?avtest=1 ONLY, deferred via setTimeout(..., 0), id "av-inspectortest".
+   ASCII source only (glyph-free); the dark screens are 220x84 canvases. */
+
+"use strict";
+
+const AV_INSPECTOR_VERSION = "c1.0";
+
+/* the seven pinned kinds: button key -> engine enum (av_synth AV_SYNTH_KINDS vocabulary) */
+const AV_INSP_KINDS = [
+  { key: "acid", enumKind: "acid", label: "ACID" },
+  { key: "wavetable", enumKind: "va", label: "WAVETABLE" },
+  { key: "fm", enumKind: "fm", label: "FM" },
+  { key: "string", enumKind: "string", label: "STRING" },
+  { key: "drum", enumKind: "drum", label: "DRUM" },
+  { key: "granular", enumKind: "grain", label: "GRANULAR" },
+  { key: "sampler", enumKind: "sampler", label: "SAMPLER" },
+];
+
+/* the six core pots — EXACT paths, ranges copied from the card that owns them in live source:
+     engine.outScale  av_dsp.js setParam (clamp 0.05..1, default 0.25 at create)
+     mix.track.m1.pan av_mix_ui.js (path mix.track.<id>.<field>, consumed by its avApplyParam wrap)
+     filter.cutoff    av_synth.js AV_SYNTH_ROWS (20..20000, log, def 800)
+     filter.reso      av_synth.js AV_SYNTH_ROWS (0..1, def 0.3)
+     env1.a           av_synth.js AV_SYNTH_ROWS (0.001..4, log, def 0.002)
+     env1.r           av_synth.js AV_SYNTH_ROWS (0.001..8, log, def 0.2) */
+const AV_INSP_CORE = [
+  { id: "av-insp-level", path: "engine.outScale", label: "LEVEL", opts: { min: 0.05, max: 1, step: 0.01, def: 0.25, fmt: "pct" } },
+  { id: "av-insp-pan", path: "mix.track.m1.pan", label: "PAN", opts: { min: -1, max: 1, step: 0.02, def: 0, fmt: "pan" } },
+  { id: "av-insp-cutoff", path: "filter.cutoff", label: "CUTOFF", opts: { min: 20, max: 20000, step: 1, def: 800, curve: "log", fmt: "hz" } },
+  { id: "av-insp-reso", path: "filter.reso", label: "RESO", opts: { min: 0, max: 1, step: 0.01, def: 0.3, fmt: "pct" } },
+  { id: "av-insp-attack", path: "env1.a", label: "ATTACK", opts: { min: 0.001, max: 4, step: 0.001, def: 0.002, curve: "log", fmt: "ms" } },
+  { id: "av-insp-release", path: "env1.r", label: "RELEASE", opts: { min: 0.001, max: 8, step: 0.001, def: 0.2, curve: "log", fmt: "ms" } },
+];
+
+/* the launcher grid — pinned order, page + sub (sub empty = page only) */
+const AV_INSP_LAUNCH = [
+  { page: "sound", sub: "engine", label: "OSC" },
+  { page: "sound", sub: "fm", label: "FM" },
+  { page: "sound", sub: "drums", label: "DRUMS" },
+  { page: "sound", sub: "samples", label: "SMP" },
+  { page: "sound", sub: "chop", label: "CHOP" },
+  { page: "sound", sub: "wt", label: "WT" },
+  { page: "sound", sub: "tune", label: "TUNE" },
+  { page: "effects", sub: "", label: "FX" },
+];
+
+const avInspectorState = { ready: false, timer: 0, kind: "wavetable", poly: "poly", waveKey: "" };
+
+/* ---------- small guards ---------- */
+
+function avInspectorEl(id) {
+  try { return document.getElementById(id); } catch (e) { return null; }
+}
+
+function avInspectorNum(v, d) {
+  const n = Number(v);
+  return isFinite(n) ? n : d;
+}
+
+/* one mirror read; the default stands on a cold start, a bad value, or a missing mirror */
+function avInspectorParam(path, d) {
+  try {
+    if (typeof avParams === "undefined" || !avParams) return d;
+    const n = Number(avParams[path]);
+    return isFinite(n) ? n : d;
+  } catch (e) { return d; }
+}
+
+/* the pin key for a live engine enum (cold start -> the va default) */
+function avInspectorKindFromEngine(kind) {
+  const k = String(kind == null ? "" : kind);
+  for (let i = 0; i < AV_INSP_KINDS.length; i++) if (AV_INSP_KINDS[i].enumKind === k) return AV_INSP_KINDS[i].key;
+  return "";
+}
+
+function avInspectorKindNorm(k) {
+  const s = String(k == null ? "" : k);
+  for (let i = 0; i < AV_INSP_KINDS.length; i++) if (AV_INSP_KINDS[i].key === s) return s;
+  /* an engine enum is accepted too (va / grain) */
+  return avInspectorKindFromEngine(s);
+}
+
+/* the current kind: the mirror when it names a known kind, else the wavetable (va) default */
+function avInspectorKind() {
+  try {
+    if (typeof avParams !== "undefined" && avParams) {
+      const v = avInspectorKindFromEngine(avParams["engine.kind"]);
+      if (v) return v;
+    }
+  } catch (e) { /* the default stands */ }
+  return "wavetable";
+}
+
+/* the aria/roving surface over the key row */
+function avInspectorMark() {
+  try {
+    const row = avInspectorEl("av-insp-kinds");
+    if (!row || !row.querySelectorAll) return false;
+    const cur = avInspectorKind();
+    row.querySelectorAll(".av-kind-key[data-kind]").forEach(function (b) {
+      const on = b.getAttribute("data-kind") === cur;
+      b.setAttribute("aria-checked", on ? "true" : "false");
+      b.tabIndex = on ? 0 : -1;
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the ADSR / wave geometry (pure) ---------- */
+
+/* the oscillator shape strings av_dsp accepts, wt.* forms folded to their base */
+function avInspectorWaveBase(v) {
+  let s = String(v == null ? "saw" : v);
+  if (s.indexOf("wt.") === 0) s = s.slice(3);
+  if (s === "pulse25") s = "pulse";
+  if (s === "noise") return "noise";
+  if (s === "square" || s === "pulse" || s === "tri" || s === "sine" || s === "saw") return s;
+  return "saw";
+}
+
+/* one cycle of the shape at phase p (0..1), -1..1 */
+function avInspectorWaveAt(shape, p) {
+  const t = p - Math.floor(p);
+  if (shape === "sine") return Math.sin(t * Math.PI * 2);
+  if (shape === "tri") return 1 - 4 * Math.abs(t - 0.5) + 0; /* -1..1, peak at 0.5 */
+  if (shape === "square") return t < 0.5 ? 1 : -1;
+  if (shape === "pulse") return t < 0.25 ? 1 : -1;
+  if (shape === "noise") return 0;                            /* the noise body is drawn as a band */
+  return t < 0.5 ? (t * 4 - 1) : (3 - t * 4);                 /* saw */
+}
+
+/* the total envelope time in seconds (a + d + r; sustain is a level, not a time) */
+function avInspectorEnvTotal() {
+  const a = avInspectorParam("env1.a", 0.002);
+  const d = avInspectorParam("env1.d", 0.3);
+  const r = avInspectorParam("env1.r", 0.2);
+  return Math.max(0.001, a + d + r);
+}
+
+/* "20 s" / "340 ms" style — the screen label */
+function avInspectorTimeText(sec) {
+  const s = avInspectorNum(sec, 0);
+  if (s >= 10) return Math.round(s) + " s";
+  if (s >= 1) return (Math.round(s * 10) / 10) + " s";
+  return Math.round(s * 1000) + " ms";
+}
+
+/* ---------- the dark screens ---------- */
+
+function avInspectorScreenInk(canvas, fallback) {
+  try {
+    const css = getComputedStyle(canvas);
+    const v = css.getPropertyValue("--zone-accent");
+    const s = String(v || "").trim();
+    if (s) return s;
+  } catch (e) { /* fall through */ }
+  return fallback;
+}
+
+function avInspectorClear(ctx, w, h, canvas) {
+  ctx.fillStyle = "#0a0c0f";
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = "rgba(255,255,255,0.07)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, h / 2 + 0.5);
+  ctx.lineTo(w, h / 2 + 0.5);
+  ctx.stroke();
+  return avInspectorScreenInk(canvas, "#3fd0c9");
+}
+
+/* the oscillator screen: two cycles of the live osc shape (C1 preview; drag-to-edit is C2) */
+function avInspectorPaintWave() {
+  try {
+    const canvas = avInspectorEl("av-insp-wave");
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const w = canvas.width || 220, h = canvas.height || 84;
+    const ink = avInspectorClear(ctx, w, h, canvas);
+    let shape = "saw";
+    try {
+      if (typeof avParams !== "undefined" && avParams) shape = avInspectorWaveBase(avParams["osc1.type"]);
+    } catch (e) { shape = "saw"; }
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    if (shape === "noise") {
+      /* a fixed pseudo-random band (deterministic — no RNG) */
+      for (let i = 0; i < 96; i++) {
+        const x = (i / 95) * w;
+        const amp = ((i * 37) % 29) / 29 - 0.5;
+        const y = h / 2 - amp * h * 0.62;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+    } else {
+      for (let i = 0; i <= 160; i++) {
+        const p = (i / 160) * 2;                    /* two cycles */
+        const x = (i / 160) * w;
+        const y = h / 2 - avInspectorWaveAt(shape, p) * h * 0.34;
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+    canvas.setAttribute("data-shape", shape);
+    avInspectorState.waveKey = shape;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the amp envelope screen: ADSR drawn from the live a/d/s/r, attack decay release as time */
+function avInspectorPaintEnv() {
+  try {
+    const canvas = avInspectorEl("av-insp-env");
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const w = canvas.width || 220, h = canvas.height || 84;
+    const ink = avInspectorClear(ctx, w, h, canvas);
+    const a = avInspectorParam("env1.a", 0.002);
+    const d = avInspectorParam("env1.d", 0.3);
+    const s = Math.max(0, Math.min(1, avInspectorParam("env1.s", 0.8)));
+    const r = avInspectorParam("env1.r", 0.2);
+    const tot = Math.max(0.001, a + d + r);
+    /* the sustain hold takes a slice of the width so the shape never collapses */
+    const holdShare = 0.24;
+    const span = 1 - holdShare;
+    const xa = (a / tot) * span * w;
+    const xd = xa + (d / tot) * span * w;
+    const xs = xd + holdShare * w;
+    const xr = xs + (r / tot) * span * w;
+    const base = h - 7, top = 9;
+    const ys = top + (1 - s) * (base - top);
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(1, base);
+    ctx.lineTo(Math.max(2, xa), top);
+    ctx.lineTo(Math.max(xa + 1, xd), ys);
+    ctx.lineTo(Math.max(xd + 2, xs), ys);
+    ctx.lineTo(Math.max(xs + 1, Math.min(w - 1, xr)), base);
+    ctx.stroke();
+    /* the end-of-release marker dot */
+    ctx.fillStyle = ink;
+    try { ctx.beginPath(); ctx.arc(Math.min(w - 2, Math.max(2, xr)), base, 1.8, 0, Math.PI * 2); ctx.fill(); } catch (e2) { /* dot is a nicety */ }
+    const lab = avInspectorEl("av-insp-env-lab");
+    if (lab) {
+      const txt = avInspectorTimeText(tot);
+      if (lab.textContent !== txt) lab.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* the mini scope: the master tap's left analyser, a flat dim line when the tap is cold */
+function avInspectorPaintScope() {
+  try {
+    const canvas = avInspectorEl("av-insp-scope");
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const w = canvas.width || 220, h = canvas.height || 36;
+    const ink = avInspectorClear(ctx, w, h, canvas);
+    let buf = null;
+    try {
+      if (typeof avTap !== "undefined" && avTap && avTap.analyserL && typeof avTap.analyserL.getByteTimeDomainData === "function") {
+        if (!avInspectorState.scopeBuf || avInspectorState.scopeBuf.length !== avTap.analyserL.fftSize) {
+          avInspectorState.scopeBuf = new Uint8Array(avTap.analyserL.fftSize);
+        }
+        avTap.analyserL.getByteTimeDomainData(avInspectorState.scopeBuf);
+        buf = avInspectorState.scopeBuf;
+      }
+    } catch (e) { buf = null; }
+    ctx.strokeStyle = ink;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    if (buf && buf.length) {
+      for (let i = 0; i < buf.length; i += 2) {
+        const x = (i / (buf.length - 1)) * w;
+        const y = h / 2 - ((buf[i] - 128) / 128) * (h * 0.44);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+    } else {
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+    }
+    ctx.stroke();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the value lines + the voice counter ---------- */
+
+function avInspectorFmt(fmt, v) {
+  try {
+    if (typeof avKnobFormat === "function") return avKnobFormat(v, { fmt: fmt || "" });
+  } catch (e) { /* the local formatter stands */ }
+  const n = avInspectorNum(v, 0);
+  if (fmt === "pct") return Math.round(n * 100) + "%";
+  if (fmt === "hz") return n >= 1000 ? (Math.round(n / 10) / 100) + "k" : String(Math.round(n));
+  if (fmt === "ms") return n >= 1 ? (Math.round(n * 100) / 100) + "s" : Math.round(n * 1000) + "ms";
+  if (fmt === "pan") return Math.abs(n) < 0.005 ? "C" : (n < 0 ? "L" : "R") + Math.round(Math.abs(n) * 100);
+  return String(Math.round(n * 1000) / 1000);
+}
+
+function avInspectorPaintNums() {
+  try {
+    for (let i = 0; i < AV_INSP_CORE.length; i++) {
+      const e = AV_INSP_CORE[i];
+      const mount = avInspectorEl(e.id);
+      if (!mount || !mount.querySelector) continue;
+      const line = mount.querySelector(".av-insp-num");
+      if (!line) continue;
+      const v = avInspectorParam(e.path, e.opts.def);
+      const txt = avInspectorFmt(e.opts.fmt, v);
+      if (line.textContent !== txt) line.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* "voices: n / m" mirrors the engine's own readout (#av-voices, sampled by av_engine ~2 Hz) */
+function avInspectorPaintVoices() {
+  try {
+    const out = avInspectorEl("av-insp-voices");
+    if (!out) return false;
+    let txt = "";
+    const chip = avInspectorEl("av-voices");
+    if (chip && chip.textContent) txt = String(chip.textContent).trim();
+    if (!txt) {
+      let mx = 0;
+      try { if (window.__avEngine && isFinite(Number(window.__avEngine.maxVoices))) mx = Number(window.__avEngine.maxVoices); } catch (e2) { mx = 0; }
+      txt = "voices: " + "\u2014" + " / " + (mx > 0 ? String(mx) : "\u2014");
+    }
+    if (out.textContent !== txt) out.textContent = txt;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the 200 ms tick ---------- */
+
+function avInspectorTick() {
+  try {
+    avInspectorPaintNums();
+    avInspectorPaintVoices();
+    avInspectorPaintScope();
+    avInspectorPaintEnv();
+    let shape = "saw";
+    try { if (typeof avParams !== "undefined" && avParams) shape = avInspectorWaveBase(avParams["osc1.type"]); } catch (e) { shape = "saw"; }
+    if (shape !== avInspectorState.waveKey) avInspectorPaintWave();
+    return true;
+  } catch (e) { return false; }
+}
+
+function avInspectorTimerStop() {
+  try {
+    if (avInspectorState.timer) clearInterval(avInspectorState.timer);
+  } catch (e) { /* already gone */ }
+  avInspectorState.timer = 0;
+}
+
+function avInspectorTimerStart() {
+  avInspectorTimerStop();
+  try { avInspectorState.timer = setInterval(avInspectorTick, 200); } catch (e) { avInspectorState.timer = 0; }
+  return avInspectorState.timer !== 0;
+}
+
+/* ---------- the kind commit ---------- */
+
+/* the shared commit: the synth card's own avSynthSetKind when it ships (it funnels engine.kind
+   through avApplyParam), else mirror-first + the same funnel; the av-param event when no core. */
+function avInspectorKindApply(enumKind) {
+  let ok = false;
+  try {
+    if (typeof avSynthSetKind === "function") ok = avSynthSetKind(enumKind) !== false;
+  } catch (e) { ok = false; }
+  if (!ok) {
+    try { if (typeof avParams !== "undefined" && avParams) avParams["engine.kind"] = enumKind; } catch (e2) { /* no mirror */ }
+    if (typeof avApplyParam === "function") {
+      try { avApplyParam("engine.kind", enumKind, { from: "inspector" }); ok = true; } catch (e3) { ok = false; }
+    } else {
+      try {
+        window.dispatchEvent(new CustomEvent("av-param", { detail: { path: "engine.kind", value: enumKind, from: "inspector" } }));
+        ok = true;
+      } catch (e4) { ok = false; }
+    }
+  }
+  return ok;
+}
+
+function avInspectorKindSet(key) {
+  try {
+    const k = avInspectorKindNorm(key);
+    if (!k) return false;
+    let enumKind = "va";
+    for (let i = 0; i < AV_INSP_KINDS.length; i++) if (AV_INSP_KINDS[i].key === k) enumKind = AV_INSP_KINDS[i].enumKind;
+    avInspectorKindApply(enumKind);
+    avInspectorState.kind = k;
+    avInspectorMark();
+    avInspectorPaintWave();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the launcher jump ---------- */
+
+function avInspectorLaunch(page, sub) {
+  try {
+    const p = String(page == null ? "" : page);
+    if (!p) return false;
+    let ok = false;
+    if (typeof avZoneShow === "function") { try { ok = avZoneShow(p) !== false; } catch (e) { ok = false; } }
+    const s = String(sub == null ? "" : sub);
+    if (ok && s && typeof avZoneSub === "function") {
+      try { ok = avZoneSub(p, s) !== false; } catch (e2) { ok = false; }
+    }
+    return ok;
+  } catch (e) { return false; }
+}
+
+/* ---------- markup (pure string builders) ---------- */
+
+function avInspectorKindsHTML() {
+  let out = "";
+  for (let i = 0; i < AV_INSP_KINDS.length; i++) {
+    const k = AV_INSP_KINDS[i];
+    out += '<button type="button" class="av-kind-key" data-kind="' + k.key + '" role="radio"' +
+      ' aria-checked="false" tabindex="-1" title="' + k.label + '">' +
+      '<span class="av-kind-dot" aria-hidden="true"></span>' +
+      '<span class="av-kind-txt">' + k.label + '</span></button>';
+  }
+  return '<div class="av-kind-keys" id="av-insp-kinds" role="radiogroup" aria-label="Engine kind">' + out + '</div>';
+}
+
+function avInspectorCoreHTML() {
+  const pots = [];
+  for (let i = 0; i < AV_INSP_CORE.length; i++) {
+    const e = AV_INSP_CORE[i];
+    const v = avInspectorParam(e.path, e.opts.def);
+    const opts = Object.assign({ value: v, size: "sm" }, e.opts);
+    pots.push('<div class="av-insp-pot" id="' + e.id + '">' +
+      '<div class="av-insp-pot-label">' + e.label + '</div>' +
+      avKnobHTML(e.path, e.label, opts) +
+      '<div class="av-insp-num" data-insp-num="' + e.path + '">' + avInspectorFmt(e.opts.fmt, v) + '</div>' +
+      '</div>');
+  }
+  return '<div id="av-insp-core">' + avKnobRowHTML(pots, "av-insp-pots") + '</div>';
+}
+
+function avInspectorLaunchHTML() {
+  let out = "";
+  for (let i = 0; i < AV_INSP_LAUNCH.length; i++) {
+    const l = AV_INSP_LAUNCH[i];
+    out += '<button type="button" class="av-insp-launch av-insp-launch-key" data-page="' + l.page + '"' +
+      (l.sub ? ' data-sub="' + l.sub + '"' : "") + ' title="Jump to ' + l.page + (l.sub ? " / " + l.sub : "") + '">' +
+      l.label + '</button>';
+  }
+  return '<div class="av-insp-launch" role="group" aria-label="Deep pages">' + out + '</div>';
+}
+
+function avInspectorBodyHTML() {
+  return '<div id="av-insp-title">SELECTED VOICE</div>' +
+    avInspectorKindsHTML() +
+    '<div class="av-insp-frame av-group">' +
+      '<div class="av-group-tab">VOICE</div>' +
+      avInspectorCoreHTML() +
+      '<div class="av-insp-screen" id="av-insp-wave">' +
+        '<canvas width="220" height="84" aria-label="Oscillator shape"></canvas>' +
+      '</div>' +
+      '<div class="av-insp-screen" id="av-insp-env">' +
+        '<canvas width="220" height="84" aria-label="Amp envelope (attack, decay, sustain, release)"></canvas>' +
+        '<span class="av-insp-screen-label" id="av-insp-env-lab">\u2014</span>' +
+      '</div>' +
+    '</div>' +
+    '<button type="button" class="av-insp-edit" id="av-insp-edit">EDIT VOICE</button>' +
+    '<div class="av-insp-scope-box" id="av-insp-scope-box">' +
+      '<canvas id="av-insp-scope" width="220" height="36" aria-label="Output scope"></canvas>' +
+    '</div>' +
+    avInspectorLaunchHTML() +
+    '<div id="av-insp-voices" aria-live="off">voices: \u2014 / \u2014</div>' +
+    '<div class="av-pair" id="av-insp-poly" role="radiogroup" aria-label="Voice mode">' +
+      '<button type="button" class="av-pair-key" data-poly="poly" role="radio" aria-checked="true">POLY</button>' +
+      '<button type="button" class="av-pair-key" data-poly="mono" role="radio" aria-checked="false">MONO</button>' +
+    '</div>';
+}
+
+/* ---------- the wiring ---------- */
+
+function avInspectorBindKinds() {
+  const row = avInspectorEl("av-insp-kinds");
+  if (!row || typeof row.querySelectorAll !== "function") return false;
+  row.querySelectorAll(".av-kind-key[data-kind]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      try { avInspectorKindSet(b.getAttribute("data-kind")); } catch (e) { /* a key never throws */ }
+    });
+    b.addEventListener("keydown", function (e) {
+      try {
+        const k = e.key;
+        if (k !== "ArrowRight" && k !== "ArrowLeft" && k !== "ArrowDown" && k !== "ArrowUp") return;
+        e.preventDefault();
+        const keys = AV_INSP_KINDS.map(function (x) { return x.key; });
+        const cur = keys.indexOf(avInspectorKind());
+        const d = (k === "ArrowRight" || k === "ArrowDown") ? 1 : -1;
+        const next = keys[(cur + d + keys.length) % keys.length];
+        avInspectorKindSet(next);
+        const nb = row.querySelector('.av-kind-key[data-kind="' + next + '"]');
+        if (nb && typeof nb.focus === "function") nb.focus({ preventScroll: true });
+      } catch (e2) { /* arrows are a nicety */ }
+    });
+  });
+  return true;
+}
+
+function avInspectorBindLaunch() {
+  const host = document.querySelector("#av-inspector .av-insp-launch");
+  if (!host || typeof host.querySelectorAll !== "function") return false;
+  host.querySelectorAll("[data-page]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      try { avInspectorLaunch(b.getAttribute("data-page"), b.getAttribute("data-sub") || ""); } catch (e) { /* a jump never throws */ }
+    });
+  });
+  return true;
+}
+
+function avInspectorBindEdit() {
+  const b = avInspectorEl("av-insp-edit");
+  if (!b) return false;
+  b.addEventListener("click", function () {
+    try { avInspectorLaunch("sound", "engine"); } catch (e) { /* the jump never throws */ }
+  });
+  return true;
+}
+
+function avInspectorBindPoly() {
+  const row = avInspectorEl("av-insp-poly");
+  if (!row || typeof row.querySelectorAll !== "function") return false;
+  row.querySelectorAll(".av-pair-key[data-poly]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      try {
+        const m = b.getAttribute("data-poly") === "mono" ? "mono" : "poly";
+        avInspectorState.poly = m;
+        row.querySelectorAll(".av-pair-key[data-poly]").forEach(function (x) {
+          x.setAttribute("aria-checked", x.getAttribute("data-poly") === m ? "true" : "false");
+        });
+      } catch (e) { /* the pair is a local readout in C1 */ }
+    });
+  });
+  return true;
+}
+
+/* strip the knob's own label + value line: the pinned .av-insp-pot-label / .av-insp-num carry
+   both (the knob keeps its aria-label, so nothing is lost to a screen reader) */
+function avInspectorTrimKnobChrome() {
+  try {
+    const core = avInspectorEl("av-insp-core");
+    if (!core || typeof core.querySelectorAll !== "function") return false;
+    core.querySelectorAll(".av-knob-lbl, .av-knob-val").forEach(function (n) {
+      if (n && n.parentNode) n.parentNode.removeChild(n);
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- mount ---------- */
+
+function avInspectorMount() {
+  try {
+    if (typeof document === "undefined" || !document || typeof document.querySelector !== "function") return null;
+    const main = document.querySelector("main.av-main");
+    if (!main) return null;
+    const aside = document.createElement("aside");
+    aside.id = "av-inspector";
+    aside.className = "av-inspector";
+    aside.setAttribute("aria-label", "Selected voice");
+    const work = document.querySelector(".av-work");
+    const parent = work || main.parentNode;
+    if (!parent) return null;
+    if (work && main.parentNode === work) parent.insertBefore(aside, main.nextSibling);
+    else parent.appendChild(aside);
+    return aside;
+  } catch (e) { return null; }
+}
+
+function avInspectorInit() {
+  try {
+    if (typeof document === "undefined" || !document) return false;
+    /* already mounted and still attached? */
+    const live = avInspectorEl("av-inspector");
+    if (avInspectorState.ready && live && document.body && document.body.contains(live)) return true;
+    if (live && live.parentNode) { try { live.parentNode.removeChild(live); } catch (e) { /* stale node */ } }
+    if (typeof avKnobHTML !== "function" || typeof avKnobRowHTML !== "function" || typeof avKnobBind !== "function") return false;
+
+    const aside = avInspectorMount();
+    if (!aside) return false;
+    aside.innerHTML = avInspectorBodyHTML();
+    avKnobBind(avInspectorEl("av-insp-core"));
+    avInspectorTrimKnobChrome();
+    avInspectorBindKinds();
+    avInspectorBindLaunch();
+    avInspectorBindEdit();
+    avInspectorBindPoly();
+
+    avInspectorState.kind = avInspectorKind();
+    avInspectorMark();
+    avInspectorPaintWave();
+    avInspectorPaintEnv();
+    avInspectorPaintScope();
+    avInspectorPaintNums();
+    avInspectorPaintVoices();
+    avInspectorTimerStart();
+    avInspectorState.ready = true;
+
+    /* proof: ?avtest=1 ONLY, deferred (never leaks onto the live page) */
+    try {
+      if (typeof avTestLine === "function" && typeof location !== "undefined" && /[?&]avtest=1/.test(String(location.search))) {
+        setTimeout(function () { try { const p = avInspectorProof(); if (p) avTestLine(p, "av-inspectortest"); } catch (e2) { /* ok */ } }, 0);
+      }
+    } catch (e) { /* proof is a nicety */ }
+    return true;
+  } catch (e) {
+    console.warn("[anvil] inspector mount failed", e);
+    return false;
+  }
+}
+
+/* ---------- the reads (facade) ---------- */
+
+/* the current selection as a plain object: the kind key, its engine enum, and the six live paths */
+function avInspectorSelect() {
+  const out = { kind: "wavetable", engine: "va", paths: {}, values: {} };
+  try {
+    out.kind = avInspectorKind();
+    for (let i = 0; i < AV_INSP_KINDS.length; i++) if (AV_INSP_KINDS[i].key === out.kind) out.engine = AV_INSP_KINDS[i].enumKind;
+    for (let i = 0; i < AV_INSP_CORE.length; i++) {
+      const e = AV_INSP_CORE[i];
+      out.paths[e.label.toLowerCase()] = e.path;
+      out.values[e.path] = avInspectorParam(e.path, e.opts.def);
+    }
+    const row = avInspectorEl("av-insp-poly");
+    out.poly = avInspectorState.poly === "mono" ? "mono" : "poly";
+    if (row) {
+      const on = row.querySelector('.av-pair-key[aria-checked="true"]');
+      if (on) out.poly = on.getAttribute("data-poly") === "mono" ? "mono" : "poly";
+    }
+  } catch (e) { /* the defaults stand */ }
+  return out;
+}
+
+function avInspectorProof() {
+  const count = function (sel) {
+    try { return document.querySelectorAll(sel).length; } catch (e) { return -1; }
+  };
+  return "INSPECTOR SELFTEST " + JSON.stringify({
+    v: AV_INSPECTOR_VERSION,
+    ready: avInspectorState.ready === true,
+    host: count("#av-inspector"),
+    kinds: count("#av-inspector .av-kind-key[data-kind]"),
+    pots: count("#av-inspector .av-insp-pot"),
+    knobs: count("#av-inspector .av-knob[data-knob]"),
+    launch: count("#av-inspector .av-insp-launch[data-page]"),
+    screens: count("#av-inspector canvas"),
+    kind: avInspectorKind(),
+    poly: avInspectorState.poly,
+    timer: avInspectorState.timer !== 0,
+  });
+}
+
+/* ---------- the window facade ---------- */
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avInspector = {
+      version: AV_INSPECTOR_VERSION,
+      init: function () { return avInspectorInit(); },
+      kind: function () { return avInspectorKind(); },
+      kindSet: function (k) { return avInspectorKindSet(k); },
+      select: function () { return avInspectorSelect(); },
+      launch: function (page, sub) { return avInspectorLaunch(page, sub); },
+      proof: function () { return avInspectorProof(); },
+    };
+  } catch (e) { /* no window - nothing to publish */ }
+}
+
+/* ---------- the dock wheels (C1 chassis): pitch springs back, mod holds ----------
+   Pointer drag + arrows. Pitch pushes MPE bend on channel 1 when the MPE deck is live; both also
+   dispatch a document "av-wheel" CustomEvent so a later wave can bind them to anything. */
+const avWheelState = { pitch: 0, mod: 0, wired: false };
+
+function avWheelSet(name, v, silent) {
+  try {
+    const el = document.getElementById(name === "pitch" ? "av-wheel-pitch" : "av-wheel-mod");
+    const min = name === "pitch" ? -1 : 0;
+    const val = Math.max(min, Math.min(1, Number(v) || 0));
+    avWheelState[name] = val;
+    if (el) {
+      el.setAttribute("aria-valuenow", String(Math.round(val * 100) / 100));
+      const cap = el.querySelector(".av-wheel-cap");
+      const span = Math.max(1, el.clientHeight - 14);
+      if (cap) cap.style.transform = "translateY(" + Math.round((1 - (val - min) / (1 - min)) * span) + "px)";
+    }
+    if (name === "pitch" && typeof avMpeDeckDispatch === "function") {
+      try { avMpeDeckDispatch(1, "bend", val * 2); } catch (e) { /* no mpe zone - value still rides */ }
+    }
+    if (!silent) {
+      try { document.dispatchEvent(new CustomEvent("av-wheel", { detail: { wheel: name, value: val } })); } catch (e2) { /* best-effort */ }
+    }
+    return val;
+  } catch (e) { return 0; }
+}
+
+function avWheelWire(el, name) {
+  if (!el) return false;
+  let drag = null;
+  el.addEventListener("pointerdown", function (e) {
+    const r = el.getBoundingClientRect();
+    drag = { y: e.clientY, v: avWheelState[name], h: Math.max(1, r.height) };
+    try { el.setPointerCapture(e.pointerId); } catch (e2) { /* capture is best-effort */ }
+    e.preventDefault();
+  });
+  el.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+    const min = name === "pitch" ? -1 : 0;
+    const span = 1 - min;
+    avWheelSet(name, drag.v + ((drag.y - e.clientY) / drag.h) * span);
+  });
+  const up = function () {
+    if (!drag) return;
+    drag = null;
+    if (name === "pitch") avWheelSet("pitch", 0);
+  };
+  el.addEventListener("pointerup", up);
+  el.addEventListener("pointercancel", up);
+  el.addEventListener("keydown", function (e) {
+    const step = e.shiftKey ? 0.01 : 0.05;
+    if (e.key === "ArrowUp") { avWheelSet(name, avWheelState[name] + step); e.preventDefault(); }
+    else if (e.key === "ArrowDown") { avWheelSet(name, avWheelState[name] - step); e.preventDefault(); }
+    else if (e.key === "Home") { avWheelSet(name, name === "pitch" ? 0 : 0); e.preventDefault(); }
+    else if (e.key === "End") { avWheelSet(name, 1); e.preventDefault(); }
+  });
+  return true;
+}
+
+function avWheelsInit() {
+  if (avWheelState.wired) return true;
+  const p = avWheelWire(document.getElementById("av-wheel-pitch"), "pitch");
+  const m = avWheelWire(document.getElementById("av-wheel-mod"), "mod");
+  avWheelState.wired = !!(p && m);
+  return avWheelState.wired;
+}
+
+/* boot: self-mount at parse time (the shell markup sits above every part script) */
+try { avInspectorInit(); avWheelsInit(); } catch (e) { /* the inspector boots best-effort */ }
 
 
 /* av_pack.js - Anvil R19 USER PACKS: the `.avpack` collect & pack + import route.
@@ -94353,6 +96943,9 @@ function avMountLevels() {
   /* R4: the left module rail */
   let railOk = false;
   try { railOk = (typeof avRailInit === "function") ? (avRailInit() !== false) : false; } catch (e) { console.warn("[anvil] rail init failed", e); }
+  /* C1: the inspector column (after the shell — it jumps through avZoneShow/avZoneSub) */
+  let inspOk = false;
+  try { inspOk = (typeof avInspectorInit === "function") ? (avInspectorInit() !== false) : false; } catch (e) { console.warn("[anvil] inspector init failed", e); }
   /* R5: the menu bar */
   let menusOk = false;
   try { menusOk = (typeof avMenubarInit === "function") ? (avMenubarInit() !== false) : false; } catch (e) { console.warn("[anvil] menubar init failed", e); }

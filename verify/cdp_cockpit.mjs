@@ -19,7 +19,7 @@ const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || exist
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* freeze pin: set to the frozen sha after the R1 build; null = unpinned report */
-const EXPECT_SHA = '6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e';
+const EXPECT_SHA = '5a5268222d5a3bdd8654995209990aa3c45d9a8d40a4437fe377f9eeed0a8257';
 
 const candidates = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -126,8 +126,8 @@ async function main() {
              vis: zones.filter(z => z.offsetParent !== null || (!z.hidden && getComputedStyle(z).display !== 'none')).map(z => z.getAttribute('data-zone')).join(',') };
   })()`);
   const z = zR.value || {};
-  check('zones: 8 panels + 8 tabs in workflow order', z.zones === 8 && z.tabs === 8 && z.order === 'synth,fx,mod,seq,studio,store,code,system', JSON.stringify({ zones: z.zones, tabs: z.tabs, order: z.order }));
-  check('default: exactly one zone rendered (synth) + aria-selected + body[data-av-zone] agree', z.shown.join(',') === 'synth' && z.vis === 'synth' && z.sel === 'synth' && z.bodyZone === 'synth', JSON.stringify(z));
+  check('pages: 9 panels + 9 tabs in signal order', z.zones === 9 && z.tabs === 9 && z.order === 'browse,perform,sound,shape,sequence,effects,mix,deliver,system', JSON.stringify({ zones: z.zones, tabs: z.tabs, order: z.order }));
+  check('default: exactly one page rendered (sound) + aria-selected + body[data-av-zone] agree', z.shown.join(',') === 'sound' && z.vis === 'sound' && z.sel === 'sound' && z.bodyZone === 'sound', JSON.stringify(z));
 
   /* 3. the page cannot scroll (structure + real witness) */
   const noScroll = await ev(`(() => {
@@ -147,11 +147,13 @@ async function main() {
 
   /* 4. card -> zone map (every id lands in its zone) */
   const ZONEMAP = {
-    synth: ['av-levels', 'av-synth', 'av-fm', 'av-drums', 'av-sample', 'av-chop', 'av-wt'],
-    fx: ['av-fx'], mod: ['av-mod', 'av-lfo'], seq: ['av-seq'],
-    studio: ['av-rec', 'av-studio', 'av-sessions', 'av-comp', 'av-mix', 'av-deck', 'av-deliver'],
-    store: ['av-store', 'av-import'], code: ['av-code'],
-    system: ['av-midi-card', 'av-files', 'av-family'],
+    browse: ['av-store', 'av-import', 'av-sessions'],
+    perform: ['av-macros', 'av-perf'],
+    sound: ['av-levels', 'av-synth', 'av-fm', 'av-drums', 'av-sample', 'av-chop', 'av-wt', 'av-tune'],
+    shape: ['av-mod', 'av-lfo'], sequence: ['av-seq'], effects: ['av-fx'],
+    mix: ['av-mix', 'av-comp', 'av-rec', 'av-studio'],
+    deliver: ['av-deck', 'av-deliver'],
+    system: ['av-midi-card', 'av-files', 'av-code', 'av-family', 'av-roadmap'],
   };
   const mapR = await ev(`(() => {
     const map = ${JSON.stringify(ZONEMAP)};
@@ -171,25 +173,25 @@ async function main() {
              aboutHost: !!(document.getElementById('av-about-pop') && document.getElementById('av-about-pop').hidden === true && document.getElementById('av-about-pop').querySelector('h1') && document.getElementById('av-head-about')) };
   })()`);
   const mp = mapR.value || {};
-  check('card map: every card id sits in its pinned zone (24/24)', mp.n === 24 && (mp.bad || []).length === 0, JSON.stringify({ n: mp.n, bad: mp.bad }));
+  check('card map: every card id sits in its pinned page (28/28)', mp.n === 28 && (mp.bad || []).length === 0, JSON.stringify({ n: mp.n, bad: mp.bad }));
   check('special: first-run strip lives in synth; the about notes live in the header popover (hidden at rest)',
-    (mp.firstrun === 'synth') && mp.aboutHost === true, JSON.stringify({ firstrun: mp.firstrun, about: mp.aboutHost }));
+    (mp.firstrun === 'sound') && mp.aboutHost === true, JSON.stringify({ firstrun: mp.firstrun, about: mp.aboutHost }));
 
   /* 5. tab click switches (and only one stays shown) */
   const clickR = await ev(`(() => {
-    document.getElementById('av-tab-studio').click();
+    document.getElementById('av-tab-mix').click();
     const shown = [...document.querySelectorAll('.av-zone')].filter(x => !x.hidden).map(x => x.getAttribute('data-zone'));
     const sel = [...document.querySelectorAll('.av-zone-tab')].filter(t => t.getAttribute('aria-selected') === 'true').map(t => t.getAttribute('data-zone'));
     return { shown: shown, sel: sel, bodyZone: document.body.getAttribute('data-av-zone'),
-             synthHidden: document.getElementById('av-zone-synth').hidden === true };
+             synthHidden: document.getElementById('av-zone-sound').hidden === true };
   })()`);
   const cr = clickR.value || {};
   check('tab click: studio comes up alone (synth hides, aria follows, body[data-av-zone] follows)',
-    cr.shown.join(',') === 'studio' && cr.sel.join(',') === 'studio' && cr.synthHidden === true && cr.bodyZone === 'studio', JSON.stringify(cr));
+    cr.shown.join(',') === 'mix' && cr.sel.join(',') === 'mix' && cr.synthHidden === true && cr.bodyZone === 'mix', JSON.stringify(cr));
 
   /* 6. internal pane scroll only */
   const scrollR = await ev(`(() => {
-    const p = document.getElementById('av-zone-studio');
+    const p = document.getElementById('av-zone-mix');
     p.scrollTop = 140;
     const st = p.scrollTop;
     const win = window.scrollY;
@@ -200,13 +202,13 @@ async function main() {
   check('pane scroll: the zone scrolls internally (scrollTop > 0) while the window stays at 0',
     sc.st > 0 && sc.win === 0, JSON.stringify(sc));
 
-  /* 7. Alt+3 keyboard shortcut -> mod */
-  await send('Input.dispatchKeyEvent', { type: 'keyDown', modifiers: 1, windowsVirtualKeyCode: 51, code: 'Digit3', key: '3' });
-  await send('Input.dispatchKeyEvent', { type: 'keyUp', modifiers: 1, windowsVirtualKeyCode: 51, code: 'Digit3', key: '3' });
+  /* 7. Alt+4 keyboard shortcut -> shape */
+  await send('Input.dispatchKeyEvent', { type: 'keyDown', modifiers: 1, windowsVirtualKeyCode: 52, code: 'Digit4', key: '4' });
+  await send('Input.dispatchKeyEvent', { type: 'keyUp', modifiers: 1, windowsVirtualKeyCode: 52, code: 'Digit4', key: '4' });
   await sleep(120);
   const altR = await ev(`(() => ({ zone: window.__avZone.current(), shown: [...document.querySelectorAll('.av-zone')].filter(x => !x.hidden).map(x => x.getAttribute('data-zone')) }))()`);
   const alt = altR.value || {};
-  check('shortcut: Alt+3 switches to the mod zone', alt.zone === 'mod' && alt.shown.join(',') === 'mod', JSON.stringify(alt));
+  check('shortcut: Alt+4 switches to the shape page', alt.zone === 'shape' && alt.shown.join(',') === 'shape', JSON.stringify(alt));
 
   /* 8. reveal seams: __avZoneAuto + the scrollIntoView wrapper */
   const seamR = await ev(`(() => {
@@ -219,7 +221,7 @@ async function main() {
   })()`);
   const seam = seamR.value || {};
   check('seams: __avZoneAuto(#av-mix) reveals studio; scrollIntoView on a hidden-zone element reveals seq',
-    seam.ok === true && seam.zone1 === 'studio' && seam.zone2 === 'seq', JSON.stringify(seam));
+    seam.ok === true && seam.zone1 === 'mix' && seam.zone2 === 'sequence', JSON.stringify(seam));
 
   /* 9. facade edges */
   const edgeR = await ev(`(() => ({
@@ -228,8 +230,8 @@ async function main() {
     autoMissing: window.__avZoneAuto('#av-does-not-exist'),
   }))()`);
   const edge = edgeR.value || {};
-  check('facade: list() = the 8 ids; unknown zone refused; missing selector refused without throwing',
-    edge.list === 'synth,fx,mod,seq,studio,store,code,system' && edge.bad === false && edge.autoMissing === false, JSON.stringify(edge));
+  check('facade: list() = the nine ids; unknown zone refused; missing selector refused without throwing',
+    edge.list === 'browse,perform,sound,shape,sequence,effects,mix,deliver,system' && edge.bad === false && edge.autoMissing === false, JSON.stringify(edge));
 
   /* 10. palette zone commands registered */
   const palR = await ev(`(() => {
@@ -244,21 +246,21 @@ async function main() {
     } catch (e) { return { err: String((e && e.message) || e) }; }
   })()`);
   const pal = palR.value || {};
-  check('palette: the Zones group is registered (8 zone commands incl. zone.system)', pal.fn === true && pal.zones === 8 && pal.hasSystem === true, JSON.stringify(pal));
+  check('palette: the Zones group is registered (9 zone commands incl. zone.system)', pal.fn === true && pal.zones === 9 && pal.hasSystem === true, JSON.stringify(pal));
 
   /* 11. proof line */
   const prR = await ev(`(() => { try { const el = document.getElementById('av-shelltest'); return el ? el.textContent : null; } catch (e) { return null; } })()`);
   let proof = null;
   try { proof = prR.value ? JSON.parse(String(prR.value).replace('SHELL SELFTEST ', '')) : null; } catch (e) { proof = null; }
-  check('proof: SHELL SELFTEST line present and sane (?avtest=1)', !!proof && proof.ready === true && proof.zones === 8 && typeof proof.active === 'string', JSON.stringify(proof));
+  check('proof: SHELL SELFTEST line present and sane (?avtest=1)', !!proof && proof.ready === true && proof.zones === 9 && typeof proof.active === 'string', JSON.stringify(proof));
 
   /* 12. persistence across reload */
-  await ev(`window.__avZone.show('code', { source: 'rig' })`);
+  await ev(`window.__avZone.show('system', { source: 'rig' })`);
   await send('Page.navigate', { url });
   let ready2 = await waitReady();
   const persR = await ev(`(() => ({ zone: window.__avZone ? window.__avZone.current() : null, ready: document.documentElement.getAttribute('data-av-ready') }))()`);
   const pers = persR.value || {};
-  check('persistence: reload restores the last zone (code)', ready2 === true && pers.zone === 'code', JSON.stringify(pers));
+  check('persistence: reload restores the last page (system)', ready2 === true && pers.zone === 'system', JSON.stringify(pers));
 
   /* 13. deep link ?z= wins where present */
   await send('Page.navigate', { url: url + '&z=system' });
@@ -290,7 +292,7 @@ async function main() {
     const r = p.getBoundingClientRect();
     const saved = JSON.parse(localStorage.getItem('av-float') || '{}');
     window.__avPanels.close('av-mix');
-    const home = !!document.querySelector('#av-zone-studio #av-mix');
+    const home = !!document.querySelector('#av-zone-mix #av-mix');
     const gone = !document.getElementById('av-float-av-mix');
     return { ok1: ok1, inPanel: inPanel, x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width),
              saved: !!(saved['av-mix']), home: home, gone: gone, list: window.__avPanels.list().length };
@@ -306,7 +308,7 @@ async function main() {
     const z = fx ? fx.style.zIndex : null;
     window.__avPanels.reset();
     const after = window.__avPanels.list().length;
-    const home = !!document.querySelector('#av-zone-fx #av-fx');
+    const home = !!document.querySelector('#av-zone-effects #av-fx');
     return { n: n, z: z, after: after, home: home };
   })()`);
   const fl2 = fl2R.value || {};

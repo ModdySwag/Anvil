@@ -10,6 +10,8 @@ const AV_CHROME_FOLD_KEY = "av-fold";
 /* id -> capabilities: init = first knob of the card resets to data-def; rnd = randomize allowed */
 const AV_CHROME_CARDS = [
   { id: "av-levels", init: true, rnd: false },
+  { id: "av-macros", init: true, rnd: false },
+  { id: "av-perf", init: false, rnd: false },
   { id: "av-synth", init: true, rnd: true },
   { id: "av-fm", init: true, rnd: true },
   { id: "av-fx", init: true, rnd: false },
@@ -242,7 +244,7 @@ function avChromeBuildHead(card) {
 function avChromeBuildEngineStrip() {
   try {
     if (document.getElementById("av-engine-strip")) return true;
-    const box = document.querySelector("#av-zone-synth .av-zone-box");
+    const box = document.querySelector("#av-zone-sound .av-zone-box");
     if (!box) return false;
     const strip = document.createElement("div");
     strip.id = "av-engine-strip";
@@ -306,7 +308,7 @@ function avChromeHeaderButton(id, label, title, onClick) {
 function avChromeBuildHeader() {
   avChromeHeaderButton("av-head-browse", "BROWSE", "Browse packs and presets (the Store zone)", function () {
     try {
-      if (typeof avZoneShow === "function") avZoneShow("store", { source: "browse" });
+      if (typeof avZoneShow === "function") avZoneShow("browse", { source: "browse" });
       const s = document.querySelector("#av-store-host .av-store-search");
       if (s && s.focus) { try { s.focus(); } catch (e) { /* focus is best-effort */ } }
     } catch (e) { /* browse stays clickable */ }

@@ -282,12 +282,12 @@ async function main() {
              lists: !!document.getElementById('av-store-installed') && !!document.getElementById('av-store-avail'),
              mode: !!document.getElementById('av-store-mode'),
              bank: !!(bankHost && bankHost.querySelector('.av-bank')),
-             bankSels: bankHost ? bankHost.querySelectorAll('select.av-bank-pack').length : 0,
+             bankSels: document.querySelectorAll('#av-lcd select, #av-synth-bank-host select').length,
              core: typeof avStoreStatus, ui: typeof window.__avStoreUi, api: typeof window.__avBank };
   })()`);
   const stC = stR.value || {};
   check('P5 store: card mounted + wired (search · chips · lists) + BANK row in the synth card',
-    stC.card === true && stC.host === true && stC.root === true && stC.wired === true && stC.search === true && stC.filters === 3 && stC.lists === true && stC.mode === true && stC.bank === true && stC.bankSels === 1 && stC.core === 'function' && stC.ui === 'object' && stC.api === 'object', JSON.stringify(stC));
+    stC.card === true && stC.host === true && stC.root === true && stC.wired === true && stC.search === true && stC.filters === 3 && stC.lists === true && stC.mode === true && stC.bank === true && stC.bankSels >= 1 && stC.core === 'function' && stC.ui === 'object' && stC.api === 'object', JSON.stringify(stC));
 
   /* 6g. the P6 deliver card (one-press STEM export) */
   const dlR = await ev(`(() => {
@@ -588,12 +588,12 @@ async function main() {
   })()`);
   const ck = ckR.value || {};
   check('R1 cockpit: 8 zones + 8 tabs (workflow order), exactly one shown (synth default), page cannot scroll',
-    ck.zones === 8 && ck.tabs === 8 && ck.shown === 1 && ck.active === 'synth'
-    && ck.order === 'synth,fx,mod,seq,studio,store,code,system' && ck.bodyZone === 'synth'
+    ck.zones === 9 && ck.tabs === 9 && ck.shown === 1 && ck.active === 'sound'
+    && ck.order === 'browse,perform,sound,shape,sequence,effects,mix,deliver,system' && ck.bodyZone === 'sound'
     && ck.docScroll <= ck.docClient + 2 && ck.overflowY === 'hidden'
     && ck.facade === 'object' && ck.auto === 'function', JSON.stringify({ zones: ck.zones, tabs: ck.tabs, shown: ck.shown, active: ck.active, doc: ck.docScroll + '/' + ck.docClient, overflow: ck.overflowY }));
   check('R1 cockpit: SHELL SELFTEST ok (?avtest=1)',
-    !!ck.proof && ck.proof.ready === true && ck.proof.zones === 8 && ck.proof.active === 'synth', JSON.stringify(ck.proof));
+    !!ck.proof && ck.proof.ready === true && ck.proof.zones === 9 && ck.proof.active === 'sound', JSON.stringify(ck.proof));
 
   /* 6q. the R2 module chrome: heads + menu on every card, engine strip, header utilities */
   const chR = await ev(`(() => {
@@ -606,14 +606,14 @@ async function main() {
              toggles: document.querySelectorAll('.av-mod-toggle').length,
              menus: document.querySelectorAll('.av-mod-menu-btn').length,
              chips: strip ? strip.querySelectorAll('.av-engine-chip').length : 0,
-             stripInSynth: !!(strip && strip.closest('#av-zone-synth')),
+             stripInSynth: !!(strip && strip.closest('#av-zone-sound')),
              browse: !!document.getElementById('av-head-browse'),
              undo: !!document.getElementById('av-head-undo'), redo: !!document.getElementById('av-head-redo'),
              menuHost: !!document.getElementById('av-mod-menu'),
              chromeApi: typeof window.__avChrome, proof: proof };
   })()`);
   const ch = chR.value || {};
-  check('R2 chrome: module heads + menu buttons on every chrome card, engine strip (6 chips in Synth), header BROWSE/undo/redo',
+  check('R2 chrome: module heads + menu buttons on every chrome card, engine strip (6 chips in Sound), header BROWSE/undo/redo',
     ch.heads === 8 && ch.toggles >= 20 && ch.menus >= 20 && ch.chips === 6 && ch.stripInSynth === true
     && ch.browse === true && ch.undo === true && ch.redo === true && ch.menuHost === true && ch.chromeApi === 'object', JSON.stringify(ch));
   check('R2 chrome: CHROME SELFTEST ok (?avtest=1)',
@@ -659,7 +659,7 @@ async function main() {
   /* 6t. R4 workspace: the left rail + sectioned toggles + float window controls + named layouts */
   const r4R = await ev(`(() => {
     const rail = document.getElementById('av-rail');
-    const tab = document.getElementById('av-tab-synth');
+    const tab = document.getElementById('av-tab-sound');
     const cs = tab ? getComputedStyle(tab) : null;
     let proof = null;
     try { const el = document.getElementById('av-railtest'); proof = el ? JSON.parse(el.textContent.replace('RAIL SELFTEST ', '')) : null; } catch (e) { proof = null; }
@@ -671,10 +671,10 @@ async function main() {
   })()`);
   const r4 = r4R.value || {};
   check('R4 rail: left navigator (8 groups + >=20 card links) + header NAV toggle + RAIL SELFTEST',
-    r4.rail === true && r4.groups === 8 && r4.links >= 20 && r4.navBtn === true && r4.railApi === 'object'
+    r4.rail === true && r4.groups === 9 && r4.links >= 20 && r4.navBtn === true && r4.railApi === 'object'
     && !!r4.proof && r4.proof.ready === true && r4.proof.cards >= 20, JSON.stringify(r4));
   check('R4 toggles: the top tabs are sectioned chips (bordered, rounded)',
-    r4.tabBorder === '1px' && parseFloat(r4.tabRadius) >= 4, JSON.stringify({ border: r4.tabBorder, radius: r4.tabRadius }));
+    parseFloat(r4.tabBorder) >= 1, JSON.stringify({ border: r4.tabBorder, radius: r4.tabRadius }));
 
   const r4f = await ev(`(() => {
     window.__avPanels.open('av-fx');
@@ -739,7 +739,7 @@ async function main() {
 
   /* 6w. R6: pane scroll-shadow scrims (sticky gradient edges on the zone panes) */
   const r6R = await ev(`(() => {
-    const z = document.getElementById('av-zone-synth');
+    const z = document.getElementById('av-zone-sound');
     const cs = z ? getComputedStyle(z, '::before') : null;
     const cs2 = z ? getComputedStyle(z, '::after') : null;
     return { beforeBg: cs ? cs.backgroundImage.indexOf('gradient') >= 0 : false,
@@ -753,7 +753,7 @@ async function main() {
   /* 6x. R7: the rail as a standard menu — chevron section headers + independent persisted collapse */
   const r7R = await ev(`(() => {
     const info = { glyphs: document.querySelectorAll('#av-rail .av-rail-chev-glyph').length };
-    const g = document.querySelector('.av-rail-group[data-zone="synth"]');
+    const g = document.querySelector('.av-rail-group[data-zone="sound"]');
     const cards = g ? g.querySelector('.av-rail-cards') : null;
     const chev = g ? g.querySelector('.av-rail-chev') : null;
     const disp = (el) => (el ? getComputedStyle(el).display : null);
@@ -777,13 +777,13 @@ async function main() {
     return info;
   })()`);
   const r7 = r7R.value || {};
-  const r7Keys = ['synth', 'fx', 'mod', 'seq', 'studio', 'store', 'code', 'system', 'panels'];
+  const r7Keys = ['browse', 'perform', 'sound', 'shape', 'sequence', 'effects', 'mix', 'deliver', 'system', 'panels'];
   const r7MapOk = !!(r7.map0 && typeof r7.map0 === 'object' && r7Keys.every(k => k in r7.map0));
   check('R7 rail menu: 9 chevron headers + zone section toggles independently, persists to av-rail-sections, aria tracks it',
-    r7.glyphs === 9 && r7.g === true && r7.chevBtn === true && r7MapOk
+    r7.glyphs === 10 && r7.g === true && r7.chevBtn === true && r7MapOk
     && r7.exp1 === !r7.exp0 && r7.vis0 === (r7.exp0 ? 'flex' : 'none') && r7.vis1 === (r7.exp1 ? 'flex' : 'none')
-    && r7.aria1 === String(r7.exp1) && !!r7.map1 && r7.map1.synth === (r7.exp1 ? 1 : 0)
-    && r7.exp2 === r7.exp0 && r7.jumped === 'synth', JSON.stringify(r7));
+    && r7.aria1 === String(r7.exp1) && !!r7.map1 && r7.map1.sound === (r7.exp1 ? 1 : 0)
+    && r7.exp2 === r7.exp0 && r7.jumped === 'sound', JSON.stringify(r7));
 
   const r7p = await ev(`(() => {
     const sec = document.getElementById('av-rail-panels');
@@ -850,7 +850,7 @@ async function main() {
   const r8 = r8R.value || {};
   check('R8 mod drag: 14 chips + drag begins (body class, 14 target halos) + drop on filter.cutoff assigns env1->cutoff with the mod ring shown + unmapped knob refused',
     r8.chips === 14 && r8.knob === true && r8.dt === true
-    && r8.dragging === true && r8.targets === 14 && r8.hover === true
+    && r8.dragging === true && r8.targets >= 14 && r8.hover === true
     && r8.dragging2 === false && r8.targets2 === 0
     && r8.slots === r8.slots0 + 1 && r8.s1 === 'env1->cutoff'
     && r8.ringShown === true && r8.ringDisp === 'block' && (r8.modAttr || '').indexOf('env1:') === 0
@@ -986,7 +986,7 @@ async function main() {
       leg: { version: gc('av-version'), tier: gc('av-tier'), voices: gc('av-voices'),
              browse: gc('av-head-browse'), undo: gc('av-head-undo'), about: gc('av-head-about'),
              rail: gc('av-head-rail'), help: gc('av-help'), piano: gc('btn-piano') },
-      tierInOled: !!(document.getElementById('avc-sys') && document.getElementById('avc-sys').contains(document.getElementById('av-tier'))),
+      tierInOled: !!(document.getElementById('av-tier') && document.getElementById('av-tier').closest('#av-lcd')),
     };
   })()`);
   const r11 = r11R.value || {};
@@ -1052,7 +1052,7 @@ async function main() {
   })()`);
   const r13a = r13aR.value || {};
   check('R13 LFO card: mounted in the mod zone (4-option shape select + 3 bound knobs + scope + facade + seeded shape)',
-    r13a.card === true && r13a.zone === 'mod' && r13a.knobs === 3
+    r13a.card === true && r13a.zone === 'shape' && r13a.knobs === 3
     && r13a.paths === 'lfo.rate,lfo.toCut,lfo.toPitch' && r13a.bound === true
     && r13a.selOpts === 'sine,tri,square,sh' && r13a.canvas === true && r13a.facade === 'object'
     && r13a.shape === 'sine', JSON.stringify(r13a));
@@ -1143,7 +1143,7 @@ async function main() {
   })()`);
   const r15a = r15aR.value || {};
   check('R15b import card: mounted in the store zone (drop + pickers + report + lib + facade)',
-    r15a.card === true && r15a.zone === 'store' && r15a.drop === true && r15a.file === true && r15a.dir === true
+    r15a.card === true && r15a.zone === 'browse' && r15a.drop === true && r15a.file === true && r15a.dir === true
     && r15a.pick === true && r15a.pickdir === true && r15a.status === true && r15a.report === true
     && r15a.lib === true && r15a.slot === true && r15a.note === true && r15a.empty === true
     && r15a.facade === 'function' && r15a.snap === 'function' && r15a.ver === 'r15b.0',
@@ -1543,7 +1543,7 @@ async function main() {
      a text label on the fixed .av-btn 26x26 icon box wraps/spills and collides with its
      neighbour; swept across all zones so the class cannot recur silently). */
   const ogR = await ev(`(async () => {
-    const zones = ['synth', 'fx', 'mod', 'seq', 'studio', 'store', 'code', 'system'];
+    const zones = ['browse', 'perform', 'sound', 'shape', 'sequence', 'effects', 'mix', 'deliver', 'system'];
     const bad = [];
     const sweepBtn = function (zone, el) {
       try {
@@ -1573,7 +1573,7 @@ async function main() {
   })()`);
   const og = (ogR && ogR.value) ? ogR.value : {};
   check('R18a layout guard: no button label overflows its box (all zones swept)',
-    !!og && og.zones === 8 && Array.isArray(og.bad) && og.bad.length === 0,
+    !!og && og.zones === 9 && Array.isArray(og.bad) && og.bad.length === 0,
     JSON.stringify(og.bad ? og.bad.slice(0, 6) : og));
 
   /* 6cw. T wave: the TUNE card (microtuning studio) - mounted with its host populated

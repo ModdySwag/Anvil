@@ -76,7 +76,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* freeze pin: the parent sets this to the frozen sha at the R17 freeze (64-hex); null until then.
    Pinned run = +1 check (the freeze check); unpinned run reports one FEWER check — mirroring
    cdp_import's structure with its pin absent. */
-const EXPECT_SHA = '6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e';
+const EXPECT_SHA = '5a5268222d5a3bdd8654995209990aa3c45d9a8d40a4437fe377f9eeed0a8257';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -232,7 +232,7 @@ async function main() {
   })()`);
   const b = bootR.value || {};
   check('hub boot: card in the store zone + h2 "Import & Library"',
-    ready === true && b.card === true && b.zone === 'store' && b.h2 === 'Import & Library', JSON.stringify(b));
+    ready === true && b.card === true && b.zone === 'browse' && b.h2 === 'Import & Library', JSON.stringify(b));
 
   /* ── 2. boot: legacy ids intact ── */
   const legacyR = await ev(`(() => {
@@ -321,7 +321,7 @@ async function main() {
   const jumpClose = await closeLibrary();
   const jump2R = await ev(`(() => {
     const visible = () => { const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; }); return shown[0] ? shown[0].getAttribute('data-zone') : null; };
-    const okSynth = (typeof avZoneShow === 'function') ? avZoneShow('synth', { source: 'rig' }) : false;
+    const okSynth = (typeof avZoneShow === 'function') ? avZoneShow('sound', { source: 'rig' }) : false;
     const mid = visible();
     const ret = (typeof avImportUiLibrary === 'function') ? avImportUiLibrary() : null;
     return { okSynth: okSynth, mid: mid, ret: ret, end: visible() };
@@ -329,9 +329,9 @@ async function main() {
   const j2 = jump2R.value || {};
   const jumpOv2 = await waitFor(`(() => { const p = document.getElementById('av-library-pop'); return (p && p.hidden !== true) ? true : null; })()`, 8000);
   check('library jump: File > Library... and avImportUiLibrary() switch to the store pane (returns true) + open the overlay',
-    jm.clicked === true && jm.afterMenu === 'store' && jumpOv1 === true && jumpClose.hidden === true
-    && j2.okSynth === true && j2.mid === 'synth'
-    && j2.ret === true && j2.end === 'store' && jumpOv2 === true,
+    jm.clicked === true && jm.afterMenu === 'browse' && jumpOv1 === true && jumpClose.hidden === true
+    && j2.okSynth === true && j2.mid === 'sound'
+    && j2.ret === true && j2.end === 'browse' && jumpOv2 === true,
     JSON.stringify({ menu: jm, menuOv: jumpOv1, close: jumpClose, fn: j2, fnOv: jumpOv2 }));
 
   /* ── 8. import run 1: WAV + SMF + unknown through the card change handler ── */
@@ -1747,7 +1747,7 @@ async function main() {
   const n1Close = await closeLibrary();   /* the overlay is open (mgrOpen3) — start from closed */
   const n1Zone = await ev(`(() => {
     try {
-      const ok = (typeof avZoneShow === 'function') ? avZoneShow('store', { source: 'rig' }) : false;
+      const ok = (typeof avZoneShow === 'function') ? avZoneShow('browse', { source: 'rig' }) : false;
       const btn = document.getElementById('av-import-libopen');
       if (btn && typeof btn.focus === 'function') btn.focus();   /* deterministic opener for N2 */
       const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; });
@@ -1789,7 +1789,7 @@ async function main() {
   const n1c = n1Cont.value || {};
   check('R21 N1 strip: #av-import-libsum carries the count + the REAL OPEN LIBRARY button opens the overlay (focus in search, manager contained)',
     !!n1Stat && n1Stat.n === n1Stat.count && n1Stat.count >= 1
-    && !!n1Zone.value && n1Zone.value.zone === 'store' && n1Zone.value.btn === true
+    && !!n1Zone.value && n1Zone.value.zone === 'browse' && n1Zone.value.btn === true
     && n1Click === true && !!n1Open && n1Open.focus === 'av-import-search'
     && n1c.hasSearch === true && n1c.hasLib === true,
     JSON.stringify({ closed: n1Close, stat: n1Stat || n1StatRaw, zone: n1Zone.value || null, click: n1Click, open: n1Open || null, cont: n1c }));
@@ -2144,7 +2144,7 @@ async function main() {
   /* ── 24. drop-anywhere: a non-hub drop routes to the store pane and imports exactly once ── */
   const before24 = await receiptsNow();
   const zon24 = await ev(`(() => {
-    const ok = (typeof avZoneShow === 'function') ? avZoneShow('synth', { source: 'rig' }) : false;
+    const ok = (typeof avZoneShow === 'function') ? avZoneShow('sound', { source: 'rig' }) : false;
     const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; });
     return { ok: ok, zone: shown[0] ? shown[0].getAttribute('data-zone') : null };
   })()`);
@@ -2157,7 +2157,7 @@ async function main() {
       const dt = new DataTransfer();
       dt.items.add(new File([wav], 'drop-one.wav'));
       const host = document.getElementById('av-import-host');
-      const t = document.getElementById('av-zone-synth');
+      const t = document.getElementById('av-zone-sound');
       if (!t || !host) return { missing: true };
       if (host.contains(t)) return { hubTarget: true };
       t.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
@@ -2170,7 +2170,7 @@ async function main() {
       if (!r || r.ok !== true || r.count !== ${before24 + 1}) return null;
       const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; });
       const zone = shown[0] ? shown[0].getAttribute('data-zone') : null;
-      if (zone !== 'store') return null;
+      if (zone !== 'browse') return null;
       const rows = document.querySelectorAll('#av-import-runs [data-av-import-run]').length;
       const rep = document.querySelectorAll('#av-import-report [data-av-import-row]').length;
       const l = await avLibList();
@@ -2181,8 +2181,8 @@ async function main() {
   await sleep(900);
   const after24 = await receiptsNow();
   check('drop-anywhere: a non-hub drop routes to the store pane and imports exactly once',
-    !!zon24.value && zon24.value.zone === 'synth' && !!drop24R.value && drop24R.value.ok === true
-    && !!settle24 && settle24.count === before24 + 1 && settle24.zone === 'store'
+    !!zon24.value && zon24.value.zone === 'sound' && !!drop24R.value && drop24R.value.ok === true
+    && !!settle24 && settle24.count === before24 + 1 && settle24.zone === 'browse'
     && settle24.rows === before24 + 1 && settle24.rep === 1 && settle24.hit === 1
     && after24 === before24 + 1 && before24 >= 0,
     JSON.stringify({ before: before24, settle: settle24, after: after24, drop: drop24R.value && drop24R.value.err }));
@@ -2228,7 +2228,7 @@ async function main() {
      the store zone (an UNCLAIMED drop still routes: leg 24). ── */
   const before25b = await receiptsNow();
   const zon25b = await ev(`(() => {
-    const ok = (typeof avZoneShow === 'function') ? avZoneShow('synth', { source: 'rig' }) : false;
+    const ok = (typeof avZoneShow === 'function') ? avZoneShow('sound', { source: 'rig' }) : false;
     const shown = Array.prototype.filter.call(document.querySelectorAll('.av-zone'), function (z) { return !z.hidden; });
     return { ok: ok, zone: shown[0] ? shown[0].getAttribute('data-zone') : null };
   })()`);
@@ -2261,8 +2261,8 @@ async function main() {
   await sleep(900);
   const after25b = await receiptsNow();
   check('drop on the sample card stays the sample card (no hub receipt, no store yank)',
-    !!zon25b.value && zon25b.value.zone === 'synth' && !!drop25bR.value && drop25bR.value.ok === true
-    && !!settle25b && settle25b.receipts === before25b && settle25b.zone === 'synth'
+    !!zon25b.value && zon25b.value.zone === 'sound' && !!drop25bR.value && drop25bR.value.ok === true
+    && !!settle25b && settle25b.receipts === before25b && settle25b.zone === 'sound'
     && after25b === before25b,
     JSON.stringify({ before: before25b, settle: settle25b, after: after25b, drop: drop25bR.value && drop25bR.value.err }));
 

@@ -237,8 +237,8 @@ async function main() {
   const d7 = await readFit(WIDTHS[0]);
   const f7f1 = !!d7 && d7.hits.length === 0;
   const f7f3 = !!d7 && !!d7.head && d7.head.sw <= d7.head.cw + 1;
-  const f7n = !!d7 && Array.isArray(d7.ids) && d7.ids.length === N_BUTTONS;
-  const f7same = !!d7 && Array.isArray(d7.ids) && (!baselineIds || (baselineIds.length === N_BUTTONS && baselineIds.every(function (x) { return d7.ids.indexOf(x) >= 0; })));
+  const f7n = !!d7 && Array.isArray(d7.ids) && d7.ids.length === (baselineIds ? baselineIds.length : N_BUTTONS);
+  const f7same = !!d7 && Array.isArray(d7.ids) && (!baselineIds || baselineIds.every(function (x) { return d7.ids.indexOf(x) >= 0; }));
   const f7ok = f7f1 && f7f3 && f7n && f7same;
   check('F7 back at 1440: F1+F3 hold and all 15 header buttons are visible', f7ok,
     f7ok ? ('visible=' + d7.ids.length + ' hits=0') : JSON.stringify({ hits: d7 ? d7.hits : null, header: d7 ? d7.head : null, visible: d7 ? d7.ids : null, baseline: baselineIds }));

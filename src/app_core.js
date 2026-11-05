@@ -164,6 +164,9 @@ function avMountLevels() {
   /* R4: the left module rail */
   let railOk = false;
   try { railOk = (typeof avRailInit === "function") ? (avRailInit() !== false) : false; } catch (e) { console.warn("[anvil] rail init failed", e); }
+  /* C1: the inspector column (after the shell — it jumps through avZoneShow/avZoneSub) */
+  let inspOk = false;
+  try { inspOk = (typeof avInspectorInit === "function") ? (avInspectorInit() !== false) : false; } catch (e) { console.warn("[anvil] inspector init failed", e); }
   /* R5: the menu bar */
   let menusOk = false;
   try { menusOk = (typeof avMenubarInit === "function") ? (avMenubarInit() !== false) : false; } catch (e) { console.warn("[anvil] menubar init failed", e); }

@@ -3943,7 +3943,7 @@ function avImportUiReveal() {
    then open the full library overlay (R21, guarded -- the old store-jump behavior is kept) */
 function avImportUiLibrary() {
   try {
-    try { if (typeof avZoneShow === "function") avZoneShow("store", { source: "menu" }); } catch (e) { /* zone seam optional */ }
+    try { if (typeof avZoneShow === "function") avZoneShow("browse", { source: "menu" }); try { avZoneSub("browse", "import", { silent: true }); } catch (e0) { /* sub optional */ }; } catch (e) { /* zone seam optional */ }
     avImportUiReveal();
     try { if (typeof avLibraryUiOpen === "function") avLibraryUiOpen(); } catch (e2) { /* overlay optional */ }
     return true;
@@ -3972,7 +3972,7 @@ function avImportUiDocDrop(ev) {
         if (!res || !res.files || !res.files.length) return;
         if (res.truncated) s.walkNote = "folder walk capped at " + avImportUiFileCap() + " files";
         avImportUiImport(res.files);
-        try { if (typeof avZoneShow === "function") avZoneShow("store", { source: "drop" }); } catch (e) { /* zone seam optional */ }
+        try { if (typeof avZoneShow === "function") avZoneShow("browse", { source: "drop" }); try { avZoneSub("browse", "import", { silent: true }); } catch (e0) { /* sub optional */ }; } catch (e) { /* zone seam optional */ }
         avImportUiReveal();
       } catch (e2) { /* a listener never throws outward */ }
     }, function () { /* a stray unreadable drop is nothing */ });
@@ -4040,7 +4040,7 @@ function avImportUiOnClick(ev) {
       let opened = false;
       try { if (typeof avLibraryUiOpen === "function") opened = (avLibraryUiOpen() !== false); } catch (e2) { opened = false; }
       if (!opened) {
-        try { if (typeof avZoneShow === "function") avZoneShow("store", { source: "menu" }); } catch (e3) { /* zone seam optional */ }
+        try { if (typeof avZoneShow === "function") avZoneShow("browse", { source: "menu" }); try { avZoneSub("browse", "import", { silent: true }); } catch (e0) { /* sub optional */ }; } catch (e3) { /* zone seam optional */ }
         avImportUiReveal();
       }
       return;

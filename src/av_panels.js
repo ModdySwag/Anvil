@@ -10,8 +10,8 @@ const AV_PANELS_VERSION = "r3.0";
 const AV_PANELS_LS = "av-float";
 const AV_ABOUT_ID = "av-about-pop";
 const AV_PANEL_ACCENTS = {
-  synth: "#2ED8C9", fx: "#E69F00", mod: "#CC79A7", seq: "#009E73",
-  studio: "#56B4E9", store: "#F0E442", code: "#E8794A", system: "#4C9FE0",
+  browse: "#F0E442", perform: "#CC79A7", sound: "#2ED8C9", shape: "#CC79A7",
+  sequence: "#009E73", effects: "#E69F00", mix: "#56B4E9", deliver: "#8C6BB1", system: "#4C9FE0",
 };
 const AV_PANEL_LAYOUTS = {
   sounddesign: { open: [["av-synth", 40, 84], ["av-fm", 500, 84], ["av-mod", 60, 428], ["av-fx", 560, 428]] },
