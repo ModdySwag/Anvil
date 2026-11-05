@@ -1,5 +1,50 @@
 # Anvil — CONTINUATION (2026-10-06)
 
+## RESUME HERE — the C programme (FSVR chassis rework), C1 landed 2026-11-06
+
+Owner asked for Anvil to become a cohesive integrated program like **FSVR** (musica.studio's
+FS1R rebuild), with his own features intact and a layout that makes professional sense. Plan of
+record: **`docs/13-chassis-fsvr.md`** (measured diagnosis, FSVR anatomy, page map, band/column
+spec, control language, waves C1-C6, gates). Wave contract: **`verify/_c1_wave.md`**.
+
+**C1 (the chassis) IS COMMITTED — `9d2c911`.** Header is now a five-group band (transport in the
+thumb zone, dot LCD readout, TONE/MACROS pot pair, meters, PANIC/LEARN); new persistent right
+inspector column (kind keys, six core pots, shape + ADSR screens, EDIT VOICE, eight launchers);
+nine pages in SIGNAL order (BROWSE PERFORM SOUND SHAPE SEQUENCE EFFECTS MIX DELIVER SYSTEM) with
+sub-tabs; rail demoted to an opt-in second map (closed on a virgin profile); dock wheels added.
+
+Gates green at the checkpoint: **cdp_chassis 11/11 (NEW) · smoke 81/81 · cockpit 21/21 · fit 49/49**.
+Pins swept across 23 files.
+
+### OPEN, in order
+1. **hub 65/68** — the two reload/receipt legs. Cause found: the receipts tier is chosen per boot;
+   the run wrote to `ls`, the reload boot read `idb` and saw 0 (mixed-tier boot, not lost data —
+   a probe proved idb persists fine). Fix = union the tiers in `avLibReceiptListRun` (read the ls
+   tier too and merge by id, cap 20), or pin the tier per session in LS. Then re-run hub.
+2. **Full battery + bench** (32 suites) has NOT been run since the chassis landed — only the four
+   rigs above. Several suites were only string-patched for the zone renames; they must all be run
+   and triaged for real.
+3. **Owner eye pass** on the live app: band balance, inspector density, tab look, dock wheels.
+4. **C2** inspector live (screens drag-to-edit, pot paths double-checked against the schema),
+   **C3** page fills to the density gate (sound 1.53 · effects 1.86 · mix 2.14 · system 1.91 at
+   1440 — C1 bound is 2.2, the 1.2 target is C3), **C4** control language, **C5** disclosure,
+   **C6** shots/pins/battery/installer/deploy.
+5. v1.15.0 release assets, README shots and the downloads card all need a refresh at C6.
+
+### Traps paid for already (do not repeat)
+- An empty `header` means the legacy ids are gone: the band must **create** `av-tier`, `av-voices`,
+  `btn-piano`, `av-help` (adopt-or-create) — `avConsoleAdopt` alone silently no-ops.
+- A failed `pathlib.write_text` **truncated** `src/av_console.js` to 0 bytes; recovery was
+  impossible from git (uncommitted) and the bundle had already been rebuilt from the empty file.
+  Write console-sized JS through `write_bytes(...encode('utf-8','surrogatepass'))`, and commit
+  after every successful build.
+- Child-authored files carry **CESU-8** emoji escapes that strict `utf-8` reads reject — normalise
+  through `utf-16` round-trip before building.
+- `.av-zone{display:flex}` beats the UA `[hidden]{display:none}`: all nine pages laid out stacked
+  at 1/9 height until `.av-zone[hidden]{display:none}` was pinned.
+- A jump (`avZoneAuto`/`scrollIntoView`) must reveal the SUB as well as the page, or deep links
+  land on a hidden card.
+
 Project home: C:\Users\Moddy\anvil (renamed from forge-synth; if an empty `forge-synth`
 folder still lingers it is a file-handle artifact — delete it whenever Windows lets you).
 
