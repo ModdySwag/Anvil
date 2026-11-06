@@ -1,6 +1,83 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-07 02:10 (session 23d). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVE 2026-11-07 00:35 (session 23e). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- C3-11 commit `4c3ef0f`. Bundle `index.html` sha256
+  `b3556d4ae9db75c2d2cbb950b5cf36c517581b3f82214280fea0efb3473dbeb7`, **4,780,091 B**. Tree clean.
+- All 23 `verify/cdp_*.mjs` pins == that sha (swept old→new from `88f0d826`; `STALE REMAINING: none`).
+- Gate: **FAST LANE clean in 99 s** (`verify/battery_fast.log`, sha b3556d4a): chassis **33/33**
+  (K24c/K24d/K24e/K24f/K24g) · a11y 33 · smoke 81 · m1 33 · m2 40 · knob_feel 19, all exit=0.
+- The last full sweep (`verify/battery_c3l.log`, sha 88f0d826) had **all 28 rigs exit=0**; its
+  bench/alias/stress were deliberately not run (policy below). A wave-gate full battery on b3556d4a
+  is the next scheduled run.
+- VERIFY AT SESSION START: `bash cache/scratch/battery_fast.sh <card-rig>` (99 s) — the per-card gate.
+
+### THE C3 REBUILD RUN IS COMPLETE — every page is inside the 1.2x gate
+| view | before (1440/1280) | after | how |
+|---|---|---|---|
+| sound/fm | 1.272 / 1.464 | **0.944 / 1.071** | two-column body (rail \| editor), knobs on one line |
+| sound/wt | 1.262 / 1.452 | **0.988 / 1.125** | two strip rows, library folded behind its chip |
+| system/code | 1.606 / 1.893 | **0.927 / 1.079** | PARAMS + CONTRACT folded, chips ride the examples row |
+| sequence | 1.530 / 1.812 | **0.932 / 1.095** | GEN + SONG folded, chips ride the transport row; FILL moved to the face |
+| shape/matrix | 1.311 / 1.540 | **0.730 / 0.843** | the source strip actually wraps (a missing wrapper, not density) |
+
+### WHAT LANDED THIS PASS (C3-11 — the matrix strip)
+`avModSrcStripHTML()` returned 14 bare chips into a flex-column section: every source on its own
+line, 294px of a 660px body, while `.av-mod-srcstrip { display:flex; flex-wrap:wrap }` sat unused in
+`styles.css`. Wrapping the output fixed it: body 660 → 429, strip 21px, all 14 chips on one row.
+K23 claims **shape/matrix** (27 views); chassis **K24g** pins the strip (14 chips, flex, wrap,
+height ≤80, ≤3 rows, none zero-sized).
+
+### TRAP 17 — check the markup carries the class before designing anything
+This page carried a 1.54 ratio that looked like "needs a real slot redesign" and was a **missing
+wrapper**: the CSS was already right. Before any layout pass, dump the block tree (rowprobe) AND
+check that every relevant class in `styles.css` is actually carried in the DOM. A one-line structure
+bug looks identical to a design problem in the numbers.
+
+### GATE POLICY (owner asked; adopted 2026-11-07)
+Per-card layout/disclosure pass → **`cache/scratch/battery_fast.sh <card-rig>`**: chassis · a11y ·
+smoke · m1 · m2 · the card's rig ≈ **100 s**. Full battery (28 rigs + bench + alias + stress) → wave /
+release gate only, when the run is complete, before C6, or when shared code changes.
+
+### WHAT WE STILL HAVE TO DO
+**A. The six planned C3 screens (docs/13 §C3, in this order):**
+1. **Filters group** — filter response screen inside the SOUND engine card beside the pots.
+2. **Envelopes group** — amp/filter/aux overlaid in operator colours; drag = the same three moves.
+3. **EFFECTS per slot** — drive curve · dyn gain-reduction meter · delay tap timeline · verb decay tail · mod LFO shape.
+4. **MIX** — EQ response curve on the master chain + per-track mini waveform in the strip.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), rows stay advanced.
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+Rule: a screen never blocks a control, carries no chrome beyond its inset, and prints its own units.
+
+**B. C4 control language** — steppers, pairs, the groups sweep.
+**C. C5 disclosure everywhere** — focus order, tab semantics, advanced-collapsed defaults.
+**D. C6 release** — shots, pins, battery, installer, deploy **v1.15.0**. Live site is still the
+2026-10-09 build (`moddys.net/anvil`, frozen e99ea8e5): **nothing from this wave is deployed.**
+`windows/stage/Anvil/resources/app/index.html` is a STALE staged copy — C6 must re-stage it.
+**E. Open from C2:** mono is not per-patch; latency/buffer has no LCD cell.
+
+### TRAPS — the list that has cost the sessions (17)
+1 cascade `!important` · 2 a fold hides an interactive control (grep rigs, add an expand step) ·
+3 a wrapper can swallow the working surface (read child order) · 4 autocrlf = rebuild ·
+5 pin sweep old→new only · 6 `Target crashed` = 0 checks · 7 no second browser during a battery ·
+8 K23 null must fail · 9 cockpit pane law · 10 knife-edge legs (store install-progress, sessions
+version ring, hub reload) · 11 budget zone chrome, use idle width before shrinking ink ·
+12 a paired row 5px over wraps and costs 34px · 13 a fold's chip must not buy a row ·
+14 a hidden zone measures 0 · 15 a fold is only legal on chrome · 16 the FILL toggle belonged on the
+face · 17 check the class is carried before designing.
+
+### WAITING ON THE OWNER
+Eye pass on the five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP), the FM
+two-column, the WT two-row + LIBRARY chip, the CODE folds, the SEQUENCE folds + relocated FILL, and
+the matrix strip. LEVELS fold verdict still open.
+
+### FIRST MOVES NEXT SESSION
+1. Read this block; run the fast lane on b3556d4a (99 s).
+2. Screen 1 — the filter response in the SOUND engine card: read `av_synth`'s filter group and
+   docs/13 §C3 item 1, design the inset (no chrome, prints its units), lab-probe it, then build.
+
+## SAVE 2026-11-07 02:10 (session 23d) — superseded by the block above
 
 ### STATE (proven, not claimed)
 - C3-10 commit `d6c98bb`. Bundle `index.html` sha256
