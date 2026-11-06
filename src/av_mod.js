@@ -178,6 +178,7 @@ function avModFacadeMod() {
 /* build + send. false when the parent hook is absent or refuses; never throws. */
 function avModPost() {
   avModSyncRings();
+  try { avModGraphSync(); } catch (e) { /* the graph repaints from its own observer if this fails */ }
   const send = avModFacadeMod();
   if (!send) return false;
   const payload = avModPayload();
@@ -360,6 +361,11 @@ function avModDragBegin(src) {
     }
     const knobs = avModMappableKnobs();
     for (let i = 0; i < knobs.length; i++) knobs[i].classList.add("av-mod-target");
+    /* C3-16: the graph's destination nodes are drop targets too (pitch + pan have no knob) */
+    try {
+      const gns = document.querySelectorAll(".av-mod-gnode[data-mod-dst]");
+      for (let i = 0; i < gns.length; i++) gns[i].classList.add("av-mod-target");
+    } catch (e2) { /* nodes are best-effort */ }
     return true;
   } catch (e) { return false; }
 }
@@ -383,10 +389,9 @@ function avModDragEnd() {
 }
 
 /* the assignment law: ONE slot per (src, dst); a re-drop re-defaults the depth */
-function avModAssign(src, path) {
+function avModAssignDst(src, dst) {
   try {
-    const dst = AV_MOD_DROP_MAP[String(path == null ? "" : path)];
-    if (!dst || avModSrcIndex(src) < 0) return false;
+    if (avModSrcIndex(src) < 0 || avModDstIndex(dst) < 0) return false;
     const st = avModModelEnsure();
     let k = -1;
     for (let i = 0; i < st.slots.length; i++) {
@@ -396,6 +401,14 @@ function avModAssign(src, path) {
     const added = avModSlotAdd(src, dst, 0.5, 0);
     if (!added) avModStatus("matrix full \u2014 " + AV_MOD_MAX_SLOTS + " slots");
     return added;
+  } catch (e) { return false; }
+}
+
+function avModAssign(src, path) {
+  try {
+    const dst = AV_MOD_DROP_MAP[String(path == null ? "" : path)];
+    if (!dst) return false;
+    return avModAssignDst(src, dst);
   } catch (e) { return false; }
 }
 
@@ -466,13 +479,21 @@ function avModSyncOutsFor(srcName) {
 
 /* ---------- the document-level drag plumbing (bound once) ---------- */
 
-function avModDragKnobFrom(e) {
+function avModDragDropEl(e) {
   try {
     const t = e && e.target;
-    const knob = (t && typeof t.closest === "function") ? t.closest(".av-knob[data-knob]") : null;
+    if (!t || typeof t.closest !== "function") return null;
+    const gnode = t.closest(".av-mod-gnode[data-mod-dst]");
+    if (gnode) return gnode;
+    const knob = t.closest(".av-knob[data-knob]");
     if (!knob) return null;
     return AV_MOD_DROP_MAP[knob.getAttribute("data-knob")] ? knob : null;
   } catch (e2) { return null; }
+}
+
+function avModDragKnobFrom(e) {
+  const el = avModDragDropEl(e);
+  return (el && el.classList && el.classList.contains("av-knob")) ? el : null;
 }
 
 function avModDragStartEvent(e) {
@@ -495,11 +516,11 @@ function avModDragOverEvent(e) {
     const types = dt && dt.types ? dt.types : null;
     const hasType = types && Array.prototype.indexOf.call(types, "text/av-modsrc") >= 0;
     if (!avModDragActive() && !hasType) return;
-    const knob = avModDragKnobFrom(e);
-    if (avModDropHover && avModDropHover !== knob) avModDropHover.classList.remove("av-mod-droppable");
-    avModDropHover = knob;
-    if (knob) {
-      knob.classList.add("av-mod-droppable");
+    const dropEl = avModDragDropEl(e);
+    if (avModDropHover && avModDropHover !== dropEl) avModDropHover.classList.remove("av-mod-droppable");
+    avModDropHover = dropEl;
+    if (dropEl) {
+      dropEl.classList.add("av-mod-droppable");
       if (e.preventDefault) e.preventDefault();
       if (dt) { try { dt.dropEffect = "copy"; } catch (e2) { /* ok */ } }
     }
@@ -515,10 +536,12 @@ function avModDropEvent(e) {
     }
     if (!src || avModSrcIndex(src) < 0) return;
     if (e.preventDefault) e.preventDefault();
-    const knob = avModDragKnobFrom(e) || avModDropHover;
-    if (knob) {
-      const path = knob.getAttribute("data-knob");
-      if (avModAssign(src, path)) avModStatus("assigned " + src + " \u2192 " + path);
+    const el = avModDragDropEl(e) || avModDropHover;
+    if (el) {
+      const dstName = (el.classList && el.classList.contains("av-mod-gnode"))
+        ? String(el.getAttribute("data-mod-dst") || "")
+        : AV_MOD_DROP_MAP[String(el.getAttribute("data-knob") || "")];
+      if (dstName && avModAssignDst(src, dstName)) avModStatus("assigned " + src + " \u2192 " + dstName);
     } else {
       const t = e && e.target;
       const anyKnob = (t && typeof t.closest === "function") ? t.closest(".av-knob[data-knob]") : null;
@@ -690,16 +713,209 @@ function avModSlotsHTML() {
   return out;
 }
 
+/* ---------- C3-16 screen 5: the matrix as a routing graph ----------
+
+   The default MATRIX view is the ROUTING GRAPH: used sources on the left, the six pinned
+   destinations on the right, one bezier per slot — colour = source family, width = |depth|,
+   dashed = inverted polarity, and the depth printed at the destination end. The slot rows are
+   still the exact controls they always were; they simply live behind the ROWS chip in the section
+   label line (so the chip buys no row, trap 13) and stay in the DOM while folded, which is what
+   the smoke rig counts.
+   The destination nodes are real buttons, so a chip can be dragged STRAIGHT onto a destination —
+   including pitch and pan, which have no knob to drop on. That is the same one-slot-per-(src,dst)
+   assignment law the knobs use (re-drop re-defaults the depth to +0.5). */
+function avModRowsChipHTML() {
+  const st = avModModelEnsure();
+  return '<button type="button" class="av-adv-chip av-mod-rows-chip" data-adv="rows" aria-expanded="false"' +
+    ' title="Show the slot rows">ROWS ' + st.slots.length + "</button>";
+}
+
+function avModGraphHTML() {
+  let nodes = "";
+  for (let i = 0; i < AV_MOD_TARGETS.length; i++) {
+    const d = AV_MOD_TARGETS[i];
+    nodes += '<button type="button" class="av-mod-gnode" data-mod-dst="' + avModEsc(d) + '"' +
+      ' style="top:' + ((i + 0.5) * 100 / AV_MOD_TARGETS.length).toFixed(4) + '%"' +
+      ' title="Drag a source chip here to route it to ' + avModEsc(d) + '">' + avModEsc(d) + "</button>";
+  }
+  return '<div class="av-mod-graph" data-av-graph="1">' +
+    '<div class="av-mod-gviz">' +
+    '<canvas class="av-mod-gcv" aria-label="Modulation routing graph: sources on the left, destinations on the right"></canvas>' +
+    '<div class="av-mod-gdst">' + nodes + "</div></div>" +
+    '<span class="av-mod-gcap av-dim"></span></div>';
+}
+
+function avModGraphFont(ctx, px, dpr) {
+  try { ctx.font = Math.round(px * dpr) + "px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"; } catch (e) { /* default font */ }
+}
+
+function avModGraphPaint(canvas) {
+  try {
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const box = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+    const cssW = Math.max(160, Math.round((box && box.width) || 640));
+    const cssH = Math.max(60, Math.round((box && box.height) || 112));
+    const dpr = Math.max(1, Math.min(3, (typeof window !== "undefined" && window.devicePixelRatio) || 1));
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+      canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const W = canvas.width, H = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const st = avModModelEnsure();
+    /* the used sources, in pinned source order */
+    const used = [];
+    for (let i = 0; i < AV_MOD_SOURCES.length; i++) {
+      const name = AV_MOD_SOURCES[i];
+      for (let k = 0; k < st.slots.length; k++) if (st.slots[k].src === name) { used.push(name); break; }
+    }
+    const labelW = Math.round(66 * dpr), dotX = labelW + 12 * dpr;
+    const dstX = W - Math.round(104 * dpr);
+    const srcY = (i) => (used.length ? H * (i + 0.5) / used.length : H / 2);
+    const dstY = (i) => H * (i + 0.5) / AV_MOD_TARGETS.length;
+    const colorOf = (name) => {
+      const c = AV_MOD_SRC_COLORS[name] || "var(--teal)";
+      if (c.indexOf("#") === 0) return c;
+      try {
+        const v = getComputedStyle(document.documentElement).getPropertyValue(c.replace(/var\(|\)/g, "").trim());
+        return String(v || "").trim() || "#2ed8c9";
+      } catch (e) { return "#2ed8c9"; }
+    };
+    /* the rail: a faint line through the destination dots so an empty matrix still reads as a map */
+    ctx.strokeStyle = "rgba(255,255,255,0.10)";
+    ctx.lineWidth = Math.max(1, dpr * 0.7);
+    ctx.beginPath(); ctx.moveTo(dotX, dstY(0)); ctx.lineTo(dotX, dstY(AV_MOD_TARGETS.length - 1)); ctx.stroke();
+    /* destination dots */
+    for (let i = 0; i < AV_MOD_TARGETS.length; i++) {
+      ctx.beginPath(); ctx.arc(dstX, dstY(i), Math.max(1.6, 2.2 * dpr), 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(190,215,220,0.55)"; ctx.fill();
+    }
+    /* edges */
+    const perDst = {};
+    for (let k = 0; k < st.slots.length; k++) {
+      const s = st.slots[k];
+      const si = used.indexOf(s.src);
+      const di = AV_MOD_DEST_INDEX[s.dst];
+      if (si < 0 || di == null) continue;
+      const y0 = srcY(si), y1 = dstY(di);
+      const a = Math.max(0.02, Math.min(1, Math.abs(s.amt)));
+      ctx.strokeStyle = colorOf(s.src);
+      ctx.globalAlpha = 0.35 + 0.6 * a;
+      ctx.lineWidth = Math.max(1, (0.8 + 3.4 * a) * dpr);
+      ctx.setLineDash(s.amt < 0 ? [Math.round(4 * dpr), Math.round(3 * dpr)] : []);
+      ctx.beginPath();
+      ctx.moveTo(dotX, y0);
+      const mx = (dotX + dstX) / 2;
+      ctx.bezierCurveTo(mx, y0, mx, y1, dstX, y1);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      const n = perDst[s.dst] = (perDst[s.dst] || 0) + 1;
+      avModGraphFont(ctx, 9, dpr);
+      ctx.fillStyle = colorOf(s.src);
+      ctx.textAlign = "right";
+      ctx.fillText(avModAmtText(s.amt), dstX - 8 * dpr, y1 - 4 * dpr - (n - 1) * 10 * dpr);
+    }
+    /* source dots + labels (the label column is why an edge can be read without hovering) */
+    avModGraphFont(ctx, 10, dpr);
+    for (let i = 0; i < used.length; i++) {
+      const y = srcY(i);
+      ctx.beginPath(); ctx.arc(dotX, y, Math.max(1.8, 2.4 * dpr), 0, Math.PI * 2);
+      ctx.fillStyle = colorOf(used[i]); ctx.fill();
+      ctx.fillStyle = "rgba(210,226,231,0.82)";
+      ctx.textAlign = "right";
+      ctx.fillText(used[i], labelW, y + 3.2 * dpr);
+    }
+    if (!used.length) {
+      avModGraphFont(ctx, 10, dpr);
+      ctx.fillStyle = "rgba(160,180,186,0.75)";
+      ctx.textAlign = "center";
+      ctx.fillText("no routes yet \u2014 drag a source chip onto a destination", W / 2, H / 2 + 3 * dpr);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* destination -> its index, built from the pinned list (the graph's right column order) */
+const AV_MOD_DEST_INDEX = (function () {
+  const o = {};
+  for (let i = 0; i < AV_MOD_TARGETS.length; i++) o[AV_MOD_TARGETS[i]] = i;
+  return o;
+})();
+
+function avModGraphCap(st) {
+  try {
+    const n = st.slots.length;
+    if (!n) return "0 routes \u00b7 6 destinations \u00b7 drag a chip onto a destination";
+    const srcs = {};
+    let deepest = 0;
+    for (let i = 0; i < n; i++) { srcs[st.slots[i].src] = 1; const a = Math.abs(st.slots[i].amt); if (a > deepest) deepest = a; }
+    return n + " route" + (n === 1 ? "" : "s") + " \u00b7 " + Object.keys(srcs).length + " source" + (Object.keys(srcs).length === 1 ? "" : "s") +
+      " \u00b7 deepest " + Math.round(deepest * 100) + "% \u00b7 dashed = inverted";
+  } catch (e) { return ""; }
+}
+
+let avModGraphSig = "";
+
+function avModGraphSync(hostArg) {
+  try {
+    const host = hostArg || avModHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const box = host.querySelector(".av-mod-graph");
+    if (!box) return false;
+    const st = avModModelEnsure();
+    const sig = avModGraphCap(st);
+    if (sig !== avModGraphSig) {
+      avModGraphSig = sig;
+      const cap = box.querySelector(".av-mod-gcap");
+      if (cap && cap.textContent !== sig) cap.textContent = sig;
+      const chip = host.querySelector(".av-mod-rows-chip");
+      if (chip) {
+        const label = "ROWS " + st.slots.length;
+        if (chip.textContent !== label) chip.textContent = label;
+      }
+    }
+    const cv = box.querySelector(".av-mod-gcv");
+    if (cv) avModGraphPaint(cv);
+    if (typeof ResizeObserver === "function" && !box.__avModGRO && typeof cv !== "undefined" && cv) {
+      box.__avModGRO = new ResizeObserver(function () { try { avModGraphSync(avModHost()); } catch (e2) { } });
+      box.__avModGRO.observe(box);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avModRowsToggle() {
+  try {
+    const host = avModHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const rows = host.querySelector(".av-mod-rows");
+    const chip = host.querySelector(".av-mod-rows-chip");
+    if (!rows) return false;
+    rows.classList.toggle("av-sec-collapsed");
+    const open = !rows.classList.contains("av-sec-collapsed");
+    if (chip) {
+      chip.setAttribute("aria-expanded", open ? "true" : "false");
+      chip.title = (open ? "Hide" : "Show") + " the slot rows";
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
 function avModBodyHTML() {
   const st = avModModelEnsure();
   return '<div class="av-mod-body">' +
     '<div class="av-mod-sec"><div class="av-mod-sec-lbl">MACROS</div>' + avModMacroRowHTML() + "</div>" +
     '<div class="av-mod-sec"><div class="av-mod-sec-lbl">SOURCES</div>' + avModSrcStripHTML() +
     '<div class="av-mod-status av-dim" id="av-mod-status"></div></div>' +
-    '<div class="av-mod-sec"><div class="av-mod-sec-lbl">MATRIX</div>' +
-    '<div class="av-mod-slots" id="av-mod-slots">' + avModSlotsHTML() + "</div>" +
+    '<div class="av-mod-sec"><div class="av-mod-sec-lbl">MATRIX' + avModRowsChipHTML() + '</div>' +
+    avModGraphHTML() +
     '<div class="av-mod-actions"><button type="button" class="av-btn av-mod-add" id="av-mod-add">+ ADD SLOT</button>' +
     '<span class="av-mod-count av-dim" id="av-mod-count">' + st.slots.length + " / " + AV_MOD_MAX_SLOTS + "</span></div>" +
+    '<div class="av-mod-rows av-sec-collapsed" data-mod-rows="1">' +
+    '<div class="av-mod-slots" id="av-mod-slots">' + avModSlotsHTML() + "</div></div>" +
     "</div>" +
     '<p class="av-note av-dim">Sources: env1 &middot; env2 &middot; lfo1 &middot; vel &middot; key &middot; rand (per note) &middot; macro1-8. ' +
     'Drag a chip onto a mapped knob (filter cutoff / reso &middot; osc1 / osc2 level) to write a slot; pitch &amp; pan stay matrix-only. ' +
@@ -766,6 +982,7 @@ function avModClick(e) {
   const t = avModEventTarget(e);
   if (!t) return;
   if (t.closest(".av-mod-add")) { avModSlotAdd(); return; }
+  if (t.closest(".av-mod-rows-chip")) { avModRowsToggle(); return; }
   const chip = t.closest(".av-mod-chip");
   if (chip) { avModStatus("drag " + chip.getAttribute("data-src") + " onto a knob"); return; }
   const pol = t.closest(".av-mod-pol");
@@ -829,6 +1046,7 @@ function avModInit() {
     avModBindDrag();
     avModRenderSlots();
     avModSyncRings();
+    try { avModGraphSync(host); } catch (e) { /* the graph paints from its observer */ }
     avModReplayWhenReady();
     return true;
   } catch (e) {
@@ -847,5 +1065,7 @@ function avModClasses() {
     "av-mod-empty", "av-mod-actions", "av-mod-add", "av-mod-count",
     "av-mod-srcstrip", "av-mod-chip", "av-mod-status", "av-mod-hdr", "av-mod-pol", "av-mod-out",
     "av-mod-target", "av-mod-droppable", "av-mod-shown", "av-knob-mod",
+    "av-mod-graph", "av-mod-gviz", "av-mod-gcv", "av-mod-gdst", "av-mod-gnode", "av-mod-gcap",
+    "av-mod-rows", "av-mod-rows-chip",
   ];
 }

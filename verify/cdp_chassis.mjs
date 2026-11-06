@@ -1213,6 +1213,98 @@ async function main() {
     && hidBuf.rowH != null && hidBuf.rowH === buf.rowH && hidBuf.headH === buf.headH,
     JSON.stringify(wv));
 
+  /* K24l -- C3-16 screen 5: the matrix is a ROUTING GRAPH by default — used sources on the left,
+     the six pinned destinations on the right, one wire per slot (width = |depth|, dashed =
+     inverted, depth printed at the destination end). The slot rows are the advanced view behind the
+     ROWS chip that rides the section label line (they stay in the DOM while folded, which is what
+     the smoke rig counts), and the destination nodes are real drop targets — the only way to route
+     to pitch and pan, which have no knob. */
+  await ev(`(() => {
+    try { window.__avZone.show('shape'); } catch (e) { return false; }
+    try { const sb = document.querySelector('#av-zone-shape .av-subtab[data-sub="matrix"]'); if (sb && sb.getAttribute('aria-selected') !== 'true') sb.click(); } catch (e) { }
+    /* start from a clean matrix so the counts below are deterministic */
+    try { const st = avModSnap(); for (let i = st.slots.length - 1; i >= 0; i--) avModSlotRemove(i); } catch (e) { }
+    return true;
+  })()`);
+  await sleep(480);
+  const shapeG = (await ev(`(() => {
+    const card = document.getElementById('av-mod');
+    if (!card) return { card: false };
+    const g = card.querySelector('.av-mod-graph');
+    const cv = card.querySelector('.av-mod-gcv');
+    const rows = card.querySelector('.av-mod-rows');
+    const chip = card.querySelector('.av-mod-rows-chip');
+    const lbl = card.querySelector('.av-mod-sec-lbl');
+    if (!g || !cv || !rows || !chip) return { card: true, g: !!g, cv: !!cv, rows: !!rows, chip: !!chip };
+    const inkOf = () => { try { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; let n = 0; for (let i = 3; i < d.length; i += 4) if (d[i] > 8) n++; return n; } catch (e) { return -1; } };
+    const out = {
+      card: true, cvW: cv.width, cvH: cv.height, ink0: inkOf(),
+      nodes: card.querySelectorAll('.av-mod-gnode[data-mod-dst]').length,
+      dsts: [...card.querySelectorAll('.av-mod-gnode[data-mod-dst]')].map(n => n.getAttribute('data-mod-dst')),
+      rowsFolded: getComputedStyle(rows).display === 'none',
+      chipInLabelLine: !!(function () {
+        const lab = [...card.querySelectorAll('.av-mod-sec-lbl')].find((l) => String(l.textContent || '').trim().indexOf('MATRIX') === 0);
+        return lab && lab.querySelector('.av-mod-rows-chip');
+      })(),
+      chipText0: String(chip.textContent || ''), aria0: chip.getAttribute('aria-expanded'),
+      rowsInDom0: card.querySelectorAll('#av-mod-slots .av-mod-slot').length,
+      cap0: String((card.querySelector('.av-mod-gcap') || {}).textContent || ''),
+    };
+    /* three routes, including the two no-knob destinations */
+    avModAssign('env1', 'filter.cutoff');
+    avModAssignDst('lfo1', 'pitch');
+    avModSlotAdd('macro1', 'pan', -0.35, 1);
+    out.n = avModSnap().slots.length;
+    out.ink1 = inkOf();
+    out.cap1 = String((card.querySelector('.av-mod-gcap') || {}).textContent || '');
+    out.chipText1 = String(chip.textContent || '');
+    /* a real drop from a chip onto the pan node (no knob can reach pan) */
+    let dt = null; try { dt = new DataTransfer(); } catch (e) { dt = null; }
+    const srcChip = card.querySelector('.av-mod-chip[data-src="env2"]');
+    const panNode = card.querySelector('.av-mod-gnode[data-mod-dst="pan"]');
+    if (dt && srcChip && panNode) {
+      srcChip.dispatchEvent(new DragEvent('dragstart', { bubbles: true, cancelable: true, dataTransfer: dt }));
+      out.targets = card.querySelectorAll('.av-mod-gnode.av-mod-target').length;
+      panNode.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: dt }));
+      out.hover = panNode.classList.contains('av-mod-droppable');
+      panNode.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: dt }));
+    }
+    out.afterDrop = avModSnap().slots.some(s => s.src === 'env2' && s.dst === 'pan');
+    out.status = String((card.querySelector('.av-mod-status') || {}).textContent || '');
+    /* the chip opens the rows (they stay in the DOM the whole time) and folds them back */
+    chip.click();
+    out.rowsOpen = getComputedStyle(rows).display !== 'none';
+    out.rowsH = Math.round(rows.getBoundingClientRect().height);
+    out.ariaOpen = chip.getAttribute('aria-expanded');
+    out.rowsInDom1 = card.querySelectorAll('#av-mod-slots .av-mod-slot').length;
+    chip.click();
+    out.rowsBack = getComputedStyle(rows).display === 'none';
+    out.ariaBack = chip.getAttribute('aria-expanded');
+    /* leave the matrix empty, as found */
+    const st2 = avModSnap();
+    for (let i = st2.slots.length - 1; i >= 0; i--) avModSlotRemove(i);
+    out.cleaned = avModSnap().slots.length === 0;
+    return out;
+  })()`)).value || {};
+  await sleep(320);
+  const gOk = shapeG || {};
+  check('K24l MATRIX graph: six destination nodes + a painted canvas with its route/depth units, the slot rows folded by default behind the ROWS chip in the section label line (still in the DOM), and the chip opens them with a real height then folds back',
+    gOk.card === true && gOk.nodes === 6 && Array.isArray(gOk.dsts) && gOk.dsts.join(',') === 'cutoff,reso,pitch,osc1.level,osc2.level,pan'
+    && gOk.cvW >= 600 && gOk.cvH === 112 && gOk.ink0 > 400
+    && /^0 routes \u00b7 6 destinations \u00b7 drag a chip onto a destination$/.test(String(gOk.cap0 || ''))
+    && gOk.rowsFolded === true && gOk.chipInLabelLine === true && gOk.chipText0 === 'ROWS 0' && gOk.aria0 === 'false'
+    && gOk.rowsOpen === true && gOk.rowsH > 100 && gOk.ariaOpen === 'true'
+    && gOk.rowsBack === true && gOk.ariaBack === 'false' && gOk.cleaned === true,
+    JSON.stringify(gOk));
+
+  check('K24l MATRIX routes: three assignments (cutoff by knob path, pitch and pan by destination) ink the graph, the caption prints routes/sources/deepest, a chip drops straight onto the pan node, and the rows chip count follows',
+    gOk.n === 3 && gOk.ink1 > gOk.ink0
+    && /^3 routes \u00b7 3 sources \u00b7 deepest 50% \u00b7 dashed = inverted$/.test(String(gOk.cap1 || ''))
+    && gOk.chipText1 === 'ROWS 3'
+    && gOk.targets === 6 && gOk.hover === true && gOk.afterDrop === true && gOk.status === 'assigned env2 \u2192 pan'
+    && gOk.rowsInDom1 === 4,
+    JSON.stringify({ n: gOk.n, ink0: gOk.ink0, ink1: gOk.ink1, cap1: gOk.cap1, chip: gOk.chipText1, targets: gOk.targets, hover: gOk.hover, afterDrop: gOk.afterDrop, status: gOk.status, rowsInDom1: gOk.rowsInDom1 }));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 
