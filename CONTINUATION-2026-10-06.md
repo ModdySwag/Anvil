@@ -1,71 +1,120 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVED FOR A CONTINUED SESSION (2026-11-07 01:45, session 24). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVED FOR A CONTINUED SESSION (2026-11-07 02:15, session 24 FINAL). READ THIS BLOCK FIRST.
 
 ### STATE (proven, not claimed)
-- HEAD `7a15fc5`. Bundle `index.html` sha256
-  `d4827fbcd1e5a890bbdecc83c4ee43a04d9ccc57e8b48d368a697d145398519b`, **4,850,010 B**. Tree clean.
-- All 23 `verify/cdp_*.mjs` pins == that sha (`STALE REMAINING: none`).
-- **Per-card gate = FAST LANE**, clean in 90 s on these bytes: chassis **42/42** (K24c…K24m) · a11y 33 ·
-  smoke 81 · m1 33 · m2 40. `cdp_seq` 41/41 solo. Full battery = wave/release gate (C6 only).
+- **Code HEAD `93a0108`.** (A save commit sits on top of it and touches only this file — `git log -1`
+  names it; the bundle sha below is the identity that matters.)
+- Bundle `index.html` sha256
+  `368d934b72cf48c47900a26ca44eab0d9887576989bfa253ad8b7658ce018324`, **4,867,325 B**. Tree clean.
+- All 23 `verify/cdp_*.mjs` pins carry that one sha (`STALE REMAINING: none`).
+- **Per-card gate = FAST LANE**, clean in 90 s on these bytes: chassis **46/46** (K24c…K24o) · a11y 33 ·
+  smoke 81 · m1 33 · m2 40.
+- Card rigs also green on these bytes: `cdp_code` 36 · `cdp_s4` 42 (DELIVER) · `cdp_comp` 41 ·
+  `cdp_studio` 37 (solo ×2) · `cdp_seq` 41 · `cdp_fit` 49.
+- **DENSITY — the binding numbers are K23's, at 1280:** **sequence 1.18**, **system/family 1.19**
+  (0.01–0.02 under the 1.2 gate — KNIFE-EDGE: any change to those two pages must reclaim height first),
+  browse/import 1.15, sound/chop 1.13, wt 1.13, engine 1.10, fm 1.07, code 1.08, matrix 1.07.
+  At 1440 the whole board is ≤1.00. **A card's own lab ratio (`box/zone`) and K23's
+  (`scrollHeight/zoneHeight`) are different numbers — cite K23, never the lab.**
 
-### SHIPPED THIS SESSION — C3 IS COMPLETE (all six screens of docs/13 §C3)
-| # | screen | how | leg |
+### WHAT LANDED THIS SESSION — C3 IS COMPLETE, C4 ITEMS 1–2 ARE IN
+| what | commit | how it works | leg / number |
 |---|---|---|---|
-| 4 | **MIX** master EQ response + per-strip source waveform (`a1606e0`) | EQ inset rides the DYN row of the folded MASTER section (flex 1 1 0, 230–380 wide, 64 tall) painted from the SAME RBJ coefficients `av_fx_dyn` builds — its magnitude equals AVFXDYN's own at 8 frequencies to **0.000000 dB**, flat case exactly 0.0; drag picks the nearest band centre in log frequency and writes that band's gain (±15 dB, half-dB); DYN off dims + says so. New `avMixPeaks()` in av_mix.js feeds each strip's mini waveform (buffers by reference, takes from the take entry, comps only from already-rendered data, engine pattern honestly `no samples`). Card 433/415 on both builds → **zero height**. | K24k ×2 |
-| 5 | **SHAPE** matrix as a routing graph (`84f241a`) | sources left / six destinations right / one bezier per slot (width = \|depth\|, dashed = inverted, depth printed at the destination end, rail through the dots, caption prints routes·sources·deepest). Slot rows unchanged but now the advanced view behind a ROWS chip in the MATRIX label line (kept in the DOM — the smoke rig counts and clicks them). Destination nodes are real buttons → a chip now drops onto **pitch and pan**, which no knob could reach (`avModAssignDst`). Density 0.73/0.84 → **0.92/0.89**. | K24l ×2 |
-| 6 | **SEQUENCE** arrangement overview (`7a15fc5`) | strip on the face between transport and grid: song as bars (block width = len×repeats, repeats ride the label), loop bracket (current row while playing, else whole song), captured scenes as recall blocks, caption prints bars · seconds · bpm · rows. **Fixed a pre-existing defect found on the way: `avSeqUiSceneNames()` only handled the array shape while `avSeqScenesSnap()` returns `{v, scenes}` — the scene select had always been empty and RECALL was dead.** Height cost three cuts (44→32→28px canvas, margins 0, card gap 8→6, head caption to one line) to land **0.98** at 1280. | K24m ×2 |
+| **C3 screen 4 — MIX** master EQ + strip waveforms | `a1606e0` | EQ inset on the DYN row of the folded MASTER section (flex 1 1 0, 230–380, 64 tall) painted from **the same RBJ coefficients av_fx_dyn builds** — identity to **0.000000 dB** at 8 frequencies, flat case exactly 0.0; drag picks the nearest band centre in log frequency, half-dB steps; DYN off dims + says so. New `avMixPeaks()` in av_mix.js feeds each strip's mini waveform (buffers by reference, takes from the entry, comps only from already-rendered data, engine pattern honestly `no samples`). | K24k ×2; card **433/415 on old and new build** → zero height |
+| **C3 screen 5 — SHAPE** matrix routing graph | `84f241a` | sources left / six destinations right / one bezier per slot (width \|depth\|, dashed inverted, depth printed at the destination), rail through the dots, caption prints routes·sources·deepest. Rows unchanged but now behind a **ROWS chip** in the MATRIX label line, kept in the DOM (smoke counts/clicks them). Destination nodes are real buttons → chips now drop onto **pitch and pan** (`avModAssignDst`). | K24l ×2; density 0.73/0.84 → **0.92/0.89** |
+| **C3 screen 6 — SEQUENCE** arrangement overview | `7a15fc5` | bar strip between transport and grid: block width = len×repeats (repeat rides the label), loop bracket (current row while playing, else whole song), captured scenes as recall blocks, caption bars·seconds·bpm·rows. **Also fixed a pre-existing dead control: `avSeqUiSceneNames()` handled only the array shape while `avSeqScenesSnap()` returns `{v,scenes}` — the scene select had always been empty and RECALL never worked.** | K24m ×2; sequence 1.242 → **1.18** at 1280 (three height cuts) |
+| **C4 item 1 — `.av-pair`** | `fc67aa1` | new `src/av_pair.js`: `role=radiogroup` of two keys over a **hidden input keeping the ORIGINAL id and `.value`**, so both cards read the control unchanged; click sets value + one bubbling `change`; arrows/Space keyboard, roving tabindex. Converted `#av-deliver-bits`, `#av-code-kind`. | K24n ×2; audit **selects 49→47, two-option 3→1, pairs 0→2** |
+| **C4 item 2 — `.av-num`** | `a5e40f8` | new `src/av_num.js`: steppers around the **REAL input** (id, class, type, min/max/step, events untouched); one click = one step = one `input`+`change`; clamps emit nothing; decimal-safe rounding. Converted `#av-comp-fade`, `#av-studio-offset`. | K24o ×2 |
 
-### WHAT IS STILL TO DO — the complete queue
-**A. C4 control language** — **items 1-2 DONE this session** (`.av-pair` at `fc67aa1`, `.av-num` at the
-commit after it; see `docs/14-c4-control-language.md`). Remaining: **`.av-fader` needs a home** (owner
-call: DELIVER master level or MIX per-track gain) and **groups `.av-group` deferred to C5**.
-**B. C5 disclosure** — **audited this session: `docs/15-c5-disclosure.md`** (measured: 31 `[role=tab]` with 25 resolving `aria-controls`, the six FM operator keys claim tabs they don't have; 86 disclosure toggles with only 55 carrying `aria-expanded` — 24 `av-adv-chip` + 7 `av-fx-toggle`; every tablist has exactly one selected; `cdp_a11y` is 33/33 so all of it is BEYOND the rig). Work order: chips → fx toggles → FM tab set → a recorded focus-order walk → groups (owner call). Nothing implemented yet.
-**C. C6 release v1.15.0** — shots, pins, **full wave battery** (28 rigs + bench + alias + stress, ~35 min, nothing else open), installer, deploy; README shots and the downloads card. Live site is still the **2026-10-09 build** (`moddys.net/anvil`, frozen `e99ea8e5`): nothing from this wave is deployed.
-`windows/stage/Anvil/resources/app/index.html` is a **STALE staged copy** (Oct 9, 4,604,527 B) — C6 must re-stage it from the new bundle.
-**D. Two C2 leftovers** — mono is not per-patch (`env.mono` is not in the pack/preset schema); latency/buffer has no LCD cell (`verify/_c2_wave.md` §5).
-**E. Owner gates** — the eye pass list below, now including the three new screens.
+Two real bugs the rigs caught while building this: `avPairSync(pair)` searched only descendants so a
+pair passed as its own root never repainted its keys (K24n failed on exactly that), and a K24k leg was
+passing on `0 === 0` because the card was hidden behind the wrong sub-tab.
 
-### GATE POLICY (unchanged, adopted 2026-11-07)
-Per card → `bash cache/scratch/battery_fast.sh <card-rig>` ≈ 90–100 s. Full battery (28 rigs + bench +
-alias + stress) → **wave/release gate only**, on final bytes with nothing else open. `verify/battery_c3l.log`
-is **VOID** — do not cite it.
+### DOCS WRITTEN THIS SESSION (read before working the queue)
+- **`docs/14-c4-control-language.md`** — the measured C4 inventory, the two REAL pair candidates, the
+  `#av-mix-add-src` false positive, the rig couplings, items 1–2 marked DONE with the gate actually run.
+- **`docs/15-c5-disclosure.md`** — the measured C5 audit and work order (below). Nothing implemented.
 
-### TRAPS — 27 now (all paid)
+### THE COMPLETE REMAINING QUEUE
+**A. C5 DISCLOSURE — audited, not built.** Measured on these bytes (all nine zones):
+- **31 `[role=tab]`, 25 resolve `aria-controls`.** The 6 that do not are **`av-fm-op-tab` (OP 1…OP 6)** —
+  they claim a tab relationship with no panel wired back. Recommended fix: real ids + `aria-controls` +
+  `aria-labelledby` (fallback: demote to `aria-pressed`).
+- **86 disclosure toggles, only 55 carry `aria-expanded`.** Missing: **24 `.av-adv-chip` + 7
+  `.av-fx-toggle`**. The chip nuance: a chip is the CLOSED-state affordance (hidden once open, while the
+  open section's `.av-sec-toggle` does carry the attribute) — so the pair is half-annotated; every chip
+  needs `aria-expanded="false"` at build and its existing sync must keep it true to `hidden`.
+- Every tablist has exactly one `aria-selected=true`. The 495 controls inside collapsed regions are
+  **NOT** a defect (`display:none` removes them from the tab order natively).
+- `cdp_a11y` is **33/33**, so everything above is beyond the rig.
+- Work order: chips → fx toggles → FM tab set → **a recorded focus-order walk** (band → tabs → pane →
+  inspector → dock, with the stop count) → groups (owner call).
+- Gate: a11y + fast lane + **K23 ratios must be byte-identical** (attributes only, no layout).
+
+**B. C4 LEFTOVERS — both need the OWNER, not work.**
+- **`.av-fader` has no home.** It is the only §5 control still unbuilt. Candidates: DELIVER's master
+  level or MIX's per-track gain. Do not invent one.
+- **`.av-group`** boxes (0 in the app) — deferred into C5, same owner call.
+
+**C. C6 RELEASE v1.15.0 — nothing started.**
+- Shots + README shots, pin sweep, **FULL wave battery** (28 rigs + bench + alias + stress, ~35 min,
+  nothing else open, on the FINAL bytes — `verify/battery_c3l.log` is VOID, do not cite it), installer,
+  the downloads card, deploy.
+- **The live site is still the 2026-10-09 build** (`moddys.net/anvil`, frozen `e99ea8e5`): **nothing from
+  C1–C5 is deployed.**
+- `windows/stage/Anvil/resources/app/index.html` is a **STALE staged copy** (verified today:
+  4,604,527 B, Oct 9 22:52, sha `6ac4425b…`) — C6 must re-stage it from the new bundle.
+
+**D. TWO C2 LEFTOVERS.** mono is not per-patch (`env.mono` is not in the pack/preset schema);
+latency/buffer has no LCD cell (`verify/_c2_wave.md` §5).
+
+**E. OWNER GATES (his eye, not a screenshot).**
+- The five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP), the FM two-column, the
+  WT two-row + LIBRARY chip, the CODE folds, the SEQUENCE folds + relocated FILL, the matrix strip, the
+  filter inset, the ENVELOPES section, the six FX screens.
+- **New this session:** the MIX master EQ inset (open MASTER), the per-strip source waveforms, the SHAPE
+  routing graph + ROWS chip, the SEQUENCE overview + scene blocks, **and the two new controls** — the
+  BITS pair on DELIVER, the KIND pair on SYSTEM→CODE, the FADE stepper on MIX→COMP, the OFFSET stepper on
+  MIX→STUDIO.
+- **A verdict on folding the LEVELS card** (one-line revert if vetoed; SOUND then loses its fit).
+
+### GATE POLICY (standing)
+Per card → `bash cache/scratch/battery_fast.sh <card-rig>` ≈ 90–100 s, plus that card's own rig and
+`cdp_fit` when the change touches layout. Full battery (28 rigs + bench + alias + stress) → **wave/release
+gate only**, on final bytes with nothing else open.
+
+### TRAPS — 27 (every one has cost a session)
 1 cascade `!important` · 2 a fold that hides an interactive control breaks rigs · 3 a wrapper can swallow
 the working surface · 4 autocrlf = rebuild · 5 pin sweep old→new only · 6 `Target crashed` = 0 checks ·
-7 never a second browser in a battery · 8 K23 null must fail · 9 cockpit pane law · 10 knife-edge legs ·
-11 budget zone chrome first · 12 a paired row 5px over wraps · 13 a fold's chip must not buy a row ·
-14 a hidden zone measures 0 · 15 a fold is only legal on chrome · 16 FILL belonged on the face ·
+7 never a second browser in a battery · 8 K23 null must fail · 9 cockpit pane law · 10 knife-edge legs
+(**cdp_store install-progress, cdp_sessions version ring, cdp_hub reload, cdp_studio metronome — all
+proven solo**) · 11 budget zone chrome first · 12 a paired row 5px over wraps · 13 a fold's chip must not
+buy a row · 14 a hidden zone measures 0 · 15 a fold is only legal on chrome · 16 FILL belonged on the face ·
 17 check the class is carried · 18 flex-basis wraps before shrinking · 19 a probe must write a differing
 value · 20 a folded canvas has no box (ResizeObserver + settle) · 21 indefinite `100%` collapses ·
-22 a canvas without a CSS height feeds back into layout · 23 sweep by the hash the rigs carry ·
-**24 a leg that measures geometry must land the zone's OWN sub-tab first** (the density walk leaves MIX on
-another sub; a `display:none` ancestor zeroes every rect while the child's computed display still reads flex) ·
-**25 `0 === 0` must never pass a no-height leg** (put `rowH > 0` in the assertion) ·
-**26 a leg that measures a canvas must settle in a SECOND evaluate** (it painted at the hidden fallback width) ·
-**27 `querySelector('.av-mod-sec-lbl')` finds MACROS, not MATRIX** — match the label text.
-Env: **port 10080 binds DevTools but never yields a page target** — lab scripts start at 10250+.
+22 a canvas without a CSS height feeds back into layout · 23 **sweep by the hash the rigs ACTUALLY carry**
+(this cost two sweeps today: `--old` must be the bundle in the rigs, not the last build you made) ·
+24 a measuring leg must land the zone's OWN sub-tab first (a `display:none` ancestor zeroes every rect
+while the child's computed display still reads flex) · 25 `0 === 0` must never pass a no-height leg ·
+26 a canvas leg must settle in a SECOND evaluate (it paints at the hidden fallback width) ·
+27 `querySelector('.av-mod-sec-lbl')` finds MACROS, not MATRIX — match the label text.
+**ENV:** port 10080 binds DevTools but never yields a page target — lab scripts start at **10250+**.
 
 ### TOOLS (cache/ is gitignored)
 `cardprobe.mjs <zone> [sub] [shot]` · `rowprobe.mjs <zone> <sub|-> "<sel>"` · `views.mjs` ·
 `battery_fast.sh <card-rig>` · `battery_c3*.sh` (full templates) · `sweep_pins.py --old <sha>` ·
-new this session: `mixlab3.mjs` (EQ + waveforms), `mixshot2.mjs`, `mixeqcheck.mjs` (the AVFXDYN
-identity), `shapelab.mjs`, `shapeshot.mjs`, `ab-mix.mjs` (old-vs-new density A/B), `seqlab.mjs`, `seqshot.mjs`.
-
-### WAITING ON THE OWNER (his gate, not a screenshot)
-- **Eye pass:** the five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP), the FM
-  two-column, the WT two-row + LIBRARY chip, the CODE folds, the SEQUENCE folds + relocated FILL, the
-  matrix strip, the filter inset, the ENVELOPES section, the six FX screens, **and now: the MIX master EQ
-  inset (open MASTER), the per-strip source waveforms, the SHAPE routing graph + ROWS chip, the SEQUENCE
-  arrangement overview + scene blocks.**
-- **A verdict on folding the LEVELS card** — one-line revert if vetoed; SOUND then loses its fit.
+session 24: `mixlab3.mjs` · `mixshot2.mjs` · `mixeqcheck.mjs` (the AVFXDYN identity proof) ·
+`shapelab.mjs` · `shapeshot.mjs` · `ab-mix.mjs` (old-vs-new density A/B) · `seqlab.mjs` · `seqshot.mjs` ·
+`c4audit.mjs` (control inventory, writes `c4audit.json`) · `c5audit.mjs` (disclosure inventory, writes
+`c5audit.json`).
 
 ### FIRST MOVES NEXT SESSION
-1. Read this block; `bash cache/scratch/battery_fast.sh` on `d4827fbc` (≈100 s).
-2. **C4 audit first, no code**: count the two-option `<select>`s, the number inputs without steppers, and
-   the control groups on every page; produce the sweep list + counts, then convert page by page.
-3. Then C5, then C6 (full battery on final bytes, re-stage `windows/stage`, deploy, README/downloads).
+1. Read this block; `bash cache/scratch/battery_fast.sh` on `368d934b` (≈90 s) to prove the tree.
+2. C5 item 1: `aria-expanded` on the 24 `.av-adv-chip`s (each card's disclosure helper already has the
+   sync site; chips are created in `avMixUiDisclosure`, the mod/seq/code/store fold helpers), then the 7
+   `.av-fx-toggle`s, then the FM tab set — one commit per group, a11y + fast lane after each.
+3. Then the recorded focus-order walk leg, then the two owner calls (.av-fader home, groups), then C6.
 
 ## SAVE 2026-11-07 01:25 (session 23 FINAL) — superseded by the block above
 
