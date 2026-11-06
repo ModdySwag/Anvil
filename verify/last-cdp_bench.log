@@ -17,7 +17,29 @@ realtime ring semantics: worklet clock = Date.now (ms lattice) — ring readings
 variant LIGHT: patch applied (all params accepted)
   light r1 step  1  voices 1  mean 3.91  p95 0  max 1000  underruns 0  n 3757  -> ok
   light r1 step  2  voices 2  mean 11.72  p95 0  max 1000  underruns 0  n 3750  -> ok
-s==0, and the publishable render cost comes from the offline ramp (fresh-context marginal cost).
-variant LIGHT: patch applied (all params accepted)
-  light r1 step  1  voices 1  mean 3.91  p95 0  max 1000  underruns 0  n 3757  -> ok
-  light r1 step  2  voices 2  mean 11.72  p95 0  max 1000  underruns 0  n 3750  -> ok
+  light r1 step  4  voices 4  mean 15.63  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r1 step  8  voices 8  mean 85.94  p95 1000  max 1000  underruns 0  n 3757  -> ok
+  light r1 step 16  voices 16  mean 257.81  p95 1000  max 1000  underruns 0  n 3757  -> ok
+  light r1 step 24  voices 24  mean 269.53  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r1 step 32  voices 32  mean 328.13  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r1 step 48  voices 48  mean 437.5  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r1 step 64  voices 64  mean 644.53  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light rep 1 max stable: 64 / 64
+  light r2 step  1  voices 1  mean 105.47  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r2 step  2  voices 2  mean 3.91  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r2 step  4  voices 4  mean 15.63  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r2 step  8  voices 8  mean 23.44  p95 0  max 1000  underruns 0  n 3753  -> ok
+  light r2 step 16  voices 16  mean 148.44  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r2 step 24  voices 24  mean 296.88  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r2 step 32  voices 32  mean 441.41  p95 1000  max 1000  underruns 0  n 3758  -> ok
+  light r2 step 48  voices 48  mean 492.19  p95 1000  max 1000  underruns 0  n 3750  -> ok
+  light r2 step 64  voices 64  mean 589.84  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light rep 2 max stable: 64 / 64
+  light r3 step  1  voices 1  mean 117.19  p95 1000  max 1000  underruns 0  n 3757  -> ok
+  light r3 step  2  voices 2  mean 113.28  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step  4  voices 4  mean 27.34  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r3 step  8  voices 8  mean 31.25  p95 0  max 1000  underruns 0  n 3750  -> ok
+n 117.19  p95 1000  max 1000  underruns 0  n 3757  -> ok
+  light r3 step  2  voices 2  mean 113.28  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step  4  voices 4  mean 27.34  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r3 step  8  voices 8  mean 31.25  p95 0  max 1000  underruns 0  n 3750  -> ok

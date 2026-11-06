@@ -46927,7 +46927,10 @@ function avModSrcStripHTML() {
       ' title="Drag ' + avModEsc(n) + ' onto a knob to modulate it"' +
       ' aria-label="Modulation source ' + avModEsc(n) + ' - drag onto a knob">' + avModEsc(n) + "</button>";
   }
-  return out;
+  /* C3-11: the strip is a WRAPPING row. It shipped as bare buttons inside a flex-column section,
+     so all 14 source chips stacked one per line (294px of the card's 660). The class already
+     existed in styles.css and nothing carried it. */
+  return '<div class="av-mod-srcstrip">' + out + "</div>";
 }
 
 function avModSlotsHTML() {

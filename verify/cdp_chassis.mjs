@@ -575,6 +575,7 @@ async function main() {
     ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'], ['sound', 'chop'], ['sound', 'fm'], ['sound', 'wt'],
     ['system', 'code'],
     ['sequence', null],
+    ['shape', 'matrix'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['effects', null],
@@ -872,6 +873,33 @@ async function main() {
     && seqFold.openG === true && seqFold.backG === true
     && seqFold.openS === true && seqFold.backS === true,
     JSON.stringify(seqFold));
+
+  /* K24g -- the MOD MATRIX source strip: 14 source chips on a WRAPPING row, not a column. It
+     shipped as bare buttons in a flex-column section (294px for 14 rows); the class existed and
+     nothing carried it. The strip must stay a wrap row and the chips must all be on screen. */
+  const modStrip = (await ev(`(() => {
+    try { window.__avZone.show('shape'); } catch (e) { return { zone: false }; }
+    try { const b = document.querySelector('#av-zone-shape .av-subtab[data-sub="matrix"]'); if (b) b.click(); } catch (e) { /* stays */ }
+    const card = document.querySelector('#av-mod-host .av-mod-body') || document.querySelector('.av-mod-body');
+    if (!card) return { card: false };
+    const strip = card.querySelector('.av-mod-srcstrip');
+    const chips = card.querySelectorAll('.av-mod-srcstrip .av-mod-chip');
+    const sizes = [...chips].map(c => { const r = c.getBoundingClientRect(); return { w: Math.round(r.width), h: Math.round(r.height), top: Math.round(r.top) }; });
+    const cs = strip ? getComputedStyle(strip) : null;
+    const rows = new Set(sizes.map(s => s.top)).size;
+    return {
+      card: true, strip: !!strip, n: chips.length,
+      display: cs ? cs.display : null, wrap: cs ? cs.flexWrap : null,
+      stripH: strip ? Math.round(strip.getBoundingClientRect().height) : null,
+      rows: rows, zero: sizes.filter(s => !s.w || !s.h).length,
+    };
+  })()`)).value || {};
+  check('K24g MOD MATRIX strip: the 14 source chips sit on a wrapping row (not one per line), all visible and the strip under 80px',
+    modStrip.card === true && modStrip.strip === true && modStrip.n === 14
+    && modStrip.display === 'flex' && modStrip.wrap === 'wrap'
+    && modStrip.stripH != null && modStrip.stripH <= 80
+    && modStrip.rows >= 1 && modStrip.rows <= 3 && modStrip.zero === 0,
+    JSON.stringify(modStrip));
 
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
