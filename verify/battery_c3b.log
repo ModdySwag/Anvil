@@ -1,0 +1,33 @@
+BATTERY-C3B START 06 Nov 2026 16:19:26 sha=b9bb4ada756e18ca50b58b4677c969382cc98541ee9783646c4903606d9b8a5e
+cdp_a11y exit=0 ok=32 fail=0
+cdp_bounce exit=0 ok=32 fail=0
+cdp_chassis exit=0 ok=26 fail=0
+cdp_cockpit exit=1 ok=20 fail=1
+cdp_code exit=0 ok=36 fail=0
+cdp_comp exit=0 ok=41 fail=0
+cdp_deck exit=0 ok=35 fail=0
+cdp_fit exit=0 ok=49 fail=0
+cdp_fx exit=0 ok=27 fail=0
+cdp_hub exit=0 ok=68 fail=0
+cdp_import exit=0 ok=26 fail=0
+cdp_keys exit=0 ok=27 fail=0
+cdp_knob_feel exit=0 ok=18 fail=0
+cdp_m1 exit=0 ok=33 fail=0
+cdp_m2 exit=0 ok=40 fail=0
+cdp_midi exit=0 ok=33 fail=0
+cdp_mix exit=0 ok=47 fail=0
+cdp_platform exit=0 ok=52 fail=0
+cdp_rec exit=0 ok=29 fail=0
+cdp_s4 exit=0 ok=42 fail=0
+cdp_s5 exit=0 ok=36 fail=0
+cdp_sample exit=0 ok=29 fail=0
+cdp_seq exit=0 ok=41 fail=0
+cdp_sessions exit=0 ok=65 fail=0
+cdp_smoke exit=0 ok=81 fail=0
+cdp_store exit=0 ok=28 fail=0
+cdp_studio exit=0 ok=37 fail=0
+cdp_tune exit=0 ok=18 fail=0
+bench exit=0
+alias exit=0
+stress exit=1
+BATTERY-C3B DONE 06 Nov 2026 16:48:56

@@ -574,7 +574,7 @@ async function main() {
     ['perform', 'macros'], ['perform', 'voice'],
     ['sound', 'samples'], ['sound', 'tune'],
     ['shape', 'lfo'],
-    ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
+    ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['deliver', 'deck'], ['deliver', 'deliver'],
     ['system', 'project'], ['system', 'family'], ['system', 'roadmap']
   ];

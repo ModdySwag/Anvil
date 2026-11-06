@@ -1,5 +1,43 @@
 # Anvil — CONTINUATION (2026-10-06)
 
+## SAVE 2026-11-06 16:50 — C3-2 THE MIX DESK FOLDS (owner's call: disclosure); frozen at b9bb4ada
+
+Owner chose **disclosure over sub-tabs** for the heavy pages. The MIX desk is the first one converted,
+and it is the template for the rest.
+
+**What changed (`src/av_mix_ui.js` + `styles.css`)**
+- The deep chain — SENDS, GLUE, MASTER (drive/dyn), AUTO-MIX, A/B — is folded by default. A folded
+  section is `display:none` entirely; ONE row of chips (`.av-adv-chip`, `data-adv=<sect>`) stands in
+  for all five, so five advanced sections cost one line instead of five header rows.
+- A chip expands its section; the section's own head then carries a fold-back toggle
+  (`.av-sec-toggle`, `aria-expanded`). State is per-section, not persisted.
+- The basic face is untouched: head, status, TRACKS, METERS, RENDER/EXPORT, the offline/privacy note.
+- Trap paid: the disclosure was first called with `#av-mix-host`, so the chip row landed BESIDE the
+  `.av-mix` root — visually identical, invisible to a card-scoped `querySelectorAll`. Pass the host,
+  but resolve `root.querySelector('.av-mix') || root` inside the helper before inserting.
+
+**Measured** (density probe; K23 certifies at both widths): mix/mix 2.14/2.53 → **0.93 / 1.05**
+(K23 1280 line reads 1.06). Card 1,225px → 494px at 1440, 471px at 1280.
+
+**Rigs**
+- `cdp_mix` gains leg **1b2**: deep chain folded by default, one chip per section, basic face up, a
+  chip expands and the head toggle folds back. Suite 46 → **47 checks**.
+- `cdp_cockpit`'s pane-scroll leg was an assumption ("the mix page always overflows"); C3 makes pages
+  FIT, so it now asserts the real law — *the window never scrolls, and the pane scrolls only when its
+  content is taller than the pane* — with `overflows` measured, not assumed.
+
+**Gates on b9bb4ada (`verify/battery_c3b.log`)**: 27/28 suites exit=0 first-lap; `cdp_cockpit` 20/21
+on the OLD law (fixed after; 21/21 solo on the same bytes, `verify/last-cdp_cockpit.log`). bench exit=0,
+alias exit=0, stress asserts-not-met 81 underrun deltas (78 → 39 → 21 → 13 → 26 → 12 → 81: the load
+class swings with the box, never a pass/fail). `cdp_mix` 47/47 solo.
+
+**NEXT (same pattern, in measured order):** system/midi 1.91/2.29 · sound/engine 1.88/2.26 ·
+effects 1.86/2.23 · system/code 1.61/1.89 · sequence 1.53/1.81 · sound/fm 1.53/1.78 ·
+sound/wt 1.52/1.77 · sound/chop 1.40/1.62 · shape/matrix 1.31/1.54 · sound/drums 1.17/1.34.
+`av_fx` has no section hooks and its UI lives inside `av_fx.js` — it needs the same `data-sect`
+treatment before it can fold. The mix helper is the template: copy the fold+chip pattern, keep
+`.av-sec-toggle` / `.av-adv-chip` generic, and add the same rig leg per card.
+
 ## SAVE 2026-11-06 13:20 — C3-1 THE DENSITY FLOOR + THE GATE (K23); frozen at d2cbe864
 
 C3's gate (docs/13 §7) is page height ≤ 1.2 × well height at 1440×900 AND 1280×800. Measured on the

@@ -715,7 +715,14 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 
 /* ============================================================================
    S3 — the MIX card (av_mix_ui.js) + the mix & master layer */
-.av-mix { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }
+.av-mix { display: flex; flex-direction: column; gap: 9px; margin: 2px 0 4px; }
+/* C3-3: folded sections are header-only rows, so their rhythm tightens instead of the content's.
+   At the narrow gate the desk also gives back 4px between sections — the note and the meters
+   stay exactly where they were. */
+@media (max-width: 1360px) {
+  .av-mix { gap: 6px; }
+  .av-mix-sect.av-sec-collapsed { padding-top: 3px; }
+}
 .av-mix-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 .av-mix-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
 .av-mix-cap { font-size: 10.5px; color: var(--text-3); }
@@ -725,6 +732,24 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-mix-err { color: #ff8a7a; }
 .av-mix-sect { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--hair); padding-top: 8px; }
 .av-mix-sect-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+/* C3 disclosure (owner's call: basic-first defaults). A folded section keeps its head; the
+   toggle is the last item in the head row and carries aria-expanded. */
+.av-mix-sect.av-sec-collapsed { display: none; }
+.av-mix-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 2px 0; }
+.av-adv-chip {
+  padding: 3px 9px; border: 1px solid var(--hair); border-radius: 10px; background: var(--raised);
+  color: var(--text-2); font: 9px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+}
+.av-adv-chip:hover { border-color: var(--teal); color: var(--teal); }
+.av-adv-chip:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
+.av-sec-toggle {
+  margin-left: auto; flex: none; width: 18px; height: 18px; padding: 0;
+  border: 1px solid var(--hair); border-radius: 4px; background: var(--raised);
+  color: var(--text-2); font: 11px/1 var(--mono); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.av-sec-toggle:hover { border-color: var(--teal); color: var(--teal); }
+.av-sec-toggle:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
 .av-mix-sect-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-3); }
 .av-mix-hint { font-size: 10px; }
 .av-mix-track-n { font-family: var(--mono); font-size: 10px; color: var(--teal); }

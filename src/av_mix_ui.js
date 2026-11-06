@@ -1528,6 +1528,7 @@ function avMixUiSync() {
     try { card = (typeof host.querySelector === "function") ? host.querySelector(".av-mix") : null; } catch (e) { card = null; }
     if (!card) {
       host.innerHTML = avMixUiBodyHTML();
+      try { avMixUiDisclosure(host); } catch (e) { /* sections stay up */ }
       avMixUiState.rowsKey = "";
       avMixUiState.addKey = "";
       avMixUiState.warnKey = "";
@@ -2245,6 +2246,55 @@ function avMixUiStartPoll() {
 
 /* ---------- init (mount, idempotent, re-mountable) ---------- */
 
+
+/* C3 disclosure (owner's call: basic-first defaults). The deep chain — sends, glue, master
+   drive/dyn, auto-mix, A/B — is folded by default. A folded section is not rendered at all; a
+   chip in one row stands in for it, so five advanced sections cost one line instead of five.
+   Expanding puts the section back with its own head (and a collapse toggle in that head). */
+function avMixUiDisclosure(root) {
+  var ADV = [['sends', 'SENDS'], ['glue', 'GLUE'], ['master', 'MASTER'], ['automix', 'AUTO-MIX'], ['ab', 'A/B']];
+  if (!root || typeof root.querySelector !== 'function') return false;
+  var card = root.querySelector('.av-mix') || root;   /* the card, not the host wrapper: the chip row belongs inside it */
+  var row = document.createElement('div');
+  row.className = 'av-mix-adv';
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', 'advanced sections');
+  ADV.forEach(function (pair) {
+    var name = pair[0], label = pair[1];
+    var sec = card.querySelector('[data-sect="' + name + '"]');
+    if (!sec) return;
+    var head = sec.querySelector('.av-mix-sect-head');
+    if (!head || head.querySelector('.av-sec-toggle')) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'av-sec-toggle';
+    btn.textContent = '▸';
+    btn.setAttribute('aria-label', 'Hide the ' + label + ' controls');
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'av-adv-chip';
+    chip.dataset.adv = name;
+    chip.textContent = label;
+    chip.title = 'Show the ' + label + ' controls';
+    function sync() {
+      var folded = sec.classList.contains('av-sec-collapsed');
+      chip.hidden = !folded;
+      btn.textContent = folded ? '▸' : '▾';
+      btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
+      btn.title = (folded ? 'Show the ' : 'Hide the ') + label + ' controls';
+    }
+    chip.addEventListener('click', function () { sec.classList.remove('av-sec-collapsed'); sync(); });
+    btn.addEventListener('click', function () { sec.classList.toggle('av-sec-collapsed'); sync(); });
+    sec.classList.add('av-sec-collapsed');
+    head.appendChild(btn);
+    row.appendChild(chip);
+    sync();
+  });
+  var foot = card.querySelector('.av-mix-foot');
+  if (foot && foot.parentNode === card) card.insertBefore(row, foot); else card.appendChild(row);
+  return true;
+}
+
 function avMixUiInit() {
   const host = avMixUiHost();
   if (!host) return false;
@@ -2253,6 +2303,7 @@ function avMixUiInit() {
     try { card = (typeof host.querySelector === "function") ? host.querySelector(".av-mix") : null; } catch (e) { card = null; }
     if (!card) {
       host.innerHTML = avMixUiBodyHTML();
+      try { avMixUiDisclosure(host); } catch (e) { /* sections stay up */ }
       avMixUiState.rowsKey = "";
       avMixUiState.addKey = "";
       avMixUiState.warnKey = "";

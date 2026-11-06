@@ -19,7 +19,7 @@ const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || exist
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* freeze pin: set to the frozen sha after the R1 build; null = unpinned report */
-const EXPECT_SHA = 'd2cbe8642bfc2be7f5527a5f9eb53d9a743390ca8ae5f8b9b4a5f3152ac5b532';
+const EXPECT_SHA = 'b9bb4ada756e18ca50b58b4677c969382cc98541ee9783646c4903606d9b8a5e';
 
 const candidates = [
   'C:/Program Files/Google/Chrome/Application/chrome.exe',
@@ -192,15 +192,19 @@ async function main() {
   /* 6. internal pane scroll only */
   const scrollR = await ev(`(() => {
     const p = document.getElementById('av-zone-mix');
+    const box = p.querySelector('.av-zone-box');
+    const overflows = !!box && box.scrollHeight > p.clientHeight + 1;
     p.scrollTop = 140;
     const st = p.scrollTop;
     const win = window.scrollY;
     p.scrollTop = 0;
-    return { st: st, win: win, doc: (document.scrollingElement||document.documentElement).scrollHeight };
+    return { st: st, win: win, overflows: overflows, doc: (document.scrollingElement||document.documentElement).scrollHeight };
   })()`);
   const sc = scrollR.value || {};
-  check('pane scroll: the zone scrolls internally (scrollTop > 0) while the window stays at 0',
-    sc.st > 0 && sc.win === 0, JSON.stringify(sc));
+  /* C3: a page that now FITS has nothing to scroll — the law is "the window never scrolls; the pane
+     scrolls only when its content is taller than the pane", not "the mix page always overflows". */
+  check('pane scroll: the pane scrolls internally only when its content overflows, and the window never does',
+    sc.win === 0 && (sc.overflows ? sc.st > 0 : sc.st === 0), JSON.stringify(sc));
 
   /* 7. Alt+4 keyboard shortcut -> shape */
   await send('Input.dispatchKeyEvent', { type: 'keyDown', modifiers: 1, windowsVirtualKeyCode: 52, code: 'Digit4', key: '4' });

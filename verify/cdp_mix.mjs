@@ -110,7 +110,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    S3: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = 'd2cbe8642bfc2be7f5527a5f9eb53d9a743390ca8ae5f8b9b4a5f3152ac5b532';
+const EXPECT_SHA = 'b9bb4ada756e18ca50b58b4677c969382cc98541ee9783646c4903606d9b8a5e';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -532,6 +532,35 @@ async function main() {
   }
   expected(cardUp, '1b card mounted: #av-mix + #av-mix-host + .av-mix root + wired marker (avMixUiWired=1)', cardInfo);
   if (!cardUp) { console.error('MIX CARD MISSING — parent adds the #av-mix card + #av-mix-host and calls avMixUiInit()'); process.exit(1); }
+
+  /* 1b2. C3 disclosure (owner's call: basic-first defaults): the deep chain — sends, glue,
+     master drive/dyn, auto-mix, A/B — is folded by default, one chip stands in for each folded
+     section, the basic face (tracks · meters · render) stays up, and a chip expands its section
+     which then carries a fold-back toggle in its head. */
+  const foldR = await ev(`(() => {
+    const root = document.querySelector('#av-mix-host .av-mix') || document.querySelector('.av-mix');
+    if (!root) return { root: false };
+    const adv = ['sends', 'glue', 'master', 'automix', 'ab'];
+    const chips = Array.from(root.querySelectorAll('.av-adv-chip')).map((c) => (c.textContent || '').trim());
+    const folded = adv.map((n) => { const sec = root.querySelector('[data-sect="' + n + '"]'); return sec ? getComputedStyle(sec).display === 'none' : null; });
+    const face = ['tracks', 'meters', 'render'].map((n) => { const sec = root.querySelector('[data-sect="' + n + '"]'); return sec ? getComputedStyle(sec).display !== 'none' : null; });
+    const first = root.querySelector('[data-sect="sends"]');
+    const chip = root.querySelector('.av-adv-chip[data-adv="sends"]');
+    let expanded = false, refolded = false;
+    if (chip && first) {
+      chip.click();
+      expanded = getComputedStyle(first).display !== 'none';
+      const t = first.querySelector('.av-sec-toggle');
+      if (t) { t.click(); refolded = getComputedStyle(first).display === 'none'; }
+    }
+    return { root: true, chips: chips, folded: folded, face: face, expanded: expanded, refolded: refolded };
+  })()`);
+  const fv = val(foldR) || {};
+  const wantChips = ['SENDS', 'GLUE', 'MASTER', 'AUTO-MIX', 'A/B'];
+  const chipsOk = wantChips.every((w) => (fv.chips || []).indexOf(w) >= 0);
+  expected(fv.root === true && chipsOk && (fv.folded || []).every((x) => x === true)
+    && (fv.face || []).every((x) => x === true) && fv.expanded === true && fv.refolded === true,
+    '1b2 disclosure: deep chain folded by default (sends/glue/master/auto-mix/A-B), one chip each, basic face up, chip expands and the head toggle folds back', J(fv));
 
   /* 1c. tolerant control discovery (labels/classes/ids/data-attrs scanned) */
   const ctrlR = await ev(`(() => {
