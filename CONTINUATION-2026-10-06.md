@@ -30,7 +30,12 @@ was contaminated because a solo `cdp_sessions` run overlapped it (376 deltas), a
 stress (543) ran while the battery's Edge teardown was still settling. Both numbers are recorded raw in
 `verify/last-cdp_stress.log` and `verify/probe-stress-solo.log`; the session's clean readings ranged
 78 → 39 → 21 → 13 → 26 → 12 → 81, so 376/543 are load artefacts, not a trend. Do not quote them as a
-regression.
+regression. The follow-up clean re-run also failed to produce a receipt: the launcher died immediately
+with `stdin is not a tty` and `verify/last-cdp_stress.log` never moved off 17:35 (the "3 stress
+processes" seen afterwards were the inspection commands themselves matching their own search string —
+not rigs). **Stress on 570727f3 has NO valid receipt.** Next session: run
+`node verify/cdp_stress.mjs` from an interactive shell on an otherwise idle box, confirm the log's
+mtime advances, and only then record the deltas.
 
 **NEXT**: sound/engine 1.88/2.26 · effects 1.86/2.23 · system/code 1.61/1.89 · sequence 1.53/1.81 ·
 sound/fm 1.53/1.78 · sound/wt 1.52/1.77 · sound/chop 1.40/1.62 · shape/matrix 1.31/1.54 ·
