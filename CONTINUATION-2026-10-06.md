@@ -1,5 +1,41 @@
 # Anvil — CONTINUATION (2026-10-06)
 
+## SAVE 2026-11-06 17:45 — C3-3 THE MIDI PANEL FOLDS; frozen at 570727f3
+
+Second card converted to the disclosure pattern the owner chose. MIDI was the worst page in the tree
+(1.91 / 2.26 at 1440/1280).
+
+**What changed (`src/av_midi.js`, `styles.css`)**
+- All nine sections now carry `data-sect`; the MPE panel is wrapped in `[data-sect="mpe"]`.
+- `avMidiFoldInit()` folds **PLAY IN · CLOCK OUT · MPE · CC → PARAM · MONITOR IN · MONITOR OUT** behind
+  one chip row. The face keeps **WEB MIDI · INPUTS · OUTPUTS** and the CLEAR MONITOR row. Same contract
+  as the MIX desk: folded = `display:none`, one chip per section, the section label carries the
+  fold-back toggle (`.av-sec-toggle`, `aria-expanded`).
+- Narrow-width rhythm: `.av-midi` gap 12 → 4 and `.av-midi-sec` gap 6 → 3 at ≤1360. No text is hidden.
+
+**Measured**: system/midi 1.91 / 2.26 → **1.09 / 1.20** (1.196 at 1280 — 2px of slack, not a rounding
+pass). K23 now claims `['mix','mix']` and `['system','midi']` (18 views).
+
+**`cdp_midi` (33/33)**: the fold broke three legs at first — PLAY-IN and both CC-learn checks click by
+COORDINATES, and a `display:none` target is refused ("click target not visible"). Fix: `clickSel` now
+expands any folded section whose chip is offered before resolving the target. The folded DEFAULT has no
+dedicated leg of its own — it is pinned indirectly by K23's `system/midi` claim (the page only fits
+while the fold holds); a per-card "chip expands" leg exists for MIX (1b2) and should be copied to MIDI.
+
+**Gates on 570727f3 (`verify/battery_c3c.log`)**: 27/28 suites exit=0 first-lap; `cdp_sessions` 64/65
+in-battery = the documented knife-edge (version ring), **65/65 solo** on identical bytes
+(`verify/probe-sessions-solo.log`). bench exit=0, alias exit=0.
+**Stress is INCONCLUSIVE on this build and must be re-run on a quiet box.** The battery's own stress
+was contaminated because a solo `cdp_sessions` run overlapped it (376 deltas), and the follow-up solo
+stress (543) ran while the battery's Edge teardown was still settling. Both numbers are recorded raw in
+`verify/last-cdp_stress.log` and `verify/probe-stress-solo.log`; the session's clean readings ranged
+78 → 39 → 21 → 13 → 26 → 12 → 81, so 376/543 are load artefacts, not a trend. Do not quote them as a
+regression.
+
+**NEXT**: sound/engine 1.88/2.26 · effects 1.86/2.23 · system/code 1.61/1.89 · sequence 1.53/1.81 ·
+sound/fm 1.53/1.78 · sound/wt 1.52/1.77 · sound/chop 1.40/1.62 · shape/matrix 1.31/1.54 ·
+sound/drums 1.17/1.34. `av_fx` still has no section hooks (UI lives in `av_fx.js`).
+
 ## SAVE 2026-11-06 16:50 — C3-2 THE MIX DESK FOLDS (owner's call: disclosure); frozen at b9bb4ada
 
 Owner chose **disclosure over sub-tabs** for the heavy pages. The MIX desk is the first one converted,

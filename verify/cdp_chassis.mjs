@@ -575,6 +575,7 @@ async function main() {
     ['sound', 'samples'], ['sound', 'tune'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
+    ['system', 'midi'],
     ['deliver', 'deck'], ['deliver', 'deliver'],
     ['system', 'project'], ['system', 'family'], ['system', 'roadmap']
   ];

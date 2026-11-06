@@ -1,7 +1,7 @@
-index.html sha256 (before): b9bb4ada756e18ca50b58b4677c969382cc98541ee9783646c4903606d9b8a5e
+index.html sha256 (before): 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1793944431696
- ok   freeze: index.html sha256 before = 5861d7d6…  -> b9bb4ada756e18ca50b58b4677c969382cc98541ee9783646c4903606d9b8a5e
+cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1793946614797
+ ok   freeze: index.html sha256 before = 5861d7d6…  -> 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
  ok   boot: data-av-ready flips (with the stub injected pre-boot)
  ok   boot: MIDI deck mounted (#av-midi-body .av-midi) + __avMidi API + stub alive  -> {"panel":true,"api":true,"snapFn":true,"stub":true,"ourClass":true}
  ok   unsupported: honest no-Web-MIDI copy (NO WEB MIDI · Safari named)  -> status=unsupported · NO WEB MIDI Web MIDI is missing in this browser, so hardware keys and hardware out are both off the table here. Chrome, 
@@ -38,10 +38,10 @@ cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1793944431
  ok   clock out: transport(false) sends 0xFC and the wire freezes  -> ticking=false · FC at 0/1 · last=[252]
  ok   clock out: the wire stays frozen after the stop byte  -> 35 → 35
    · CLOCK OUT: restart, then OFF (real click) must stop it
- ok   clock out: OFF (real click) stops a running clock — 0xFC sent, wire frozen, pref off  -> was ticking=true · FC at 10/11 · frozen 62=62
+ ok   clock out: OFF (real click) stops a running clock — 0xFC sent, wire frozen, pref off  -> was ticking=true · FC at 11/12 · frozen 63=63
  ok   zero console errors for the whole run (exceptions · Log errors · console.error · stub listener errors)  -> page errors=0 · stub listener errors=0
- ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 237969 bytes · clip 1052×1462 @2x
-index.html sha256 (after): b9bb4ada756e18ca50b58b4677c969382cc98541ee9783646c4903606d9b8a5e
- ok   freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)  -> b9bb4ada756e18ca50b58b4677c969382cc98541ee9783646c4903606d9b8a5e
+ ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 192845 bytes · clip 1052×670 @2x
+index.html sha256 (after): 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
+ ok   freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)  -> 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
 
 33 passed, 0 failed

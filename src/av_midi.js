@@ -438,6 +438,53 @@ function avMidiLearnStateText() {
   return avMidiCcBinds.length ? avMidiCcBinds.length + " binding" + (avMidiCcBinds.length === 1 ? "" : "s") : "idle";
 }
 
+/* C3 disclosure (owner's call: basic-first defaults). The setup surface - web midi, inputs,
+   outputs - stays on the face; the deep routing (play-in, clock, MPE, CC learn, both monitors)
+   folds behind one row of chips. Folded = display:none; a chip expands its section, whose label
+   then carries a fold-back toggle. Same contract as the MIX desk (avMixUiDisclosure). */
+function avMidiFoldInit(root) {
+  var card = (root && root.querySelector && root.querySelector('.av-midi')) || root;
+  if (!card || !card.querySelector) return false;
+  var ADV = [['play', 'PLAY IN'], ['clock', 'CLOCK OUT'], ['mpe', 'MPE'], ['cc', 'CC → PARAM'], ['monin', 'MONITOR IN'], ['monout', 'MONITOR OUT']];
+  var row = document.createElement('div');
+  row.className = 'av-mix-adv';
+  row.setAttribute('role', 'group');
+  row.setAttribute('aria-label', 'advanced midi sections');
+  ADV.forEach(function (pair) {
+    var name = pair[0], label = pair[1];
+    var sec = card.querySelector('[data-sect="' + name + '"]');
+    if (!sec) return;
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'av-sec-toggle';
+    btn.textContent = '▸';
+    var chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'av-adv-chip';
+    chip.dataset.adv = name;
+    chip.textContent = label;
+    chip.title = 'Show the ' + label + ' controls';
+    function sync() {
+      var folded = sec.classList.contains('av-sec-collapsed');
+      chip.hidden = !folded;
+      btn.textContent = folded ? '▸' : '▾';
+      btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
+      btn.setAttribute('aria-label', 'Hide the ' + label + ' controls');
+    }
+    chip.addEventListener('click', function () { sec.classList.remove('av-sec-collapsed'); sync(); });
+    btn.addEventListener('click', function () { sec.classList.toggle('av-sec-collapsed'); sync(); });
+    sec.classList.add('av-sec-collapsed');
+    var b = sec.querySelector('b');
+    if (b) b.appendChild(btn); else sec.insertBefore(btn, sec.firstChild);
+    row.appendChild(chip);
+    sync();
+  });
+  var actions = null;
+  Array.prototype.forEach.call(card.children, function (k) { if (!actions && k.classList && k.classList.contains('av-midi-actions')) actions = k; });
+  if (actions) card.insertBefore(row, actions); else card.appendChild(row);
+  return true;
+}
+
 function avMidiPanelHTML() {
   const supported = avMidiSupported();
   const enabled = avMidiStatus === "enabled";
@@ -447,7 +494,7 @@ function avMidiPanelHTML() {
   const devIn = avMidiSelectedInput();
   return '<div class="av-midi">' +
 
-    '<div class="av-midi-sec"><b>WEB MIDI</b>' +
+    '<div class="av-midi-sec" data-sect="web"><b>WEB MIDI</b>' +
       avMidiStatusHTML() +
       '<p class="av-midi-cap" id="av-midi-say">' + avMidiEsc(avMidiSayState) + '</p>' +
       '<div class="av-midi-actions">' +
@@ -459,11 +506,11 @@ function avMidiPanelHTML() {
       '<p class="av-midi-cap">MIDI is a browser permission, not a setting: it needs a real click (this ENABLE button), it is never remembered across a reload, and pages opened over https or as a local file can both ask. No sysex, no extra download. If the browser has no Web MIDI there is nothing to enable — the panel says so instead of pretending.</p>' +
     '</div>' +
 
-    '<div class="av-midi-sec"><b>INPUTS</b><div id="av-midi-dev-in">' + avMidiDevRowsHTML("in") + '</div></div>' +
+    '<div class="av-midi-sec" data-sect="inputs"><b>INPUTS</b><div id="av-midi-dev-in">' + avMidiDevRowsHTML("in") + '</div></div>' +
 
-    '<div class="av-midi-sec"><b>OUTPUTS</b><div id="av-midi-dev-out">' + avMidiDevRowsHTML("out") + '</div></div>' +
+    '<div class="av-midi-sec" data-sect="outputs"><b>OUTPUTS</b><div id="av-midi-dev-out">' + avMidiDevRowsHTML("out") + '</div></div>' +
 
-    '<div class="av-midi-sec"><b>PLAY IN</b>' +
+    '<div class="av-midi-sec" data-sect="play"><b>PLAY IN</b>' +
       '<div class="av-midi-row">' +
         '<button class="av-btn mini' + (playIn ? " on" : "") + '" data-midi="playin" data-midival="1">ON</button>' +
         '<button class="av-btn mini' + (playIn ? "" : " on") + '" data-midi="playin" data-midival="0">OFF</button>' +
@@ -474,7 +521,7 @@ function avMidiPanelHTML() {
       '<div class="av-midi-row"><span class="av-midi-cap">HELD NOW</span><b class="av-midi-note" id="av-midi-held">' + (avMidiHeld.size ? avMidiEsc([...avMidiHeld].join(" ")) : "—") + '</b></div>' +
     '</div>' +
 
-    '<div class="av-midi-sec"><b>CLOCK OUT</b>' +
+    '<div class="av-midi-sec" data-sect="clock"><b>CLOCK OUT</b>' +
       '<div class="av-midi-row">' +
         '<button class="av-btn mini' + (clockOn ? " on" : "") + '" data-midiclock="on" title="send MIDI clock (0xFA/0xF8/0xFC) to the OUTPUT selected above">ON</button>' +
         '<button class="av-btn mini' + (clockOn ? "" : " on") + '" data-midiclock="off" title="send nothing, even if the transport runs">OFF</button>' +
@@ -484,9 +531,9 @@ function avMidiPanelHTML() {
       '<div class="av-midi-row"><span class="av-midi-cap">TICKS SENT</span><b class="av-midi-stat" id="av-midi-clock-ticks">' + avMidiEsc(avMidiClockTicksText()) + '</b></div>' +
     '</div>' +
 
-    (typeof avMpeDeckPanelHTML === "function" ? avMpeDeckPanelHTML() : "") +
+    '<div data-sect="mpe">' + (typeof avMpeDeckPanelHTML === "function" ? avMpeDeckPanelHTML() : "") + '</div>' +
 
-    '<div class="av-midi-sec"><b>CC → PARAMETER</b>' +
+    '<div class="av-midi-sec" data-sect="cc"><b>CC → PARAMETER</b>' +
       '<div class="av-midi-actions">' +
         '<button class="av-btn mini' + (armed ? " on" : "") + '" data-midilearn="arm" title="arm CC learn — the next CC selects the controller">' + (armed ? "LEARN ARMED — CANCEL" : "ARM LEARN") + '</button>' +
         '<button class="av-btn mini" data-midilearn="clear" title="forget every binding">CLEAR ALL</button>' +
@@ -496,9 +543,9 @@ function avMidiPanelHTML() {
       '<p class="av-midi-cap">Arm, move one knob on the hardware (the first CC picks the controller; channel-mode CC 120–127 are refused — that is not a knob), then click an av-knob: the click is swallowed, so binding never turns it. That CC then drives the parameter through avApplyParam — the same funnel the knob uses — and the on-screen knob repaints, never re-commits. One controller per parameter, one parameter per controller. Bindings are saved in this browser (av-midi-cc) and can be removed one by one ✕.</p>' +
     '</div>' +
 
-    '<div class="av-midi-sec"><b>MONITOR IN <span class="av-midi-cap" id="av-midi-count-in"></span></b><div id="av-midi-mon-in" class="av-midi-mon"></div></div>' +
+    '<div class="av-midi-sec" data-sect="monin"><b>MONITOR IN <span class="av-midi-cap" id="av-midi-count-in"></span></b><div id="av-midi-mon-in" class="av-midi-mon"></div></div>' +
 
-    '<div class="av-midi-sec"><b>MONITOR OUT <span class="av-midi-cap" id="av-midi-count-out"></span></b><div id="av-midi-mon-out" class="av-midi-mon"></div></div>' +
+    '<div class="av-midi-sec" data-sect="monout"><b>MONITOR OUT <span class="av-midi-cap" id="av-midi-count-out"></span></b><div id="av-midi-mon-out" class="av-midi-mon"></div></div>' +
 
     '<div class="av-midi-actions">' +
       '<button class="av-btn mini" data-midi="clear">CLEAR MONITOR</button>' +
@@ -514,6 +561,7 @@ function avMidiRender() {
   const host = document.getElementById("av-midi-body");
   if (!host) return false;
   host.innerHTML = avMidiPanelHTML();
+  try { avMidiFoldInit(host); } catch (e) { /* sections stay up */ }
   try { if (typeof avMpeDeckWire === "function") avMpeDeckWire(host); } catch (e) { /* the MPE row is additive */ }
   avMidiDrawMonitor();
   return true;

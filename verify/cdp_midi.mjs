@@ -33,7 +33,7 @@ const page = path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after. */
-const EXPECT_SHA = 'b9bb4ada756e18ca50b58b4677c969382cc98541ee9783646c4903606d9b8a5e';
+const EXPECT_SHA = '570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7';
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
 console.log('index.html sha256 (before): ' + shaBefore);
@@ -227,6 +227,10 @@ async function main() {
     }
   };
   const clickSel = async (sel, after = 300) => {
+    /* C3 folds (owner's call: basic-first): a folded section is display:none and cannot be clicked
+       at coordinates. Expand any folded section whose chip is offered first — the folded DEFAULT
+       itself is pinned by K23's system/midi claim (the page only fits while it stays folded). */
+    await ev(`(() => { document.querySelectorAll('.av-adv-chip').forEach((c) => { if (!c.hidden) c.click(); }); return true; })()`);
     const found = await ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return false; if (e.scrollIntoView) e.scrollIntoView({ block: 'center', inline: 'center' }); return true; })()`);
     if (found.value !== true) { note('click target missing: ' + sel); return false; }
     await sleep(200);
