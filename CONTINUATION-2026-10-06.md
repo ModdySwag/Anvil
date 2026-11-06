@@ -4,7 +4,7 @@
 
 ### STATE (proven, not claimed)
 - C3-9 commit `297e9d1` (on top of `4006ae3`, `49e60ad`, `0e51c3f`). Bundle `index.html` sha256
-  `76b8e141ca3c35820f9bf8e0c989b208770d10bd49c88f9ac00b80f8e62251e7`, **4,768,296 B**. Tree clean.
+  `76b8e141ca3c35820f9bf8e0c989b208770d10bd49c88f9ac00b80f8e62251e7`, **4,775,206 B**. Tree clean.
 - All 23 `verify/cdp_*.mjs` pins == that sha (swept old→new from `8ad8e4b7`; `STALE REMAINING: none`).
 - Battery **c3k** (`verify/battery_c3k.log`): **27/28 suites exit=0**, bench exit=0, alias exit=0,
   stress **20** deltas (band 12–125). The one red is **cdp_hub's reload legs** ("receipts survive
