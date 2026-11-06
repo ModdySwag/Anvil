@@ -568,11 +568,11 @@ async function main() {
      1.2x the well height at BOTH widths. The list grows as each view is rebuilt; a view that
      regresses past 1.2 fails the chassis. A null sub = a zone with no sub-tabs (effects).
      Unclaimed views are the outstanding C3 rebuilds (system/code, sequence,
-     sound/engine|fm|chop|wt|drums, shape/matrix) -- see CONTINUATION for the measured table. */
+     sound/wt, shape/matrix) -- see CONTINUATION for the measured table. */
   const DENSITY_CLAIMED = [
     ['browse', 'packs'], ['browse', 'import'], ['browse', 'sessions'],
     ['perform', 'macros'], ['perform', 'voice'],
-    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'], ['sound', 'chop'],
+    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'], ['sound', 'chop'], ['sound', 'fm'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['effects', null],
@@ -691,6 +691,48 @@ async function main() {
     chopDisc.card === true && chopDisc.present === true && chopFoldOk && chopOpenOk && chopBackOk
     && chopDisc.pads === 16 && chopDisc.chipVisible === true && (chopDisc.chip || '').indexOf('MAP') >= 0,
     JSON.stringify(chopDisc));
+
+  /* K24c -- the FM card's C3-7 body: the algorithm rail (picker + routing view) sits BESIDE the
+     operator editor, not above it, and the active operator's eight knobs share one line. No fold
+     here: every FM control stays on the face, the density comes from the layout. */
+  const fmBody = (await ev(`(() => {
+    try { const b = document.querySelector('#av-zone-sound .av-subtab[data-sub="fm"]'); if (!b) return { sub: false }; b.click(); } catch (e) { return { sub: false }; }
+    const card = document.querySelector('#av-fm .av-fm');
+    if (!card) return { card: false };
+    const main = card.querySelector(':scope > .av-fm-main');
+    const rail = main ? main.querySelector(':scope > .av-fm-top') : null;
+    const editor = main ? main.querySelector(':scope > .av-fm-ops') : null;
+    const view = card.querySelector('#av-fm-algo-view');
+    const globals = card.querySelectorAll('.av-fm-globals .av-knob[data-knob]').length;
+    const tabs = card.querySelectorAll('.av-fm-op-tab[data-op]').length;
+    const shown = (e) => !!e && getComputedStyle(e).display !== 'none';
+    const out = {
+      card: true, main: !!main, rail: !!rail, editor: !!editor,
+      railFirst: !!(main && main.firstElementChild === rail),
+      pick: !!(rail && rail.querySelector('#av-fm-algo')),
+      view: !!(view && view.querySelector('svg.av-fm-svg')),
+      globals: globals, tabs: tabs,
+      sameLine: null, n: null, op3: null, op1: null,
+    };
+    const knobs = [...card.querySelectorAll('.av-fm-op-panel.av-fm-op-on .av-knob-wrap')];
+    out.n = knobs.length;
+    const tops = knobs.map(k => Math.round(k.getBoundingClientRect().top));
+    out.sameLine = out.n === 8 && Math.max(...tops) - Math.min(...tops) <= 2;
+    const t3 = card.querySelector('.av-fm-op-tab[data-op="3"]');
+    if (t3) {
+      t3.click();
+      out.op3 = shown(card.querySelector('[data-op-panel="3"]')) && !shown(card.querySelector('[data-op-panel="1"]'));
+      const t1 = card.querySelector('.av-fm-op-tab[data-op="1"]');
+      if (t1) { t1.click(); out.op1 = shown(card.querySelector('[data-op-panel="1"]')); }
+    }
+    return out;
+  })()`)).value || {};
+  check('K24c FM body: the algorithm rail (picker + painted routing view) sits beside the operator editor, and all eight knobs of the active operator share one line — every control on the face, nothing folded',
+    fmBody.card === true && fmBody.main === true && fmBody.rail === true && fmBody.editor === true
+    && fmBody.railFirst === true && fmBody.pick === true && fmBody.view === true
+    && fmBody.globals === 2 && fmBody.tabs === 6 && fmBody.sameLine === true && fmBody.n === 8
+    && fmBody.op3 === true && fmBody.op1 === true,
+    JSON.stringify(fmBody));
 
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));

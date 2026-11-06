@@ -1,6 +1,107 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-06 21:35 (session 22, FINAL SAVE). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVE 2026-11-06 22:50 (session 23). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- HEAD `9ab374c` (C3-7, on top of `4a8b5ae`). Bundle `index.html` sha256
+  `a731996911021f5d092d02b33a80d7c58518c34906cf9a0d5ca48fc0a9a279e4`, **4,765,298 B**. Tree clean.
+- All 23 `verify/cdp_*.mjs` pins == that sha (swept old→new from `d6f54566`; `STALE REMAINING: none`).
+- Battery **c3i** (`verify/battery_c3i.log`): **28/28 suites exit=0 FIRST-LAP, zero FAIL lines**;
+  bench exit=0; alias exit=0; stress verdict `asserts-not-met` with **64** underrun deltas
+  (the documented load class — band 12–125; c3g 123, c3h 125, c3e 21; shape = the cap-phase
+  uni>3 over-drive probe, drains 15/15 ok, page errors 0).
+- VERIFY AT SESSION START, before touching anything: `node verify/cdp_chassis.mjs` (29 checks incl.
+  K24c) · `node verify/cdp_fx.mjs` (28) · `node verify/cdp_m2.mjs` (40).
+
+### WHAT LANDED (C3-7 — FM is a two-column card, not a fold)
+`av_fm_ui.js`: the body is `.av-fm-main` — the **algorithm rail** (`.av-fm-top`: picker + painted
+routing view) beside the **operator editor** (`.av-fm-ops`: `.av-fm-headrow` = six OP tabs with
+FEEDBACK/VOLUME pushed to the right end, then `.av-fm-panels`). Status line stays full width under
+both columns. `styles.css`: `.av-fm-main` flex row, gap 18; `.av-fm-headrow` flex with
+`.av-fm-globals { margin-left:auto }`; **`.av-fm-op-body` is now a row** — the eight operator knobs
+share one line (voice group, 22px, envelope group).
+- **MEASURED: sound/fm 1.272 / 1.464 → 0.944 / 1.071** (1440 / 1280). Card **469 → 271**
+  (head 17 · main 219 = rail 158 | editor 219 [headrow 84 + panels 127] · status 15).
+  Nothing folded: every FM control is on the face.
+- K23 claims **`['sound','fm']`** (23 views). Chassis leg **K24c** pins the contract: `.av-fm-main`
+  exists with the rail as its first child, picker + `svg.av-fm-svg` inside the rail, 6 tabs,
+  exactly 2 globals, all eight `.av-knob-wrap` of the active panel share a top (≤2px), OP 3 then
+  OP 1 switch.
+- Header comment + `avFmUiClasses()` carry `.av-fm-main` and `.av-fm-headrow`.
+
+### THE LESSON THIS PASS PAID (new — trap 11)
+A card that is 376px on a 504px well cannot be saved by trimming one row. Merging the two knob rows
+cut 93px and still read **1.28** at 1280, because the zone chrome above the card (firstrun bar +
+engine chips + LEVELS head + sub-tabs ≈ 170px) rides on top of it. The ratio is a property of the
+card's SHAPE: the FM card was 1014px wide and used ~550 of it. Two columns spent the idle width and
+removed 198px of height without folding a control. Before shrinking ink (diagram, labels) or folding
+a control, ask whether the width is being wasted — and measure the zone chrome before budgeting.
+
+### WHAT WE STILL HAVE TO DO
+**A. The last C3 page rebuilds — NOT folds; each needs restructuring. RE-MEASURE FIRST.**
+
+| view | 1440 / 1280 | what it needs |
+|---|---|---|
+| sound/wt | 1.262 / 1.452 | **NEXT.** `av_wt_ui.js` is a TEN-block single column (8px gaps): head (title + cap + NAME) · status · stage (canvas 160 + cap) · tools · frames · morph A→B · harmonics ≤N · library · actions · note. Rowprobe `.av-wt` for the block heights first. The canvas is the work surface and stays; the strips are the candidates (tools\|frames, morph\|harmonics), and the library grows once tables are installed. |
+| system/code | 1.61 / 1.89 | `av_code_ui.js` monolithic — needs `data-sect` hooks written in, then a fold. |
+| sequence | 1.53 / 1.81 | `av_seq_ui.js` monolithic — same treatment. |
+| shape/matrix | 1.31 / 1.54 | two-column measured WORSE (1.31→1.35); needs a real slot redesign. |
+
+**B. The six planned C3 screens (docs/13 §C3, in this order):**
+1. **Filters group** — the filter response screen inside the SOUND engine card beside the pots.
+2. **Envelopes group** — amp/filter/aux overlaid in their operator colours; drag = the same three moves.
+3. **EFFECTS per slot** — drive curve · dyn gain-reduction meter · delay tap timeline · verb decay tail · mod LFO shape.
+4. **MIX** — EQ response curve on the master chain + per-track mini waveform in the strip.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), rows stay advanced.
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+Rule: a screen never blocks a control, carries no chrome beyond its inset, and prints its own units.
+
+**C. C4 control language** — steppers, pairs, the groups sweep.
+**D. C5 disclosure everywhere** — focus order, tab semantics, advanced-collapsed defaults.
+**E. C6 release** — shots, pins, battery, installer, deploy **v1.15.0**; the live site is still the
+2026-10-09 build (`moddys.net/anvil`, frozen e99ea8e5): **nothing from this wave is deployed.**
+**F. Open from C2:** mono is not per-patch (`env.mono` is not in the pack/preset schema);
+latency/buffer has no LCD cell (`verify/_c2_wave.md` §5).
+
+### TRAPS — every one of these has already cost a session
+1. **Cascade:** a card's own `display:flex` on its section class beats `.av-sec-collapsed` at equal
+   specificity when it sits later in `styles.css` — the class applies and nothing moves. Do not
+   weaken the `!important`.
+2. **A fold that hides an INTERACTIVE CONTROL breaks rigs** (knob_feel drag, a11y focus, midi CC-learn).
+   Grep the rig set for the selectors of anything that folds; give each rig an expand step.
+3. **A wrapper around "the rest of the card" can swallow the working surface** — read the child order.
+4. **autocrlf:** `index.html`/`sw.js` are `-text`; if a checkout moves the sha, REBUILD.
+5. **Pin sweep:** old→new only (`cache/scratch/sweep_pins.py --old <sha>`); never "any 64-hex".
+6. **`Target crashed`** = exit 1 with 0 checks. Re-run solo before touching code.
+7. **Never run a second browser during a battery** (contamination reads 376/543 deltas).
+8. **K23 null safety:** `null <= 1.2` is TRUE — a broken measurement must fail explicitly.
+9. **Cockpit pane law:** the window never scrolls; the pane scrolls only when its content is taller.
+10. **Knife-edge legs exist** (cdp_store install-progress, cdp_sessions version ring) — prove solo.
+11. **A tight card on a chrome-heavy page cannot be fixed by one row** — budget the zone chrome
+    (~170px in SOUND) before designing, and look at the idle width before shrinking ink.
+
+### WAITING ON THE OWNER (his gate, not a screenshot)
+- Eye pass on the five folded surfaces: MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP — plus
+  the new FM two-column shape (no fold, but a new layout).
+- A verdict on folding the LEVELS card (one-line revert if vetoed; SOUND loses its fit).
+
+### TOOLS IN THE REPO NOW
+`cache/scratch/cardprobe.mjs <zone> [sub] [shotName]` — ratios at 1440/1280 + the block tree.
+`cache/scratch/rowprobe.mjs <zone> <sub|-> "<selector>"` — one container's children, heights/widths.
+`cache/scratch/views.mjs <zone> [sub|-] [width] [name]` — full-viewport PNG at a chosen width.
+`cache/scratch/fmlab.mjs` / `fmlab2.mjs` — test a card structure LIVE (DOM move + injected CSS) and
+print ratios at both widths BEFORE rebuilding; copy this pattern for WT.
+`cache/scratch/sweep_pins.py --old <sha>` · `battery_c3*.sh` templates. (cache/ is gitignored.)
+
+### FIRST MOVES NEXT SESSION
+1. Read this block. Verify at `a7319969`: chassis (29), fx (28), m2 (40).
+2. `node cache/scratch/rowprobe.mjs sound wt ".av-wt"` → block heights, then decide WT's shape
+   (canvas stays; pair or fold the strips) with a lab probe before rebuilding. WT is the next real
+   rebuild.
+3. Then system/code, sequence, matrix — re-measure each before designing.
+4. Then the six screens (B), then C4, C5, C6.
+
+## SAVE 2026-11-06 21:35 (session 22, FINAL SAVE) — superseded by the block above
 
 ### STATE (proven, not claimed)
 - HEAD `4a8b5ae`. Bundle `index.html` sha256

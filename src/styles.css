@@ -1165,7 +1165,18 @@ body.av-palette-open { }
 .av-fm-node { fill: var(--panel); stroke: var(--text-3); stroke-width: 1.5; }
 .av-fm-car { fill: #0d2422; stroke: var(--teal); }
 .av-fm-node-lbl { fill: var(--text-2); }
-.av-fm-globals { align-self: center; }
+/* C3-7: the FM card body is two columns — the ALGORITHM rail (pick + routing view) on the left,
+   the OPERATOR editor (tab strip + globals, then the eight op knobs on one line) on the right.
+   Stacking them cost 376px on a 504px well at 1280; side by side the card is 271 and no control
+   is folded. The op knobs were two rows of four on a 992px card that used ~550 of it. */
+.av-fm-main { display: flex; gap: 18px; align-items: flex-start; }
+.av-fm-main > .av-fm-top { flex: 0 0 auto; margin: 0; }
+.av-fm-main > .av-fm-ops { flex: 1 1 auto; min-width: 0; }
+.av-fm-headrow { display: flex; align-items: flex-start; gap: 12px; }
+.av-fm-headrow .av-fm-tabs { flex: 0 0 auto; margin-top: 2px; }
+/* the globals ride the right end of the tab strip: engine trims next to the operator picker */
+.av-fm-headrow .av-fm-globals { align-self: flex-start; margin-left: auto; }
+.av-fm-globals { align-self: flex-start; }
 .av-fm-ops { display: flex; flex-direction: column; gap: 8px; }
 .av-fm-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .av-fm-op-tab { }
@@ -1175,7 +1186,11 @@ body.av-palette-open { }
 .av-fm-op-head { display: flex; align-items: baseline; gap: 8px; }
 .av-fm-op-num { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--teal); }
 .av-fm-op-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
-.av-fm-op-body { display: flex; flex-direction: column; gap: 8px; }
+/* C3-7: the eight operator knobs sit on ONE line — voice group (ratio·detune·level·vel) then
+   envelope group (att·dec·sus·rel). Two stacked rows cost 93px on a card whose rows only use
+   ~550 of 992px; side by side the op panel drops 219 -> 125 and sound/fm meets the gate without
+   folding a single control. At 1280 the two groups need 550px of ~800 — it wraps harmlessly. */
+.av-fm-op-body { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 10px 22px; }
 .av-fm-op-main { }
 .av-fm-op-env { }
 .av-fm-status { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 0; overflow-wrap: anywhere; }

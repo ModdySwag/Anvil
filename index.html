@@ -1188,7 +1188,18 @@ body.av-palette-open { }
 .av-fm-node { fill: var(--panel); stroke: var(--text-3); stroke-width: 1.5; }
 .av-fm-car { fill: #0d2422; stroke: var(--teal); }
 .av-fm-node-lbl { fill: var(--text-2); }
-.av-fm-globals { align-self: center; }
+/* C3-7: the FM card body is two columns — the ALGORITHM rail (pick + routing view) on the left,
+   the OPERATOR editor (tab strip + globals, then the eight op knobs on one line) on the right.
+   Stacking them cost 376px on a 504px well at 1280; side by side the card is 271 and no control
+   is folded. The op knobs were two rows of four on a 992px card that used ~550 of it. */
+.av-fm-main { display: flex; gap: 18px; align-items: flex-start; }
+.av-fm-main > .av-fm-top { flex: 0 0 auto; margin: 0; }
+.av-fm-main > .av-fm-ops { flex: 1 1 auto; min-width: 0; }
+.av-fm-headrow { display: flex; align-items: flex-start; gap: 12px; }
+.av-fm-headrow .av-fm-tabs { flex: 0 0 auto; margin-top: 2px; }
+/* the globals ride the right end of the tab strip: engine trims next to the operator picker */
+.av-fm-headrow .av-fm-globals { align-self: flex-start; margin-left: auto; }
+.av-fm-globals { align-self: flex-start; }
 .av-fm-ops { display: flex; flex-direction: column; gap: 8px; }
 .av-fm-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .av-fm-op-tab { }
@@ -1198,7 +1209,11 @@ body.av-palette-open { }
 .av-fm-op-head { display: flex; align-items: baseline; gap: 8px; }
 .av-fm-op-num { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--teal); }
 .av-fm-op-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
-.av-fm-op-body { display: flex; flex-direction: column; gap: 8px; }
+/* C3-7: the eight operator knobs sit on ONE line — voice group (ratio·detune·level·vel) then
+   envelope group (att·dec·sus·rel). Two stacked rows cost 93px on a card whose rows only use
+   ~550 of 992px; side by side the op panel drops 219 -> 125 and sound/fm meets the gate without
+   folding a single control. At 1280 the two groups need 550px of ~800 — it wraps harmlessly. */
+.av-fm-op-body { display: flex; flex-direction: row; flex-wrap: wrap; align-items: flex-start; gap: 10px 22px; }
 .av-fm-op-main { }
 .av-fm-op-env { }
 .av-fm-status { font-family: var(--mono); font-size: 10px; color: var(--text-3); min-width: 0; overflow-wrap: anywhere; }
@@ -85754,7 +85769,10 @@ function avSynthInit() {
 /* Anvil — FM CARD (M1 wave, child sa-B): the FM engine's control surface mounted into the
    parent-owned host #av-fm-host. The parent adds the card + host; this part owns the UI only.
 
-   Layout (DOM pins per verify/_m1_wave.md §2.2):
+   Layout (DOM pins per verify/_m1_wave.md §2.2; C3-7 restructure):
+     card grid      .av-fm-main — a two-column body: the ALGORITHM rail on the left (picker +
+                    routing view), the OPERATOR editor on the right (tabs + globals strip, then
+                    the active op's eight knobs on ONE line, then the card status line)
      op tabs        .av-fm-op-tab[data-op="1".."6"] — one button per operator
      op panels      [data-op-panel="N"] — one panel per operator; the ACTIVE one carries
                     .av-fm-op-on and is visible; ALL panels render their eight fm.opN.* knobs
@@ -85764,7 +85782,8 @@ function avSynthInit() {
      algorithm view #av-fm-algo-view — a small inline SVG drawn STRICTLY from
                     AVFM.algoInfo(i) (typeof-guarded); with the engine module absent it degrades
                     to a labelled placeholder, never a routing guess
-     globals        fm.fb + fm.volume knobs, always visible (self-feedback rides OP 6)
+     globals        fm.fb + fm.volume knobs, always visible, right end of the tab strip
+                    (self-feedback rides OP 6)
      status line    #av-fm-status
 
    Param schema (LOCAL copy of verify/_m1_wave.md §2.1 — this part cannot import av_fm.js, so
@@ -86079,8 +86098,13 @@ function avFmBodyHTML() {
   return '<div class="av-fm" data-av-fm="1">' +
     '<div class="av-fm-head"><span class="av-fm-title">FM ENGINE</span>' +
     '<span class="av-fm-cap">6 operators · 8 algorithms · self-feedback on OP 6 · set ENGINE to fm in the SYNTH card · the routing view redraws from AVFM.algoInfo</span></div>' +
-    '<div class="av-fm-top">' + avFmAlgoSelectHTML() + avFmAlgoViewHTML() + avFmGlobalsHTML() + "</div>" +
-    '<div class="av-fm-ops">' + avFmTabsHTML(op) + '<div class="av-fm-panels">' + panels + "</div></div>" +
+    '<div class="av-fm-main">' +
+      '<div class="av-fm-top">' + avFmAlgoSelectHTML() + avFmAlgoViewHTML() + "</div>" +
+      '<div class="av-fm-ops">' +
+        '<div class="av-fm-headrow">' + avFmTabsHTML(op) + avFmGlobalsHTML() + "</div>" +
+        '<div class="av-fm-panels">' + panels + "</div>" +
+      "</div>" +
+    "</div>" +
     '<div class="av-fm-status" id="av-fm-status" role="status">' + avFmEsc(avFmStatusText(algo, op, avFmAlgoInfoSafe(algo))) + "</div>" +
     "</div>";
 }
@@ -86373,12 +86397,12 @@ function avFmUiSnap() {
 /* ---------- classes + debug handle ---------- */
 
 function avFmUiClasses() {
-  return ["av-fm", "av-fm-head", "av-fm-title", "av-fm-cap", "av-fm-top",
+  return ["av-fm", "av-fm-head", "av-fm-title", "av-fm-cap", "av-fm-main", "av-fm-top",
     "av-fm-pick", "av-fm-pick-lbl", "av-fm-select",
     "av-fm-algo-view", "av-fm-svg", "av-fm-view-lbl",
     "av-fm-edge", "av-fm-arrow", "av-fm-fbpath", "av-fm-fb-lbl",
     "av-fm-node", "av-fm-car", "av-fm-node-lbl",
-    "av-fm-globals", "av-fm-ops", "av-fm-tabs", "av-fm-op-tab", "av-fm-op-on",
+    "av-fm-globals", "av-fm-ops", "av-fm-headrow", "av-fm-tabs", "av-fm-op-tab", "av-fm-op-on",
     "av-fm-panels", "av-fm-op-panel", "av-fm-op-head", "av-fm-op-num", "av-fm-op-cap",
     "av-fm-op-body", "av-fm-op-main", "av-fm-op-env", "av-fm-status"];
 }

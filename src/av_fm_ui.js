@@ -1,7 +1,10 @@
 /* Anvil — FM CARD (M1 wave, child sa-B): the FM engine's control surface mounted into the
    parent-owned host #av-fm-host. The parent adds the card + host; this part owns the UI only.
 
-   Layout (DOM pins per verify/_m1_wave.md §2.2):
+   Layout (DOM pins per verify/_m1_wave.md §2.2; C3-7 restructure):
+     card grid      .av-fm-main — a two-column body: the ALGORITHM rail on the left (picker +
+                    routing view), the OPERATOR editor on the right (tabs + globals strip, then
+                    the active op's eight knobs on ONE line, then the card status line)
      op tabs        .av-fm-op-tab[data-op="1".."6"] — one button per operator
      op panels      [data-op-panel="N"] — one panel per operator; the ACTIVE one carries
                     .av-fm-op-on and is visible; ALL panels render their eight fm.opN.* knobs
@@ -11,7 +14,8 @@
      algorithm view #av-fm-algo-view — a small inline SVG drawn STRICTLY from
                     AVFM.algoInfo(i) (typeof-guarded); with the engine module absent it degrades
                     to a labelled placeholder, never a routing guess
-     globals        fm.fb + fm.volume knobs, always visible (self-feedback rides OP 6)
+     globals        fm.fb + fm.volume knobs, always visible, right end of the tab strip
+                    (self-feedback rides OP 6)
      status line    #av-fm-status
 
    Param schema (LOCAL copy of verify/_m1_wave.md §2.1 — this part cannot import av_fm.js, so
@@ -326,8 +330,13 @@ function avFmBodyHTML() {
   return '<div class="av-fm" data-av-fm="1">' +
     '<div class="av-fm-head"><span class="av-fm-title">FM ENGINE</span>' +
     '<span class="av-fm-cap">6 operators · 8 algorithms · self-feedback on OP 6 · set ENGINE to fm in the SYNTH card · the routing view redraws from AVFM.algoInfo</span></div>' +
-    '<div class="av-fm-top">' + avFmAlgoSelectHTML() + avFmAlgoViewHTML() + avFmGlobalsHTML() + "</div>" +
-    '<div class="av-fm-ops">' + avFmTabsHTML(op) + '<div class="av-fm-panels">' + panels + "</div></div>" +
+    '<div class="av-fm-main">' +
+      '<div class="av-fm-top">' + avFmAlgoSelectHTML() + avFmAlgoViewHTML() + "</div>" +
+      '<div class="av-fm-ops">' +
+        '<div class="av-fm-headrow">' + avFmTabsHTML(op) + avFmGlobalsHTML() + "</div>" +
+        '<div class="av-fm-panels">' + panels + "</div>" +
+      "</div>" +
+    "</div>" +
     '<div class="av-fm-status" id="av-fm-status" role="status">' + avFmEsc(avFmStatusText(algo, op, avFmAlgoInfoSafe(algo))) + "</div>" +
     "</div>";
 }
@@ -620,12 +629,12 @@ function avFmUiSnap() {
 /* ---------- classes + debug handle ---------- */
 
 function avFmUiClasses() {
-  return ["av-fm", "av-fm-head", "av-fm-title", "av-fm-cap", "av-fm-top",
+  return ["av-fm", "av-fm-head", "av-fm-title", "av-fm-cap", "av-fm-main", "av-fm-top",
     "av-fm-pick", "av-fm-pick-lbl", "av-fm-select",
     "av-fm-algo-view", "av-fm-svg", "av-fm-view-lbl",
     "av-fm-edge", "av-fm-arrow", "av-fm-fbpath", "av-fm-fb-lbl",
     "av-fm-node", "av-fm-car", "av-fm-node-lbl",
-    "av-fm-globals", "av-fm-ops", "av-fm-tabs", "av-fm-op-tab", "av-fm-op-on",
+    "av-fm-globals", "av-fm-ops", "av-fm-headrow", "av-fm-tabs", "av-fm-op-tab", "av-fm-op-on",
     "av-fm-panels", "av-fm-op-panel", "av-fm-op-head", "av-fm-op-num", "av-fm-op-cap",
     "av-fm-op-body", "av-fm-op-main", "av-fm-op-env", "av-fm-status"];
 }
