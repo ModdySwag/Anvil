@@ -631,7 +631,7 @@ function avInspectorCoreHTML() {
       '<div class="av-insp-num" data-insp-num="' + e.path + '">' + avInspectorFmt(e.opts.fmt, v) + '</div>' +
       '</div>');
   }
-  return '<div id="av-insp-core">' + avKnobRowHTML(pots, "av-insp-pots") + '</div>';
+  return '<div id="av-insp-core">' + pots.join("") + '</div>';
 }
 
 function avInspectorLaunchHTML() {
@@ -668,10 +668,12 @@ function avInspectorBodyHTML() {
       '<canvas id="av-insp-scope" width="220" height="36" aria-label="Output scope"></canvas>' +
     '</div>' +
     avInspectorLaunchHTML() +
-    '<div id="av-insp-voices" aria-live="off">voices: \u2014 / \u2014</div>' +
-    '<div class="av-pair" id="av-insp-poly" role="radiogroup" aria-label="Voice mode">' +
-      '<button type="button" class="av-pair-key" data-poly="poly" role="radio" aria-checked="true">POLY</button>' +
-      '<button type="button" class="av-pair-key" data-poly="mono" role="radio" aria-checked="false">MONO</button>' +
+    '<div class="av-insp-foot">' +
+      '<div id="av-insp-voices" aria-live="off">voices: \u2014 / \u2014</div>' +
+      '<div class="av-pair" id="av-insp-poly" role="radiogroup" aria-label="Voice mode">' +
+        '<button type="button" class="av-pair-key" data-poly="poly" role="radio" aria-checked="true">POLY</button>' +
+        '<button type="button" class="av-pair-key" data-poly="mono" role="radio" aria-checked="false">MONO</button>' +
+      '</div>' +
     '</div>';
 }
 

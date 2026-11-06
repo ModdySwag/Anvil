@@ -2661,6 +2661,7 @@ body { --dock-h: 132px; }
 }
 
 #av-insp-wave,
+#av-insp-filter,
 #av-insp-env {
   position: relative;
   display: block;
@@ -3282,3 +3283,128 @@ body { --dock-h: 132px; }
 #av-insp-filter, #av-insp-env { cursor: crosshair; touch-action: none; }
 #av-insp-filter.av-insp-dragging, #av-insp-env.av-insp-dragging { cursor: grabbing; }
 #av-insp-filter .av-insp-screen-label { color: var(--teal); }
+
+/* ===========================================================================
+   C2b — FIT PASS (measured with cache/scratch/probe_c2_layout.mjs, 2026-11-06)
+   Before: the band's natural content was ~1690px into 1420; every group was
+   flex:none except `pots`, so the pots group absorbed the entire shortfall and
+   collapsed to 20px (its four caps spilled). The LCD carried 307px of rows —
+   including the av-tier / av-voices diagnostic chips — inside a 109px glass.
+   The six inspector pots stacked in ONE column: the module wrapped them in a
+   knob row, so the grid saw one cell. And .av-kind-txt (the module's own label
+   span) had no rule at all, so it painted at body size over the keys.
+   Laws kept: every pinned id stays in its group and in contract order; the LCD
+   keeps three rows; the five groups keep their names and order.
+   =========================================================================== */
+
+/* -- band: only the display may give; every other group keeps its content -- */
+#av-band { gap: 10px; }
+#av-band .av-band-grp { flex: none; min-width: 0; gap: 6px; padding: 0 8px; }
+#av-band .av-band-grp[data-grp="identity"] { flex: 1 1 auto; min-width: 0; padding: 4px 8px; }
+#av-band .av-band-grp[data-grp="pots"] { flex: none; gap: 4px; }
+#av-band .av-band-grp[data-grp="out"] { flex: none; gap: 5px; }
+
+/* the view keys: a 5x2 key grid (nine text buttons cannot sit in one 429px row) */
+#av-band .av-band-grp[data-grp="view"] {
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  gap: 3px 4px;
+  align-content: center;
+  justify-items: stretch;
+}
+#av-band .av-band-grp[data-grp="view"] .av-btn,
+#av-band .av-band-grp[data-grp="view"] .av-btn.mini { width: auto; min-width: 22px; padding: 0 5px; font-size: 8.5px; letter-spacing: .06em; }
+
+/* the glass: diagnostics belong in the console, not on the instrument face */
+#av-band #av-lcd #av-tier,
+#av-band #av-lcd #av-voices { display: none !important; }
+#av-band #av-lcd-bezel { flex: 1 1 240px; min-width: 196px; max-width: 360px; }
+#av-band #av-lcd { padding: 2px 5px; }
+#av-band #av-lcd .av-lcd-row { gap: 4px; }
+
+/* the four tone pots: 44px cells, 40px caps, TONE/MACROS keep their words */
+#av-band .av-band-grp[data-grp="pots"] .av-band-pot { width: 44px; flex: none; }
+#av-band .av-band-grp[data-grp="pots"] .av-band-pot .av-knob-wrap { width: 40px !important; }
+#av-band #av-potmode { padding: 1px; gap: 1px; }
+#av-band #av-potmode .av-btn,
+#av-band #av-potmode .av-btn.mini { padding: 0 5px; font-size: 8px; letter-spacing: .02em; }
+
+/* transport + out: the same keys, tighter chrome */
+#av-band .av-band-transport { gap: 3px; }
+#av-band .av-band-transport .av-btn,
+#av-band .av-band-transport .av-btn.mini { padding: 0 6px; font-size: 8.5px; }
+#av-band .av-band-grp[data-grp="out"] .av-btn,
+#av-band .av-band-grp[data-grp="out"] .av-btn.mini { padding: 0 7px; font-size: 8.5px; }
+#av-band .av-band-grp[data-grp="out"] #av-scope { width: 84px; }
+
+/* -- 1280-1360: shave chrome, keep every control and the word mark -- */
+@media (max-width: 1360px) {
+  #av-band { gap: 7px; }
+  #av-band .av-band-grp { gap: 4px; padding: 0 6px; }
+  #av-band #av-lcd-bezel { min-width: 172px; flex-basis: 190px; }
+  #av-band .av-band-grp[data-grp="identity"] { padding: 4px 6px; }
+  #av-band .av-band-grp[data-grp="pots"] .av-band-pot { width: 40px; }
+  #av-band .av-band-grp[data-grp="pots"] .av-band-pot .av-knob-wrap { width: 36px !important; }
+  #av-band .av-band-grp[data-grp="view"] .av-btn,
+  #av-band .av-band-grp[data-grp="view"] .av-btn.mini { padding: 0 4px; font-size: 8px; }
+  #av-band .av-band-grp[data-grp="out"] #av-scope { width: 64px; }
+  #av-band .av-band-transport .av-btn,
+  #av-band .av-band-transport .av-btn.mini { padding: 0 5px; }
+}
+
+/* -- inspector: six pots are a 3x2 grid; the column fits a 900px window -- */
+#av-inspector { gap: 5px; padding-bottom: 10px; }
+#av-inspector .av-insp-frame { padding: 6px; gap: 4px; }
+#av-insp-core { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 2px; }
+#av-inspector .av-insp-pot .av-knob-wrap { width: 40px !important; }
+
+/* the key legend: the small caps are the ::after; the module's .av-kind-txt keeps the
+   accessible name but must never paint (it was rendering at body size over the keys) */
+.av-kind-keys { grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; gap: 4px; row-gap: 4px; }
+.av-kind-key { justify-self: center; }
+.av-kind-key::after { font-size: 7px; letter-spacing: .02em; }
+.av-kind-txt {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* the screens: strips that read, short enough that nothing is sliced at the fold */
+#av-insp-wave { height: 42px; }
+#av-insp-filter { height: 50px; }
+#av-insp-env { height: 52px; }
+#av-insp-edit { height: 24px; font-size: 9px; }
+#av-inspector .av-insp-launch { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
+#av-inspector .av-insp-launch[data-page] { height: 24px; font-size: 8px; letter-spacing: .06em; }
+#av-insp-title { font-size: 8px; }
+.av-insp-foot { display: flex; align-items: center; justify-content: space-between; gap: 6px; flex: none; }
+.av-insp-foot #av-insp-voices { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.av-insp-foot #av-insp-poly { flex: none; }
+
+/* C2b-2: a screen canvas fills its box. The canvases carry width=220 height=84 as their
+   BACKING store; without a CSS size they paint 84px tall inside a 42-52px screen and
+   spill over the screen below (the wave drew across the filter's corner label). */
+#av-insp-wave canvas,
+#av-insp-filter canvas,
+#av-insp-env canvas { display: block; width: 100%; height: 100%; }
+#av-insp-scope { display: block; width: 100%; height: 100%; }
+
+/* the last 16px the identity group was short at 1440 (measured 378 needed / 362 given) */
+#av-band #av-lcd-bezel { min-width: 188px; }
+#av-band .av-band-grp[data-grp="identity"] .av-band-pot { width: 44px; }
+
+@media (max-width: 1360px) {
+  /* the plate stacks the word over the version: 110px of width becomes 74 */
+  #av-band .av-band-plate { flex-direction: column; align-items: flex-start; gap: 0; line-height: 1; }
+  #av-band .av-band-grp[data-grp="transport"] .av-btn,
+  #av-band .av-band-transport .av-btn,
+  #av-band .av-band-transport .av-btn.mini { font-size: 8px; }
+  #av-band .av-band-grp[data-grp="out"] #av-scope { width: 56px; }
+}
+
+/* C2b-3: the plate had no box rule at all — the word and the version chip flowed inline
+   (110px). As a flex box it lines up; at 1280 it stacks to 74px. */
+#av-band .av-band-plate { display: flex; align-items: center; gap: 6px; min-width: 0; }
+@media (max-width: 1360px) {
+  #av-band .av-band-plate { flex-direction: column; align-items: flex-start; gap: 0; }
+  #av-band #av-lcd-bezel { min-width: 160px; }
+}
