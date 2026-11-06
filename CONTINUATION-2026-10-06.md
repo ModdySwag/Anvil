@@ -52,6 +52,12 @@ back inside the 12-81 band, which also confirms 376/543 were contamination, not 
 **NEXT**: sound/engine 1.88/2.26 · effects 1.86/2.23 · system/code 1.61/1.89 · sequence 1.53/1.81 ·
 sound/fm 1.53/1.78 · sound/wt 1.52/1.77 · sound/chop 1.40/1.62 · shape/matrix 1.31/1.54 ·
 sound/drums 1.17/1.34. `av_fx` still has no section hooks (UI lives in `av_fx.js`).
+**Probed for the next pass (do not re-probe):** `av_synth` has exactly ONE `.av-synth-sec` block
+(MODS) — the rest of the engine editor is unsectioned, so it needs `data-sect` hooks written into
+`av_synth.js` before it can fold. `av-midi-card` and `av-mix` were the two cheap ones (they already
+had nine and ten section blocks); the remaining cards (`av-fx` 1,094px, `av-mix` done, `av-midi` done,
+`av-code` 902px, `av-seq` 894px, `av-synth` 735px) each need their markup sectioned first — that is
+UI work per module, not a copy-paste of the fold helper.
 
 ## SAVE 2026-11-06 16:50 — C3-2 THE MIX DESK FOLDS (owner's call: disclosure); frozen at b9bb4ada
 
