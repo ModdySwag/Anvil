@@ -1,6 +1,117 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-07 00:40 (session 23c). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVE 2026-11-07 02:10 (session 23d). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- C3-10 commit `d6c98bb`. Bundle `index.html` sha256
+  `88f0d8264568c9dae0842d34553a83a857f362fd2160e9d4d2e565930f87075b`, **4,779,800 B**. Tree clean.
+- All 23 `verify/cdp_*.mjs` pins == that sha (swept old→new from `d46588b8`; `STALE REMAINING: none`).
+- Gate (`verify/battery_c3l.log`): **all 28 rigs exit=0, zero fail counts**; bench/alias/stress were
+  NOT run — the socket was stopped at the end of the rig sweep on purpose, because the new
+  **FAST-LANE policy** makes them a wave/release gate, not a per-card one (see below).
+- Solo receipts on these bytes: chassis **32/32** (K24f), `cdp_seq` **41/41**, `cdp_a11y` **33/33**.
+- VERIFY AT SESSION START: `node verify/cdp_chassis.mjs` (32) · `node verify/cdp_seq.mjs` (41) ·
+  `node verify/cdp_a11y.mjs` (33) · `node verify/cdp_m1.mjs` (33) · `node verify/cdp_m2.mjs` (40).
+
+### WHAT LANDED (C3-10 — the SEQUENCE page folds GEN + SONG, and FILL moves onto the face)
+`av_seq_ui.js`: `avSeqUiFoldInit()` folds **GEN** (euclid / mutate / humanize / fill) and **SONG**
+(rows, arrangement, timeline, scenes) behind two chips that **ride the TRANSPORT row** — no extra row
+(the CODE lesson). Each section keeps a head `.av-sec-toggle`; the SONG chip carries the row count
+and both chips stay visible while folded (`avSeqUiFoldSync`).
+**The FILL toggle moved out of GEN into the transport row**: it is a performance flag (a cond:"fill"
+step fires while it is on), so it stays on the face; only the named fill picker + apply button fold.
+- **MEASURED: sequence 1.530 / 1.812 → 0.932 / 1.095** (1440 / 1280). Card **830 → 470**
+  (head 17 · transport 84 · gridwrap 107 · inspector 149 · io 80 · two folded sections 0).
+- K23 claims **`['sequence', null]`** (26 views). Chassis leg **K24f** pins: the chip row sits inside
+  `.av-seq-transport`, both sections folded, chips visible (`GEN`, `SONG · n`), head toggles fold
+  back, the step grid stays up with 64 cells.
+- `cdp_seq` gained **`expandSeqFolds()`** (the cdp_fx `expandFolds` law): a coordinate click on a
+  folded control is refused, so the song leg opens its chip first — the rig's only folded-region
+  coordinate click is `#av-seq-song-add`.
+
+### THE LESSON THIS PASS PAID (trap 16)
+**A fold is only legal on chrome.** GEN held the runtime FILL toggle — a performance flag — and
+folding it took out a live control the rig coordinate-clicks (40/41, `clsOff === clsOn`, `fill: 0`).
+The rig's own check text had been saying "#av-seq-fill-toggle in the transport row" since the KI pin,
+so the page had been carrying a control in the wrong place all along: the fold exposed it. The fix
+was the product fix (move FILL next to PLAY/STOP/REC), not a rig-side dig. When a fold breaks a leg,
+ask first whether the control belonged under that fold at all.
+
+
+### GATE POLICY — THE FAST LANE (owner asked; adopted 2026-11-07)
+A per-card layout/disclosure pass does NOT need the 35-minute battery. bench (~8 min) and stress
+(~12 min) are load/perf suites that cannot move from CSS or a fold, and half the rig set cannot reach
+the card that changed. **Per-card gate = `cache/scratch/battery_fast.sh <card-rig>`**: chassis ·
+a11y · smoke · m1 · m2 · the card's own rig (≈6 min). **Full battery (28 rigs + bench + alias +
+stress) = wave/release gate** — run it when the rebuild run is complete, before C6, or whenever a
+change touches shared code (app_core, av_knob, styles that every card reads).
+
+### WHAT WE STILL HAVE TO DO
+**A. The last C3 page rebuild — NOT a fold. RE-MEASURE FIRST.**
+
+| view | 1440 / 1280 | what it needs |
+|---|---|---|
+| shape/matrix | 1.31 / 1.54 | needs a real slot redesign (two-column measured WORSE, 1.31→1.35): the matrix rows are label+knob+knob wide already; the win has to come from the slot shape (compact rows, or a source-column rail), not from wrapping. |
+
+**B. The six planned C3 screens (docs/13 §C3, in this order):**
+1. **Filters group** — filter response screen inside the SOUND engine card beside the pots.
+2. **Envelopes group** — amp/filter/aux overlaid in operator colours; drag = the same three moves.
+3. **EFFECTS per slot** — drive curve · dyn gain-reduction meter · delay tap timeline · verb decay tail · mod LFO shape.
+4. **MIX** — EQ response curve on the master chain + per-track mini waveform in the strip.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), rows stay advanced.
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+Rule: a screen never blocks a control, carries no chrome beyond its inset, and prints its own units.
+
+**C. C4 control language** — steppers, pairs, the groups sweep.
+**D. C5 disclosure everywhere** — focus order, tab semantics, advanced-collapsed defaults.
+**E. C6 release** — shots, pins, battery, installer, deploy **v1.15.0**. The live site is still the
+2026-10-09 build (`moddys.net/anvil`, frozen e99ea8e5): **nothing from this wave is deployed.**
+`windows/stage/Anvil/resources/app/index.html` is a STALE staged copy — C6 must re-stage it.
+**F. Open from C2:** mono is not per-patch; latency/buffer has no LCD cell.
+
+### TRAPS — every one of these has already cost a session
+1. **Cascade:** a card's own `display:flex` on its section class beats `.av-sec-collapsed` at equal
+   specificity when it sits later in `styles.css`. The `!important` is load-bearing.
+2. **A fold that hides an INTERACTIVE CONTROL breaks rigs** (knob_feel drag, a11y focus, midi
+   CC-learn, seq song-add). Grep the rig set for the selectors of anything that folds; give each rig
+   an expand step with a named check.
+3. **A wrapper around "the rest of the card" can swallow the working surface** — read the child order.
+4. **autocrlf:** `index.html`/`sw.js` are `-text`; if a checkout moves the sha, REBUILD.
+5. **Pin sweep:** old→new only (`cache/scratch/sweep_pins.py --old <sha>`); never "any 64-hex".
+6. **`Target crashed`** = exit 1 with 0 checks. Re-run solo before touching code.
+7. **Never run a second browser during a battery** (contamination reads 376/543 deltas).
+8. **K23 null safety:** `null <= 1.2` is TRUE — a broken measurement must fail explicitly.
+9. **Cockpit pane law:** the window never scrolls; the pane scrolls only when its content is taller.
+10. **Knife-edge legs exist** (cdp_store install-progress, cdp_sessions version ring, cdp_hub reload)
+    — prove solo before calling it a regression.
+11. **A tight card on a chrome-heavy page cannot be fixed by one row** — budget the zone chrome
+    (~120–275px) first, and look at the idle WIDTH before shrinking ink (FM used 550 of 1014px).
+12. **A paired row 5px too wide wraps and costs ~34px** — cap the flexible children, measure both widths.
+13. **A fold's own chip must not buy a row** — ride an existing row or the affordance hides first.
+14. **A hidden zone measures 0** — legs that measure geometry must show their own zone first.
+15. **A fold is only legal on chrome** — if folding a section breaks a leg, check whether the control
+    belonged on the face before teaching the rig to dig.
+
+### WAITING ON THE OWNER (his gate, not a screenshot)
+- Eye pass on the five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP), the FM
+  two-column shape, the WT two-row shape + LIBRARY chip, the CODE folds, and the SEQUENCE folds + the
+  relocated FILL button.
+- A verdict on folding the LEVELS card (one-line revert if vetoed; SOUND loses its fit).
+
+### TOOLS IN THE REPO NOW
+`cache/scratch/cardprobe.mjs <zone> [sub] [shotName]` — ratios at 1440/1280 + the block tree.
+`cache/scratch/rowprobe.mjs <zone> <sub|-> "<selector>"` — one container's children, heights/widths.
+`cache/scratch/views.mjs <zone> [sub|-] [width] [name]` — full-viewport PNG at a chosen width.
+`cache/scratch/fmlab.mjs` / `fmlab2.mjs` / `wtlab.mjs` / `wtlab3.mjs` — live DOM+CSS lab probes.
+`cache/scratch/sweep_pins.py --old <sha>` · `battery_c3*.sh` templates. (cache/ is gitignored.)
+
+### FIRST MOVES NEXT SESSION
+1. Read this block. Verify at `88f0d826`: chassis (32), seq (41), a11y (33), m1 (33), m2 (40).
+2. `node cache/scratch/rowprobe.mjs shape matrix ".av-mod"` (or the matrix root) → block tree, then a
+   lab probe with two or three slot shapes before touching markup. SHAPE/MATRIX is the last rebuild.
+3. Then the six screens (B), then C4, C5, C6.
+
+## SAVE 2026-11-07 00:40 (session 23c) — superseded by the block above
 
 ### STATE (proven, not claimed)
 - C3-9 commit `297e9d1` (on top of `4006ae3`, `49e60ad`, `0e51c3f`). Bundle `index.html` sha256
