@@ -964,6 +964,55 @@ async function main() {
     && filtScreen.beforeR != null && filtScreen.afterR != null && filtScreen.afterR !== filtScreen.beforeR,
     JSON.stringify(filtScreen));
 
+  /* K24i -- C3-13 screen 2: the envelopes group. Folded by default behind its own chip in the
+     adv row (0px while closed), it opens to a painted overlay of the two real envelopes (env1 amp
+     teal, env2 filter orange) with its units printed; the head toggle folds it back. The open is
+     measured in a SECOND evaluate after a settle: the canvas repaints from a ResizeObserver, which
+     lands a frame after the click. */
+  await ev(`(() => {
+    try { window.__avZone.show('sound'); } catch (e) { return false; }
+    try { const b = document.querySelector('#av-zone-sound .av-subtab[data-sub="engine"]'); if (b) b.click(); } catch (e) { }
+    const panel = document.querySelector('#av-synth-knobs .av-synth-panel[data-kind="va"]');
+    const chip = panel ? panel.querySelector('.av-synth-adv .av-adv-chip[data-adv="envscreen"]') : null;
+    if (chip && !chip.hidden) chip.click();
+    return true;
+  })()`);
+  await sleep(420);
+  const envScreen = (await ev(`(() => {
+    const panel = document.querySelector('#av-synth-knobs .av-synth-panel[data-kind="va"]');
+    if (!panel) return { panel: false };
+    const sec = panel.querySelector('.av-synth-sec[data-sect="envscreen"]');
+    const chip = panel.querySelector('.av-synth-adv .av-adv-chip[data-adv="envscreen"]');
+    const shown = (e) => !!e && getComputedStyle(e).display !== 'none';
+    if (!sec || !chip) return { panel: true, sec: !!sec, chip: !!chip };
+    const cv = sec.querySelector('.av-synth-envcanvas');
+    const cap = sec.querySelector('.av-synth-envview-cap');
+    let ink = 0;
+    try {
+      const ctx = cv.getContext('2d');
+      const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 8) ink++;
+    } catch (e) { ink = -1; }
+    const out = {
+      panel: true, sec: true, chip: true, chipTxt: (chip.textContent || '').trim(),
+      open: shown(sec), chipHiddenWhenOpen: chip.hidden === true,
+      cvW: cv.width, cvH: cv.height, ink: ink,
+      cap: cap ? String(cap.textContent || '') : null,
+    };
+    const t = sec.querySelector('.av-synth-sec-head .av-sec-toggle');
+    out.toggle = !!t;
+    if (t) { t.click(); out.refolded = !shown(sec); out.chipBack = chip.hidden === false; }
+    return out;
+  })()`)).value || {};
+  check('K24i envelope screen: folded behind its chip at 0px, opens to a painted two-envelope overlay with its units, and the head toggle folds it back',
+    envScreen.panel === true && envScreen.sec === true && envScreen.chip === true
+    && envScreen.chipTxt === 'ENVELOPES'
+    && envScreen.open === true && envScreen.chipHiddenWhenOpen === true
+    && envScreen.cvW >= 400 && envScreen.ink > 100
+    && /^A .+ \. D .+ \. S \d+ \. R /.test(String(envScreen.cap || ''))
+    && envScreen.toggle === true && envScreen.refolded === true && envScreen.chipBack === true,
+    JSON.stringify(envScreen));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

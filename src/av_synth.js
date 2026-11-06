@@ -402,7 +402,7 @@ function avSynthBodyHTML() {
       '<div class="av-synth-sec-head"><span class="av-synth-sec-lbl">' + avSynthEsc(row.label) + "</span></div>" +
       body + "</div>";
   }).join("");
-  const va = avSynthPanelHTML("va", kind === "va", '<div class="av-synth-selects">' + picks + "</div>" + rows);
+  const va = avSynthPanelHTML("va", kind === "va", '<div class="av-synth-selects">' + picks + "</div>" + rows + avSynthEnvSectionHTML());
 
   /* acid — the hero row + MODS (EXPANDED) */
   const acid = avSynthPanelHTML("acid", kind === "acid",
@@ -504,7 +504,7 @@ function avSynthSetKind(kind, options) {
 /* The VA panel's deep rows fold behind one chip each: OSC + FILTER + ENV stay on the face, TUNE
    (the pitch pair) and GLIDE are one click away. The chip row lives INSIDE the panel (so a kind
    switch takes it with it), and the section head carries the fold-back toggle. */
-const AV_SYNTH_ADV = [["tune", "TUNE"], ["glide", "GLIDE"]];
+const AV_SYNTH_ADV = [["tune", "TUNE"], ["glide", "GLIDE"], ["envscreen", "ENVELOPES"]];
 
 function avSynthFoldInit(root) {
   if (!root || typeof root.querySelector !== "function" || typeof document === "undefined") return false;
@@ -556,6 +556,138 @@ function avSynthFoldInit(root) {
    avParams, not the markup), then render and bind, then show the current kind's panel. Seeding
    only fills unset paths so a re-mount can never clobber live values. Host absent or knob parts
    missing → false, no throw. */
+/* ---------- C3-13 screen 2: the envelopes group (folded) ---------- */
+
+/* The engine has TWO envelopes (env1 = amp, env2 = filter; av_dsp.js carries no aux env), so the
+   overlay draws the two real ones in their own colours. The VA line is full at 1280, so the screen
+   folds behind the ENVELOPES chip: folded = 0px, open = one 104px block the user asked for. */
+const AV_SYNTH_ENV_SECT = "envscreen";
+function avSynthEnvSectionHTML() {
+  return '<div class="av-synth-sec av-sec-collapsed" data-sect="' + AV_SYNTH_ENV_SECT + '">' +
+    '<div class="av-synth-sec-head"><span class="av-synth-sec-lbl">ENVELOPES</span></div>' +
+    '<div class="av-synth-envview">' +
+    '<canvas class="av-synth-envcanvas" aria-label="Amp and filter envelopes - drag left to right for attack, decay, release; up and down for sustain"></canvas>' +
+    '<span class="av-synth-envview-cap">A 2ms . D 300ms . S 80 . R 200ms</span></div></div>';
+}
+function avSynthEnvMs(v) {
+  const s2 = Number(v) || 0;
+  if (s2 >= 1) return s2.toFixed(1) + "s";
+  return Math.round(s2 * 1000) + "ms";
+}
+function avSynthEnvPaintOne(ctx, w, h, col, a, d, sus, r, dpr) {
+  const tot = Math.max(0.001, a + d + r);
+  const holdShare = 0.24, span = 1 - holdShare;
+  const xa = (a / tot) * span * w, xd = xa + (d / tot) * span * w;
+  const xs = xd + holdShare * w, xr = xs + (r / tot) * span * w;
+  const base = h - 6 * dpr, top = 6 * dpr;
+  const ys = top + (1 - sus) * (base - top);
+  ctx.strokeStyle = col;
+  ctx.lineWidth = Math.max(1, 1.6 * dpr);
+  ctx.beginPath();
+  ctx.moveTo(1, base);
+  ctx.lineTo(Math.max(2, xa), top);
+  ctx.lineTo(Math.max(xa + 1, xd), ys);
+  ctx.lineTo(Math.max(xd + 2, xs), ys);
+  ctx.lineTo(Math.max(xs + 1, xr), base);
+  ctx.stroke();
+  ctx.globalAlpha = 0.5;
+  ctx.beginPath();
+  ctx.arc(Math.max(2, xa), top, 2 * dpr, 0, Math.PI * 2);
+  ctx.fillStyle = col;
+  ctx.fill();
+  ctx.globalAlpha = 1;
+}
+function avSynthEnvPaint(canvas) {
+  try {
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const box = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+    const cssW = Math.max(80, Math.round((box && box.width) || 300));
+    const cssH = Math.max(40, Math.round((box && box.height) || 72));
+    const dpr = Math.max(1, Math.min(3, (typeof window !== "undefined" && window.devicePixelRatio) || 1));
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+      canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const P = function (path, def) { return Number((typeof avParams !== "undefined" && avParams && avParams[path] != null) ? avParams[path] : def); };
+    avSynthEnvPaintOne(ctx, canvas.width, canvas.height, "#2ed8c9", P("env1.a", 0.002), P("env1.d", 0.3), Math.max(0, Math.min(1, P("env1.s", 0.8))), P("env1.r", 0.2), dpr);
+    avSynthEnvPaintOne(ctx, canvas.width, canvas.height, "#ff8f6e", P("env2.a", 0.002), P("env2.d", 0.3), Math.max(0, Math.min(1, P("env2.s", 0.8))), P("env2.r", 0.2), dpr);
+    return true;
+  } catch (e) { return false; }
+}
+function avSynthEnvSync(hostArg) {
+  try {
+    const host = hostArg || document.getElementById("av-synth-knobs");
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    const P = function (path, def) { return Number((typeof avParams !== "undefined" && avParams && avParams[path] != null) ? avParams[path] : def); };
+    const cap = "A " + avSynthEnvMs(P("env1.a", 0.002)) + " . D " + avSynthEnvMs(P("env1.d", 0.3)) +
+      " . S " + Math.round(Math.max(0, Math.min(1, P("env1.s", 0.8))) * 100) + " . R " + avSynthEnvMs(P("env1.r", 0.2));
+    host.querySelectorAll(".av-synth-envview").forEach(function (box) {
+      const canvas = box.querySelector(".av-synth-envcanvas");
+      if (canvas) avSynthEnvPaint(canvas);
+      const lab = box.querySelector(".av-synth-envview-cap");
+      if (lab && lab.textContent !== cap) lab.textContent = cap;
+    });
+    return true;
+  } catch (e) { return false; }
+}
+function avSynthEnvSet(path, v) {
+  try {
+    avParams[path] = v;
+    if (typeof avApplyParam === "function") avApplyParam(path, v, { from: "envscreen" });
+    else if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("av-param", { detail: { path: path, value: v, from: "envscreen" } }));
+    const host = document.getElementById("av-synth-knobs");
+    if (host && typeof avKnobRefreshAll === "function") avKnobRefreshAll(host);
+    /* a folded section has no box to measure: repaint shortly after the chip opens it */
+    try {
+      const chip = host.querySelector('.av-synth-adv .av-adv-chip[data-adv="envscreen"]');
+      if (chip && chip.dataset.avEnvRepaint !== "1") {
+        chip.dataset.avEnvRepaint = "1";
+        chip.addEventListener("click", function () { setTimeout(function () { try { avSynthEnvSync(host); } catch (e4) { } }, 40); });
+      }
+    } catch (e5) { /* repaint is a nicety */ }
+    avSynthEnvSync(host);
+    return true;
+  } catch (e) { return false; }
+}
+function avSynthEnvInit(hostArg) {
+  try {
+    const host = hostArg || document.getElementById("av-synth-knobs");
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    host.querySelectorAll(".av-synth-envview").forEach(function (box) {
+      const canvas = box.querySelector(".av-synth-envcanvas");
+      if (!canvas || typeof canvas.addEventListener !== "function" || canvas.dataset.avEnvWired === "1") return;
+      canvas.dataset.avEnvWired = "1";
+      let drag = false;
+      const at = function (e) {
+        const r = canvas.getBoundingClientRect();
+        const x = Math.max(0, Math.min(1, (e.clientX - r.left) / Math.max(1, r.width)));
+        const y = Math.max(0, Math.min(1, (e.clientY - r.top) / Math.max(1, r.height)));
+        if (x < 0.34) avSynthEnvSet("env1.a", Math.round(Math.max(0.001, Math.min(4, 0.001 + (x / 0.34) * 4)) * 1000) / 1000);
+        else if (x < 0.67) avSynthEnvSet("env1.d", Math.round(Math.max(0.001, Math.min(8, 0.001 + ((x - 0.34) / 0.33) * 8)) * 1000) / 1000);
+        else avSynthEnvSet("env1.r", Math.round(Math.max(0.001, Math.min(8, 0.001 + ((x - 0.67) / 0.33) * 8)) * 1000) / 1000);
+        avSynthEnvSet("env1.s", Math.round((1 - y) * 100) / 100);
+      };
+      canvas.addEventListener("pointerdown", function (e) { drag = true; try { canvas.setPointerCapture(e.pointerId); } catch (err) { } at(e); e.preventDefault(); });
+      canvas.addEventListener("pointermove", function (e) { if (drag) { at(e); e.preventDefault(); } });
+      canvas.addEventListener("pointerup", function () { drag = false; });
+      canvas.addEventListener("pointercancel", function () { drag = false; });
+      /* a folded section has no box; the observer paints the moment the chip opens it (the click
+         hook alone proved unreliable - the section is visible a frame later than the event) */
+      try {
+        if (typeof ResizeObserver === "function" && !box.__avEnvRO) {
+          box.__avEnvRO = new ResizeObserver(function () { try { avSynthEnvSync(host); } catch (e6) { } });
+          box.__avEnvRO.observe(box);
+        }
+      } catch (e7) { /* observer is a nicety */ }
+    });
+    avSynthEnvSync(host);
+    return true;
+  } catch (e) { return false; }
+}
+
 /* ---------- C3-12 screen 1: the filter response inset ---------- */
 
 /* The VA panel's filter row is 194px of three pots; the panel is 944 wide at 1280, so the screen
@@ -693,12 +825,14 @@ function avSynthInit() {
     avKnobBind(host);
     avSynthBindSelects(host);
     try { avSynthFiltInit(host); } catch (e) { /* the screen is an inset, never the card */ }
+    try { avSynthEnvInit(host); } catch (e) { /* the envelope screen folds, never the card */ }
     try {
       if (!window.__avFiltHook) {
         window.__avFiltHook = 1;
         window.addEventListener("av-param", (ev) => {
           const p = ev && ev.detail && ev.detail.path;
           if (typeof p === "string" && p.indexOf("filter.") === 0) { try { avSynthFiltSync(); } catch (e2) { } }
+          if (typeof p === "string" && p.indexOf("env1.") === 0) { try { avSynthEnvSync(); } catch (e3) { } }
         });
       }
     } catch (e3) { /* no window */ }

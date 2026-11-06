@@ -1,8 +1,8 @@
-FAST-LANE START 07 Nov 2026 00:41:05 sha=61532d1132337acdacbca0eacab04bb0294f793422f98a65cae40c8764748c27 card=knob_feel
-cdp_chassis exit=0 ok=34 fail=0
+FAST-LANE START 07 Nov 2026 00:47:17 sha=3fd8e43cba59203c961d44d666a0a0adef760dd3fba6e905a5b837148111252a card=knob_feel
+cdp_chassis exit=0 ok=35 fail=0
 cdp_a11y exit=0 ok=33 fail=0
 cdp_smoke exit=0 ok=81 fail=0
 cdp_m1 exit=0 ok=33 fail=0
 cdp_m2 exit=0 ok=40 fail=0
 cdp_knob_feel exit=0 ok=19 fail=0
-FAST-LANE DONE 07 Nov 2026 00:42:42 verdict=clean
+FAST-LANE DONE 07 Nov 2026 00:48:56 verdict=clean
