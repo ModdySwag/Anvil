@@ -1,4 +1,4 @@
-index.html sha256: b3556d4ae9db75c2d2cbb950b5cf36c517581b3f82214280fea0efb3473dbeb7
+index.html sha256: 61532d1132337acdacbca0eacab04bb0294f793422f98a65cae40c8764748c27
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
    - data-av-ready: true
  ok   K1 virgin: rail closed, no rail control visible (tabs are the one navigation)  -> {"closed":true,"rail":true,"visibleRailCtl":0}
@@ -17,9 +17,9 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   K14 voice screens draw real data (oscillator, filter response with a live corner label, envelope with its time)  -> {"wave":18480,"filter":18480,"env":18480,"flab":"LP 800 R30","elab":"502 ms"}
  ok   K15 the screens edit: a drag on the filter moves cutoff + reso, a drag on the envelope moves attack  -> {"c0":800,"c1":3835,"r1":0.8,"a0":0.002,"a1":0.72}
  ok   K16 kind keys drive the engine kind (param + synth select + LCD + lit key)  -> {"okClick":true,"open":{"param":"va","sel":"va","lcd":"VA","lit":["wavetable"]},"fm":{"param":"fm","sel":"fm","lcd":"FM","lit":["fm"]},"back":{"param":"va","sel":"va","lcd":"VA","lit":["wavetable"]}}
- ok   K17 core pots are live: drags on CUTOFF and LEVEL write filter.cutoff and engine.outScale  -> {"pathC":"filter.cutoff","pathL":"engine.outScale","c0":3835,"c1":3884,"l0":null,"l1":0.36,"num":"1.51k"}
+ ok   K17 core pots are live: drags on CUTOFF and LEVEL write filter.cutoff and engine.outScale  -> {"pathC":"filter.cutoff","pathL":"engine.outScale","c0":3835,"c1":3841,"l0":null,"l1":0.36,"num":"2.35k"}
  ok   K18 POLY/MONO is a live voice mode (mono keeps one voice per channel, held notes return)  -> {"engine":true,"envPoly":0,"poly":2,"statsMono":1,"mono2":1,"clicked":true,"envMono":1,"lcd":"MONO —","lit":"mono","back1":1,"rel":0,"restored":0}
- ok   K19 scope + LEVEL are live: a sounding note inks the scope and the LEVEL pot scales the master tap  -> {"engine":true,"silent":{"ink":440,"spread":1},"loud":{"ink":837,"spread":17},"r0":0,"r1":0.27137787191241014,"r2":0.013682769794142631}
+ ok   K19 scope + LEVEL are live: a sounding note inks the scope and the LEVEL pot scales the master tap  -> {"engine":true,"silent":{"ink":440,"spread":1},"loud":{"ink":916,"spread":17},"r0":0,"r1":0.25502121481814843,"r2":0.012976252212810851}
  ok   K20 the oscillator screen draws the live wavetable frame of the installed table  -> {"engine":true,"ok":true,"slot":0,"before":{"shape":"saw","wt":""},"after":{"shape":"wt","wt":"C2 RIG TABLE #1/1"},"ink":466}
  ok   K21 band fit: every group carries its content and the strip does not overflow  -> {"band":{"cw":1420,"sw":1420},"clipped":[]}
  ok   K22 W=1440: glass rows + fields fit, tempo inside the glass  -> {"rows":[{"cw":147,"sw":147},{"cw":147,"sw":147},{"cw":147,"sw":147}],"badRow":[],"badSlot":[],"tempoRight":640.2,"glassRight":645.2,"inside":5}
@@ -33,6 +33,7 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   K24e CODE folds: PARAMS + CONTRACT close behind chips that ride the examples row, each section keeps a head toggle, the folded chips stay visible (PARAMS carries the count) and the safety line sits inside the contract  -> {"card":true,"row3":true,"folded":[true,true],"chips":[{"vis":true,"txt":"PARAMS · 0"},{"vis":true,"txt":"DOCS"}],"toggles":true,"footInDocs":true,"srcH":218,"openP":true,"foldedP":true,"openD":true,"foldedD":true}
  ok   K24f SEQUENCE folds: GEN + SONG close behind chips riding the transport row, the chips stay visible (SONG carries the row count), head toggles fold back, and the step grid stays up  -> {"card":true,"inTransport":true,"folded":[true,true],"chips":[{"vis":true,"txt":"GEN"},{"vis":true,"txt":"SONG · 0"}],"toggles":true,"gridUp":true,"cells":64,"openG":true,"backG":true,"openS":true,"backS":true}
  ok   K24g MOD MATRIX strip: the 14 source chips sit on a wrapping row (not one per line), all visible and the strip under 80px  -> {"card":true,"strip":true,"n":14,"display":"flex","wrap":"wrap","stripH":21,"rows":1,"zero":0}
+ ok   K24h filter screen: the response inset sits on the pots line inside the panel, paints, prints its units, and a drag writes cutoff + reso  -> {"panel":true,"box":true,"cv":true,"ink":509,"sameLine":true,"panelH":180,"h":84,"w":150,"insidePanel":true,"cap":"LP24 2.9k R90","before":3999,"after":2883,"beforeR":0.8,"afterR":0.9}
  ok   K9 zero page errors through the run  -> []
 
-CHASSIS-RESULT pass=33 fail=0
+CHASSIS-RESULT pass=34 fail=0

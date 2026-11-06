@@ -901,6 +901,69 @@ async function main() {
     && modStrip.rows >= 1 && modStrip.rows <= 3 && modStrip.zero === 0,
     JSON.stringify(modStrip));
 
+  /* K24h -- C3-12 screen 1: the filter response inset in the SOUND engine card. It must be a
+     panel-level item on the SAME line as the pots (no new row, so the density gate cannot move),
+     painted (not a blank canvas), print its units, and DRAG: x writes filter.cutoff, y writes reso. */
+  const filtScreen = (await ev(`(() => {
+    try { window.__avZone.show('sound'); } catch (e) { return { zone: false }; }
+    try { const b = document.querySelector('#av-zone-sound .av-subtab[data-sub="engine"]'); if (b) b.click(); } catch (e) { /* stays */ }
+    const panel = document.querySelector('#av-synth-knobs .av-synth-panel[data-kind="va"]');
+    if (!panel) return { panel: false };
+    const box = panel.querySelector('.av-synth-filtscreen');
+    const cv = box ? box.querySelector('.av-synth-filtcanvas') : null;
+    const cap = box ? box.querySelector('.av-synth-filtscreen-cap') : null;
+    if (!box || !cv) return { panel: true, box: !!box, cv: !!cv };
+    const pr = panel.getBoundingClientRect(), br = box.getBoundingClientRect();
+    const row = panel.querySelector('.av-synth-filter');
+    const rr = row ? row.getBoundingClientRect() : null;
+    let ink = 0;
+    try {
+      const ctx = cv.getContext('2d');
+      const d = ctx.getImageData(0, 0, cv.width, cv.height).data;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 8) ink++;
+    } catch (e) { ink = -1; }
+    const before = (typeof avParams !== 'undefined' && avParams) ? Number(avParams['filter.cutoff']) : null;
+    const beforeR = (typeof avParams !== 'undefined' && avParams) ? Number(avParams['filter.reso']) : null;
+    let after = null, afterR = null;
+    try {
+      const r = cv.getBoundingClientRect();
+      const ev2 = (type, fx, fy) => cv.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: r.left + r.width * fx, clientY: r.top + r.height * fy, pointerId: 1, button: 0, buttons: type === 'pointerup' ? 0 : 1 }));
+      /* drag to an x that MOVES the cutoff and a y that MOVES the reso — the first cut ended at
+         y=0.2 which happened to equal the live reso (0.8) and the assertion read that as "no write" */
+      ev2('pointerdown', 0.2, 0.85);
+      ev2('pointermove', 0.75, 0.10);
+      ev2('pointerup', 0.75, 0.10);
+      after = (typeof avParams !== 'undefined' && avParams) ? Number(avParams['filter.cutoff']) : null;
+      afterR = (typeof avParams !== 'undefined' && avParams) ? Number(avParams['filter.reso']) : null;
+      /* put the page back where the leg found it (later legs read filter state) */
+      if (typeof avApplyParam === 'function' && before != null && beforeR != null) {
+        avParams['filter.cutoff'] = before; avApplyParam('filter.cutoff', before, { from: 'rig' });
+        avParams['filter.reso'] = beforeR; avApplyParam('filter.reso', beforeR, { from: 'rig' });
+      }
+    } catch (e) { /* the drag probe is best-effort; the fields below fail it */ }
+    return {
+      panel: true, box: !!box, cv: !!cv, ink: ink,
+      /* the knob rows carry a 2px top margin, so "same line" means within the row band, and the
+         panel must not have grown a second line (<=200px tall) */
+      sameLine: !!(rr && Math.abs(rr.top - br.top) <= 10),
+      panelH: Math.round(pr.height),
+      h: Math.round(br.height), w: Math.round(br.width),
+      insidePanel: br.right <= pr.right + 1 && br.left >= pr.left - 1,
+      cap: cap ? String(cap.textContent || '') : null,
+      before: before, after: after, beforeR: beforeR, afterR: afterR,
+    };
+  })()`)).value || {};
+  const capOk = /^(LP|LP24|BP|HP) (\d+(\.\d+)?k?) R\d+$/.test(String(filtScreen.cap || ''));
+  check('K24h filter screen: the response inset sits on the pots line inside the panel, paints, prints its units, and a drag writes cutoff + reso',
+    filtScreen.panel === true && filtScreen.box === true && filtScreen.cv === true
+    && filtScreen.ink > 40 && filtScreen.sameLine === true && filtScreen.insidePanel === true
+    && filtScreen.panelH != null && filtScreen.panelH <= 200
+    && filtScreen.h >= 80 && filtScreen.w >= 88
+    && capOk === true
+    && filtScreen.before != null && filtScreen.after != null && filtScreen.after !== filtScreen.before
+    && filtScreen.beforeR != null && filtScreen.afterR != null && filtScreen.afterR !== filtScreen.beforeR,
+    JSON.stringify(filtScreen));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

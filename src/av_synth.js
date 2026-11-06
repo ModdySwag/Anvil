@@ -556,6 +556,127 @@ function avSynthFoldInit(root) {
    avParams, not the markup), then render and bind, then show the current kind's panel. Seeding
    only fills unset paths so a re-mount can never clobber live values. Host absent or knob parts
    missing → false, no throw. */
+/* ---------- C3-12 screen 1: the filter response inset ---------- */
+
+/* The VA panel's filter row is 194px of three pots; the panel is 944 wide at 1280, so the screen
+   rides the SAME flex line as a shrinkable item (flex 0 1 186px, min 96) and takes whatever width
+   is left — no absolute positioning, no new row, nothing blocked. The curve law is the inspector's
+   (av_inspector.js avInspectorPaintFilter): the compact mirror lives there, this is where you drag. */
+function avSynthFiltFreq(v) {
+  const t = Math.max(0, Math.min(1, v));
+  return 40 * Math.pow(300, t);
+}
+function avSynthFiltPos(f) {
+  return Math.log(Math.max(40, Math.min(12000, f)) / 40) / Math.log(300);
+}
+function avSynthFiltLabel(cut, reso, mode) {
+  const m = (mode === "lp24") ? "LP24" : (mode === "bp") ? "BP" : (mode === "hp") ? "HP" : "LP";
+  const c = cut >= 1000 ? (cut / 1000).toFixed(1) + "k" : String(Math.round(cut));
+  return m + " " + c + " R" + Math.round(reso * 100);
+}
+function avSynthFiltScreenHTML() {
+  return '<div class="av-synth-filtscreen" data-av-filt="1">' +
+    '<canvas class="av-synth-filtcanvas" aria-label="Filter response — drag across for cutoff, up for resonance"></canvas>' +
+    '<span class="av-synth-filtscreen-cap">LP 800 R30</span></div>';
+}
+function avSynthFiltPaint(canvas) {
+  try {
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const box = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+    const cssW = Math.max(60, Math.round((box && box.width) || 120));
+    const cssH = Math.max(28, Math.round((box && box.height) || 56));
+    const dpr = Math.max(1, Math.min(3, (typeof window !== "undefined" && window.devicePixelRatio) || 1));
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+      canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const w = canvas.width, h = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const cut = Number((typeof avParams !== "undefined" && avParams && avParams["filter.cutoff"]) || 800);
+    const reso = Math.max(0, Math.min(1, Number((typeof avParams !== "undefined" && avParams && avParams["filter.reso"]) || 0)));
+    const mode = String((typeof avParams !== "undefined" && avParams && avParams["filter.mode"]) || "lp12");
+    const fc = Math.max(0, Math.min(1, avSynthFiltPos(cut)));
+    const base = h - 4 * dpr, top = 4 * dpr, amp = (base - top) * 0.78;
+    ctx.strokeStyle = "#2ed8c9"; ctx.lineWidth = Math.max(1, 1.4 * dpr);
+    ctx.beginPath();
+    for (let i = 0; i <= 140; i++) {
+      const t = i / 140;
+      let mag = 1 / Math.sqrt(1 + Math.pow(t / Math.max(0.02, fc), 4));
+      if (mode === "lp24") mag = mag * mag;
+      if (mode === "hp") mag = Math.sqrt(Math.max(0, 1 - 1 / (1 + Math.pow(t / Math.max(0.02, fc), 4))));
+      const bump = reso * 0.9 * Math.exp(-Math.pow((t - fc) / Math.max(0.03, 0.10 + reso * 0.10), 2));
+      mag = Math.min(1.35, mag + bump * (t > fc * 0.4 ? 1 : 0.35));
+      const y = base - mag * amp;
+      if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(t * w, y);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath(); ctx.moveTo(fc * w, top); ctx.lineTo(fc * w, base); ctx.stroke();
+    ctx.globalAlpha = 1;
+    return true;
+  } catch (e) { return false; }
+}
+function avSynthFiltSync(hostArg) {
+  try {
+    const host = hostArg || document.getElementById("av-synth-knobs");
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    const cut = Number((typeof avParams !== "undefined" && avParams && avParams["filter.cutoff"]) || 800);
+    const reso = Math.max(0, Math.min(1, Number((typeof avParams !== "undefined" && avParams && avParams["filter.reso"]) || 0)));
+    const mode = String((typeof avParams !== "undefined" && avParams && avParams["filter.mode"]) || "lp12");
+    const cap = avSynthFiltLabel(cut, reso, mode);
+    host.querySelectorAll(".av-synth-filtscreen").forEach((box) => {
+      const canvas = box.querySelector(".av-synth-filtcanvas");
+      if (canvas) avSynthFiltPaint(canvas);
+      const lab = box.querySelector(".av-synth-filtscreen-cap");
+      if (lab && lab.textContent !== cap) lab.textContent = cap;
+    });
+    return true;
+  } catch (e) { return false; }
+}
+function avSynthFiltSet(path, v) {
+  try {
+    avParams[path] = v;
+    if (typeof avApplyParam === "function") avApplyParam(path, v, { from: "filtscreen" });
+    else if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("av-param", { detail: { path: path, value: v, from: "filtscreen" } }));
+    const host = document.getElementById("av-synth-knobs");
+    if (host && typeof avKnobRefreshAll === "function") avKnobRefreshAll(host);
+    avSynthFiltSync(host);
+    return true;
+  } catch (e) { return false; }
+}
+function avSynthFiltInit(hostArg) {
+  try {
+    const host = hostArg || document.getElementById("av-synth-knobs");
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    host.querySelectorAll(".av-synth-filter").forEach((row) => {
+      /* the screen is a PANEL-level flex item, not a knob-row child: inside the row it grew the row
+         by its own width and pushed ENV onto a second line at 1280 (the paired-row trap again). */
+      const panel = row.parentNode;
+      if (!panel || panel.querySelector(".av-synth-filtscreen")) return;
+      panel.insertAdjacentHTML("beforeend", avSynthFiltScreenHTML());
+      const box = panel.querySelector(".av-synth-filtscreen");
+      const canvas = box ? box.querySelector(".av-synth-filtcanvas") : null;
+      if (!canvas || typeof canvas.addEventListener !== "function") return;
+      let drag = false;
+      const at = (e) => {
+        const r = canvas.getBoundingClientRect();
+        const x = Math.max(0, Math.min(1, (e.clientX - r.left) / Math.max(1, r.width)));
+        const y = Math.max(0, Math.min(1, (e.clientY - r.top) / Math.max(1, r.height)));
+        avSynthFiltSet("filter.cutoff", Math.round(avSynthFiltFreq(x)));
+        avSynthFiltSet("filter.reso", Math.round((1 - y) * 100) / 100);
+      };
+      canvas.addEventListener("pointerdown", (e) => { drag = true; try { canvas.setPointerCapture(e.pointerId); } catch (err) { } at(e); e.preventDefault(); });
+      canvas.addEventListener("pointermove", (e) => { if (drag) { at(e); e.preventDefault(); } });
+      canvas.addEventListener("pointerup", () => { drag = false; });
+      canvas.addEventListener("pointercancel", () => { drag = false; });
+    });
+    avSynthFiltSync(host);
+    return true;
+  } catch (e) { return false; }
+}
+
 function avSynthInit() {
   const host = document.getElementById("av-synth-knobs");
   if (!host) return false;
@@ -571,6 +692,16 @@ function avSynthInit() {
     try { avSynthFoldInit(host); } catch (e) { /* deep groups stay up */ }
     avKnobBind(host);
     avSynthBindSelects(host);
+    try { avSynthFiltInit(host); } catch (e) { /* the screen is an inset, never the card */ }
+    try {
+      if (!window.__avFiltHook) {
+        window.__avFiltHook = 1;
+        window.addEventListener("av-param", (ev) => {
+          const p = ev && ev.detail && ev.detail.path;
+          if (typeof p === "string" && p.indexOf("filter.") === 0) { try { avSynthFiltSync(); } catch (e2) { } }
+        });
+      }
+    } catch (e3) { /* no window */ }
     avSynthSetKind(avParams["engine.kind"], { commit: false });
     try { avSynthOscOptionsRefresh(); } catch (e) { /* osc options are best-effort */ }
     return true;

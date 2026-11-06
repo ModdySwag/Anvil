@@ -1143,9 +1143,17 @@ body.av-palette-open { }
 /* C3-5: the VA panel pairs its knob rows side by side — the card is ~1000px wide and each row
    used ~300-550px, so five stacked rows wasted half the width. The deep rows (TUNE, GLIDE) carry
    a head and fold behind one chip each; OSC + FILTER + ENV stay on the face. */
-.av-synth-panel[data-kind="va"] { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 22px; row-gap: 2px; }
+.av-synth-panel[data-kind="va"] { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 18px; row-gap: 2px; }
 .av-synth-panel[data-kind="va"] .av-synth-selects { flex: 0 0 100%; }
 .av-synth-panel[data-kind="va"] .av-knobs { flex: 0 0 auto; margin: 2px 0 6px; }
+/* C3-12 screen 1: the filter response inset rides the SAME flex line as the filter pots as a
+   shrinkable item (186px when there is room, 96px floor at 1280) — it takes leftover width and
+   never buys a row, so the engine card's density does not move. */
+/* flex-basis 0 + grow: a 150px BASIS wraps the line before it ever shrinks (wrap uses the
+   hypothetical size), so the item grows into the leftover width instead. */
+.av-synth-filtscreen { flex: 1 1 0; min-width: 92px; max-width: 150px; height: 84px; display: flex; flex-direction: column; gap: 2px; background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 6px; }
+.av-synth-filtcanvas { width: 100%; flex: 1 1 auto; display: block; cursor: crosshair; touch-action: none; }
+.av-synth-filtscreen-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); white-space: nowrap; overflow: hidden; }
 .av-synth-panel[data-kind="va"] > .av-synth-sec { flex: 0 0 auto; margin: 2px 0 6px; }
 .av-synth-sec-head { display: flex; align-items: baseline; gap: 8px; }
 .av-synth-sec-head .av-sec-toggle { margin-left: 0; }
