@@ -16,6 +16,8 @@ console messages: 2
 realtime ring semantics: worklet clock = Date.now (ms lattice) — ring readings resolve to 0/1000/2000 µs and 0 is EXPECTED at this engine speed (sub-1 ms cost); 0 ≠ zero cost — stability stays p95Us<1333 && underruns==0, and the publishable render cost comes from the offline ramp (fresh-context marginal cost).
 variant LIGHT: patch applied (all params accepted)
   light r1 step  1  voices 1  mean 3.91  p95 0  max 1000  underruns 0  n 3757  -> ok
-gine speed (sub-1 ms cost); 0 ≠ zero cost — stability stays p95Us<1333 && underruns==0, and the publishable render cost comes from the offline ramp (fresh-context marginal cost).
+  light r1 step  2  voices 2  mean 11.72  p95 0  max 1000  underruns 0  n 3750  -> ok
+s==0, and the publishable render cost comes from the offline ramp (fresh-context marginal cost).
 variant LIGHT: patch applied (all params accepted)
   light r1 step  1  voices 1  mean 3.91  p95 0  max 1000  underruns 0  n 3757  -> ok
+  light r1 step  2  voices 2  mean 11.72  p95 0  max 1000  underruns 0  n 3750  -> ok
