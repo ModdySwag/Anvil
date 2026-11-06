@@ -1060,6 +1060,159 @@ async function main() {
     && fxScreens.refolded === true,
     JSON.stringify(fxScreens));
 
+  /* K24k -- C3-15 screen 4: the master EQ response + a source waveform per strip. The screen rides
+     the DYN row of the folded MASTER section, so it costs the card no height while closed and no
+     height while open (the row is already 72 tall from its own knobs). The curve is not a lookalike:
+     its magnitude at eight frequencies must equal AVFXDYN's OWN coefficients at the live gains. A
+     drag writes the band gain through the card's funnel (a differing value, then restored), and each
+     strip paints its source waveform — engine pattern marked data-wave="none" (no sample buffer),
+     a buffers source painted with its peak/length units — without buying the head a single pixel. */
+  const mixScreen = (await ev(`(() => {
+    try { window.__avZone.show('mix'); } catch (e) { return { card: false }; }
+    /* the density leg walks every page and can leave MIX on another sub-tab, so land on MIX & MASTER */
+    try { const sb = document.querySelector('#av-zone-mix .av-subtab[data-sub="mix"]'); if (sb && sb.getAttribute('aria-selected') !== 'true') sb.click(); } catch (e) { }
+    const card = document.querySelector('.av-mix');
+    if (!card) return { card: false };
+    const sec = card.querySelector('[data-sect="master"]');
+    const scr = card.querySelector('.av-mix-eqscreen');
+    const cv = scr ? scr.querySelector('.av-mix-eqcv') : null;
+    const foldedBox = scr ? Math.round(scr.getBoundingClientRect().height) : null;
+    /* open MASTER through its chip (the card is basic-first by default) */
+    const chip = card.querySelector('.av-adv-chip[data-adv="master"]');
+    if (!chip) return { card: true, chip: false };
+    chip.click();
+    return { card: true, chip: true, foldedBox: foldedBox, sec: !!sec, cv: !!cv, chipHidden: chip.hidden === true };
+  })()`)).value || {};
+  await sleep(520);
+  const mixEq = (await ev(`(() => {
+    const card = document.querySelector('.av-mix');
+    if (!card) return { card: false };
+    const sec = card.querySelector('[data-sect="master"]');
+    const scr = card.querySelector('.av-mix-eqscreen');
+    const cv = scr ? scr.querySelector('.av-mix-eqcv') : null;
+    const cap = scr ? scr.querySelector('.av-mix-eqcap') : null;
+    const dynRow = sec ? sec.querySelectorAll('.av-mix-row')[1] : null;
+    let ink = 0;
+    try { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 8) ink++; } catch (e) { ink = -1; }
+    const box = scr ? scr.getBoundingClientRect() : null;
+    /* the curve law must BE the engine's EQ: same coefficients, same magnitude, at the live gains */
+    let law = null;
+    try {
+      const p = avMixParams();
+      const lo = Number(p['master.dyn.eqLo']), md = Number(p['master.dyn.eqMid']), hi = Number(p['master.dyn.eqHi']);
+      const st = AVFXDYN.createState();
+      AVFXDYN.setParam(st, 'fx.dyn.eqLo', lo);
+      AVFXDYN.setParam(st, 'fx.dyn.eqMid', md);
+      AVFXDYN.setParam(st, 'fx.dyn.eqHi', hi);
+      const sr = st.sr;
+      const mag = (i, f) => {
+        const w = 2 * Math.PI * f / sr, cw = Math.cos(w), sw = Math.sin(w), c2 = Math.cos(2 * w), s2 = Math.sin(2 * w);
+        const b0 = st.b0[i], b1 = st.b1[i], b2 = st.b2[i], a1 = st.a1[i], a2 = st.a2[i];
+        const nr = b0 + b1 * cw + b2 * c2, ni = -(b1 * sw + b2 * s2);
+        const dr = 1 + a1 * cw + a2 * c2, di = -(a1 * sw + a2 * s2);
+        return 20 * Math.log10(Math.sqrt(nr * nr + ni * ni) / Math.sqrt(dr * dr + di * di));
+      };
+      const ui = [avMixUiEqBandCoef(0, lo, sr), avMixUiEqBandCoef(1, md, sr), avMixUiEqBandCoef(2, hi, sr)];
+      let maxd = 0;
+      [20, 60, 120, 500, 1000, 3000, 8000, 16000].forEach((f) => {
+        const eng = mag(0, f) + mag(1, f) + mag(2, f);
+        const d = Math.abs(avMixUiEqMagDb(ui, f, sr) - eng);
+        if (d > maxd) maxd = d;
+      });
+      law = { lo: lo, mid: md, hi: hi, maxd: +maxd.toFixed(6) };
+    } catch (e) { law = { error: String(e && e.message || e) }; }
+    return {
+      card: true, secOpen: sec ? getComputedStyle(sec).display !== 'none' : null,
+      box: box ? { w: Math.round(box.width), h: Math.round(box.height) } : null,
+      cvW: cv ? cv.width : null, cvH: cv ? cv.height : null, ink: ink,
+      cap: cap ? String(cap.textContent || '') : null,
+      dynRowH: dynRow ? Math.round(dynRow.getBoundingClientRect().height) : null,
+      law: law,
+    };
+  })()`)).value || {};
+  /* the drag: left third up, right third down, then put both bands back */
+  const mixDrag = (await ev(`(() => {
+    const cv = document.querySelector('.av-mix-eqcv');
+    if (!cv) return { cv: false };
+    const r = cv.getBoundingClientRect();
+    const fire = (type, x, y) => cv.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: r.left + x, clientY: r.top + y, pointerId: 11 }));
+    const p0 = avMixParams();
+    const before = { lo: Number(p0['master.dyn.eqLo']), hi: Number(p0['master.dyn.eqHi']) };
+    fire('pointerdown', r.width * 0.12, r.height * 0.20); fire('pointerup', r.width * 0.12, r.height * 0.20);
+    fire('pointerdown', r.width * 0.90, r.height * 0.80); fire('pointerup', r.width * 0.90, r.height * 0.80);
+    const p1 = avMixParams();
+    const after = { lo: Number(p1['master.dyn.eqLo']), hi: Number(p1['master.dyn.eqHi']) };
+    const cap = document.querySelector('.av-mix-eqcap');
+    avMixSetParam('master.dyn.eqLo', before.lo);
+    avMixSetParam('master.dyn.eqHi', before.hi);
+    const p2 = avMixParams();
+    return { before: before, after: after, cap: cap ? String(cap.textContent || '') : null,
+      restored: { lo: Number(p2['master.dyn.eqLo']), hi: Number(p2['master.dyn.eqHi']) } };
+  })()`)).value || {};
+  /* the strips: an engine track (no sample buffer) and a buffers track (real samples) */
+  await ev(`(() => {
+    const n = 28800, l = new Float32Array(n), r = new Float32Array(n);
+    for (let i = 0; i < n; i++) { const env = Math.sin(Math.PI * i / n); l[i] = env * Math.sin(2 * Math.PI * 220 * i / 48000) * 0.8; r[i] = env * Math.sin(2 * Math.PI * 330 * i / 48000) * 0.6; }
+    avMixAddTrack({ name: 'ENGINE', source: { type: 'engine', mask: [true, true, false, false], loops: 1, tailS: 0.5 } });
+    avMixAddTrack({ name: 'RAMP', source: { type: 'buffers', l: l, r: r, sr: 48000 } });
+    if (window.__avMixUi && typeof window.__avMixUi.sync === 'function') window.__avMixUi.sync();
+    return true;
+  })()`);
+  await sleep(420);
+  const mixWaves = (await ev(`(() => {
+    const rows = [...document.querySelectorAll('.av-mix-track')];
+    const read = (rw) => {
+      const cv = rw.querySelector('.av-mix-wave');
+      const cap = rw.querySelector('.av-mix-wave-cap');
+      let ink = 0;
+      try { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 8) ink++; } catch (e) { ink = -1; }
+      return { id: rw.getAttribute('data-track'), src: rw.querySelector('.av-mix-track-src') ? String(rw.querySelector('.av-mix-track-src').textContent || '') : '',
+        wave: cv.getAttribute('data-wave'), cap: cap ? String(cap.textContent || '') : null,
+        cvW: cv.width, cvH: cv.height, ink: ink, peak: cv.getAttribute('data-peak-db'), secs: cv.getAttribute('data-seconds'),
+        title: cv.getAttribute('title'), rowH: Math.round(rw.getBoundingClientRect().height), headH: Math.round(rw.querySelector('.av-mix-track-head').getBoundingClientRect().height) };
+    };
+    const out = { rows: rows.map(read) };
+    /* the no-height proof: hide the wave pair and the row/head must measure the same */
+    const cvs = [...document.querySelectorAll('.av-mix-wave, .av-mix-wave-cap')];
+    cvs.forEach((e) => { e.style.display = 'none'; });
+    out.hidden = rows.map((rw) => ({ rowH: Math.round(rw.getBoundingClientRect().height), headH: Math.round(rw.querySelector('.av-mix-track-head').getBoundingClientRect().height) }));
+    cvs.forEach((e) => { e.style.display = ''; });
+    return out;
+  })()`)).value || {};
+  /* leave the card as found: tracks cleared, MASTER folded, EQ flat */
+  await ev(`(() => {
+    const c = document.querySelector('.av-mix-clear'); if (c) c.click();
+    const sec = document.querySelector('.av-mix [data-sect="master"]');
+    const t = sec ? sec.querySelector('.av-mix-sec-head .av-sec-toggle, .av-mix-sect-head .av-sec-toggle') : null;
+    if (t && !sec.classList.contains('av-sec-collapsed')) t.click();
+    return { folded: sec ? sec.classList.contains('av-sec-collapsed') : null };
+  })()`);
+  const wv = mixWaves || {};
+  const eng = (wv.rows || []).find((r) => r && r.src && r.src.indexOf('engine') === 0);
+  const buf = (wv.rows || []).find((r) => r && r.src === 'buffers');
+  const hidEng = (wv.hidden || [])[0] || {};
+  const hidBuf = (wv.hidden || [])[1] || {};
+  check('K24k MIX screen: the EQ response rides the DYN row of MASTER (0 while folded, >=230x64 with ink and its dB units, row stays 72), its curve law equals AVFXDYN at 8 frequencies, a drag writes and restores both shelves',
+    mixScreen.card === true && mixScreen.chip === true && mixScreen.foldedBox === 0
+    && mixEq.secOpen === true && mixEq.box && mixEq.box.w >= 230 && mixEq.box.h === 64
+    && mixEq.cvW >= 200 && mixEq.ink > 400 && mixEq.dynRowH === 72
+    && /^120 [+-]\d+\.\ddB \u00b7 1k [+-]\d+\.\ddB \u00b7 8k [+-]\d+\.\ddB/.test(String(mixEq.cap || ''))
+    && mixEq.law && mixEq.law.maxd != null && mixEq.law.maxd <= 0.001
+    && mixDrag.before && mixDrag.after && mixDrag.after.lo !== mixDrag.before.lo && mixDrag.after.hi !== mixDrag.before.hi
+    && mixDrag.restored.lo === mixDrag.before.lo && mixDrag.restored.hi === mixDrag.before.hi,
+    JSON.stringify({ screen: mixScreen, eq: mixEq, drag: mixDrag }));
+
+  check('K24k MIX strips: an engine track is marked data-wave="none" with an honest title, a buffers track paints its samples with peak/length units, and the waveform pair costs the head and row zero height',
+    wv.rows && wv.rows.length === 2
+    && eng && eng.wave === 'none' && /no sample buffer/.test(String(eng.title || ''))
+    && buf && buf.wave === 'buffers' && buf.ink > 200 && buf.cvW >= 100
+    && /^[-\d.]+ dBFS \u00b7 \d+\.\d+ s$/.test(String(buf.cap || ''))
+    && buf.peak != null && buf.peak !== '' && Number(buf.secs) > 0
+    && eng.rowH > 60 && buf.rowH > 60 && eng.headH > 12 && buf.headH > 12
+    && hidEng.rowH != null && hidEng.rowH === eng.rowH && hidEng.headH === eng.headH
+    && hidBuf.rowH != null && hidBuf.rowH === buf.rowH && hidBuf.headH === buf.headH,
+    JSON.stringify(wv));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

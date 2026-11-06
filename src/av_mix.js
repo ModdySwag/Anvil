@@ -65,7 +65,7 @@
 */
 "use strict";
 
-const AV_MIX_VERSION = "s3.0";
+const AV_MIX_VERSION = "s3.1";
 const AV_MIX_CHUNK_FRAMES = 131072;   /* render chunk (pin) */
 const AV_MIX_MAX_SECONDS = 300;       /* output cap (pin): refuse above */
 const AV_MIX_SR_DEF = 48000;
@@ -698,6 +698,93 @@ function avMixResolveBuffers(source) {
     const off = avMixClamp(Math.round(avMixClampNum(source.offsetFrames, 0, 0, frames)), 0, frames);
     return { ok: true, chans: chans, off: off, frames: frames - off, rate: rate, assumedRate: assumed };
   } catch (e) { return { ok: false, error: avMixErr(e) }; }
+}
+
+/* ---------- C3-15: source peaks for the strip waveform ----------
+
+   The MIX strips carry a mini waveform of each track's SOURCE. The track copy deliberately never
+   carries sample arrays (avMixSourceCopy stays small), so the samples are read HERE, inside the
+   module that owns them:
+     buffers -> the live channels (by reference)
+     take    -> the take entry's data (the same array the render reads)
+     comp    -> the comp store's ALREADY-RENDERED data only; this never triggers a comp render
+     engine  -> no sample buffer exists until a bounce; refused honestly (kind 'engine')
+   Each window is scanned with a stride so a pass is bounded at buckets*64 reads per channel — a
+   mini waveform is an envelope, not a sample dump. Returns
+   { ok, kind, frames, rate, seconds, min[], max[], peakDb } | { ok:false, kind, error }.
+   Never throws, never allocates beyond the two bucket arrays. */
+function avMixPeaks(id, buckets) {
+  try {
+    avMixEnsure();
+    let B = Math.round(Number(buckets));
+    if (!isFinite(B) || B < 8) B = 120;
+    if (B > 512) B = 512;
+    let tr = null;
+    for (let i = 0; i < avMix.tracks.length; i++) {
+      if (String(avMix.tracks[i].id) === String(id)) { tr = avMix.tracks[i]; break; }
+    }
+    if (!tr) return { ok: false, kind: "none", error: "track not found: " + String(id) };
+    const src = tr.source || null;
+    const kind = (src && src.type) ? String(src.type) : "none";
+    let r = null;
+    if (kind === "take") r = avMixResolveTake(src.id);
+    else if (kind === "buffers") r = avMixResolveBuffers(src);
+    else if (kind === "comp") {
+      /* no render trigger: the store's rendered data is the only honest source here */
+      const store = avMixCompStore();
+      let data = null, rate0 = null, frames0 = null;
+      if (store) {
+        const s = String(src.id);
+        for (let i = 0; i < store.length; i++) {
+          if (String(store[i].id) !== s) continue;
+          const rend = store[i].rendered;
+          if (rend && rend.data != null && typeof rend.data.length === "number") {
+            data = rend.data; rate0 = avMixFiniteNum(rend.rate); frames0 = avMixFiniteNum(rend.frames);
+          }
+          break;
+        }
+      }
+      if (!data) return { ok: false, kind: kind, error: "comp " + String(src.id) + " has no rendered samples yet" };
+      const chans = [];
+      for (let c = 0; c < data.length && c < 8; c++) if (avMixIsChan(data[c])) chans.push(data[c]);
+      if (!chans.length) return { ok: false, kind: kind, error: "comp " + String(src.id) + " rendered data unreadable" };
+      let frames = (frames0 !== null && frames0 > 0) ? Math.round(frames0) : chans[0].length;
+      frames = Math.min(frames, chans[0].length);
+      if (!(frames > 0)) return { ok: false, kind: kind, error: "comp " + String(src.id) + " is empty" };
+      r = { ok: true, chans: chans, off: 0, frames: frames, rate: (rate0 !== null && rate0 > 0) ? rate0 : AV_MIX_SR_DEF };
+    } else if (kind === "engine") {
+      return { ok: false, kind: "engine", error: "the engine pattern has no sample buffer until a bounce" };
+    } else {
+      return { ok: false, kind: kind, error: "unknown source type: " + kind };
+    }
+    if (!r || r.ok !== true) return { ok: false, kind: kind, error: String((r && r.error) || "source unavailable") };
+    const chans = r.chans, off = r.off, n = r.frames;
+    const min = new Array(B), max = new Array(B);
+    const win = n / B;
+    const stride = Math.max(1, Math.floor(win / 64));
+    let peak = 0;
+    for (let b = 0; b < B; b++) {
+      const a0 = off + Math.floor(b * win);
+      const a1 = off + Math.min(n, Math.floor((b + 1) * win));
+      let lo = 0, hi = 0;
+      for (let s = a0; s < a1; s += stride) {
+        for (let c = 0; c < chans.length; c++) {
+          const x = chans[c][s];
+          if (!(x === x)) continue;                     /* NaN never wins a bucket */
+          if (x < lo) lo = x;
+          if (x > hi) hi = x;
+        }
+      }
+      min[b] = Math.round(lo * 10000) / 10000;
+      max[b] = Math.round(hi * 10000) / 10000;
+      const p = Math.max(-lo, hi);
+      if (p > peak) peak = p;
+    }
+    return {
+      ok: true, kind: kind, frames: n, rate: r.rate, seconds: n / r.rate,
+      min: min, max: max, peakDb: peak > 0 ? 20 * Math.log10(peak) : null,
+    };
+  } catch (e) { return { ok: false, kind: "none", error: avMixErr(e) }; }
 }
 
 /* engine -> avBounce (guarded, async); includeParts:false, includeMaster:true */
@@ -1627,6 +1714,7 @@ if (typeof window !== "undefined" && window) {
       clear: avMixClear,
       setParam: avMixSetParam,
       params: avMixParams,
+      peaks: avMixPeaks,
       render: avMixRender,
       "export": avMixExport,
       autoBalance: avMixAutoBalance,

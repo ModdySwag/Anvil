@@ -867,6 +867,18 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-mix-m-peak { }
 .av-mix-m-norm { }
 
+/* C3-15: screen 4 — the master EQ response rides the DYN row as a shrinkable flex item
+   (flex 1 1 0 + min/max, trap 18: nothing to wrap because the basis is 0). The row is 72 tall
+   from its own knobs, so the screen buys no height. Each strip carries its source waveform on the
+   head line, where the row already has ~600px of slack, so it buys no height either. The canvases
+   pin their CSS heights (trap 22) and derive their backing stores from the laid-out box. */
+.av-mix-eqscreen { flex: 1 1 0; min-width: 230px; max-width: 380px; height: 64px; display: flex; flex-direction: column; gap: 2px; background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; padding: 3px 6px; }
+.av-mix-eqcv { width: 100%; height: 40px; display: block; cursor: ns-resize; touch-action: none; }
+.av-mix-eqcap { font-family: var(--mono); font-size: 9px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.av-mix-wave { width: 140px; height: 22px; display: block; align-self: center; margin-left: auto; }
+.av-mix-wave-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); align-self: center; white-space: nowrap; }
+.av-mix-wave[data-wave="none"] { opacity: .55; }
+
 /* ============================================================================
    DECK — the DECK card (av_deck_ui.js): scope · spectrum · waterfall · meters · readouts */
 .av-deck { display: flex; flex-direction: column; gap: 10px; margin: 2px 0 4px; }

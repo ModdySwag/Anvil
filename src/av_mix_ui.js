@@ -79,7 +79,7 @@
 
 "use strict";
 
-const AV_MIX_UI_VERSION = "s3.0";
+const AV_MIX_UI_VERSION = "s3.1";
 const AV_MIX_UI_POLL_MS = 1500;                 /* the light mix-changed poll (§2.3) */
 const AV_MIX_UI_WARN_MAX = 8;
 const AV_MIX_UI_TRACKS_MAX = 64;                /* rows rendered */
@@ -435,6 +435,7 @@ function avMixUiTrackView(meta, i) {
     id: id,
     name: name,
     srcText: avMixUiSrcText(m.source, id),
+    srcKind: (m.source && typeof m.source === "object" && typeof m.source.type === "string") ? m.source.type : "",
     mute: m.mute === true,
     solo: m.solo === true,
     duckSrc: (m.duck && typeof m.duck === "object" && typeof m.duck.src === "string") ? m.duck.src : "",
@@ -811,6 +812,7 @@ function avMixUiTrackRowHTML(v, tracks) {
     '<button type="button" class="av-btn mini av-mix-btn av-mix-solo' + (v.solo ? " av-mix-on" : "") + '" data-act="solo" data-track="' + idEsc + '" title="SOLO this track" aria-pressed="' + (v.solo ? "true" : "false") + '">SOLO</button>' +
     '<button type="button" class="av-btn mini av-mix-btn av-mix-fx-btn' + (v.expanded ? " av-mix-fx-open" : "") + '" data-act="fx" data-track="' + idEsc + '" title="Insert FX for this track (drive then dyn)" aria-expanded="' + (v.expanded ? "true" : "false") + '">FX</button>' +
     '<button type="button" class="av-btn mini av-mix-btn av-mix-remove" data-act="remove" data-track="' + idEsc + '" title="Remove this track" aria-label="Remove">\u2715</button>' +
+    avMixUiWaveHTML(v.srcKind) +
     "</div>" +
     '<div class="av-mix-track-knobs">' + knobs + "</div>" +
     '<div class="av-mix-track-extra">' +
@@ -951,7 +953,7 @@ function avMixUiBodyHTML() {
     '<section class="av-mix-sect" data-sect="master">' +
     '<div class="av-mix-sect-head"><span class="av-mix-sect-lbl">MASTER</span></div>' +
     '<div class="av-mix-row">' + tog("av-mix-md-on") + kv("av-mix-md-amount") + "</div>" +
-    '<div class="av-mix-row">' + tog("av-mix-mdyn-on") + kv("av-mix-mdyn-eqlo") + kv("av-mix-mdyn-eqhi") + kv("av-mix-mdyn-thresh") + kv("av-mix-mdyn-ratio") + kv("av-mix-mdyn-ceil") + "</div>" +
+    '<div class="av-mix-row">' + tog("av-mix-mdyn-on") + kv("av-mix-mdyn-eqlo") + kv("av-mix-mdyn-eqhi") + kv("av-mix-mdyn-thresh") + kv("av-mix-mdyn-ratio") + kv("av-mix-mdyn-ceil") + avMixUiEqScreenHTML() + "</div>" +
     '<div class="av-mix-row">' + tog("av-mix-norm-on") +
     '<label class="av-mix-lab" for="av-mix-norm-target">TARGET</label>' +
     '<select class="av-select av-mix-select" id="av-mix-norm-target" data-mix-param="master.norm.target" data-mix-num="1" aria-label="Normalize loudness target">' + normOpts + "</select>" +
@@ -1535,6 +1537,7 @@ function avMixUiSync() {
       avMixUiState.autoKey = "";
       avMixUiWire(host);
       if (typeof avKnobBind === "function") { try { avKnobBind(host); } catch (e) { /* binding is a nicety */ } }
+      try { avMixUiEqInit(host); } catch (e) { /* the screen is an inset, never the card */ }
     }
     avMixUiEnsureHooks();
     avMixUiModulesNote();
@@ -1542,6 +1545,8 @@ function avMixUiSync() {
     avMixUiPaintStatus(host);
     avMixUiPaintAdd(host);
     avMixUiPaintTracks(host);
+    avMixUiWavePaint(host);
+    avMixUiEqSync(host);
     avMixUiPaintParams(host);
     avMixUiPaintMeters(host);
     avMixUiPaintAuto(host);
@@ -2244,6 +2249,306 @@ function avMixUiStartPoll() {
   } catch (e) { return false; }
 }
 
+/* ---------- C3-15 screen 4: master EQ response + a source waveform per strip ----------
+
+   The MASTER chain is DRIVE -> DYN (3-band EQ -> compressor -> limiter). Two shelf knobs cannot
+   show the shape between them, so the DYN row carries the response screen on the SAME flex line as
+   the knobs (flex 1 1 0, min 230 / max 380, 64 tall). The row is already 72 tall from its knobs, so
+   the screen buys no height. The curve is computed from the SAME RBJ coefficients the engine builds
+   (av_fx_dyn eqCoeffs: low shelf 120 Hz S=1, peaking 1 kHz Q=1, high shelf 8 kHz S=1), so it is the
+   chain, not a sketch of it. Drag: x picks the nearest band centre in log frequency, y sets that
+   band's gain (-15..+15 dB, half-dB steps). While DYN is off the curve is dimmed and the caption
+   says so. MASTER is folded by default, so the canvas has no box on mount — a ResizeObserver paints
+   it the moment the chip opens it (trap 20).
+
+   Every track strip carries a mini waveform of its SOURCE (avMixPeaks, in av_mix.js: the module that
+   owns the sample arrays). A source with no sample buffer — the engine pattern, or a comp that has
+   not been rendered — is drawn as a bare centre line and marked data-wave="none": labelled
+   best-effort, never a fake trace. */
+const AV_MIX_UI_EQ_F = [120, 1000, 8000];
+const AV_MIX_UI_EQ_DBMAX = 15;          /* the eqLo/eqMid/eqHi range */
+const AV_MIX_UI_EQ_WIN = 18;            /* the window drawn: +-18 dB (headroom over the boosts) */
+const AV_MIX_UI_EQ_PATHS = ["master.dyn.eqLo", "master.dyn.eqMid", "master.dyn.eqHi"];
+const AV_MIX_UI_WAVE_BUCKETS = 120;
+
+function avMixUiEqScreenHTML() {
+  return '<div class="av-mix-eqscreen" data-av-eq="1">' +
+    '<canvas class="av-mix-eqcv" aria-label="Master EQ response (low shelf 120 Hz, peak 1 kHz, high shelf 8 kHz) \u2014 drag for band gain"></canvas>' +
+    '<span class="av-mix-eqcap">\u2014</span></div>';
+}
+
+/* the exact magnitudes av_fx_dyn's eqCoeffs builds — same constants, same RBJ forms */
+function avMixUiEqBandCoef(band, db, sr) {
+  const f = AV_MIX_UI_EQ_F[band];
+  const w0 = 2 * Math.PI * f / sr;
+  const cw = Math.cos(w0), sw = Math.sin(w0);
+  const A = Math.pow(10, db / 40);
+  let b0, b1, b2, a0, a1, a2;
+  if (band === 1) {
+    const alpha = sw / 2, ap = alpha * A, am = alpha / A;
+    b0 = 1 + ap; b1 = -2 * cw; b2 = 1 - ap;
+    a0 = 1 + am; a1 = -2 * cw; a2 = 1 - am;
+    if (db === 0) { b0 = a0; b1 = a1; b2 = a2; }
+  } else if (band === 0) {
+    const alpha = sw / 2 * Math.SQRT2, sa = 2 * Math.sqrt(A) * alpha;
+    b0 = A * ((A + 1) - (A - 1) * cw + sa);
+    b1 = 2 * A * ((A - 1) - (A + 1) * cw);
+    b2 = A * ((A + 1) - (A - 1) * cw - sa);
+    a0 = (A + 1) + (A - 1) * cw + sa;
+    a1 = -2 * ((A - 1) + (A + 1) * cw);
+    a2 = (A + 1) + (A - 1) * cw - sa;
+    if (db === 0) { b0 = a0; b1 = a1; b2 = a2; }
+  } else {
+    const alpha = sw / 2 * Math.SQRT2, sa = 2 * Math.sqrt(A) * alpha;
+    b0 = A * ((A + 1) + (A - 1) * cw + sa);
+    b1 = -2 * A * ((A - 1) + (A + 1) * cw);
+    b2 = A * ((A + 1) + (A - 1) * cw - sa);
+    a0 = (A + 1) - (A - 1) * cw + sa;
+    a1 = 2 * ((A - 1) - (A + 1) * cw);
+    a2 = (A + 1) - (A - 1) * cw - sa;
+    if (db === 0) { b0 = a0; b1 = a1; b2 = a2; }
+  }
+  const inv = 1 / a0;
+  return { b0: b0 * inv, b1: b1 * inv, b2: b2 * inv, a1: a1 * inv, a2: a2 * inv };
+}
+function avMixUiEqMagDb(coefs, f, sr) {
+  const w = 2 * Math.PI * f / sr;
+  const cw = Math.cos(w), sw = Math.sin(w), c2 = Math.cos(2 * w), s2 = Math.sin(2 * w);
+  let db = 0;
+  for (let i = 0; i < coefs.length; i++) {
+    const c = coefs[i];
+    const nr = c.b0 + c.b1 * cw + c.b2 * c2, ni = -(c.b1 * sw + c.b2 * s2);
+    const dr = 1 + c.a1 * cw + c.a2 * c2, di = -(c.a1 * sw + c.a2 * s2);
+    const num = Math.sqrt(nr * nr + ni * ni), den = Math.sqrt(dr * dr + di * di);
+    db += 20 * Math.log10(Math.max(1e-9, num) / Math.max(1e-9, den));
+  }
+  return db;
+}
+function avMixUiEqState() {
+  try {
+    const p = avMixUiMixParamsRead().params || {};
+    return {
+      lo: avMixUiNum(p["master.dyn.eqLo"], 0),
+      mid: avMixUiNum(p["master.dyn.eqMid"], 0),
+      hi: avMixUiNum(p["master.dyn.eqHi"], 0),
+      on: avMixUiNum(p["master.dyn.on"], 0) > 0,
+    };
+  } catch (e) { return { lo: 0, mid: 0, hi: 0, on: false }; }
+}
+function avMixUiEqFmt(v) {
+  const n = avMixUiNum(v, 0);
+  return (n >= 0 ? "+" : "") + n.toFixed(1);
+}
+function avMixUiEqCap(st) {
+  return "120 " + avMixUiEqFmt(st.lo) + "dB \u00b7 1k " + avMixUiEqFmt(st.mid) + "dB \u00b7 8k " + avMixUiEqFmt(st.hi) + "dB" +
+    (st.on ? "" : " \u00b7 DYN OFF");
+}
+function avMixUiEqPaint(canvas, st) {
+  try {
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const box = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+    const cssW = Math.max(80, Math.round((box && box.width) || 240));
+    const cssH = Math.max(24, Math.round((box && box.height) || 40));
+    const dpr = Math.max(1, Math.min(3, (typeof window !== "undefined" && window.devicePixelRatio) || 1));
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+      canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const w = canvas.width, h = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const pad = 2 * dpr, mid = h / 2, amp = Math.max(2, mid - pad);
+    const yAt = (db) => mid - (Math.max(-AV_MIX_UI_EQ_WIN, Math.min(AV_MIX_UI_EQ_WIN, db)) / AV_MIX_UI_EQ_WIN) * amp;
+    /* grid: the 0 dB line plus the decade ticks (20 Hz .. 20 kHz, log x) */
+    ctx.lineWidth = Math.max(1, dpr * 0.7);
+    ctx.strokeStyle = "rgba(255,255,255,0.16)";
+    ctx.beginPath(); ctx.moveTo(0, yAt(0)); ctx.lineTo(w, yAt(0)); ctx.stroke();
+    ctx.strokeStyle = "rgba(255,255,255,0.07)";
+    [100, 1000, 10000].forEach(function (f) {
+      const x = Math.log(f / 20) / Math.log(1000) * w;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    });
+    [-12, -6, 6, 12].forEach(function (db) {
+      ctx.beginPath(); ctx.moveTo(0, yAt(db)); ctx.lineTo(w, yAt(db)); ctx.stroke();
+    });
+    /* the chain's own response */
+    const sr = AV_MIX_UI_RATE_DEF;
+    const coefs = [avMixUiEqBandCoef(0, st.lo, sr), avMixUiEqBandCoef(1, st.mid, sr), avMixUiEqBandCoef(2, st.hi, sr)];
+    ctx.globalAlpha = st.on ? 1 : 0.45;
+    ctx.strokeStyle = "#2ed8c9";
+    ctx.lineWidth = Math.max(1, 1.5 * dpr);
+    ctx.beginPath();
+    const STEPS = 160;
+    for (let i = 0; i <= STEPS; i++) {
+      const f = 20 * Math.pow(1000, i / STEPS);
+      const y = yAt(avMixUiEqMagDb(coefs, f, sr));
+      if (i === 0) ctx.moveTo(0, y); else ctx.lineTo(i / STEPS * w, y);
+    }
+    ctx.stroke();
+    /* band centres as dots at their gain */
+    ctx.globalAlpha = st.on ? 0.9 : 0.4;
+    const gains = [st.lo, st.mid, st.hi];
+    for (let b = 0; b < 3; b++) {
+      const x = Math.log(AV_MIX_UI_EQ_F[b] / 20) / Math.log(1000) * w;
+      const y = yAt(gains[b]);
+      ctx.beginPath(); ctx.arc(x, y, Math.max(1.4, 1.8 * dpr), 0, Math.PI * 2); ctx.fillStyle = "#2ed8c9"; ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    return true;
+  } catch (e) { return false; }
+}
+function avMixUiEqSync(hostArg) {
+  try {
+    const host = hostArg || avMixUiHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const box = host.querySelector(".av-mix-eqscreen");
+    if (!box) return false;
+    const st = avMixUiEqState();
+    const cv = box.querySelector(".av-mix-eqcv");
+    if (cv) avMixUiEqPaint(cv, st);
+    const cap = box.querySelector(".av-mix-eqcap");
+    const text = avMixUiEqCap(st);
+    if (cap && cap.textContent !== text) cap.textContent = text;
+    if (box.dataset) box.dataset.on = st.on ? "1" : "0";
+    return true;
+  } catch (e) { return false; }
+}
+/* x -> the nearest band centre in log frequency; y -> that band's gain */
+function avMixUiEqBandAt(t) {
+  const f = 20 * Math.pow(1000, Math.max(0, Math.min(1, t)));
+  let best = 0, bestD = Infinity;
+  for (let i = 0; i < 3; i++) {
+    const d = Math.abs(Math.log(f / AV_MIX_UI_EQ_F[i]));
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+function avMixUiEqSet(band, db) {
+  try {
+    const i = Math.max(0, Math.min(2, band | 0));
+    const v = Math.round(Math.max(-AV_MIX_UI_EQ_DBMAX, Math.min(AV_MIX_UI_EQ_DBMAX, db)) * 2) / 2;
+    if (!avMixUiApplyParam(AV_MIX_UI_EQ_PATHS[i], v)) return false;
+    const host = avMixUiHost();
+    if (host && typeof avKnobRefreshAll === "function") { try { avKnobRefreshAll(host); } catch (e) { /* nicety */ } }
+    avMixUiEqSync(host);
+    return true;
+  } catch (e) { return false; }
+}
+function avMixUiEqInit(hostArg) {
+  try {
+    const host = hostArg || avMixUiHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const box = host.querySelector(".av-mix-eqscreen");
+    if (!box) return false;
+    const cv = box.querySelector(".av-mix-eqcv");
+    if (cv && !cv.__avMixEqBound && typeof cv.addEventListener === "function") {
+      cv.__avMixEqBound = 1;
+      let drag = false;
+      const at = function (e) {
+        const r = cv.getBoundingClientRect();
+        const t = Math.max(0, Math.min(1, (e.clientX - r.left) / Math.max(1, r.width)));
+        const y = Math.max(0, Math.min(1, (e.clientY - r.top) / Math.max(1, r.height)));
+        avMixUiEqSet(avMixUiEqBandAt(t), (0.5 - y) * 2 * AV_MIX_UI_EQ_DBMAX);
+      };
+      cv.addEventListener("pointerdown", function (e) { drag = true; try { cv.setPointerCapture(e.pointerId); } catch (err) { } at(e); e.preventDefault(); });
+      cv.addEventListener("pointermove", function (e) { if (drag) { at(e); e.preventDefault(); } });
+      cv.addEventListener("pointerup", function () { drag = false; });
+      cv.addEventListener("pointercancel", function () { drag = false; });
+    }
+    if (typeof ResizeObserver === "function" && !box.__avMixEqRO) {
+      box.__avMixEqRO = new ResizeObserver(function () { try { avMixUiEqSync(avMixUiHost()); } catch (e2) { } });
+      box.__avMixEqRO.observe(box);
+    }
+    avMixUiEqSync(host);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* one strip's waveform frame: the canvas is painted from the source, the caption prints its units */
+function avMixUiWaveHTML(kind) {
+  const known = (kind === "take" || kind === "buffers" || kind === "comp");
+  return '<canvas class="av-mix-wave" data-wave="' + (known ? kind : "none") + '" aria-hidden="true"></canvas>' +
+    '<span class="av-mix-wave-cap">\u2014</span>';
+}
+function avMixUiWaveDraw(cv, p) {
+  try {
+    if (!cv || typeof cv.getContext !== "function") return false;
+    const box = cv.getBoundingClientRect ? cv.getBoundingClientRect() : null;
+    const cssW = Math.max(40, Math.round((box && box.width) || 140));
+    const cssH = Math.max(12, Math.round((box && box.height) || 22));
+    const dpr = Math.max(1, Math.min(3, (typeof window !== "undefined" && window.devicePixelRatio) || 1));
+    if (cv.width !== Math.round(cssW * dpr) || cv.height !== Math.round(cssH * dpr)) {
+      cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
+    }
+    const ctx = cv.getContext("2d");
+    if (!ctx) return false;
+    const w = cv.width, h = cv.height, mid = h / 2;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = "rgba(255,255,255,0.14)";
+    ctx.lineWidth = Math.max(1, dpr * 0.7);
+    ctx.beginPath(); ctx.moveTo(0, mid); ctx.lineTo(w, mid); ctx.stroke();
+    if (!p || p.ok !== true) {
+      cv.setAttribute("data-wave", "none");
+      cv.setAttribute("title", (p && p.error) ? String(p.error) : "no sample buffer for this source");
+      return true;
+    }
+    cv.setAttribute("data-wave", String(p.kind));
+    cv.setAttribute("data-peak-db", p.peakDb != null ? p.peakDb.toFixed(1) : "");
+    cv.setAttribute("data-seconds", Number(p.seconds).toFixed(2));
+    cv.setAttribute("title", "source waveform \u00b7 " + String(p.kind) + " \u00b7 " + Number(p.seconds).toFixed(2) + " s \u00b7 peak " +
+      (p.peakDb != null ? String(Number(p.peakDb).toFixed(1)) + " dBFS" : "silent"));
+    const n = p.min.length;
+    const bw = w / n;
+    const amp = mid * 0.92;
+    ctx.strokeStyle = "#2ed8c9";
+    ctx.lineWidth = Math.max(1, dpr * 0.9);
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = (i + 0.5) * bw;
+      const y0 = mid - Math.max(-1, Math.min(1, p.max[i])) * amp;
+      const y1 = mid - Math.max(-1, Math.min(1, p.min[i])) * amp;
+      ctx.moveTo(x, y0);
+      ctx.lineTo(x, Math.max(y1, y0 + Math.max(1, dpr * 0.6)));
+    }
+    ctx.stroke();
+    return true;
+  } catch (e) { return false; }
+}
+function avMixUiWaveCap(p) {
+  try {
+    if (!p || p.ok !== true) return "no samples";
+    const secs = Number(p.seconds);
+    const t = secs >= 10 ? secs.toFixed(0) : secs.toFixed(2);
+    return (p.peakDb != null ? Number(p.peakDb).toFixed(1) + " dBFS \u00b7 " : "silent \u00b7 ") + t + " s";
+  } catch (e) { return "\u2014"; }
+}
+function avMixUiWavePaint(hostArg) {
+  try {
+    const host = hostArg || avMixUiHost();
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    const cvs = host.querySelectorAll(".av-mix-wave");
+    if (!cvs || !cvs.length) return false;
+    for (let i = 0; i < cvs.length; i++) {
+      const cv = cvs[i];
+      if (cv.__avMixWaveDone) continue;          /* a row rebuild makes a NEW canvas, so this is per-mount */
+      const row = (typeof cv.closest === "function") ? cv.closest(".av-mix-track") : null;
+      const id = row ? String(row.getAttribute("data-track") || "") : "";
+      let p = null;
+      if (id && typeof avMixPeaks === "function") { try { p = avMixPeaks(id, AV_MIX_UI_WAVE_BUCKETS); } catch (e) { p = null; } }
+      avMixUiWaveDraw(cv, p);
+      const cap = cv.nextElementSibling;
+      if (cap && cap.classList && cap.classList.contains("av-mix-wave-cap")) {
+        const text = avMixUiWaveCap(p);
+        if (cap.textContent !== text) cap.textContent = text;
+      }
+      cv.__avMixWaveDone = 1;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
 /* ---------- init (mount, idempotent, re-mountable) ---------- */
 
 
@@ -2311,6 +2616,18 @@ function avMixUiInit() {
     }
     avMixUiWire(host);
     if (typeof avKnobBind === "function") { try { avKnobBind(host); } catch (e) { /* binding is a nicety */ } }
+    try { avMixUiEqInit(host); } catch (e) { /* the screen is an inset, never the card */ }
+    try {
+      /* the EQ knobs commit through avApplyParam and then dispatch 'av-param' (av_knob.js), so the
+         screen repaints live under a knob drag instead of waiting out the 1.5 s poll */
+      if (!window.__avMixEqHook) {
+        window.__avMixEqHook = 1;
+        window.addEventListener("av-param", (ev) => {
+          const p = ev && ev.detail && ev.detail.path;
+          if (typeof p === "string" && p.indexOf("mix.master.dyn.") === 0) { try { avMixUiEqSync(); } catch (e2) { } }
+        });
+      }
+    } catch (e3) { /* no window */ }
     const s = avMixUiState;
     s.inited = true;
     s.mounts += 1;
@@ -2414,6 +2731,8 @@ function avMixUiClasses() {
     "av-mix-file", "av-mix-ref-file", "av-mix-ref-val", "av-mix-compare", "av-mix-cmp-val",
     "av-mix-playab", "av-mix-ab-val",
     "av-mix-warnings", "av-mix-warn-head", "av-mix-warn-item",
+    "av-mix-eqscreen", "av-mix-eqcv", "av-mix-eqcap",
+    "av-mix-wave", "av-mix-wave-cap",
     "av-mix-foot",
     "av-mix-m-lufs", "av-mix-m-dbtp", "av-mix-m-peak", "av-mix-m-norm",
   ];
