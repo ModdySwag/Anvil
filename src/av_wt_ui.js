@@ -33,7 +33,9 @@
                 via avWtSetFrame. Applied on release (change); the readout updates on input.
      · LIBRARY  `#av-wt-lib` — rows `[data-lib-id]` from avWtLibraryList() with LOAD / INSTALL /
                 DELETE buttons; refreshed after installs and deletes (sync or promise lists are
-                both settled).
+                both settled). C3-8: the library is the one section that GROWS with use, so it is
+                folded by default (`av-sec-collapsed`) behind the head chip `#av-wt-lib-toggle`,
+                whose label carries the row count — a folded library is never invisible.
      · ACTIONS  `#av-wt-new` · `#av-wt-import` (+ the hidden file input `#av-wt-import-file`,
                 accept=".wt,.json") · `#av-wt-export` · `#av-wt-install` · `#av-wt-audition`.
                 INSTALL: avWtInstall(table) -> sets osc2.type to wt.userN for the RECEIPT's slot
@@ -45,6 +47,11 @@
      · STATUS   `#av-wt-status` (role=status, aria-live=polite) — every refusal is a plain line.
      · NAME     `#av-wt-name` (an extra control) renames the current table (guarded write; a
                 frozen table refuses honestly).
+
+   LAYOUT (C3-8): the body is head · status · canvas · `.av-wt-row1` (tools + frames + actions on
+   one line) · `.av-wt-row2` (morph + harmonics on the next) · the folded library. Ten stacked
+   strips cost 463px on a 504px well at 1280; this shape is 298px and the canvas stays full
+   width. The note line is gone — its two facts live in the tool titles and the INSTALL title.
 
    PINNED IDS (rig + parent rely on these; exact): #av-wt-canvas · #av-wt-tool [data-tool] ·
    #av-wt-frames · #av-wt-frame-add · [data-frame="i"] · #av-wt-morph (the range input) ·
@@ -141,7 +148,8 @@ const AV_WT_UI_CLASSES = [
   "av-wt-morph-sec", "av-wt-range", "av-wt-select", "av-wt-morph-val",
   "av-wt-spec", "av-wt-harm-val", "av-wt-lbl",
   "av-wt-lib", "av-wt-lib-row", "av-wt-lib-name", "av-wt-lib-meta", "av-wt-lib-acts", "av-wt-lib-empty",
-  "av-wt-actions", "av-wt-btn", "av-wt-file", "av-wt-note",
+  "av-wt-row1", "av-wt-row2", "av-wt-lib-toggle",
+  "av-wt-actions", "av-wt-btn", "av-wt-file",
 ];
 
 /* UI-local state only — every core fact is read through the pinned apis per call */
@@ -645,11 +653,66 @@ function wtUiPaintLib(host) {
     if (!s.lib.length) {
       const why = s.lastLibErr ? (" \u2014 " + avWtUiEsc(s.lastLibErr)) : "";
       box.innerHTML = '<p class="av-note av-dim av-wt-lib-empty">library \u2014 install a table to store it here' + why + "</p>";
+      wtUiLibChipPaint(host);
       return true;
     }
     let html = "";
     for (let i = 0; i < s.lib.length; i++) html += wtUiLibRowHTML(s.lib[i]);
     box.innerHTML = html;
+    wtUiLibChipPaint(host);
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- the LIBRARY fold (C3-8) ---------- */
+
+/* the chip label carries the count ("LIBRARY · 3"), so a folded library is never invisible */
+function wtUiLibChipPaint(host) {
+  try {
+    const h = host || avWtUiHost();
+    if (!h || typeof h.querySelector !== "function") return false;
+    const chip = h.querySelector("#av-wt-lib-toggle");
+    const box = h.querySelector("#av-wt-lib");
+    if (!chip || !box) return false;
+    const n = box.querySelectorAll("[data-lib-id]").length;
+    const label = "LIBRARY \u00b7 " + n;
+    if (String(chip.textContent || "") !== label) chip.textContent = label;
+    return true;
+  } catch (e) { return false; }
+}
+
+/* fold or open the library section — the chip is its only toggle (the section has no head) */
+function wtUiLibFoldSet(open) {
+  try {
+    const h = avWtUiHost();
+    if (!h || typeof h.querySelector !== "function") return false;
+    const chip = h.querySelector("#av-wt-lib-toggle");
+    const box = h.querySelector("#av-wt-lib");
+    if (!chip || !box) return false;
+    if (open) box.classList.remove("av-sec-collapsed"); else box.classList.add("av-sec-collapsed");
+    chip.setAttribute("aria-expanded", open ? "true" : "false");
+    return true;
+  } catch (e) { return false; }
+}
+
+/* wire the chip; idempotent (a re-mount re-wires without doubling the listener) and always
+   resets the fold to CLOSED, because the card is chrome-heavy and the well is fixed */
+function wtUiLibFoldWire(host) {
+  try {
+    const h = host || avWtUiHost();
+    if (!h || typeof h.querySelector !== "function") return false;
+    const chip = h.querySelector("#av-wt-lib-toggle");
+    const box = h.querySelector("#av-wt-lib");
+    if (!chip || !box) return false;
+    box.classList.add("av-sec-collapsed");
+    chip.setAttribute("aria-expanded", "false");
+    if (chip.dataset.avWtFoldWired !== "1") {
+      chip.dataset.avWtFoldWired = "1";
+      chip.addEventListener("click", () => {
+        try { wtUiLibFoldSet(!!box.classList.contains("av-sec-collapsed")); } catch (e) { /* stays */ }
+      });
+    }
+    wtUiLibChipPaint(h);
     return true;
   } catch (e) { return false; }
 }
@@ -1784,14 +1847,21 @@ function wtUiBodyHTML() {
     '<div class="av-wt-head"><span class="av-wt-title">WT EDITOR</span>' +
     '<span class="av-wt-cap av-dim">Draw a frame \u00b7 trim its harmonics \u00b7 morph A\u2192B \u00b7 install it as an osc2 wavetable. Everything stays on this machine.</span>' +
     '<span class="av-wt-namewrap"><label class="av-wt-name-lbl" for="av-wt-name">NAME</label>' +
-    '<input class="av-wt-name" id="av-wt-name" type="text" spellcheck="false" autocomplete="off" maxlength="48" aria-label="Wavetable name"></span></div>' +
+    '<input class="av-wt-name" id="av-wt-name" type="text" spellcheck="false" autocomplete="off" maxlength="48" aria-label="Wavetable name"></span>' +
+    /* C3-8: the library is the one section that GROWS with use (a row per installed table), so it
+       folds behind this chip; the count on the chip keeps a folded library visible. */
+    '<button type="button" class="av-btn mini av-wt-lib-toggle" id="av-wt-lib-toggle" aria-expanded="false" aria-controls="av-wt-lib" title="LIBRARY \u2014 the tables installed on this machine; the chip opens the list">LIBRARY \u00b7 0</button></div>' +
     '<div class="av-wt-status-line"><span class="av-wt-status av-wt-msg" id="av-wt-status" role="status" aria-live="polite">' + avWtUiEsc(s.status) + "</span></div>" +
     '<div class="av-wt-stage"><canvas class="av-wt-canvas" id="av-wt-canvas" width="2048" height="160" role="img" aria-label="Wavetable frame editor \u2014 draw with the pointer"></canvas>' +
     '<span class="av-wt-canvas-cap av-dim" id="av-wt-canvas-cap"></span></div>' +
-    '<div class="av-wt-tool" id="av-wt-tool">' + tools + "</div>" +
+    /* C3-8: the five strips pair into two rows under the canvas — tools + frames + actions on one
+       line, morph + harmonics on the next — instead of ten stacked rows (card 463 -> 298). */
+    '<div class="av-wt-row1"><div class="av-wt-tool" id="av-wt-tool">' + tools + "</div>" +
     '<div class="av-wt-frames" id="av-wt-frames"><button type="button" class="av-btn mini av-wt-frame-add" id="av-wt-frame-add" title="add a frame after the last one">+ FRAME</button>' +
     '<span class="av-wt-chips" id="av-wt-chips"></span></div>' +
-    '<div class="av-wt-morph-sec"><span class="av-wt-lbl" title="A is the frame being edited; B is picked here">MORPH A\u2192B</span>' +
+    '<div class="av-wt-actions">' + acts +
+    '<input class="av-wt-file" id="av-wt-import-file" type="file" accept=".wt,.json" data-wt-import-input hidden></div></div>' +
+    '<div class="av-wt-row2"><div class="av-wt-morph-sec"><span class="av-wt-lbl" title="A is the frame being edited; B is picked here">MORPH A\u2192B</span>' +
     '<input class="av-wt-range" id="av-wt-morph" type="range" min="0" max="100" step="1" value="' + px + '" aria-label="Morph position from the current frame (A) to frame B">' +
     '<label class="av-wt-lbl" for="av-wt-morph-b">B</label>' +
     '<select class="av-select av-wt-select" id="av-wt-morph-b" aria-label="Morph target frame B"></select>' +
@@ -1800,11 +1870,8 @@ function wtUiBodyHTML() {
     '<div class="av-wt-spec"><span class="av-wt-lbl">HARMONICS \u2264</span>' +
     '<input class="av-wt-range" id="av-wt-harmonics" type="range" min="1" max="1024" step="1" value="' + harm + '" aria-label="Keep harmonics 1..N">' +
     '<span class="av-wt-harm-val" id="av-wt-harm-val">1..' + harm + "</span>" +
-    '<span class="av-wt-lbl av-dim" title="keep harmonics 1..N, zero everything above and the DC bin, then write the frame">trim on release \u00b7 DC removed</span></div>' +
-    '<div class="av-wt-lib" id="av-wt-lib"><p class="av-note av-dim av-wt-lib-empty">library \u2014 install a table to store it here</p></div>' +
-    '<div class="av-wt-actions">' + acts +
-    '<input class="av-wt-file" id="av-wt-import-file" type="file" accept=".wt,.json" data-wt-import-input hidden></div>' +
-    '<p class="av-note av-dim av-wt-note">DRAW / LINE / SMOOTH shape the frame (peak-normalised to 0.95 on release) \u00b7 UNDO steps back one edit \u00b7 INSTALL sends the table to the engine and points osc2 at it.</p>' +
+    '<span class="av-wt-lbl av-dim" title="keep harmonics 1..N, zero everything above and the DC bin, then write the frame">trim on release \u00b7 DC removed</span></div></div>' +
+    '<div class="av-wt-lib av-sec-collapsed" id="av-wt-lib"><p class="av-note av-dim av-wt-lib-empty">library \u2014 install a table to store it here</p></div>' +
     "</div>";
 }
 
@@ -1837,6 +1904,7 @@ function avWtUiInit() {
     }
     wtUiEnsureRootId(card);
     wtUiWireHost(host);
+    wtUiLibFoldWire(host);
     wtUiBindCanvas();
     s.chipSig = ""; s.morphSig = ""; s.libSig = "";
     /* first paint: one editable scratch table when the core is present and none exists yet

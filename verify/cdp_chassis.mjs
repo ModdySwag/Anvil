@@ -568,11 +568,11 @@ async function main() {
      1.2x the well height at BOTH widths. The list grows as each view is rebuilt; a view that
      regresses past 1.2 fails the chassis. A null sub = a zone with no sub-tabs (effects).
      Unclaimed views are the outstanding C3 rebuilds (system/code, sequence,
-     sound/wt, shape/matrix) -- see CONTINUATION for the measured table. */
+     shape/matrix) -- see CONTINUATION for the measured table. */
   const DENSITY_CLAIMED = [
     ['browse', 'packs'], ['browse', 'import'], ['browse', 'sessions'],
     ['perform', 'macros'], ['perform', 'voice'],
-    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'], ['sound', 'chop'], ['sound', 'fm'],
+    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'], ['sound', 'chop'], ['sound', 'fm'], ['sound', 'wt'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['effects', null],
@@ -733,6 +733,48 @@ async function main() {
     && fmBody.globals === 2 && fmBody.tabs === 6 && fmBody.sameLine === true && fmBody.n === 8
     && fmBody.op3 === true && fmBody.op1 === true,
     JSON.stringify(fmBody));
+
+  /* K24d -- the WT card's C3-8 body: the canvas keeps the full card width, the five strips pair
+     into two rows under it (tools + frames + actions · morph + harmonics), and the library folds
+     behind the head chip (closed by default, count on the chip, the chip opens and closes it).
+     The old note line is gone: its facts live in the tool titles. */
+  const wtBody = (await ev(`(() => {
+    try { const b = document.querySelector('#av-zone-sound .av-subtab[data-sub="wt"]'); if (!b) return { sub: false }; b.click(); } catch (e) { return { sub: false }; }
+    const card = document.querySelector('#av-wt .av-wt') || document.querySelector('.av-wt');
+    if (!card) return { card: false };
+    const q = (s) => card.querySelector(s);
+    const r1 = q('.av-wt-row1'), r2 = q('.av-wt-row2');
+    const cv = q('#av-wt-canvas'), chip = q('#av-wt-lib-toggle'), lib = q('#av-wt-lib');
+    const shown = (e) => !!e && getComputedStyle(e).display !== 'none';
+    const out = {
+      card: true,
+      row1: !!(r1 && r1.querySelector('#av-wt-tool') && r1.querySelector('#av-wt-frames') && r1.querySelector('.av-wt-actions')),
+      row2: !!(r2 && r2.querySelector('.av-wt-morph-sec') && r2.querySelector('#av-wt-harmonics')),
+      canvasPct: (cv && card.getBoundingClientRect().width) ? Math.round(cv.getBoundingClientRect().width / card.getBoundingClientRect().width * 100) : null,
+      tools: card.querySelectorAll('#av-wt-tool [data-tool]').length,
+      acts: card.querySelectorAll('.av-wt-actions .av-wt-btn').length,
+      note: !!q('.av-wt-note'),
+      folded: !shown(lib), aria0: chip ? chip.getAttribute('aria-expanded') : null,
+      chipTxt: chip ? (chip.textContent || '').trim() : null,
+      open: null, aria1: null, closed: null, aria2: null,
+    };
+    if (chip && lib) {
+      chip.click();
+      out.open = shown(lib); out.aria1 = chip.getAttribute('aria-expanded');
+      chip.click();
+      out.closed = !shown(lib); out.aria2 = chip.getAttribute('aria-expanded');
+    }
+    return out;
+  })()`)).value || {};
+  check('K24d WT body: the canvas keeps the full card width, tools+frames+actions and morph+harmonics sit on two rows under it, and the library folds behind its head chip (count on the chip, opens and closes)',
+    wtBody.card === true && wtBody.row1 === true && wtBody.row2 === true
+    && wtBody.canvasPct != null && wtBody.canvasPct >= 95
+    && wtBody.tools === 5 && wtBody.acts === 5 && wtBody.note === false
+    && wtBody.folded === true && wtBody.aria0 === 'false'
+    && (wtBody.chipTxt || '').indexOf('LIBRARY') >= 0 && (wtBody.chipTxt || '').indexOf('0') >= 0
+    && wtBody.open === true && wtBody.aria1 === 'true'
+    && wtBody.closed === true && wtBody.aria2 === 'false',
+    JSON.stringify(wtBody));
 
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));

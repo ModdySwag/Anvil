@@ -1197,6 +1197,14 @@ body.av-palette-open { }
 
 /* --- Wavetable editor card --- */
 .av-wt { display: flex; flex-direction: column; gap: 8px; }
+/* C3-8: the strips pair into two rows under the canvas (tools + frames + actions · morph +
+   harmonics) and the library folds behind the head chip. Ten stacked rows cost 463px on a 504px
+   well at 1280; this shape is 298 and the canvas keeps the full width. */
+.av-wt-row1, .av-wt-row2 { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.av-wt-row1 > .av-wt-tool, .av-wt-row1 > .av-wt-frames, .av-wt-row1 > .av-wt-actions { flex: 0 0 auto; }
+.av-wt-row2 > .av-wt-morph-sec, .av-wt-row2 > .av-wt-spec { flex: 1 1 auto; min-width: 0; }
+.av-wt-row2 .av-wt-range { flex: 1 1 140px; min-width: 110px; max-width: 240px; }
+.av-wt-lib-toggle { margin-left: auto; }
 .av-wt-head { display: flex; align-items: baseline; gap: 10px; }
 .av-wt-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
 .av-wt-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); }
@@ -1233,7 +1241,6 @@ body.av-palette-open { }
 .av-wt-lib-empty { margin: 0; }
 .av-wt-actions { }
 .av-wt-file { display: none; }
-.av-wt-note { margin: 0; }
 
 /* --- mod matrix rows (P3 gap closed: macros were fine, the matrix body was flat) --- */
 .av-mod-body { display: flex; flex-direction: column; gap: 8px; }
