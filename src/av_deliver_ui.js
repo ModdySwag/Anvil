@@ -1012,8 +1012,12 @@ function avDeliverChromeHTML() {
     '<select class="av-select av-deliver-loops" id="av-deliver-loops" aria-label="Export length in pattern loops">' +
     '<option value="1" selected>1</option><option value="2">2</option><option value="4">4</option><option value="8">8</option></select></label>' +
     '<label class="av-deliver-opt"><span class="av-deliver-opt-lbl">BITS</span>' +
-    '<select class="av-select av-deliver-bits" id="av-deliver-bits" aria-label="WAV bit depth">' +
-    '<option value="16">16</option><option value="24" selected>24</option></select></label>' +
+    /* C4: two fixed choices are a key pair, not a select that opens a menu for one bit. The hidden
+       input keeps the id and .value the snapshot reader already uses. */
+    (typeof avPairHTML === "function"
+      ? avPairHTML({ id: "av-deliver-bits", label: "WAV bit depth", value: 24, choices: [[16, "16"], [24, "24"]] })
+      : '<select class="av-select av-deliver-bits" id="av-deliver-bits" aria-label="WAV bit depth"><option value="16">16</option><option value="24" selected>24</option></select>') +
+    "</label>" +
     '<label class="av-deliver-check"><input type="checkbox" class="av-deliver-ck" id="av-deliver-stems" checked> STEMS</label>' +
     '<label class="av-deliver-check"><input type="checkbox" class="av-deliver-ck" id="av-deliver-master" checked> MASTER</label>' +
     '<label class="av-deliver-check"><input type="checkbox" class="av-deliver-ck" id="av-deliver-midi" checked> MIDI</label>' +

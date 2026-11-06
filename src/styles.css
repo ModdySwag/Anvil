@@ -349,6 +349,16 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-rec-on { color: #ff8a7a !important; }
 .av-rec-err { color: #ff8a7a; font-size: 12px; }
 
+/* C4 §5: the two-choice control — a silver key pair, role=radio, ONE accent on the lit key. The
+   hidden input inside the pair carries the id and .value, so cards keep reading it as they always
+   did; the keys are the affordance, the input is the truth. */
+.av-pair { display: inline-flex; align-items: stretch; border: 1px solid var(--hair); border-radius: 6px; overflow: hidden; background: var(--raised); }
+.av-pair-key { appearance: none; border: 0; background: transparent; color: var(--text-3); font-family: var(--mono); font-size: 10px; letter-spacing: .04em; padding: 3px 9px; cursor: pointer; line-height: 1.35; }
+.av-pair-key + .av-pair-key { border-left: 1px solid var(--hair); }
+.av-pair-key:hover { color: var(--text-2); background: rgba(255,255,255,0.04); }
+.av-pair-key.on { color: #10201d; background: var(--teal); font-weight: 600; }
+.av-pair-key:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
+
 /* ============================================================================
    P4 — SEQUENCER (av_seq_ui.js · av_plock.js · av_seq_acid.js) — grid card skin */
 .av-seq { display: flex; flex-direction: column; gap: 6px; }

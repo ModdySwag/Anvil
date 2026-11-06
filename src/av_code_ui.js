@@ -837,6 +837,7 @@ function avCodeUiSync() {
     avCodeUiPaintBusy(host);
     avCodeUiPaintNote(host);
     avCodeUiFoldSync(host);
+    try { if (typeof avPairSync === "function") avPairSync(host); } catch (e2) { /* keys are a nicety */ }
     return true;
   } catch (e) { return false; }
 }
@@ -856,6 +857,8 @@ function avCodeUiSetInput(host, sel, val) {
     if (!el) return false;
     const v = String(val == null ? "" : val);
     if (el.value !== v) el.value = v;
+    /* C4: a pair's keys read the hidden input, so a direct write must move them */
+    try { if (el.type === "hidden" && typeof avPairSync === "function") avPairSync(host); } catch (e2) { }
     return true;
   } catch (e) { return false; }
 }
@@ -1626,10 +1629,15 @@ function avCodeUiBodyHTML() {
     '<label class="av-code-field"><span class="av-code-field-lbl">NAME</span>' +
     '<input type="text" class="av-code-in" id="av-code-name" spellcheck="false" autocomplete="off" placeholder="My Module"></label>' +
     '<label class="av-code-field"><span class="av-code-field-lbl">KIND</span>' +
-    '<select class="av-select av-code-kind" id="av-code-kind" aria-label="module kind \u2014 fx insert or voice kind">' +
-    '<option value="fx">fx \u2014 an insert effect</option>' +
-    '<option value="kind">kind \u2014 a voice engine</option>' +
-    "</select></label>" +
+    /* C4: fx/kind is a two-choice decision — a key pair, with the hidden input keeping the id and
+       .value that avCodeUiInput/avCodeUiSetInput already read and write. */
+    (typeof avPairHTML === "function"
+      ? avPairHTML({ id: "av-code-kind", label: "module kind \u2014 fx insert or voice kind", value: "fx", choices: [["fx", "fx"], ["kind", "kind"]] })
+      : '<select class="av-select av-code-kind" id="av-code-kind" aria-label="module kind \u2014 fx insert or voice kind">' +
+        '<option value="fx">fx \u2014 an insert effect</option>' +
+        '<option value="kind">kind \u2014 a voice engine</option>' +
+        "</select>") +
+    "</label>" +
     "</div>" +
     '<textarea class="av-code-src av-mono" id="av-code-src" spellcheck="false" wrap="off" rows="12" aria-label="module source" placeholder="// anvil module source \u2014 api: 1 \u2014 CHECK lints it, RUN loads it"></textarea>' +
     '<div class="av-code-actions">' +

@@ -1368,6 +1368,75 @@ async function main() {
     && seqOv.selOpts >= 1 && seqOv.selAfter === 'K24MVERSE',
     JSON.stringify({ sceneBlocks: seqOv.sceneBlocks, firstName: seqOv.firstName, names: seqOv.names, selOpts: seqOv.selOpts, selAfter: seqOv.selAfter }));
 
+  /* K24n -- C4 item 1: the two-choice control. The audit's two REAL two-option selects
+     (`#av-deliver-bits`, `#av-code-kind`) are now key pairs: a radiogroup of two keys over a hidden
+     input that keeps the id and .value both cards already read. Clicking a key must write the hidden
+     value AND move the keys, and a direct write from the card's own setter must move them back. */
+  const c4Pairs = (await ev(`(() => {
+    const out = { total: 0, deliver: null, code: null };
+    out.total = document.querySelectorAll('.av-pair[data-av-pair="1"]').length;
+    const readPair = (sel) => {
+      const pair = document.querySelector(sel);
+      if (!pair) return { missing: true };
+      const keys = [...pair.querySelectorAll('.av-pair-key')];
+      const input = pair.querySelector('input[type=hidden]');
+      return {
+        keys: keys.length, role: pair.getAttribute('role'),
+        vals: keys.map(k => k.getAttribute('data-pair-value')),
+        checked: keys.map(k => k.getAttribute('aria-checked')),
+        onCount: keys.filter(k => k.classList.contains('on')).length,
+        inputId: input ? input.id : null, value: input ? String(input.value) : null,
+      };
+    };
+    /* deliver: switch BITS to 16 through the key, then read it back through the card's own reader */
+    try {
+      window.__avZone.show('deliver');
+      const card = document.querySelector('.av-deliver');
+      out.deliver = readPair('.av-deliver .av-pair');
+      let fired = 0;
+      const inp = document.querySelector('#av-deliver-bits');
+      if (inp) inp.addEventListener('change', () => { fired++; }, { once: true });
+      const key16 = document.querySelector('.av-deliver .av-pair-key[data-pair-value="16"]');
+      if (key16) key16.click();
+      out.deliverFired = fired;
+      out.deliverValue = inp ? String(inp.value) : null;
+      out.deliverBits = (typeof avDeliverUiReadOpts === 'function' && card) ? avDeliverUiReadOpts(card).bits : null;
+      out.deliverAfter = readPair('.av-deliver .av-pair');
+    } catch (e) { out.deliverErr = String(e && e.message || e); }
+    /* code: switch KIND to 'kind' by key, then write 'fx' with the card's own setter */
+    try {
+      window.__avZone.show('system');
+      const sb = document.querySelector('#av-zone-system .av-subtab[data-sub="code"]');
+      if (sb && sb.getAttribute('aria-selected') !== 'true') sb.click();
+      const host = document.getElementById('av-code-host');
+      out.code = readPair('#av-code-host .av-pair');
+      const keyKind = document.querySelector('#av-code-host .av-pair-key[data-pair-value="kind"]');
+      if (keyKind) keyKind.click();
+      out.codeRead = host ? avCodeUiInput(host, '#av-code-kind') : null;
+      if (host) avCodeUiSetInput(host, '#av-code-kind', 'fx');
+      out.codeAfter = readPair('#av-code-host .av-pair');
+    } catch (e) { out.codeErr = String(e && e.message || e); }
+    return out;
+  })()`)).value || {};
+  await sleep(260);
+  const c4d = c4Pairs.deliver || {};
+  const c4c = c4Pairs.code || {};
+  check('K24n two-choice pairs: the app has exactly two .av-pair controls, each a radiogroup of two keys over a hidden input carrying the ORIGINAL id and value the card reads',
+    c4Pairs.total === 2
+    && c4d.keys === 2 && c4d.role === 'radiogroup' && c4d.inputId === 'av-deliver-bits' && c4d.value === '24'
+    && c4d.vals.join(',') === '16,24' && c4d.onCount === 1 && c4d.checked.join(',') === 'false,true'
+    && c4c.keys === 2 && c4c.role === 'radiogroup' && c4c.inputId === 'av-code-kind' && c4c.value === 'fx'
+    && c4c.vals.join(',') === 'fx,kind' && c4c.onCount === 1 && c4c.checked.join(',') === 'true,false',
+    JSON.stringify(c4Pairs));
+
+  check('K24n pair writes: a key click writes the hidden value, fires one bubbling change, and the DELIVER card reads 16 through its own reader; the CODE setter flips the keys back',
+    c4Pairs.deliverValue === '16' && c4Pairs.deliverFired === 1 && c4Pairs.deliverBits === 16
+    && c4d.keys === 2 && c4Pairs.deliverAfter && c4Pairs.deliverAfter.value === '16'
+    && c4Pairs.deliverAfter.checked.join(',') === 'true,false' && c4Pairs.deliverAfter.onCount === 1
+    && c4Pairs.codeRead === 'kind'
+    && c4Pairs.codeAfter && c4Pairs.codeAfter.value === 'fx' && c4Pairs.codeAfter.checked.join(',') === 'true,false',
+    JSON.stringify({ dv: c4Pairs.deliverValue, fired: c4Pairs.deliverFired, bits: c4Pairs.deliverBits, da: c4Pairs.deliverAfter, cr: c4Pairs.codeRead, ca: c4Pairs.codeAfter }));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 
