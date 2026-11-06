@@ -43,6 +43,22 @@ and K23 ×2), bench exit=0, alias exit=0, stress asserts-not-met 12 underrun del
 26 → 12 across the passes: the quietest load-class pass recorded). Chassis K23 detail carries the full
 claimed table.
 
+### C3-2 attempted and REVERTED (2026-11-06 13:30) — do not repeat it
+`av-mod` two columns at ≥1240 (`.av-mod-slots{display:grid;grid-template-columns:1fr 1fr}`) plus a
+compacted slot grid at ≤1360. Measured WORSE, not better: shape/matrix 1.31 → 1.35 at 1440 and
+1.54 → 1.58 at 1280 (av-mod 724 → 745). The compacted 8-column slot grid (16/68/56/80/24/76/38/20)
+made each slot TALLER — the selects and the amount cell wrap inside the narrower tracks — and the
+extra height ate more than the second column saved. The matrix needs its slot grid genuinely
+redesigned (fewer tracks, a two-line slot, or the docs' "source chips → destination knobs" graph),
+not wrapped in columns. Nothing was committed; the build was reverted and rebuilt to d2cbe864.
+
+### The autocrlf trap (fixed 06d3611)
+Reverting that experiment with `git checkout -- index.html` rewrote the bundle to CRLF and moved its
+sha to aa3641b4 — every pin in the tree would have reported a freeze FAIL on correct code, and the
+"release identity" would have been the wrong bytes. `.gitattributes` now carries
+`index.html -text` + `sw.js -text`; a checkout is proven to preserve d2cbe864. If a checkout ever
+moves the sha again, rebuild (`python3 build.py`) rather than trusting the checked-out bytes.
+
 **OPEN:** owner eye pass (his gate) on the glass and the density floor; then the six C3 page rebuilds
 above; C4 control language, C5 disclosure, C6 shots/pins/battery/installer/deploy (v1.15.0 assets).
 
