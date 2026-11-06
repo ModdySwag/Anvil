@@ -1,5 +1,46 @@
 # Anvil — CONTINUATION (2026-10-06)
 
+## RESUME HERE — SAVE 2026-11-06 21:20 (session 22, third save). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- HEAD `3047e35` + this save. Bundle `index.html` sha256
+  `d6f5456680d42a8f0aac84b0b73df4ae58d5dde4ac790639677511dae05c6cdd`, **4,763,487 B**.
+- All 23 `verify/cdp_*.mjs` pins == that sha (three sweeps this session, `STALE REMAINING: none`).
+- **Battery c3h (`verify/battery_c3h.log`): 28/28 suites exit=0 FIRST-LAP, zero reds** (store green
+  this time), bench exit=0, alias exit=0, stress **125** deltas (load class, same shape as c3g's 123).
+- Solo receipts: `verify/probe-c36-{chassis,m2,smoke}.log`.
+
+### WHAT LANDED (C3-6 — the CHOP card)
+- The mapping block folds behind one **MAP · APPLY** chip: SLOT/BASE + the per-slice rows (a section
+  BEFORE the pads) and APPLY KIT / SLICE→STEPS / TRACK / START + the help line (a section AFTER the
+  pads) fold together under one chip (`avChopUiFoldInit` in `av_chop_ui.js`, both sections toggle as
+  a pair). The source picker, the waveform and the 16 pads stay on the face.
+- **MEASURED: sound/chop 1.141 / 1.308 → 0.988 / 1.125.** K23 claims `['sound','chop']` (**22 views**).
+- Chassis **K24b** pins it (28 checks total): both sections folded, chip present, 16 pads on the face,
+  chip expands both, the first section's head toggle folds both back.
+
+### THE TRAP THIS PASS PAID (new)
+- **A single wrapper around "the rest of the card" swallows the working surface.** The markup order is
+  maprow → slices → **pads** → actions → note, so the first cut wrapped the pad grid too and the pads
+  vanished from the face — the page still measured 0.85/0.96 and every rig stayed green; only the eye
+  check caught it. Fix: two sections either side of the pads, one chip controlling both.
+  **Rule: when folding "everything after X", read the child order first — the thing you must NOT hide
+  is often in the middle.**
+
+### WHAT REMAINS (1440 / 1280, measured after every fold so far)
+sound/fm 1.272 / 1.464 · sound/wt 1.262 / 1.452 · system/code 1.61 / 1.89 · sequence 1.53 / 1.81 ·
+shape/matrix 1.31 / 1.54 (two-column measured WORSE; needs a slot redesign) · then the six planned C3
+screens (docs/13 §C3) · C4 control language · C5 disclosure everywhere + focus order + tab semantics ·
+C6 shots/pins/battery/installer/deploy v1.15.0.
+- Open from C2: mono is not per-patch (`env.mono` not in the pack schema); latency/buffer has no LCD
+  cell (`verify/_c2_wave.md` §5).
+
+### FIRST MOVES NEXT SESSION
+1. Read this block. `node verify/cdp_chassis.mjs` at `d6f54566` (28 checks incl. K24/K24b).
+2. **Owner eye pass** on five folded surfaces — MIX, SYSTEM→MIDI, EFFECTS, SOUND/ENGINE, CHOP — and a
+   verdict on folding the LEVELS card (one-line revert if vetoed; SOUND then loses its fit).
+3. FM then WT (real card rebuilds), then system/code and sequence, then the six screens.
+
 ## RESUME HERE — SAVE 2026-11-06 20:35 (session 22, second save). READ THIS BLOCK FIRST.
 
 ### STATE (proven, not claimed)

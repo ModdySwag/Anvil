@@ -572,7 +572,7 @@ async function main() {
   const DENSITY_CLAIMED = [
     ['browse', 'packs'], ['browse', 'import'], ['browse', 'sessions'],
     ['perform', 'macros'], ['perform', 'voice'],
-    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'],
+    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'], ['sound', 'chop'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['effects', null],
@@ -658,6 +658,39 @@ async function main() {
     disc.root === true && disc.lvlFolded === true && disc.lvlOpen === true && disc.lvlClosed === true
     && advOk && faceOk && chipsOk && pairOk && disc.advOpen === true && disc.advRefolded === true && disc.chipBack === true,
     JSON.stringify(disc));
+
+  /* K24b -- the CHOP card's disclosure: the two mapping blocks either side of the pads (SLOT/BASE +
+     slice rows, and APPLY KIT / SLICE→STEPS + the help line) fold together behind one chip, while
+     the source picker, the waveform and the 16 pads stay on the face. */
+  const chopDisc = (await ev(`(() => {
+    try { const b = document.querySelector('#av-zone-sound .av-subtab[data-sub="chop"]'); if (!b) return { sub: false }; b.click(); } catch (e) { return { sub: false }; }
+    const card = document.querySelector('#av-chop-host .av-chop') || document.querySelector('.av-chop');
+    if (!card) return { card: false };
+    const foldedNow = (e) => e ? getComputedStyle(e).display === 'none' : null;
+    const secs = ['map', 'map2'].map(n => card.querySelector('.av-chop-sec[data-sect="' + n + '"]'));
+    const chip = card.querySelector('.av-chop-adv .av-adv-chip');
+    const pads = card.querySelectorAll('.av-chop-pads .av-chop-pad').length;
+    const out = {
+      card: true, present: secs.every(Boolean), folded: secs.map(foldedNow), pads: pads,
+      chip: chip ? (chip.textContent || '').trim() : null,
+      chipVisible: !!chip && !chip.hidden,
+      open: null, refolded: null,
+    };
+    if (chip && secs.every(Boolean)) {
+      chip.click();
+      out.open = secs.map(foldedNow);
+      const t = secs[0].querySelector('.av-sec-toggle');
+      if (t) { t.click(); out.refolded = secs.map(foldedNow); }
+    }
+    return out;
+  })()`)).value || {};
+  const chopOpenOk = (chopDisc.open || []).length === 2 && (chopDisc.open || []).every(x => x === false);
+  const chopFoldOk = (chopDisc.folded || []).length === 2 && (chopDisc.folded || []).every(x => x === true);
+  const chopBackOk = (chopDisc.refolded || []).length === 2 && (chopDisc.refolded || []).every(x => x === true);
+  check('K24b CHOP disclosure: the two mapping blocks fold together behind one MAP · APPLY chip, the 16 pads stay on the face, chip expands both and the head toggle folds both back',
+    chopDisc.card === true && chopDisc.present === true && chopFoldOk && chopOpenOk && chopBackOk
+    && chopDisc.pads === 16 && chopDisc.chipVisible === true && (chopDisc.chip || '').indexOf('MAP') >= 0,
+    JSON.stringify(chopDisc));
 
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));

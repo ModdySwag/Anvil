@@ -1142,6 +1142,11 @@ body.av-palette-open { }
 .av-synth-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; flex: 0 0 100%; padding: 1px 0 3px; }
 /* the BANK row's preset browser folds to its head (av_bank.js) */
 .av-bank-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+/* C3-6: the CHOP mapping block (SLOT/BASE, the slice rows, APPLY KIT / SLICE→STEPS) folds behind
+   one chip; the source picker, the waveform and the pads stay on the face. */
+.av-chop-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 1px 0 3px; }
+.av-chop-sec-head { display: flex; align-items: baseline; gap: 8px; }
+.av-chop-sec-head .av-sec-toggle { margin-left: 0; }
 .av-fm { display: flex; flex-direction: column; gap: 10px; }
 .av-fm-head { display: flex; align-items: baseline; gap: 10px; }
 .av-fm-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }

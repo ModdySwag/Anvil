@@ -1428,6 +1428,8 @@ function avChopUiBodyHTML() {
     '<div class="av-chop-stage">' +
     '<canvas class="av-chop-canvas" id="av-chop-canvas" width="1200" height="168" role="img" aria-label="Sample waveform with slice markers"></canvas>' +
     '<span class="av-chop-canvas-cap av-dim" id="av-chop-canvas-cap"></span></div>' +
+    '<div class="av-chop-sec" data-sect="map">' +
+    '<div class="av-chop-sec-head"><span class="av-chop-lbl">MAP \u00b7 APPLY</span></div>' +
     '<div class="av-chop-maprow">' +
     '<label class="av-chop-lbl" for="av-chop-slot">SLOT</label>' +
     '<select class="av-select av-chop-select av-chop-slot" id="av-chop-slot" aria-label="Sampler slot 0-3">' + slotOpts + "</select>" +
@@ -1435,7 +1437,9 @@ function avChopUiBodyHTML() {
     '<input class="av-chop-num av-chop-base" id="av-chop-base" type="number" min="0" max="108" step="1" value="' + avChopUiBaseOf() + '" aria-label="Base note (MIDI 0-108)">' +
     '<span class="av-chop-mapnote av-dim" id="av-chop-mapnote"></span></div>' +
     '<div class="av-chop-slices" id="av-chop-slices"></div>' +
+    "</div>" +
     '<div class="av-chop-pads" id="av-chop-pads">' + pads + "</div>" +
+    '<div class="av-chop-sec" data-sect="map2">' +
     '<div class="av-chop-actions">' +
     '<button type="button" class="av-btn av-chop-btn" id="av-chop-apply" title="send the kit to the engine (zones on a sampler slot)">APPLY KIT</button>' +
     '<button type="button" class="av-btn av-chop-btn" id="av-chop-steps" title="write one step per active slice to the sequencer">SLICE\u2192STEPS</button>' +
@@ -1445,6 +1449,7 @@ function avChopUiBodyHTML() {
     '<input class="av-chop-num av-chop-steps-start" id="av-chop-steps-start" type="number" min="0" max="63" step="1" value="0" aria-label="First step index (0-63)">' +
     "</div>" +
     '<p class="av-note av-dim av-chop-note">The kit holds up to 16 slices mapped from BASE upward \u00b7 pads play the mapped notes through the note bus \u00b7 everything stays on this machine.</p>' +
+    "</div>" +
     "</div>";
 }
 
@@ -1463,6 +1468,52 @@ function avChopUiEnsureRootId(card) {
 
 /* ---------- init / sync / snap / classes ---------- */
 
+/* C3-6 disclosure (the MIX/MIDI/FX/SOUND contract, fifth card): the mapping block — SLOT/BASE, the
+   per-slice rows, APPLY KIT / SLICE\u2192STEPS and the help line — folds behind one chip. The source
+   picker, the waveform and the pads stay on the face: they are the working surface. */
+function avChopUiFoldInit(root) {
+  if (!root || typeof root.querySelector !== "function" || typeof document === "undefined") return false;
+  const card = root.querySelector(".av-chop") || root;
+  const secs = Array.prototype.slice.call(card.querySelectorAll('.av-chop-sec[data-sect="map"], .av-chop-sec[data-sect="map2"]'));
+  if (!secs.length || card.querySelector(".av-chop-adv")) return false;
+  const head = secs[0].querySelector(".av-chop-sec-head");
+  if (!head || head.querySelector(".av-sec-toggle")) return false;
+  const label = "MAP \u00b7 APPLY";
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "av-sec-toggle";
+  btn.textContent = "\u25b8";
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "av-adv-chip";
+  chip.dataset.adv = "map";
+  chip.textContent = label;
+  function folded() { return secs.every(function (s) { return s.classList.contains("av-sec-collapsed"); }); }
+  function setFolded(on) { secs.forEach(function (s) { s.classList.toggle("av-sec-collapsed", on); }); sync(); }
+  function sync() {
+    const f = folded();
+    chip.hidden = !f;
+    chip.title = "Show the mapping and apply controls";
+    chip.setAttribute("aria-label", chip.title);
+    btn.textContent = f ? "\u25b8" : "\u25be";
+    btn.setAttribute("aria-expanded", f ? "false" : "true");
+    btn.title = (f ? "Show" : "Hide") + " the mapping and apply controls";
+    btn.setAttribute("aria-label", btn.title);
+  }
+  chip.addEventListener("click", function () { setFolded(false); });
+  btn.addEventListener("click", function () { setFolded(!folded()); });
+  secs.forEach(function (s) { s.classList.add("av-sec-collapsed"); });
+  head.appendChild(btn);
+  const row = document.createElement("div");
+  row.className = "av-chop-adv";
+  row.setAttribute("role", "group");
+  row.setAttribute("aria-label", "folded mapping controls");
+  row.appendChild(chip);
+  card.insertBefore(row, secs[0]);
+  sync();
+  return true;
+}
+
 function avChopUiInit() {
   const host = avChopUiHost();
   if (!host || typeof host.querySelector !== "function") return false;
@@ -1476,6 +1527,7 @@ function avChopUiInit() {
       s.rowsKit = null;
       s.rowsCount = -1;                 /* a fresh slices box needs its first paint        */
       host.innerHTML = avChopUiBodyHTML();
+      try { avChopUiFoldInit(host); } catch (e0) { /* the mapping block stays up */ }
       try { card = host.querySelector(".av-chop"); } catch (e2) { card = null; }
     }
     avChopUiEnsureRootId(card);
