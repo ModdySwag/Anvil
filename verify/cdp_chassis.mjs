@@ -566,15 +566,16 @@ async function main() {
 
   /* K23 -- the density gate (docs/13 s.7): a page/sub view that C3 has CLAIMED renders within
      1.2x the well height at BOTH widths. The list grows as each view is rebuilt; a view that
-     regresses past 1.2 fails the chassis. Unclaimed views are the outstanding C3 rebuilds
-     (mix, effects, system/midi, system/code, sequence, sound/engine|fm|chop|wt|drums,
-     shape/matrix) -- see CONTINUATION for the measured table. */
+     regresses past 1.2 fails the chassis. A null sub = a zone with no sub-tabs (effects).
+     Unclaimed views are the outstanding C3 rebuilds (system/code, sequence,
+     sound/engine|fm|chop|wt|drums, shape/matrix) -- see CONTINUATION for the measured table. */
   const DENSITY_CLAIMED = [
     ['browse', 'packs'], ['browse', 'import'], ['browse', 'sessions'],
     ['perform', 'macros'], ['perform', 'voice'],
     ['sound', 'samples'], ['sound', 'tune'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
+    ['effects', null],
     ['system', 'midi'],
     ['deliver', 'deck'], ['deliver', 'deliver'],
     ['system', 'project'], ['system', 'family'], ['system', 'roadmap']
@@ -587,7 +588,9 @@ async function main() {
     for (const [z, sub] of DENSITY_CLAIMED) {
       const shown = ((await ev(`(() => {
         try { window.__avZone.show(${JSON.stringify(z)}); } catch (e) { return 'zone'; }
-        const btn = document.querySelector('#av-zone-${z} .av-subtab[data-sub="${sub}"]');
+        const sub = ${JSON.stringify(sub)};
+        if (sub == null) return 'ok';
+        const btn = document.querySelector('#av-zone-${z} .av-subtab[data-sub="' + sub + '"]');
         if (!btn) return 'sub';
         btn.click();
         return 'ok';

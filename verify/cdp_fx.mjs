@@ -18,6 +18,11 @@
 //      exports live (avFxInit/avFxSnap/avFxClasses/avFxInventory + window.__avFx).
 //   1b. absent-host contract: with #av-fx-host detached avFxInit() returns false WITHOUT throwing;
 //      re-attaching the host and calling avFxInit() re-mounts the card (7 strips, all re-bound).
+//   1b2. C3-4 disclosure: the five deep modules (mod · delay · verb · conv · dyn) are folded by
+//      default behind one chip each, DRIVE + FLAVOUR stay on the face, a chip expands its module,
+//      the module head carries the fold-back toggle, and a folded module that is ON lights its chip.
+//      clickSel/maxKnob expand the folds before resolving a coordinate target (a display:none
+//      toggle cannot be clicked — the cdp_midi law).
 //   2. REAL input: a real CDP mouse click on the VERB toggle enables the module (mirror +
 //      aria-pressed + strip .av-fx-on), and a real CDP drag on the VERB MIX knob lands it on 1
 //      (mirror 1, aria-valuenow 1, readout 100%).
@@ -60,7 +65,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    P3: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = 'd3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009';
+const EXPECT_SHA = 'b4e0b4e70f24663b8d41467d7d88657433185c85951526d5c8c153569052bd19';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -405,7 +410,15 @@ async function main() {
     for (const [dx, dy] of deltas) { x += dx; y += dy; await mouse('mouseMoved', x, y); if (gap) await sleep(gap); }
     await mouse('mouseReleased', x, y);
   };
+  /* folded sections are display:none, so a coordinate click cannot reach into them: expand every
+     fold whose chip is still offered before resolving a target (the cdp_midi clickSel law) */
+  const expandFolds = async () => {
+    const r = await ev(`(() => { const cs = [...document.querySelectorAll('#av-fx-host .av-fx-adv .av-adv-chip')].filter(c => !c.hidden); cs.forEach(c => c.click()); return cs.map(c => c.dataset.adv); })()`);
+    if (r.value && r.value.length) await sleep(180);
+    return r.value || [];
+  };
   const clickSel = async (sel, after = 300) => {
+    await expandFolds();
     const found = await ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return false; if (e.scrollIntoView) e.scrollIntoView({ block: 'center', inline: 'center' }); return true; })()`);
     if (found.value !== true) { note('click target missing: ' + sel); return false; }
     await sleep(200);
@@ -421,6 +434,7 @@ async function main() {
   };
   /* real drag to the knob's mechanical max (the cdp_knob_feel technique) */
   const maxKnob = async (sel, path, target) => {
+    await expandFolds();
     await ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (e && e.scrollIntoView) e.scrollIntoView({ block: 'center', inline: 'center' }); return true; })()`);
     await sleep(250);
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -535,6 +549,40 @@ async function main() {
     probe.absent === false && probe.absentThrew === false && probe.remount === true && probe.remountThrew === false &&
     probe.strips === 7 && probe.knobsBound === WANT_KNOBS && probe.boundTS === WANT_TOGGLES + WANT_SELECTS && probe.wired === true,
     JSON.stringify(probe));
+
+  /* ── 1b2. C3-4 disclosure (owner's call: basic-first defaults): the five deep modules are folded
+     by default, one chip stands in for each, DRIVE + FLAVOUR stay on the face, a chip expands its
+     module which then carries a fold-back toggle in its head, and a folded module that is ON lights
+     its chip (a folded-but-active module must never be invisible). ── */
+  const foldR = await ev(`(() => {
+    const root = document.querySelector('#av-fx-host .av-fx');
+    if (!root) return { root: false };
+    const adv = ['mod', 'delay', 'verb', 'conv', 'dyn'];
+    const chips = Array.from(root.querySelectorAll('.av-fx-adv .av-adv-chip')).map(c => (c.textContent || '').trim());
+    const folded = adv.map(n => { const s = root.querySelector('.av-fx-strip[data-sect="' + n + '"]'); return s ? getComputedStyle(s).display === 'none' : null; });
+    const face = ['drive', 'aw'].map(n => { const s = root.querySelector('.av-fx-strip[data-sect="' + n + '"]'); return s ? getComputedStyle(s).display !== 'none' : null; });
+    const verb = root.querySelector('.av-fx-strip[data-sect="verb"]');
+    const chip = root.querySelector('.av-fx-adv .av-adv-chip[data-adv="verb"]');
+    let expanded = false, refolded = false, chipOn = null, chipOff = null;
+    if (chip && verb) {
+      chip.click();
+      expanded = getComputedStyle(verb).display !== 'none';
+      const t = verb.querySelector('.av-sec-toggle');
+      if (t) { t.click(); refolded = getComputedStyle(verb).display === 'none'; }
+      window.__avFx.commit('fx.verb.on', 1, null, 'rig-fold');
+      chipOn = chip.classList.contains('on');
+      window.__avFx.commit('fx.verb.on', 0, null, 'rig-fold');
+      chipOff = chip.classList.contains('on');
+    }
+    return { root: true, chips: chips, folded: folded, face: face, expanded: expanded, refolded: refolded, chipOn: chipOn, chipOff: chipOff };
+  })()`);
+  const fv = foldR.value || {};
+  const wantChips = ['MOD', 'DELAY', 'VERB', 'CONV', 'DYN'];
+  const chipsOk = wantChips.every((w) => (fv.chips || []).indexOf(w) >= 0);
+  check('1b2 disclosure: deep modules folded by default (mod/delay/verb/conv/dyn), one chip each, DRIVE + FLAVOUR on the face, chip expands and the head toggle folds back, a folded ON module lights its chip',
+    fv.root === true && chipsOk && (fv.folded || []).every((x) => x === true)
+    && (fv.face || []).every((x) => x === true) && fv.expanded === true && fv.refolded === true
+    && fv.chipOn === true && fv.chipOff === false, JSON.stringify(fv));
 
   /* ── 2. REAL input: click the VERB toggle, drag the VERB MIX knob to 1 ── */
   const clicked = await clickSel('#av-fx-host [data-fx-toggle="fx.verb.on"]', 350);

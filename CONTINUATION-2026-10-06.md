@@ -1,6 +1,69 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-06 18:55 (session 21). READ THIS BLOCK FIRST; everything below is history.
+## RESUME HERE — SAVE 2026-11-06 19:20 (session 22). READ THIS BLOCK FIRST; everything below is history.
+
+### STATE (proven, not claimed)
+- HEAD `611640e` + this save. Bundle `index.html` sha256
+  `b4e0b4e70f24663b8d41467d7d88657433185c85951526d5c8c153569052bd19`, **4,753,549 B**.
+- All 23 `verify/cdp_*.mjs` pins == that sha (swept old→new, `STALE REMAINING: none`).
+- **Battery c3e (`verify/battery_c3e.log`) is the clean receipt: 28/28 suites exit=0 FIRST-LAP,
+  zero reds**, bench exit=0, alias exit=0, stress **21** underrun deltas (verdict
+  `asserts-not-met` = the documented load class, same shape as c3d's 65; band is 12–81).
+- Solo receipts kept: `verify/probe-fx-fold.log` (cdp_fx 28/28 with the new leg),
+  `verify/probe-chassis-c34.log` (chassis 26/26, K23 with effects claimed).
+
+### WHAT LANDED (C3-4 — the FX rack folds)
+- `av_fx.js`: every strip carries `data-sect="<mod>"`; `avFxFoldInit()` folds **MOD · DELAY · VERB ·
+  CONV · DYN** behind one chip each and leaves **DRIVE + FLAVOUR** on the face (basic-first
+  defaults, same contract as MIX/MIDI). `avFxFoldSync()` keeps each chip honest: hidden while its
+  section is expanded, and **lit (teal dot) while its module is ON** — a folded module that is
+  enabled is never invisible. Called from `avFxInit()` after `host.innerHTML`, so a re-mount re-folds
+  (the rig's absent-host probe proves it).
+- `styles.css`: `.av-fx-adv` chip row, `.av-fx-strip-head .av-sec-toggle { margin-left: 0 }` (the ON
+  toggle keeps the auto margin), chip `.on` dot.
+- **MEASURED: effects 1.86 / 2.23 → 0.705 / 0.817** (1440 / 1280); card 1,094px → 396px; window and
+  pane both stop scrolling. K23 now claims **`['effects', null]`** — a null sub means "zone with no
+  sub-tabs", handled explicitly in the loop (**19 views claimed** now).
+- `cdp_fx`: leg **1b2** (27 → **28 checks**) — five chips with their labels, five sections folded,
+  DRIVE + FLAVOUR on the face, a chip expands, the head toggle folds back, and the folded-ON chip
+  lights then clears. `clickSel`/`maxKnob` now call `expandFolds()` first, because a folded toggle is
+  `display:none` and a coordinate click is refused (the cdp_midi law, re-paid here).
+
+### THE TRAP THIS PASS PAID (new — write it down)
+- `.av-sec-collapsed { display:none }` was **overridden by the card's own base rule**:
+  `.av-fx-strip { display:flex }` has the SAME specificity and sits LATER in `styles.css`, so the
+  fold class applied and the page did not move — the first measurement showed all five strips at
+  132px each with `display:flex`. The MPE lesson had a second half: a generic fold rule is only
+  reliable if it wins the cascade. The rule is now `display: none !important` with the reason in the
+  comment. Any future card that sets `display` on its section class depends on this.
+
+### WHAT REMAINS — C3 page rebuilds (measured at 1440/1280 before C3-4; effects is now claimed)
+sound/engine 1.88/2.26 · system/code 1.61/1.89 · sequence 1.53/1.81 · sound/fm 1.53/1.78 ·
+sound/wt 1.52/1.77 · sound/chop 1.40/1.62 · shape/matrix 1.31/1.54 · sound/drums 1.17/1.34.
+- `av_synth` (sound/engine) is ONE card whose VA panel is five knob rows (osc · tune · filter · env ·
+  mod) plus the picks row; the rows carry no headings, so sectioning it means adding a head
+  (`.av-synth-sec` + `.av-synth-sec-lbl` + `.av-sec-toggle`) per folded group — that is where the
+  planned **filters group** screen goes too (docs/13 §C3 item 1).
+- The shared lever is still **`av-levels` (222px, zone-level in SOUND, rides every sub-tab)**; moving
+  or folding it flips drums (1.34→~0.88) but `cdp_cockpit`'s ZONEMAP and `cdp_knob_feel`/`cdp_a11y`
+  measure its master knob — update those rigs in the same commit.
+- `shape/matrix`: two-column measured WORSE (1.31→1.35). Needs a real slot redesign.
+- Then the six planned C3 screens (docs/13 §C3, numbered in order), then C4 control language,
+  C5 disclosure everywhere + focus order + tab semantics, C6 shots/pins/battery/installer/deploy
+  v1.15.0.
+- Open from C2: mono is not per-patch (`env.mono` not in the pack schema); latency/buffer has no LCD
+  cell (`verify/_c2_wave.md` §5).
+
+### FIRST MOVES NEXT SESSION
+1. Read this block. `node verify/cdp_chassis.mjs` and `node verify/cdp_fx.mjs` to confirm green at
+   `b4e0b4e7` before changing anything.
+2. **Owner eye pass** on the three folded surfaces (MIX, SYSTEM→MIDI, EFFECTS) — his gate.
+3. Section `av_synth`: group heads for TUNE / ENV / GLIDE (OSC + FILTER stay up), fold, the engine
+   rig gains a 1b2 leg, claim `sound/engine`, battery, commit. MEASURE FIRST — dump the visible
+   card's child heights at both widths before choosing which rows fold.
+
+## SAVE 2026-11-06 18:55 (session 21) — C2b-8 glass · C3-1 gate · C3-2 MIX · C3-3 MIDI
+
 
 ### STATE (proven, not claimed)
 - HEAD `f18f8d2` (+ this save). Bundle `index.html` sha256

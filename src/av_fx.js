@@ -138,6 +138,11 @@ const AV_FX_MODULES = [
 /* state (the rig reads inited via avFxSnap) */
 const avFxState = { inited: false, mounts: 0 };
 
+/* C3-4 disclosure (owner's call: basic-first defaults). DRIVE and FLAVOUR are the always-on
+   tone stage and stay on the face; the five deep modules fold behind one chip each. The chip
+   lights up while its module is enabled, so a folded module that is ON is still visible. */
+const AV_FX_ADV = [["mod", "MOD"], ["delay", "DELAY"], ["verb", "VERB"], ["conv", "CONV"], ["dyn", "DYN"]];
+
 /* local escaper — the same rules as avKnobEsc / avSynthEsc; this part keeps no extra deps */
 const avFxEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -188,7 +193,7 @@ function avFxStripHTML(m, idx) {
   const sels = m.selects.map(avFxSelectHTML).join("");
   const knobs = m.knobs.map(k => avKnobHTML(k.path, k.label, Object.assign({ value: avParams[k.path] }, k.opts)));
   const on = !!avParams[m.toggle.path];
-  return '<div class="av-fx-strip' + (on ? " av-fx-on" : "") + '" data-mod="' + avFxEsc(m.mod) + '" data-idx="' + idx + '">' +
+  return '<div class="av-fx-strip' + (on ? " av-fx-on" : "") + '" data-mod="' + avFxEsc(m.mod) + '" data-sect="' + avFxEsc(m.mod) + '" data-idx="' + idx + '">' +
     '<div class="av-fx-strip-head"><span class="av-fx-mod">' + avFxEsc(m.label) + "</span>" +
     '<span class="av-fx-cap">' + avFxEsc(m.cap) + "</span>" + toggle + "</div>" +
     '<div class="av-fx-ctl">' + sels + avKnobRowHTML(knobs, "av-fx-knobs") + "</div>" +
@@ -204,6 +209,79 @@ function avFxBodyHTML() {
     '<span class="av-fx-cap">drive → flavour → mod → delay → verb → conv → dyn · inside the mixer worklet · every module off = bit-identical bypass</span></div>' +
     '<div class="av-fx-strips">' + strips + "</div>" +
     "</div>";
+}
+
+/* ---------- C3 disclosure (same contract as the MIX desk and the MIDI panel) ---------- */
+
+/* Fold the deep modules behind one chip each. Proven shape (avMixUiDisclosure): resolve the
+   CARD, insert the chip row inside it, give each section's head a .av-sec-toggle, and fold via
+   the generic .av-sec-collapsed rule. The chip is only in the row while its section is folded;
+   the head toggle is the way back. Runs after every mount, so a re-mount re-folds. */
+function avFxFoldInit(root) {
+  if (!root || typeof root.querySelector !== "function" || typeof document === "undefined") return false;
+  const card = root.querySelector(".av-fx") || root;
+  const stripsWrap = card.querySelector(".av-fx-strips");
+  if (!stripsWrap) return false;
+  if (card.querySelector(".av-fx-adv")) return false;   /* already folded (defensive) */
+  const row = document.createElement("div");
+  row.className = "av-fx-adv";
+  row.setAttribute("role", "group");
+  row.setAttribute("aria-label", "folded FX modules");
+  AV_FX_ADV.forEach(function (pair) {
+    const name = pair[0], label = pair[1];
+    const sec = card.querySelector('.av-fx-strip[data-sect="' + name + '"]');
+    if (!sec) return;
+    const head = sec.querySelector(".av-fx-strip-head");
+    if (!head || head.querySelector(".av-sec-toggle")) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "av-sec-toggle";
+    btn.textContent = "▸";
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "av-adv-chip";
+    chip.dataset.adv = name;
+    chip.textContent = label;
+    function sync() {
+      const folded = sec.classList.contains("av-sec-collapsed");
+      const on = !!(typeof avParams !== "undefined" && avParams && avParams["fx." + name + ".on"]);
+      chip.hidden = !folded;
+      chip.classList.toggle("on", on);
+      chip.title = (on ? label + " is ON — " : "") + "Show the " + label + " controls";
+      chip.setAttribute("aria-label", chip.title);
+      btn.textContent = folded ? "▸" : "▾";
+      btn.setAttribute("aria-expanded", folded ? "false" : "true");
+      btn.title = (folded ? "Show the " : "Hide the ") + label + " controls";
+      btn.setAttribute("aria-label", btn.title);
+    }
+    chip.addEventListener("click", function () { sec.classList.remove("av-sec-collapsed"); sync(); });
+    btn.addEventListener("click", function () { sec.classList.toggle("av-sec-collapsed"); sync(); });
+    sec.classList.add("av-sec-collapsed");
+    head.appendChild(btn);
+    row.appendChild(chip);
+    sync();
+  });
+  card.insertBefore(row, stripsWrap);
+  return true;
+}
+
+/* repaint the chip state (folded visibility + the ON light) without touching layout */
+function avFxFoldSync(root) {
+  let card = root || null;
+  if (!card || typeof card.querySelector !== "function") return false;
+  if (!card.querySelector(".av-fx-adv")) card = card.querySelector(".av-fx") || card;
+  const row = card.querySelector ? card.querySelector(".av-fx-adv") : null;
+  if (!row) return false;
+  row.querySelectorAll(".av-adv-chip").forEach(function (chip) {
+    const name = chip.dataset.adv;
+    const sec = card.querySelector('.av-fx-strip[data-sect="' + name + '"]');
+    const folded = !!(sec && sec.classList.contains("av-sec-collapsed"));
+    const on = !!(typeof avParams !== "undefined" && avParams && avParams["fx." + name + ".on"]);
+    chip.hidden = !folded;
+    chip.classList.toggle("on", on);
+    chip.title = (on ? name.toUpperCase() + " is ON — " : "") + "Show the " + name.toUpperCase() + " controls";
+  });
+  return true;
 }
 
 /* ---------- commits (toggles + selects; knobs commit through avKnobCommit themselves) ---------- */
@@ -241,6 +319,7 @@ function avFxSyncControl(path) {
   const mod = String(path).split(".")[1];
   const strip = host.querySelector('.av-fx-strip[data-mod="' + avFxCssEsc(mod) + '"]');
   if (strip && typeof avParams["fx." + mod + ".on"] !== "undefined") strip.classList.toggle("av-fx-on", !!avParams["fx." + mod + ".on"]);
+  try { avFxFoldSync(host); } catch (e) { /* chips keep their last paint */ }
   return true;
 }
 
@@ -276,6 +355,7 @@ function avFxSync(root) {
   host.querySelectorAll(".av-fx-strip[data-mod]").forEach(strip => {
     strip.classList.toggle("av-fx-on", !!avParams["fx." + strip.dataset.mod + ".on"]);
   });
+  try { avFxFoldSync(host); } catch (e) { /* chips keep their last paint */ }
   return true;
 }
 
@@ -342,7 +422,8 @@ function avFxInventory() {
 function avFxClasses() {
   return ["av-fx", "av-fx-head", "av-fx-title", "av-fx-cap", "av-fx-strips", "av-fx-strip",
     "av-fx-on", "av-fx-strip-head", "av-fx-mod", "av-fx-toggle", "av-fx-ctl",
-    "av-fx-pick", "av-fx-pick-lbl", "av-fx-knobs", "av-fx-actions", "av-fx-btn", "av-fx-status"];
+    "av-fx-pick", "av-fx-pick-lbl", "av-fx-knobs", "av-fx-actions", "av-fx-btn", "av-fx-status",
+    "av-fx-adv", "av-adv-chip", "av-sec-toggle", "av-sec-collapsed"];
 }
 
 /* ---------- init (mount) ---------- */
@@ -366,6 +447,7 @@ function avFxInit() {
       if (s.options.indexOf(avParams[s.path]) < 0) avParams[s.path] = s.def;
     }));
     host.innerHTML = avFxBodyHTML();
+    try { avFxFoldInit(host); } catch (e) { /* deep modules stay up */ }
     avKnobBind(host);
     avFxWire(host);
     avFxBindSelects(host);
@@ -408,6 +490,7 @@ function avFxSnap() {
     params: {},
     inventory: inv,
     classes: avFxClasses(),
+    fold: { chips: 0, folded: 0, face: [] },
   };
   if (host && host.querySelectorAll) {
     const knobs = Array.prototype.slice.call(host.querySelectorAll(".av-knob[data-knob]"));
@@ -418,6 +501,11 @@ function avFxSnap() {
     snap.controls.toggles = toggles.length;
     snap.controls.selects = sels.length;
     snap.controls.bound = toggles.filter(b => b.dataset.fxBound === "1").length + sels.filter(s => s.dataset.fxBound === "1").length;
+    snap.fold.chips = host.querySelectorAll(".av-fx-adv .av-adv-chip").length;
+    snap.fold.folded = Array.prototype.slice.call(host.querySelectorAll('.av-fx-strip[data-sect]'))
+      .filter(s => s.classList.contains("av-sec-collapsed")).length;
+    snap.fold.face = Array.prototype.slice.call(host.querySelectorAll('.av-fx-strip[data-sect]'))
+      .filter(s => !s.classList.contains("av-sec-collapsed")).map(s => s.dataset.sect);
   }
   if (typeof avParams !== "undefined" && avParams) {
     inv.forEach(e => { if (Object.prototype.hasOwnProperty.call(avParams, e.path)) snap.params[e.path] = avParams[e.path]; });

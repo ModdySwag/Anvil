@@ -741,8 +741,11 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 /* C3 disclosure (owner's call: basic-first defaults). A folded section keeps its head; the
    toggle is the last item in the head row and carries aria-expanded. */
 /* the fold contract applies to any section a fold helper marks — the MPE wrapper is a plain div,
-   not a .av-midi-sec, so the generic class is the reliable hook. */
-.av-sec-collapsed { display: none; }
+   not a .av-midi-sec, so the generic class is the reliable hook.
+   !important: a card's own base rule (.av-fx-strip { display:flex }, .av-mix-sect { display:flex })
+   has the SAME specificity and may sit LATER in this sheet, so source order silently un-folds it.
+   The class is the contract — unhide by removing the class, never by fighting this rule. */
+.av-sec-collapsed { display: none !important; }
 .av-mix-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 1px 0; }
 .av-adv-chip {
   padding: 3px 9px; border: 1px solid var(--hair); border-radius: 10px; background: var(--raised);
@@ -1119,6 +1122,13 @@ body.av-palette-open { }
 .av-fx-actions { display: flex; align-items: center; gap: 8px; }
 .av-fx-btn { }
 .av-fx-status { font-family: var(--mono); font-size: 10px; color: var(--teal); min-width: 0; overflow-wrap: anywhere; }
+/* C3-4 disclosure: DRIVE + FLAVOUR stay on the face; MOD · DELAY · VERB · CONV · DYN fold behind
+   one chip each (the MIX/MIDI contract, same generic .av-sec-collapsed hook). The chip carries a
+   teal dot while its module is enabled, so a folded-but-active module is never invisible. */
+.av-fx-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 1px 0 3px; }
+.av-fx-strip-head .av-sec-toggle { margin-left: 0; }
+.av-adv-chip.on { border-color: var(--teal-deep); color: var(--teal); }
+.av-adv-chip.on::before { content: "\25CF"; margin-right: 4px; font-size: 7px; vertical-align: 1px; }
 
 /* --- FM ENGINE card --- */
 .av-fm { display: flex; flex-direction: column; gap: 10px; }

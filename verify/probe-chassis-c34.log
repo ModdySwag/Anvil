@@ -1,0 +1,31 @@
+index.html sha256: b4e0b4e70f24663b8d41467d7d88657433185c85951526d5c8c153569052bd19
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+   - data-av-ready: true
+ ok   K1 virgin: rail closed, no rail control visible (tabs are the one navigation)  -> {"closed":true,"rail":true,"visibleRailCtl":0}
+ ok   K2 nine tabs in the pinned signal order, every aria-controls resolves  -> {"ids":["browse","perform","sound","shape","sequence","effects","mix","deliver","system"],"unresolved":[]}
+ ok   K3 band: groups in contract order, LCD rows, four pot mounts, one pot-mode key lit, volume pot  -> {"grp":["transport","identity","pots","view","out"],"lcdRows":3,"pots":4,"checked":1,"vol":true}
+ ok   K4 inspector: seven kind keys, six core pots, eight+ launchers on real targets, both screens, EDIT  -> {"kinds":7,"pots":6,"launches":8,"bad":[],"wave":true,"env":true,"edit":true,"title":"SELECTED VOICE"}
+ ok   K5 launcher click lands page + sub  -> {"zone":"sound","sub":"fm","shown":true}
+ ok   K6 pitch wheel springs back to 0; mod wheel holds a raised value  -> {"pitchAfter":0,"modHeld":0.63}
+ ok   K7 W=1440: every page within 2.2x the page height  -> browse=0.65 perform=0.27 sound=1.53 shape=1.31 sequence=1.53 effects=0.71 mix=0.94 deliver=0.73 system=0.81
+ ok   K7 W=1280: every page within 2.2x the page height  -> browse=0.63 perform=0.24 sound=1.48 shape=1.28 sequence=1.51 effects=0.68 mix=0.89 deliver=0.69 system=0.73
+ ok   K8 every card sits in a real page (and inside a declared sub on a paged page)  -> {"n":28,"bad":[]}
+ ok   K10 transport surface resolves (play, stop, bpm, preset keys)  -> []
+ ok   K11 display: bezel + glass, three dot rows, every field id, no wrap, steppers at its left  -> {"rows":3,"missing":[],"dots":true,"bezelBg":"rgba(0, 0, 0, 0)","nowrap":true,"stepsLeft":true,"status":"status"}
+ ok   K12 display fields read live state (engine kind, poly mode, voices, cpu, tempo)  -> {"eng":"VA","poly":"POLY —","voices":"VOICES —/64","cpu":"CPU —","bpm":"120"}
+ ok   K13 steppers: nothing paints over them, the bank selects live in the display, a click steps  -> {"hit":"av-lcd-up","adopted":1,"opts":1,"before":0,"after":0}
+ ok   K14 voice screens draw real data (oscillator, filter response with a live corner label, envelope with its time)  -> {"wave":18480,"filter":18480,"env":18480,"flab":"LP 800 R30","elab":"502 ms"}
+ ok   K15 the screens edit: a drag on the filter moves cutoff + reso, a drag on the envelope moves attack  -> {"c0":800,"c1":3835,"r1":0.8,"a0":0.002,"a1":0.72}
+ ok   K16 kind keys drive the engine kind (param + synth select + LCD + lit key)  -> {"okClick":true,"open":{"param":"va","sel":"va","lcd":"VA","lit":["wavetable"]},"fm":{"param":"fm","sel":"fm","lcd":"FM","lit":["fm"]},"back":{"param":"va","sel":"va","lcd":"VA","lit":["wavetable"]}}
+ ok   K17 core pots are live: drags on CUTOFF and LEVEL write filter.cutoff and engine.outScale  -> {"pathC":"filter.cutoff","pathL":"engine.outScale","c0":3835,"c1":3893,"l0":null,"l1":0.36,"num":"3.42k"}
+ ok   K18 POLY/MONO is a live voice mode (mono keeps one voice per channel, held notes return)  -> {"engine":true,"envPoly":0,"poly":2,"statsMono":1,"mono2":1,"clicked":true,"envMono":1,"lcd":"MONO —","lit":"mono","back1":1,"rel":0,"restored":0}
+ ok   K19 scope + LEVEL are live: a sounding note inks the scope and the LEVEL pot scales the master tap  -> {"engine":true,"silent":{"ink":440,"spread":1},"loud":{"ink":808,"spread":17},"r0":0,"r1":0.2667662841774431,"r2":0.012381564778423795}
+ ok   K20 the oscillator screen draws the live wavetable frame of the installed table  -> {"engine":true,"ok":true,"slot":0,"before":{"shape":"saw","wt":""},"after":{"shape":"wt","wt":"C2 RIG TABLE #1/1"},"ink":466}
+ ok   K21 band fit: every group carries its content and the strip does not overflow  -> {"band":{"cw":1420,"sw":1420},"clipped":[]}
+ ok   K22 W=1440: glass rows + fields fit, tempo inside the glass  -> {"rows":[{"cw":147,"sw":147},{"cw":147,"sw":147},{"cw":147,"sw":147}],"badRow":[],"badSlot":[],"tempoRight":640.2,"glassRight":645.2,"inside":5}
+ ok   K22 W=1280: glass rows + fields fit, tempo inside the glass  -> {"rows":[{"cw":145,"sw":145},{"cw":145,"sw":145},{"cw":145,"sw":145}],"badRow":[],"badSlot":[],"tempoRight":564.1,"glassRight":569.1,"inside":5}
+ ok   K23 W=1440: every C3-claimed page/sub inside the 1.2x density gate  -> browse/packs=0.65 browse/import=0.98 browse/sessions=0.89 perform/macros=0.27 perform/voice=0.27 sound/samples=0.87 sound/tune=1.03 shape/lfo=0.88 mix/mix=0.94 mix/comp=0.78 mix/rec=0.26 mix/studio=0.81 effects/null=0.70 system/midi=0.81 deliver/deck=0.73 deliver/deliver=0.58 system/project=0.92 system/family=0.98 system/roadmap=0.51
+ ok   K23 W=1280: every C3-claimed page/sub inside the 1.2x density gate  -> browse/packs=0.75 browse/import=1.15 browse/sessions=1.08 perform/macros=0.29 perform/voice=0.29 sound/samples=0.98 sound/tune=1.17 shape/lfo=0.99 mix/mix=1.06 mix/comp=0.90 mix/rec=0.28 mix/studio=0.94 effects/null=0.82 system/midi=0.88 deliver/deck=0.83 deliver/deliver=0.66 system/project=1.07 system/family=1.19 system/roadmap=0.58
+ ok   K9 zero page errors through the run  -> []
+
+CHASSIS-RESULT pass=26 fail=0
