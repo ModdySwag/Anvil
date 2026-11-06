@@ -1,12 +1,13 @@
-index.html sha256 (before): 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
+index.html sha256 (before): d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1793946614797
- ok   freeze: index.html sha256 before = 5861d7d6…  -> 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
+cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1793950673121
+ ok   freeze: index.html sha256 before = 5861d7d6…  -> d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009
  ok   boot: data-av-ready flips (with the stub injected pre-boot)
  ok   boot: MIDI deck mounted (#av-midi-body .av-midi) + __avMidi API + stub alive  -> {"panel":true,"api":true,"snapFn":true,"stub":true,"ourClass":true}
  ok   unsupported: honest no-Web-MIDI copy (NO WEB MIDI · Safari named)  -> status=unsupported · NO WEB MIDI Web MIDI is missing in this browser, so hardware keys and hardware out are both off the table here. Chrome, 
  ok   unsupported: NO enable action rendered  -> enable button present: false
    · setMode(deny) + re-render, then a REAL click on ENABLE
+ ok   1b2 disclosure: midi deep routing folded by default (6 chips), web/inputs/outputs on the face, chip expands and the label toggle folds back  -> {"card":true,"chips":["PLAY IN","CLOCK OUT","MPE","CC → PARAM","MONITOR IN","MONITOR OUT"],"folded":[true,true,true,true,true,true],"face":[true,true,true],"expanded":true,"refolded":true}
  ok   deny: NotAllowedError path ends DENIED BY BROWSER + padlock way-out copy  -> status=denied · err="Permission denied"
  ok   no sysex: requestMIDIAccess called with NO options (log.calls[0].opts === null)  -> calls=1 · firstOpts=null
    · setMode(grant) + two ports, then a REAL click on ENABLE
@@ -40,8 +41,8 @@ cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1793946614
    · CLOCK OUT: restart, then OFF (real click) must stop it
  ok   clock out: OFF (real click) stops a running clock — 0xFC sent, wire frozen, pref off  -> was ticking=true · FC at 11/12 · frozen 63=63
  ok   zero console errors for the whole run (exceptions · Log errors · console.error · stub listener errors)  -> page errors=0 · stub listener errors=0
- ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 192845 bytes · clip 1052×670 @2x
-index.html sha256 (after): 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
- ok   freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)  -> 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
+ ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 118586 bytes · clip 1052×500 @2x
+index.html sha256 (after): d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009
+ ok   freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)  -> d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009
 
-33 passed, 0 failed
+34 passed, 0 failed

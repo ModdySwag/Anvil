@@ -763,7 +763,9 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-mix-sect-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 /* C3 disclosure (owner's call: basic-first defaults). A folded section keeps its head; the
    toggle is the last item in the head row and carries aria-expanded. */
-.av-mix-sect.av-sec-collapsed, .av-midi-sec.av-sec-collapsed { display: none; }
+/* the fold contract applies to any section a fold helper marks — the MPE wrapper is a plain div,
+   not a .av-midi-sec, so the generic class is the reliable hook. */
+.av-sec-collapsed { display: none; }
 .av-mix-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 1px 0; }
 .av-adv-chip {
   padding: 3px 9px; border: 1px solid var(--hair); border-radius: 10px; background: var(--raised);

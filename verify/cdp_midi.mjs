@@ -33,7 +33,7 @@ const page = path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after. */
-const EXPECT_SHA = '570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7';
+const EXPECT_SHA = 'd3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009';
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
 console.log('index.html sha256 (before): ' + shaBefore);
@@ -294,6 +294,35 @@ async function main() {
   note('setMode(deny) + re-render, then a REAL click on ENABLE');
   await ev(`(() => { window.__MIDI_STUB.setMode('deny'); avMidiRender(); return true; })()`);
   await sleep(200);
+  /* 1b2-style (C3 disclosure): the deep routing — play-in, clock, MPE, CC learn, both monitors —
+     is folded by default behind one chip row, the setup face (web midi, inputs, outputs) stays up,
+     a chip expands its section and that section's label then carries the fold-back toggle.
+     MUST run before any clickSel: that helper expands folds before it clicks. */
+  const foldR = await ev(`(() => {
+    const card = document.querySelector('.av-midi');
+    if (!card) return { card: false };
+    const adv = ['play', 'clock', 'mpe', 'cc', 'monin', 'monout'];
+    const chips = Array.from(card.querySelectorAll('.av-adv-chip')).map((c) => (c.textContent || '').trim());
+    const folded = adv.map((n) => { const s = card.querySelector('[data-sect="' + n + '"]'); return s ? getComputedStyle(s).display === 'none' : null; });
+    const face = ['web', 'inputs', 'outputs'].map((n) => { const s = card.querySelector('[data-sect="' + n + '"]'); return s ? getComputedStyle(s).display !== 'none' : null; });
+    const first = card.querySelector('[data-sect="play"]');
+    const chip = card.querySelector('.av-adv-chip[data-adv="play"]');
+    let expanded = false, refolded = false;
+    if (chip && first) {
+      chip.click();
+      expanded = getComputedStyle(first).display !== 'none';
+      const t = first.querySelector('.av-sec-toggle');
+      if (t) { t.click(); refolded = getComputedStyle(first).display === 'none'; }
+    }
+    return { card: true, chips: chips, folded: folded, face: face, expanded: expanded, refolded: refolded };
+  })()`);
+  const fv = foldR.value || {};
+  const wantChips = ['PLAY IN', 'CLOCK OUT', 'MPE', 'CC → PARAM', 'MONITOR IN', 'MONITOR OUT'];
+  check('1b2 disclosure: midi deep routing folded by default (6 chips), web/inputs/outputs on the face, chip expands and the label toggle folds back',
+    fv.card === true && wantChips.every((w) => (fv.chips || []).indexOf(w) >= 0)
+    && (fv.folded || []).every((x) => x === true) && (fv.face || []).every((x) => x === true)
+    && fv.expanded === true && fv.refolded === true, JSON.stringify(fv));
+
   const denyClicked = await clickSel('#av-midi-body [data-midi="enable"]');
   const denyOk = await until(`window.__avMidi.snap().status === 'denied'`, 4000);
   const denyR = await ev(`(() => {

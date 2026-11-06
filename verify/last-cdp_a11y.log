@@ -1,6 +1,6 @@
-index.html sha256 (before): 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
+index.html sha256 (before): d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1793946354771
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1793950416694
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
@@ -36,7 +36,7 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   F3 contrast reload: class + aria-pressed + state RESTORED from prefs  -> {"ready":true,"inited":true,"cls":"av-contrast av-rail-closed","pressed":"true","contrast":true,"ls":{"contrast":true,"motion":"system"}}
  ok   F4 contrast reset: default clean (class off + aria-pressed "false" + state false + prefs contrast false)  -> {"click":true,"cls":"av-rail-closed","pressed":"false","contrast":false,"ls":{"contrast":false,"motion":"system"}}
 == G. motion (emulated reduce + the manual toggle) ==
- ok   G1 motion premise: 2 element(s) under main animate in normal mode (nonzero transitionDuration)  -> {"ok":true,"total":4266,"nz":2,"sample":["av-studio-meter-bar","av-studio-meter-rms"]}
+ ok   G1 motion premise: 2 element(s) under main animate in normal mode (nonzero transitionDuration)  -> {"ok":true,"total":4267,"nz":2,"sample":["av-studio-meter-bar","av-studio-meter-rms"]}
  ok   G2 motion emulated (prefers-reduced-motion: reduce): 0 elements under main with a nonzero transitionDuration (all <= 0.0001 s)  -> {"count":{"ok":true,"total":4266,"nz":0,"sample":[]},"cls":"av-rail-closed av-reduce-motion","matchMedia":true,"motion":"system","reduceActive":true}
  ok   G3 motion manual: #av-a11y-motion click -> av-reduce-motion class + aria-pressed "true" + 0 animated elements  -> {"click":true,"cls":"av-rail-closed av-reduce-motion","pressed":"true","motion":"reduce","count":{"ok":true,"total":4266,"nz":0,"sample":[]}}
  ok   G4 motion persisted: prefs motion "reduce" in av-a11y localStorage + state().motion reduce  -> {"ls":{"contrast":false,"motion":"reduce"},"motion":"reduce"}
@@ -45,11 +45,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"av-rail-closed","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 570727f35b01...
+index.html sha256 (after):  d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned d3cf06aef67d...
 
 RESULT: 32 passed, 0 failed
 A11Y-RESULT 32/32
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7","sha256After":"570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7","pinned":"570727f35b01e9065db8c2804665bf57626e229ae13d703fb8c95edad593b0b7","passed":32,"failed":0,"checks":32,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009","sha256After":"d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009","pinned":"d3cf06aef67d9a70bed1d1c88853a30886b4d09fccb59e520f7aa417a9b16009","passed":32,"failed":0,"checks":32,"verdict":"pass"}
 A11Y PASSED

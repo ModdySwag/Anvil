@@ -37,6 +37,18 @@ not rigs). **Stress on 570727f3 has NO valid receipt.** Next session: run
 `node verify/cdp_stress.mjs` from an interactive shell on an otherwise idle box, confirm the log's
 mtime advances, and only then record the deltas.
 
+**C3-3b (18:33) — the MPE hole, and a clean battery.** The MPE block is the one section whose
+wrapper is a plain `<div data-sect="mpe">`, not a `.av-midi-sec`, so the collapse class was applied
+but had no CSS to act on: the helper marked it folded while it stayed on the page. That is why the
+first measurement read 1.09/1.20 — it INCLUDED MPE. Fixed with a generic
+`.av-sec-collapsed { display: none; }` (the reliable hook for any wrapper a fold helper marks), and
+`cdp_midi` gained the 1b2 leg it was missing (**33 → 34 checks**): six chips present with their
+labels, all six sections folded, web/inputs/outputs on the face, a chip expands, the label toggle
+folds back. Measured after the fix: **system/midi 0.88 at 1280**.
+**Battery c3d on d3cf06ae: 28/28 suites exit=0 FIRST-LAP with zero reds** (the first battery this
+session with no knife-edge and no crash), bench exit=0, alias exit=0, stress **65** underrun deltas —
+back inside the 12-81 band, which also confirms 376/543 were contamination, not the build.
+
 **NEXT**: sound/engine 1.88/2.26 · effects 1.86/2.23 · system/code 1.61/1.89 · sequence 1.53/1.81 ·
 sound/fm 1.53/1.78 · sound/wt 1.52/1.77 · sound/chop 1.40/1.62 · shape/matrix 1.31/1.54 ·
 sound/drums 1.17/1.34. `av_fx` still has no section hooks (UI lives in `av_fx.js`).
