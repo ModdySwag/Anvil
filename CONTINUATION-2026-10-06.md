@@ -1,5 +1,51 @@
 # Anvil — CONTINUATION (2026-10-06)
 
+## SAVE 2026-11-06 13:20 — C3-1 THE DENSITY FLOOR + THE GATE (K23); frozen at d2cbe864
+
+C3's gate (docs/13 §7) is page height ≤ 1.2 × well height at 1440×900 AND 1280×800. Measured on the
+C2b-8 bytes with `cache/scratch/probe_density.mjs` (every zone × every sub-tab — K7 only measures the
+ACTIVE sub, so the old 2.2 bound was hiding 15 views): 26 views, 11 over at 1440 and 15 over at 1280.
+Worst: mix/mix 2.14/2.53 · system/midi 1.91/2.29 · sound/engine 1.88/2.26 · effects 1.86/2.23.
+
+**C3-1 lands the floor and the instrument, not the page rebuilds.**
+- Narrow-width rhythm (≤1360): zone padding 12/14/18 → 10/12/14, gap 10 → 8, card padding 16/18 →
+  12/14. That alone took browse/sessions 1.22 → 1.19, sound/tune 1.23 → 1.17, system/family
+  1.23 → 1.19.
+- **K23 (chassis)**: a CLAIMED list of page/sub views that must render ≤1.2 at both widths; the list
+  grows as each heavy page is rebuilt. Two rig traps paid in writing it: the id must be built by
+  concatenation (`'av-zone-' + "browse"`), never `'av-zone-"browse"'`; and a null ratio must FAIL —
+  `null <= 1.2` is TRUE in JS, so a broken measurement silently green-lights the gate (it did, and
+  was caught before commit).
+
+**Claimed now (K23, 1440 / 1280):** browse packs .65/.75 · import .98/1.15 · sessions .98/1.19 ·
+perform macros .27/.29 · voice .27/.29 · sound samples .87/.98 · tune 1.03/1.17 · shape lfo .88/.99 ·
+mix comp .78/.90 · rec .26/.28 · studio .81/.94 · deliver deck .73/.83 · deliver .58/.66 ·
+system project .92/1.07 · family .98/1.19 · roadmap .51/.58.
+
+**Still over (the C3 page rebuilds, with targets):** mix/mix 2.14/2.53 · system/midi 1.91/2.29 ·
+sound/engine 1.88/2.26 · effects 1.86/2.23 · system/code 1.61/1.89 · sequence 1.53/1.81 ·
+sound/fm 1.53/1.78 · sound/wt 1.52/1.77 · sound/chop 1.40/1.62 · shape/matrix 1.31/1.54 ·
+sound/drums 1.17/1.34.
+
+**Levers identified (next session, in this order):**
+1. `av-levels` (222px) is zone-level in SOUND and rides every sub. Moving it out flips drums
+   (1.34 → ~0.88) and nearly flips chop. It IS in `cdp_cockpit`'s ZONEMAP (sound: ['av-levels', …]) and
+   `cdp_knob_feel`/`cdp_a11y` measure its master knob on the visible page — a move must update that
+   ZONEMAP and the rigs' show() calls, then re-pin.
+2. `av-mod` (724) is a vertical slot list (`.av-mod-slot`, 8-col grid ≈494px). Two columns at ≥1200 plus
+   a compact slot grid at ≤1360 (≈430px) reaches 2×4 rows → ~590px, inside the gate at both widths.
+3. `av-synth` (743), `av-fx` (1094), `av-mix` (1225), `av-midi-card` (1085), `av-code` (902),
+   `av-seq` (894) each need in-card sub-panels (the existing `.av-subtab` pattern, like BROWSE/PERFORM/
+   SOUND/SHAPE already have) before they can reach 605px at 1280. These are UI builds, not CSS.
+
+**Gates on d2cbe864 (`verify/battery_c3a.log`):** 28/28 suites exit=0 first-lap (chassis 26 incl K22 ×2
+and K23 ×2), bench exit=0, alias exit=0, stress asserts-not-met 12 underrun deltas (78 → 39 → 21 → 13 →
+26 → 12 across the passes: the quietest load-class pass recorded). Chassis K23 detail carries the full
+claimed table.
+
+**OPEN:** owner eye pass (his gate) on the glass and the density floor; then the six C3 page rebuilds
+above; C4 control language, C5 disclosure, C6 shots/pins/battery/installer/deploy (v1.15.0 assets).
+
 ## SAVE 2026-11-06 12:50 — C2b-8 THE GLASS (root causes, not shrinkage); frozen at 1210c461
 
 The C2b-2 close (b7ea1627, the co-writer session) fit row 3 by dropping the type to 9px and taking the

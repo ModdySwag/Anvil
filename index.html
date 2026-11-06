@@ -2171,6 +2171,13 @@ header.av-head {
 }
 .av-zone { display: flex; flex-direction: column; min-height: 0; }
 .av-zone-box { padding: 12px 14px 18px; gap: 10px; }
+/* C3 density: at the narrow gate width (1280) the vertical rhythm gives back 8px per card and
+   2px per gap. That is what the single-card pages sitting at ~1.22 need; it is not a substitute
+   for the real page rebuilds (mix/effects/system-midi/sequence), it is the floor they build on. */
+@media (max-width: 1360px) {
+  .av-zone-box { padding: 10px 12px 14px; gap: 8px; }
+  .av-card { padding: 12px 14px; }
+}
 body.av-rail-closed .av-rail { display: none; }
 body.av-rail-closed .av-work { gap: 0; }
 

@@ -1,5 +1,5 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-index.html sha256 (before): 1210c461d09949aa27afe898de42c405ba2c2324287027f930cbec1dbf122193
+index.html sha256 (before): d2cbe8642bfc2be7f5527a5f9eb53d9a743390ca8ae5f8b9b4a5f3152ac5b532
  ok   boot: data-av-ready flips
  ok   pages: 9 panels + 9 tabs in signal order  -> {"zones":9,"tabs":9,"order":"browse,perform,sound,shape,sequence,effects,mix,deliver,system"}
  ok   default: exactly one page rendered (sound) + aria-selected + body[data-av-zone] agree  -> {"zones":9,"tabs":9,"order":"browse,perform,sound,shape,sequence,effects,mix,deliver,system","shown":["sound"],"bodyZone":"sound","sel":"sound","vis":"sound"}
@@ -20,6 +20,6 @@ index.html sha256 (before): 1210c461d09949aa27afe898de42c405ba2c2324287027f930cb
  ok   R3 float: two panels coexist with z-order set; reset() brings everything home  -> {"n":2,"z":"58","after":0,"home":true}
  ok   R3 about: the header About button toggles the phase-notes popover (moved out of the page)  -> {"open":true,"closed":true,"hasH1":true}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned  -> pinned 1210c461d099...
+ ok   freeze: index.html sha256 = pinned  -> pinned d2cbe8642bfc...
 
 21 passed, 0 failed

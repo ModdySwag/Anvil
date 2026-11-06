@@ -564,6 +564,51 @@ async function main() {
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await sleep(200);
 
+  /* K23 -- the density gate (docs/13 s.7): a page/sub view that C3 has CLAIMED renders within
+     1.2x the well height at BOTH widths. The list grows as each view is rebuilt; a view that
+     regresses past 1.2 fails the chassis. Unclaimed views are the outstanding C3 rebuilds
+     (mix, effects, system/midi, system/code, sequence, sound/engine|fm|chop|wt|drums,
+     shape/matrix) -- see CONTINUATION for the measured table. */
+  const DENSITY_CLAIMED = [
+    ['browse', 'packs'], ['browse', 'import'], ['browse', 'sessions'],
+    ['perform', 'macros'], ['perform', 'voice'],
+    ['sound', 'samples'], ['sound', 'tune'],
+    ['shape', 'lfo'],
+    ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
+    ['deliver', 'deck'], ['deliver', 'deliver'],
+    ['system', 'project'], ['system', 'family'], ['system', 'roadmap']
+  ];
+  const DENSITY_MAX = 1.2;
+  for (const W of [1440, 1280]) {
+    await send('Emulation.setDeviceMetricsOverride', { width: W, height: W === 1440 ? 900 : 800, deviceScaleFactor: 1, mobile: false });
+    await sleep(240);
+    const rows = [];
+    for (const [z, sub] of DENSITY_CLAIMED) {
+      const shown = ((await ev(`(() => {
+        try { window.__avZone.show(${JSON.stringify(z)}); } catch (e) { return 'zone'; }
+        const btn = document.querySelector('#av-zone-${z} .av-subtab[data-sub="${sub}"]');
+        if (!btn) return 'sub';
+        btn.click();
+        return 'ok';
+      })()`)) || {}).value;
+      await sleep(140);
+      const m = shown === 'ok' ? (((await ev(`(() => {
+        const zn = document.getElementById('av-zone-' + ${JSON.stringify(z)});
+        const box = zn ? zn.querySelector('.av-zone-box') : null;
+        return { h: zn ? zn.clientHeight : 0, s: box ? box.scrollHeight : 0 };
+      })()`)) || {}).value || {}) : {};
+      rows.push({ id: z + '/' + sub, ratio: m.h ? +(m.s / m.h).toFixed(3) : null, missing: shown === 'ok' ? null : shown });
+    }
+    /* null ratio = the measurement never happened; it must FAIL, not coerce to 0 and pass */
+    const bad = rows.filter(r => r.missing || r.ratio == null || r.ratio > DENSITY_MAX);
+    check('K23 W=' + W + ': every C3-claimed page/sub inside the ' + DENSITY_MAX + 'x density gate',
+      bad.length === 0,
+      bad.length ? JSON.stringify(bad) : rows.map(r => r.id + '=' + (r.ratio == null ? 'n/a' : r.ratio.toFixed(2))).join(' '));
+  }
+  await ev(`(() => { try { window.__avZone.show('sound'); const b = document.querySelector('#av-zone-sound .av-subtab[data-sub="engine"]'); if (b) b.click(); } catch (e) { /* stays put */ } return true; })()`);
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await sleep(200);
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 
