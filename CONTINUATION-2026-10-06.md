@@ -1,6 +1,73 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-07 01:00 (session 23g). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVE 2026-11-07 01:15 (session 23h). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- C3-14 commit `7dd7f68`. Bundle `index.html` sha256
+  `21f3e525c1cc4de519d58442ac7e78a79a4314cf11031b823826e903e9b99903`, **4,806,181 B**. Tree clean.
+  All 23 pins == that sha (`STALE REMAINING: none`).
+- Gate: **FAST LANE clean in 100 s**: chassis **36/36** (K24c–K24j) · a11y 33 · smoke 81 · m1 33 ·
+  m2 40 · **fx 28**.
+- VERIFY AT SESSION START: `bash cache/scratch/battery_fast.sh fx` (≈100 s).
+
+### WHAT LANDED — C3 screens 1–3
+1. **Filter response inset** (`f7e3743`): engine card, on the pots line, 92–150px, units `LP24 2.9k R90`, drag x cutoff / y reso. Engine 0.969/1.101 unmoved. K24h.
+2. **Envelopes group** (`0f311f8`): folds behind its `ENVELOPES` chip (owner's call). 0px closed, 133px open, 506×121 canvas, env1 amp + env2 filter overlaid, units, drag x a/d/r, y sustain. K24i.
+3. **Per-slot FX screens** (C3-14, this commit): every one of the six strips carries the screen its
+   block has — drive transfer curve (sat/fold/crush), dyn compressor in→out curve (thresh/ratio/ceiling),
+   delay tap timeline (time/feedback/ping-pong), verb + conv T60 decay tails, mod LFO shape. Closed
+   strips cost 0; opening one paints through a ResizeObserver. **effects 0.705/0.817 → 0.854/0.996**
+   (the rise is DRIVE's screen, which is on the face by design). K24j pins six screens, DRIVE painted
+   on the face, DELAY painted when opened, and the fold-back.
+
+### TRAPS 22–23 (paid this pass)
+22. **A canvas without a CSS height feeds its backing store back into layout.** A `flex: 1` canvas has
+    no height, so layout uses its `height` ATTRIBUTE, which the painter sets from the layout box — the
+    box grew to 183px on a 76px screen. Pin the CSS height (`56px`) and derive the store from that.
+23. **Sweep the pin by the hash the rigs actually carry.** A sweep with the wrong `--old` prints
+    `STALE REMAINING: [...]` and silently leaves every rig pinned to the previous build — the fast
+    lane then reports four freeze-leg reds that look like regressions. Read the sweep's last line.
+
+### TRAPS — the carried list (23)
+1 cascade `!important` · 2 a fold hides an interactive control · 3 a wrapper swallows the working
+surface · 4 autocrlf = rebuild · 5 pin sweep old→new only · 6 `Target crashed` = 0 checks · 7 no second
+browser during a battery · 8 K23 null must fail · 9 cockpit pane law · 10 knife-edge legs (store
+install-progress, sessions version ring, hub reload) · 11 budget zone chrome / use idle width · 12 a
+paired row 5px over wraps · 13 a fold's chip must not buy a row · 14 a hidden zone measures 0 · 15 a
+fold is only legal on chrome · 16 FILL belonged on the face · 17 check the class is carried · 18
+flex-basis wraps before shrinking · 19 a probe must write a differing value · 20 a folded canvas has
+no box (ResizeObserver + settle) · 21 indefinite `100%` width collapses · 22 canvas without a CSS
+height feeds back into layout · 23 sweep by the hash the rigs carry.
+
+### WHAT WE STILL HAVE TO DO
+**A. C3 screens 4–6** (docs/13 §C3):
+4. **MIX** — EQ response curve on the master chain + per-track mini waveform in the strip.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), rows stay advanced.
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+Rule: a screen never blocks a control, carries no chrome beyond its inset, prints its own units.
+Pattern to copy: the FX screens (screen inside the module, painted on open) and the filter inset
+(screen on the line, `flex: 1 1 0`).
+
+**B. C4 control language** · **C. C5 disclosure** · **D. C6 release v1.15.0** (live site still the
+2026-10-09 build; `windows/stage/Anvil/resources/app/index.html` is a stale staged copy).
+**E. Open from C2:** mono is not per-patch; latency/buffer has no LCD cell.
+
+### GATE POLICY (standing)
+Per card → `cache/scratch/battery_fast.sh <card-rig>` (≈100 s). Full battery (28 rigs + bench +
+alias + stress) → wave/release gate on FINAL bytes with nothing else open. `verify/battery_c3l.log`
+is VOID — do not cite it.
+
+### WAITING ON THE OWNER
+Eye pass: the five folded surfaces + FM/WT/CODE/SEQ/MATRIX shapes + the filter inset + the ENVELOPES
+section (opens below the pane fold at 1280) + the six FX screens (DRIVE's curve is always visible).
+LEVELS fold verdict still open.
+
+### FIRST MOVES NEXT SESSION
+1. Read this block; fast lane on `21f3e525`.
+2. Screen 4 — MIX: the master chain is the place for an EQ curve (measure `rowprobe mix mix ".av-mix"`),
+   and the per-track strip waveform rides each strip. Screens buy no height on claimed pages.
+
+## SAVE 2026-11-07 01:00 (session 23g) — superseded by the block above
 
 ### STATE (proven, not claimed)
 - C3-13 commit `0f311f8`. Bundle `index.html` sha256
