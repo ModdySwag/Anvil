@@ -8,9 +8,11 @@
 - All 23 `verify/cdp_*.mjs` pins == that sha (swept old→new from `88f0d826`; `STALE REMAINING: none`).
 - Gate: **FAST LANE clean in 99 s** (`verify/battery_fast.log`, sha b3556d4a): chassis **33/33**
   (K24c/K24d/K24e/K24f/K24g) · a11y 33 · smoke 81 · m1 33 · m2 40 · knob_feel 19, all exit=0.
-- The last full sweep (`verify/battery_c3l.log`, sha 88f0d826) had **all 28 rigs exit=0**; its
-  bench/alias/stress were deliberately not run (policy below). A wave-gate full battery on b3556d4a
-  is the next scheduled run.
+- `verify/battery_c3l.log` is **VOID as a wave receipt**: its 28 rigs are green on 88f0d826, but the
+  script outlived the attempt to stop it — bench was killed (exit **143**), alias ran on the newer
+  bytes, and stress read **138** deltas *while a second browser (cardprobe/views) was running*: that
+  is the contamination trap, not a regression (clean runs read 12–125). The real wave gate runs on
+  the FINAL bytes with nothing else open.
 - VERIFY AT SESSION START: `bash cache/scratch/battery_fast.sh <card-rig>` (99 s) — the per-card gate.
 
 ### THE C3 REBUILD RUN IS COMPLETE — every page is inside the 1.2x gate

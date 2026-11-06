@@ -27,3 +27,7 @@ cdp_smoke exit=0 ok=81 fail=0
 cdp_store exit=0 ok=28 fail=0
 cdp_studio exit=0 ok=37 fail=0
 cdp_tune exit=0 ok=18 fail=0
+bench exit=143
+alias exit=0
+stress exit=1
+BATTERY-C3L DONE 07 Nov 2026 00:33:35
