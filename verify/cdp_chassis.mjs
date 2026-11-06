@@ -572,7 +572,7 @@ async function main() {
   const DENSITY_CLAIMED = [
     ['browse', 'packs'], ['browse', 'import'], ['browse', 'sessions'],
     ['perform', 'macros'], ['perform', 'voice'],
-    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'],
+    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['effects', null],

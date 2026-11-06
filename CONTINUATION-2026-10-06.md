@@ -49,10 +49,17 @@
   keys knob: four cascading reds). All three now open the card first, each with a named check.
   **Rule: before folding anything, grep the rig set for the selectors of the controls that fold.**
 
-### WHAT REMAINS — re-measure BEFORE rebuilding the rest of SOUND
-The LEVELS fold took ~140px off **every** SOUND sub-page, so the old numbers are stale. Re-measure
-drums (was 1.17/1.34), fm (1.53/1.78), wt (1.52/1.77), chop (1.40/1.62) before designing anything —
-several may already be near the gate, and the FM/WT cards are the next real rebuilds.
+### WHAT REMAINS - the SOUND family, RE-MEASURED after the LEVELS fold (1440 / 1280)
+
+| view | before | now | verdict |
+|---|---|---|---|
+| sound/engine | 1.88 / 2.26 | **0.97 / 1.10** | claimed in c3g |
+| sound/drums | 1.17 / 1.34 | **0.91 / 1.03** | **claimed after c3g**, validated by the solo chassis run `verify/probe-c35-chassis-drums.log` (27/27), not by the battery |
+| sound/chop | 1.40 / 1.62 | 1.141 / 1.308 | ~55px short at 1280; the `#av-chop` body is ONE `.av-chop` block of 390px (9 children), so it needs a sectioned fold |
+| sound/fm | 1.53 / 1.78 | 1.272 / 1.464 | next real rebuild (the FM card) |
+| sound/wt | 1.52 / 1.77 | 1.262 / 1.452 | then the WT card |
+
+K23 now claims **21 views** (20 at the battery + drums).
 Then: system/code 1.61/1.89 · sequence 1.53/1.81 · shape/matrix 1.31/1.54 (two-column measured
 WORSE; needs a slot redesign) · then the six planned C3 screens (docs/13 §C3) · C4 control language ·
 C5 disclosure everywhere + focus order + tab semantics · C6 shots/pins/battery/installer/deploy
