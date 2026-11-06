@@ -76,7 +76,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* freeze pin: the parent sets this to the frozen sha at the R17 freeze (64-hex); null until then.
    Pinned run = +1 check (the freeze check); unpinned run reports one FEWER check — mirroring
    cdp_import's structure with its pin absent. */
-const EXPECT_SHA = '76b8e141ca3c35820f9bf8e0c989b208770d10bd49c88f9ac00b80f8e62251e7';
+const EXPECT_SHA = '88f0d8264568c9dae0842d34553a83a857f362fd2160e9d4d2e565930f87075b';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);

@@ -379,6 +379,9 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-seq-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
 .av-seq-cap { font-size: 10.5px; color: var(--text-3); }
 .av-seq-transport { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* C3-10: GEN + SONG fold behind two chips that ride the transport row (no extra row) — the
+   page's work surface is the transport, the step grid and the step inspector. */
+.av-seq-adv { display: flex; align-items: center; gap: 6px; margin-left: auto; padding-left: 8px; }
 .av-seq-btn { }
 .av-seq-btn.on { color: var(--teal); border-color: var(--teal-deep); box-shadow: 0 0 6px rgba(46,216,201,.35); }
 .av-seq-pos { font-family: var(--mono); font-size: 11px; color: var(--teal); min-width: 56px; text-align: center; }
@@ -51710,7 +51713,8 @@ function avSeqAcidSlideState() {
      call is typeof-guarded and this file never assumes it exists).
 
    K ADDENDUM (wave verify/_k_wave.md §2 — child KI): the runtime FILL toggle.
-   - Control: `#av-seq-fill-toggle` (label "FILL"; class "on" + aria-pressed reflect
+   - Control: `#av-seq-fill-toggle` (label "FILL", in the TRANSPORT row since C3-10 — a performance
+     flag stays on the face while the named fill picker folds with GEN; class "on" + aria-pressed reflect
      avSeqSchedGetFill() === 1). PLACEMENT NOTE — the pin reads "transport row next to the
      existing FILL apply control"; the ONLY fill apply control (`#av-seq-fill-apply`) lives in
      the GEN block's FILL row, so the toggle sits next to it THERE (the adjacency anchor wins;
@@ -52758,6 +52762,9 @@ function avSeqUiTransportHTML() {
     '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-play" aria-pressed="false" title="PLAY — start the audio-clock transport">PLAY</button>' +
     '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-stop" title="STOP — halt and rewind the transport">STOP</button>' +
     '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-rec" aria-pressed="false" title="REC — cycle capture arm: off → step → live">REC</button>' +
+    /* C3-10: FILL is a PERFORMANCE flag, so it stays on the face even though the rest of the fill
+       controls (the named picker + the apply button) fold away with GEN. */
+    '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-fill-toggle" aria-pressed="false" title="FILL — runtime fill flag (steps with condition FILL fire while on) · performance state: no undo, not part of the pattern, not saved">FILL</button>' +
     '<span class="av-seq-pos" id="av-seq-pos" role="status">BAR 1 · 01/16</span>' +
     '<span class="av-seq-bpm">' + knob + '</span>' +
     '</div>';
@@ -52810,7 +52817,6 @@ function avSeqUiGenHTML() {
     '<span class="av-seq-gen-lbl">FILL</span>' +
     '<select class="av-select av-seq-tsel" id="av-seq-fill-id" aria-label="Named fill">' + fillOpts + '</select>' +
     '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-fill-apply" title="Apply the named fill (avSeqFill) — model edit, undo checkpoint after">FILL ▸</button>' +
-    '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-fill-toggle" aria-pressed="false" title="FILL — runtime fill flag (steps with condition FILL fire while on) · performance state: no undo, not part of the pattern, not saved">FILL</button>' +
     '</div>' +
     '<div class="av-seq-gen-row">' +
     '<span class="av-seq-gen-lbl">EUCLID</span>' +
@@ -53513,6 +53519,93 @@ function avSeqUiStartLoop() {
 
 /* ---------- init (mount, re-mountable) ---------- */
 
+/* ---------- the C3-10 folds: GEN + SONG ---------- */
+
+/* The page's work surface is the transport, the step grid and the step inspector. The generators
+   (euclid / mutate / humanize / fill) and the song arrangement are secondary surfaces, so they fold
+   behind two chips that ride the TRANSPORT row - no extra row of their own (the CODE lesson). Each
+   section keeps a head toggle so it can fold back. */
+const AV_SEQ_FOLD = [["gen", "GEN"], ["song", "SONG"]];
+
+function avSeqUiFoldSync(rootArg) {
+  try {
+    const host = avSeqUiHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const card = rootArg || host.querySelector(".av-seq") || host;
+    if (!card || typeof card.querySelector !== "function") return false;
+    const rows = card.querySelectorAll("#av-seq-song-rows .av-seq-songrow").length;
+    for (let i = 0; i < AV_SEQ_FOLD.length; i++) {
+      const name = AV_SEQ_FOLD[i][0];
+      const sec = card.querySelector(".av-seq-" + name);
+      const chip = card.querySelector('.av-adv-chip[data-adv="' + name + '"]');
+      if (!sec || !chip) continue;
+      const folded = sec.classList.contains("av-sec-collapsed");
+      chip.hidden = !folded;
+      const label = name === "song" ? ("SONG \u00b7 " + rows) : "GEN";
+      if (String(chip.textContent || "") !== label) chip.textContent = label;
+      chip.title = folded ? ("Show the " + (name === "gen" ? "generators" : "song arrangement")) : ("Hide the " + (name === "gen" ? "generators" : "song arrangement"));
+      chip.setAttribute("aria-label", chip.title);
+      const btn = sec.querySelector(".av-sec-toggle");
+      if (btn) {
+        btn.textContent = folded ? "\u25b8" : "\u25be";
+        btn.setAttribute("aria-expanded", folded ? "false" : "true");
+        btn.title = (folded ? "Show the " : "Hide the ") + (name === "gen" ? "generators" : "song arrangement");
+        btn.setAttribute("aria-label", btn.title);
+      }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSeqUiFoldInit(hostArg) {
+  try {
+    const host = hostArg || avSeqUiHost();
+    if (!host || typeof host.querySelector !== "function" || typeof document === "undefined") return false;
+    const card = host.querySelector(".av-seq") || host;
+    if (!card || typeof card.querySelector !== "function") return false;
+    if (card.querySelector(".av-seq-adv")) { avSeqUiFoldSync(card); return true; }
+    const transport = card.querySelector(".av-seq-transport");
+    if (!transport) return false;
+    const row = document.createElement("div");
+    row.className = "av-seq-adv";
+    row.setAttribute("role", "group");
+    row.setAttribute("aria-label", "folded sequencer sections");
+    for (let i = 0; i < AV_SEQ_FOLD.length; i++) {
+      const name = AV_SEQ_FOLD[i][0];
+      const sec = card.querySelector(".av-seq-" + name);
+      if (!sec) continue;
+      sec.setAttribute("data-sect", name);
+      const head = sec.querySelector(".av-seq-" + name + "-head");
+      if (head && !head.querySelector(".av-sec-toggle")) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "av-sec-toggle";
+        btn.textContent = "\u25b8";
+        btn.setAttribute("aria-expanded", "false");
+        btn.addEventListener("click", function () {
+          sec.classList.toggle("av-sec-collapsed");
+          avSeqUiFoldSync(card);
+        });
+        head.appendChild(btn);
+      }
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "av-adv-chip";
+      chip.dataset.adv = name;
+      chip.textContent = name === "song" ? "SONG \u00b7 0" : "GEN";
+      chip.addEventListener("click", function () {
+        sec.classList.remove("av-sec-collapsed");
+        avSeqUiFoldSync(card);
+      });
+      row.appendChild(chip);
+      sec.classList.add("av-sec-collapsed");
+    }
+    transport.appendChild(row);
+    avSeqUiFoldSync(card);
+    return true;
+  } catch (e) { return false; }
+}
+
 function avSeqUiInit() {
   const host = avSeqUiHost();
   if (!host) return false;
@@ -53529,6 +53622,7 @@ function avSeqUiInit() {
     host.innerHTML = avSeqUiBodyHTML(snap);
     avKnobBind(host);
     avSeqUiWire(host);
+    avSeqUiFoldInit(host);
     avSeqUiState.inited = true;
     avSeqUiState.mounts += 1;
     avSeqUiState.lens = avSeqUiTrackLens(snap);
@@ -53604,6 +53698,7 @@ function avSeqUiClasses() {
     "av-seq-insp", "av-seq-insp-head", "av-seq-insp-at", "av-seq-insp-empty", "av-seq-insp-body",
     "av-seq-insp-row", "av-seq-insp-lbl", "av-seq-insp-ctl", "av-seq-insp-val",
     "av-seq-range", "av-seq-check",
+    "av-seq-adv",
     "av-seq-gen", "av-seq-gen-head", "av-seq-gen-row", "av-seq-gen-lbl", "av-seq-gen-status", "av-seq-num",
     "av-seq-song", "av-seq-song-head", "av-seq-chains", "av-seq-chain", "av-seq-song-actions",
     "av-seq-arrange", "av-seq-arrange-head", "av-seq-song-pos", "av-seq-song-quant", "av-seq-song-quant-wrap",

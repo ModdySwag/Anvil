@@ -574,6 +574,7 @@ async function main() {
     ['perform', 'macros'], ['perform', 'voice'],
     ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'], ['sound', 'chop'], ['sound', 'fm'], ['sound', 'wt'],
     ['system', 'code'],
+    ['sequence', null],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['effects', null],
@@ -830,6 +831,47 @@ async function main() {
     && codeFold.openP === true && codeFold.foldedP === true
     && codeFold.openD === true && codeFold.foldedD === true,
     JSON.stringify(codeFold));
+
+  /* K24f -- the SEQUENCE card's C3-10 folds: GEN and SONG close behind two chips that ride the
+     transport row, each section keeps a head toggle, and the step grid stays the working surface. */
+  const seqFold = (await ev(`(() => {
+    try { window.__avZone.show('sequence'); } catch (e) { return { zone: false }; }
+    const card = document.querySelector('#av-seq-host .av-seq') || document.querySelector('.av-seq');
+    if (!card) return { card: false };
+    const q = (s) => card.querySelector(s);
+    const shown = (e) => !!e && getComputedStyle(e).display !== 'none';
+    const transport = q('.av-seq-transport');
+    const adv = q('.av-seq-adv');
+    const gen = q('.av-seq-gen'), song = q('.av-seq-song');
+    const gChip = q('.av-adv-chip[data-adv="gen"]'), sChip = q('.av-adv-chip[data-adv="song"]');
+    const gBtn = gen ? gen.querySelector('.av-sec-title .av-sec-toggle, .av-seq-gen-head .av-sec-toggle') : null;
+    const sBtn = song ? song.querySelector('.av-seq-song-head .av-sec-toggle') : null;
+    const grid = q('.av-seq-grid');
+    const out = {
+      card: true,
+      inTransport: !!(transport && adv && transport.contains(adv)),
+      folded: [gen, song].map(e => e ? !shown(e) : null),
+      chips: [gChip, sChip].map(c => c ? { vis: !c.hidden, txt: (c.textContent || '').trim() } : null),
+      toggles: !!(gBtn && sBtn),
+      gridUp: !!(grid && shown(grid)),
+      cells: card.querySelectorAll('.av-seq-cell').length,
+      openG: null, backG: null, openS: null, backS: null,
+    };
+    if (gChip && gBtn && gen) { gChip.click(); out.openG = shown(gen) && gChip.hidden === true; gBtn.click(); out.backG = !shown(gen) && gChip.hidden === false; }
+    if (sChip && sBtn && song) { sChip.click(); out.openS = shown(song) && sChip.hidden === true; sBtn.click(); out.backS = !shown(song) && sChip.hidden === false; }
+    return out;
+  })()`)).value || {};
+  const seqChipsOk = (seqFold.chips || []).length === 2
+    && (seqFold.chips || []).every(c => c && c.vis === true)
+    && (seqFold.chips[0] || {}).txt === 'GEN'
+    && String((seqFold.chips[1] || {}).txt || '').indexOf('SONG') === 0;
+  check('K24f SEQUENCE folds: GEN + SONG close behind chips riding the transport row, the chips stay visible (SONG carries the row count), head toggles fold back, and the step grid stays up',
+    seqFold.card === true && seqFold.inTransport === true
+    && (seqFold.folded || []).length === 2 && (seqFold.folded || []).every(x => x === true)
+    && seqChipsOk === true && seqFold.toggles === true && seqFold.gridUp === true && seqFold.cells > 0
+    && seqFold.openG === true && seqFold.backG === true
+    && seqFold.openS === true && seqFold.backS === true,
+    JSON.stringify(seqFold));
 
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));

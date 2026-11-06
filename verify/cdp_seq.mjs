@@ -107,7 +107,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after.
    P4: the frozen sha of the rebuilt index.html is not known until build.py runs — the parent may
    fill this constant or pass --sha <hex>; the rig never loosens the before === after check. */
-const EXPECT_SHA = '76b8e141ca3c35820f9bf8e0c989b208770d10bd49c88f9ac00b80f8e62251e7';
+const EXPECT_SHA = '88f0d8264568c9dae0842d34553a83a857f362fd2160e9d4d2e565930f87075b';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -482,6 +482,22 @@ async function main() {
     await mouse('mouseReleased', b.x, b.y);
     await sleep(after);
     return true;
+  };
+
+  /* C3-10: GEN + SONG fold behind chips in the transport; a coordinate click on a folded control
+     is refused, so any song/gen interaction opens its chip first (the cdp_fx expandFolds law). */
+  const expandSeqFolds = async () => {
+    await ev(`(() => {
+      const card = document.querySelector('#av-seq-host .av-seq') || document.querySelector('.av-seq');
+      if (!card) return false;
+      ['gen', 'song'].forEach((n) => {
+        const sec = card.querySelector('.av-seq-' + n);
+        const chip = card.querySelector('.av-adv-chip[data-adv="' + n + '"]');
+        if (sec && chip && sec.classList.contains('av-sec-collapsed') && !chip.hidden) chip.click();
+      });
+      return true;
+    })()`);
+    await sleep(250);
   };
 
   const stopTransport = async () => {
@@ -1163,6 +1179,7 @@ async function main() {
     const chainsJ = async () => (await ev(`(() => { try { return JSON.stringify(avSeqChainsSnap()); } catch (e) { return null; } })()`)).value;
     const cPreJ = await chainsJ();
     await ev(`(() => { const ids = ['av-seq-song-name','av-seq-chain-name','av-seq-chains-name']; for (let i = 0; i < ids.length; i++) { const el = document.getElementById(ids[i]); if (el) { el.value = 'RIG CHAIN'; el.dispatchEvent(new Event('input', { bubbles: true })); return true; } } return false; })()`);
+    await expandSeqFolds();
     const addClick = await clickSel('#av-seq-host #av-seq-song-add', 350);
     const cMidJ = await chainsJ();
     const grew = (() => { try { return cMidJ != null && cPreJ != null && cMidJ !== cPreJ; } catch (e) { return false; } })();
