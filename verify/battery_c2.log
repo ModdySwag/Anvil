@@ -1,0 +1,33 @@
+BATTERY-C2 START 06 Nov 2026 09:38:38 sha=07aa7ef08cab4be6e8793e47074bb07bc4a7055d80b16be5a2c33a951ab6a3c6
+cdp_a11y exit=1 ok=31 fail=1
+cdp_bounce exit=1 ok=31 fail=1
+cdp_chassis exit=0 ok=20 fail=0
+cdp_cockpit exit=1 ok=20 fail=1
+cdp_code exit=1 ok=35 fail=1
+cdp_comp exit=1 ok=40 fail=1
+cdp_deck exit=1 ok=34 fail=1
+cdp_fit exit=0 ok=49 fail=0
+cdp_fx exit=1 ok=26 fail=1
+cdp_hub exit=1 ok=67 fail=1
+cdp_import exit=1 ok=25 fail=1
+cdp_keys exit=0 ok=27 fail=0
+cdp_knob_feel exit=0 ok=18 fail=0
+cdp_m1 exit=1 ok=32 fail=1
+cdp_m2 exit=1 ok=39 fail=1
+cdp_midi exit=1 ok=31 fail=2
+cdp_mix exit=1 ok=45 fail=1
+cdp_platform exit=1 ok=51 fail=1
+cdp_rec exit=1 ok=27 fail=2
+cdp_s4 exit=1 ok=41 fail=1
+cdp_s5 exit=1 ok=35 fail=1
+cdp_sample exit=1 ok=28 fail=1
+cdp_seq exit=1 ok=40 fail=1
+cdp_sessions exit=1 ok=62 fail=3
+cdp_smoke exit=0 ok=81 fail=0
+cdp_store exit=1 ok=27 fail=1
+cdp_studio exit=1 ok=36 fail=1
+cdp_tune exit=1 ok=16 fail=2
+bench exit=0
+alias exit=0
+stress exit=1
+BATTERY-C2 DONE 06 Nov 2026 10:07:50

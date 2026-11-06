@@ -194,7 +194,7 @@ never a chart of nothing.
 **Built (C1 / C1b):**
 | Screen | Home | Reads | Edits |
 |---|---|---|---|
-| Oscillator shape | inspector | live `osc1.type` | — (C2: draw a wavetable frame) |
+| Oscillator shape | inspector | live `osc1.type`, and the live wavetable frame for `wt.userN` (C2) | — |
 | Filter response + corner label | inspector | live `filter.cutoff` / `.reso` | drag: x cutoff, y resonance |
 | Amp envelope + time | inspector | live `env1.a/d/s/r` | drag: x attack/decay/release, y sustain |
 | Output scope | inspector | master tap analyser | — |

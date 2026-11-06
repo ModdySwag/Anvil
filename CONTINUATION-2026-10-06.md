@@ -1,6 +1,52 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## SAVE 2026-11-06 08:22 — C1 IS CLOSED; C2 display work is IN FLIGHT in a SECOND live session
+## SAVE 2026-11-06 10:45 — C2 IS CLOSED; C3 IS NEXT
+
+C2 (inspector live) is done, committed (`eab4570`) and frozen at **8d92be74** (4,731,363 B). All 23
+rig pins are swept to it. The 08:22 save's open item 1 is closed; the co-writer session is gone — this
+session had the tree alone and every gate below ran solo.
+
+**Gates, all on the frozen bytes (`verify/battery_c2b.log`):** 29 suites, every one green first-lap
+(chassis 21/21 · smoke 81/81 · cockpit 21/21 · fit 49/49 · comp 41/41 · seq 41/41 · sessions 65/65 ·
+tune 18/18). Bench exit=0 (knee 96/128 monotone, realtime 64/64, ratio 1.0). Alias exit=0 complete
+(VA worst −58.18 dBc, WT −91.21, determinism bit-identical — the same numbers as C1, so the DSP
+change is provably inert with mono off). Stress asserts-not-met (39 underrun deltas vs C1's 78,
+drains 15/15, 0 page errors, heap +0 MB) — the documented load class, quieter.
+
+### What C2 changed
+- `src/av_inspector.js` (c2.0): POLY/MONO reads and writes `env.mono` through the param funnel and
+  repaints from the mirror on the tick; the oscillator screen draws the LIVE wavetable frame for
+  `wt.userN` (one cycle from the installed table — the WT card's own frame when that card is showing
+  the same table, else frame 0; `data-shape="wt"` + `data-wt="<name> #i/n"`).
+- `src/av_dsp.js`: `env.mono` is a real engine flag — a 16x16 held-note stack per channel, one voice
+  per channel in mono (last-note priority; a release returns to the newest key still down), and
+  `stats().mono`. mono=0 is the shipped poly allocator, untouched.
+- `src/av_wt.js`: install records now carry `data: t.frames` (the `frames` COUNT field is unchanged)
+  so the inspector can draw the actual frame.
+- `verify/cdp_chassis.mjs`: K16 kind keys · K17 core pots · K18 mono allocator · K19 scope + LEVEL
+  against the master tap · K20 live wavetable frame.
+- Docs: `verify/_c2_wave.md` (the C2 contract as executed), docs/13 wave table + screen inventory.
+
+### OPEN, in order
+1. **Owner eye pass** on the live app — C2's standing gate: band balance, inspector density, the
+   POLY/MONO pair, the wavetable screen on a real table, the scope under load. Moddy drives.
+2. **C3 page fills** to the 1.2 density gate (sound 1.53 · effects 1.86 · mix 2.14 · system 1.91 at
+   1440; the C1/C2 bound is 2.2).
+3. C4 control language, C5 disclosure, C6 shots/pins/battery/installer/deploy (v1.15.0 assets).
+4. Mono is not yet per-patch (`env.mono` is not in the pack/preset schema) — it joins when the
+   format next moves. Latency/buffer has no LCD cell (the contract pins three rows) — see
+   `verify/_c2_wave.md` §5.
+
+### C2 traps paid for
+- `avWtState.installed[s].frames` is a COUNT; the frame arrays were never kept. The screen needs
+  `data` (added). Any future screen reading an installed table must use `data`.
+- `avInspectorEl(id)` resolves the CANVAS inside a screen div — `document.getElementById('av-insp-wave')`
+  is the div. Rig reads must come from `#av-insp-wave canvas`.
+- The LCD repaints on its own tick: a rig that clicks POLY/MONO must poll the row (up to ~2.5 s), not
+  read it 200 ms later.
+- A canvas "ink" count by alpha counts the opaque glass: count luminance > 60, not alpha.
+
+## (superseded) SAVE 2026-11-06 08:22 — C1 IS CLOSED; C2 display work is IN FLIGHT in a SECOND live session
 
 Hermes died mid-wave at ~06:43 during the FSVR C1 rebuild. Resumed, finished C1, closed it. **A SECOND
 Hermes session has been alive on this same tree the whole time** (`8a7837c09cd9` is this one, the other
