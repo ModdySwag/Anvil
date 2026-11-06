@@ -1,6 +1,73 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-07 00:50 (session 23f). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVE 2026-11-07 01:00 (session 23g). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- C3-13 commit `0f311f8`. Bundle `index.html` sha256
+  `3fd8e43cba59203c961d44d666a0a0adef760dd3fba6e905a5b837148111252a`, **4,796,435 B**. Tree clean.
+  All 23 pins == that sha (`STALE REMAINING: none`).
+- Gate: **FAST LANE clean in 99 s**: chassis **35/35** (K24c–K24i) · a11y 33 · smoke 81 · m1 33 ·
+  m2 40 · knob_feel 19.
+- VERIFY AT SESSION START: `bash cache/scratch/battery_fast.sh knob_feel` (≈100 s).
+
+### WHAT LANDED — C3 screens 1 + 2 (both in the SOUND engine card)
+1. **Filter response inset** (C3-12, `f7e3743`): panel-level flex item on the pots line, 92–150px,
+   `flex: 1 1 0`, drawn from `filter.cutoff/.reso/.mode`, prints `LP24 2.9k R90`, drag = x cutoff /
+   y reso. Engine density **unmoved 0.969/1.101**. Chassis K24h.
+2. **Envelopes group** (C3-13, `0f311f8`): FOLDS behind its own `ENVELOPES` chip in the adv row
+   (owner's call: fold, not a row rewrite). Folded 0px; open 133px, canvas 506×121, the engine's
+   **two real envelopes** overlaid (env1 amp teal, env2 filter orange — `av_dsp.js` has no aux env),
+   units `A 2ms . D 300ms . S 80 . R 200ms`, drag = x attack/decay/release, y sustain. Chassis K24i.
+
+### TRAPS 20–21 (paid this pass)
+20. **A folded canvas has no box.** Painting a screen inside `display:none` measures 0 and clamps to
+    the minimum (300×72); the chip's click lands a frame before the section has a box. Paint from a
+    **ResizeObserver** on the view, and in rigs measure the open state in a **second evaluate after a
+    ~400ms settle** — a single synchronous leg reads the stale backing store.
+21. **A wrapper with `width: min(520px, 100%)` inside an auto-width flex item collapses to 0** —
+    `100%` of an indefinite parent is indefinite, so the canvas never gets a real size. Give the
+    wrapper a definite width (`520px` + `max-width: 100%`).
+
+### TRAPS — the carried list (21)
+1 cascade `!important` · 2 a fold hides an interactive control · 3 a wrapper can swallow the working
+surface · 4 autocrlf = rebuild · 5 pin sweep old→new only · 6 `Target crashed` = 0 checks · 7 no
+second browser during a battery · 8 K23 null must fail · 9 cockpit pane law · 10 knife-edge legs
+(store install-progress, sessions version ring, hub reload) · 11 budget zone chrome / use idle width ·
+12 a paired row 5px over wraps · 13 a fold's chip must not buy a row · 14 a hidden zone measures 0 ·
+15 a fold is only legal on chrome · 16 FILL belonged on the face · 17 check the class is carried ·
+18 flex-basis wraps before shrinking · 19 a probe must write a differing value · 20 folded canvas has
+no box (ResizeObserver + settle) · 21 indefinite `100%` width collapses.
+
+### WHAT WE STILL HAVE TO DO
+**A. C3 screens 3–6** (docs/13 §C3):
+3. **EFFECTS per slot** — drive curve · dyn gain-reduction meter · delay tap timeline · verb decay tail · mod LFO shape. The rack already folds; each strip's screen rides its folded head or the strip face.
+4. **MIX** — EQ response curve on the master chain + per-track mini waveform in the strip.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), rows stay advanced.
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+Rule: a screen never blocks a control, carries no chrome beyond its inset, prints its own units.
+
+**B. C4 control language** · **C. C5 disclosure** · **D. C6 release v1.15.0** (live site still the
+2026-10-09 build; `windows/stage/Anvil/resources/app/index.html` is a stale staged copy).
+**E. Open from C2:** mono is not per-patch; latency/buffer has no LCD cell.
+
+### GATE POLICY (standing)
+Per card → `cache/scratch/battery_fast.sh <card-rig>` (≈100 s). Full battery (28 rigs + bench +
+alias + stress) → wave/release gate on FINAL bytes with nothing else open. `verify/battery_c3l.log`
+is VOID (bench 143 killed, stress 138 contaminated by a second browser) — do not cite it.
+
+### WAITING ON THE OWNER
+Eye pass: five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP), FM two-column,
+WT two-row + LIBRARY chip, CODE folds, SEQUENCE folds + relocated FILL, matrix strip, the filter
+inset, and the ENVELOPES section (it opens BELOW the pane fold at 1280 — the pane scrolls, which is
+lawful, but the owner should say whether that placement feels right or the section should sit higher).
+
+### FIRST MOVES NEXT SESSION
+1. Read this block; fast lane on `3fd8e43c`.
+2. Screen 3 — EFFECTS per slot: the rack's five modules are already folded behind chips, so each
+   screen can live INSIDE its folded strip (painted when the chip opens, trap 20 applies) or on the
+   strip's face for the always-visible DRIVE. Measure the rack first: `rowprobe effects - ".av-fx"`.
+
+## SAVE 2026-11-07 00:50 (session 23f) — superseded by the block above
 
 ### STATE (proven, not claimed)
 - C3-12 commit `f7e3743` (on top of `4c3ef0f`, `d6c98bb`, `297e9d1`, `49e60ad`, `0e51c3f`).
