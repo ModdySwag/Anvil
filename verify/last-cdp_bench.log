@@ -39,7 +39,9 @@ variant LIGHT: patch applied (all params accepted)
   light r3 step  2  voices 2  mean 113.28  p95 1000  max 1000  underruns 0  n 3754  -> ok
   light r3 step  4  voices 4  mean 27.34  p95 0  max 1000  underruns 0  n 3754  -> ok
   light r3 step  8  voices 8  mean 31.25  p95 0  max 1000  underruns 0  n 3750  -> ok
-n 117.19  p95 1000  max 1000  underruns 0  n 3757  -> ok
-  light r3 step  2  voices 2  mean 113.28  p95 1000  max 1000  underruns 0  n 3754  -> ok
-  light r3 step  4  voices 4  mean 27.34  p95 0  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 16  voices 16  mean 58.59  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 24  voices 24  mean 277.34  p95 1000  max 1000  underruns 0  n 3754  -> ok
+ 27.34  p95 0  max 1000  underruns 0  n 3754  -> ok
   light r3 step  8  voices 8  mean 31.25  p95 0  max 1000  underruns 0  n 3750  -> ok
+  light r3 step 16  voices 16  mean 58.59  p95 1000  max 1000  underruns 0  n 3754  -> ok
+  light r3 step 24  voices 24  mean 277.34  p95 1000  max 1000  underruns 0  n 3754  -> ok
