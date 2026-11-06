@@ -1,6 +1,71 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-07 00:35 (session 23e). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVE 2026-11-07 00:50 (session 23f). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- C3-12 commit `f7e3743` (on top of `4c3ef0f`, `d6c98bb`, `297e9d1`, `49e60ad`, `0e51c3f`).
+  Bundle `index.html` sha256 `61532d1132337acdacbca0eacab04bb0294f793422f98a65cae40c8764748c27`,
+  **4,788,125 B**. Tree clean. All 23 pins == that sha (`STALE REMAINING: none`).
+- Gate: **FAST LANE clean in 97 s** (`verify/battery_fast.log`): chassis **34/34** (K24c–K24h) ·
+  a11y 33 · smoke 81 · m1 33 · m2 40 · knob_feel 19.
+- VERIFY AT SESSION START: `bash cache/scratch/battery_fast.sh knob_feel` (≈100 s).
+
+### WHAT LANDED — C3 screen 1 (the filter response inset)
+`av_synth.js`: `avSynthFiltInit/Paint/Sync/Set` + a `.av-synth-filtscreen` panel-level item in the VA
+panel, on the SAME flex line as the pots (`flex: 1 1 0; min 92 / max 150; 84 tall`), painted from
+`filter.cutoff/.reso/.mode` with the inspector's curve law, printing its units (`LP24 2.9k R90`),
+draggable (x = cutoff 40 Hz–12 kHz log, y = reso) through `avApplyParam` + `avKnobRefreshAll`.
+**Engine density unmoved: 0.969 / 1.101** — the screen buys no height. Chassis **K24h** pins it.
+Screens 2–6 remain (envelopes · effects per slot · MIX · SHAPE graph · SEQUENCE arrangement).
+
+### TRAPS 18–19 (paid this pass)
+18. **A flex-basis bigger than the leftover width wraps the line before it shrinks** — flex wrapping
+    uses the hypothetical (basis) size, so a 150px item on a line with 98px free goes to its own
+    line, then shrinks there. Use `flex: 1 1 0` + min/max when the item should take leftover width.
+19. **A rig probe must not write a value it might already hold** — the first K24h drag ended on
+    y=0.2 → reso 0.8, which was the live value, and the leg read "no write". Drag to a value that
+    differs from both the start and the defaults, then restore what the leg found.
+
+### TRAPS — the carried list (19)
+1 cascade `!important` · 2 a fold hides an interactive control · 3 a wrapper can swallow the working
+surface · 4 autocrlf = rebuild · 5 pin sweep old→new only · 6 `Target crashed` = 0 checks · 7 no
+second browser during a battery · 8 K23 null must fail · 9 cockpit pane law · 10 knife-edge legs
+(store install-progress, sessions version ring, hub reload) · 11 budget zone chrome, use idle width
+before shrinking ink · 12 a paired row 5px over wraps and costs ~34px · 13 a fold's chip must not buy
+a row · 14 a hidden zone measures 0 · 15 a fold is only legal on chrome · 16 the SEQUENCE FILL toggle
+belonged on the face · 17 check the class is carried before designing · 18 flex-basis wraps before
+shrinking · 19 a probe must write a value that differs.
+
+### WHAT WE STILL HAVE TO DO
+**A. C3 screens 2–6** (docs/13 §C3, in order):
+2. **Envelopes group** — amp/filter/aux overlaid in operator colours; drag = the same three moves.
+3. **EFFECTS per slot** — drive curve · dyn gain-reduction meter · delay tap timeline · verb decay tail · mod LFO shape.
+4. **MIX** — EQ response curve on the master chain + per-track mini waveform in the strip.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), rows stay advanced.
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+Rule: a screen never blocks a control, carries no chrome beyond its inset, prints its own units.
+
+**B. C4 control language** · **C. C5 disclosure** · **D. C6 release v1.15.0** (live site still the
+2026-10-09 build; `windows/stage/Anvil/resources/app/index.html` is a stale staged copy).
+**E. Open from C2:** mono is not per-patch; latency/buffer has no LCD cell.
+
+### GATE POLICY (standing)
+Per card → `cache/scratch/battery_fast.sh <card-rig>` (chassis · a11y · smoke · m1 · m2 · card rig,
+≈100 s). Full battery (28 rigs + bench + alias + stress) → wave/release gate on FINAL bytes with
+nothing else open. `verify/battery_c3l.log` is VOID (bench killed 143, stress 138 contaminated by a
+second browser) — do not cite it.
+
+### WAITING ON THE OWNER
+Eye pass: five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP), FM two-column,
+WT two-row + LIBRARY chip, CODE folds, SEQUENCE folds + relocated FILL, matrix strip, and now the
+filter inset. LEVELS fold verdict still open.
+
+### FIRST MOVES NEXT SESSION
+1. Read this block; fast lane on `61532d11`.
+2. Screen 2 — envelopes: find the env screens that already exist in the inspector, decide the
+   overlay, keep it inside the existing row height (screens buy no height — trap 18 applies).
+
+## SAVE 2026-11-07 00:35 (session 23e) — superseded by the block above
 
 ### STATE (proven, not claimed)
 - C3-11 commit `4c3ef0f`. Bundle `index.html` sha256
