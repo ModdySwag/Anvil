@@ -3,7 +3,7 @@
 ## RESUME HERE — SAVE 2026-11-06 22:50 (session 23). READ THIS BLOCK FIRST.
 
 ### STATE (proven, not claimed)
-- HEAD `9ab374c` (C3-7, on top of `4a8b5ae`). Bundle `index.html` sha256
+- C3-7 commit `0e51c3f` (on top of `4a8b5ae`; this doc block lands on top of it). Bundle `index.html` sha256
   `a731996911021f5d092d02b33a80d7c58518c34906cf9a0d5ca48fc0a9a279e4`, **4,765,298 B**. Tree clean.
 - All 23 `verify/cdp_*.mjs` pins == that sha (swept old→new from `d6f54566`; `STALE REMAINING: none`).
 - Battery **c3i** (`verify/battery_c3i.log`): **28/28 suites exit=0 FIRST-LAP, zero FAIL lines**;
