@@ -38,7 +38,19 @@ sound/drums 1.17/1.34.
    `av-seq` (894) each need in-card sub-panels (the existing `.av-subtab` pattern, like BROWSE/PERFORM/
    SOUND/SHAPE already have) before they can reach 605px at 1280. These are UI builds, not CSS.
 
-**Gates on d2cbe864 (`verify/battery_c3a.log`):** 28/28 suites exit=0 first-lap (chassis 26 incl K22 ×2
+**CORRECTION to the C3-1 battery receipt (2026-11-06 13:40).** `battery_c3a.log` does NOT read
+28/28 exit=0: `cdp_s4 exit=1 ok=0 fail=0` — the suite aborted with **`Error: Target crashed`** (a
+headless Edge renderer crash) before its first check, and the raw log is kept at
+`verify/crash-c3a-cdp_s4.log`. It is NOT a code regression: on the same frozen bytes the suite was
+re-run three times and passed 42/42, 42/42 (`verify/probe-s4-withdensity1.log`, `…2.log`), and it
+passes 42/42 on the previous bundle too (`verify/probe-s4-prev.log`). A density-CSS bisect (build
+`bf9abf09` with the block removed) ran 42/42 twice, so the C3 density rules are not implicated.
+**New rig class, add it to the triage list:** a `Target crashed` abort shows as exit=1 with **0
+checks** — no assertion ever runs, so it can masquerade as a total regression. Re-run solo before a
+verdict; if it repeats on identical bytes, suspect the browser, not the page.
+
+**Gates on d2cbe864 (`verify/battery_c3a.log`, s4 corrected by solo re-runs):** 27/28 suites exit=0
+first-lap, s4 green 2× solo on identical bytes (chassis 26 incl K22 ×2
 and K23 ×2), bench exit=0, alias exit=0, stress asserts-not-met 12 underrun deltas (78 → 39 → 21 → 13 →
 26 → 12 across the passes: the quietest load-class pass recorded). Chassis K23 detail carries the full
 claimed table.
