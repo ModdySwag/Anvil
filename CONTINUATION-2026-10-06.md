@@ -17,7 +17,9 @@
 | 6 | **SEQUENCE** arrangement overview (`7a15fc5`) | strip on the face between transport and grid: song as bars (block width = len×repeats, repeats ride the label), loop bracket (current row while playing, else whole song), captured scenes as recall blocks, caption prints bars · seconds · bpm · rows. **Fixed a pre-existing defect found on the way: `avSeqUiSceneNames()` only handled the array shape while `avSeqScenesSnap()` returns `{v, scenes}` — the scene select had always been empty and RECALL was dead.** Height cost three cuts (44→32→28px canvas, margins 0, card gap 8→6, head caption to one line) to land **0.98** at 1280. | K24m ×2 |
 
 ### WHAT IS STILL TO DO — the complete queue
-**A. C4 control language** (docs/13 §5, §C4) — steppers, pairs, groups sweep. *Nothing audited yet, nothing touched.*
+**A. C4 control language** — **items 1-2 DONE this session** (`.av-pair` at `fc67aa1`, `.av-num` at the
+commit after it; see `docs/14-c4-control-language.md`). Remaining: **`.av-fader` needs a home** (owner
+call: DELIVER master level or MIX per-track gain) and **groups `.av-group` deferred to C5**.
 **B. C5 disclosure** — focus order, tab semantics, advanced-collapsed defaults per page.
 **C. C6 release v1.15.0** — shots, pins, **full wave battery** (28 rigs + bench + alias + stress, ~35 min, nothing else open), installer, deploy; README shots and the downloads card. Live site is still the **2026-10-09 build** (`moddys.net/anvil`, frozen `e99ea8e5`): nothing from this wave is deployed.
 `windows/stage/Anvil/resources/app/index.html` is a **STALE staged copy** (Oct 9, 4,604,527 B) — C6 must re-stage it from the new bundle.

@@ -99,12 +99,24 @@ Per card: `bash cache/scratch/battery_fast.sh <card-rig>` and `node verify/cdp_f
 
 ## Order of work (smallest blast radius first)
 
-1. `.av-pair` class + the two conversions (`deliver-bits`, then `code-kind`), each with its rig leg
-   updated in the same commit.
-2. `.av-num` steppers for the two numbers (`comp-fade`, `studio-offset`).
+1. **DONE (2026-11-07, `fc67aa1`)** `.av-pair` (`src/av_pair.js`) + both conversions — `#av-deliver-bits`
+   and `#av-code-kind` are now radiogroups of two keys over a hidden input that keeps the original id
+   and `.value`, so both cards keep reading the control unchanged. Audit after the sweep: selects
+   49 → 47, two-option selects 3 → 1 (only the data-driven `#av-mix-add-src`), pairs 0 → 2. Pinned by
+   K24n (×2). A real bug was caught on the way: `avPairSync(pair)` searched only descendants, so a pair
+   passed as its own root never repainted the keys.
+2. **DONE (2026-11-07, this commit)** `.av-num` (`src/av_num.js`) + both conversions — `#av-comp-fade`
+   and `#av-studio-offset` are now stepper fields around the SAME input (id, class, type, min/max/step
+   and events untouched); a key click sets `.value` inside the range and dispatches one `input` + one
+   `change`, and a clamp emits nothing. Pinned by K24o (×2).
 3. `.av-fader` — needs its first real home; DELIVER's master level or MIX's per-track gain are the only
    candidates. **Owner call.**
 4. Groups — deferred to C5 per the recommendation above.
+
+**Gate actually run for items 1–2:** fast lane (chassis 46, a11y 33, smoke 81, m1 33, m2 40) ·
+`cdp_fit` 49/49 · `cdp_code` 36/36 · `cdp_s4` 42/42 (the DELIVER card's rig) · `cdp_comp` 41/41 ·
+`cdp_studio` 37/37 solo twice (one 3-onset metronome read right after the comp suite was CPU
+contention — the knife-edge leg, trap 10).
 
 ## What is NOT in this wave
 

@@ -1437,6 +1437,78 @@ async function main() {
     && c4Pairs.codeAfter && c4Pairs.codeAfter.value === 'fx' && c4Pairs.codeAfter.checked.join(',') === 'true,false',
     JSON.stringify({ dv: c4Pairs.deliverValue, fired: c4Pairs.deliverFired, bits: c4Pairs.deliverBits, da: c4Pairs.deliverAfter, cr: c4Pairs.codeRead, ca: c4Pairs.codeAfter }));
 
+  /* K24o -- C4 item 2: the number control. The audit's two bare number inputs (`#av-comp-fade`,
+     0..500 step 0.5; `#av-studio-offset`, -200..200 step 1) are now stepper fields. The INPUT is
+     untouched (id, class, type, min/max/step, events) — the keys beside it only set .value inside
+     the range and dispatch input+change, so every existing reader and rig keeps working. */
+  const c4Nums = (await ev(`(() => {
+    const out = { total: 0 };
+    out.total = document.querySelectorAll('.av-num[data-av-num="1"]').length;
+    const probe = (id) => {
+      const wrap = document.getElementById(id) ? document.getElementById(id).closest('.av-num') : null;
+      const inp = document.getElementById(id);
+      if (!wrap || !inp) return { missing: true };
+      return { wrap: true, steps: wrap.querySelectorAll('.av-num-step').length, tag: inp.tagName,
+        type: inp.type, cls: String(inp.className || ''), value: String(inp.value),
+        min: inp.getAttribute('min'), max: inp.getAttribute('max'), step: inp.getAttribute('step') };
+    };
+    const click = (id, dir) => {
+      const inp = document.getElementById(id);
+      const wrap = inp ? inp.closest('.av-num') : null;
+      const btn = wrap ? wrap.querySelector('.av-num-step[data-num-step="' + dir + '"]') : null;
+      if (!btn) return false;
+      btn.click();
+      return true;
+    };
+    const events = (id, fn) => {
+      const inp = document.getElementById(id);
+      if (!inp) return null;
+      let n = 0;
+      const h = () => { n++; };
+      inp.addEventListener('change', h);
+      fn();
+      inp.removeEventListener('change', h);
+      return n;
+    };
+    /* comp fade: 5 -> up 5.5 -> down 5 -> down 4.5, with exactly one change per click */
+    out.comp = probe('av-comp-fade');
+    out.compEvents = events('av-comp-fade', () => { click('av-comp-fade', 1); });
+    out.compUp = document.getElementById('av-comp-fade') ? String(document.getElementById('av-comp-fade').value) : null;
+    click('av-comp-fade', -1); click('av-comp-fade', -1);
+    out.compDown = document.getElementById('av-comp-fade') ? String(document.getElementById('av-comp-fade').value) : null;
+    /* clamp: pin to the ceiling and step up — value must not pass max, and no event is emitted */
+    const ci = document.getElementById('av-comp-fade');
+    if (ci) ci.value = '500';
+    out.compClampEvents = events('av-comp-fade', () => { click('av-comp-fade', 1); });
+    out.compClamped = ci ? String(ci.value) : null;
+    if (ci) ci.value = '5';
+    /* studio offset: 0 -> down -1 -> down -2 -> up -1, then the floor clamp */
+    out.off = probe('av-studio-offset');
+    click('av-studio-offset', -1); click('av-studio-offset', -1);
+    out.offDown = document.getElementById('av-studio-offset') ? String(document.getElementById('av-studio-offset').value) : null;
+    click('av-studio-offset', 1);
+    out.offUp = document.getElementById('av-studio-offset') ? String(document.getElementById('av-studio-offset').value) : null;
+    const oi = document.getElementById('av-studio-offset');
+    if (oi) oi.value = '-200';
+    click('av-studio-offset', -1);
+    out.offClamped = oi ? String(oi.value) : null;
+    if (oi) oi.value = '0';
+    return out;
+  })()`)).value || {};
+  check('K24o number steppers: two .av-num fields, each a real number input (same id, class, min/max/step) flanked by two keys',
+    c4Nums.total === 2
+    && c4Nums.comp && c4Nums.comp.steps === 2 && c4Nums.comp.tag === 'INPUT' && c4Nums.comp.type === 'number'
+    && c4Nums.comp.cls.indexOf('av-comp-fade') >= 0 && c4Nums.comp.min === '0' && c4Nums.comp.max === '500' && c4Nums.comp.step === '0.5'
+    && c4Nums.off && c4Nums.off.steps === 2 && c4Nums.off.tag === 'INPUT' && c4Nums.off.type === 'number'
+    && c4Nums.off.cls.indexOf('av-studio-offset') >= 0 && c4Nums.off.min === '-200' && c4Nums.off.max === '200',
+    JSON.stringify({ total: c4Nums.total, comp: c4Nums.comp, off: c4Nums.off }));
+
+  check('K24o number writes: one click is one step and exactly one change (5 -> 5.5 -> 5 -> 4.5 on a 0.5 step), the ceiling and floor clamp without emitting, and the offset steps -1 / -2 / -1',
+    c4Nums.compUp === '5.5' && c4Nums.compEvents === 1 && c4Nums.compDown === '4.5'
+    && c4Nums.compClamped === '500' && c4Nums.compClampEvents === 0
+    && c4Nums.offDown === '-2' && c4Nums.offUp === '-1' && c4Nums.offClamped === '-200',
+    JSON.stringify({ up: c4Nums.compUp, ev: c4Nums.compEvents, down: c4Nums.compDown, clamped: c4Nums.compClamped, clampEv: c4Nums.compClampEvents, offDown: c4Nums.offDown, offUp: c4Nums.offUp, offClamped: c4Nums.offClamped }));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

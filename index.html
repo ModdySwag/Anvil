@@ -382,6 +382,19 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-pair-key.on { color: #10201d; background: var(--teal); font-weight: 600; }
 .av-pair-key:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
 
+/* C4 §5: the number control — a real input flanked by two stepper keys. The input keeps its id,
+   class, min/max/step and events, so a stepper click is indistinguishable from a keystroke to the
+   card that reads it. */
+.av-num { display: inline-flex; align-items: stretch; border: 1px solid var(--hair); border-radius: 6px; background: var(--raised); overflow: hidden; }
+.av-num-in { appearance: textfield; -moz-appearance: textfield; border: 0; background: transparent; color: var(--text); font-family: var(--mono); font-size: 11px; text-align: center; width: 5.5ch; padding: 2px 2px; min-width: 0; }
+.av-num-in::-webkit-outer-spin-button, .av-num-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.av-num-in:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
+.av-num-step { appearance: none; border: 0; background: transparent; color: var(--text-3); font-family: var(--mono); font-size: 11px; line-height: 1; width: 18px; padding: 0; cursor: pointer; }
+.av-num-step:hover { color: var(--teal); background: rgba(255,255,255,0.05); }
+.av-num-step:active { background: rgba(46,216,201,0.18); }
+.av-num-step:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
+.av-num-unit { display: inline-flex; align-items: center; padding: 0 5px 0 1px; font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+
 /* ============================================================================
    P4 — SEQUENCER (av_seq_ui.js · av_plock.js · av_seq_acid.js) — grid card skin */
 .av-seq { display: flex; flex-direction: column; gap: 6px; }
@@ -4643,6 +4656,127 @@ if (typeof window !== "undefined") {
 }
 
 try { avPairBind(); } catch (e) { /* no document */ }
+
+
+/* Anvil — av_num.js: the C4 number control (docs/13 §5, `.av-num`: value field, down-stepper left,
+   up-stepper right).
+
+   WHY IT EXISTS: C4's audit found exactly two bare `input[type=number]` controls in the app
+   (`#av-comp-fade`, 0..500 ms step 0.5, and `#av-studio-offset`, -200..200 ms step 1). Both are
+   values a person nudges one step at a time, which is what a spinner is for; neither had one.
+
+   THE CONTRACT THAT MATTERS: unlike the pair, the number control does NOT replace the input — the
+   input stays an input with its id, class, min/max/step and events. The two keys sit beside it and
+   do exactly what typing does: set `.value` inside min/max, then dispatch a bubbling `input` and
+   `change`. So every existing reader and every rig that types into these ids keeps working, and a
+   stepper click is indistinguishable from a keystroke to the cards.
+
+   MARKUP
+     <span class="av-num" data-av-num="1">
+       <button type="button" class="av-num-step av-num-down" data-num-step="-1" aria-label="Decrease …">−</button>
+       <input type="number" id="…" …>
+       <button type="button" class="av-num-step av-num-up" data-num-step="1" aria-label="Increase …">+</button>
+     </span>
+
+   LAWS: one delegated listener; never throws; a disabled/absent input is a no-op; decimals step
+   exactly (the step's own decimal places decide the rounding, so 0.5 never drifts). */
+
+"use strict";
+
+const AV_NUM_VERSION = "c4.0";
+
+function avNumEsc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function avNumDecimals(n) {
+  const s = String(n);
+  const i = s.indexOf(".");
+  return i < 0 ? 0 : Math.min(6, s.length - i - 1);
+}
+
+/* opts: { id, className, label, min, max, step, value, inputmode, unit } */
+function avNumHTML(opts) {
+  const o = (opts && typeof opts === "object") ? opts : {};
+  const id = String(o.id || "");
+  if (!id) return "";
+  const label = String(o.label || id);
+  const cls = "av-num-in" + (o.className ? " " + String(o.className) : "");
+  const min = (o.min == null) ? "" : ' min="' + avNumEsc(o.min) + '"';
+  const max = (o.max == null) ? "" : ' max="' + avNumEsc(o.max) + '"';
+  const step = (o.step == null) ? ' step="1"' : ' step="' + avNumEsc(o.step) + '"';
+  const val = (o.value == null) ? ' value="0"' : ' value="' + avNumEsc(o.value) + '"';
+  const mode = o.inputmode ? ' inputmode="' + avNumEsc(o.inputmode) + '"' : "";
+  const unit = o.unit ? '<span class="av-num-unit">' + avNumEsc(o.unit) + "</span>" : "";
+  return '<span class="av-num" data-av-num="1">' +
+    '<button type="button" class="av-num-step av-num-down" data-num-step="-1" aria-label="Decrease ' + avNumEsc(label) + '">\u2212</button>' +
+    '<input type="number" class="' + cls + '" id="' + avNumEsc(id) + '"' + min + max + step + val + mode +
+    ' aria-label="' + avNumEsc(label) + '">' +
+    '<button type="button" class="av-num-step av-num-up" data-num-step="1" aria-label="Increase ' + avNumEsc(label) + '">+</button>' +
+    unit + "</span>";
+}
+
+/* one step on one input: clamp, round to the step's decimals, fire input + change */
+function avNumStep(input, dir) {
+  try {
+    if (!input || typeof input.value === "undefined") return false;
+    if (input.disabled === true) return false;
+    const stepN = Math.abs(Number(input.getAttribute("step")));
+    const step = (isFinite(stepN) && stepN > 0) ? stepN : 1;
+    const minN = Number(input.getAttribute("min"));
+    const maxN = Number(input.getAttribute("max"));
+    const hasMin = input.getAttribute("min") !== null && isFinite(minN);
+    const hasMax = input.getAttribute("max") !== null && isFinite(maxN);
+    const curN = Number(input.value);
+    const cur = isFinite(curN) ? curN : (hasMin ? minN : 0);
+    let next = cur + step * (dir < 0 ? -1 : 1);
+    const dp = avNumDecimals(step);
+    next = Number(next.toFixed(dp));
+    if (hasMin && next < minN) next = minN;
+    if (hasMax && next > maxN) next = maxN;
+    if (next === cur) return true;                        /* already at the end: no event, no noise */
+    input.value = String(next);
+    const fire = (typeof Event === "function") && (typeof input.dispatchEvent === "function");
+    if (fire) {
+      try { input.dispatchEvent(new Event("input", { bubbles: true })); } catch (e) { /* no ctor */ }
+      try { input.dispatchEvent(new Event("change", { bubbles: true })); } catch (e2) { }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avNumClick(e) {
+  try {
+    const t = e && e.target;
+    const btn = (t && typeof t.closest === "function") ? t.closest(".av-num-step") : null;
+    if (!btn) return;
+    const wrap = btn.closest(".av-num[data-av-num=\"1\"]");
+    if (!wrap) return;
+    const input = wrap.querySelector("input[type=number]");
+    if (!input) return;
+    avNumStep(input, Number(btn.getAttribute("data-num-step")) < 0 ? -1 : 1);
+  } catch (e2) { /* a listener never throws outward */ }
+}
+
+function avNumBind() {
+  try {
+    if (typeof document === "undefined" || !document || typeof document.addEventListener !== "function") return false;
+    if (document.__avNumBound === true) return true;
+    document.__avNumBound = true;
+    document.addEventListener("click", avNumClick);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avNumClasses() {
+  return ["av-num", "av-num-in", "av-num-step", "av-num-down", "av-num-up", "av-num-unit"];
+}
+
+if (typeof window !== "undefined") {
+  try { window.__avNum = { version: AV_NUM_VERSION, html: avNumHTML, step: avNumStep, bind: avNumBind, classes: avNumClasses }; } catch (e) { /* guarded */ }
+}
+
+try { avNumBind(); } catch (e) { /* no document */ }
 
 
 /* av_note.js — the ONE note bus (Anvil). Every input surface routes here: the 61-key piano dock,
@@ -64538,7 +64672,10 @@ function avStudioUiBodyHTML() {
     '<input type="range" class="av-studio-range" id="av-studio-gain" min="0" max="1.2" step="0.01" value="1" aria-label="Input gain"><span class="av-studio-val" id="av-studio-gain-val">1.00</span>' +
     '<button type="button" class="av-btn mini av-studio-btn av-studio-monitor" id="av-studio-monitor" aria-pressed="false" title="Monitor the input through the master \u2014 feedback risk, keep headphones on (off by default)">MONITOR</button>' +
     '<label class="av-studio-lab" for="av-studio-offset">OFFSET</label>' +
-    '<input type="number" class="av-studio-offset" id="av-studio-offset" min="-200" max="200" step="1" value="0" aria-label="Latency offset in milliseconds"><span class="av-studio-unit">ms</span>' +
+    /* C4: a nudged number is a stepper field; the input keeps its id, class, step and events */
+    (typeof avNumHTML === "function"
+      ? avNumHTML({ id: "av-studio-offset", className: "av-studio-offset", label: "Latency offset in milliseconds", min: -200, max: 200, step: 1, value: 0, unit: "ms" })
+      : '<input type="number" class="av-studio-offset" id="av-studio-offset" min="-200" max="200" step="1" value="0" aria-label="Latency offset in milliseconds"><span class="av-studio-unit">ms</span>') +
     '</div>' +
     '<div class="av-studio-row av-studio-meter-row">' +
     '<span class="av-studio-lab">LEVEL</span>' +
@@ -72602,7 +72739,10 @@ function avCompUiBodyHTML() {
     '<button type="button" class="av-btn mini av-comp-btn av-comp-add" id="av-comp-add" title="Append a segment from the selected lane (full take range, at the fade length)">ADD SEGMENT</button>' +
     '<button type="button" class="av-btn mini av-comp-btn av-comp-auto" id="av-comp-auto" title="Pick-best: score every take over the longest take\u2019s lap grid and build winning segments">AUTO-COMP</button>' +
     '<label class="av-comp-lab" for="av-comp-fade">FADE (ms)</label>' +
-    '<input type="number" class="av-comp-fade" id="av-comp-fade" min="0" max="500" step="0.5" value="5" inputmode="decimal" aria-label="Fade length in milliseconds for new segments">' +
+    /* C4: a nudged number is a stepper field; the input keeps its id, class, step and events */
+    (typeof avNumHTML === "function"
+      ? avNumHTML({ id: "av-comp-fade", className: "av-comp-fade", label: "Fade length in milliseconds for new segments", min: 0, max: 500, step: 0.5, value: 5, inputmode: "decimal" })
+      : '<input type="number" class="av-comp-fade" id="av-comp-fade" min="0" max="500" step="0.5" value="5" inputmode="decimal" aria-label="Fade length in milliseconds for new segments">') +
     "</div>" +
     '<div class="av-comp-row">' +
     '<button type="button" class="av-btn mini av-comp-btn av-comp-render" id="av-comp-render" title="Stitch the comp\u2019s segments (trims \u00b7 equal-power crossfades) in memory \u2014 no download">RENDER</button>' +

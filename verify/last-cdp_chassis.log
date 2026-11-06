@@ -1,4 +1,4 @@
-index.html sha256: 799227d1c56f34193b7e58b1b4c842c5080a6da96639c32780ca9f2d5969013b
+index.html sha256: 368d934b72cf48c47900a26ca44eab0d9887576989bfa253ad8b7658ce018324
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
    - data-av-ready: true
  ok   K1 virgin: rail closed, no rail control visible (tabs are the one navigation)  -> {"closed":true,"rail":true,"visibleRailCtl":0}
@@ -17,9 +17,9 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   K14 voice screens draw real data (oscillator, filter response with a live corner label, envelope with its time)  -> {"wave":18480,"filter":18480,"env":18480,"flab":"LP 800 R30","elab":"502 ms"}
  ok   K15 the screens edit: a drag on the filter moves cutoff + reso, a drag on the envelope moves attack  -> {"c0":800,"c1":3835,"r1":0.8,"a0":0.002,"a1":0.72}
  ok   K16 kind keys drive the engine kind (param + synth select + LCD + lit key)  -> {"okClick":true,"open":{"param":"va","sel":"va","lcd":"VA","lit":["wavetable"]},"fm":{"param":"fm","sel":"fm","lcd":"FM","lit":["fm"]},"back":{"param":"va","sel":"va","lcd":"VA","lit":["wavetable"]}}
- ok   K17 core pots are live: drags on CUTOFF and LEVEL write filter.cutoff and engine.outScale  -> {"pathC":"filter.cutoff","pathL":"engine.outScale","c0":3835,"c1":3885,"l0":null,"l1":0.36,"num":"1.51k"}
+ ok   K17 core pots are live: drags on CUTOFF and LEVEL write filter.cutoff and engine.outScale  -> {"pathC":"filter.cutoff","pathL":"engine.outScale","c0":3835,"c1":3886,"l0":null,"l1":0.36,"num":"3.84k"}
  ok   K18 POLY/MONO is a live voice mode (mono keeps one voice per channel, held notes return)  -> {"engine":true,"envPoly":0,"poly":2,"statsMono":1,"mono2":1,"clicked":true,"envMono":1,"lcd":"MONO —","lit":"mono","back1":1,"rel":0,"restored":0}
- ok   K19 scope + LEVEL are live: a sounding note inks the scope and the LEVEL pot scales the master tap  -> {"engine":true,"silent":{"ink":440,"spread":1},"loud":{"ink":856,"spread":15},"r0":0,"r1":0.2667662841774431,"r2":0.013682769794142631}
+ ok   K19 scope + LEVEL are live: a sounding note inks the scope and the LEVEL pot scales the master tap  -> {"engine":true,"silent":{"ink":440,"spread":1},"loud":{"ink":1050,"spread":17},"r0":0,"r1":0.2667662841774431,"r2":0.01323098037581956}
  ok   K20 the oscillator screen draws the live wavetable frame of the installed table  -> {"engine":true,"ok":true,"slot":0,"before":{"shape":"saw","wt":""},"after":{"shape":"wt","wt":"C2 RIG TABLE #1/1"},"ink":466}
  ok   K21 band fit: every group carries its content and the strip does not overflow  -> {"band":{"cw":1420,"sw":1420},"clipped":[]}
  ok   K22 W=1440: glass rows + fields fit, tempo inside the glass  -> {"rows":[{"cw":147,"sw":147},{"cw":147,"sw":147},{"cw":147,"sw":147}],"badRow":[],"badSlot":[],"tempoRight":640.2,"glassRight":645.2,"inside":5}
@@ -44,6 +44,8 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   K24m SEQUENCE scenes: a captured scene appears as a block AND reaches the scene select (the array-only name reader left RECALL dead), and clicking the block puts its name in the select  -> {"sceneBlocks":1,"firstName":"K24MVERSE","names":["K24MVERSE"],"selOpts":1,"selAfter":"K24MVERSE"}
  ok   K24n two-choice pairs: the app has exactly two .av-pair controls, each a radiogroup of two keys over a hidden input carrying the ORIGINAL id and value the card reads  -> {"total":2,"deliver":{"keys":2,"role":"radiogroup","vals":["16","24"],"checked":["false","true"],"onCount":1,"inputId":"av-deliver-bits","value":"24"},"code":{"keys":2,"role":"radiogroup","vals":["fx","kind"],"checked":["true","false"],"onCount":1,"inputId":"av-code-kind","value":"fx"},"deliverFired":1,"deliverValue":"16","deliverBits":16,"deliverAfter":{"keys":2,"role":"radiogroup","vals":["16","24"],"checked":["true","false"],"onCount":1,"inputId":"av-deliver-bits","value":"16"},"codeRead":"kind","codeAfter":{"keys":2,"role":"radiogroup","vals":["fx","kind"],"checked":["true","false"],"onCount":1,"inputId":"av-code-kind","value":"fx"}}
  ok   K24n pair writes: a key click writes the hidden value, fires one bubbling change, and the DELIVER card reads 16 through its own reader; the CODE setter flips the keys back  -> {"dv":"16","fired":1,"bits":16,"da":{"keys":2,"role":"radiogroup","vals":["16","24"],"checked":["true","false"],"onCount":1,"inputId":"av-deliver-bits","value":"16"},"cr":"kind","ca":{"keys":2,"role":"radiogroup","vals":["fx","kind"],"checked":["true","false"],"onCount":1,"inputId":"av-code-kind","value":"fx"}}
+ ok   K24o number steppers: two .av-num fields, each a real number input (same id, class, min/max/step) flanked by two keys  -> {"total":2,"comp":{"wrap":true,"steps":2,"tag":"INPUT","type":"number","cls":"av-num-in av-comp-fade","value":"5","min":"0","max":"500","step":"0.5"},"off":{"wrap":true,"steps":2,"tag":"INPUT","type":"number","cls":"av-num-in av-studio-offset","value":"0","min":"-200","max":"200","step":"1"}}
+ ok   K24o number writes: one click is one step and exactly one change (5 -> 5.5 -> 5 -> 4.5 on a 0.5 step), the ceiling and floor clamp without emitting, and the offset steps -1 / -2 / -1  -> {"up":"5.5","ev":1,"down":"4.5","clamped":"500","clampEv":0,"offDown":"-2","offUp":"-1","offClamped":"-200"}
  ok   K9 zero page errors through the run  -> []
 
-CHASSIS-RESULT pass=44 fail=0
+CHASSIS-RESULT pass=46 fail=0

@@ -359,6 +359,19 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-pair-key.on { color: #10201d; background: var(--teal); font-weight: 600; }
 .av-pair-key:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
 
+/* C4 §5: the number control — a real input flanked by two stepper keys. The input keeps its id,
+   class, min/max/step and events, so a stepper click is indistinguishable from a keystroke to the
+   card that reads it. */
+.av-num { display: inline-flex; align-items: stretch; border: 1px solid var(--hair); border-radius: 6px; background: var(--raised); overflow: hidden; }
+.av-num-in { appearance: textfield; -moz-appearance: textfield; border: 0; background: transparent; color: var(--text); font-family: var(--mono); font-size: 11px; text-align: center; width: 5.5ch; padding: 2px 2px; min-width: 0; }
+.av-num-in::-webkit-outer-spin-button, .av-num-in::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.av-num-in:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
+.av-num-step { appearance: none; border: 0; background: transparent; color: var(--text-3); font-family: var(--mono); font-size: 11px; line-height: 1; width: 18px; padding: 0; cursor: pointer; }
+.av-num-step:hover { color: var(--teal); background: rgba(255,255,255,0.05); }
+.av-num-step:active { background: rgba(46,216,201,0.18); }
+.av-num-step:focus-visible { outline: 1px solid var(--teal); outline-offset: -2px; }
+.av-num-unit { display: inline-flex; align-items: center; padding: 0 5px 0 1px; font-family: var(--mono); font-size: 9px; color: var(--text-3); }
+
 /* ============================================================================
    P4 — SEQUENCER (av_seq_ui.js · av_plock.js · av_seq_acid.js) — grid card skin */
 .av-seq { display: flex; flex-direction: column; gap: 6px; }

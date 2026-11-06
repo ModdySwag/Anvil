@@ -499,7 +499,10 @@ function avStudioUiBodyHTML() {
     '<input type="range" class="av-studio-range" id="av-studio-gain" min="0" max="1.2" step="0.01" value="1" aria-label="Input gain"><span class="av-studio-val" id="av-studio-gain-val">1.00</span>' +
     '<button type="button" class="av-btn mini av-studio-btn av-studio-monitor" id="av-studio-monitor" aria-pressed="false" title="Monitor the input through the master \u2014 feedback risk, keep headphones on (off by default)">MONITOR</button>' +
     '<label class="av-studio-lab" for="av-studio-offset">OFFSET</label>' +
-    '<input type="number" class="av-studio-offset" id="av-studio-offset" min="-200" max="200" step="1" value="0" aria-label="Latency offset in milliseconds"><span class="av-studio-unit">ms</span>' +
+    /* C4: a nudged number is a stepper field; the input keeps its id, class, step and events */
+    (typeof avNumHTML === "function"
+      ? avNumHTML({ id: "av-studio-offset", className: "av-studio-offset", label: "Latency offset in milliseconds", min: -200, max: 200, step: 1, value: 0, unit: "ms" })
+      : '<input type="number" class="av-studio-offset" id="av-studio-offset" min="-200" max="200" step="1" value="0" aria-label="Latency offset in milliseconds"><span class="av-studio-unit">ms</span>') +
     '</div>' +
     '<div class="av-studio-row av-studio-meter-row">' +
     '<span class="av-studio-lab">LEVEL</span>' +

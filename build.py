@@ -78,6 +78,7 @@ js_parts = [
     (SRC / "av_tap.js").read_text(encoding="utf-8"),    # LAW: the tap installs before any engine code
     (SRC / "av_knob.js").read_text(encoding="utf-8"),   # the knob feel engine, before the shell that mounts it
     (SRC / "av_pair.js").read_text(encoding="utf-8"),   # C4: the two-choice key pair (role=radio)
+    (SRC / "av_num.js").read_text(encoding="utf-8"),    # C4: the number control (steppers around a real input)
     (SRC / "av_note.js").read_text(encoding="utf-8"),   # the ONE note bus (dock + typing keys + MIDI route here)
     (SRC / "av_mpe.js").read_text(encoding="utf-8"),      # M2: MPE expression kernel (page + worklet concat)
     (SRC / "av_kb.js").read_text(encoding="utf-8"),     # the 61-key piano dock + the ONE keydown dispatcher

@@ -459,7 +459,10 @@ function avCompUiBodyHTML() {
     '<button type="button" class="av-btn mini av-comp-btn av-comp-add" id="av-comp-add" title="Append a segment from the selected lane (full take range, at the fade length)">ADD SEGMENT</button>' +
     '<button type="button" class="av-btn mini av-comp-btn av-comp-auto" id="av-comp-auto" title="Pick-best: score every take over the longest take\u2019s lap grid and build winning segments">AUTO-COMP</button>' +
     '<label class="av-comp-lab" for="av-comp-fade">FADE (ms)</label>' +
-    '<input type="number" class="av-comp-fade" id="av-comp-fade" min="0" max="500" step="0.5" value="5" inputmode="decimal" aria-label="Fade length in milliseconds for new segments">' +
+    /* C4: a nudged number is a stepper field; the input keeps its id, class, step and events */
+    (typeof avNumHTML === "function"
+      ? avNumHTML({ id: "av-comp-fade", className: "av-comp-fade", label: "Fade length in milliseconds for new segments", min: 0, max: 500, step: 0.5, value: 5, inputmode: "decimal" })
+      : '<input type="number" class="av-comp-fade" id="av-comp-fade" min="0" max="500" step="0.5" value="5" inputmode="decimal" aria-label="Fade length in milliseconds for new segments">') +
     "</div>" +
     '<div class="av-comp-row">' +
     '<button type="button" class="av-btn mini av-comp-btn av-comp-render" id="av-comp-render" title="Stitch the comp\u2019s segments (trims \u00b7 equal-power crossfades) in memory \u2014 no download">RENDER</button>' +
