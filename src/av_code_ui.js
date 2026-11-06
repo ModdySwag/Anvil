@@ -84,7 +84,7 @@ const AV_CODE_UI_CLASSES = [
   "av-code-cols", "av-code-sec", "av-code-sec-title",
   "av-code-fields", "av-code-field", "av-code-field-lbl", "av-code-in", "av-code-kind",
   "av-code-src", "av-code-actions", "av-code-btn", "av-code-file", "av-code-import",
-  "av-code-examples", "av-code-example",
+  "av-code-examples", "av-code-example", "av-code-adv",
   "av-code-list", "av-code-none", "av-code-row", "selected", "off", "bad", "av-code-led", "on",
   "av-code-badge", "av-code-row-name", "av-code-row-sub", "av-code-row-acts",
   "av-code-enable", "av-code-edit", "av-code-exp", "av-code-del",
@@ -836,6 +836,7 @@ function avCodeUiSync() {
     avCodeUiPaintStatus(host);
     avCodeUiPaintBusy(host);
     avCodeUiPaintNote(host);
+    avCodeUiFoldSync(host);
     return true;
   } catch (e) { return false; }
 }
@@ -1500,6 +1501,114 @@ function avCodeUiStartPoll() {
   } catch (e) { return false; }
 }
 
+/* ---------- the C3-9 folds: PARAMS + CONTRACT ---------- */
+
+/* The card is an IDE: the editor and the library are the work surface; a module's knobs and the
+   module contract are reference. Both fold behind chips in ONE row under the columns, and each
+   section keeps a head toggle so it can fold back. The PARAMS chip carries the knob count and
+   lights when the selected module declares any — a folded control surface is never invisible. */
+const AV_CODE_FOLD = [["params", "PARAMS"], ["docs", "DOCS"]];
+
+/* repaint chip labels / light / aria from the live DOM; safe to call any number of times */
+function avCodeUiFoldSync(cardArg) {
+  try {
+    const host = avCodeUiHost();
+    if (!host || typeof host.querySelector !== "function") return false;
+    const card = cardArg || host.querySelector(".av-code") || host;
+    if (!card || typeof card.querySelector !== "function") return false;
+    const n = card.querySelectorAll("#av-code-params [data-knob]").length;
+    for (let i = 0; i < AV_CODE_FOLD.length; i++) {
+      const name = AV_CODE_FOLD[i][0];
+      const sec = card.querySelector(".av-code-sec-" + name);
+      const chip = card.querySelector('.av-adv-chip[data-adv="' + name + '"]');
+      if (!sec || !chip) continue;
+      const folded = sec.classList.contains("av-sec-collapsed");
+      const on = name === "params" ? n > 0 : false;
+      chip.hidden = !folded;
+      chip.classList.toggle("on", on);
+      const label = name === "params" ? ("PARAMS \u00b7 " + n) : "DOCS";
+      if (String(chip.textContent || "") !== label) chip.textContent = label;
+      chip.title = (on ? "this module declares " + n + " control" + (n === 1 ? "" : "s") + " \u2014 " : "")
+        + (name === "params" ? "show the module controls" : "show the module contract");
+      chip.setAttribute("aria-label", chip.title);
+      const btn = sec.querySelector(".av-code-sec-title .av-sec-toggle");
+      if (btn) {
+        btn.textContent = folded ? "\u25b8" : "\u25be";
+        btn.setAttribute("aria-expanded", folded ? "false" : "true");
+        btn.title = (folded ? "Show " : "Hide ") + (name === "params" ? "the module controls" : "the module contract");
+        btn.setAttribute("aria-label", btn.title);
+      }
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* build the chip row + head toggles once per mount; both sections start folded, and the safety
+   line moves inside the contract (it is documentation, not card floor) */
+function avCodeUiFoldInit(hostArg) {
+  try {
+    const host = hostArg || avCodeUiHost();
+    if (!host || typeof host.querySelector !== "function" || typeof document === "undefined") return false;
+    const card = host.querySelector(".av-code") || host;
+    if (!card || typeof card.querySelector !== "function") return false;
+    if (card.querySelector(".av-code-adv")) { avCodeUiFoldSync(card); return true; }
+    const cols = card.querySelector(".av-code-cols");
+    const paramsSec = card.querySelector(".av-code-sec-params");
+    const docsSec = card.querySelector(".av-code-sec-docs");
+    if (!cols || !paramsSec || !docsSec) return false;
+    const foot = card.querySelector(".av-code-foot");
+    if (foot && foot.parentNode !== docsSec) docsSec.appendChild(foot);
+    const row = document.createElement("div");
+    row.className = "av-code-adv";
+    row.setAttribute("role", "group");
+    row.setAttribute("aria-label", "folded CODE sections");
+    /* the chips ride the EXAMPLES row instead of buying a row of their own: the card is an IDE and
+       the pane is ~504px at 1280, so a 30px row is the difference between fitting and not */
+    const exRow = card.querySelector(".av-code-examples");
+    for (let i = 0; i < AV_CODE_FOLD.length; i++) {
+      const name = AV_CODE_FOLD[i][0];
+      const sec = card.querySelector(".av-code-sec-" + name);
+      if (!sec) continue;
+      sec.setAttribute("data-sect", name);
+      const title = sec.querySelector(".av-code-sec-title");
+      if (title && !title.querySelector(".av-sec-toggle")) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "av-sec-toggle";
+        btn.textContent = "\u25b8";
+        btn.setAttribute("aria-expanded", "false");
+        btn.addEventListener("click", function () {
+          sec.classList.toggle("av-sec-collapsed");
+          avCodeUiFoldSync(card);
+        });
+        title.appendChild(btn);
+      }
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "av-adv-chip";
+      chip.dataset.adv = name;
+      chip.textContent = name === "params" ? "PARAMS \u00b7 0" : "DOCS";
+      chip.addEventListener("click", function () {
+        sec.classList.remove("av-sec-collapsed");
+        avCodeUiFoldSync(card);
+      });
+      row.appendChild(chip);
+      sec.classList.add("av-sec-collapsed");
+    }
+    if (exRow) {
+      const box = document.createElement("div");
+      box.className = "av-code-row3";
+      exRow.parentNode.insertBefore(box, exRow);
+      box.appendChild(exRow);
+      box.appendChild(row);
+    } else {
+      card.insertBefore(row, paramsSec);
+    }
+    avCodeUiFoldSync(card);
+    return true;
+  } catch (e) { return false; }
+}
+
 /* ---------- markup (pure string builders) ---------- */
 
 function avCodeUiBodyHTML() {
@@ -1595,6 +1704,7 @@ function avCodeUiInit() {
     }
     avCodeUiEnsureRootId(root);
     avCodeUiWire(host);
+    avCodeUiFoldInit(host);
     s.inited = true;
     s.mounts += 1;
     avCodeUiStartPoll();

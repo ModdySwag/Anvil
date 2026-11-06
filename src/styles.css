@@ -951,14 +951,21 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 .av-code-cols { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 12px; }
 @media (max-width: 1100px) { .av-code-cols { grid-template-columns: 1fr; } }
 .av-code-sec { display: flex; flex-direction: column; gap: 8px; min-width: 0; background: var(--raised); border: 1px solid var(--hair); border-radius: 8px; padding: 10px 12px; }
-.av-code-sec-title { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin: 0; }
+.av-code-sec-title { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 9px; letter-spacing: .12em; text-transform: uppercase; color: var(--teal); margin: 0; }
+/* C3-9: the PARAMS + CONTRACT sections fold behind one chip row under the columns, and each
+   section keeps a head toggle so it can fold back (the FX rack flavour). */
+.av-code-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 1px 0 3px; }
+.av-code-row3 { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.av-code-row3 > .av-code-examples { flex: 1 1 auto; min-width: 0; }
+.av-code-row3 > .av-code-adv { flex: 0 0 auto; margin-left: auto; padding: 0; }
+.av-code-sec-title .av-sec-toggle { margin-left: 0; }
 .av-code-fields { display: flex; flex-wrap: wrap; gap: 10px; }
 .av-code-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .av-code-field-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--text-3); }
 .av-code-in, .av-code-kind { background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 11px; padding: 4px 6px; }
 .av-code-in { min-width: 140px; }
 .av-code-kind { min-width: 84px; }
-.av-code-src { width: 100%; min-height: 240px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 11.5px; line-height: 1.45; padding: 8px; resize: vertical; tab-size: 2; white-space: pre; }
+.av-code-src { width: 100%; min-height: 170px; background: #0a0e11; border: 1px solid var(--hair); border-radius: 6px; color: var(--text); font-family: var(--mono); font-size: 11.5px; line-height: 1.45; padding: 8px; resize: vertical; tab-size: 2; white-space: pre; }
 .av-code-src:focus-visible, .av-code-in:focus-visible, .av-code-kind:focus-visible { outline: 1px solid var(--teal); outline-offset: 1px; }
 .av-code-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .av-code-btn { }

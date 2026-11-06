@@ -567,12 +567,13 @@ async function main() {
   /* K23 -- the density gate (docs/13 s.7): a page/sub view that C3 has CLAIMED renders within
      1.2x the well height at BOTH widths. The list grows as each view is rebuilt; a view that
      regresses past 1.2 fails the chassis. A null sub = a zone with no sub-tabs (effects).
-     Unclaimed views are the outstanding C3 rebuilds (system/code, sequence,
-     shape/matrix) -- see CONTINUATION for the measured table. */
+     Unclaimed views are the outstanding C3 rebuilds (sequence, shape/matrix) --
+     see CONTINUATION for the measured table. */
   const DENSITY_CLAIMED = [
     ['browse', 'packs'], ['browse', 'import'], ['browse', 'sessions'],
     ['perform', 'macros'], ['perform', 'voice'],
     ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'], ['sound', 'drums'], ['sound', 'chop'], ['sound', 'fm'], ['sound', 'wt'],
+    ['system', 'code'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['effects', null],
@@ -775,6 +776,60 @@ async function main() {
     && wtBody.open === true && wtBody.aria1 === 'true'
     && wtBody.closed === true && wtBody.aria2 === 'false',
     JSON.stringify(wtBody));
+
+  /* K24e -- the CODE card's C3-9 folds: PARAMS and CONTRACT fold behind two chips that ride the
+     EXAMPLES row (no extra row of their own), each section keeps a head toggle, and the safety
+     line lives inside the contract. Folded control surfaces stay reachable: the chips are visible
+     while folded and carry the PARAMS knob count. */
+  const codeFold = (await ev(`(() => {
+    try { window.__avZone.show('system'); } catch (e) { return { zone: false }; }
+    try { const b = document.querySelector('#av-zone-system .av-subtab[data-sub="code"]'); if (!b) return { sub: false }; b.click(); } catch (e) { return { sub: false }; }
+    const card = document.querySelector('#av-code .av-code') || document.querySelector('.av-code');
+    if (!card) return { card: false };
+    const q = (s) => card.querySelector(s);
+    const shown = (e) => !!e && getComputedStyle(e).display !== 'none';
+    const row3 = q('.av-code-row3');
+    const adv = q('.av-code-adv');
+    const pSec = q('.av-code-sec-params'), dSec = q('.av-code-sec-docs');
+    const pChip = q('.av-adv-chip[data-adv="params"]'), dChip = q('.av-adv-chip[data-adv="docs"]');
+    const pBtn = pSec ? pSec.querySelector('.av-code-sec-title .av-sec-toggle') : null;
+    const dBtn = dSec ? dSec.querySelector('.av-code-sec-title .av-sec-toggle') : null;
+    const src = q('#av-code-src');
+    const out = {
+      card: true,
+      row3: !!(row3 && row3.querySelector('#av-code-examples') && row3.querySelector('.av-code-adv')),
+      folded: [pSec, dSec].map(e => e ? !shown(e) : null),
+      chips: [pChip, dChip].map(c => c ? { vis: !c.hidden, txt: (c.textContent || '').trim() } : null),
+      toggles: !!(pBtn && dBtn),
+      footInDocs: !!(dSec && dSec.querySelector('.av-code-foot')),
+      srcH: src ? Math.round(src.getBoundingClientRect().height) : null,
+      openP: null, foldedP: null, openD: null, foldedD: null,
+    };
+    if (pChip && pBtn && pSec) {
+      pChip.click();
+      out.openP = shown(pSec) && pChip.hidden === true;
+      pBtn.click();
+      out.foldedP = !shown(pSec) && pChip.hidden === false;
+    }
+    if (dChip && dBtn && dSec) {
+      dChip.click();
+      out.openD = shown(dSec) && dChip.hidden === true;
+      dBtn.click();
+      out.foldedD = !shown(dSec) && dChip.hidden === false;
+    }
+    return out;
+  })()`)).value || {};
+  const codeChipsOk = (codeFold.chips || []).length === 2
+    && (codeFold.chips || []).every(c => c && c.vis === true)
+    && (codeFold.chips[0] || {}).txt === 'PARAMS \u00b7 0' && (codeFold.chips[1] || {}).txt === 'DOCS';
+  check('K24e CODE folds: PARAMS + CONTRACT close behind chips that ride the examples row, each section keeps a head toggle, the folded chips stay visible (PARAMS carries the count) and the safety line sits inside the contract',
+    codeFold.card === true && codeFold.row3 === true
+    && (codeFold.folded || []).length === 2 && (codeFold.folded || []).every(x => x === true)
+    && codeChipsOk === true && codeFold.toggles === true && codeFold.footInDocs === true
+    && codeFold.srcH != null && codeFold.srcH >= 150
+    && codeFold.openP === true && codeFold.foldedP === true
+    && codeFold.openD === true && codeFold.foldedD === true,
+    JSON.stringify(codeFold));
 
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
