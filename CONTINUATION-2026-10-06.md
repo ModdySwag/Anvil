@@ -1,6 +1,108 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-06 23:30 (session 23b). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVE 2026-11-07 00:40 (session 23c). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- C3-9 commit `297e9d1` (on top of `4006ae3`, `49e60ad`, `0e51c3f`). Bundle `index.html` sha256
+  `76b8e141ca3c35820f9bf8e0c989b208770d10bd49c88f9ac00b80f8e62251e7`, **4,768,296 B**. Tree clean.
+- All 23 `verify/cdp_*.mjs` pins == that sha (swept old→new from `8ad8e4b7`; `STALE REMAINING: none`).
+- Battery **c3k** (`verify/battery_c3k.log`): **27/28 suites exit=0**, bench exit=0, alias exit=0,
+  stress **20** deltas (band 12–125). The one red is **cdp_hub's reload legs** ("receipts survive
+  fresh" + "the library loads fresh … dom 0") — green SOLO TWICE at **68/68** on identical bytes
+  (`verify/probe-hub-c39.log`, `probe-hub-c39b.log`): another persistence knife-edge, prove solo.
+- Solo receipts on these bytes: chassis **31/31** (K24c/K24d/K24e), `cdp_code` **36/36**, `cdp_m1` **33/33**.
+- VERIFY AT SESSION START: `node verify/cdp_chassis.mjs` (31) · `node verify/cdp_code.mjs` (36) ·
+  `node verify/cdp_m1.mjs` (33) · `node verify/cdp_fx.mjs` (28) · `node verify/cdp_m2.mjs` (40).
+
+### WHAT LANDED (C3-9 — the CODE card folds its reference, not its workspace)
+`av_code_ui.js`: `avCodeUiFoldInit()` builds one chip row and folds **PARAMS** + **CONTRACT** behind
+it (`avCodeUiFoldSync` repaints label/light/aria). The chips ride the **EXAMPLES row** (`.av-code-row3`
+wraps `#av-code-examples` + `.av-code-adv`) — a separate 30px row pushed the chips themselves below
+the fold at 1280. Both sections keep a head `.av-sec-toggle` (the FX flavour: chip hidden while its
+section is open, chip visible and carrying the count while folded; PARAMS lights when the selected
+module declares knobs). The safety line moved **inside the contract** (it is documentation, not card
+floor). `styles.css`: `.av-code-adv`, `.av-code-row3`, the title toggle, and `.av-code-src`
+min-height **240 → 170** (`resize: vertical` kept, so the editor grows on demand).
+- **MEASURED: system/code 1.606 / 1.893 → 0.927 / 1.079** (1440 / 1280). Card **834 → 424**
+  (head 17 · status 17 · cols 371 — editor | library — · the two folded sections 0).
+- K23 claims **`['system','code']`** (25 views). Chassis leg **K24e** pins: the chip row is inside the
+  row that holds `#av-code-examples`, both sections folded, chips visible with `PARAMS · 0` / `DOCS`,
+  head toggles fold back, the foot lives in the contract, the editor is ≥150px tall.
+
+### THE LESSONS THIS PASS PAID (traps 13–14)
+13. **A fold's own control must not buy a row.** The first cut put the chips in a new row under the
+    columns; the card then read 1.149 at 1280 and the chips sat BELOW the fold — the affordance was
+    the first thing hidden. Ride an existing row (the examples line) and the fold costs 0px.
+14. **A hidden zone measures 0.** K24e's first run reported `srcH: 0` because the previous leg had
+    switched the zone to SOUND and the leg only clicked the SYSTEM sub-tab — `__avZone.show('system')`
+    must come first. Any leg that measures geometry must show its own zone.
+
+### WHAT WE STILL HAVE TO DO
+**A. The last two C3 page rebuilds — NOT folds. RE-MEASURE FIRST.**
+
+| view | 1440 / 1280 | what it needs |
+|---|---|---|
+| sequence | 1.53 / 1.81 | **NEXT.** `av_seq_ui.js` monolithic — measure the block tree, then section it. The step grid is the work surface; the transport / scene / pattern strips are the candidates (pair them, or ride a fold on an existing row). |
+| shape/matrix | 1.31 / 1.54 | needs a real slot redesign (two-column measured WORSE, 1.31→1.35). |
+
+**B. The six planned C3 screens (docs/13 §C3, in this order):**
+1. **Filters group** — filter response screen inside the SOUND engine card beside the pots.
+2. **Envelopes group** — amp/filter/aux overlaid in operator colours; drag = the same three moves.
+3. **EFFECTS per slot** — drive curve · dyn gain-reduction meter · delay tap timeline · verb decay tail · mod LFO shape.
+4. **MIX** — EQ response curve on the master chain + per-track mini waveform in the strip.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), rows stay advanced.
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+Rule: a screen never blocks a control, carries no chrome beyond its inset, and prints its own units.
+
+**C. C4 control language** — steppers, pairs, the groups sweep.
+**D. C5 disclosure everywhere** — focus order, tab semantics, advanced-collapsed defaults.
+**E. C6 release** — shots, pins, battery, installer, deploy **v1.15.0**. The live site is still the
+2026-10-09 build (`moddys.net/anvil`, frozen e99ea8e5): **nothing from this wave is deployed.**
+`windows/stage/Anvil/resources/app/index.html` is a STALE staged copy — C6 must re-stage it.
+**F. Open from C2:** mono is not per-patch; latency/buffer has no LCD cell.
+
+### TRAPS — every one of these has already cost a session
+1. **Cascade:** a card's own `display:flex` on its section class beats `.av-sec-collapsed` at equal
+   specificity when it sits later in `styles.css`. The `!important` is load-bearing.
+2. **A fold that hides an INTERACTIVE CONTROL breaks rigs** (knob_feel drag, a11y focus, midi
+   CC-learn). Grep the rig set for the selectors of anything that folds.
+3. **A wrapper around "the rest of the card" can swallow the working surface** — read the child order.
+4. **autocrlf:** `index.html`/`sw.js` are `-text`; if a checkout moves the sha, REBUILD.
+5. **Pin sweep:** old→new only (`cache/scratch/sweep_pins.py --old <sha>`); never "any 64-hex".
+6. **`Target crashed`** = exit 1 with 0 checks. Re-run solo before touching code.
+7. **Never run a second browser during a battery** (contamination reads 376/543 deltas).
+8. **K23 null safety:** `null <= 1.2` is TRUE — a broken measurement must fail explicitly.
+9. **Cockpit pane law:** the window never scrolls; the pane scrolls only when its content is taller.
+10. **Knife-edge legs exist** (cdp_store install-progress, cdp_sessions version ring) — prove solo.
+11. **A tight card on a chrome-heavy page cannot be fixed by one row** — budget the zone chrome
+    (~170–275px) first, and look at the idle WIDTH before shrinking ink (FM used 550 of 1014px).
+12. **A paired row 5px too wide wraps and costs ~34px** — cap the flexible children, measure both widths.
+13. **A fold's own chip must not buy a row** — ride an existing row or the affordance hides first.
+14. **A hidden zone measures 0** — legs that measure geometry must show their own zone first.
+15. **cdp_hub's reload legs are knife-edge** (library DOM rows 0 in-battery, 68/68 solo twice) —
+    same class as cdp_store's install-progress and cdp_sessions' version ring.
+
+### WAITING ON THE OWNER (his gate, not a screenshot)
+- Eye pass on the five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP), the FM
+  two-column shape, the WT two-row shape + LIBRARY chip, and the CODE folds (PARAMS · n / DOCS).
+- A verdict on folding the LEVELS card (one-line revert if vetoed; SOUND loses its fit).
+
+### TOOLS IN THE REPO NOW
+`cache/scratch/cardprobe.mjs <zone> [sub] [shotName]` — ratios at 1440/1280 + the block tree.
+`cache/scratch/rowprobe.mjs <zone> <sub|-> "<selector>"` — one container's children, heights/widths.
+`cache/scratch/views.mjs <zone> [sub|-] [width] [name]` — full-viewport PNG at a chosen width.
+`cache/scratch/fmlab.mjs` / `fmlab2.mjs` / `wtlab.mjs` / `wtlab3.mjs` — live DOM+CSS lab probes;
+copy the pattern before rebuilding anything.
+`cache/scratch/sweep_pins.py --old <sha>` · `battery_c3*.sh` templates. (cache/ is gitignored.)
+
+### FIRST MOVES NEXT SESSION
+1. Read this block. Verify at `76b8e141`: chassis (31), code (36), m1 (33), fx (28), m2 (40).
+2. `node cache/scratch/rowprobe.mjs sequence - ".av-seq"` → block tree, then decide the shape with a
+   lab probe before touching markup. SEQUENCE is the next real rebuild.
+3. Then shape/matrix (slot redesign, not a wrapper).
+4. Then the six screens (B), then C4, C5, C6.
+
+## SAVE 2026-11-06 23:30 (session 23b) — superseded by the block above
 
 ### STATE (proven, not claimed)
 - C3-8 commit `49e60ad` (on top of `0e51c3f` and `4a8b5ae`). Bundle `index.html` sha256
