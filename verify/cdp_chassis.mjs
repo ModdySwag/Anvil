@@ -526,6 +526,44 @@ async function main() {
     k21.band && k21.band.sw <= k21.band.cw + 1 && badGrp.length === 0,
     JSON.stringify({ band: k21.band, clipped: badGrp }));
 
+  /* K22 -- the GLASS fits: every row and every field inside it at both widths, no field
+     ellipsized, the tempo painted clear of the glass edge. C2b: row 3 ran 173px into 147
+     because three C1 rules still shaped data fields (the green leading-label paint, the
+     tempo's transport-window box, an absolute-pinned POLY). The band leg (K21) cannot see
+     this: the glass fits its group while its own content spills. Pin the row budget here. */
+  for (const W of [1440, 1280]) {
+    await send('Emulation.setDeviceMetricsOverride', { width: W, height: 900, deviceScaleFactor: 1, mobile: false });
+    await sleep(260);
+    const k22 = (await ev(`(() => {
+      const lcd = document.getElementById('av-lcd');
+      const rows = Array.from(lcd.querySelectorAll('.av-lcd-row'));
+      const painted = (el) => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect(); };
+      const slot = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return { id: id, missing: true };
+        return { id: id, cw: el.clientWidth, sw: el.scrollWidth, display: getComputedStyle(el).display };
+      };
+      const val = document.getElementById('avc-bpm-val');
+      const g = lcd.getBoundingClientRect();
+      return {
+        glass: { right: g.right, padR: parseFloat(getComputedStyle(lcd).paddingRight) || 0 },
+        rows: rows.map((r) => ({ cw: r.clientWidth, sw: r.scrollWidth })),
+        slots: [slot('av-lcd-voices'), slot('av-lcd-cpu')],
+        tempo: val ? { right: painted(val).right, w: painted(val).width } : null
+      };
+    })()`)).value || {};
+    const badRow = (k22.rows || []).filter((r) => r.sw > r.cw + 1).map((r) => r.sw + '>' + r.cw);
+    const badSlot = (k22.slots || []).filter((s) => s.missing || s.display === 'none' || s.sw > s.cw + 1)
+      .map((s) => s.id + (s.missing ? ':missing' : (s.display === 'none' ? ':hidden' : '=' + s.sw + '/' + s.cw)));
+    const glassR = k22.glass ? k22.glass.right : 0;
+    const inside = k22.tempo ? glassR - k22.tempo.right : -1;
+    check('K22 W=' + W + ': glass rows + fields fit, tempo inside the glass',
+      badRow.length === 0 && badSlot.length === 0 && k22.tempo !== null && inside >= 1,
+      JSON.stringify({ rows: k22.rows, badRow: badRow, badSlot: badSlot, tempoRight: k22.tempo && +k22.tempo.right.toFixed(1), glassRight: +glassR.toFixed(1), inside: +inside.toFixed(1) }));
+  }
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await sleep(200);
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

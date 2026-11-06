@@ -467,7 +467,7 @@ function avBankRowHTML() {
 }
 
 function avBankPackOptionsHTML(packs, selId) {
-  if (!packs.length) return '<option value="">— no banks installed —</option>';
+  if (!packs.length) return '<option value="">NONE</option>';
   let out = "";
   for (let i = 0; i < packs.length; i++) {
     const p = packs[i];

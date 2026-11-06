@@ -1,5 +1,45 @@
 # Anvil — CONTINUATION (2026-10-06)
 
+## SAVE 2026-11-06 12:50 — C2b-8 THE GLASS (root causes, not shrinkage); frozen at 1210c461
+
+The C2b-2 close (b7ea1627, the co-writer session) fit row 3 by dropping the type to 9px and taking the
+CPU% readout off the instrument face. That buys the fit with the contract's own field list — row 3 is
+VOICES · CPU · tempo. The overflow was never the data; it was three C1-era rules still shaping fields
+that had since become data:
+
+1. `.av-lcd-row > span:first-child` still painted the leading span as a green LABEL with `.2em`
+   tracking → "VOICES 12/64" needed 82px in a 71px slot, so it ellipsized.
+2. `.avc-bpm` still carried its transport-window box inside the glass (min-width 66, padding 0 10px,
+   a 21px numeral in a 13px row) → the dark slab over the readout, and 66px of the row's 173.
+3. `#av-lcd-poly` was still absolute-pinned (right 9 / bottom 6) in plasma green → it drew on top of
+   row 3 instead of sitting in row 2's flow where the contract puts it.
+
+Reset those three, give CPU its widest value (`#av-lcd-cpu{flex:0 0 8ch}` — "CPU 100%" never fit 5ch,
+the `%` was ellipsized away), keep the row at 10px with gap 2 / tracking .03em: 136.9px of content in
+145 (1280) and 147 (1440), every field complete, tempo 5px inside the glass. The pack field's empty
+state was a 21-char sentence in a 7ch slot (clipped mid-word): slot 7ch → 9ch, empty text "NONE".
+
+**Gates on 1210c461 (`verify/battery_c2e.log`):** 28/28 suites exit=0 first-lap (chassis 24 incl K22 at
+both widths · smoke 81 · cockpit 21 · fit 49 · comp 41 · seq 41 · sessions 65 · tune 18 · rec 29 ·
+s4 42). Bench exit=0 (knee 96/128 monotone, realtime 64/64, ratio 1.0). Alias exit=0 complete
+(VA worst −58.18 dBc, WT −91.21, determinism maxAbsDiff 0 — byte-for-byte the C1/C2 numbers, so the
+change is provably inert). Stress asserts-not-met, 26 underrun deltas (78 → 39 → 21 → 13 → 26 across
+the passes: the documented load class).
+
+**New rig law — K22 (chassis).** Pins the glass itself at 1440 AND 1280: every `.av-lcd-row`
+scrollWidth ≤ clientWidth, `#av-lcd-voices` / `#av-lcd-cpu` neither hidden nor ellipsized, and the
+tempo's PAINTED text (Range rect) ending inside the glass. K21 (band fit) cannot see this: a group can
+carry its content while a row inside it spills.
+
+**Pins** swept by `cache/scratch/sweep_pins.py`, old→new derived from `git show HEAD:index.html`.
+Trap paid: an "any 64-hex that isn't the current sha" sweep rewrites the `sha256("abc")` test vector in
+`avpack_check.mjs` (ba7816bf…) into a bogus pin; sweep only the previous build's sha.
+
+**OPEN:** owner eye pass on the glass at both widths (his gate); then **C3 page fills** — density gate
+page height ≤ 1.2 × well height at 1440×900 and 1280×800 (sound 1.53 · shape 1.31 · sequence 1.53 ·
+effects 1.86 · mix 2.14 · system 1.91 measured on the C2b bytes), plus the six planned screens
+(docs/13 §C3). `cdp_shot` is the only cdp_*.mjs outside the suite loop (it is the shot generator).
+
 ## SAVE 2026-11-06 11:55 — C2b FIT PASS (owner eye pass fixes), frozen at b7ea1627
 
 The owner drove the live surface after C2 and flagged formatting: overlapping kind-key text,

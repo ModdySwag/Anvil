@@ -3183,7 +3183,7 @@ body { --dock-h: 132px; }
 #av-lcd-bezel .av-lcd-slot { overflow: hidden; text-overflow: ellipsis; }
 #av-lcd-bezel .av-lcd-right { margin-left: auto; text-align: right; }
 #av-lcd-bezel .av-lcd-w5 { flex: 0 0 5ch; }
-#av-lcd-bezel .av-lcd-w7 { flex: 0 0 7ch; }
+#av-lcd-bezel .av-lcd-w7 { flex: 0 0 9ch; }   /* C2b-8: a bank name needs 9ch; the old 7ch clipped even the empty state */
 #av-lcd-bezel .av-lcd-w10 { flex: 0 0 10ch; }
 #av-lcd-bezel .av-lcd-w13 { flex: 0 0 13ch; }
 #av-lcd-bezel .av-lcd-w15 { flex: 1 1 auto; min-width: 0; }
@@ -3432,29 +3432,33 @@ body { --dock-h: 132px; }
   #av-band #av-lcd-bezel { min-width: 160px; }
 }
 
-/* C2b-4: the glass's third row carries VOICES + CPU + tempo = 173px into a 147-157px
-   glass, so the tempo readout was cut. Tighten the dot-matrix tracking (not the fields). */
-#av-band #av-lcd .av-lcd-row { gap: 3px; letter-spacing: .07em; font-size: 9.5px; }
-@media (max-width: 1360px) {
-  #av-band #av-lcd .av-lcd-row { letter-spacing: .04em; font-size: 9px; }
+/* C2b-8: row 3 (VOICES · CPU · tempo) measured 173px of content in a 145px row, but the overflow
+   was NOT the data — three C1-era rules were still shaping fields that had since become data:
+   (a) `.av-lcd-row > span:first-child` still painted the leading span as a green LABEL with .2em
+       tracking, which is what ellipsized "VOICES 12/64" (82px of text in a 71px slot);
+   (b) the tempo still carried its transport-window box inside the glass — min-width 66px, 10px
+       side padding, a 21px numeral in a 13px row (the dark slab over the readout);
+   (c) `#av-lcd-poly` was still absolute-pinned to the glass's bottom-right in plasma green, so it
+       drew on top of row 3 instead of sitting in row 2 where the contract puts it.
+   Reset those three, give the CPU field its widest value ("CPU 100%"), and spend the rest on
+   tracking: 136.9px in 145 — every field complete at 1280, tempo 7px clear of the edge. */
+#av-lcd-bezel .av-lcd-row > span:first-child { color: inherit; letter-spacing: inherit; }
+#av-lcd-bezel #av-lcd-poly {
+  position: static; right: auto; bottom: auto; margin-left: auto;
+  color: inherit; text-shadow: none; letter-spacing: inherit; font-size: inherit;
 }
-
-/* C2b-5: inside the glass the tempo reads as a number (the "BPM" lab is in its tooltip and
-   aria-label); that is the last 24px row 3 needed. 166 -> ~142 in a 147px glass. */
-#av-band #av-lcd .av-lcd-row { font-size: 9px; }
-#av-band #av-lcd #avc-bpm { width: 40px; padding: 0 2px; gap: 0; justify-content: flex-end; }
-#av-band #av-lcd #avc-bpm .avc-bpm-lab { display: none; }
-
-/* C2b-6: row 3 at 9px still ran 161 into 147 (VOICES 82 + CPU 32 + tempo 40 + gaps).
-   8.5px with a 34px tempo cell puts it inside the glass at both widths. */
-#av-band #av-lcd .av-lcd-row { font-size: 8.5px; gap: 2px; }
-#av-band #av-lcd #avc-bpm { width: 34px; }
-
-/* C2b-7: row 3 FINAL — voices + tempo on the glass at 9px; the CPU% readout is diagnostics
-   (like the tier chip), so it stays live in the DOM but leaves the instrument face. */
-#av-band #av-lcd .av-lcd-row { font-size: 9px; gap: 3px; }
-#av-band #av-lcd #av-lcd-cpu { display: none !important; }
-#av-band #av-lcd #avc-bpm { width: 40px; }
+#av-lcd-bezel .avc-bpm {
+  min-width: 0; padding: 0; flex-direction: row; align-items: baseline; gap: 3px;
+  background: none; border: 0; border-radius: 0; box-shadow: none; overflow: visible;
+}
+#av-lcd-bezel .avc-bpm::after { content: none; }
+#av-lcd-bezel #avc-bpm-val { font: inherit; font-weight: 700; color: inherit; text-shadow: inherit; line-height: inherit; }
+#av-lcd-bezel .avc-bpm-lab { display: none; }   /* the value sits beside CPU; 23 glyphs is the glass budget */
+#av-lcd-bezel #av-lcd-cpu { flex: 0 0 8ch; }    /* "CPU 100%" — the old 5ch clipped the number away */
+#av-band #av-lcd .av-lcd-row { gap: 2px; letter-spacing: .03em; font-size: 10px; }
+@media (max-width: 1360px) {
+  #av-band #av-lcd .av-lcd-row { letter-spacing: .02em; }
+}
 
 </style>
 </head>
@@ -55152,7 +55156,7 @@ function avBankRowHTML() {
 }
 
 function avBankPackOptionsHTML(packs, selId) {
-  if (!packs.length) return '<option value="">— no banks installed —</option>';
+  if (!packs.length) return '<option value="">NONE</option>';
   let out = "";
   for (let i = 0; i < packs.length; i++) {
     const p = packs[i];
