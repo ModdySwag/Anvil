@@ -20,7 +20,7 @@
 **A. C4 control language** — **items 1-2 DONE this session** (`.av-pair` at `fc67aa1`, `.av-num` at the
 commit after it; see `docs/14-c4-control-language.md`). Remaining: **`.av-fader` needs a home** (owner
 call: DELIVER master level or MIX per-track gain) and **groups `.av-group` deferred to C5**.
-**B. C5 disclosure** — focus order, tab semantics, advanced-collapsed defaults per page.
+**B. C5 disclosure** — **audited this session: `docs/15-c5-disclosure.md`** (measured: 31 `[role=tab]` with 25 resolving `aria-controls`, the six FM operator keys claim tabs they don't have; 86 disclosure toggles with only 55 carrying `aria-expanded` — 24 `av-adv-chip` + 7 `av-fx-toggle`; every tablist has exactly one selected; `cdp_a11y` is 33/33 so all of it is BEYOND the rig). Work order: chips → fx toggles → FM tab set → a recorded focus-order walk → groups (owner call). Nothing implemented yet.
 **C. C6 release v1.15.0** — shots, pins, **full wave battery** (28 rigs + bench + alias + stress, ~35 min, nothing else open), installer, deploy; README shots and the downloads card. Live site is still the **2026-10-09 build** (`moddys.net/anvil`, frozen `e99ea8e5`): nothing from this wave is deployed.
 `windows/stage/Anvil/resources/app/index.html` is a **STALE staged copy** (Oct 9, 4,604,527 B) — C6 must re-stage it from the new bundle.
 **D. Two C2 leftovers** — mono is not per-patch (`env.mono` is not in the pack/preset schema); latency/buffer has no LCD cell (`verify/_c2_wave.md` §5).
