@@ -1159,6 +1159,11 @@ body.av-palette-open { }
    one chip each (the MIX/MIDI contract, same generic .av-sec-collapsed hook). The chip carries a
    teal dot while its module is enabled, so a folded-but-active module is never invisible. */
 .av-fx-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 1px 0 3px; }
+/* C3-14: each folded FX strip carries its block's screen — 0px while the strip is folded, painted
+   from a ResizeObserver the moment the chip opens it. */
+.av-fx-screen { display: flex; flex-direction: column; gap: 2px; height: 84px; margin-top: 6px; background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 6px; }
+.av-fx-screencv { width: 100%; height: 56px; display: block; }
+.av-fx-screen-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); white-space: nowrap; overflow: hidden; }
 .av-fx-strip-head .av-sec-toggle { margin-left: 0; }
 .av-adv-chip.on { border-color: var(--teal-deep); color: var(--teal); }
 .av-adv-chip.on::before { content: "\25CF"; margin-right: 4px; font-size: 7px; vertical-align: 1px; }
@@ -1180,7 +1185,7 @@ body.av-palette-open { }
 /* C3-13: the envelopes screen is FOLDED (chip in the adv row): when open it is one 104px block,
    wide enough for a real a/d/s/r shape, and it never changes the folded card's height. */
 .av-synth-envview { display: flex; flex-direction: column; gap: 2px; width: 520px; max-width: 100%; height: 104px; background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 6px; margin: 2px 0 6px; }
-.av-synth-envcanvas { width: 100%; flex: 1 1 auto; display: block; cursor: crosshair; touch-action: none; }
+.av-synth-envcanvas { width: 100%; height: 78px; display: block; cursor: crosshair; touch-action: none; }
 .av-synth-envview-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); white-space: nowrap; overflow: hidden; }
 .av-synth-panel[data-kind="va"] > .av-synth-sec { flex: 0 0 auto; margin: 2px 0 6px; }
 .av-synth-sec-head { display: flex; align-items: baseline; gap: 8px; }
@@ -46092,7 +46097,7 @@ function avFxInventory() {
 }
 
 function avFxClasses() {
-  return ["av-fx", "av-fx-head", "av-fx-title", "av-fx-cap", "av-fx-strips", "av-fx-strip",
+  return ["av-fx", "av-fx-head", "av-fx-title", "av-fx-cap", "av-fx-strips", "av-fx-strip", "av-fx-screen", "av-fx-screencv", "av-fx-screen-cap",
     "av-fx-on", "av-fx-strip-head", "av-fx-mod", "av-fx-toggle", "av-fx-ctl",
     "av-fx-pick", "av-fx-pick-lbl", "av-fx-knobs", "av-fx-actions", "av-fx-btn", "av-fx-status",
     "av-fx-adv", "av-adv-chip", "av-sec-toggle", "av-sec-collapsed"];
@@ -46103,6 +46108,179 @@ function avFxClasses() {
 /* mount into the parent-owned host: seed unset mirror paths, render, bind knobs/toggles/
    selects, repaint. Host absent or knob parts missing → false, no throw. Re-mountable: a
    second call rebuilds the markup from the live mirror (used by the rig's absent-host probe). */
+/* ---------- C3-14 screen 3: per-slot effect screens ---------- */
+
+/* Each strip gets the screen its block actually has, INSIDE the strip: folded (the default) the
+   screen costs 0px, and opening a module paints it through a ResizeObserver (trap 20 — a folded
+   canvas has no box). Every screen is computed from that module's own params; none of them pretends
+   to show live signal the UI cannot see. */
+const AV_FX_SCREEN_META = {
+  drive: { cap: function (P) { return String(P("fx.drive.mode")).toUpperCase() + " . DRIVE +" + Math.round(P("fx.drive.amount") * 30) + "dB"; } },
+  delay: { cap: function (P) { return Number(P("fx.delay.time")).toFixed(3) + "s . FB " + Math.round(P("fx.delay.feedback") * 100) + "%"; } },
+  verb: { cap: function (P) { return "T60 " + (0.3 + P("fx.verb.decay") * 11.7).toFixed(1) + "s . SIZE " + Math.round(P("fx.verb.size") * 100); } },
+  conv: { cap: function (P) { return String(P("fx.conv.mode")).toUpperCase() + " . T60 " + (0.3 + P("fx.conv.decay") * 11.7).toFixed(1) + "s"; } },
+  dyn: { cap: function (P) { return "T " + Number(P("fx.dyn.comp.thresh")).toFixed(0) + "dB . R " + Number(P("fx.dyn.comp.ratio")).toFixed(1) + "x"; } },
+  mod: { cap: function (P) { return String(P("fx.mod.mode")).toUpperCase() + " . " + Number(P("fx.mod.rate")).toFixed(2) + "Hz . " + Math.round(P("fx.mod.depth") * 100); } }
+};
+
+function avFxScreenHTML() {
+  return '<div class="av-fx-screen"><canvas class="av-fx-screencv" aria-label="Effect block screen"></canvas>' +
+    '<span class="av-fx-screen-cap"></span></div>';
+}
+
+function avFxScreenPaint(canvas, mod) {
+  try {
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const box = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+    const cssW = Math.max(40, Math.round((box && box.width) || 300));
+    const cssH = Math.max(24, Math.round((box && box.height) || 56));
+    const dpr = Math.max(1, Math.min(3, (typeof window !== "undefined" && window.devicePixelRatio) || 1));
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+      canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const w = canvas.width, h = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const P = function (path, def) {
+      if (typeof avParams === "undefined" || !avParams) return def;
+      const v = avParams[path];
+      return (v == null || (typeof v === "string" && v === "")) ? def : v;
+    };
+    const N = function (path, def) { const v = Number(P(path, def)); return isFinite(v) ? v : def; };
+    const base = h - 5 * dpr, top = 5 * dpr, H = base - top;
+    const teal = "#2ed8c9", dim = "rgba(150,170,170,0.35)";
+    if (mod === "drive") {
+      const amt = Math.max(0, Math.min(1, N("fx.drive.amount", 0)));
+      const mode = String(P("fx.drive.mode", "sat"));
+      const k = 1 + amt * 29;                     /* up to +30 dB of drive */
+      const bits = Math.max(4, Math.min(16, N("fx.drive.bits", 16)));
+      const shape = function (x) {
+        if (mode === "fold") { let v = x * (1 + amt * 6); while (v > 1 || v < -1) v = v > 1 ? 2 - v : -2 - v; return v; }
+        if (mode === "crush") { const q = Math.pow(2, bits - 1); return Math.round((x * (1 + amt * 6)) * q) / q; }
+        return Math.tanh(x * k) / Math.tanh(k || 1);
+      };
+      ctx.strokeStyle = dim; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, base); ctx.lineTo(w, top); ctx.stroke();
+      ctx.strokeStyle = teal; ctx.lineWidth = Math.max(1, 1.6 * dpr); ctx.beginPath();
+      for (let i = 0; i <= 120; i++) {
+        const x = (i / 120) * 2 - 1;
+        const y = base - ((shape(x) + 1) / 2) * H;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo((i / 120) * w, y);
+      }
+      ctx.stroke();
+    } else if (mod === "dyn") {
+      const th = Math.max(-48, Math.min(0, N("fx.dyn.comp.thresh", 0)));
+      const ra = Math.max(1, Math.min(20, N("fx.dyn.comp.ratio", 1)));
+      const ceil = Math.max(-48, Math.min(0, N("fx.dyn.lim.ceiling", 0)));
+      const lo = -48;
+      ctx.strokeStyle = dim; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, base); ctx.lineTo(w, top); ctx.stroke();
+      ctx.strokeStyle = teal; ctx.lineWidth = Math.max(1, 1.6 * dpr); ctx.beginPath();
+      for (let i = 0; i <= 120; i++) {
+        const xin = lo + (i / 120) * (0 - lo);
+        let out = xin <= th ? xin : th + (xin - th) / ra;
+        if (out > ceil && ceil < 0) out = ceil;
+        const px = (i / 120) * w, py = base - ((out - lo) / (0 - lo)) * H;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+    } else if (mod === "delay") {
+      const t = Math.max(0.01, N("fx.delay.time", 0.3));
+      const fb = Math.max(0, Math.min(0.95, N("fx.delay.feedback", 0.4)));
+      const pp = Math.max(0, Math.min(1, N("fx.delay.pingpong", 0.5)));
+      const span = Math.max(2, t * 4);            /* show at least four taps */
+      ctx.strokeStyle = teal; ctx.lineWidth = Math.max(1, 1.4 * dpr);
+      for (let n = 0; n < 10; n++) {
+        const at = (n + 1) * t;
+        if (at > span) break;
+        const x = (at / span) * w, amp = Math.pow(fb || 0.02, n);
+        const hgt = Math.max(1, amp * H);
+        ctx.globalAlpha = 0.35 + (pp ? (n % 2 ? 0.15 : 0) : 0);
+        ctx.beginPath(); ctx.moveTo(x, base); ctx.lineTo(x, base - hgt); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    } else if (mod === "verb" || mod === "conv") {
+      const d = Math.max(0, Math.min(1, N("fx." + mod + ".decay", 0.5)));
+      const t60 = 0.3 + d * 11.7;
+      const tau = t60 / 6.9078;
+      ctx.strokeStyle = teal; ctx.lineWidth = Math.max(1, 1.6 * dpr); ctx.beginPath();
+      for (let i = 0; i <= 140; i++) {
+        const tt = (i / 140) * 4 * tau;
+        const y = base - Math.exp(-tt / tau) * H;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo((i / 140) * w, y);
+      }
+      ctx.stroke();
+    } else if (mod === "mod") {
+      const rate = Math.max(0.05, Math.min(10, N("fx.mod.rate", 0.6)));
+      const depth = Math.max(0, Math.min(1, N("fx.mod.depth", 0.5)));
+      const cyc = 2;
+      ctx.strokeStyle = teal; ctx.lineWidth = Math.max(1, 1.6 * dpr); ctx.beginPath();
+      for (let i = 0; i <= 140; i++) {
+        const ph = (i / 140) * cyc * Math.PI * 2;
+        const y = base - H * 0.5 - Math.sin(ph) * H * 0.45 * depth;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo((i / 140) * w, y);
+      }
+      ctx.stroke();
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFxScreensSync(hostArg) {
+  try {
+    let host = hostArg || null;
+    if (!host) { try { host = document.getElementById("av-fx-host"); } catch (e) { host = null; } }
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    const P = function (path, def) {
+      if (typeof avParams === "undefined" || !avParams) return def;
+      const v = avParams[path];
+      return (v == null || (typeof v === "string" && v === "")) ? def : v;
+    };
+    host.querySelectorAll(".av-fx-strip[data-mod]").forEach(function (strip) {
+      const mod = strip.getAttribute("data-mod");
+      const box = strip.querySelector(".av-fx-screen");
+      if (!box || !AV_FX_SCREEN_META[mod]) return;
+      const cv = box.querySelector(".av-fx-screencv");
+      if (cv) avFxScreenPaint(cv, mod);
+      const cap = box.querySelector(".av-fx-screen-cap");
+      const txt = AV_FX_SCREEN_META[mod].cap(P);
+      if (cap && cap.textContent !== txt) cap.textContent = txt;
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+function avFxScreensInit(hostArg) {
+  try {
+    let host = hostArg || null;
+    if (!host) { try { host = document.getElementById("av-fx-host"); } catch (e) { host = null; } }
+    if (!host || typeof host.querySelectorAll !== "function" || typeof document === "undefined") return false;
+    host.querySelectorAll(".av-fx-strip[data-mod]").forEach(function (strip) {
+      const mod = strip.getAttribute("data-mod");
+      if (!AV_FX_SCREEN_META[mod] || strip.querySelector(".av-fx-screen")) return;
+      strip.insertAdjacentHTML("beforeend", avFxScreenHTML());
+      const box = strip.querySelector(".av-fx-screen");
+      try {
+        if (box && typeof ResizeObserver === "function" && !box.__avFxRO) {
+          box.__avFxRO = new ResizeObserver(function () { try { avFxScreensSync(host); } catch (e5) { } });
+          box.__avFxRO.observe(box);
+        }
+      } catch (e4) { /* the observer is a nicety */ }
+    });
+    try {
+      if (typeof window !== "undefined" && !window.__avFxScreenHook) {
+        window.__avFxScreenHook = 1;
+        window.addEventListener("av-param", function (ev) {
+          const pth = ev && ev.detail && ev.detail.path;
+          if (typeof pth === "string" && pth.indexOf("fx.") === 0) { try { avFxScreensSync(); } catch (e3) { } }
+        });
+      }
+    } catch (e2) { /* no window */ }
+    avFxScreensSync(host);
+    return true;
+  } catch (e) { return false; }
+}
+
 function avFxInit() {
   let host = null;
   try { host = (typeof document !== "undefined" && document) ? document.getElementById("av-fx-host") : null; } catch (e) { host = null; }
@@ -46125,6 +46303,7 @@ function avFxInit() {
     avFxBindSelects(host);
     avFxMarkBound(host);
     avFxSync(host);
+    try { avFxScreensInit(host); } catch (e6) { /* screens are insets, never the card */ }
     avFxState.inited = true;
     avFxState.mounts += 1;
     return true;

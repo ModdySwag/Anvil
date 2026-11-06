@@ -1013,6 +1013,53 @@ async function main() {
     && envScreen.toggle === true && envScreen.refolded === true && envScreen.chipBack === true,
     JSON.stringify(envScreen));
 
+  /* K24j -- C3-14 screen 3: every FX strip carries its own block screen. DRIVE is on the face, so
+     its screen is painted immediately; the five folded modules paint only when their chip opens
+     (a folded canvas has no box — trap 20), and each caption prints that block's units. */
+  await ev(`(() => {
+    try { window.__avZone.show('effects'); } catch (e) { return false; }
+    const chip = document.querySelector('.av-fx-strip[data-sect="delay"] .av-fx-toggle');
+    const strip = document.querySelector('.av-fx-strip[data-sect="delay"]');
+    if (strip && strip.classList.contains('av-sec-collapsed')) {
+      const adv = document.querySelector('.av-fx-adv .av-adv-chip[data-adv="delay"]');
+      if (adv) adv.click();
+    }
+    return true;
+  })()`);
+  await sleep(420);
+  const fxScreens = (await ev(`(() => {
+    const card = document.querySelector('.av-fx');
+    if (!card) return { card: false };
+    const P = (sel) => {
+      const box = card.querySelector(sel);
+      if (!box) return null;
+      const cv = box.querySelector('.av-fx-screencv');
+      const cap = box.querySelector('.av-fx-screen-cap');
+      let ink = 0;
+      try { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 8) ink++; } catch (e) { ink = -1; }
+      return { w: cv.width, h: cv.height, ink: ink, cap: cap ? String(cap.textContent || '') : null };
+    };
+    const out = {
+      card: true,
+      screens: card.querySelectorAll('.av-fx-screen').length,
+      drive: P('.av-fx-strip[data-mod="drive"] .av-fx-screen'),
+      delay: P('.av-fx-strip[data-mod="delay"] .av-fx-screen'),
+    };
+    /* refold delay so the card is left as found */
+    const sec = card.querySelector('.av-fx-strip[data-sect="delay"]');
+    const t = sec ? sec.querySelector('.av-fx-strip-head .av-sec-toggle') : null;
+    if (t && !sec.classList.contains('av-sec-collapsed')) t.click();
+    out.refolded = sec ? sec.classList.contains('av-sec-collapsed') : null;
+    return out;
+  })()`)).value || {};
+  const fxCapOk = (o, re) => !!(o && re.test(String(o.cap || '')));
+  check('K24j FX screens: six strips carry a screen, DRIVE paints on the face, DELAY paints when its chip opens (>=300px, inked, units), and it folds back',
+    fxScreens.card === true && fxScreens.screens === 6
+    && fxScreens.drive && fxScreens.drive.ink > 60 && fxCapOk(fxScreens.drive, /^(SAT|FOLD|CRUSH) \. DRIVE \+/)
+    && fxScreens.delay && fxScreens.delay.w >= 300 && fxScreens.delay.ink > 40 && fxCapOk(fxScreens.delay, /^\d\.\d{3}s \. FB \d+%$/)
+    && fxScreens.refolded === true,
+    JSON.stringify(fxScreens));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

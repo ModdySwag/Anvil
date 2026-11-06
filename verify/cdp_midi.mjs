@@ -33,7 +33,7 @@ const page = path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after. */
-const EXPECT_SHA = '3fd8e43cba59203c961d44d666a0a0adef760dd3fba6e905a5b837148111252a';
+const EXPECT_SHA = '21f3e525c1cc4de519d58442ac7e78a79a4314cf11031b823826e903e9b99903';
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
 console.log('index.html sha256 (before): ' + shaBefore);

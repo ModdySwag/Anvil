@@ -1136,6 +1136,11 @@ body.av-palette-open { }
    one chip each (the MIX/MIDI contract, same generic .av-sec-collapsed hook). The chip carries a
    teal dot while its module is enabled, so a folded-but-active module is never invisible. */
 .av-fx-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 1px 0 3px; }
+/* C3-14: each folded FX strip carries its block's screen — 0px while the strip is folded, painted
+   from a ResizeObserver the moment the chip opens it. */
+.av-fx-screen { display: flex; flex-direction: column; gap: 2px; height: 84px; margin-top: 6px; background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 6px; }
+.av-fx-screencv { width: 100%; height: 56px; display: block; }
+.av-fx-screen-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); white-space: nowrap; overflow: hidden; }
 .av-fx-strip-head .av-sec-toggle { margin-left: 0; }
 .av-adv-chip.on { border-color: var(--teal-deep); color: var(--teal); }
 .av-adv-chip.on::before { content: "\25CF"; margin-right: 4px; font-size: 7px; vertical-align: 1px; }
@@ -1157,7 +1162,7 @@ body.av-palette-open { }
 /* C3-13: the envelopes screen is FOLDED (chip in the adv row): when open it is one 104px block,
    wide enough for a real a/d/s/r shape, and it never changes the folded card's height. */
 .av-synth-envview { display: flex; flex-direction: column; gap: 2px; width: 520px; max-width: 100%; height: 104px; background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; padding: 4px 6px; margin: 2px 0 6px; }
-.av-synth-envcanvas { width: 100%; flex: 1 1 auto; display: block; cursor: crosshair; touch-action: none; }
+.av-synth-envcanvas { width: 100%; height: 78px; display: block; cursor: crosshair; touch-action: none; }
 .av-synth-envview-cap { font-family: var(--mono); font-size: 9px; color: var(--text-3); white-space: nowrap; overflow: hidden; }
 .av-synth-panel[data-kind="va"] > .av-synth-sec { flex: 0 0 auto; margin: 2px 0 6px; }
 .av-synth-sec-head { display: flex; align-items: baseline; gap: 8px; }
