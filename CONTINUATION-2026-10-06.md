@@ -1,6 +1,128 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-07 01:15 (session 23h). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVED FOR A CONTINUED SESSION (2026-11-07 01:25, session 23 FINAL). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- HEAD `00d2811` (C3-14 code at `7dd7f68`). Bundle `index.html` sha256
+  `21f3e525c1cc4de519d58442ac7e78a79a4314cf11031b823826e903e9b99903`, **4,806,181 B**. Tree clean.
+- All 23 `verify/cdp_*.mjs` pins == that sha (`STALE REMAINING: none`).
+- **Per-card gate = FAST LANE**, clean in 100 s on these bytes (`verify/battery_fast.log`):
+  chassis **36/36** (K24c…K24j) · a11y 33 · smoke 81 · m1 33 · m2 40 · fx 28.
+- `verify/battery_c3l.log` is **VOID** as a wave receipt (bench killed exit 143; stress read 138
+  deltas with a second browser open — contamination, not a regression). The full battery
+  (28 rigs + bench + alias + stress, ~35 min) is the **wave/release gate**: run it on the FINAL
+  bytes, nothing else open, before C6.
+- VERIFY AT SESSION START: `bash cache/scratch/battery_fast.sh <card-rig>` (≈100 s).
+
+### SHIPPED THIS SESSION (all committed, all gated)
+**The C3 rebuild run is COMPLETE — every page inside the 1.2x density gate:**
+| view | before (1440/1280) | after | how | leg |
+|---|---|---|---|---|
+| sound/fm | 1.272 / 1.464 | **0.944 / 1.071** | two-column body (algorithm rail \| operator editor), 8 op knobs on one line | K24c |
+| sound/wt | 1.262 / 1.452 | **0.988 / 1.125** | two strip rows, library folded behind a counted head chip | K24d |
+| system/code | 1.606 / 1.893 | **0.927 / 1.079** | PARAMS + CONTRACT folded, chips ride the EXAMPLES row, editor 240→170 | K24e |
+| sequence | 1.530 / 1.812 | **0.932 / 1.095** | GEN + SONG folded, chips ride the TRANSPORT row, FILL moved onto the face | K24f |
+| shape/matrix | 1.311 / 1.540 | **0.730 / 0.843** | the source strip actually wraps (a missing wrapper, not density) | K24g |
+
+**C3 screens 1–3 of 6 are in:**
+1. **Filter response inset** (`f7e3743`) — engine card, on the pots line (`flex: 1 1 0`, 92–150px),
+   drawn from `filter.cutoff/.reso/.mode`, prints `LP24 2.9k R90`, drag x cutoff / y reso.
+   Engine stays **0.969 / 1.101**. **K24h**.
+2. **Envelopes group** (`0f311f8`) — folds behind its own `ENVELOPES` chip (owner's call):
+   0px closed, 133px open, 506×121 canvas overlaying env1 (amp, teal) + env2 (filter, orange) —
+   `av_dsp.js` has no aux envelope, so it draws what exists — units `A 2ms . D 300ms . S 80 . R 200ms`,
+   drag x attack/decay/release, y sustain. **K24i**.
+3. **Per-slot FX screens** (`7dd7f68`) — all six rack strips carry their block's screen: drive
+   transfer curve, dyn compressor in→out, delay tap timeline, verb/conv T60 tails, mod LFO shape.
+   Closed strips cost 0 (ResizeObserver paints on open); DRIVE's curve is on the face by design, so
+   effects 0.705/0.817 → **0.854 / 0.996**. **K24j**.
+
+### WHAT WE STILL HAVE TO DO — the complete queue
+**A. C3 screens 4–6** (docs/13 §C3, in order). *Rule: a screen never blocks a control, carries no
+chrome beyond its inset, and always prints its own units.*
+4. **MIX** — EQ response curve on the master chain + a per-track mini waveform in each strip.
+   Measure first: `rowprobe mix mix ".av-mix"`; mix/mix sits at 0.94/1.06, so the screen must buy no height.
+5. **SHAPE** — the matrix as a routing graph (source chips → destination knobs), replacing the row
+   list as the default and keeping the rows as the advanced view. shape/matrix is now 0.73/0.84,
+   so there is room; do NOT regress the wrap fix (`.av-mod-srcstrip`).
+6. **SEQUENCE** — arrangement overview (song length, scene blocks, loop bracket) above the grid.
+   The SONG section is folded (K24f); the overview belongs on the face above `.av-seq-grid`.
+**Patterns to copy:** screen inside the module painted on open (FX, trap 20) · screen on the line as
+`flex: 1 1 0` with min/max (filter, trap 18) · fold behind a chip riding an existing row (trap 13).
+
+**B. C4 control language** — steppers, pairs, the groups sweep (docs/13 §C4).
+**C. C5 disclosure everywhere** — focus order, tab semantics, advanced-collapsed defaults.
+**D. C6 release v1.15.0** — shots, pins, **full wave battery**, installer, deploy; README shots and
+the downloads card refresh. The live site is still the **2026-10-09 build** (`moddys.net/anvil`,
+frozen `e99ea8e5`): **nothing from this wave is deployed**. `windows/stage/Anvil/resources/app/index.html`
+is a STALE staged copy (old FM body, WT note, no screens) — C6 must re-stage it from the new bundle.
+**E. Two C2 leftovers** — mono is not per-patch (`env.mono` is not in the pack/preset schema);
+latency/buffer has no LCD cell (`verify/_c2_wave.md` §5).
+**F. Owner gates** — see below.
+
+### GATE POLICY (owner asked about the 35-minute batteries; adopted 2026-11-07)
+Per card → `cache/scratch/battery_fast.sh <card-rig>`: chassis · a11y · smoke · m1 · m2 · the card's
+rig ≈ **100 s**. Full battery (28 rigs + bench + alias + stress) → **wave/release gate only**, on the
+final bytes with nothing else open. bench/stress are load suites a CSS change cannot move.
+
+### TRAPS — every one of these has already cost a session (23)
+1. **Cascade:** a card's own `display:flex` on its section class beats `.av-sec-collapsed` at equal
+   specificity when it sits later in `styles.css`. The `!important` is load-bearing.
+2. **A fold that hides an INTERACTIVE CONTROL breaks rigs** — grep the rig set for the selectors of
+   anything that folds; give each rig an expand step with a named check (cdp_fx `expandFolds`,
+   cdp_seq `expandSeqFolds`).
+3. **A wrapper around "the rest of the card" can swallow the working surface** — read the child order.
+4. **autocrlf:** `index.html`/`sw.js` are `-text`; if a checkout moves the sha, REBUILD.
+5. **Pin sweep old→new only**, and **read its last line** — a wrong `--old` prints
+   `STALE REMAINING: [...]` and leaves every rig on the previous build (trap 23).
+6. **`Target crashed`** = exit 1 with 0 checks. Re-run solo before touching code.
+7. **Never run a second browser during a battery** (the 138-delta contaminated read).
+8. **K23 null safety:** `null <= 1.2` is TRUE — a broken measurement must fail explicitly.
+9. **Cockpit pane law:** the window never scrolls; the pane scrolls only when its content is taller.
+10. **Knife-edge legs exist** — cdp_store install-progress, cdp_sessions version ring, cdp_hub reload
+    legs (68/68 solo twice while red in-battery). Prove solo before calling a regression.
+11. **A tight card on a chrome-heavy page cannot be fixed by one row** — budget the zone chrome
+    (~120–275px) first and look at idle WIDTH before shrinking ink (FM used 550 of 1014px).
+12. **A paired row 5px too wide wraps and costs ~34px** — cap the flexible children, measure both widths.
+13. **A fold's chip must not buy a row** — ride an existing row or the affordance hides first.
+14. **A hidden zone measures 0** — legs that measure geometry must `__avZone.show` their zone first.
+15. **A fold is only legal on chrome** — if folding breaks a leg, check whether the control belonged
+    on the face (the SEQUENCE FILL toggle did).
+16. **FILL is a performance flag** — it lives in the transport row, not inside GEN.
+17. **Check the class is carried before designing** — the matrix "redesign" was a missing wrapper.
+18. **A flex-basis wider than the leftover width WRAPS before shrinking** — use `flex: 1 1 0` + min/max.
+19. **A rig probe must write/drag a value that differs from the live one**, then restore what it found.
+20. **A folded canvas has no box** — paint from a ResizeObserver, and measure the open state in a
+    SECOND evaluate after a ~400 ms settle.
+21. **`width: min(520px, 100%)` inside an auto-width flex item collapses to 0** — give it a definite width.
+22. **A canvas without a CSS height feeds its backing store back into layout** (183px on a 76px
+    screen) — pin the CSS height and derive the store from it.
+23. **Sweep the pin by the hash the rigs actually carry.**
+
+### TOOLS IN THE REPO NOW (cache/ is gitignored)
+`cache/scratch/cardprobe.mjs <zone> [sub] [shot]` — ratios at 1440/1280 + block tree ·
+`rowprobe.mjs <zone> <sub|-> "<sel>"` — one container's children ·
+`views.mjs <zone> [sub|-] [width] [name]` — full-viewport PNG ·
+`battery_fast.sh <card-rig>` — the per-card gate ·
+`battery_c3*.sh` — the full templates ·
+`fmlab.mjs` / `fmlab2.mjs` / `wtlab.mjs` / `wtlab3.mjs` / `envshot.mjs` — live DOM/CSS lab probes ·
+`sweep_pins.py --old <sha>` — the pin sweep.
+
+### WAITING ON THE OWNER (his gate, not a screenshot)
+- **Eye pass:** the five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP), the FM
+  two-column, the WT two-row + LIBRARY chip, the CODE folds, the SEQUENCE folds + relocated FILL,
+  the matrix strip, the filter inset, the ENVELOPES section (opens BELOW the pane fold at 1280),
+  and the six FX screens (DRIVE's curve is always visible).
+- **A verdict on folding the LEVELS card** — one-line revert if vetoed; SOUND then loses its fit
+  (engine returns to ~1.88/2.26).
+
+### FIRST MOVES NEXT SESSION
+1. Read this block; `bash cache/scratch/battery_fast.sh fx` on `21f3e525` (≈100 s).
+2. Screen 4 — MIX: measure the master chain (`rowprobe mix mix ".av-mix"`), decide where the EQ
+   curve sits (chain head vs the strips), lab-probe it, then build with the filter-inset pattern.
+3. Then screen 5 (SHAPE graph), screen 6 (SEQUENCE overview), then C4, C5, C6.
+
+## SAVE 2026-11-07 01:15 (session 23h) — superseded by the block above
 
 ### STATE (proven, not claimed)
 - C3-14 commit `7dd7f68`. Bundle `index.html` sha256
