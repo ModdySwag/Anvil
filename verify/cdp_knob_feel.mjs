@@ -109,6 +109,12 @@ async function main() {
   check('boot: data-av-ready flips and the app is wired', ready);
   if (!ready) { console.error('APP NOT READY'); process.exit(1); }
 
+  /* C3-5: the LEVELS card folds to its head by default. A hidden knob has no geometry and cannot
+     be dragged, so this rig opens it first (the fold law every disclosure rig pays). */
+  const levelsOpen = await ev(`(() => { const b = document.querySelector('#av-levels .av-levels-body'); if (!b) return 'missing'; if (!b.classList.contains('av-sec-collapsed')) return 'open'; const t = document.querySelector('#av-levels .av-mod-head .av-sec-toggle'); if (!t) return 'notoggle'; t.click(); return b.classList.contains('av-sec-collapsed') ? 'stuck' : 'opened'; })()`);
+  check('C3-5: the LEVELS fold opens (a hidden knob cannot be dragged)', levelsOpen.value === 'opened' || levelsOpen.value === 'open', String(levelsOpen.value));
+  await sleep(220);
+
   const setMaster = async (v) => { await ev(`avKnobCommit(document.querySelector('#av-levels .av-knob[data-knob="master"]'), ${v})`); await sleep(260); };
   const master = async () => (await ev('avState.master')).value;
   const knobRect = async (sel) => (await ev(`(() => { const el = document.querySelector(${JSON.stringify(sel)}); if (!el) return null; const b = el.getBoundingClientRect(); return { x: b.left + b.width / 2, y: b.top + b.height / 2, w: b.width, h: b.height, cx: Math.round(b.left + b.width / 2), cy: Math.round(b.top + b.height / 2) }; })()`)).value;

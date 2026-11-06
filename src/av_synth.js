@@ -149,8 +149,9 @@ const AV_SYNTH_ROWS = [
     { path: "osc1.spread", label: "SPREAD", opts: { min: 0, max: 50, step: 0.5, def: 12, fmt: "ct" } },
     { path: "sub.level", label: "SUB", opts: { min: 0, max: 1, step: 0.01, def: 0, fmt: "pct" } },
   ] },
-  /* R9: per-oscillator pitch — coarse (±24 st) + fine (±100 ct), the industry-standard pair */
-  { cls: "av-synth-tune", knobs: [
+  /* R9: per-oscillator pitch — coarse (±24 st) + fine (±100 ct), the industry-standard pair.
+     C3-5: this row is one of the VA panel's two deep groups (the other is GLIDE) and folds. */
+  { cls: "av-synth-tune", sect: "tune", label: "TUNE", knobs: [
     { path: "osc1.tune", label: "OSC1 PITCH", opts: { min: -24, max: 24, step: 1, def: 0, unit: "st" } },
     { path: "osc1.fine", label: "OSC1 FINE", opts: { min: -100, max: 100, step: 1, def: 0, fmt: "ct" } },
     { path: "osc2.tune", label: "OSC2 PITCH", opts: { min: -24, max: 24, step: 1, def: 0, unit: "st" } },
@@ -167,7 +168,7 @@ const AV_SYNTH_ROWS = [
     { path: "env1.s", label: "SUSTAIN", opts: { min: 0, max: 1, step: 0.01, def: 0.8, fmt: "pct" } },
     { path: "env1.r", label: "RELEASE", opts: { min: 0.001, max: 8, step: 0.001, def: 0.2, curve: "log", fmt: "ms" } },
   ] },
-  { cls: "av-synth-mod", knobs: [
+  { cls: "av-synth-mod", sect: "glide", label: "GLIDE", knobs: [
     { path: "voice.glide", label: "GLIDE", opts: { min: 0, max: 2, step: 0.001, def: 0, fmt: "ms" } },
   ] },
 ];
@@ -391,9 +392,16 @@ function avSynthBodyHTML() {
     aria: AV_SYNTH_ENGINE.aria, options: AV_SYNTH_KINDS.concat(avSynthUserKindNames()),
   }) + "</div>";
 
-  /* va — the P1 body exactly as it shipped: selects row + one knob row per group */
+  /* va — the P1 body exactly as it shipped: selects row + one knob row per group. C3-5: the
+     deep rows carry a head (label + fold toggle) and the panel pairs its rows side by side. */
   const picks = AV_SYNTH_SELECTS.map(s => avSynthSelectHTML(s)).join("");
-  const rows = AV_SYNTH_ROWS.map(row => avSynthKnobSpecRowHTML(row.cls, row.knobs)).join("");
+  const rows = AV_SYNTH_ROWS.map(row => {
+    const body = avSynthKnobSpecRowHTML(row.cls, row.knobs);
+    if (!row.sect) return body;
+    return '<div class="av-synth-sec" data-sect="' + avSynthEsc(row.sect) + '">' +
+      '<div class="av-synth-sec-head"><span class="av-synth-sec-lbl">' + avSynthEsc(row.label) + "</span></div>" +
+      body + "</div>";
+  }).join("");
   const va = avSynthPanelHTML("va", kind === "va", '<div class="av-synth-selects">' + picks + "</div>" + rows);
 
   /* acid — the hero row + MODS (EXPANDED) */
@@ -491,6 +499,59 @@ function avSynthSetKind(kind, options) {
   return true;
 }
 
+/* ---------- C3-5 disclosure (the MIX/MIDI/FX contract, fourth card) ---------- */
+
+/* The VA panel's deep rows fold behind one chip each: OSC + FILTER + ENV stay on the face, TUNE
+   (the pitch pair) and GLIDE are one click away. The chip row lives INSIDE the panel (so a kind
+   switch takes it with it), and the section head carries the fold-back toggle. */
+const AV_SYNTH_ADV = [["tune", "TUNE"], ["glide", "GLIDE"]];
+
+function avSynthFoldInit(root) {
+  if (!root || typeof root.querySelector !== "function" || typeof document === "undefined") return false;
+  const panel = root.querySelector('.av-synth-panel[data-kind="va"]');
+  if (!panel || panel.querySelector(".av-synth-adv")) return false;
+  const anchor = panel.querySelector(".av-synth-selects");
+  if (!anchor) return false;
+  const row = document.createElement("div");
+  row.className = "av-synth-adv";
+  row.setAttribute("role", "group");
+  row.setAttribute("aria-label", "folded engine groups");
+  AV_SYNTH_ADV.forEach(function (pair) {
+    const name = pair[0], label = pair[1];
+    const sec = panel.querySelector('.av-synth-sec[data-sect="' + name + '"]');
+    if (!sec) return;
+    const head = sec.querySelector(".av-synth-sec-head");
+    if (!head || head.querySelector(".av-sec-toggle")) return;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "av-sec-toggle";
+    btn.textContent = "▸";
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "av-adv-chip";
+    chip.dataset.adv = name;
+    chip.textContent = label;
+    function sync() {
+      const folded = sec.classList.contains("av-sec-collapsed");
+      chip.hidden = !folded;
+      chip.title = "Show the " + label + " controls";
+      chip.setAttribute("aria-label", chip.title);
+      btn.textContent = folded ? "▸" : "▾";
+      btn.setAttribute("aria-expanded", folded ? "false" : "true");
+      btn.title = (folded ? "Show the " : "Hide the ") + label + " controls";
+      btn.setAttribute("aria-label", btn.title);
+    }
+    chip.addEventListener("click", function () { sec.classList.remove("av-sec-collapsed"); sync(); });
+    btn.addEventListener("click", function () { sec.classList.toggle("av-sec-collapsed"); sync(); });
+    sec.classList.add("av-sec-collapsed");
+    head.appendChild(btn);
+    row.appendChild(chip);
+    sync();
+  });
+  if (anchor.nextSibling) panel.insertBefore(row, anchor.nextSibling); else panel.appendChild(row);
+  return true;
+}
+
 /* mount into the parent-owned host: seed the mirror first (LEVELS idiom — first paint reads
    avParams, not the markup), then render and bind, then show the current kind's panel. Seeding
    only fills unset paths so a re-mount can never clobber live values. Host absent or knob parts
@@ -507,6 +568,7 @@ function avSynthInit() {
     /* repair a value that is neither a known kind string nor a §2.1 ordinal before first paint */
     avParams["engine.kind"] = avSynthKindNorm(avParams["engine.kind"]) || "va";
     host.innerHTML = avSynthBodyHTML();
+    try { avSynthFoldInit(host); } catch (e) { /* deep groups stay up */ }
     avKnobBind(host);
     avSynthBindSelects(host);
     avSynthSetKind(avParams["engine.kind"], { commit: false });

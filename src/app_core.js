@@ -58,7 +58,40 @@ function avMountLevels() {
   host.innerHTML = avKnobRowHTML(AV_LEVELS.map(k =>
     avKnobHTML(k.path, k.label, Object.assign({ value: avParams[k.path] }, k.opts))));
   avKnobBind(host);
+  try { avLevelsFold(); } catch (e) { /* the card stays open */ }
   return true;
+}
+
+/* C3-5: the LEVELS card folds to its head. It is chrome on every SOUND sub-page (the well is
+   ~500px at 1280) and the head keeps the label + the fold toggle. Runs again after the chrome
+   builds .av-mod-head, which is why the boot calls it a second time. */
+function avLevelsFold() {
+  try {
+    const card = document.getElementById("av-levels");
+    if (!card) return false;
+    const body = card.querySelector(".av-levels-body");
+    const head = card.querySelector(".av-mod-head");
+    if (!body || !head || head.querySelector(".av-sec-toggle")) return false;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "av-sec-toggle";
+    btn.textContent = "▸";
+    btn.title = "Show the levels controls";
+    btn.setAttribute("aria-label", btn.title);
+    btn.setAttribute("aria-expanded", "false");
+    function sync() {
+      const folded = body.classList.contains("av-sec-collapsed");
+      btn.textContent = folded ? "▸" : "▾";
+      btn.setAttribute("aria-expanded", folded ? "false" : "true");
+      btn.title = (folded ? "Show" : "Hide") + " the levels controls";
+      btn.setAttribute("aria-label", btn.title);
+    }
+    btn.addEventListener("click", function () { body.classList.toggle("av-sec-collapsed"); sync(); });
+    const h2 = head.querySelector("h2");
+    if (h2 && h2.nextSibling) head.insertBefore(btn, h2.nextSibling); else head.appendChild(btn);
+    sync();
+    return true;
+  } catch (e) { return false; }
 }
 
 /* ---------- boot ---------- */
@@ -161,6 +194,8 @@ function avMountLevels() {
   /* R3: the float workspace + the About popover */
   let panelsOk = false;
   try { panelsOk = (typeof avPanelsInit === "function") ? (avPanelsInit() !== false) : false; } catch (e) { console.warn("[anvil] panels init failed", e); }
+  /* C3-5: the card heads exist now — give LEVELS its fold toggle */
+  try { avLevelsFold(); } catch (e) { console.warn("[anvil] levels fold failed", e); }
   /* R4: the left module rail */
   let railOk = false;
   try { railOk = (typeof avRailInit === "function") ? (avRailInit() !== false) : false; } catch (e) { console.warn("[anvil] rail init failed", e); }

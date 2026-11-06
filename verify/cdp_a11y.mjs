@@ -70,7 +70,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
    P7: the integrated index.html sha does not exist at authoring time - EXPECT_SHA stays null
    until the parent pins it (constant below or --sha <hex>); while null the rig still enforces
    before === after and prints a pin note (never loosened). */
-const EXPECT_SHA = "b4e0b4e70f24663b8d41467d7d88657433185c85951526d5c8c153569052bd19";   /* sa-C pin slot - parent fills after the P7 build (or --sha <hex>) */
+const EXPECT_SHA = "84e7e546474ba6441a08a7d63f130991724710c183a0214d7aa887f7f0ac7797";   /* sa-C pin slot - parent fills after the P7 build (or --sha <hex>) */
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -333,6 +333,13 @@ async function main() {
   await sleep(700);
   const ready = await until(`document.documentElement.getAttribute('data-av-ready') === '1'`, 30000, 300);
   check('0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)', ready === true, 'url ' + url);
+
+  /* C3-5: the LEVELS card folds to its head by default. A display:none knob cannot take focus
+     (activeElement stays on body), so the a11y rig opens the card before it measures knobs —
+     the fold is a disclosure, and everything inside it must still pass every a11y leg. */
+  const levelsOpen = (await ev(`(() => { const b = document.querySelector('#av-levels .av-levels-body'); if (!b) return 'missing'; if (!b.classList.contains('av-sec-collapsed')) return 'open'; const t = document.querySelector('#av-levels .av-mod-head .av-sec-toggle'); if (!t) return 'notoggle'; t.click(); return b.classList.contains('av-sec-collapsed') ? 'stuck' : 'opened'; })()`)).value;
+  check('C3-5: the LEVELS fold opens before the knob legs (a hidden knob cannot take focus)', levelsOpen === 'opened' || levelsOpen === 'open', String(levelsOpen));
+  await sleep(200);
   if (ready !== true) { console.error('APP NOT READY'); process.exit(1); }
   const inited = await until(`(function () { try { return !!(window.__avA11y && typeof __avA11y.state === 'function' && __avA11y.state().inited === true); } catch (e) { return false; } })()`, 15000, 250);
   if (inited !== true) note('__avA11y not inited after ready - the A legs will report honestly');

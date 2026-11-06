@@ -1130,7 +1130,18 @@ body.av-palette-open { }
 .av-adv-chip.on { border-color: var(--teal-deep); color: var(--teal); }
 .av-adv-chip.on::before { content: "\25CF"; margin-right: 4px; font-size: 7px; vertical-align: 1px; }
 
-/* --- FM ENGINE card --- */
+/* C3-5: the VA panel pairs its knob rows side by side — the card is ~1000px wide and each row
+   used ~300-550px, so five stacked rows wasted half the width. The deep rows (TUNE, GLIDE) carry
+   a head and fold behind one chip each; OSC + FILTER + ENV stay on the face. */
+.av-synth-panel[data-kind="va"] { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 22px; row-gap: 2px; }
+.av-synth-panel[data-kind="va"] .av-synth-selects { flex: 0 0 100%; }
+.av-synth-panel[data-kind="va"] .av-knobs { flex: 0 0 auto; margin: 2px 0 6px; }
+.av-synth-panel[data-kind="va"] > .av-synth-sec { flex: 0 0 auto; margin: 2px 0 6px; }
+.av-synth-sec-head { display: flex; align-items: baseline; gap: 8px; }
+.av-synth-sec-head .av-sec-toggle { margin-left: 0; }
+.av-synth-adv { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; flex: 0 0 100%; padding: 1px 0 3px; }
+/* the BANK row's preset browser folds to its head (av_bank.js) */
+.av-bank-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 .av-fm { display: flex; flex-direction: column; gap: 10px; }
 .av-fm-head { display: flex; align-items: baseline; gap: 10px; }
 .av-fm-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }

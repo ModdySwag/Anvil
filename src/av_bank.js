@@ -453,7 +453,9 @@ const avBankEsc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ 
 function avBankRowHTML() {
   return '<div class="av-bank" data-av-bank="1">' +
     '<div class="av-bank-head"><span class="av-bank-title">BANK</span>' +
-    '<span class="av-bank-cap">installed packs &middot; APPLY loads a preset &middot; PREVIEW auditions it (2.0 s offline render)</span></div>' +
+    '<span class="av-bank-cap">installed packs &middot; APPLY loads a preset &middot; PREVIEW auditions it (2.0 s offline render)</span>' +
+    '<button type="button" class="av-sec-toggle" aria-expanded="false" aria-label="Show the preset browser" title="Show the preset browser">&#9656;</button></div>' +
+    '<div class="av-bank-body av-sec-collapsed" data-sect="bank">' +
     '<div class="av-bank-row">' +
     '<label class="av-bank-pick"><span class="av-bank-pick-lbl">PACK</span>' +
     '<select class="av-select av-bank-pack" aria-label="Bank — installed packs"></select></label>' +
@@ -463,6 +465,7 @@ function avBankRowHTML() {
     '<button type="button" class="av-btn mini av-bank-preview" aria-label="Preview the selected preset">PREVIEW</button>' +
     '</div>' +
     '<p class="av-bank-hint av-note av-dim">0 packs installed — the PACKS card installs banks.</p>' +
+    '</div>' +
     "</div>";
 }
 
@@ -653,6 +656,24 @@ function avBankMountHost() {
   } catch (e) { return null; }
 }
 
+/* C3-5: the preset browser folds to its head — the PACK/PRESET/APPLY/PREVIEW row is a deep
+   control set, and the head keeps the one-line explanation visible. */
+function avBankFoldWire(host) {
+  try {
+    const t = host.querySelector(".av-bank .av-sec-toggle");
+    const body = host.querySelector(".av-bank .av-bank-body");
+    if (!t || !body) return false;
+    t.addEventListener("click", function () {
+      const folded = body.classList.toggle("av-sec-collapsed");
+      t.textContent = folded ? "\u25B8" : "\u25BE";
+      t.setAttribute("aria-expanded", folded ? "false" : "true");
+      t.title = (folded ? "Show" : "Hide") + " the preset browser";
+      t.setAttribute("aria-label", t.title);
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
 /* mount the BANK row. false without a host (or without a DOM at all), never throws; re-mountable
    (a second call rebuilds the markup from the live store — the sibling cards' discipline). */
 function avBankInit() {
@@ -660,6 +681,7 @@ function avBankInit() {
   if (!host) return false;
   try {
     host.innerHTML = avBankRowHTML();
+    avBankFoldWire(host);
     avBankState.host = host;
     avBankWire(host);
     avBankPaint(host);
@@ -690,7 +712,7 @@ function avBankRefresh() {
 function avBankClasses() {
   return [
     "av-bank", "av-bank-wrap", "av-bank-head", "av-bank-title", "av-bank-cap", "av-bank-row",
-    "av-bank-pick", "av-bank-pick-lbl", "av-bank-pack", "av-bank-preset",
+    "av-bank-body", "av-bank-pick", "av-bank-pick-lbl", "av-bank-pack", "av-bank-preset",
     "av-bank-apply", "av-bank-preview", "av-bank-hint",
   ];
 }

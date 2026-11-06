@@ -1,6 +1,72 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVE 2026-11-06 19:20 (session 22). READ THIS BLOCK FIRST; everything below is history.
+## RESUME HERE — SAVE 2026-11-06 20:35 (session 22, second save). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- HEAD `38689ef` + this save. Bundle `index.html` sha256
+  `84e7e546474ba6441a08a7d63f130991724710c183a0214d7aa887f7f0ac7797`, **4,760,492 B**.
+- All 23 `verify/cdp_*.mjs` pins == that sha (two sweeps this session, `STALE REMAINING: none`).
+- **Battery c3g (`verify/battery_c3g.log`): 27/28 suites exit=0 FIRST-LAP.** The one red is
+  `cdp_store`'s "install progress affordance" observation leg, which reads **28/28 solo on the same
+  bytes** (`verify/probe-c35-store.log`) — the timing knife-edge class, not a regression.
+  bench exit=0, alias exit=0, **stress 123 deltas** (`asserts-not-met` = the load class; recorded
+  raw — above the 12–81 band of c3d/c3e, far below the 376/543 contamination, and no second browser
+  ran during it).
+- Solo receipts: `verify/probe-c35-{chassis,knob_feel,a11y,midi,store}.log`.
+
+### WHAT LANDED (C3-5 — the SOUND page)
+- **VA panel pairs its rows.** The engine card is ~1,000px wide and each knob row used 300–550px, so
+  five stacked rows wasted half the card. CSS-only: the panel is a wrap-flex, selects span the row,
+  rows sit side by side. Card 743 → 350px.
+- **TUNE + GLIDE fold** behind one chip each (`avSynthFoldInit`, rows carry `data-sect` + a
+  `.av-synth-sec-head` with label + toggle). OSC · FILTER · ENV stay on the face.
+- **BANK preset browser folds to its head** (`avBankFoldWire` — self-contained in `av_bank.js`, head
+  toggle, no chip row). 71 → 24px.
+- **LEVELS card folds to its head** (`avLevelsFold` in `app_core.js`, toggle inserted beside the h2;
+  called twice because `.av-mod-head` only exists after `avPanelsInit`). This is the shared lever:
+  it rides every SOUND sub-tab.
+- **MEASURED: sound/engine 1.88 / 2.26 → 0.969 / 1.101.** Side effects of the LEVELS fold on the
+  same zone: samples 0.87 → 0.60, tune 1.03 → 0.77 at 1440.
+- K23 claims **`['sound', 'engine']`** (20 views). New chassis leg **K24** pins the whole contract:
+  LEVELS folded + toggle opens and closes, the three face rows share one line (tops within 2px),
+  TUNE/GLIDE folded with chips present, chip expands, head toggle folds back, chip returns.
+  Chassis 26 → **27 checks**; knob_feel 18 → 19; a11y 32 → 33; midi 34.
+
+### THE FOLD FLAVOURS NOW IN THE TREE (three, all on the same `.av-sec-collapsed` contract)
+1. **Chip row inside the card** — MIX (`avMixUiDisclosure`), MIDI (`avMidiFoldInit`), FX
+   (`avFxFoldInit`), SOUND's TUNE/GLIDE (`avSynthFoldInit`). Chip visible only while folded; the
+   section head carries the fold-back toggle; chips can light an ON state (FX).
+2. **Card-head toggle, no chip** — LEVELS (`avLevelsFold`). Cheapest for a whole card that is
+   chrome on its page.
+3. **Head toggle inside the module** — BANK (`avBankFoldWire`). Self-contained: the module owns its
+   markup, so no cross-module DOM surgery.
+
+### THE TRAP THIS PASS PAID (new)
+- **A fold that hides an INTERACTIVE CONTROL breaks every rig that reaches it by coordinate or by
+  focus.** Folding LEVELS hid `#av-levels .av-knob[data-knob="keys"|"master"]` and took out three
+  rigs at once: `cdp_knob_feel` (drags the master knob), `cdp_a11y` (focuses it — a display:none
+  element cannot take focus, `activeElement` stays body), and `cdp_midi`'s CC-learn leg (clicks the
+  keys knob: four cascading reds). All three now open the card first, each with a named check.
+  **Rule: before folding anything, grep the rig set for the selectors of the controls that fold.**
+
+### WHAT REMAINS — re-measure BEFORE rebuilding the rest of SOUND
+The LEVELS fold took ~140px off **every** SOUND sub-page, so the old numbers are stale. Re-measure
+drums (was 1.17/1.34), fm (1.53/1.78), wt (1.52/1.77), chop (1.40/1.62) before designing anything —
+several may already be near the gate, and the FM/WT cards are the next real rebuilds.
+Then: system/code 1.61/1.89 · sequence 1.53/1.81 · shape/matrix 1.31/1.54 (two-column measured
+WORSE; needs a slot redesign) · then the six planned C3 screens (docs/13 §C3) · C4 control language ·
+C5 disclosure everywhere + focus order + tab semantics · C6 shots/pins/battery/installer/deploy
+v1.15.0.
+- Open from C2: mono is not per-patch (`env.mono` not in the pack schema); latency/buffer has no LCD
+  cell (`verify/_c2_wave.md` §5).
+
+### FIRST MOVES NEXT SESSION
+1. Read this block. `node verify/cdp_chassis.mjs` + `node verify/cdp_midi.mjs` at `84e7e546`.
+2. **Owner eye pass** on four folded surfaces — MIX, SYSTEM→MIDI, EFFECTS, SOUND/ENGINE — and a
+   verdict on folding the LEVELS card (the biggest UX call of the wave; one-line revert if vetoed).
+3. Re-measure the SOUND family, then rebuild FM/WT, then sequence and code, then the six screens.
+
+## SAVE 2026-11-06 19:20 (session 22) — C3-4 the FX rack folds
 
 ### STATE (proven, not claimed)
 - HEAD `611640e` + this save. Bundle `index.html` sha256

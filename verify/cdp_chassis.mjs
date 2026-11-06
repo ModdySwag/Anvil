@@ -572,7 +572,7 @@ async function main() {
   const DENSITY_CLAIMED = [
     ['browse', 'packs'], ['browse', 'import'], ['browse', 'sessions'],
     ['perform', 'macros'], ['perform', 'voice'],
-    ['sound', 'samples'], ['sound', 'tune'],
+    ['sound', 'samples'], ['sound', 'tune'], ['sound', 'engine'],
     ['shape', 'lfo'],
     ['mix', 'mix'], ['mix', 'comp'], ['mix', 'rec'], ['mix', 'studio'],
     ['effects', null],
@@ -612,6 +612,52 @@ async function main() {
   await ev(`(() => { try { window.__avZone.show('sound'); const b = document.querySelector('#av-zone-sound .av-subtab[data-sub="engine"]'); if (b) b.click(); } catch (e) { /* stays put */ } return true; })()`);
   await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
   await sleep(200);
+
+  /* K24 -- the C3-5 disclosure contract on the SOUND page: the LEVELS card folds to its head (its
+     two knobs are chrome on a page whose well is ~500px at 1280), the VA panel pairs its rows, and
+     TUNE + GLIDE fold behind one chip each while OSC / FILTER / ENV stay on the face. A folded
+     section is display:none; the head toggle folds back; the chip returns. */
+  const disc = (await ev(`(() => {
+    const lvl = document.getElementById('av-levels');
+    const lvlBody = lvl ? lvl.querySelector('.av-levels-body') : null;
+    const lvlTop = lvl ? lvl.querySelector('.av-mod-head .av-sec-toggle') : null;
+    const panel = document.querySelector('#av-synth-knobs .av-synth-panel[data-kind="va"]');
+    if (!lvl || !lvlBody || !lvlTop || !panel) return { root: false, lvl: !!lvl, body: !!lvlBody, top: !!lvlTop, panel: !!panel };
+    const foldedNow = (e) => e ? getComputedStyle(e).display === 'none' : null;
+    const sec = (n) => panel.querySelector('.av-synth-sec[data-sect="' + n + '"]');
+    const row = (n) => panel.querySelector('.av-synth-' + n);
+    const chips = [...panel.querySelectorAll('.av-synth-adv .av-adv-chip')].map(c => (c.textContent || '').trim());
+    const out = {
+      root: true,
+      lvlFolded: foldedNow(lvlBody),
+      adv: ['tune', 'glide'].map(n => foldedNow(sec(n))),
+      face: ['osc', 'filter', 'env'].map(n => foldedNow(row(n))),
+      chips: chips,
+      paired: [row('osc'), row('filter'), row('env')].map(r => r ? Math.round(r.getBoundingClientRect().top) : null),
+      lvlOpen: null, advOpen: null, advRefolded: null,
+    };
+    lvlTop.click();
+    out.lvlOpen = !foldedNow(lvlBody);
+    lvlTop.click();
+    out.lvlClosed = foldedNow(lvlBody);
+    const chip = panel.querySelector('.av-synth-adv .av-adv-chip[data-adv="tune"]');
+    if (chip) {
+      chip.click();
+      out.advOpen = !foldedNow(sec('tune'));
+      const t = sec('tune').querySelector('.av-sec-toggle');
+      if (t) { t.click(); out.advRefolded = foldedNow(sec('tune')); }
+      out.chipBack = !chip.hidden;
+    }
+    return out;
+  })()`)).value || {};
+  const advOk = (disc.adv || []).length === 2 && (disc.adv || []).every(x => x === true);
+  const faceOk = (disc.face || []).length === 3 && (disc.face || []).every(x => x === false);
+  const chipsOk = ['TUNE', 'GLIDE'].every(w => (disc.chips || []).indexOf(w) >= 0);
+  const pairOk = (disc.paired || []).every(t => t != null && Math.abs(t - (disc.paired || [])[0]) <= 2);
+  check('K24 disclosure: LEVELS folds to its head (toggle opens and closes), VA pairs OSC/FILTER/ENV on one line, TUNE + GLIDE fold behind chips and fold back',
+    disc.root === true && disc.lvlFolded === true && disc.lvlOpen === true && disc.lvlClosed === true
+    && advOk && faceOk && chipsOk && pairOk && disc.advOpen === true && disc.advRefolded === true && disc.chipBack === true,
+    JSON.stringify(disc));
 
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));

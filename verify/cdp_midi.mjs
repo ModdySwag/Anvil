@@ -33,7 +33,7 @@ const page = path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
 /* FREEZE LAW: the bytes under test are named before anything runs, and re-checked after. */
-const EXPECT_SHA = 'b4e0b4e70f24663b8d41467d7d88657433185c85951526d5c8c153569052bd19';
+const EXPECT_SHA = '84e7e546474ba6441a08a7d63f130991724710c183a0214d7aa887f7f0ac7797';
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
 console.log('index.html sha256 (before): ' + shaBefore);
@@ -229,8 +229,15 @@ async function main() {
   const clickSel = async (sel, after = 300) => {
     /* C3 folds (owner's call: basic-first): a folded section is display:none and cannot be clicked
        at coordinates. Expand any folded section whose chip is offered first — the folded DEFAULT
-       itself is pinned by K23's system/midi claim (the page only fits while it stays folded). */
-    await ev(`(() => { document.querySelectorAll('.av-adv-chip').forEach((c) => { if (!c.hidden) c.click(); }); return true; })()`);
+       itself is pinned by K23's system/midi claim (the page only fits while it stays folded).
+       C3-5: the LEVELS card folds to a head TOGGLE (no chip), and the CC-learn leg clicks its
+       Instrument knob, so open that card here too — a display:none knob has no geometry. */
+    await ev(`(() => {
+      document.querySelectorAll('.av-adv-chip').forEach((c) => { if (!c.hidden) c.click(); });
+      const lb = document.querySelector('#av-levels .av-levels-body');
+      if (lb && lb.classList.contains('av-sec-collapsed')) { const t = document.querySelector('#av-levels .av-mod-head .av-sec-toggle'); if (t) t.click(); }
+      return true;
+    })()`);
     const found = await ev(`(() => { const e = document.querySelector(${JSON.stringify(sel)}); if (!e) return false; if (e.scrollIntoView) e.scrollIntoView({ block: 'center', inline: 'center' }); return true; })()`);
     if (found.value !== true) { note('click target missing: ' + sel); return false; }
     await sleep(200);
