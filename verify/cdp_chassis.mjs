@@ -511,6 +511,21 @@ async function main() {
     && /^C2 RIG TABLE #1\//.test(k20.after.wt) && k20.ink > 200,
     JSON.stringify(k20));
 
+  /* K21 -- the band FITS: every group carries its own content and the strip never
+     overflows. C2b: `pots` was the only shrinkable group, so it absorbed the whole
+     shortfall and collapsed to 20px while its caps spilled. This leg pins the law. */
+  const k21 = (await ev(`(() => {
+    const band = document.getElementById('av-band');
+    const grps = Array.from(document.querySelectorAll('#av-band .av-band-grp')).map(g => ({
+      grp: g.getAttribute('data-grp'), cw: g.clientWidth, sw: g.scrollWidth
+    }));
+    return { band: { cw: band ? band.clientWidth : -1, sw: band ? band.scrollWidth : -1 }, grps: grps };
+  })()`)).value || {};
+  const badGrp = (k21.grps || []).filter(g => g.sw > g.cw + 1).map(g => g.grp + ' ' + g.sw + '>' + g.cw);
+  check('K21 band fit: every group carries its content and the strip does not overflow',
+    k21.band && k21.band.sw <= k21.band.cw + 1 && badGrp.length === 0,
+    JSON.stringify({ band: k21.band, clipped: badGrp }));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

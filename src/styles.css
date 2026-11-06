@@ -3408,3 +3408,27 @@ body { --dock-h: 132px; }
   #av-band .av-band-plate { flex-direction: column; align-items: flex-start; gap: 0; }
   #av-band #av-lcd-bezel { min-width: 160px; }
 }
+
+/* C2b-4: the glass's third row carries VOICES + CPU + tempo = 173px into a 147-157px
+   glass, so the tempo readout was cut. Tighten the dot-matrix tracking (not the fields). */
+#av-band #av-lcd .av-lcd-row { gap: 3px; letter-spacing: .07em; font-size: 9.5px; }
+@media (max-width: 1360px) {
+  #av-band #av-lcd .av-lcd-row { letter-spacing: .04em; font-size: 9px; }
+}
+
+/* C2b-5: inside the glass the tempo reads as a number (the "BPM" lab is in its tooltip and
+   aria-label); that is the last 24px row 3 needed. 166 -> ~142 in a 147px glass. */
+#av-band #av-lcd .av-lcd-row { font-size: 9px; }
+#av-band #av-lcd #avc-bpm { width: 40px; padding: 0 2px; gap: 0; justify-content: flex-end; }
+#av-band #av-lcd #avc-bpm .avc-bpm-lab { display: none; }
+
+/* C2b-6: row 3 at 9px still ran 161 into 147 (VOICES 82 + CPU 32 + tempo 40 + gaps).
+   8.5px with a 34px tempo cell puts it inside the glass at both widths. */
+#av-band #av-lcd .av-lcd-row { font-size: 8.5px; gap: 2px; }
+#av-band #av-lcd #avc-bpm { width: 34px; }
+
+/* C2b-7: row 3 FINAL — voices + tempo on the glass at 9px; the CPU% readout is diagnostics
+   (like the tier chip), so it stays live in the DOM but leaves the instrument face. */
+#av-band #av-lcd .av-lcd-row { font-size: 9px; gap: 3px; }
+#av-band #av-lcd #av-lcd-cpu { display: none !important; }
+#av-band #av-lcd #avc-bpm { width: 40px; }
