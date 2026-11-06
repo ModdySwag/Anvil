@@ -351,9 +351,21 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 
 /* ============================================================================
    P4 — SEQUENCER (av_seq_ui.js · av_plock.js · av_seq_acid.js) — grid card skin */
-.av-seq { display: flex; flex-direction: column; gap: 8px; }
+.av-seq { display: flex; flex-direction: column; gap: 6px; }
 .av-seq-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 .av-seq-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+
+/* C3-17 screen 6: the arrangement overview rides the face between the transport and the grid — the
+   song as bars with the loop bracket, and the captured scenes as blocks you can recall from. The
+   canvas pins its CSS height (trap 22) and the scene row wraps rather than overflowing. */
+.av-seq-ov { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+.av-seq-ovcv { width: 100%; height: 28px; display: block; background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; }
+.av-seq-ovrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.av-seq-ovscenes { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; flex: 0 1 auto; }
+.av-seq-ovscene { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 13px; padding: 0 4px; border: 1px dashed var(--hair); border-radius: 4px; font-family: var(--mono); font-size: 8px; color: var(--text-3); background: transparent; }
+.av-seq-ovscene.on { border-style: solid; border-color: var(--teal-deep); color: var(--teal); background: var(--raised); cursor: pointer; }
+.av-seq-ovscene.on:hover { border-color: var(--teal); color: var(--text); }
+.av-seq-ovcap { font-family: var(--mono); font-size: 9px; color: var(--text-3); margin-left: auto; white-space: nowrap; }
 .av-seq-cap { font-size: 10.5px; color: var(--text-3); }
 .av-seq-transport { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 /* C3-10: GEN + SONG fold behind two chips that ride the transport row (no extra row) — the

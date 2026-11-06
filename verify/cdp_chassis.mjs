@@ -1305,6 +1305,69 @@ async function main() {
     && gOk.rowsInDom1 === 4,
     JSON.stringify({ n: gOk.n, ink0: gOk.ink0, ink1: gOk.ink1, cap1: gOk.cap1, chip: gOk.chipText1, targets: gOk.targets, hover: gOk.hover, afterDrop: gOk.afterDrop, status: gOk.status, rowsInDom1: gOk.rowsInDom1 }));
 
+  /* K24m -- C3-17 screen 6: the arrangement overview on the face between the transport and the grid.
+     Three song rows must read as 8 bars / 16.0 s / 3 rows with the whole-song bracket, the canvas
+     must ink at the real card width, a captured scene must appear as a block AND make the scene
+     select non-empty (the old array-only name reader left RECALL dead), and clicking that block must
+     put its name into the select. */
+  await ev(`(() => {
+    try { window.__avZone.show('sequence'); } catch (e) { return false; }
+    try {
+      avSeqSongLoad({ v: 1, rows: [
+        { ref: 'live', repeats: 2, len: 16, tempo: 0, label: 'INTRO' },
+        { ref: 'live', repeats: 4, len: 16, tempo: 0, label: 'GROOVE' },
+        { ref: 'live', repeats: 1, len: 32, tempo: 0, label: 'BREAK' }
+      ] });
+    } catch (e) { }
+    try { avSeqSceneCapture('K24MVERSE'); } catch (e) { }
+    try { avSeqUiSync(); } catch (e) { }
+    return true;
+  })()`);
+  await sleep(480);
+  const seqOv = (await ev(`(() => {
+    const card = document.querySelector('.av-seq');
+    if (!card) return { card: false };
+    const ov = card.querySelector('.av-seq-ov');
+    const cv = card.querySelector('.av-seq-ovcv');
+    const cap = card.querySelector('.av-seq-ovcap');
+    const tp = card.querySelector('.av-seq-transport');
+    const gr = card.querySelector('.av-seq-grid');
+    if (!ov || !cv || !cap) return { card: true, ov: !!ov, cv: !!cv, cap: !!cap };
+    let ink = 0;
+    try { const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data; for (let i = 3; i < d.length; i += 4) if (d[i] > 8) ink++; } catch (e) { ink = -1; }
+    const model = avSeqUiOvModel();
+    const names = avSeqUiSceneNames();
+    const sel = card.querySelector('#av-seq-scene-sel');
+    const blocks = [...card.querySelectorAll('.av-seq-ovscene.on')];
+    const out = {
+      card: true, ink: ink, cvW: cv.width, cvH: cv.height,
+      cap: String(cap.textContent || ''),
+      between: !!(tp && gr && (tp.compareDocumentPosition(ov) & Node.DOCUMENT_POSITION_FOLLOWING) && (ov.compareDocumentPosition(gr) & Node.DOCUMENT_POSITION_FOLLOWING)),
+      blocks: model && model.blocks ? model.blocks.length : -1,
+      bars: model ? model.bars : null, seconds: model ? +model.seconds.toFixed(2) : null,
+      sceneBlocks: blocks.length, firstName: blocks[0] ? blocks[0].getAttribute('data-seq-scene') : null,
+      names: names, selOpts: sel ? sel.options.length : -1,
+    };
+    /* click the block: it must land in the select (the recall path reads that value) */
+    if (blocks[0]) { blocks[0].click(); out.selAfter = sel ? String(sel.value || '') : null; }
+    /* leave the card as found */
+    try { avSeqSongLoad({ v: 1, rows: [] }); } catch (e) { }
+    try { avSeqUiSync(); } catch (e) { }
+    return out;
+  })()`)).value || {};
+  check('K24m SEQUENCE overview: three song rows read as 8 bars / 2 rows of units on the face between the transport and the grid, the canvas inks at the real card width, and the loop bracket caption is whole-song when stopped',
+    seqOv.card === true && seqOv.between === true
+    && seqOv.cvW >= 600 && seqOv.cvH === 30 && seqOv.ink > 200
+    && seqOv.blocks === 3 && seqOv.bars === 8 && seqOv.seconds === 16
+    && /^8 bars \u00b7 16\.0 s @ \d+ bpm \u00b7 3 rows \u00b7 bracket = whole song$/.test(String(seqOv.cap || '')),
+    JSON.stringify({ between: seqOv.between, cvW: seqOv.cvW, cvH: seqOv.cvH, ink: seqOv.ink, blocks: seqOv.blocks, bars: seqOv.bars, seconds: seqOv.seconds, cap: seqOv.cap }));
+
+  check('K24m SEQUENCE scenes: a captured scene appears as a block AND reaches the scene select (the array-only name reader left RECALL dead), and clicking the block puts its name in the select',
+    seqOv.sceneBlocks >= 1 && seqOv.firstName === 'K24MVERSE'
+    && Array.isArray(seqOv.names) && seqOv.names.indexOf('K24MVERSE') >= 0
+    && seqOv.selOpts >= 1 && seqOv.selAfter === 'K24MVERSE',
+    JSON.stringify({ sceneBlocks: seqOv.sceneBlocks, firstName: seqOv.firstName, names: seqOv.names, selOpts: seqOv.selOpts, selAfter: seqOv.selAfter }));
+
   /* K9 -- errors last, after every interaction */
   check('K9 zero page errors through the run', pageErrors.length === 0, JSON.stringify(pageErrors.slice(0, 5)));
 

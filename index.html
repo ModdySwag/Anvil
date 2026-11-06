@@ -374,9 +374,21 @@ body.kb-armed .pk-keycap { color: #052e2a; background: #a7f4e9; border-color: va
 
 /* ============================================================================
    P4 — SEQUENCER (av_seq_ui.js · av_plock.js · av_seq_acid.js) — grid card skin */
-.av-seq { display: flex; flex-direction: column; gap: 8px; }
+.av-seq { display: flex; flex-direction: column; gap: 6px; }
 .av-seq-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
 .av-seq-title { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--teal); }
+
+/* C3-17 screen 6: the arrangement overview rides the face between the transport and the grid — the
+   song as bars with the loop bracket, and the captured scenes as blocks you can recall from. The
+   canvas pins its CSS height (trap 22) and the scene row wraps rather than overflowing. */
+.av-seq-ov { display: flex; flex-direction: column; gap: 2px; margin: 0; }
+.av-seq-ovcv { width: 100%; height: 28px; display: block; background: var(--panel); border: 1px solid var(--hair); border-radius: 6px; }
+.av-seq-ovrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.av-seq-ovscenes { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; flex: 0 1 auto; }
+.av-seq-ovscene { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 13px; padding: 0 4px; border: 1px dashed var(--hair); border-radius: 4px; font-family: var(--mono); font-size: 8px; color: var(--text-3); background: transparent; }
+.av-seq-ovscene.on { border-style: solid; border-color: var(--teal-deep); color: var(--teal); background: var(--raised); cursor: pointer; }
+.av-seq-ovscene.on:hover { border-color: var(--teal); color: var(--text); }
+.av-seq-ovcap { font-family: var(--mono); font-size: 9px; color: var(--text-3); margin-left: auto; white-space: nowrap; }
 .av-seq-cap { font-size: 10.5px; color: var(--text-3); }
 .av-seq-transport { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 /* C3-10: GEN + SONG fold behind two chips that ride the transport row (no extra row) — the
@@ -52258,6 +52270,8 @@ const avSeqUiState = {
   genMsg: "",                  /* last GEN status line (repainted after a rebuild) */
   songRowsKey: "",             /* song rows/timeline rebuild key */
   songPosKey: "",              /* #av-seq-song-pos text key */
+  ovKey: "",                   /* C3-17 overview caption key */
+  ovSceneKey: "",              /* C3-17 overview scene blocks key */
   songQuant: "beat",           /* the stored scene-recall quantisation default */
   uiSongPlaying: false,
 };
@@ -53055,6 +53069,8 @@ function avSeqUiSongPlaybackRefresh(host) {
       const bi = Math.floor(Number(blocks[i].dataset.row));
       blocks[i].classList.toggle("cur", playing && bi === row);
     }
+    /* C3-17: the face overview carries the same bracket */
+    try { avSeqUiOvRefresh(host); } catch (e) { /* next pass */ }
     return true;
   } catch (e) { return false; }
 }
@@ -53355,11 +53371,183 @@ function avSeqUiIoHTML() {
     '</div>';
 }
 
+/* ---------- C3-17 screen 6: the arrangement overview ----------
+
+   Above the grid, on the face: the song as BARS. Each row is a block whose width is its real span
+   (len x repeats, floor one pattern cycle), the current row carries the loop bracket while the song
+   runner walks it, and the captured scenes sit under the strip as blocks you can recall from (the
+   same path the RECALL button takes). The SONG block downstairs keeps its editable timeline; this
+   is the map you read without opening it, and it prints its own units (bars, seconds, tempo). */
+const AV_SEQ_UI_OV_STEPS = 16;          /* one bar = the default pattern cycle */
+
+function avSeqUiOvModel() {
+  try {
+    let song = null;
+    try { if (typeof avSeqSongSnap === "function") song = avSeqSongSnap(); } catch (e) { song = null; }
+    const rows = avSeqUiSongRowsModel(song);
+    let bpm = 120;
+    try {
+      if (typeof avParams !== "undefined" && avParams && isFinite(avParams["bpm"])) bpm = Number(avParams["bpm"]);
+      else if (typeof avState !== "undefined" && avState && isFinite(avState.bpm)) bpm = Number(avState.bpm);
+    } catch (e) { bpm = 120; }
+    bpm = Math.max(20, Math.min(300, bpm));
+    const blocks = [];
+    let total = 0;
+    if (rows.length) {
+      for (let i = 0; i < rows.length; i++) {
+        const L = rows[i].len || AV_SEQ_UI_OV_STEPS;
+        const span = Math.max(1, L * rows[i].repeats);
+        blocks.push({ i: i, span: span, label: rows[i].label || ("ROW " + (i + 1)), ref: rows[i].ref || "", repeats: rows[i].repeats });
+        total += span;
+      }
+    } else {
+      blocks.push({ i: 0, span: AV_SEQ_UI_OV_STEPS, label: "LIVE", ref: "", repeats: 1 });
+      total = AV_SEQ_UI_OV_STEPS;
+    }
+    return { blocks: blocks, total: total, bars: total / AV_SEQ_UI_OV_STEPS, bpm: bpm,
+      seconds: (total / AV_SEQ_UI_OV_STEPS) * 4 * 60 / bpm, rows: rows.length };
+  } catch (e) { return { blocks: [], total: 0, bars: 0, bpm: 120, seconds: 0, rows: 0 }; }
+}
+
+function avSeqUiOvCap(m, st) {
+  try {
+    const bars = m.bars >= 1 ? Math.round(m.bars * 100) / 100 : m.bars;
+    let s = bars + " bar" + (bars === 1 ? "" : "s") + " \u00b7 " + m.seconds.toFixed(1) + " s @ " + Math.round(m.bpm) + " bpm \u00b7 " +
+      (m.rows ? m.rows + " row" + (m.rows === 1 ? "" : "s") : "live pattern");
+    if (st && st.playing === true) s += " \u00b7 bracket = row " + (Number(st.row) + 1) + (Number(st.repeat) > 1 ? " rpt " + Number(st.repeat) : "");
+    else s += " \u00b7 bracket = whole song";
+    return s;
+  } catch (e) { return ""; }
+}
+
+function avSeqUiSongStatusSafe() {
+  try { if (typeof avSongStatus === "function") { const st = avSongStatus(); return (st && typeof st === "object") ? st : null; } } catch (e) { /* no runner */ }
+  return null;
+}
+
+function avSeqUiOvPaint(canvas, m, st) {
+  try {
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const box = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+    const cssW = Math.max(160, Math.round((box && box.width) || 640));
+    const cssH = Math.max(30, Math.round((box && box.height) || 56));
+    const dpr = Math.max(1, Math.min(3, (typeof window !== "undefined" && window.devicePixelRatio) || 1));
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+      canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const W = canvas.width, H = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    if (!m.blocks.length || !(m.total > 0)) return false;
+    const barH = H - 12 * dpr;                 /* the strip leaves room for the bracket under it */
+    let x = 0;
+    const cur = (st && st.playing === true && isFinite(Number(st.row))) ? Math.floor(Number(st.row)) : -1;
+    for (let i = 0; i < m.blocks.length; i++) {
+      const b = m.blocks[i];
+      const w = Math.max(2, (b.span / m.total) * W);
+      ctx.fillStyle = (b.i === cur) ? "rgba(46,216,201,0.28)" : "rgba(255,255,255,0.07)";
+      ctx.fillRect(x + 1 * dpr, 0, Math.max(1, w - 2 * dpr), barH);
+      ctx.strokeStyle = (b.i === cur) ? "#2ed8c9" : "rgba(255,255,255,0.18)";
+      ctx.lineWidth = Math.max(1, dpr * 0.8);
+      ctx.strokeRect(x + 1 * dpr, 0, Math.max(1, w - 2 * dpr), barH);
+      if (w > 30 * dpr && barH >= 12 * dpr) {
+        ctx.font = Math.round(8 * dpr) + "px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+        ctx.fillStyle = (b.i === cur) ? "#d8fbf7" : "rgba(210,226,231,0.72)";
+        ctx.textAlign = "left";
+        /* the repeat count rides the label: a right-aligned ×N sat flush against the NEXT block's
+           name and read as one string ("×2 GROOVE") */
+        const full = String(b.label) + (b.repeats > 1 ? " \u00d7" + b.repeats : "");
+        const txt = full.slice(0, Math.max(3, Math.floor(w / (4.8 * dpr))));
+        ctx.fillText(txt, x + 3 * dpr, barH / 2 + 2.8 * dpr);
+      }
+      x += w;
+    }
+    /* the loop bracket: the current row while the runner walks, otherwise the whole song */
+    const b0 = (cur >= 0 && m.blocks[cur]) ? m.blocks[cur] : null;
+    let bx0 = 0, bx1 = W;
+    if (b0) {
+      let acc = 0;
+      for (let i = 0; i < cur; i++) acc += m.blocks[i].span;
+      bx0 = (acc / m.total) * W; bx1 = ((acc + b0.span) / m.total) * W;
+    }
+    const by = H - 4 * dpr;
+    ctx.strokeStyle = "#2ed8c9";
+    ctx.lineWidth = Math.max(1, 1.4 * dpr);
+    ctx.beginPath();
+    ctx.moveTo(bx0 + 2 * dpr, by - 4 * dpr); ctx.lineTo(bx0 + 2 * dpr, by);
+    ctx.lineTo(Math.max(bx0 + 3 * dpr, bx1 - 2 * dpr), by); ctx.lineTo(Math.max(bx0 + 3 * dpr, bx1 - 2 * dpr), by - 4 * dpr);
+    ctx.stroke();
+    ctx.font = Math.round(8 * dpr) + "px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+    ctx.fillStyle = "rgba(46,216,201,0.9)";
+    ctx.textAlign = "right";
+    ctx.fillText("LOOP", Math.max(bx0 + 3 * dpr, bx1 - 2 * dpr) - 2 * dpr, by - 5 * dpr);
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSeqUiOvScenesHTML(host) {
+  let scenes = [];
+  try { if (typeof avSeqScenesSnap === "function") { const s = avSeqScenesSnap(); scenes = (s && Array.isArray(s.scenes)) ? s.scenes : []; } } catch (e) { scenes = []; }
+  let out = "";
+  /* only the scenes that exist: sixteen dashed placeholders were pure noise (the CAPTURE and RECALL
+     controls already sit downstream in the SONG block) */
+  for (let i = 0; i < scenes.length && i < AV_SEQ_SCENE_CAP; i++) {
+    const sc = scenes[i];
+    if (!sc || !sc.name) continue;
+    out += '<button type="button" class="av-seq-ovscene on" data-seq-scene="' + avSeqUiEsc(sc.name) + '" title="Recall scene ' +
+      avSeqUiEsc(sc.name) + '">' + avSeqUiEsc(String(sc.name).slice(0, 10)) + "</button>";
+  }
+  if (!out) out = '<span class="av-seq-ovscene av-dim">no scenes captured</span>';
+  return out;
+}
+
+function avSeqUiOvRefresh(host) {
+  try {
+    if (!host || typeof host.querySelector !== "function") return false;
+    const box = host.querySelector(".av-seq-ov");
+    if (!box) return false;
+    const m = avSeqUiOvModel();
+    const st = avSeqUiSongStatusSafe();
+    const cv = box.querySelector(".av-seq-ovcv");
+    if (cv) avSeqUiOvPaint(cv, m, st);
+    const cap = box.querySelector(".av-seq-ovcap");
+    if (cap) {
+      const txt = avSeqUiOvCap(m, st);
+      const key = "ov:" + txt + ":" + (st && st.playing ? "p" : "-");
+      if (avSeqUiState.ovKey !== key) { avSeqUiState.ovKey = key; cap.textContent = txt; }
+    }
+    const sc = box.querySelector(".av-seq-ovscenes");
+    if (sc) {
+      let names = "";
+      try { if (typeof avSeqScenesSnap === "function") { const s = avSeqScenesSnap(); names = (s && Array.isArray(s.scenes)) ? s.scenes.map(x => x && x.name ? x.name : "").join("|") : ""; } } catch (e) { names = ""; }
+      if (avSeqUiState.ovSceneKey !== names) { avSeqUiState.ovSceneKey = names; sc.innerHTML = avSeqUiOvScenesHTML(host); }
+    }
+    /* a hidden card has no box, so the canvas paints at its fallback size: repaint the moment the
+       pane gives it one (trap 20) */
+    if (cv && typeof ResizeObserver === "function" && !box.__avSeqOvRO) {
+      box.__avSeqOvRO = new ResizeObserver(function () { try { avSeqUiOvRefresh(avSeqUiHost()); } catch (e2) { } });
+      box.__avSeqOvRO.observe(box);
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSeqUiOvHTML() {
+  return '<div class="av-seq-ov" data-av-ov="1">' +
+    '<canvas class="av-seq-ovcv" aria-label="Arrangement overview: song rows as bars with the loop bracket"></canvas>' +
+    '<div class="av-seq-ovrow">' +
+    '<div class="av-seq-ovscenes" aria-label="Captured scenes (click to recall)"></div>' +
+    '<span class="av-seq-ovcap av-dim"></span></div></div>';
+}
+
 function avSeqUiBodyHTML(snap) {
   return '<div class="av-seq" data-av-seq="1">' +
     '<div class="av-seq-head"><span class="av-seq-title">SEQUENCER</span>' +
-    '<span class="av-seq-cap">16th step grid · per-track len / speed / swing · generative ops under GEN · arrangement rows under ARRANGER · commits ride avApplyParam / the core model</span></div>' +
+    '<span class="av-seq-cap">16th step grid \u00b7 per-track len / speed / swing \u00b7 arrangement overview above the grid \u00b7 GEN and SONG fold behind their chips</span></div>' +
     avSeqUiTransportHTML() +
+    avSeqUiOvHTML() +
     avSeqUiGridHTML(snap) +
     avSeqUiInspHTML() +
     avSeqUiGenHTML() +
@@ -53533,10 +53721,13 @@ function avSeqUiSceneNames() {
   try {
     if (typeof avSeqScenesSnap === "function") {
       const a = avSeqScenesSnap();
-      if (Array.isArray(a)) {
+      /* C3-17: the core hands back {v, scenes}; the old array-only branch left the select empty,
+         which meant RECALL never had a value to read. Accept both shapes. */
+      const arr = Array.isArray(a) ? a : ((a && Array.isArray(a.scenes)) ? a.scenes : null);
+      if (arr) {
         const out = [];
-        for (let i = 0; i < a.length && out.length < 32; i++) {
-          const x = a[i];
+        for (let i = 0; i < arr.length && out.length < 32; i++) {
+          const x = arr[i];
           if (typeof x === "string" && x) out.push(x);
           else if (x && typeof x === "object" && (x.name || x.id)) out.push(String(x.name || x.id));
         }
@@ -53649,6 +53840,7 @@ function avSeqUiSync() {
     avSeqUiGenRefresh(host);
     avSeqUiSongRefresh(host);
     avSeqUiSongPlaybackRefresh(host);
+    try { avSeqUiOvRefresh(host); } catch (e) { /* the overview repaints on the next pass */ }
     /* keep every knob on the card honest to the mirror (BPM is the only one today) */
     try {
       const knob = host.querySelector('.av-knob[data-knob="bpm"]');
@@ -53829,6 +54021,18 @@ function avSeqUiClick(e) {
     if (t.closest("#av-seq-song-clear")) { avSeqUiChainClear(); return; }
     if (t.closest("#av-seq-scene-cap")) { avSeqUiSceneCaptureUI(); return; }
     if (t.closest("#av-seq-scene-recall")) { avSeqUiSceneRecallUI(); return; }
+    const ovScene = t.closest("[data-seq-scene]");
+    if (ovScene) {
+      const nm = String(ovScene.getAttribute("data-seq-scene") || "");
+      const selEl = avSeqUiHost() ? avSeqUiHost().querySelector("#av-seq-scene-sel") : null;
+      if (nm && selEl) {
+        /* the select is rebuilt from avSeqUiSceneNames(); make sure it carries the name before recall */
+        if (!selEl.querySelector('option[value="' + nm.replace(/"/g, '\\"') + '"]')) avSeqUiSync();
+        selEl.value = nm;
+        if (String(selEl.value || "") === nm) avSeqUiSceneRecallUI();
+      }
+      return;
+    }
     if (t.closest("#av-seq-export")) { avSeqUiExport(); return; }
     if (t.closest("#av-seq-import")) { avSeqUiImport(); return; }
     /* M2 — the GEN block */
@@ -54149,6 +54353,7 @@ function avSeqUiClasses() {
     "av-seq-song-rows", "av-seq-songrow", "av-seq-songrow-idx", "av-seq-songrow-ref", "av-seq-songrow-label",
     "av-seq-songrow-mutes", "av-seq-songrow-mute", "av-seq-songrow-btn",
     "av-seq-song-timeline", "av-seq-tl-block",
+    "av-seq-ov", "av-seq-ovcv", "av-seq-ovscenes", "av-seq-ovscene", "av-seq-ovcap",
     "av-seq-song-export", "av-seq-song-file", "av-seq-song-openbtn", "av-seq-song-status",
     "av-seq-scene-row", "av-seq-scene-name", "av-seq-scene-sel",
     "av-seq-io", "av-seq-io-row", "av-seq-io-area",
