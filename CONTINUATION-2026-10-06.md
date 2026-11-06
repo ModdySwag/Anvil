@@ -1,6 +1,54 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## SAVE 2026-11-06 10:45 — C2 IS CLOSED; C3 IS NEXT
+## SAVE 2026-11-06 11:55 — C2b FIT PASS (owner eye pass fixes), frozen at b7ea1627
+
+The owner drove the live surface after C2 and flagged formatting: overlapping kind-key text,
+clipped pot value lines, a crushed control in the band. All were real and all were measured before
+touching (probes: `cache/scratch/probe_c2_layout.mjs`, `probe_band.mjs`).
+
+**Root causes (each proven by a rect, not a guess)**
+1. `.av-kind-txt` (the inspector's own label span) had NO CSS rule at all, so it painted at body
+   size over the 26px keys; the small caps under the keys are the button's `::after`.
+2. The six core pots were wrapped in `avKnobRowHTML(...)` — the 3-column grid saw ONE child and
+   stacked them (core 490px tall, frame 763).
+3. The screen canvases carry `width=220 height=84` as their backing store but had no CSS size, so
+   each painted 84px tall inside a 42-62px box and spilled over the screen below; and
+   `#av-insp-filter` was missing the `position: relative` the other two screens have, so its corner
+   label ("LP 800 R30") anchored to the frame instead of the filter.
+4. The band needed ~1690px of content in 1420. Every group was `flex: none` EXCEPT `pots` (a later
+   C1b rule made it shrinkable), so the pots group absorbed the entire shortfall and collapsed to
+   20px — the "cut knob" in the owner's screenshot. The view group was a 429px single-row rail.
+5. The LCD carried 307px of rows in a 109px glass: the console adopts `#av-tier` ("tap: armed ·
+   engine: worklet") and `#av-voices` into the engine row by id.
+
+**Fixes**
+- `src/av_inspector.js`: core pots are direct grid children; voices + POLY/MONO share a foot row;
+  the key label span is kept for the accessible name.
+- `src/styles.css` (C2b blocks): key legend grid `repeat(4, minmax(0,1fr))` + SR-only `.av-kind-txt`;
+  pots 3x2 at 40px caps; screens 42/50/52 with `canvas{width:100%;height:100%}` and the filter's
+  `position:relative`; launchers 4x2; band groups never shrink except the identity (which absorbs
+  slack), view keys as a 5x2 grid, LCD bezel 188 (glass 157), tier/voices chips and the CPU% readout
+  off the glass (both stay live in the DOM — the inspector reads #av-voices), tempo cell compact,
+  pots 44px cells at 1440 / 40px at 1280, plate stacks at 1280.
+- `verify/cdp_chassis.mjs`: **K21** pins the band fit (`scrollWidth <= clientWidth` per group and for
+  the strip). This is the leg that would have caught the original crush.
+- `verify/cdp_rec.mjs`: its pin lives in an `||` fallback, not an `EXPECT_SHA = '...'` literal — the
+  sweep must match any 64-hex constant, not just the constant form.
+
+**Measured after**: inspector 604/604 at 1440x900 (596 at 1280x800, scrolls ~90); every band group
+fits at both widths (identity 362/362, band 1420/1420); all three LCD rows 147/147 and 145/145.
+Gates on b7ea1627: chassis 22/22 · fit 49/49 · a11y 32/32 · smoke 81/81 · cockpit 21/21 ·
+knob_feel 18/18 · s5 36/36; then the full battery (`verify/battery_c2d.log`).
+
+**Traps paid for**
+- Band overrides need an `#av-band` ancestor: the console's buttons are `#av-band .av-btn.mini`
+  (1,2,0), which beats any class-only selector — three of my first fixes silently did nothing.
+- `scrollWidth > clientWidth` is the fit witness; `getBoundingClientRect().width` alone hides a
+  crushed flex item (its box is small, its content spills).
+- A hidden element still answers `textContent` — hiding a diagnostic field keeps every rig that
+  reads it green, so "off the glass" must be stated in the wave doc, not inferred from a red leg.
+
+## (superseded) SAVE 2026-11-06 10:45 — C2 IS CLOSED; C3 IS NEXT
 
 C2 (inspector live) is done, committed (`eab4570`) and frozen at **8d92be74** (4,731,363 B). All 23
 rig pins are swept to it. The 08:22 save's open item 1 is closed; the co-writer session is gone — this
