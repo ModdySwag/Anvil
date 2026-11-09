@@ -1,6 +1,96 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVED FOR A CONTINUED SESSION (2026-11-07 02:15, session 24 FINAL). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVED FOR A CONTINUED SESSION (2026-11-10, session 25). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- **Code HEAD `810d4e3`** (two commits on top of session 24's `93a0108`: `ab38a4d` C5 item 1,
+  `810d4e3` C5 items 2-4).
+- Bundle `index.html` sha256
+  `3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3`, **4,869,722 B**. Tree clean.
+- All 23 `verify/cdp_*.mjs` pins carry that one sha (`STALE REMAINING: none`).
+- **Per-card gate = FAST LANE**, clean in **87 s** on these bytes: chassis **46/46** (K24c…K24o) ·
+  **a11y 37** (was 33 — four new legs, I1-I4) · smoke 81 · m1 33 · m2 40.
+- Card rigs green on these bytes: `cdp_fit` 49 · `cdp_s4` 42 · `cdp_mix` 47 · `cdp_fx` 28 ·
+  `cdp_seq` 41 · `cdp_code` 36 · `cdp_midi` 34. (comp/studio not re-run this session — no surface
+  they read was touched.)
+- **DENSITY — K23 at 1280 is UNCHANGED from session 24**: sequence **1.18**, system/family **1.19**
+  (knife-edge, 0.01-0.02 under the gate), browse/import 1.15, sound/chop 1.13, wt 1.13, engine 1.10,
+  code 1.08, fm 1.07, matrix 1.07, effects 1.01. Both C5 commits were attributes/DOM only and the
+  board proved it. **Cite K23, never a card's lab ratio.**
+
+### WHAT LANDED THIS SESSION — C5 IS COMPLETE EXCEPT THE OWNER CALL
+| item | commit | what it is | proof |
+|---|---|---|---|
+| **C5-1 the 24 chips** | `ab38a4d` | every `.av-adv-chip` sync sets `aria-expanded` beside `hidden` (folded false / open true) in all seven creation sites: CHOP, CODE, FX (two sync paths), SYSTEM->MIDI, MIX, SEQUENCE, SOUND->ENGINE. SHAPE's `.av-mod-rows-chip` already did it since C3-11 and was the pattern. | `c5audit.mjs`: folds **79/79** carry it (was 55/79) |
+| **C5-2 FM tab set** | `810d4e3` | tabs `id=av-fm-op-tab-N` + `aria-controls`, panels `id=av-fm-op-panel-N` + `aria-labelledby` (panel `aria-label` dropped); **one tab stop** (roving tabindex kept by `avFmPaintOps`), Arrow L/R/U/D + Home/End in `avFmWire`; click stays the only commit path | a11y I2, `tabsWithControls` 25->31 |
+| **C5-2b help overlay** | `810d4e3` | the audit only walked the nine zones, so it missed `#av-help-tab-shortcuts/-tour/-guides/-tips`: role=tab, ids, **no aria-controls**, panes with aria-label and no aria-labelledby. Same fix. | whole document **44 tabs / 44 panels / 0 unresolved** (a11y I1) |
+| **C5-4 focus order RECORDED** | `810d4e3` | `cdp_a11y` I3 walks all nine pages and records the order **chrome (skip link + 5 menu items) -> band -> tab bar -> pane -> inspector**; I4 proves it with REAL CDP Tabs from `#av-a11y-skip` (5 menu items then `#avc-play`, `#avc-stop`, `#avc-song` — predicted === real) | stops per page: browse 133 · perform 128 · sound 152 · shape 158 · sequence 228 · effects 143 · mix 139 · deliver 132 · system 138 |
+
+**The audit's own correction** (recorded in `docs/15`): the 7 `.av-fx-toggle`s are NOT disclosures —
+`avFxToggleHTML` builds a module on/off switch carrying `aria-pressed` and an ON light, and
+`cdp_fx.expandFolds()` clicks chips, never them. They were left truthful (7/7 aria-pressed) and
+`c5audit.mjs` now measures them as their own class. Adding `aria-expanded` would have been a lie.
+
+### THE COMPLETE REMAINING QUEUE
+**A. C5 item 5 — GROUPS: owner call, then paint only.** 0 `.av-group` boxes in the app (the inspector's
+frame carries the class but is not the §5 box). Not started, deliberately.
+
+**B. C4 LEFTOVERS — owner calls.** `.av-fader` has no home (candidates: DELIVER master level or MIX
+per-track gain — do not invent one). `.av-group` is the same call as A.
+
+**C. TWO C2 LEFTOVERS.** mono is not per-patch (`env.mono` is not in the pack/preset schema);
+latency/buffer has no LCD cell (`verify/_c2_wave.md` §5).
+
+**D. C6 RELEASE v1.15.0 — nothing started.** Shots + README shots, pin sweep, **FULL wave battery**
+(28 rigs + bench + alias + stress, ~35 min, nothing else open, on the FINAL bytes —
+`verify/battery_c3l.log` is VOID), installer, downloads card, deploy. **The live site is still the
+2026-10-09 build**: nothing from C1-C5 is deployed. `windows/stage/Anvil/resources/app/index.html` is
+still the **stale** Oct 9 copy (4,604,527 B, sha `6ac4425b…`) — re-stage from the new bundle.
+
+**E. OWNER EYE GATES (his eye, not a screenshot).** The five folded surfaces (MIX · SYSTEM->MIDI ·
+EFFECTS · SOUND/ENGINE · CHOP), FM two-column + the new tab keys, WT two-row + LIBRARY chip, CODE folds,
+SEQUENCE folds + relocated FILL, matrix strip, filter inset, ENVELOPES section, six FX screens, the MIX
+master EQ + strip waveforms, the SHAPE routing graph + ROWS chip, the SEQUENCE overview + scene blocks,
+the BITS/PAIR + KIND/PAIR + FADE/OFST steppers, **and now the help overlay's tab set**. Plus a verdict
+on folding the LEVELS card.
+
+### TRAPS — 31 now (every one has cost a session)
+1 cascade `!important` · 2 a fold that hides an interactive control breaks rigs · 3 a wrapper can swallow
+the working surface · 4 autocrlf = rebuild · 5 pin sweep old->new only · 6 `Target crashed` = 0 checks ·
+7 never a second browser in a battery · 8 K23 null must fail · 9 cockpit pane law · 10 knife-edge legs
+(**cdp_store install-progress, cdp_sessions version ring, cdp_hub reload, cdp_studio metronome — all
+proven solo**) · 11 budget zone chrome first · 12 a paired row 5px over wraps · 13 a fold's chip must not
+buy a row · 14 a hidden zone measures 0 · 15 a fold is only legal on chrome · 16 FILL belonged on the face ·
+17 check the class is carried · 18 flex-basis wraps before shrinking · 19 a probe must write a differing
+value · 20 a folded canvas has no box (ResizeObserver + settle) · 21 indefinite `100%` collapses ·
+22 a canvas without a CSS height feeds back into layout · 23 **sweep by the hash the rigs ACTUALLY carry** ·
+24 a measuring leg must land the zone's OWN sub-tab first · 25 `0 === 0` must never pass a no-height leg ·
+26 a canvas leg must settle in a SECOND evaluate · 27 `querySelector('.av-mod-sec-lbl')` finds MACROS, not
+MATRIX — match the label text · **28 a class name can lie about its semantics — `.av-fx-toggle` is an
+aria-pressed switch, not a disclosure; read the builder before annotating** · **29 a zone-scoped audit
+misses the overlays — count the whole document (the help dialog's four tabs)** · **30 a `timeout` over
+600 s silently backgrounds the call; the MSYS job then writes `stdin is not a tty` into every redirected
+log and runs nothing — keep rig loops foreground, split into batches** · **31 Tab from a warmed page is
+not a fresh walk: Chromium continues from the last focused element, so focus the skip link (or reload)
+before recording a real Tab sequence.**
+**ENV:** port 10080 binds DevTools but never yields a page target — lab scripts start at **10250+**.
+
+### TOOLS (cache/ is gitignored)
+`cardprobe.mjs <zone> [sub] [shot]` · `rowprobe.mjs <zone> <sub|-> "<sel>"` · `views.mjs` ·
+`battery_fast.sh <card-rig>` · `battery_c3*.sh` (full templates) · `sweep_pins.py --old <sha>` ·
+`c5audit.mjs` (disclosure inventory — **selector corrected**, `.av-fx-toggle` measured separately) ·
+**`focuswalk.mjs` (new: the tab contract over the whole document, the FM arrow walk, the per-zone focus
+order, the real Tab prefix)** · session 24: `mixlab3.mjs` · `mixshot2.mjs` · `mixeqcheck.mjs` ·
+`shapelab.mjs` · `shapeshot.mjs` · `ab-mix.mjs` · `seqlab.mjs` · `seqshot.mjs` · `c4audit.mjs`.
+
+### FIRST MOVES NEXT SESSION
+1. Read this block; `bash cache/scratch/battery_fast.sh` on `3fde8da2` (about 90 s) to prove the tree.
+2. The two owner calls (.av-fader home, groups) — they are decisions, not work.
+3. C6 v1.15.0: re-stage `windows/stage`, take the shots, then the FULL wave battery on the final bytes
+   with nothing else open, then installer + downloads card + deploy.
+
+## SAVE 2026-11-07 02:15 (session 24 FINAL) — superseded by the block above; its content follows unchanged.
+
 
 ### STATE (proven, not claimed)
 - **Code HEAD `93a0108`.** (A save commit sits on top of it and touches only this file — `git log -1`
