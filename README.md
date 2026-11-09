@@ -11,7 +11,7 @@ Pattern Forge (the Strudel-powered workstation at moddys.net/forge), from the sa
 lines of HTML/CSS/JS in `src/`, no framework and no bundler beyond its own `build.py`.
 
 - Live app: **https://moddys.net/anvil/** (free, in the browser, installable as an app)
-- Windows app: **the 1.15.0 beta** - download the installer from
+- Windows app: **1.15.0** - download the installer from
   [moddys.net/moddys-downloads.html](https://moddys.net/moddys-downloads.html) or
   [Releases](https://github.com/ModdySwag/Anvil/releases); each build ships with its
   corresponding source (AGPL-3.0-or-later).
@@ -20,17 +20,17 @@ lines of HTML/CSS/JS in `src/`, no framework and no bundler beyond its own `buil
 - (c) 2026 Modtech (Moddy) - free software under the **GNU AGPL-3.0-or-later** licence
   (see `LICENSE`).
 
-Shipped file: **4,604,527 bytes**, sha256
-`6ac4425b8d42fa583b8d2b17b04629039f00491c3890a98c3209dd26e93fa02e`; the deployed copy at
-moddys.net/anvil is byte-identical to the built local file (checked 2026-10-09).
+Shipped file: **4,869,715 bytes**, sha256
+`9bac5f565dfac29d3d18f690d5acd2437254837fad6bc4fe89ccea4d075b6d67`; these are the same bytes at
+moddys.net/anvil, inside the Windows installer, and in the source zip (checked at build time).
 
 ## Screenshots
 
 The Windows build, captured from the app itself:
 
-![Anvil - the cockpit: the SYNTH zone, the module rail and the console](screenshots/anvil-cockpit.jpg)
-![Anvil - the store and the import hub: the pack catalog and the import card](screenshots/anvil-hub.jpg)
-![Anvil - the sequencer: the demo groove, the step grid and the generative tools](screenshots/anvil-seq.jpg)
+![Anvil - the cockpit: the SOUND page, the synth card and the console](screenshots/anvil-cockpit.jpg)
+![Anvil - the store: the pack catalogue with every pack's install state](screenshots/anvil-hub.jpg)
+![Anvil - the sequencer: the demo groove, the step grid and the arrangement overview](screenshots/anvil-seq.jpg)
 
 ## Quick start
 
@@ -77,7 +77,7 @@ headless verification suites need Node 21+.
 
 ## The Windows app
 
-The 1.15.0 beta is the same instrument in its own window: no browser, no tabs, a per-user
+The Windows build is the same instrument in its own window: no browser, no tabs, a per-user
 installer (no admin prompt) and an uninstall that keeps your data by default. It starts and
 plays with no network at all. The installer is not code-signed yet, so SmartScreen will say it
 hasn't seen the app before - More info, then Run anyway. Your sounds live in

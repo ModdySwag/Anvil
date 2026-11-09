@@ -28,7 +28,7 @@ identically once pasted into the page.
     <div>
       <h2 class="name">Anvil</h2>
       <div class="pills">
-        <span class="pill ver">v1.15.0-beta</span>
+        <span class="pill ver">v1.15.0</span>
         <span class="pill">Windows 10/11 &middot; 64-bit</span>
         <span class="pill">desktop app</span>
         <span class="pill">AGPL-3.0</span>
@@ -102,7 +102,7 @@ identically once pasted into the page.
     <div class="fine">
       On Windows: <code>certutil -hashfile "Anvil-1.15.0-Setup.exe.zip" SHA256</code> &mdash;
       the exe inside unzips to the second hash, which is also the installer attached to the
-      <b>v1.15.0-beta</b> release on GitHub. The installer carries app build
+      <b>v1.15.0</b> release on GitHub. The installer carries app build
       <code>6ac4425b</code>, the same build that is live at moddys.net/anvil.
     </div>
   </details>
@@ -117,7 +117,7 @@ identically once pasted into the page.
 
   <div class="acts">
     <a class="go ghost" href="https://moddys.net/anvil/" target="_blank" rel="noopener">Run it in the browser &mdash; moddys.net/anvil</a>
-    <a class="go ghost" href="https://github.com/ModdySwag/Anvil/releases/tag/v1.15.0-beta" target="_blank" rel="noopener">Release notes, installer &amp; source on GitHub</a>
+    <a class="go ghost" href="https://github.com/ModdySwag/Anvil/releases/tag/v1.15.0" target="_blank" rel="noopener">Release notes, installer &amp; source on GitHub</a>
     <a class="go ghost" href="downloads/Anvil-1.15.0-source.zip" download>Corresponding source (AGPL-3.0-or-later)</a>
   </div>
 </div>

@@ -91,15 +91,19 @@ try {
   };
   const call = async (expr, tag) => { const r = await ev(expr); console.log(tag + ': ' + JSON.stringify(r)); return r; };
 
-  /* 01 -- boot: the app's default surface, settled after the engine/boot load */
+  /* 01 -- the SOUND page (the instrument's engine surface). C1 renamed the zones to the nine
+     signal-order pages, so the shots name the page they want instead of the old 'synth'/'store'/
+     'seq' aliases the pre-chassis build used. */
   await sleep(2500);
+  await call(`(() => { try { return { ok: avZoneShow('sound', { source: 'shots' }) === true }; } catch (e) { return { err: String(e) }; } })()`, 'sound zone');
+  await sleep(1200);
   await shot('desktop-01-boot');
 
   /* 02 -- hub: the STORE zone with the import hub card revealed (the app's own zone switch) */
-  await call(`(() => { try { if (typeof avZoneShow === 'function') return { ok: avZoneShow('store', { source: 'shots' }) === true }; return { ok: false, why: 'no avZoneShow' }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`, 'store zone');
-  await sleep(900);
-  await call(`(() => { try { if (typeof avImportUiReveal === 'function') return { ok: avImportUiReveal() === true }; return { ok: false, why: 'no avImportUiReveal' }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`, 'hub reveal');
-  await sleep(900);
+  await call(`(() => { try { if (typeof avZoneShow === 'function') return { ok: avZoneShow('browse', { source: 'shots' }) === true }; return { ok: false, why: 'no avZoneShow' }; } catch (e) { return { err: String((e && e.message) || e) }; } })()`, 'browse zone');
+  await sleep(800);
+  await call(`(() => { const b = document.querySelector('#av-zone-browse .av-subtab[data-sub="packs"]'); if (!b) return { ok: false, why: 'no packs subtab' }; b.click(); return { ok: true }; })()`, 'packs sub');
+  await sleep(1100);
   await shot('desktop-02-hub');
 
   /* 03 -- seq: the demo groove in the sequencer. Press the app's own FIRST SOUND control (the
@@ -110,7 +114,7 @@ try {
   if (!demo || demo.loaded !== true) console.log('WARN: the demo groove did not load');
   await sleep(1600);
 
-  await call(`(() => { try { return { ok: avZoneShow('seq', { source: 'shots' }) === true }; } catch (e) { return { err: String(e) }; } })()`, 'seq zone');
+  await call(`(() => { try { return { ok: avZoneShow('sequence', { source: 'shots' }) === true }; } catch (e) { return { err: String(e) }; } })()`, 'sequence zone');
   await sleep(1200);
   console.log('seq playing:', JSON.stringify(await ev(`(typeof avSeqIsPlaying === 'function') ? avSeqIsPlaying() : null`)));
 

@@ -70,7 +70,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
    P7: the integrated index.html sha does not exist at authoring time - EXPECT_SHA stays null
    until the parent pins it (constant below or --sha <hex>); while null the rig still enforces
    before === after and prints a pin note (never loosened). */
-const EXPECT_SHA = "3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3";   /* sa-C pin slot - parent fills after the P7 build (or --sha <hex>) */
+const EXPECT_SHA = "9bac5f565dfac29d3d18f690d5acd2437254837fad6bc4fe89ccea4d075b6d67";   /* sa-C pin slot - parent fills after the P7 build (or --sha <hex>) */
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);

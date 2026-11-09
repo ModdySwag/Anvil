@@ -67,7 +67,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
    authoring. A valid --sha <hex> becomes the run-time expectation while the constant is null,
    and echoes/overrides the constant once pinned (cdp_hub semantics, verbatim). The rig never
    loosens the before === after check. */
-const EXPECT_SHA = '3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3';
+const EXPECT_SHA = '9bac5f565dfac29d3d18f690d5acd2437254837fad6bc4fe89ccea4d075b6d67';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -247,6 +247,28 @@ function tuneWitnessInstall() {
       const ss = window.__tuneRig.sigStats(W.td);
       const pk = window.__tuneRig.peakOf(W.td, W.sr, loHz, hiHz);
       return { ok: true, hz: pk.hz, db: pk.db, rms: ss.rms, peakAmp: ss.peak, bin: pk.bin, df: pk.df, interp: pk.interp };
+    } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
+  };
+  /* liveness (no FFT): the context must actually be RENDERING and its clock must move - a
+     suspended context hands back a STALE capture buffer that looks like audio */
+  API.state = function () {
+    try {
+      const W = API.W;
+      if (!W) return { ok: false, why: 'witness not armed' };
+      return { ok: true, state: String(W.ctx.state || ''), t: W.ctx.currentTime, sr: W.sr };
+    } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
+  };
+  /* buffer identity: a frame stamp over the live capture. A STALE (frozen) analyser returns the
+     SAME stamp twice; one that is rendering does not. This is what separates "the note is sounding"
+     from "the context is running but this buffer is the boot tail". */
+  API.tap = function () {
+    try {
+      const W = API.W;
+      if (!W) return { ok: false, why: 'witness not armed' };
+      W.an.getFloatTimeDomainData(W.td);
+      let h = 2166136261;
+      for (let i = 0; i < W.td.length; i += 97) { h = (h ^ Math.round(W.td[i] * 1e6)) >>> 0; h = Math.imul(h, 16777619) >>> 0; }
+      return { ok: true, h: h };
     } catch (e) { return { ok: false, why: String((e && e.message) || e) }; }
   };
   /* light flow gate (no FFT): the rms/peak of the CURRENT capture window */
@@ -521,43 +543,61 @@ async function main() {
      flows (rms > 0.001, ~100 ms steps, 3 s deadline - the first read used to race the audio path),
      then FFT the settled window. A timeout keeps the raw read as the honest failure evidence. */
   const measureE4 = async () => {
-    /* full-capture retry: the first touch after boot can race the audio path (a dry capture);
-       up to 3 attempts, each = fire -> poll flow (rms>0.001, 3 s) -> settle -> re-check -> FFT. */
+    /* MEASURED FIXTURE (2026-11-10): the analyser window is 32768 frames = 683 ms at 48 kHz, so a
+       read taken less than ~650 ms after a fresh note is HALF EMPTY and the argmax lands on a
+       smeared bin - measured on these bytes as a 329.63 Hz note reported at 523.25 / 213.9 / 106.8
+       Hz while the rms still read ~0.065 against 0.108 for a full window (and the same failure
+       reproduces on the session-24 bytes, so it is the capture, never the app). The fix is physics,
+       not a loosened assertion: silence the previous voice, fire the note, wait one whole window,
+       then read ONCE. Envelope measured with cache/scratch/tunewit-probe.mjs: the window is full at
+       ~650 ms; the release reaches silence in ~600 ms. */
+    const quiet = async (ms) => {
+      await ev(`(() => { try { avNoteUp('e4'); } catch (e) { /* no voice */ } return true; })()`);
+      await sleep(ms);
+    };
+    /* WARM-UP (measured 2026-11-10): the FIRST note of a fresh page NEVER reaches this analyser -
+       on both this build and the session-24 bytes it reads a 523 Hz residual at rms 0.04 while the
+       second and later notes read the true fundamental at rms 0.11. One throwaway note, fully
+       released, moves the race off the measured note without touching the assertion. */
+    if (!measureE4.warmed) {
+      measureE4.warmed = true;
+      await quiet(300);
+      await ev(`(() => { try { avNoteDown('e4', 1.0); } catch (e) { } return true; })()`);
+      await sleep(1200);
+      await quiet(700);
+    }
     let last = null;
     for (let attempt = 1; attempt <= 3; attempt++) {
+      await quiet(650);
       let dn = (await ev(`(() => { const ok = avNoteDown('e4', 1.0); return { ok: ok === true }; })()`)).value;
       if (!dn || dn.ok !== true) {
-        await ev(`(() => { try { avNoteUp('e4'); } catch (e) { /* retry path */ } return true; })()`);
-        await sleep(220);
+        await quiet(400);
         dn = (await ev(`(() => { const ok = avNoteDown('e4', 1.0); return { ok: ok === true, retry: true }; })()`)).value;
       }
       if (!dn || dn.ok !== true) return { err: 'note-down refused', dn: dn };
-      let flow = null, rmsLast = null;
       const t0 = Date.now();
-      while (Date.now() - t0 < 3000) {
-        rmsLast = (await ev('window.__tuneWit && typeof window.__tuneWit.rms === "function" ? window.__tuneWit.rms() : null')).value || null;
-        if (rmsLast && rmsLast.ok === true && typeof rmsLast.rms === 'number' && rmsLast.rms > 0.001) { flow = rmsLast; break; }
-        await sleep(100);
+      await sleep(800);                                  /* one full 683 ms window + margin */
+      const s1 = (await ev('window.__tuneWit && typeof window.__tuneWit.state === "function" ? window.__tuneWit.state() : null')).value || null;
+      const t1 = (await ev('window.__tuneWit && typeof window.__tuneWit.tap === "function" ? window.__tuneWit.tap() : null')).value || null;
+      await sleep(150);
+      const s2 = (await ev('window.__tuneWit && typeof window.__tuneWit.state === "function" ? window.__tuneWit.state() : null')).value || null;
+      const t2 = (await ev('window.__tuneWit && typeof window.__tuneWit.tap === "function" ? window.__tuneWit.tap() : null')).value || null;
+      const flow = (await ev('window.__tuneWit && typeof window.__tuneWit.rms === "function" ? window.__tuneWit.rms() : null')).value || null;
+      const adv = !!(s1 && s2 && s1.ok === true && s2.ok === true
+        && typeof s1.t === 'number' && typeof s2.t === 'number' && (s2.t - s1.t) >= 0.1);
+      /* the buffer must be UPDATING (two different stamps) as well as loud enough to be a full window */
+      const moving = !!(t1 && t2 && t1.ok === true && t2.ok === true && typeof t1.h === 'number' && typeof t2.h === 'number' && t1.h !== t2.h);
+      if (adv === true && moving === true && flow && flow.ok === true && typeof flow.rms === 'number' && flow.rms > 0.02) {
+        const read = (await ev('window.__tuneWit ? window.__tuneWit.read(80, 1200) : null')).value;
+        const up = (await ev(`(() => { const ok = avNoteUp('e4'); return { ok: ok === true }; })()`)).value;
+        await sleep(240);
+        return { dn: dn, read: read, up: up, flowMs: Date.now() - t0, rmsFlow: flow.rms, live: { adv: adv, state: s2 && s2.state }, attempts: attempt };
       }
-      const flowMs = flow ? (Date.now() - t0) : null;
-      if (flow) {
-        await sleep(250);                                  /* a short settle inside the steady sustain */
-        const settle = (await ev('window.__tuneWit && typeof window.__tuneWit.rms === "function" ? window.__tuneWit.rms() : null')).value || null;
-        if (settle && settle.ok === true && typeof settle.rms === 'number' && settle.rms > 0.001) {
-          const read = (await ev('window.__tuneWit ? window.__tuneWit.read(80, 1200) : null')).value;
-          const up = (await ev(`(() => { const ok = avNoteUp('e4'); return { ok: ok === true }; })()`)).value;
-          await sleep(240);
-          return { dn: dn, read: read, up: up, flowMs: flowMs, rmsFlow: flow.rms, peakFlow: flow.peakAmp, attempts: attempt };
-        }
-        last = { flowMs: flowMs, rmsSettle: settle, rmsFlow: flow.rms };
-      } else {
-        last = { flowMs: null, rmsPoll: rmsLast };
-      }
-      await ev(`(() => { try { avNoteUp('e4'); } catch (e) { /* attempt reset */ } return true; })()`);
-      await sleep(320);                                    /* let the tail drain before the next touch */
+      last = { flowMs: Date.now() - t0, rmsFlow: flow && flow.rms, adv: adv, moving: moving, state: s2 && s2.state, note: 'window not live, or stale, or not full' };
+      await quiet(200);
     }
     const raw = (await ev('window.__tuneWit ? window.__tuneWit.read(80, 1200) : null')).value;
-    return { dn: { ok: true }, read: raw, up: { ok: true }, flowMs: null, attempts: 3, last: last, err: 'no audio reached the witness across 3 attempts - the raw read is kept' };
+    return { dn: { ok: true }, read: raw, up: { ok: true }, flowMs: null, attempts: 3, last: last, err: 'no full window reached across 3 attempts - the raw read is kept' };
   };
 
   /* ---- T6. spectrum witness: just-major e4 (expected recomputed from the fixture) ---- */
