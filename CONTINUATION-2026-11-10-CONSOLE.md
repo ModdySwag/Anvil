@@ -66,11 +66,23 @@ screen well, metal plate, knob face, keycap, rubber pad, fader cap, wheel rim, w
 - **`sweep_pins.py --old` must be the sha the RIGS carry, not your last build** (paid again): sweeping
   `2f607e72` when the rigs held `30d90f86` rewrote 0 rigs and printed STALE REMAINING.
 
+### LATER THE SAME SESSION (HEAD `7d49d11`, sha `352db606`, 6,070,856 B)
+- **MIX P2 (`0913b89`)** — with no tracks the card was a wall of prose over an invisible surface. It now shows
+  an **eight-strip ghost rack** (`avMixUiRackHTML`): T1..T8 plates, a fader slot with its cap at unity on a
+  0/-6/-12/-24/-40/-inf scale, a stereo meter pair, M/S keys and a MAIN out, hidden the moment a track exists.
+  Ghosts only, no invented values. The card's cap + foot prose are off the face (kept in the DOM), and the
+  inner `MIX` title is gone because the module head already says MIX & MASTER.
+- **Inspector launcher is navigation now (`7d49d11`)** — the entry matching the live zone + sub carries `.on`
+  and `aria-current="page"` via `avInspectorLaunchSync`, driven by the shell's own `av-zone-shown` /
+  `av-sub-shown` events. Three competing tab layers are down to one.
+- Gate on `352db606`: chassis 47/47 · a11y 37/37 · smoke 81/81 · m1 33/33 · m2 40/40 · mix 47/47.
+
 ### WHAT IS LEFT
-1. **P2 on MIX, SEQUENCE and EFFECTS** — still the old prose-card surfaces (MIX & MASTER is one giant text
-   card; SEQUENCE's grid is sparse; EFFECTS is stacked cards, not a serial chain). Same treatment SOUND got.
-2. **Inspector launcher grid** still repeats the sub-tab destinations (OSC/FM/DRUMS/SMP/CHOP/WT/TUNE) — make
-   it reflect the active page so it reads as status, not a third tab row.
+1. **P2 on SEQUENCE and EFFECTS** — SEQUENCE's grid is sparse and EFFECTS is stacked cards, not the serial
+   chain the spec asks for (a vertical signal rail). Same treatment SOUND and MIX got.
+2. **MIX real strips** — the loop-only rack is the EMPTY state; the populated `.av-mix-track` rows are still
+   horizontal rows, not vertical console strips with a dB-scaled fader.
+3. The SEQ pattern textarea is the last raw-looking field (styled in §17 but never eye-checked).
 3. **Owner eye gate** on the three finishes + every page.
 4. Bundle is **6.06 MB** (materials.css 980 KB) — a size pass before release would be wise.
 5. Carried over untouched: MIDI import bug, full wave battery on final bytes, elevated uninstall of the stale
