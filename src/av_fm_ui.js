@@ -265,10 +265,14 @@ function avFmKnobRow(cls, knobs) {
   return avKnobRowHTML(knobs.map(avFmKnobSpecHTML), cls);
 }
 
-/* one tab button per operator */
+/* one tab button per operator — a REAL tab: it owns an id, points at its panel through
+   aria-controls, and only the selected tab is in the tab order (roving tabindex, arrow keys in
+   avFmWire). The panel names itself back through aria-labelledby (Finding 2, option a). */
 function avFmTabHTML(op, active) {
   return '<button type="button" class="av-btn mini av-fm-op-tab' + (active ? " av-fm-op-on" : "") +
-    '" role="tab" data-op="' + op + '" aria-selected="' + (active ? "true" : "false") +
+    '" role="tab" data-op="' + op + '" id="av-fm-op-tab-' + op + '" aria-controls="av-fm-op-panel-' + op +
+    '" tabindex="' + (active ? "0" : "-1") +
+    '" aria-selected="' + (active ? "true" : "false") +
     '" aria-label="Operator ' + op + '" title="Operator ' + op + '">OP ' + op + "</button>";
 }
 
@@ -283,7 +287,8 @@ function avFmTabsHTML(activeOp) {
 function avFmPanelHTML(op, active) {
   const o = avFmOpNorm(op);
   return '<div class="av-fm-op-panel' + (active ? " av-fm-op-on" : "") + '" data-op-panel="' + o + '"' +
-    (active ? "" : ' hidden style="display:none"') + ' role="tabpanel" aria-label="Operator ' + o + '">' +
+    ' id="av-fm-op-panel-' + o + '"' +
+    (active ? "" : ' hidden style="display:none"') + ' role="tabpanel" aria-labelledby="av-fm-op-tab-' + o + '">' +
     '<div class="av-fm-op-head"><span class="av-fm-op-num">OP ' + o + "</span>" +
     '<span class="av-fm-op-cap">ratio · detune · level · velocity — attack · decay · sustain · release</span></div>' +
     '<div class="av-fm-op-body">' + avFmPanelBodyHTML(o) + "</div></div>";
@@ -428,6 +433,8 @@ function avFmPaintOps(root) {
     const on = avFmOpNorm(btn.getAttribute("data-op")) === op;
     btn.classList.toggle("av-fm-op-on", on);
     btn.setAttribute("aria-selected", on ? "true" : "false");
+    /* roving tabindex: the tab set is ONE stop, arrows walk it (avFmWire) */
+    btn.setAttribute("tabindex", on ? "0" : "-1");
   });
   root.querySelectorAll(".av-fm-op-panel[data-op-panel]").forEach(panel => {
     const on = avFmOpNorm(panel.getAttribute("data-op-panel")) === op;
@@ -469,6 +476,28 @@ function avFmWire(host) {
       const op = avFmOpNorm(tab.getAttribute("data-op"));
       if (op === avFmState.op) return;
       avFmSetOp(op);
+    } catch (err) { /* the card never throws outward */ }
+  });
+  /* APG tab behaviour: one tab stop, arrows walk the six operators, Home/End jump the ends.
+     The click path above stays the only commit path. */
+  host.addEventListener("keydown", (e) => {
+    try {
+      const t = e && e.target;
+      if (!t || typeof t.closest !== "function") return;
+      const tab = t.closest(".av-fm-op-tab");
+      if (!tab) return;
+      const op = avFmOpNorm(tab.getAttribute("data-op"));
+      const key = e.key;
+      let next = 0;
+      if (key === "ArrowRight" || key === "ArrowDown") next = (op % AV_FM_OPS) + 1;
+      else if (key === "ArrowLeft" || key === "ArrowUp") next = op === 1 ? AV_FM_OPS : op - 1;
+      else if (key === "Home") next = 1;
+      else if (key === "End") next = AV_FM_OPS;
+      else return;
+      e.preventDefault();
+      avFmSetOp(next);
+      const nt = host.querySelector('.av-fm-op-tab[data-op="' + next + '"]');
+      if (nt && typeof nt.focus === "function") nt.focus();
     } catch (err) { /* the card never throws outward */ }
   });
   return true;

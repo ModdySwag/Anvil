@@ -61,7 +61,7 @@ const shaArg = argv.indexOf('--sha');
 const page = argv.find(a => !a.startsWith('--') && (/\.html?$/i.test(a) || existsSync(a))) || path.join(here, '..', 'index.html');
 if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(2); }
 
-const EXPECT_SHA = '9d49de1ecd6f24e3b74dce14ef9f5102f7e2c10eabee70eda4772b8ce49a2a35';
+const EXPECT_SHA = '3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);

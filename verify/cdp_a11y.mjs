@@ -70,7 +70,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
    P7: the integrated index.html sha does not exist at authoring time - EXPECT_SHA stays null
    until the parent pins it (constant below or --sha <hex>); while null the rig still enforces
    before === after and prints a pin note (never loosened). */
-const EXPECT_SHA = "9d49de1ecd6f24e3b74dce14ef9f5102f7e2c10eabee70eda4772b8ce49a2a35";   /* sa-C pin slot - parent fills after the P7 build (or --sha <hex>) */
+const EXPECT_SHA = "3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3";   /* sa-C pin slot - parent fills after the P7 build (or --sha <hex>) */
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);
@@ -674,6 +674,136 @@ async function main() {
   check('G5 motion reset: back to system (class off + aria-pressed "false" + count restored >= 1)',
     gClick2 === true && splitCls(g5p.cls).indexOf('av-reduce-motion') < 0 && g5p.pressed === 'false' && g5p.motion === 'system' && g5c.ok === true && g5c.nz >= 1 && lsMotionSystem(g5p.ls),
     J({ click: gClick2, cls: g5p.cls, pressed: g5p.pressed, motion: g5p.motion, count: g5c, ls: g5p.ls }));
+
+  /* ================= I. tab semantics + the recorded focus order ================= */
+  console.log('== I. tab sets + the recorded focus order ==');
+  const i1 = val(await ev(`(function () {
+    try {
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('[role=tab]'));
+      var bad = [];
+      tabs.forEach(function (t) {
+        var c = t.getAttribute('aria-controls');
+        var p = c ? document.getElementById(c) : null;
+        if (!t.id) bad.push('no-id');
+        else if (!p || p.getAttribute('role') !== 'tabpanel') bad.push(t.id + '->' + String(c));
+        else if (p.getAttribute('aria-labelledby') !== t.id) bad.push(t.id + ' panel-labels=' + String(p.getAttribute('aria-labelledby')));
+      });
+      var lists = Array.prototype.slice.call(document.querySelectorAll('[role=tablist]')).map(function (l) {
+        var ts = Array.prototype.slice.call(l.querySelectorAll('[role=tab]'));
+        return { label: l.getAttribute('aria-label') || '?', tabs: ts.length,
+          selected: ts.filter(function (t) { return t.getAttribute('aria-selected') === 'true'; }).length,
+          stops: ts.filter(function (t) { return t.getAttribute('tabindex') === '0'; }).length };
+      });
+      var fm = lists.filter(function (l) { return l.label === 'FM operators'; })[0] || null;
+      return { tabs: tabs.length, panels: document.querySelectorAll('[role=tabpanel]').length, bad: bad, lists: lists, fm: fm };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`)) || {};
+  const i1sel = (i1.lists || []).every(l => l.selected === 1);
+  check('I1 tab sets: every [role=tab] resolves aria-controls to a [role=tabpanel] that names it back via aria-labelledby, + exactly one aria-selected per tablist (tabs ' + J(i1.tabs) + ', panels ' + J(i1.panels) + ')',
+    i1.err === undefined && i1.tabs > 0 && i1.tabs === i1.panels && (i1.bad || []).length === 0 && i1sel === true &&
+    !!i1.fm && i1.fm.tabs === 6 && i1.fm.stops === 1,
+    J(i1.bad && i1.bad.length ? { bad: i1.bad, lists: i1.lists } : { tabs: i1.tabs, panels: i1.panels, lists: i1.lists.length, fm: i1.fm }));
+
+  /* the FM operator tab set is ONE tab stop and arrows walk it (real CDP keys, cdp_keys law) */
+  await ev(`(function () { try { window.__avZone.show('sound'); } catch (e) { } return true; })()`);
+  await sleep(280);
+  await ev(`(function () { var b = document.querySelector('#av-zone-sound .av-subtab[data-sub="fm"]'); if (b) b.click(); return true; })()`);
+  await sleep(340);
+  const FMREAD = `(function () {
+    try {
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('#av-fm .av-fm-op-tab'));
+      var sel = tabs.filter(function (t) { return t.getAttribute('aria-selected') === 'true'; }).map(function (t) { return t.getAttribute('data-op'); });
+      var stops = tabs.filter(function (t) { return t.getAttribute('tabindex') === '0'; }).map(function (t) { return t.getAttribute('data-op'); });
+      var a = document.activeElement;
+      var shown = function (e) { return !!e && getComputedStyle(e).display !== 'none'; };
+      return { tabs: tabs.length, sel: sel, stops: stops, focus: a ? (a.id || String(a.tagName)) : null,
+        panel: sel.length === 1 ? shown(document.querySelector('[data-op-panel="' + sel[0] + '"]')) : null,
+        shownPanels: Array.prototype.slice.call(document.querySelectorAll('#av-fm .av-fm-op-panel')).filter(function (p) { return getComputedStyle(p).display !== 'none'; }).length };
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`;
+  await ev(`(function () { var t = document.getElementById('av-fm-op-tab-1'); if (t) t.focus(); return true; })()`);
+  await sleep(160);
+  const i2a = val(await ev(FMREAD)) || {};
+  await pressKey('ArrowRight', 'ArrowRight', 39); await sleep(240);
+  const i2b = val(await ev(FMREAD)) || {};
+  await pressKey('End', 'End', 35); await sleep(240);
+  const i2c = val(await ev(FMREAD)) || {};
+  await pressKey('Home', 'Home', 36); await sleep(240);
+  const i2d = val(await ev(FMREAD)) || {};
+  check('I2 FM operator tabs: one tab stop (roving tabindex) + ArrowRight/End/Home with REAL CDP keys move selection, panel and focus together',
+    i2a.tabs === 6 && i2a.stops.length === 1 && i2a.stops[0] === '1' && i2a.sel[0] === '1' && i2a.panel === true && i2a.shownPanels === 1 &&
+    i2b.sel[0] === '2' && i2b.focus === 'av-fm-op-tab-2' && i2b.panel === true && i2b.stops[0] === '2' && i2b.shownPanels === 1 &&
+    i2c.sel[0] === '6' && i2c.focus === 'av-fm-op-tab-6' && i2c.panel === true && i2c.stops[0] === '6' &&
+    i2d.sel[0] === '1' && i2d.focus === 'av-fm-op-tab-1' && i2d.panel === true && i2d.stops[0] === '1',
+    J({ a: i2a, arrowRight: i2b, end: i2c, home: i2d }));
+
+  /* the RECORDED focus order: the DOM order is the sequential focus order (no positive tabindex in
+     the bundle), so the rig records it per page - chrome -> band -> tab bar -> pane -> inspector - and
+     then proves it with a real Tab walk from the skip link. */
+  const ORDERJS = `(function () {
+    try {
+      var els = Array.prototype.slice.call(document.querySelectorAll('a[href],button,input,select,textarea,[tabindex]'));
+      var vis = els.filter(function (el) {
+        if (el.disabled) return false;
+        var ti = el.getAttribute('tabindex');
+        if (ti !== null && Number(ti) < 0) return false;
+        var cs = null; try { cs = getComputedStyle(el); } catch (e) { cs = null; }
+        if (cs && cs.visibility === 'hidden') return false;
+        if (!(el.offsetWidth || el.offsetHeight || el.getClientRects().length)) return false;
+        var n = el; while (n) { if (getComputedStyle(n).display === 'none') return false; n = n.parentElement; }
+        return true;
+      });
+      var region = function (el) {
+        if (el.closest('#av-zones')) return 'tabs';
+        if (el.closest('#av-head')) return 'band';
+        if (el.closest('.av-main')) return 'pane';
+        if (el.closest('#av-inspector')) return 'inspector';
+        if (el.closest('.av-foot')) return 'dock';
+        return 'chrome';
+      };
+      return vis.map(function (el) { return { id: el.id || null, tag: String(el.tagName), cls: String(el.className || '').slice(0, 40), r: region(el) }; });
+    } catch (e) { return { err: String((e && e.message) || e) }; }
+  })()`;
+  const RANK = { chrome: 0, band: 1, tabs: 2, pane: 3, inspector: 4, dock: 5 };
+  const zoneIds = val(await ev(`(function () { return Array.prototype.slice.call(document.querySelectorAll('.av-zone-tab[data-zone]')).map(function (t) { return t.getAttribute('data-zone'); }); })()`)) || [];
+  const perZone = {};
+  let orderBad = [];
+  for (const z of zoneIds) {
+    await ev(`(function () { try { window.__avZone.show(${JSON.stringify(z)}); } catch (e) { } return true; })()`);
+    await sleep(240);
+    const list = val(await ev(ORDERJS));
+    if (!list || !Array.isArray(list) || !list.length) { orderBad.push(z + ':no-order'); continue; }
+    const first = {};
+    list.forEach((s, i) => { if (first[s.r] === undefined) first[s.r] = i; });
+    const seen = Object.keys(first).sort((a, b) => first[a] - first[b]);
+    const ranks = seen.map(r => RANK[r]);
+    const mono = ranks.every((v, i) => i === 0 || v > ranks[i - 1]);
+    if (!mono) orderBad.push(z + ':' + seen.join('>'));
+    perZone[z] = { stops: list.length, first: first };
+  }
+  check('I3 focus order recorded: on every page the tab order runs chrome -> band -> tab bar -> pane -> inspector (no cycle, ' + J(zoneIds.length) + ' pages; stops ' + J(Object.keys(perZone).map(z => perZone[z].stops).join('/')) + ')',
+    orderBad.length === 0 && Object.keys(perZone).length === zoneIds.length && zoneIds.length >= 9,
+    J({ bad: orderBad, per: perZone }));
+
+  /* the real-key proof: from the skip link, 8 more Tabs must land exactly where the record says */
+  await ev(`(function () { try { window.__avZone.show('browse'); } catch (e) { } return true; })()`);
+  await sleep(300);
+  const keyOf = s => s ? (s.id || (String(s.tag) + '.' + String(s.cls || '').slice(0, 40))) : 'none';
+  const rec = val(await ev(ORDERJS)) || [];
+  const skipAt = rec.findIndex(s => s.id === 'av-a11y-skip');
+  const predicted = rec.slice(skipAt + 1, skipAt + 9).map(keyOf);
+  await ev(`(function () { var a = document.getElementById('av-a11y-skip'); if (a && a.focus) a.focus(); return true; })()`);
+  await sleep(140);
+  const real = [];
+  for (let i = 0; i < 8; i++) {
+    await pressKey('Tab', 'Tab', 9, String.fromCharCode(9));
+    await sleep(90);
+    real.push(val(await ev(`(function () { var a = document.activeElement; return a ? { id: a.id || null, tag: String(a.tagName), cls: String(a.className || '').slice(0, 40) } : null; })()`)));
+  }
+  const realKeys = real.map(keyOf);
+  check('I4 real Tab walk: from #av-a11y-skip, eight REAL Tabs land on exactly the eight stops the record predicts (' + J(realKeys.slice(0, 3).join(' | ')) + ' ...)',
+    skipAt >= 0 && predicted.length === 8 && realKeys.every((k, i) => k === predicted[i]),
+    J({ skipAt: skipAt, predicted: predicted, real: realKeys }));
 
   /* ================= H. seal ================= */
   console.log('== H. seal (prefs default - zero errors - freeze - pin) ==');

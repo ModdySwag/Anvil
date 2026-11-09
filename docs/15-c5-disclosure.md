@@ -5,8 +5,12 @@ tab semantics") and §7 (the gates: `cdp_a11y`, `cdp_fit`).
 Method: `cache/scratch/c5audit.mjs` walks all nine zones; raw data in `cache/scratch/c5audit.json`.
 `cdp_a11y` is already **33/33 green** — every defect below is a gap BEYOND what the rig asserts.
 
-**STATUS 2026-11-10:** Findings 1 and 2 are SHIPPED and gated (items 1–3 below). Item 4 (the recorded
-focus-order walk) is the remaining rig work; item 5 (groups) is still an owner call.
+**STATUS 2026-11-10:** Findings 1, 2 and 2b are SHIPPED and gated, and the recorded focus-order walk is
+in `cdp_a11y` (33 → 37 checks). Only item 5 (groups) is left, and it is an owner call.
+
+Whole-document re-count after C5 (`cache/scratch/focuswalk.mjs`, help overlay included):
+**44 tabs / 44 panels / 0 unresolved**. The original audit walked the nine zones only and missed the
+help overlay's four tabs — that is Finding 2b below.
 
 ## What the audit measured (2026-11-07, session 24)
 
@@ -76,30 +80,43 @@ selector now measures them as their own class.
 
 Measured after the fix: `tabsWithControls` **25 → 31**, `panelsLabelled` **25 → 31**.
 
+## Finding 2b — the help overlay's four tabs had the same defect (FOUND AND FIXED 2026-11-10)
+
+`c5audit.mjs` walks `#av-zone-*`, so it never saw the help dialog: `#av-help-tab-shortcuts/-tour/
+-guides/-tips` were `role=tab` with ids and no `aria-controls`, over panes carrying `aria-label` but no
+`aria-labelledby`. Same fix as the FM set: each tab got `aria-controls="av-help-pane-N"`, each pane got
+that id and `aria-labelledby="av-help-tab-N"` (its `aria-label` dropped). Whole-document contract now
+**44/44**, asserted by `cdp_a11y` I1 so a future overlay cannot re-open the gap.
+
 ## Finding 3 — the group question lands here (deferred from C4)
 
 C4 found **0 `.av-group` boxes** in the app (the inspector's frame carries the class, but it is a class,
 not the §5 box). Whether card sections become boxed `.av-group`s with the 45° title tab is a look
 change on cards the C3 wave has just settled at 0.89–0.99 density. **Still an owner call.**
 
-## What C5 must also PROVE (the part nobody has measured)
+## What C5 must also PROVE (the part nobody has measured) — NOW PINNED
 
-Focus order is asserted by `cdp_a11y` (33 checks) but never *recorded*. C5 pins the actual walk:
-**band → tab bar → rail → pane → inspector → dock**, per page, with the count of stops, so a
-future card cannot silently move the order. There is no positive `tabindex` anywhere in the bundle
-(verified), so DOM order IS the sequential focus order here; one real CDP Tab walk on the boot page
-proves the recorded order is the browser's, not an assumption.
+Focus order is asserted by `cdp_a11y` but it is now also **recorded**. There is no positive `tabindex`
+anywhere in the bundle (verified), so DOM order IS the sequential focus order; the rig walks all nine
+pages and asserts the order runs **chrome (skip link + menu) → band → tab bar → pane → inspector**, with
+the stop count per page: **browse 133 · perform 128 · sound 152 · shape 158 · sequence 228 · effects 143
+· mix 139 · deliver 132 · system 138** (the rail and the dock carry no stops). One real CDP Tab walk
+from `#av-a11y-skip` then proves the record is the browser's, not an assumption: the next eight stops
+are five `.av-menu-item`s then `#avc-play`, `#avc-stop`, `#avc-song` — predicted and real, identical.
 
 ## Order of work
 
 1. **DONE** `aria-expanded` on the 24 `.av-adv-chip`s.
 2. **DONE (nothing to do)** `.av-fx-toggle`s — `aria-pressed`; the audit was over-broad.
 3. **DONE** the FM operator tab set — option (a) + roving tabindex + arrow keys.
-4. The focus-order walk leg (`cdp_a11y` extension): record band → tabs → rail → pane → inspector → dock.
+3b. **DONE** the help overlay's four tabs (Finding 2b).
+4. **DONE** the focus-order walk leg — `cdp_a11y` I3 (record) + I4 (real-key proof) + I1 (tab contract)
+   + I2 (the FM key walk): **37/37 green**.
 5. Groups: owner call, then paint only.
 
 ## Gate
 
-`cdp_a11y` (33 checks + the new walk leg), the fast lane, and `cdp_fit` — the aria work is DOM
-attributes only, so density must not move at all. **Confirmed on the first C5 build: the 1280 board
-reads the same values, knife-edge sequence 1.18 and system/family 1.19 included.**
+`cdp_a11y` (**37/37** — the tab contract, the FM key walk, the recorded order, the real Tab proof), the
+fast lane (**chassis 46 · a11y 37 · smoke 81 · m1 33 · m2 40, clean in 87 s**) and the layout rigs
+(**cdp_fit 49 · cdp_s4 42 · cdp_mix 47**) on `3fde8da2`. Density did not move: the 1280 board reads the
+same values as the first C5 build, knife-edge sequence 1.18 and system/family 1.19 included.

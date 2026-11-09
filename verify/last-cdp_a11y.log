@@ -1,8 +1,7 @@
-index.html sha256 (before): 9d49de1ecd6f24e3b74dce14ef9f5102f7e2c10eabee70eda4772b8ce49a2a35
+index.html sha256 (before): 3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794243090464
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794243745827
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
-   - Page.setDownloadBehavior unavailable
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
  ok   C3-5: the LEVELS fold opens before the knob legs (a hidden knob cannot take focus)  -> opened
@@ -43,15 +42,20 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   G3 motion manual: #av-a11y-motion click -> av-reduce-motion class + aria-pressed "true" + 0 animated elements  -> {"click":true,"cls":"av-rail-closed av-reduce-motion","pressed":"true","motion":"reduce","count":{"ok":true,"total":4388,"nz":0,"sample":[]}}
  ok   G4 motion persisted: prefs motion "reduce" in av-a11y localStorage + state().motion reduce  -> {"ls":{"contrast":false,"motion":"reduce"},"motion":"reduce"}
  ok   G5 motion reset: back to system (class off + aria-pressed "false" + count restored >= 1)  -> {"click":true,"cls":"av-rail-closed","pressed":"false","motion":"system","count":{"ok":true,"total":4388,"nz":2,"sample":["av-studio-meter-bar","av-studio-meter-rms"]},"ls":{"contrast":false,"motion":"system"}}
+== I. tab sets + the recorded focus order ==
+ ok   I1 tab sets: every [role=tab] resolves aria-controls to a [role=tabpanel] that names it back via aria-labelledby, + exactly one aria-selected per tablist (tabs 44, panels 44)  -> {"tabs":44,"panels":44,"lists":10,"fm":{"label":"FM operators","tabs":6,"selected":1,"stops":1}}
+ ok   I2 FM operator tabs: one tab stop (roving tabindex) + ArrowRight/End/Home with REAL CDP keys move selection, panel and focus together  -> {"a":{"tabs":6,"sel":["1"],"stops":["1"],"focus":"av-fm-op-tab-1","panel":true,"shownPanels":1},"arrowRight":{"tabs":6,"sel":["2"],"stops":["2"],"focus":"av-fm-op-tab-2","panel":true,"shownPanels":1},"end":{"tabs":6,"sel":["6"],"stops":["6"],"focus":"av-fm-op-tab-6","panel":true,"shownPanels":1},"home":{"tabs":6,"sel":["1"],"stops":["1"],"focus":"av-fm-op-tab-1","panel":true,"shownPanels":1}}
+ ok   I3 focus order recorded: on every page the tab order runs chrome -> band -> tab bar -> pane -> inspector (no cycle, 9 pages; stops "133/128/152/158/228/143/139/132/138")  -> {"bad":[],"per":{"browse":{"stops":133,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":45}},"perform":{"stops":128,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":40}},"sound":{"stops":152,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":64}},"shape":{"stops":158,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":70}},"sequence":{"stops":228,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":140}},"effects":{"stops":143,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":55}},"mix":{"stops":139,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":51}},"deliver":{"stops":132,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":44}},"system":{"stops":138,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":50}}}}
+ ok   I4 real Tab walk: from #av-a11y-skip, eight REAL Tabs land on exactly the eight stops the record predicts ("BUTTON.av-menu-item | BUTTON.av-menu-item | BUTTON.av-menu-item" ...)  -> {"skipAt":0,"predicted":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","avc-play","avc-stop","avc-song"],"real":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","avc-play","avc-stop","avc-song"]}
 == H. seal (prefs default - zero errors - freeze - pin) ==
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"av-rail-closed","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  9d49de1ecd6f24e3b74dce14ef9f5102f7e2c10eabee70eda4772b8ce49a2a35
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 9d49de1ecd6f24e3b74dce14ef9f5102f7e2c10eabee70eda4772b8ce49a2a35
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 9d49de1ecd6f...
+index.html sha256 (after):  3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 3fde8da2ffd3...
 
-RESULT: 33 passed, 0 failed
-A11Y-RESULT 33/33
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"9d49de1ecd6f24e3b74dce14ef9f5102f7e2c10eabee70eda4772b8ce49a2a35","sha256After":"9d49de1ecd6f24e3b74dce14ef9f5102f7e2c10eabee70eda4772b8ce49a2a35","pinned":"9d49de1ecd6f24e3b74dce14ef9f5102f7e2c10eabee70eda4772b8ce49a2a35","passed":33,"failed":0,"checks":33,"verdict":"pass"}
+RESULT: 37 passed, 0 failed
+A11Y-RESULT 37/37
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3","sha256After":"3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3","pinned":"3fde8da2ffd3ee9d1d67cf040d2aee5d959478720d0f3628cb9f2bfc46b229c3","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 A11Y PASSED

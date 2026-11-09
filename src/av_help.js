@@ -270,17 +270,17 @@ function avHelpRootHTML() {
   return '<div class="av-help-head"><span class="av-help-title">HELP</span>'
     + '<button type="button" class="av-btn mini av-help-x" id="av-help-close" data-av-help="close" aria-label="Close help">\u2715</button></div>'
     + '<div class="av-help-tabs" role="tablist" aria-label="Help sections">'
-    + '<button type="button" class="av-btn mini av-help-tab on" id="av-help-tab-shortcuts" role="tab" data-av-help="tab" data-tab="shortcuts" aria-selected="true">SHORTCUTS</button>'
-    + '<button type="button" class="av-btn mini av-help-tab" id="av-help-tab-tour" role="tab" data-av-help="tab" data-tab="tour" aria-selected="false">TOUR</button>'
-    + '<button type="button" class="av-btn mini av-help-tab" id="av-help-tab-guides" role="tab" data-av-help="tab" data-tab="guides" aria-selected="false">GUIDES</button>'
-    + '<button type="button" class="av-btn mini av-help-tab" id="av-help-tab-tips" role="tab" data-av-help="tab" data-tab="tips" aria-selected="false">TIPS</button>'
+    + '<button type="button" class="av-btn mini av-help-tab on" id="av-help-tab-shortcuts" role="tab" data-av-help="tab" data-tab="shortcuts" aria-controls="av-help-pane-shortcuts" aria-selected="true">SHORTCUTS</button>'
+    + '<button type="button" class="av-btn mini av-help-tab" id="av-help-tab-tour" role="tab" data-av-help="tab" data-tab="tour" aria-controls="av-help-pane-tour" aria-selected="false">TOUR</button>'
+    + '<button type="button" class="av-btn mini av-help-tab" id="av-help-tab-guides" role="tab" data-av-help="tab" data-tab="guides" aria-controls="av-help-pane-guides" aria-selected="false">GUIDES</button>'
+    + '<button type="button" class="av-btn mini av-help-tab" id="av-help-tab-tips" role="tab" data-av-help="tab" data-tab="tips" aria-controls="av-help-pane-tips" aria-selected="false">TIPS</button>'
     + "</div>"
     + '<div class="av-help-body">'
-    + '<div class="av-help-pane" data-pane="shortcuts" role="tabpanel" aria-label="Shortcuts">'
+    + '<div class="av-help-pane" data-pane="shortcuts" id="av-help-pane-shortcuts" role="tabpanel" aria-labelledby="av-help-tab-shortcuts">'
     + '<div class="av-help-rows" id="av-help-shortcuts">' + avHelpShortcutsHTML() + "</div></div>"
-    + '<div class="av-help-pane" data-pane="tour" role="tabpanel" aria-label="Tour" hidden>' + avHelpTourPaneHTML() + "</div>"
-    + '<div class="av-help-pane" data-pane="guides" role="tabpanel" aria-label="Guides" hidden>' + avHelpGuidesHTML() + "</div>"
-    + '<div class="av-help-pane" data-pane="tips" role="tabpanel" aria-label="Tips" hidden>'
+    + '<div class="av-help-pane" data-pane="tour" id="av-help-pane-tour" role="tabpanel" aria-labelledby="av-help-tab-tour" hidden>' + avHelpTourPaneHTML() + "</div>"
+    + '<div class="av-help-pane" data-pane="guides" id="av-help-pane-guides" role="tabpanel" aria-labelledby="av-help-tab-guides" hidden>' + avHelpGuidesHTML() + "</div>"
+    + '<div class="av-help-pane" data-pane="tips" id="av-help-pane-tips" role="tabpanel" aria-labelledby="av-help-tab-tips" hidden>'
     + '<div class="av-help-rows" id="av-help-tiprows">' + avHelpTipsHTML() + "</div></div>"
     + "</div>"
     + '<p class="av-help-note av-note av-dim">Nothing here leaves the page. ? opens or closes this panel \u2014 it never covers the instrument or the keys.</p>';
