@@ -1,6 +1,6 @@
-index.html sha256 (before): 3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed
+index.html sha256 (before): d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794267486016
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794267863637
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
@@ -37,11 +37,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   F3 contrast reload: class + aria-pressed + state RESTORED from prefs  -> {"ready":true,"inited":true,"cls":"av-contrast av-rail-closed","pressed":"true","contrast":true,"ls":{"contrast":true,"motion":"system"}}
  ok   F4 contrast reset: default clean (class off + aria-pressed "false" + state false + prefs contrast false)  -> {"click":true,"cls":"av-rail-closed","pressed":"false","contrast":false,"ls":{"contrast":false,"motion":"system"}}
 == G. motion (emulated reduce + the manual toggle) ==
- ok   G1 motion premise: 5 element(s) under main animate in normal mode (nonzero transitionDuration)  -> {"ok":true,"total":4793,"nz":5,"sample":["I","I","av-lv-clip","av-studio-meter-bar","av-studio-meter-rms"]}
- ok   G2 motion emulated (prefers-reduced-motion: reduce): 0 elements under main with a nonzero transitionDuration (all <= 0.0001 s)  -> {"count":{"ok":true,"total":4792,"nz":0,"sample":[]},"cls":"av-rail-closed av-reduce-motion","matchMedia":true,"motion":"system","reduceActive":true}
- ok   G3 motion manual: #av-a11y-motion click -> av-reduce-motion class + aria-pressed "true" + 0 animated elements  -> {"click":true,"cls":"av-rail-closed av-reduce-motion","pressed":"true","motion":"reduce","count":{"ok":true,"total":4792,"nz":0,"sample":[]}}
+ ok   G1 motion premise: 5 element(s) under main animate in normal mode (nonzero transitionDuration)  -> {"ok":true,"total":4818,"nz":5,"sample":["I","I","av-lv-clip","av-studio-meter-bar","av-studio-meter-rms"]}
+ ok   G2 motion emulated (prefers-reduced-motion: reduce): 0 elements under main with a nonzero transitionDuration (all <= 0.0001 s)  -> {"count":{"ok":true,"total":4817,"nz":0,"sample":[]},"cls":"av-rail-closed av-reduce-motion","matchMedia":true,"motion":"system","reduceActive":true}
+ ok   G3 motion manual: #av-a11y-motion click -> av-reduce-motion class + aria-pressed "true" + 0 animated elements  -> {"click":true,"cls":"av-rail-closed av-reduce-motion","pressed":"true","motion":"reduce","count":{"ok":true,"total":4817,"nz":0,"sample":[]}}
  ok   G4 motion persisted: prefs motion "reduce" in av-a11y localStorage + state().motion reduce  -> {"ls":{"contrast":false,"motion":"reduce"},"motion":"reduce"}
- ok   G5 motion reset: back to system (class off + aria-pressed "false" + count restored >= 1)  -> {"click":true,"cls":"av-rail-closed","pressed":"false","motion":"system","count":{"ok":true,"total":4792,"nz":5,"sample":["I","I","av-lv-clip","av-studio-meter-bar","av-studio-meter-rms"]},"ls":{"contrast":false,"motion":"system"}}
+ ok   G5 motion reset: back to system (class off + aria-pressed "false" + count restored >= 1)  -> {"click":true,"cls":"av-rail-closed","pressed":"false","motion":"system","count":{"ok":true,"total":4817,"nz":5,"sample":["I","I","av-lv-clip","av-studio-meter-bar","av-studio-meter-rms"]},"ls":{"contrast":false,"motion":"system"}}
 == I. tab sets + the recorded focus order ==
  ok   I1 tab sets: every [role=tab] resolves aria-controls to a [role=tabpanel] that names it back via aria-labelledby, + exactly one aria-selected per tablist (tabs 44, panels 44)  -> {"tabs":44,"panels":44,"lists":10,"fm":{"label":"FM operators","tabs":6,"selected":1,"stops":1}}
  ok   I2 FM operator tabs: one tab stop (roving tabindex) + ArrowRight/End/Home with REAL CDP keys move selection, panel and focus together  -> {"a":{"tabs":6,"sel":["1"],"stops":["1"],"focus":"av-fm-op-tab-1","panel":true,"shownPanels":1},"arrowRight":{"tabs":6,"sel":["2"],"stops":["2"],"focus":"av-fm-op-tab-2","panel":true,"shownPanels":1},"end":{"tabs":6,"sel":["6"],"stops":["6"],"focus":"av-fm-op-tab-6","panel":true,"shownPanels":1},"home":{"tabs":6,"sel":["1"],"stops":["1"],"focus":"av-fm-op-tab-1","panel":true,"shownPanels":1}}
@@ -51,11 +51,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"av-rail-closed","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 3a7b42c6e8c5...
+index.html sha256 (after):  d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned d133f8a1a6d1...
 
 RESULT: 37 passed, 0 failed
 A11Y-RESULT 37/37
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed","sha256After":"3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed","pinned":"3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed","passed":37,"failed":0,"checks":37,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08","sha256After":"d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08","pinned":"d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 A11Y PASSED

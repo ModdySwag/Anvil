@@ -1970,3 +1970,51 @@ textarea::-webkit-scrollbar-thumb { background: #22303A; border-radius: 5px; bor
 }
 #av-seq-insp-empty { display: none !important; }
 .av-seq-io-area { height: 46px !important; min-height: 46px !important; }
+
+/* 20. EFFECTS: the rack states its own signal flow (2026-11-10)
+   The page is a serial chain and nothing on it said so. A signal-flow bar sits under the strips:
+   IN -> one block per module in processing order -> OUT, each block lit from its own strip's
+   on-state. It has a DEFINITE height, so it can never stretch a strip — that stretch is what killed
+   the first attempt at this page (see the continuation). It also reclaims ~110px of the 153px void.
+*/
+.av-fx-chain {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 3px; flex-wrap: wrap;
+  height: 104px; padding: 10px 12px;
+  border-radius: 6px;
+  background-image: var(--mat-well, none), linear-gradient(180deg, #060B0D 0%, #04080A 100%);
+  background-size: 260px 260px, auto;
+  background-blend-mode: soft-light, normal;
+  border: 1px solid #16211F;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+.av-fx-chain-term {
+  font-family: var(--mono); font-size: 9px; letter-spacing: .14em; color: var(--text-3);
+  padding: 0 2px;
+}
+.av-fx-chain-arrow { color: #2A3A40; font-size: 11px; padding: 0 1px; }
+.av-fx-chain-block {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: .1em;
+  color: #5C7176;
+  padding: 5px 8px; border-radius: 3px;
+  border: 1px solid #16211F;
+  background-image: var(--mat-btn, none), linear-gradient(180deg, #0E1618 0%, #080D0F 100%);
+  background-size: 90px 90px, auto;
+  background-blend-mode: soft-light, normal;
+}
+.av-fx-chain-led {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #14201F; box-shadow: inset 0 0 0 1px #1B2A2C;
+}
+.av-fx-chain-block.on {
+  color: #BFEFF5; border-color: #2C5A61;
+  background-image: var(--mat-btn, none), linear-gradient(180deg, #16302F 0%, #0C1E20 100%);
+  background-size: 90px 90px, auto;
+}
+.av-fx-chain-block.on .av-fx-chain-led {
+  background: var(--fin-accent);
+  box-shadow: 0 0 4px rgba(47, 182, 196, .7), inset 0 0 0 1px rgba(255, 255, 255, .3);
+}
+/* the chain bar says the order now, so the cap line that spelled it out is redundant prose */
+.av-fx-cap { display: none !important; }

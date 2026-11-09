@@ -86,7 +86,15 @@ screen well, metal plate, knob face, keycap, rubber pad, fader cap, wheel rim, w
   assertion — a decorative element must never be matchable by a contract selector.
 - Gate on `3a7b42c6`: chassis 47/47 · a11y 37/37 · smoke 81/81 · m1 33/33 · m2 40/40 · seq 41/41.
 
-### EFFECTS — ATTEMPTED AND REVERTED (tree clean at `3a7b42c6`)
+### EFFECTS — LANDED (`d133f8a1`, 6,076,793 B)
+The page is a serial chain and nothing on it said so. A **signal-flow bar** now sits under the strips:
+IN -> DRIVE -> FLAVOUR -> MOD -> DELAY -> VERB -> CONV -> DYN -> OUT, each block lit from its own strip's
+`.av-fx-on` state (`avFxChainSync`, called from `avFxSync`). It has a DEFINITE 104px height, so it can never
+stretch a strip — that stretch is exactly what killed the first attempt. Dead band 153 -> ~48px, and the
+head's cap line (which spelled the order out in prose) is off the face because the bar says it visually.
+Gate: chassis 47/47 · a11y 37/37 · smoke 81/81 · m1 33/33 · m2 40/40 · **fx 28/28**.
+
+### EARLIER ATTEMPT — REVERTED (kept as a map of what not to do)
 Tried to kill the 153px void by letting the card own the well and the strip rack spread down it
 (`#av-fx-host` flex chain + `.av-fx-strips{flex:1; justify-content:space-between}` + a signal rail with a
 node per strip). **It made the page worse:** the strips are flex items in a column, so they took the slack

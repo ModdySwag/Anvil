@@ -208,7 +208,41 @@ function avFxBodyHTML() {
     '<div class="av-fx-head"><span class="av-fx-title">FX RACK</span>' +
     '<span class="av-fx-cap">drive → flavour → mod → delay → verb → conv → dyn · inside the mixer worklet · every module off = bit-identical bypass</span></div>' +
     '<div class="av-fx-strips">' + strips + "</div>" +
+    avFxChainHTML() +
     "</div>";
+}
+
+/* P2 (2026-11-10): the rack is a SERIAL CHAIN, and the page has to say so. This is the signal-flow
+   bar under the strips: IN -> one block per module in processing order -> OUT, each block lit from
+   its own strip's on-state. It is a fixed-height block, so it can never stretch a strip (the failure
+   mode that killed the first attempt at this page). */
+function avFxChainHTML() {
+  let out = '<span class="av-fx-chain-term">IN</span>';
+  for (let i = 0; i < AV_FX_MODULES.length; i++) {
+    const m = AV_FX_MODULES[i];
+    out += '<span class="av-fx-chain-arrow" aria-hidden="true">›</span>' +
+      '<span class="av-fx-chain-block" data-chain="' + avFxEsc(m.mod) + '">' +
+      '<i class="av-fx-chain-led"></i>' + avFxEsc(m.label) + '</span>';
+  }
+  out += '<span class="av-fx-chain-arrow" aria-hidden="true">›</span>' +
+    '<span class="av-fx-chain-term">OUT</span>';
+  return '<div class="av-fx-chain" id="av-fx-chain" role="img" aria-label="signal chain: ' +
+    'in, then every module in processing order, then out">' + out + '</div>';
+}
+
+/* mirror each strip's on-state onto its chain block (the strips own the truth) */
+function avFxChainSync() {
+  try {
+    const card = document.getElementById("av-fx");
+    if (!card) return false;
+    const strips = card.querySelectorAll(".av-fx-strip[data-sect]");
+    for (let i = 0; i < strips.length; i++) {
+      const mod = strips[i].getAttribute("data-sect");
+      const blk = card.querySelector('.av-fx-chain-block[data-chain="' + mod + '"]');
+      if (blk) blk.classList.toggle("on", strips[i].classList.contains("av-fx-on"));
+    }
+    return true;
+  } catch (e) { return false; }
 }
 
 /* ---------- C3 disclosure (same contract as the MIX desk and the MIDI panel) ---------- */
@@ -357,6 +391,7 @@ function avFxSync(root) {
   host.querySelectorAll(".av-fx-strip[data-mod]").forEach(strip => {
     strip.classList.toggle("av-fx-on", !!avParams["fx." + strip.dataset.mod + ".on"]);
   });
+  try { avFxChainSync(); } catch (e) { /* the chain mirrors the strips, best-effort */ }
   try { avFxFoldSync(host); } catch (e) { /* chips keep their last paint */ }
   return true;
 }
