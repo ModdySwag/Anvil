@@ -1,8 +1,8 @@
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-index.html sha256 (before): 54df076ae5d57d7a4fe5cba3c15f0d3da0833ebc18609673859151f09db25334
+index.html sha256 (before): d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08
  ok   boot: data-av-ready flips
- ok   pages: 9 panels + 9 tabs in signal order  -> {"zones":9,"tabs":9,"order":"browse,perform,sound,shape,sequence,effects,mix,deliver,system"}
- ok   default: exactly one page rendered (sound) + aria-selected + body[data-av-zone] agree  -> {"zones":9,"tabs":9,"order":"browse,perform,sound,shape,sequence,effects,mix,deliver,system","shown":["sound"],"bodyZone":"sound","sel":"sound","vis":"sound"}
+ ok   pages: 9 panels + 9 tabs in console order (3 modes, then 6 panels)  -> {"zones":9,"tabs":9,"order":"sound,sequence,mix,browse,perform,shape,effects,deliver,system"}
+ ok   default: exactly one page rendered (sound) + aria-selected + body[data-av-zone] agree  -> {"zones":9,"tabs":9,"order":"sound,sequence,mix,browse,perform,shape,effects,deliver,system","shown":["sound"],"bodyZone":"sound","sel":"sound","vis":"sound"}
  ok   no page scroll: scrollHeight == clientHeight, html+body overflow hidden, scrollTo is a no-op  -> {"doc":900,"client":900,"before":0,"after":0,"htmlOverflow":"hidden","bodyOverflow":"hidden"}
  ok   card map: every card id sits in its pinned page (28/28)  -> {"n":28,"bad":[]}
  ok   special: first-run strip lives in synth; the about notes live in the header popover (hidden at rest)  -> {"firstrun":"sound","about":true}
@@ -20,6 +20,6 @@ index.html sha256 (before): 54df076ae5d57d7a4fe5cba3c15f0d3da0833ebc186096738591
  ok   R3 float: two panels coexist with z-order set; reset() brings everything home  -> {"n":2,"z":"58","after":0,"home":true}
  ok   R3 about: the header About button toggles the phase-notes popover (moved out of the page)  -> {"open":true,"closed":true,"hasH1":true}
  ok   zero page errors
- ok   freeze: index.html sha256 = pinned  -> pinned 54df076ae5d5...
+ ok   freeze: index.html sha256 = pinned  -> pinned d133f8a1a6d1...
 
 21 passed, 0 failed

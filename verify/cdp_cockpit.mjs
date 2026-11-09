@@ -126,7 +126,11 @@ async function main() {
              vis: zones.filter(z => z.offsetParent !== null || (!z.hidden && getComputedStyle(z).display !== 'none')).map(z => z.getAttribute('data-zone')).join(',') };
   })()`);
   const z = zR.value || {};
-  check('pages: 9 panels + 9 tabs in signal order', z.zones === 9 && z.tabs === 9 && z.order === 'browse,perform,sound,shape,sequence,effects,mix,deliver,system', JSON.stringify({ zones: z.zones, tabs: z.tabs, order: z.order }));
+  /* P2 (2026-11-10): the order pinned here was the C1 FSVR signal order. P0 (4a38d2e) rebuilt the strip
+     by owner decision — THREE MODES LEAD (Sound / Sequence / Mix, bold) and the six panels follow (quiet) —
+     and only the freeze pin was updated, so this assertion has been failing since P0 without being seen
+     (the fast lane never runs this rig). Re-pinned to the console order the chassis actually ships. */
+  check('pages: 9 panels + 9 tabs in console order (3 modes, then 6 panels)', z.zones === 9 && z.tabs === 9 && z.order === 'sound,sequence,mix,browse,perform,shape,effects,deliver,system', JSON.stringify({ zones: z.zones, tabs: z.tabs, order: z.order }));
   check('default: exactly one page rendered (sound) + aria-selected + body[data-av-zone] agree', z.shown.join(',') === 'sound' && z.vis === 'sound' && z.sel === 'sound' && z.bodyZone === 'sound', JSON.stringify(z));
 
   /* 3. the page cannot scroll (structure + real witness) */
