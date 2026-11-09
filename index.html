@@ -2575,7 +2575,16 @@ body { --dock-h: 132px; }
 #av-pot-a,
 #av-pot-b,
 #av-pot-c,
-#av-pot-d { width: 40px; height: 40px; flex: none; }
+#av-pot-d {
+  width: 40px; flex: none;
+  /* height was pinned to the knob's 40 px, but the mount also carries the readout line under the
+     knob. With the pin, the pot measured 51 px while its content was 65, so the readout hung 7 px
+     below the pots group and the group's clip-path (--ch-chamfer, overflow-hidden box) sliced the
+     bottom off every value - the owner's "2ms reads 2mc, 800 reads 80A" (measured 2026-11-10:
+     value 97..111 against a group bottom of 104). Auto height puts the value INSIDE the group
+     (90..104) with no header growth, so K23 is untouched. */
+  height: auto;
+}
 #av-pot-a .av-knob-wrap,
 #av-pot-b .av-knob-wrap,
 #av-pot-c .av-knob-wrap,

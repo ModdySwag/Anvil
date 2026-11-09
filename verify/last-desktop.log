@@ -34,7 +34,7 @@
  ok   library: a sample row exists for the EXP lane (imported via __avImport when missing)  -- rows=1 (pre-existing)
  ok   the library EXP action downloads through the shell (will-download -> DL dir, no dialog)  -- desktop-rig-220.wav (192044 B)
  ok   the downloaded file carries the library bytes (RIFF/WAVE; size matches the import when fresh)  -- desktop-rig-220.wav 192044 B (pre-existing row)
-   - the app recorded its own download metadata: {"name":"desktop-rig-220.wav","bytes":192044,"at":1794250732313,"via":"anchor"}
+   - the app recorded its own download metadata: {"name":"desktop-rig-220.wav","bytes":192044,"at":1794253476090,"via":"anchor"}
  ok   the library overlay closes (snap.open false)
 -- header (fit law)
  ok   the header renders 21 buttons (the fit law)  -- visible=21 at 1492x918

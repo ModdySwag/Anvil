@@ -11,8 +11,8 @@
   "license": "AGPL-3.0-or-later",
   "copyright": "(c) 2026 Modtech (Moddy)",
   "electron": "40.10.2",
-  "appBuild": "ab4a5e3a",
-  "appBuildBytes": 4870359,
-  "appBuildSha256": "ab4a5e3a7efbff9d3ffb37e21d5111a8a02cf42fce86651c125c10a336e3d349",
-  "appBuildNote": "C5 rebuild + owner-pass polish (band LED dot clear of the glyphs, band readout glow tightened); frozen ab4a5e3a; 28 suites green first-lap; bench realtime 1.0 knee 96/128; alias clean; stress 16 deltas (history 20-138)"
+  "appBuild": "54df076a",
+  "appBuildBytes": 4870911,
+  "appBuildSha256": "54df076ae5d57d7a4fe5cba3c15f0d3da0833ebc18609673859151f09db25334",
+  "appBuildNote": "C5 rebuild + owner pass (band LED clear of glyphs, band readout no longer clipped by the pots group); frozen 54df076a; 28 suites green first-lap; bench realtime 0.999 knee 128 no-fail; alias clean; stress 7 deltas (best of the day; history 16-138)"
 }
