@@ -1,6 +1,131 @@
 # Anvil — CONTINUATION (2026-10-06)
 
-## RESUME HERE — SAVED FOR A CONTINUED SESSION (2026-11-10, session 25). READ THIS BLOCK FIRST.
+## RESUME HERE — SAVED FOR A CONTINUED SESSION (2026-11-10, session 25 FINAL). READ THIS BLOCK FIRST.
+
+### STATE (proven, not claimed)
+- **Code HEAD `944c6ba`** (tree clean). Bundle `index.html` sha256
+  `97ba6540da4e43a7fc731e988381539bf70fed9cc5f0f6170ef1abcd5ddf2847`, **4,872,362 B**.
+- All 23 `verify/cdp_*.mjs` pins carry that sha (`STALE REMAINING: none` after every sweep).
+- **GATE ON THESE BYTES = FAST LANE ONLY.** Clean: chassis 46 · a11y 37 · smoke 81 · m1 33 · m2 40.
+  The last FULL wave battery ran on `54df076a` (28 suites green, bench realtime 0.999 knee 128 no-fail,
+  alias complete, stress 7 deltas — the best of the day; history 16/20/37/64/103/125/138). The band
+  fixes since then are CSS/DOM only, but the full battery has NOT been re-run on `97ba6540`.
+- **K23 at 1280 is unchanged and still the binding truth:** sequence **1.18**, system/family **1.19**
+  against a 1.2 gate. A 110 px header was tried and REJECTED on measurement (sequence 1.21,
+  system/family 1.229). Any height spent in the band has to be reclaimed on those two pages first.
+- Installer in `windows/out` was built from `54df076a` (100,075,528 B,
+  sha256 71b6255bf053819d67d972d44814e509c4c4fda8db411d89b02442877f3c071f) — **stale now**, rebuild
+  from `97ba6540` before publishing. `windows/version.json` still points at 54df076a.
+
+### WHAT LANDED THIS SESSION (session 25, three waves)
+**C5 finished** — `ab38a4d` (24 chips get `aria-expanded`, 79/79) and `810d4e3` (FM operator tabs are a
+real tab set with roving tabindex + arrow keys; the help overlay's four tabs wired the same way;
+`cdp_a11y` grew 33 → 37 with I1 tab contract 44/44, I2 the FM key walk, I3 the RECORDED focus order per
+page — chrome→band→tabs→pane→inspector, stops browse 133 / perform 128 / sound 152 / shape 158 /
+sequence 228 / effects 143 / mix 139 / deliver 132 / system 138 — and I4 a real-key proof: eight Tabs
+from `#av-a11y-skip` land on exactly the eight stops the record predicts). Docs: `docs/15` rewritten.
+
+**C6 release prep** — version stamp moved to "C5 · rebuild / 2026-11-10"; `cdp_tune`'s capture fixture
+FIXED (the analyser window is 32768 frames = 683 ms and the first note on a fresh page never reaches
+it: warm-up note + liveness/moving-buffer gate; the ±3 Hz assertion untouched; 18/18 three runs);
+desktop rig header count re-pinned 15 → 21 for the C1 chassis; `take_desktop_shots.mjs` retargeted to
+the C1 zone names (it still called 'store'/'seq', so two of three shots were silently the browse
+page); README, `windows/RELEASE-NOTES-1.15.0.md` and `windows/downloads-card-draft.md` rewritten for
+the rebuild (three TODO sha256 tokens still unfilled); installer built and the desktop rig green
+31/31 on it; shots re-taken from the packaged app and converted to `screenshots/*.jpg`.
+
+**Owner-pass band fixes** (three rounds, all measured):
+- `ab4a5e3a` / `ae9b1e6` — the transport keys' status LED was a `::after` pin at top:5px right:6px
+  overlapping the last glyph on ALL SIX keys (4×1–2 px); moved to top:2px, 0 of 6 collide.
+- `d7e85666` — the macro dials' readout was rendered TWICE (avKnobHTML's own `.av-knob-val` inside the
+  knob wrap + `avConsoleNumLine`'s `.av-band-num`); the lower copy fell outside the pots group and was
+  sliced by its chamfer clip-path ("2ms" read "2mc", "800" read "80A"), and the pair re-flowed the pot.
+  Fix: hide the inner copy in the band, mount pinned back to 40, and SEED the number line at build —
+  it used to mount EMPTY, so the pot was 51 px at rest and 63 px on the first value write, which is
+  why the dial LIFTED 6 px on first drag. Proven with real CDP mouse events: pot t=39 h=63 and knob
+  t=51 identical through press → four moves → release.
+- `97ba6540` — VOL's own label rendered BELOW its dial while the four macros render theirs ABOVE, so
+  its dial sat 13 px higher (knob centre 58 vs 71). Label order flipped; centres now 72 vs 71.
+
+### THE COMPLETE REMAINING QUEUE
+**A. MIDI IMPORT BUG — reported by the owner, NOT reproduced yet.** Dropping a `.mid` opens the file
+picker but the file does not load. Established: the import input's accept list DOES include
+`.mid`/`.midi` (`AV_IMPORT_UI_ACCEPT`), `av_import.js:355` detects the `MThd` header and routes to
+`avImportMidMeta`, and the format vocabulary folds `midi` → `mid`. So the rejection is downstream —
+likely the import report counting it skipped, or the library view filtering a pattern-kind item out.
+**First move:** write a minimal valid `.mid` to disk, set it on `#av-import-file` via DataTransfer +
+change, and read the import status line / `avImportUiSnap()` — then fix the routing or the report.
+No rig covers this today.
+
+**B. FULL WAVE BATTERY on `97ba6540`** (28 rigs + bench + alias + stress, ~35 min, nothing else open),
+then rebuild `windows/version.json` + the installer from those bytes, re-shoot, commit.
+
+**C. INSTALL JOURNEY — BLOCKED ON AN ELEVATED UNINSTALL.** A stale machine-wide Anvil is on the box:
+`C:\Program Files\Anvil` (unins000.exe, FileVersion 1.15.0.0) plus one HKLM Add/Remove entry. The
+journey's own pre-flight flags it ("Inno would glom it into admin mode") and then the per-user install
+fails every location check. The agent token is Medium and Program Files is not writable, so this needs
+ONE elevated uninstall by the owner before `py -3.11 windows/tools/install_journey.py` can pass.
+
+**D. PUBLISH (nothing pushed, nothing deployed).** Source zip + the three real sha256s into the release
+notes and downloads card; push ~68 local commits; tag `v1.15.0`; attach installer / zipped installer /
+source; deploy `index.html`, `sw.js`, `manifest.webmanifest`, icons, `packs/`, `inbox.html` to
+`moddys.net/anvil` and verify the served bytes hash to the released sha; update the downloads page
+(its working copy is NOT in `webmusic-hub/site` — locate it) + `anvil-icon.png` + shot thumbs; live
+verify. The live site is still the 2026-10-09 build.
+
+**E. OWNER CALLS (decisions, not work).** Where `.av-fader` lives (DELIVER master level or MIX
+per-track gain — do not invent one); whether card sections become `.av-group` boxes.
+
+**F. OWNER EYE GATES.** The five folded surfaces (MIX · SYSTEM→MIDI · EFFECTS · SOUND/ENGINE · CHOP),
+FM two-column + its tab keys, WT two-row + LIBRARY chip, CODE folds, SEQUENCE folds + relocated FILL,
+matrix strip, filter inset, ENVELOPES section, the six FX screens, the MIX master EQ + strip waveforms,
+the SHAPE routing graph + ROWS chip, the SEQUENCE overview + scene blocks, the BITS/KIND pairs and the
+FADE/OFFSET steppers, the help overlay's tabs, and the band after this session's three fixes. Plus a
+verdict on folding the LEVELS card.
+
+### TRAPS — 37 now (every one has cost a session)
+1 cascade `!important` · 2 a fold that hides an interactive control breaks rigs · 3 a wrapper can swallow
+the working surface · 4 autocrlf = rebuild · 5 pin sweep old→new only · 6 `Target crashed` = 0 checks ·
+7 never a second browser in a battery · 8 K23 null must fail · 9 cockpit pane law · 10 knife-edge legs ·
+11 budget zone chrome first · 12 a paired row 5px over wraps · 13 a fold's chip must not buy a row ·
+14 a hidden zone measures 0 · 15 a fold is only legal on chrome · 16 FILL belonged on the face ·
+17 check the class is carried · 18 flex-basis wraps before shrinking · 19 a probe must write a differing
+value · 20 a folded canvas has no box · 21 indefinite `100%` collapses · 22 a canvas without a CSS
+height feeds back into layout · 23 **sweep by the hash the rigs ACTUALLY carry** · 24 a measuring leg
+must land the zone's own sub-tab first · 25 `0 === 0` must never pass a no-height leg · 26 a canvas leg
+must settle in a SECOND evaluate · 27 `querySelector('.av-mod-sec-lbl')` finds MACROS, not MATRIX ·
+**28 a class name can lie — `.av-fx-toggle` is an aria-pressed switch, not a disclosure** · **29 a
+zone-scoped audit misses overlays (the help dialog's four tabs)** · **30 a `timeout` over ~420 s
+silently backgrounds the call and the MSYS job then writes `stdin is not a tty` into every log and runs
+nothing — launch long rigs through `cache/scratch/run_rig.vbs` via wscript and poll the log** ·
+**31 Tab from a warmed page is not a fresh walk** · **32 a `::after` status pin can sit on the last
+glyph — measure the dot rect against the text range, not the button** · **33 a band pot can render its
+value twice (knob's own `.av-knob-val` + `.av-band-num`); the lower copy is what a group clip-path
+slices** · **34 a readout that mounts EMPTY makes its container's height follow the first value write —
+the control lifts when you first touch it; seed it and reserve its line** · **35 sibling controls align
+by their LABEL ORDER, not their pot height (VOL's label below the dial cost it 13 px)** · **36
+`vision_analyze` times out repeatedly on 4× crops; verify geometry numerically and treat a "clipped"
+verdict as suspect when the crop ends at a box edge** · **37 fix what the owner POINTS AT, not what the
+measurement suggests — re-read his crop before changing anything (three rounds were spent on the wrong
+reading of "overlap")**.
+**ENV:** port 10080 binds DevTools but never yields a page target — lab scripts start at **10250+**.
+
+### TOOLS (cache/ is gitignored)
+`battery_fast.sh <card-rig>` · `battery_c3*.sh` / `battery_c6b|c.log` (full templates) ·
+`sweep_pins.py --old <sha>` · `run_rig.vbs <rig>` (detached, survives the shell) · `c5audit.mjs` ·
+`focuswalk.mjs` (tab contract + FM walk + focus order) · `bandprobe.mjs` (band geometry, dot-vs-text,
+clip scan, band.png at 4×) · `bandbox.mjs` (VOL/pot tree, stability across values) ·
+`dragprobe.mjs` (real CDP mouse drag on a band knob — the lift detector) · `tunewit-probe.mjs` (+
+`tunewit-src.js`, the tune capture envelope).
+
+### FIRST MOVES NEXT SESSION
+1. Read this block; `bash cache/scratch/battery_fast.sh` on `97ba6540` (≈90 s) to prove the tree.
+2. The MIDI import bug (queue A) — reproduce with a synthetic `.mid`, then fix and pin it.
+3. Full wave battery on the final bytes, rebuild the installer, then the publish ladder (queue D) —
+   the install journey (queue C) needs the owner's one elevated uninstall first.
+
+## SAVE 2026-11-10 (session 25, mid-day) — superseded by the block above; its content follows unchanged.
+
 
 ### STATE (proven, not claimed)
 - **Code HEAD `810d4e3`** (two commits on top of session 24's `93a0108`: `ab38a4d` C5 item 1,
