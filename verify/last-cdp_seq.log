@@ -1,6 +1,6 @@
-index.html sha256 (before): 54df076ae5d57d7a4fe5cba3c15f0d3da0833ebc18609673859151f09db25334
+index.html sha256 (before): 3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-1794251781077
+cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-1794267552544
  ok   boot: data-av-ready flips
  ok   seq card mounted: #av-seq-host + card root + grid (4 rows)
  ok   grid counts: 4 rows × N cells (N ≥ 4; total ≥ 64), every cell pinned data-track/data-step  -> [16,16,16,16] · total=64
@@ -14,17 +14,17 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-179425178
  ok   witness patch: engine.kind -> drum accepted (one-shot kick c2 = midi 36; kind restored at the end)  -> {"ok":true,"prev":{"kind":"va","kick":0.4},"mirror":"drum"}
  ok   baseline: silent control window BEFORE the first PLAY (RMS < 0.01)  -> {"max":0,"n":102}
    · transport run pattern: {"ok":true,"why":"import"}
- ok   real PLAY click: transport runs (avSeqIsPlaying) and the playhead .cur advances  -> playing=true · cur "0:8,1:8,2:8,3:8" -> "0:14,1:14,2:14,3:14" · click window 778 ms
+ ok   real PLAY click: transport runs (avSeqIsPlaying) and the playhead .cur advances  -> playing=true · cur "0:8,1:8,2:8,3:8" -> "0:14,1:14,2:14,3:14" · click window 780 ms
  ok   real STOP click: transport halts and the playhead freezes  -> halted=true · frozen ""
  ok   timing: known 16-step all-on pattern loaded @120 bpm (S=50) via the pinned import path  -> {"ok":true,"why":"import"}
-   · timing capture: samples=3693 · onsets=144 · maxRms=0.091 · slopeThr=0.020
- ok   timing: first onset lands within the PLAY click window (transport actually started)  -> first onset -190 ms after the click reads
+   · timing capture: samples=3691 · onsets=144 · maxRms=0.091 · slopeThr=0.020
+ ok   timing: first onset lands within the PLAY click window (transport actually started)  -> first onset -193 ms after the click reads
  ok   timing: 16 onsets/bar over 8 bars (128 matched grid slots)  -> matched=128/128
- ok   timing: mean |onset − grid| ≤ 8 ms (phase-fitted, jitter witness)  -> mean|Δ|=4.429 ms
- ok   timing: NO cumulative drift — bar 8 within ±6 ms of bar 1  -> bar1=-3.731 ms · bar8=-5.691 ms · drift=-1.959 ms
+ ok   timing: mean |onset − grid| ≤ 8 ms (phase-fitted, jitter witness)  -> mean|Δ|=2.635 ms
+ ok   timing: NO cumulative drift — bar 8 within ±6 ms of bar 1  -> bar1=-2.444 ms · bar8=-1.913 ms · drift=0.531 ms
    · swing pattern: {"ok":true,"why":"import"}
-   · swing capture: onsets=59 · evenShiftAlt=-24.885 ms · evenSpread=1.075
- ok   swing: S=66 ⇒ odd onsets shift ≈ +20 ms (16 % of stepDur) ±6 ms  -> oddShift=24.885 ms over n=48
+   · swing capture: onsets=59 · evenShiftAlt=-25.037 ms · evenSpread=0.785
+ ok   swing: S=66 ⇒ odd onsets shift ≈ +20 ms (16 % of stepDur) ±6 ms  -> oddShift=25.037 ms over n=48
  ok   probability: prob 0 on the odd steps ⇒ deterministic silence (16 onsets / 2 bars)  -> in2bars=16 · total onsets=22
  ok   probability: prob 100 ⇒ all steps present (32 onsets / 2 bars)  -> in2bars=32 · total onsets=43
  ok   pattern round-trip (UI path): real EXPORT writes the pinned JSON → real IMPORT → avSeqSnap() deep-equal  -> exported 29735 chars · import deep-equal
@@ -34,11 +34,11 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-179425178
  ok   undo/redo: real cell click edits (snap changes) → avUndo() restores pre-edit → avRedo() reapplies  -> edited=true · undo=true restore=deep-equal · redo=true reapply=deep-equal
  ok   undo: UI repaint after avUndo() (cell .on follows the restored snapshot)  -> cell .on cleared=true
    · accent witness prep: {"kindOk":true,"mirror":"acid","applied":[["acid.cutoff",true],["acid.reso",true],["acid.envMod",true],["acid.decay",true],["acid.accent",true],["acid.accentDecay",true],["acid.volume",true],["acid.veg",true],["acid.softAttack",true]],"fx":[{"mod":"fx.drive","on":true,"mix":true},{"mod":"fx.aw","on":true,"mix":true},{"mod":"fx.mod","on":true,"mix":true},{"mod":"fx.delay","on":true,"mix":true},{"mod":"fx.verb","on":true,"mix":true},{"mod":"fx.conv","on":true,"mix":true},{"mod":"fx.dyn","on":true,"mix":true}]}
-   · accent witness raw: flag1=0.025 flag0=0.012 vel0.8=0.011 vel0.5=0.006 legacy=0.022 explicit0=0.012
- ok   accent witness (E decision): sequenced flag 1 vs flag 0 at equal emitted vel 1.0 -> flagged peak materially above (ratio >= 1.15)  -> {"kindOk":true,"onPeak":0.024640136292678985,"offPeak":0.012031086301633586,"ratio":2.048,"min":1.15,"saneMax":6,"on":{"ok":true,"peak":0.024640136292678985,"hits":4,"n":699,"flowMs":1,"flowRms":0.0239076859343361,"quiet":{"ok":true,"floor":0,"ms":1},"clicked":true,"attempt":0},"off":{"ok":true,"peak":0.012031086301633586,"hits":2,"n":700,"flowMs":1,"flowRms":0.012031086301633586,"quiet":{"ok":true,"floor":0,"ms":1},"clicked":true,"attempt":0}}
- ok   accent witness (default-vel unflagged): vel 0.8 flag 0 vs vel 0.5 flag 0 -> peak ratio inside the pure-gain band (1.6 +- 15%; the old implicit accent reads ~3x)  -> {"kindOk":true,"hiPeak":0.010524816589519197,"loPeak":0.006015543150816793,"ratio":1.75,"gainRatio":1.6,"bandRel":0.15,"hi":{"ok":true,"peak":0.010524816589519197,"hits":2,"n":698,"flowMs":1,"flowRms":0.010524816589519197,"quiet":{"ok":true,"floor":0,"ms":0},"clicked":true,"attempt":0},"lo":{"ok":true,"peak":0.006015543150816793,"hits":0,"n":697,"flowMs":1,"flowRms":0.006015543150816793,"quiet":{"ok":true,"floor":0,"ms":1},"clicked":true,"attempt":0}}
- ok   accent witness (legacy path): plain avNoteDown vel 0.9 (no opts) still accents vs an explicit acc:0 render (ratio >= 1.15)  -> {"kindOk":true,"legacyPeak":0.021579797406391682,"explicitPeak":0.0118404185366715,"ratio":1.823,"min":1.15,"saneMax":6,"legacy":{"ok":true,"peak":0.021579797406391682,"n":68,"flowMs":76,"flowRms":0.021579797406391682,"quiet":{"ok":true,"floor":0,"ms":1},"attempt":0},"explicit":{"ok":true,"peak":0.0118404185366715,"n":66,"flowMs":63,"flowRms":0.0118404185366715,"quiet":{"ok":true,"floor":0,"ms":1},"attempt":0}}
- ok   accent witness sanity: all six renders flowed on the master tap (peak rms > 0.001 -- the ratio gates are never vacuous)  -> [{"leg":"flag1","ok":true,"peak":0.0246,"flowMs":1,"hits":4},{"leg":"flag0","ok":true,"peak":0.012,"flowMs":1,"hits":2},{"leg":"vel0.8","ok":true,"peak":0.0105,"flowMs":1,"hits":2},{"leg":"vel0.5","ok":true,"peak":0.006,"flowMs":1,"hits":0},{"leg":"legacy","ok":true,"peak":0.0216,"flowMs":76,"hits":null},{"leg":"explicit0","ok":true,"peak":0.0118,"flowMs":63,"hits":null}]
+   · accent witness raw: flag1=0.025 flag0=0.013 vel0.8=0.010 vel0.5=0.006 legacy=0.022 explicit0=0.011
+ ok   accent witness (E decision): sequenced flag 1 vs flag 0 at equal emitted vel 1.0 -> flagged peak materially above (ratio >= 1.15)  -> {"kindOk":true,"onPeak":0.024726260167027066,"offPeak":0.013156020650212033,"ratio":1.879,"min":1.15,"saneMax":6,"on":{"ok":true,"peak":0.024726260167027066,"hits":4,"n":701,"flowMs":0,"flowRms":0.0239768723540531,"quiet":{"ok":true,"floor":0,"ms":0},"clicked":true,"attempt":0},"off":{"ok":true,"peak":0.013156020650212033,"hits":2,"n":703,"flowMs":1,"flowRms":0.013156020650212033,"quiet":{"ok":true,"floor":0,"ms":1},"clicked":true,"attempt":0}}
+ ok   accent witness (default-vel unflagged): vel 0.8 flag 0 vs vel 0.5 flag 0 -> peak ratio inside the pure-gain band (1.6 +- 15%; the old implicit accent reads ~3x)  -> {"kindOk":true,"hiPeak":0.009670837749102898,"loPeak":0.006015543150816793,"ratio":1.608,"gainRatio":1.6,"bandRel":0.15,"hi":{"ok":true,"peak":0.009670837749102898,"hits":2,"n":699,"flowMs":1,"flowRms":0.009670837749102898,"quiet":{"ok":true,"floor":0,"ms":0},"clicked":true,"attempt":0},"lo":{"ok":true,"peak":0.006015543150816793,"hits":0,"n":698,"flowMs":1,"flowRms":0.006015543150816793,"quiet":{"ok":true,"floor":0,"ms":1},"clicked":true,"attempt":0}}
+ ok   accent witness (legacy path): plain avNoteDown vel 0.9 (no opts) still accents vs an explicit acc:0 render (ratio >= 1.15)  -> {"kindOk":true,"legacyPeak":0.021579784557926533,"explicitPeak":0.010879692400654012,"ratio":1.983,"min":1.15,"saneMax":6,"legacy":{"ok":true,"peak":0.021579784557926533,"n":69,"flowMs":76,"flowRms":0.021579784557926533,"quiet":{"ok":true,"floor":0,"ms":1},"attempt":0},"explicit":{"ok":true,"peak":0.010879692400654012,"n":62,"flowMs":62,"flowRms":0.010827977688102257,"quiet":{"ok":true,"floor":0,"ms":0},"attempt":0}}
+ ok   accent witness sanity: all six renders flowed on the master tap (peak rms > 0.001 -- the ratio gates are never vacuous)  -> [{"leg":"flag1","ok":true,"peak":0.0247,"flowMs":0,"hits":4},{"leg":"flag0","ok":true,"peak":0.0132,"flowMs":1,"hits":2},{"leg":"vel0.8","ok":true,"peak":0.0097,"flowMs":1,"hits":2},{"leg":"vel0.5","ok":true,"peak":0.006,"flowMs":1,"hits":0},{"leg":"legacy","ok":true,"peak":0.0216,"flowMs":76,"hits":null},{"leg":"explicit0","ok":true,"peak":0.0109,"flowMs":62,"hits":null}]
    · accent witness restored: 23 params rolled back (fx + acid pins)
  ok   K fill toggle surface: #av-seq-fill-toggle in the transport row (label FILL) + avSeqSchedSetFill/GetFill exports live (the KI pin)  -> {"tog":true,"label":"FILL","cls":"av-btn mini av-seq-btn","aria":"false","setFn":true,"getFn":true,"fill":0,"handle":true}
  ok   K fill OFF: a lone cond:"fill" step stays SILENT while the runtime flag reads 0 (no track-0/step-0 "on" trace records; transport provably ran)  -> {"load":true,"play":true,"playing":true,"fill":0,"offHits":0,"offWindow":[608,608]}
@@ -48,9 +48,9 @@ cdp port 9480 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-sequi-179425178
  ok   K scene undo: capture (track 0 muted) + un-mute -> real RECALL applies the scene -> avUndo() restores the prior pattern byte-for-byte (facade avSeqSnap deep-equal)  -> {"muteOn":true,"captured":true,"muteOff":true,"armed":true,"recall":true,"recalled":true,"undo":true,"restored":true}
    · witness patch restored: engine.kind="va" kick.decay=0.4
  ok   zero page errors
- ok   screenshot: renders/p4-seq-suite.png (the sequencer card, scale 2)  -> 204370 bytes · clip 1014×852 @2x
-index.html sha256 (after): 54df076ae5d57d7a4fe5cba3c15f0d3da0833ebc18609673859151f09db25334
- ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 54df076ae5d57d7a4fe5cba3c15f0d3da0833ebc18609673859151f09db25334
- ok   freeze: index.html sha256 = pinned  -> pinned 54df076ae5d5…
+ ok   screenshot: renders/p4-seq-suite.png (the sequencer card, scale 2)  -> 1292295 bytes · clip 1016×946 @2x
+index.html sha256 (after): 3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed
+ ok   freeze: index.html sha256 before === after (unchanged by the run)  -> 3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed
+ ok   freeze: index.html sha256 = pinned  -> pinned 3a7b42c6e8c5…
 
 41 passed, 0 failed

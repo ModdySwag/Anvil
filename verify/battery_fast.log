@@ -1,7 +1,8 @@
-FAST-LANE START 10 Nov 2026 09:59:05 sha=352db60680c603f4a6e6cce810bedbcb9305e00c544babf24158bd7981e5b91a card=none
+FAST-LANE START 10 Nov 2026 10:07:43 sha=3a7b42c6e8c58d6db2140e31f621050bc4fb8ffeaecf7e9837525ce909fd14ed card=seq
 cdp_chassis exit=0 ok=47 fail=0
 cdp_a11y exit=0 ok=37 fail=0
 cdp_smoke exit=0 ok=81 fail=0
 cdp_m1 exit=0 ok=33 fail=0
 cdp_m2 exit=0 ok=40 fail=0
-FAST-LANE DONE 10 Nov 2026 10:00:33 verdict=clean
+cdp_seq exit=0 ok=41 fail=0
+FAST-LANE DONE 10 Nov 2026 10:10:37 verdict=clean

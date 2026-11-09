@@ -120,6 +120,8 @@
 
 const AV_SEQ_UI_VERSION = "p4.0";
 const AV_SEQ_UI_TRACKS = 4;
+/* P2: the rack never renders shorter than this — the spare rows are inert ghosts (no data-track) */
+const AV_SEQ_UI_GHOST = 8;
 const AV_SEQ_UI_DEFAULT_LEN = 16;
 const AV_SEQ_UI_MAX_LEN = 64;
 const AV_SEQ_UI_FIELDS = ["on", "note", "vel", "gate", "slide", "accent", "oct", "prob", "cond", "ratchet", "micro"];
@@ -1085,6 +1087,18 @@ function avSeqUiGridHTML(snap) {
       ' aria-label="Mute track ' + (t + 1) + '" title="Mute / unmute track ' + (t + 1) + '">M</button>' +
       avSeqUiTrackCtlHTML(snap, t) +
       cells + '</div>';
+  }
+  /* P2 (2026-11-10): the rack reads short when a song has few tracks — four 22px rows on a 580px
+     card left the page looking half-built. Inert ghost rows fill the rack to AV_SEQ_UI_GHOST rows:
+     Their own class names (av-seq-grow / av-seq-gcell), so no rig selector and no click target for
+     a real step can ever match them; aria-hidden and pointer-events:none. Ghosts only — they never
+     claim a note. */
+  for (let g = AV_SEQ_UI_TRACKS; g < AV_SEQ_UI_GHOST; g++) {
+    let gcells = "";
+    for (let s = 0; s < 16; s++) gcells += '<i class="av-seq-gcell"></i>';
+    rows += '<div class="av-seq-grow" aria-hidden="true">' +
+      '<span class="av-seq-grow-lbl">T' + (g + 1) + '</span>' +
+      '<i class="av-seq-grow-mute"></i>' + gcells + '</div>';
   }
   return '<div class="av-seq-gridwrap"><div class="av-seq-grid" role="group" aria-label="Step grid">' + rows + '</div></div>';
 }
