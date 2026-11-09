@@ -27,7 +27,8 @@ css = "\n".join((
     (SRC / "styles.css").read_text(encoding="utf-8"),
     (SRC / "fonts.css").read_text(encoding="utf-8"),        # P0: Inter var 400-600 + Plex Mono 400/500 (OFL, embedded)
     (SRC / "icons.css").read_text(encoding="utf-8"),        # P0: the icon masks (generated from the Iconset catalog)
-    (SRC / "styles-console.css").read_text(encoding="utf-8"),  # P0: the Console chassis layer (loads last, owns the bands)
+    (SRC / "materials.css").read_text(encoding="utf-8"),    # P1: the Higgsfield material sheet (dial glass, plates, knob faces, walnut)
+    (SRC / "styles-console.css").read_text(encoding="utf-8"),  # P0/P1: the Console chassis + control language (loads last)
 ))
 body = (SRC / "body.html").read_text(encoding="utf-8")
 

@@ -52,10 +52,10 @@
 
   /* ---- chassis geometry (measured before/after in the receipt) ---- */
   --title-h: 30px;
-  --band-h: 74px;
+  --band-h: 80px;
   --zones-h: 38px;
   --status-h: 23px;
-  --dock-h: 68px;
+  --dock-h: 64px;
 
   /* ---- legacy tokens retinted onto the glass (every card inherits) ---- */
   --bg: #080B0C;
@@ -74,6 +74,7 @@
 
 /* finish variants — selected in P3; present now so the tokens never fork per rule */
 body[data-finish="silver"] {
+  --fin-metal: linear-gradient(180deg, #F4F5F5 0%, #ECEDED 34%, #CFD1CB 82%, #B4B6AE 100%);
   --fin-face-1: #F4F5F5;
   --fin-face-2: #ECEDED;
   --fin-face-3: #CFD1CB;
@@ -88,6 +89,7 @@ body[data-finish="silver"] {
   --teal-glow: #E9A961;
 }
 body[data-finish="walnut"] {
+  --fin-metal: linear-gradient(180deg, #4A3626 0%, #3A2A1E 34%, #251A12 82%, #1A120C 100%);
   --fin-face-1: #3A2A1E;
   --fin-face-2: #2B1D15;
   --fin-face-3: #1D130D;
@@ -130,8 +132,11 @@ body[data-finish="walnut"] {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: var(--fin-brush);
-  opacity: .6;
+  background-image: var(--mat-plate, none), var(--fin-brush);
+  background-size: 480px 480px, auto;
+  background-position: center, 0 0;
+  mix-blend-mode: soft-light;
+  opacity: .55;
 }
 #av-title .av-band-plate {
   display: flex;
@@ -208,10 +213,10 @@ body[data-finish="walnut"] {
   letter-spacing: .08em;
   text-transform: uppercase;
   color: var(--fin-ink);
-  background: linear-gradient(180deg, #F7EDD8 0%, #E9D9B8 55%, #D8C193 100%);
+  background: linear-gradient(180deg, var(--fin-face-1) 0%, var(--fin-face-2) 55%, var(--fin-face-3) 100%);
   border: 1px solid var(--fin-edge-lo);
   border-radius: 3px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 1px 0 rgba(255, 255, 255, .25);
+  box-shadow: inset 0 1px 0 var(--fin-edge-hi), 0 1px 0 rgba(255, 255, 255, .12);
 }
 #av-title .av-btn:hover { color: var(--fin-ink); border-color: rgba(46, 38, 22, .55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 3px rgba(0, 0, 0, .18); }
 #av-title .av-btn:focus-visible { outline: 2px solid var(--fin-accent-deep); outline-offset: 1px; }
@@ -224,7 +229,7 @@ header.av-head {
   min-height: var(--band-h);
 }
 #av-band {
-  padding: 5px 10px;
+  padding: 3px 10px;
   gap: 10px;
 }
 #av-band .av-band-grp {
@@ -253,8 +258,11 @@ header.av-head {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: var(--fin-brush);
-  opacity: .55;
+  background-image: var(--mat-plate, none), var(--fin-brush);
+  background-size: 480px 480px, auto;
+  background-position: center, 0 0;
+  mix-blend-mode: soft-light;
+  opacity: .5;
 }
 .av-zones-in {
   height: 100%;
@@ -450,10 +458,10 @@ body.kb-midi #av-status .pk-mode-hint { color: #1E5A78; }
   font-size: 8.5px;
   line-height: 1;
   color: var(--fin-ink);
-  background: rgba(255, 255, 255, .3);
+  background: linear-gradient(180deg, var(--fin-face-1) 0%, var(--fin-face-3) 100%);
   border: 1px solid var(--fin-edge-lo);
   border-radius: 2px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55);
+  box-shadow: inset 0 1px 0 var(--fin-edge-hi);
 }
 #av-status .av-btn:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 1px 3px rgba(0, 0, 0, .18); }
 #av-status #pk-return { display: none; }
@@ -463,7 +471,7 @@ body.piano-pop #av-status #pk-pop { display: none; }
 /* ============================================================================
    5. PIANO DOCK — 68 px: wheels + keys only (the rail lives in the status bar)
    ============================================================================ */
-body { --dock-h: 68px; --status-h: 23px; }
+body { --dock-h: 64px; --status-h: 23px; }
 body:not(.piano-closed) { --dock-tax: calc(var(--dock-h) + var(--status-h)); }
 body.piano-closed { --dock-tax: var(--status-h); }
 #piano-dock {
@@ -521,8 +529,414 @@ body.piano-pop #piano-dock > #piano-keys { padding: 3px 4px; }
   letter-spacing: var(--trk-legend);
 }
 
+/* ============================================================================
+   7. CONTROL LANGUAGE — the same grammar on every surface (P1a)
+   The owner's note (2026-11-10): "the out of format knobs have returned" and
+   "why not apply the theme to the whole gui". P0 only dressed the chrome; this
+   section carries the console grammar into the work area so nothing reads as
+   the old build: engraved tick rings, one pointer, neutral values, no glows,
+   flat engraved keys, console sub-tabs, rocker pairs, module heads with an LED.
+   The knob's .av-knob-ring / -face / -mark and its --knob-arc hook stay (the
+   knob_feel rig pins them); only the paint changes.
+   ============================================================================ */
+
+/* 7a. pots */
+.av-knob {
+  background-image:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, .10) 0%, rgba(0, 0, 0, .10) 58%, rgba(0, 0, 0, .38) 100%),
+    var(--mat-knob, linear-gradient(180deg, #2E3A41 0%, #19242A 55%, #0B1115 100%));
+  background-size: 100% 100%, 118% 118%;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  border-color: #05080B;
+  box-shadow: 0 2px 3px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .09), inset 0 -2px 5px rgba(0, 0, 0, .55);
+}
+.av-knob:hover { box-shadow: 0 0 0 1px rgba(47, 182, 196, .45), 0 2px 4px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .10); }
+.av-knob:focus-visible { box-shadow: 0 0 0 2px var(--fin-accent), 0 2px 4px rgba(0, 0, 0, .6); }
+.av-knob.dragging { box-shadow: 0 0 0 1px var(--fin-accent), 0 2px 6px rgba(0, 0, 0, .7); }
+.av-knob-ring {
+  inset: -5px;
+  background:
+    repeating-conic-gradient(from 225deg, rgba(233, 238, 239, .30) 0deg 1.1deg, transparent 1.1deg 7.6deg),
+    conic-gradient(from 225deg, rgba(47, 182, 196, .55) 0deg var(--knob-arc, 0deg), transparent var(--knob-arc, 0deg) 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 0 68%, #000 69% 100%);
+  mask: radial-gradient(circle, transparent 0 68%, #000 69% 100%);
+  opacity: 1;
+}
+.av-knob-face {
+  inset: 16%;
+  background: radial-gradient(circle at 42% 28%, rgba(255, 255, 255, .10) 0%, rgba(0, 0, 0, .06) 56%, rgba(0, 0, 0, .26) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), inset 0 -2px 4px rgba(0, 0, 0, .28);
+}
+.av-knob-mark { width: 2px; height: 34%; top: 7%; background: #CFE8EC; box-shadow: none; }
+.av-knob.at-min .av-knob-mark { background: #9FB3B8; box-shadow: none; }
+.av-knob.at-max .av-knob-mark { background: var(--fin-accent); box-shadow: none; }
+.av-knob-lbl { font-family: var(--mono); font-size: 8px; letter-spacing: .14em; color: var(--text-3); }
+.av-knob-val { font-family: var(--mono); font-size: 10px; color: var(--text-2); text-shadow: none; font-variant-numeric: tabular-nums; }
+.k-sm .av-knob-lbl { font-size: 7.5px; }
+.k-sm .av-knob-val { font-size: 9px; }
+
+/* 7b. keys: dark caps, hairline, light legend — no glow */
+.av-btn {
+  border-radius: 3px;
+  background: linear-gradient(180deg, #1B242A 0%, #121A1F 100%);
+  border: 1px solid #0A1014;
+  color: var(--text-2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+.av-btn:hover { color: var(--text); border-color: #2A3A40; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
+.av-btn.on, .av-btn[aria-pressed="true"] {
+  background: linear-gradient(180deg, #2A3B40 0%, #152024 100%);
+  color: #BFEFF5;
+  border-color: #2C5A61;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .07);
+}
+.av-btn:focus-visible { outline: 2px solid var(--fin-accent); outline-offset: 1px; }
+
+/* 7c. chips */
+.av-chip {
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .03);
+  border-color: #223032;
+  color: var(--text-2);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+}
+.av-chip.av-hot { color: #8CE9F2; border-color: #2C5A61; }
+
+/* 7d. sub-tabs: console tabs, one accent underline */
+.av-subtabs { gap: 2px; border-bottom: 1px solid #1A2426; }
+.av-subtab {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-3);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  padding: 4px 10px;
+}
+.av-subtab:hover { color: var(--text-2); background: rgba(255, 255, 255, .03); }
+.av-subtab[aria-selected="true"] {
+  color: var(--text);
+  border-bottom-color: var(--fin-accent);
+  background: linear-gradient(180deg, rgba(47, 182, 196, .10), transparent);
+  box-shadow: none;
+}
+
+/* 7e. two-choice pairs: a rocker, one lit key */
+.av-pair { border-radius: 3px; border-color: #0A1014; background: #0B1216; }
+.av-pair-key { font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: var(--text-3); padding: 3px 8px; }
+.av-pair-key:hover { color: var(--text-2); background: rgba(255, 255, 255, .04); }
+.av-pair-key.on { color: #052A2E; background: linear-gradient(180deg, #67CBD6 0%, #2FB6C4 100%); font-weight: 600; }
+.av-pair-key:focus-visible { outline: 1px solid var(--fin-accent); outline-offset: -2px; }
+
+/* 7f. cards and module heads: one hairline, an LED, micro-caps names */
+.av-card::before { width: 1px; background: var(--zone-accent, var(--fin-accent)); opacity: .5; }
+.av-mod-head h2 { font-family: var(--mono); font-size: 10px; letter-spacing: .16em; color: var(--text-2); }
+.av-mod-head h2::before {
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  margin-right: 7px;
+  background: var(--zone-accent, var(--fin-accent));
+  opacity: .9;
+  vertical-align: 1px;
+}
+.av-note { color: var(--text-3); }
+
+/* 7g. the 74px band: the pot cell fits inside the group, nothing clips */
+#av-band .av-band-pot { width: 46px; }
+#av-pot-a, #av-pot-b, #av-pot-c, #av-pot-d { width: 34px; height: 34px; }
+#av-pot-a .av-knob-wrap,
+#av-pot-b .av-knob-wrap,
+#av-pot-c .av-knob-wrap,
+#av-pot-d .av-knob-wrap { width: 34px !important; }
+.av-band-pot-label { font-family: var(--mono); font-size: 7px; line-height: 9px; letter-spacing: .12em; color: var(--text-3); }
+.av-band-num { font-family: var(--mono); font-size: 8.5px; line-height: 10px; color: var(--text-2); }
+#av-band .av-band-pot.av-band-vol { width: 54px; }
+#av-band #av-vol-pot { width: 40px; height: 40px; }
+
+/* 7h. the six panel keys read a shade stronger than the first cut */
+.av-zone-tab[data-kind="panel"] { color: rgba(46, 38, 22, .62); }
+
 /* forced-colors / High Contrast: never rely on the metal */
 @media (forced-colors: active) {
   #av-title, .av-zones, #av-status, #piano-dock { background: Canvas; color: CanvasText; }
   .av-zone-tab[aria-selected="true"] { border-bottom-color: Highlight; color: Highlight; }
+}
+
+/* ============================================================================
+   8. BAND INTERNALS — the display is dial glass, the pots fit, the keys shrink
+   ============================================================================ */
+
+/* 8a. the display: cream dial glass in a brass bezel (the old green dot-matrix is gone) */
+#av-lcd-bezel {
+  padding: 4px;
+  gap: 4px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #4A3B26 0%, #2A2118 55%, #17120D 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 210, .18), inset 0 -2px 6px rgba(0, 0, 0, .85), 0 1px 0 rgba(255, 255, 255, .05);
+}
+#av-lcd-bezel #av-lcd {
+  padding: 2px 7px;
+  gap: 1px;
+  border-radius: 2px;
+  background-color: #F3E7CE;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, .5) 0%, rgba(190, 160, 105, .22) 100%);
+  background-size: auto;
+  box-shadow: inset 0 0 0 1px rgba(60, 44, 20, .55), inset 0 0 12px rgba(120, 90, 40, .22);
+}
+#av-lcd-bezel .av-lcd-row {
+  height: 14px;
+  line-height: 14px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .07em;
+  color: #2B2314;
+  text-shadow: none;
+}
+#av-lcd-bezel .av-lcd-row > span:first-child { color: #6B5836; }
+#av-lcd-bezel select.av-bank-pack,
+#av-lcd-bezel select.av-bank-preset { color: #2B2314; height: 14px; }
+#av-lcd-bezel select:focus-visible { outline: 1px solid #6B5836; outline-offset: 1px; }
+#av-lcd-edited { color: #A9502A; }
+
+/* 8b. PANIC / LEARN read as keys, not slabs */
+#av-panic,
+#av-learn {
+  height: 24px;
+  min-width: 44px;
+  padding: 0 9px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .12em;
+  color: var(--text-2);
+  background: linear-gradient(180deg, #1B242A 0%, #121A1F 100%);
+  border: 1px solid #0A1014;
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+#av-panic:hover { border-color: #5A2E2E; color: #F2B8B8; background: linear-gradient(180deg, #2A1A1A 0%, #1A1010 100%); }
+#av-learn.on, #av-learn[aria-pressed="true"] {
+  color: #052A2E;
+  background: linear-gradient(180deg, #67CBD6 0%, #2FB6C4 100%);
+  border-color: #1B7B86;
+}
+
+/* 8c. the pot cell owns its box, so the label and the value can never be sliced */
+#av-band .av-band-pot {
+  width: 48px;
+  height: 58px;
+  justify-content: flex-end;
+}
+.av-band-pot-label { height: 9px; line-height: 9px; font-size: 7px; }
+.av-band-num { height: 11px; line-height: 11px; font-size: 8.5px; }
+#av-pot-a, #av-pot-b, #av-pot-c, #av-pot-d { width: 36px; height: 36px; }
+#av-pot-a .av-knob-wrap,
+#av-pot-b .av-knob-wrap,
+#av-pot-c .av-knob-wrap,
+#av-pot-d .av-knob-wrap { width: 36px !important; }
+#av-band .av-band-pot.av-band-vol { width: 56px; height: 62px; }
+#av-band #av-vol-pot { width: 42px; height: 42px; }
+
+/* 8d. native selects become console fields (dark glass, hairline, drawn caret) */
+select:not(.av-bank-pack):not(.av-bank-preset) {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 24px;
+  padding: 0 22px 0 8px;
+  border: 1px solid #0A1014;
+  border-radius: 3px;
+  background-color: #0E1518;
+  background-image:
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' fill='none' stroke='%23A9B4B8' stroke-width='1.4' stroke-linecap='round'/></svg>"),
+    linear-gradient(180deg, #161F22 0%, #0E1518 100%);
+  background-repeat: no-repeat, no-repeat;
+  background-position: right 7px center, 0 0;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .05em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+select:not(.av-bank-pack):not(.av-bank-preset):hover { color: var(--text); border-color: #2A3A40; }
+select:not(.av-bank-pack):not(.av-bank-preset):focus-visible { outline: 2px solid var(--fin-accent); outline-offset: 1px; }
+select option { background: #0E1518; color: var(--text); }
+
+/* 8e. the first-run strip: a console strip, not a wireframe banner */
+#av-firstrun {
+  background: linear-gradient(180deg, #131C1E 0%, #0C1315 100%);
+  border: 1px solid #223032;
+  border-left: 2px solid var(--fin-accent);
+  border-radius: 4px;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+}
+#av-firstrun button {
+  background: linear-gradient(180deg, #24343A 0%, #162326 100%);
+  border: 1px solid #0A1014;
+  border-radius: 3px;
+  color: #BFEFF5;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+}
+
+/* 8f. the keyboard: ivory and ebony, brass under the tonic — no teal wash */
+.pk-white {
+  background: linear-gradient(180deg, #F7F2E6 0%, #EDE4D2 55%, #DCD0B8 100%);
+  border-color: #2A241A;
+}
+.pk-white.in-scale { background: linear-gradient(180deg, #FBF7EE 0%, #F2E9D6 55%, #E2D6BE 100%); }
+.pk-white.in-win { background: linear-gradient(180deg, #FEFBF4 0%, #F7F0E0 55%, #E9DFC9 100%); }
+.pk-white.root { background: linear-gradient(180deg, #FBF4E2 0%, #F0E4C8 55%, #DFCFAB 100%); box-shadow: inset 0 -3px 0 #C9A961; }
+.pk-white:active, .pk-white.down { background: linear-gradient(180deg, #DCD0B8 0%, #C6B896 100%); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .2); }
+.pk-black { background: linear-gradient(180deg, #22282C 0%, #0A0E10 70%, #141A1D 100%); border-color: #05080B; }
+.pk-black:active, .pk-black.down { background: linear-gradient(180deg, #0C1012 0%, #05080B 100%); }
+.pk-keycap { color: #6B5E42; background: #F6EFDF; border-color: #C9B98F; }
+.pk-black .pk-keycap { color: #E6DCC6; background: #1A2124; border-color: #3A4348; }
+body.kb-armed .pk-keycap { color: #052A2E; background: #A7F4E9; border-color: var(--fin-accent); box-shadow: none; }
+
+/* 8g. scrollbars follow the glass */
+.av-zone::-webkit-scrollbar-thumb { background: #26343A; border-color: #0B0F10; }
+.av-zone::-webkit-scrollbar-thumb:hover { background: #33474F; }
+
+/* ============================================================================
+   9. THE DISPLAY — a real instrument window: ivory dial glass, bought texture,
+      three rows with a hero line, engraved bezel and a glass reflection.
+   ============================================================================ */
+#av-lcd-bezel {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 5px 6px 5px 5px;
+  border-radius: 5px;
+  background:
+    linear-gradient(180deg, #6A5433 0%, #4A3A24 18%, #2A2016 60%, #14100B 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 210, .35),
+    inset 0 -1px 0 rgba(0, 0, 0, .9),
+    inset 0 0 0 1px rgba(0, 0, 0, .55),
+    0 1px 2px rgba(0, 0, 0, .6);
+}
+#av-lcd-bezel #av-lcd {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1px;
+  padding: 4px 9px 5px;
+  border-radius: 2px;
+  overflow: hidden;
+  background-color: #F1E4C9;
+  background-image:
+    var(--mat-dial, none),
+    linear-gradient(180deg, #F7EDD8 0%, #EFE0C0 52%, #E2CFA8 100%);
+  background-size: 320px 320px, auto;
+  background-position: center, 0 0;
+  box-shadow:
+    inset 0 0 0 1px rgba(60, 44, 20, .65),
+    inset 0 2px 3px rgba(90, 66, 30, .35),
+    inset 0 -6px 12px rgba(90, 66, 30, .18);
+}
+#av-lcd-bezel #av-lcd::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(178deg, rgba(255, 255, 255, .38) 0%, rgba(255, 255, 255, .10) 34%, rgba(255, 255, 255, 0) 46%);
+}
+#av-lcd-bezel .av-lcd-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  height: 14px;
+  line-height: 14px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .07em;
+  color: #2B2314;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 250, 235, .5);
+  white-space: nowrap;
+  overflow: hidden;
+}
+#av-lcd-bezel .av-lcd-row:first-child {
+  height: 19px;
+  line-height: 19px;
+  align-items: center;
+  border-bottom: 1px solid rgba(90, 66, 30, .22);
+  margin-bottom: 1px;
+  padding-bottom: 1px;
+}
+#av-lcd-bezel .av-lcd-hero {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  color: #1F180C;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#av-lcd-bezel .av-lcd-row > span:first-child { color: #6B5836; }
+#av-lcd-bezel .av-lcd-slot { overflow: hidden; text-overflow: ellipsis; }
+#av-lcd-bezel .av-lcd-right { margin-left: auto; text-align: right; color: #4A3A22; }
+#av-lcd-bezel .av-lcd-w5 { flex: 0 0 6ch; }
+#av-lcd-bezel .av-lcd-w7 { flex: 0 0 9ch; }
+#av-lcd-bezel .av-lcd-w10 { flex: 0 0 11ch; }
+#av-lcd-bezel .av-lcd-w13 { flex: 0 0 14ch; }
+#av-lcd-bezel .av-lcd-w15 { flex: 0 1 auto; min-width: 0; }
+#av-lcd-bezel select.av-bank-pack,
+#av-lcd-bezel select.av-bank-preset {
+  color: #1F180C;
+  height: 19px;
+  font-family: var(--mono);
+  letter-spacing: .12em;
+  background: transparent;
+}
+#av-lcd-bezel #avc-bpm {
+  margin-left: auto;
+  min-width: 74px;
+  padding: 0;
+  height: 14px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  justify-content: flex-end;
+  color: #1F180C;
+  background: none;
+  border: 0;
+  box-shadow: none;
+}
+#av-lcd-bezel .avc-bpm-lab { font-size: 7.5px; letter-spacing: .22em; color: #6B5836; }
+#av-lcd-bezel #avc-bpm-val { font-size: 12px; font-weight: 600; letter-spacing: .06em; }
+#av-lcd-bezel .av-lcd-steps { display: flex; flex-direction: column; gap: 2px; flex: none; }
+#av-lcd-bezel .av-lcd-step {
+  width: 14px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid #0A0805;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #6A5433 0%, #3A2C1B 100%);
+  color: #E8D9B6;
+  font-size: 7px;
+  line-height: 1;
+  cursor: pointer;
+}
+#av-lcd-bezel .av-lcd-step:hover { background: linear-gradient(180deg, #8A6E42 0%, #4A3A22 100%); }
+#av-lcd-edited { color: #A9502A; text-shadow: none; }
+
+/* the inspector's screens share the display's bezel grammar */
+#av-insp-wave, #av-insp-filter, #av-insp-env {
+  border-radius: 2px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .6), inset 0 2px 6px rgba(0, 0, 0, .5);
 }

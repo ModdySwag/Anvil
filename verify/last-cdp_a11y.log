@@ -1,7 +1,8 @@
-index.html sha256 (before): de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205
+index.html sha256 (before): 8490ab1387a37992992960a457dd9ca45b97774424f788f331081c180078a7c4
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794261504011
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794262626545
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
+   - Page.setDownloadBehavior unavailable
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
  ok   C3-5: the LEVELS fold opens before the knob legs (a hidden knob cannot take focus)  -> opened
@@ -24,7 +25,7 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   C5 master knob End (real CDP key): value clamps to max ("1.2") and aria-valuenow matches  -> {"v":1.2,"max":"1.2","aria":"1.2","readout":"120%"}
  ok   C6 master knob restore: start value (0.8) restored through the commit path (readback matches)  -> {"orig":0.8,"restored":0.8,"aria":"0.8"}
 == D. names (visible buttons + counts.unnamed) ==
- ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 147 visible of 652  -> {"total":652,"visible":147,"bad":[]}
+ ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 148 visible of 653  -> {"total":653,"visible":148,"bad":[]}
  ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":565,"counts":{"sliders":223,"knobsTabbed":223,"canvases":22,"liveRegions":4,"roleButtons":2,"labeled":565,"unnamed":0}}
 == E. live regions + announce ==
  ok   E1 live regions: >= 3 pinned-selector elements (.av-fam-status / #av-deliver-status / .av-session-status) carry role=status or aria-live (live 4 of 4)  -> {"found":4,"live":4,"sample":["av-deliver-status","av-fam-hub-status","av-fam-res-status","av-fam-radio-status"]}
@@ -45,17 +46,17 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
 == I. tab sets + the recorded focus order ==
  ok   I1 tab sets: every [role=tab] resolves aria-controls to a [role=tabpanel] that names it back via aria-labelledby, + exactly one aria-selected per tablist (tabs 44, panels 44)  -> {"tabs":44,"panels":44,"lists":10,"fm":{"label":"FM operators","tabs":6,"selected":1,"stops":1}}
  ok   I2 FM operator tabs: one tab stop (roving tabindex) + ArrowRight/End/Home with REAL CDP keys move selection, panel and focus together  -> {"a":{"tabs":6,"sel":["1"],"stops":["1"],"focus":"av-fm-op-tab-1","panel":true,"shownPanels":1},"arrowRight":{"tabs":6,"sel":["2"],"stops":["2"],"focus":"av-fm-op-tab-2","panel":true,"shownPanels":1},"end":{"tabs":6,"sel":["6"],"stops":["6"],"focus":"av-fm-op-tab-6","panel":true,"shownPanels":1},"home":{"tabs":6,"sel":["1"],"stops":["1"],"focus":"av-fm-op-tab-1","panel":true,"shownPanels":1}}
- ok   I3 focus order recorded: on every page the tab order runs chrome -> band -> tab bar -> pane -> inspector (no cycle, 9 pages; stops "152/228/139/133/128/158/143/132/138")  -> {"bad":[],"per":{"sound":{"stops":152,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":64}},"sequence":{"stops":228,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":140}},"mix":{"stops":139,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":51}},"browse":{"stops":133,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":45}},"perform":{"stops":128,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":40}},"shape":{"stops":158,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":70}},"effects":{"stops":143,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":55}},"deliver":{"stops":132,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":44}},"system":{"stops":138,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":50}}}}
- ok   I4 real Tab walk: from #av-a11y-skip, eight REAL Tabs land on exactly the eight stops the record predicts ("BUTTON.av-menu-item | BUTTON.av-menu-item | BUTTON.av-menu-item" ...)  -> {"skipAt":0,"predicted":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","av-head-browse","av-head-undo","av-head-redo"],"real":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","av-head-browse","av-head-undo","av-head-redo"]}
+ ok   I3 focus order recorded: on every page the tab order runs chrome -> band -> tab bar -> pane -> inspector (no cycle, 9 pages; stops "153/229/140/134/129/159/144/133/139")  -> {"bad":[],"per":{"sound":{"stops":153,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":65}},"sequence":{"stops":229,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":141}},"mix":{"stops":140,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":52}},"browse":{"stops":134,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":46}},"perform":{"stops":129,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":41}},"shape":{"stops":159,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":71}},"effects":{"stops":144,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":56}},"deliver":{"stops":133,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":45}},"system":{"stops":139,"first":{"chrome":0,"band":16,"tabs":36,"pane":37,"inspector":51}}}}
+ ok   I4 real Tab walk: from #av-a11y-skip, eight REAL Tabs land on exactly the eight stops the record predicts ("BUTTON.av-menu-item | BUTTON.av-menu-item | BUTTON.av-menu-item" ...)  -> {"skipAt":0,"predicted":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","av-finish","av-head-browse","av-head-undo"],"real":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","av-finish","av-head-browse","av-head-undo"]}
 == H. seal (prefs default - zero errors - freeze - pin) ==
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"av-rail-closed","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned de3bf123b24e...
+index.html sha256 (after):  8490ab1387a37992992960a457dd9ca45b97774424f788f331081c180078a7c4
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 8490ab1387a37992992960a457dd9ca45b97774424f788f331081c180078a7c4
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 8490ab1387a3...
 
 RESULT: 37 passed, 0 failed
 A11Y-RESULT 37/37
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205","sha256After":"de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205","pinned":"de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205","passed":37,"failed":0,"checks":37,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"8490ab1387a37992992960a457dd9ca45b97774424f788f331081c180078a7c4","sha256After":"8490ab1387a37992992960a457dd9ca45b97774424f788f331081c180078a7c4","pinned":"8490ab1387a37992992960a457dd9ca45b97774424f788f331081c180078a7c4","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 A11Y PASSED

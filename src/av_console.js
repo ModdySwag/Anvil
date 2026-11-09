@@ -347,10 +347,83 @@ function avConsoleRefresh() {
       const txt = "CPU " + (isFinite(load) ? String(Math.max(0, Math.min(100, Math.round(load)))) + "%" : "—");
       if (cpuRow.textContent !== txt) cpuRow.textContent = txt;
     }
+    /* P1: the wider display carries three more honest fields — the pattern, the master level and
+       the engine's own sample rate. Each read is guarded; a dash is what a cold engine shows. */
+    const patEl = avConsoleEl("av-lcd-pat");
+    if (patEl) {
+      let pname = "";
+      let playing = false;
+      try {
+        const seq = window.__avSeq;
+        if (seq) {
+          playing = seq.playing === true || (typeof seq.playing === "function" && seq.playing() === true);
+          const pn = seq.patternName;
+          pname = (typeof pn === "function") ? String(pn() || "") : String(pn || "");
+        }
+      } catch (e11) { pname = ""; }
+      const txt = (playing ? "\u25B6 " : "") + "PAT " + (pname ? pname.toUpperCase().slice(0, 14) : "—");
+      if (patEl.textContent !== txt) patEl.textContent = txt;
+    }
+    const masterLcd = avConsoleEl("av-lcd-master");
+    if (masterLcd) {
+      let m = NaN;
+      try { m = (typeof avState !== "undefined" && avState && isFinite(Number(avState.master))) ? Number(avState.master) : NaN; } catch (e12) { m = NaN; }
+      const txt = "MASTER " + (isFinite(m) ? String(Math.round(Math.max(0, Math.min(1.2, m)) * 100)) + "%" : "—");
+      if (masterLcd.textContent !== txt) masterLcd.textContent = txt;
+    }
+    const srLcd = avConsoleEl("av-lcd-sr");
+    if (srLcd) {
+      let sr = 0;
+      try { sr = (eng && isFinite(Number(eng.sr))) ? Number(eng.sr) : 0; } catch (e13) { sr = 0; }
+      const txt = sr > 0 ? (Math.round(sr / 100) / 10).toFixed(1) + " kHz" : "— kHz";
+      if (srLcd.textContent !== txt) srLcd.textContent = txt;
+    }
     /* P0: the title bar + the status bar ride the same tick (both are idempotent moves/paints) */
     try { avConsoleTitleDeck(); avConsoleStatusPaint(); } catch (e10) { /* the bands keep their last paint */ }
+    /* P1: the master volume belongs beside the meters in the out group — the display plate was
+       left with a dead black void once the word mark moved up to the title bar. One-way move
+       (the parent changes once), so the 400 ms tick can never re-append it. */
+    try {
+      const outGrp = document.querySelector('#av-band .av-band-grp[data-grp="out"]');
+      const volCell = document.querySelector('#av-band .av-band-vol');
+      if (outGrp && volCell && volCell.parentNode !== outGrp) outGrp.insertBefore(volCell, outGrp.firstChild);
+    } catch (eArr) { /* the band keeps its last arrangement */ }
     return true;
   } catch (e) { return false; }
+}
+
+/* ---------- P1: the finish switcher ----------
+   Three finishes (gold leads, then silver, then walnut), each with its own token set in
+   styles-console.css and its own Higgsfield materials in materials.css. The choice persists in
+   localStorage now; P3 moves it into the patch/project and the installer. */
+const AV_FINISH_ORDER = ["gold", "silver", "walnut"];
+
+function avFinishBoot() {
+  try {
+    let f = "gold";
+    try {
+      const s = localStorage.getItem("av-finish");
+      if (s === "silver" || s === "walnut" || s === "gold") f = s;
+    } catch (e) { /* default */ }
+    document.body.dataset.finish = f;
+    return f;
+  } catch (e) { return "gold"; }
+}
+
+function avFinishCycle() {
+  try {
+    const cur = document.body.dataset.finish || "gold";
+    const next = AV_FINISH_ORDER[(AV_FINISH_ORDER.indexOf(cur) + 1) % AV_FINISH_ORDER.length];
+    document.body.dataset.finish = next;
+    try { localStorage.setItem("av-finish", next); } catch (e) { /* session only */ }
+    const b = document.getElementById("av-finish");
+    if (b) {
+      b.textContent = next.toUpperCase();
+      b.title = "Finish: " + next + " — click to cycle gold / silver / walnut";
+      b.setAttribute("aria-label", "Finish: " + next + " — click to cycle");
+    }
+    return next;
+  } catch (e) { return null; }
 }
 
 /* ---------- P0: the title bar (docs/16 s.3, s.9) ----------
@@ -376,6 +449,21 @@ function avConsoleTitleDeck() {
       for (let i = 0; i < want.length; i++) { if (bar.children[i] !== want[i]) { same = false; break; } }
     }
     if (!same) { for (let i = 0; i < want.length; i++) bar.appendChild(want[i]); }
+    /* the finish key rides at the head of the utility group */
+    if (view) {
+      let fin = document.getElementById("av-finish");
+      if (!fin) {
+        fin = document.createElement("button");
+        fin.type = "button";
+        fin.id = "av-finish";
+        fin.className = "av-btn mini";
+        fin.textContent = (document.body.dataset.finish || "gold").toUpperCase();
+        fin.title = "Finish: " + (document.body.dataset.finish || "gold") + " — click to cycle gold / silver / walnut";
+        fin.setAttribute("aria-label", "Finish: " + (document.body.dataset.finish || "gold") + " — click to cycle");
+        fin.addEventListener("click", function () { avFinishCycle(); });
+      }
+      if (fin.parentNode !== view) view.insertBefore(fin, view.firstChild);
+    }
     return true;
   } catch (e) { return false; }
 }
@@ -723,16 +811,21 @@ function avConsoleBuild(head) {
   packSlot.className = "av-lcd-slot av-lcd-w7";
   const presetSlot = document.createElement("span");
   presetSlot.id = "av-lcd-preset";
-  presetSlot.className = "av-lcd-slot av-lcd-w15";
+  presetSlot.className = "av-lcd-slot av-lcd-w15 av-lcd-hero";
   const edited = document.createElement("span");
   edited.id = "av-lcd-edited";
   edited.className = "av-lcd-edited";
   edited.hidden = true;
   edited.setAttribute("aria-hidden", "true");
   edited.title = "edited since the preset loaded";
+  const patSlot = document.createElement("span");
+  patSlot.id = "av-lcd-pat";
+  patSlot.className = "av-lcd-slot av-lcd-right";
+  patSlot.textContent = "PAT —";
   row1.appendChild(packSlot);
   row1.appendChild(presetSlot);
   row1.appendChild(edited);
+  row1.appendChild(patSlot);
   lcd.appendChild(row1);
 
   const row2 = document.createElement("div");
@@ -743,10 +836,15 @@ function avConsoleBuild(head) {
   eng.textContent = "—";
   const poly = document.createElement("span");
   poly.id = "av-lcd-poly";
-  poly.className = "av-lcd-slot av-lcd-w15 av-lcd-right";
+  poly.className = "av-lcd-slot av-lcd-w15";
   poly.textContent = "POLY —";
+  const srSlot = document.createElement("span");
+  srSlot.id = "av-lcd-sr";
+  srSlot.className = "av-lcd-slot av-lcd-right";
+  srSlot.textContent = "— kHz";
   row2.appendChild(eng);
   row2.appendChild(poly);
+  row2.appendChild(srSlot);
   lcd.appendChild(row2);
 
   const row3 = document.createElement("div");
@@ -755,11 +853,16 @@ function avConsoleBuild(head) {
   voicesEl.id = "av-lcd-voices";
   voicesEl.className = "av-lcd-slot av-lcd-w13";
   voicesEl.textContent = "VOICES —";
+  const masterEl = document.createElement("span");
+  masterEl.id = "av-lcd-master";
+  masterEl.className = "av-lcd-slot av-lcd-w13";
+  masterEl.textContent = "MASTER —";
   const cpuEl = document.createElement("span");
   cpuEl.id = "av-lcd-cpu";
-  cpuEl.className = "av-lcd-slot av-lcd-w5 av-lcd-right";
+  cpuEl.className = "av-lcd-slot av-lcd-w5";
   cpuEl.textContent = "CPU —";
   row3.appendChild(voicesEl);
+  row3.appendChild(masterEl);
   row3.appendChild(cpuEl);
   lcd.appendChild(row3);
 
@@ -1025,6 +1128,7 @@ function avConsoleInit() {
   try {
     if (avConsoleState.ready) return true;
     if (typeof document === "undefined" || !document) return false;
+    try { avFinishBoot(); } catch (eF) { /* gold stays the default */ }
     const head = document.querySelector("header.av-head");
     if (!head) return false;
     if (avConsoleEl("avc-play")) { avConsoleState.ready = true; return true; }

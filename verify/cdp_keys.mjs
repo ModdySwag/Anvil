@@ -182,7 +182,7 @@ async function main() {
     if (!dock || !box) return { dock: !!dock, box: !!box };
     const r = dock.getBoundingClientRect();
     const st = document.getElementById('av-status');
-    // P0 (2026-11-10): the dock is 68px and sits on top of the 23px status bar. The old 132px
+    // P0 (2026-11-10): the dock is 64px and sits on top of the 23px status bar. The old 132px
     // floor is gone; keep a band, not a point, so a collapsed stub (40px pop) still fails.
     return { dock: true, box: true, h: Math.round(r.height),
       status: st ? Math.round(st.getBoundingClientRect().height) : 0,
@@ -192,8 +192,8 @@ async function main() {
       white: box.querySelectorAll('.pk-white').length,
       black: box.querySelectorAll('.pk-black').length };
   })()`)).value || {};
-  check('dock: #piano-dock on screen at 68px above the status bar - exactly 61 keys (36 white / 25 black)',
-    d1.dock === true && d1.visible === true && d1.h === 68 && d1.status === 23 && d1.gap === 0 &&
+  check('dock: #piano-dock on screen at 64px above the status bar - exactly 61 keys (36 white / 25 black)',
+    d1.dock === true && d1.visible === true && d1.h === 64 && d1.status === 23 && d1.gap === 0 &&
     d1.total === 61 && d1.white === 36 && d1.black === 25, JSON.stringify(d1));
 
   /* 2. black-key geometry — left % on the boundary (belowIdx+1)*W - BW/2, W = 100/36, BW = W*0.6 */

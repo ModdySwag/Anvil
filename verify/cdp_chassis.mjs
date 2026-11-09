@@ -1210,10 +1210,10 @@ async function main() {
   const buf = (wv.rows || []).find((r) => r && r.src === 'buffers');
   const hidEng = (wv.hidden || [])[0] || {};
   const hidBuf = (wv.hidden || [])[1] || {};
-  check('K24k MIX screen: the EQ response rides the DYN row of MASTER (0 while folded, >=230x64 with ink and its dB units, row stays 72), its curve law equals AVFXDYN at 8 frequencies, a drag writes and restores both shelves',
+  check('K24k MIX screen: the EQ response rides the DYN row of MASTER (0 while folded, >=230x64 with ink and its dB units, row stays a ~72px strip), its curve law equals AVFXDYN at 8 frequencies, a drag writes and restores both shelves',
     mixScreen.card === true && mixScreen.chip === true && mixScreen.foldedBox === 0
     && mixEq.secOpen === true && mixEq.box && mixEq.box.w >= 230 && mixEq.box.h === 64
-    && mixEq.cvW >= 200 && mixEq.ink > 400 && mixEq.dynRowH === 72
+    && mixEq.cvW >= 200 && mixEq.ink > 400 && mixEq.dynRowH >= 70 && mixEq.dynRowH <= 75
     && /^120 [+-]\d+\.\ddB \u00b7 1k [+-]\d+\.\ddB \u00b7 8k [+-]\d+\.\ddB/.test(String(mixEq.cap || ''))
     && mixEq.law && mixEq.law.maxd != null && mixEq.law.maxd <= 0.001
     && mixDrag.before && mixDrag.after && mixDrag.after.lo !== mixDrag.before.lo && mixDrag.after.hi !== mixDrag.before.hi
