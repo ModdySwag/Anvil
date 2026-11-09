@@ -1021,3 +1021,127 @@ select.av-sel-native {
 .av-sel-opt:hover, .av-sel-opt.act { background: rgba(47, 182, 196, .12); color: var(--text); }
 .av-sel-opt.on { color: #8CE9F2; }
 .av-sel-opt.on::before { content: "· "; color: var(--fin-accent); }
+
+/* ============================================================================
+   11. THE REST OF THE INVENTORY — every remaining control class gets the grammar
+   (owner: "did you pass the WHOLE build gui elements"; the band pot ring must not
+   touch its label or value; the kind keys stop glowing)
+   ============================================================================ */
+
+/* 11a. the band pot cell reserves room for the tick ring (5px overhang each side) */
+#av-band .av-band-pot { height: 68px; }
+#av-band .av-band-mount { margin: 5px 0 4px; }
+
+/* 11b. the inspector kind keys: a key with an LED, no halo */
+.av-kind-key,
+.av-kind-key.on,
+.av-kind-key[aria-pressed="true"] {
+  border-radius: 3px;
+  background: linear-gradient(180deg, #1B242A 0%, #121A1F 100%);
+  border: 1px solid #0A1014;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+  color: var(--text-2);
+}
+.av-kind-key:hover { border-color: #2A3A40; }
+.av-kind-key.on,
+.av-kind-key[aria-pressed="true"] {
+  background: linear-gradient(180deg, #16292C 0%, #0E1A1C 100%) !important;
+  border-color: #2C5A61 !important;
+  color: #BFEFF5 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06) !important;
+}
+.av-kind-key.on::after,
+.av-kind-key[aria-pressed="true"]::after { color: #8CE9F2 !important; }
+.av-kind-key.on .av-kind-dot,
+.av-kind-key[aria-pressed="true"] .av-kind-dot {
+  background: var(--fin-accent) !important;
+  box-shadow: 0 0 6px rgba(47, 182, 196, .5), inset 0 0 0 1px rgba(0, 0, 0, .45) !important;
+}
+.av-kind-key.on::before,
+.av-kind-key[aria-pressed="true"]::before,
+.av-kind-key.on::after { box-shadow: none !important; }
+.av-kind-dot { background: #0E1518; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .6); }
+.av-kind-key.on .av-kind-dot,
+.av-kind-key[aria-pressed="true"] .av-kind-dot {
+  background: var(--fin-accent);
+  box-shadow: 0 0 6px rgba(47, 182, 196, .5), inset 0 0 0 1px rgba(0, 0, 0, .45);
+}
+.av-kind-key::after { color: var(--text-3); }
+
+/* 11c. inspector launcher keys */
+.av-insp-launch[data-page] {
+  background: linear-gradient(180deg, #1B242A 0%, #121A1F 100%);
+  border: 1px solid #0A1014;
+  border-radius: 3px;
+  color: var(--text-2);
+  font-family: var(--mono);
+  letter-spacing: .1em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+.av-insp-launch[data-page]:hover { color: var(--text); border-color: #2A3A40; background: linear-gradient(180deg, #202B32 0%, #162025 100%); }
+.av-insp-edit {
+  background: linear-gradient(180deg, #24424A 0%, #14262B 100%);
+  border: 1px solid #2C5A61;
+  color: #BFEFF5;
+  font-family: var(--mono);
+  border-radius: 3px;
+}
+
+/* 11d. disclosure chips, section toggles, engine chips, module buttons */
+.av-adv-chip,
+.av-sec-toggle,
+.av-engine-chip {
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid #223032;
+  border-radius: 2px;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .1em;
+  box-shadow: none;
+}
+.av-adv-chip:hover,
+.av-sec-toggle:hover,
+.av-engine-chip:hover { color: var(--text); border-color: #2A3A40; box-shadow: none; }
+.av-adv-chip.on,
+.av-engine-chip.on { color: #8CE9F2; border-color: #2C5A61; }
+.av-adv-chip.on::before { color: var(--fin-accent); }
+.av-mod-toggle,
+.av-mod-menu-btn,
+.av-mod-float-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-3);
+  border-radius: 3px;
+  box-shadow: none;
+}
+.av-mod-toggle:hover,
+.av-mod-menu-btn:hover,
+.av-mod-float-btn:hover { color: var(--text); border-color: #223032; background: rgba(255, 255, 255, .04); }
+.av-mod-menu { background: linear-gradient(180deg, #131C1E 0%, #0B1214 100%); border-color: #223032; }
+.av-mod-menu-item { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; color: var(--text-2); }
+.av-mod-menu-item:hover { background: rgba(47, 182, 196, .10); color: var(--text); }
+
+/* 11e. the fader and the wheels */
+.av-fader::before { background: #05080B; box-shadow: inset 0 1px 3px rgba(0, 0, 0, .85); }
+.av-fader .av-fader-cap { background: linear-gradient(180deg, #3A4750 0%, #1A242A 100%); border: 1px solid #05080B; border-radius: 2px; }
+.av-wheel { background: linear-gradient(180deg, #1A242A 0%, #0C1215 100%); border: 1px solid #0A1014; }
+.av-wheel-cap { background: linear-gradient(180deg, #46545E 0%, #25323A 100%); border-color: #05080B; }
+
+/* 11f. the keyboard wears real ivory and ebony (Higgsfield materials) */
+.pk-white {
+  background-image: var(--mat-key-white, none), linear-gradient(180deg, #F7F2E6 0%, #EDE4D2 55%, #DCD0B8 100%) !important;
+  background-size: cover, auto;
+  background-position: center, 0 0;
+}
+.pk-white.in-scale { background-image: var(--mat-key-white, none), linear-gradient(180deg, rgba(255, 255, 255, .30), rgba(201, 169, 97, .10)) !important; }
+.pk-white.in-win { background-image: var(--mat-key-white, none), linear-gradient(180deg, rgba(255, 255, 255, .48), rgba(255, 255, 255, 0)) !important; }
+.pk-white.root { background-image: var(--mat-key-white, none), linear-gradient(180deg, rgba(255, 255, 255, .40), rgba(201, 169, 97, .30)) !important; box-shadow: inset 0 -3px 0 #C9A961; }
+.pk-white:active, .pk-white.down { filter: brightness(.93); }
+.pk-black {
+  background-image: var(--mat-key-black, none), linear-gradient(180deg, #22282C 0%, #0A0E10 70%, #141A1D 100%) !important;
+  background-size: cover, auto;
+  background-position: center, 0 0;
+}
+.pk-black.in-scale { background-image: var(--mat-key-black, none), linear-gradient(180deg, rgba(201, 169, 97, .16), rgba(0, 0, 0, 0)) !important; }
+.pk-black:active, .pk-black.down { filter: brightness(1.1); }

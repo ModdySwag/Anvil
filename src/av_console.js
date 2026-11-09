@@ -361,7 +361,8 @@ function avConsoleRefresh() {
           pname = (typeof pn === "function") ? String(pn() || "") : String(pn || "");
         }
       } catch (e11) { pname = ""; }
-      const txt = (playing ? "\u25B6 " : "") + "PAT " + (pname ? pname.toUpperCase().slice(0, 14) : "—");
+      const nm = pname ? pname.toUpperCase().slice(0, 14) : "\u2014";
+      const txt = (playing ? "\u25B6 " : "") + (/^PAT\b/.test(nm) ? nm : "PAT " + nm);
       if (patEl.textContent !== txt) patEl.textContent = txt;
     }
     const masterLcd = avConsoleEl("av-lcd-master");
