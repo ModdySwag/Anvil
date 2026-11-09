@@ -77,9 +77,21 @@ screen well, metal plate, knob face, keycap, rubber pad, fader cap, wheel rim, w
   `av-sub-shown` events. Three competing tab layers are down to one.
 - Gate on `352db606`: chassis 47/47 · a11y 37/37 · smoke 81/81 · m1 33/33 · m2 40/40 · mix 47/47.
 
+### SEQUENCE (`51735f9`, sha `3a7b42c6`, 6,072,918 B)
+- Four 22px track rows on a 580px card read as a half-built page. Inert **ghost rows** fill the rack to eight
+  (`av-seq-grow` / `av-seq-gcell`), the "click a grid cell" instruction line is off the face, and the pattern
+  textarea shrinks to the two lines EXPORT/IMPORT use.
+- **TRAP PAID:** the first cut reused `.av-seq-row`/`.av-seq-cell` for the ghosts and broke two legs (smoke P4
+  counted 8 rows, cdp_seq counted 128 cells). The fix is own class names on the ghosts, NOT a relaxed
+  assertion — a decorative element must never be matchable by a contract selector.
+- Gate on `3a7b42c6`: chassis 47/47 · a11y 37/37 · smoke 81/81 · m1 33/33 · m2 40/40 · seq 41/41.
+
 ### WHAT IS LEFT
-1. **P2 on SEQUENCE and EFFECTS** — SEQUENCE's grid is sparse and EFFECTS is stacked cards, not the serial
-   chain the spec asks for (a vertical signal rail). Same treatment SOUND and MIX got.
+1. **P2 on EFFECTS** — still stacked cards, not the serial chain the spec asks for (a vertical signal rail).
+2. **MIX real strips** — the ghost rack is the EMPTY state; populated `.av-mix-track` rows are still
+   horizontal, not vertical console strips with a dB-scaled fader.
+3. **SEQUENCE transport** — the PLAY/STOP/REC-STEP/FILL row leaves a wide void between the BPM knob and
+   GEN/SONG; it could carry the bar/beat and the swing control.
 2. **MIX real strips** — the loop-only rack is the EMPTY state; the populated `.av-mix-track` rows are still
    horizontal rows, not vertical console strips with a dB-scaled fader.
 3. The SEQ pattern textarea is the last raw-looking field (styled in §17 but never eye-checked).
