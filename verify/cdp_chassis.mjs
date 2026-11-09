@@ -932,8 +932,12 @@ async function main() {
     const cap = box ? box.querySelector('.av-synth-filtscreen-cap') : null;
     if (!box || !cv) return { panel: true, box: !!box, cv: !!cv };
     const pr = panel.getBoundingClientRect(), br = box.getBoundingClientRect();
-    const row = panel.querySelector('.av-synth-filter');
-    const rr = row ? row.getBoundingClientRect() : null;
+    const band = panel.querySelector('.av-synth-va-screens');
+    const bandR = band ? band.getBoundingClientRect() : null;
+    const osc = panel.querySelector('.av-synth-oscscreen');
+    const oscR = osc ? osc.getBoundingClientRect() : null;
+    const pots = panel.querySelector('.av-synth-va-pots');
+    const potsR = pots ? pots.getBoundingClientRect() : null;
     let ink = 0;
     try {
       const ctx = cv.getContext('2d');
@@ -961,9 +965,16 @@ async function main() {
     } catch (e) { /* the drag probe is best-effort; the fields below fail it */ }
     return {
       panel: true, box: !!box, cv: !!cv, ink: ink,
-      /* the knob rows carry a 2px top margin, so "same line" means within the row band, and the
-         panel must not have grown a second line (<=200px tall) */
-      sameLine: !!(rr && Math.abs(rr.top - br.top) <= 10),
+      /* P2 (2026-11-10): the inset moved off the pots line into the card's SCREENS BAND — the one
+         row that grows, which is how the card fills the well instead of leaving a dead band under
+         it. The leg now pins that shape: the screen shares the band with the oscillator scope, the
+         band sits BELOW the pot row, and the band is what carries the card's leftover height. */
+      band: !!band,
+      inBand: !!(band && band.contains(box)),
+      sideBySide: !!(oscR && Math.abs(oscR.top - br.top) <= 2 && oscR.right <= br.left + 1),
+      belowPots: !!(potsR && br.top >= potsR.bottom - 1),
+      bandIsSlack: !!(bandR && pr.height - bandR.height <= 190 && bandR.height >= 118),
+      panelTop: Math.round(pr.top), bandH: bandR ? Math.round(bandR.height) : null,
       panelH: Math.round(pr.height),
       h: Math.round(br.height), w: Math.round(br.width),
       insidePanel: br.right <= pr.right + 1 && br.left >= pr.left - 1,
@@ -972,11 +983,12 @@ async function main() {
     };
   })()`)).value || {};
   const capOk = /^(LP|LP24|BP|HP) (\d+(\.\d+)?k?) R\d+$/.test(String(filtScreen.cap || ''));
-  check('K24h filter screen: the response inset sits on the pots line inside the panel, paints, prints its units, and a drag writes cutoff + reso',
+  check('K24h filter screen: the response inset shares the card SCREENS BAND with the oscillator scope, below the pot row, paints, prints its units, and a drag writes cutoff + reso',
     filtScreen.panel === true && filtScreen.box === true && filtScreen.cv === true
-    && filtScreen.ink > 40 && filtScreen.sameLine === true && filtScreen.insidePanel === true
-    && filtScreen.panelH != null && filtScreen.panelH <= 200
-    && filtScreen.h >= 80 && filtScreen.w >= 88
+    && filtScreen.ink > 40 && filtScreen.band === true && filtScreen.inBand === true
+    && filtScreen.sideBySide === true && filtScreen.belowPots === true && filtScreen.bandIsSlack === true
+    && filtScreen.panelH != null
+    && filtScreen.h >= 140 && filtScreen.w >= 260
     && capOk === true
     && filtScreen.before != null && filtScreen.after != null && filtScreen.after !== filtScreen.before
     && filtScreen.beforeR != null && filtScreen.afterR != null && filtScreen.afterR !== filtScreen.beforeR,

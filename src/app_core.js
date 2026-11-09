@@ -71,6 +71,9 @@ function avLevelsFold() {
     if (!card) return false;
     const body = card.querySelector(".av-levels-body");
     const head = card.querySelector(".av-mod-head");
+    /* P2: the output strip lives in the head, so it survives the body fold. Built before the
+       toggle guard — the second boot call (after the chrome made the head) is the one that lands. */
+    try { avLevelsStrip(); } catch (e0) { /* the head strip is best-effort */ }
     if (!body || !head || head.querySelector(".av-sec-toggle")) return false;
     const btn = document.createElement("button");
     btn.type = "button";
@@ -90,6 +93,117 @@ function avLevelsFold() {
     const h2 = head.querySelector("h2");
     if (h2 && h2.nextSibling) head.insertBefore(btn, h2.nextSibling); else head.appendChild(btn);
     sync();
+    return true;
+  } catch (e) { return false; }
+}
+
+/* P2 (2026-11-10): the LEVELS head is the OUTPUT STAGE, not a label over a fold.
+   The card must still fold to its head (chassis K24 pins that), so the head band is the only place
+   that is always on screen — it carries the job: the two master-tap gains, a live stereo peak meter
+   off avTap.levels, the peak-hold readout and a latched clip tell. The pots stay behind the fold
+   (the body), unchanged. Reads avParams + avTap only; never writes a param. */
+const AV_LV_HOLD_MS = 1200;
+const avLvMeter = { clipAt: 0, holdL: -120, holdR: -120, holdAt: 0, raf: 0 };
+
+function avLvDb(v) {
+  const n = Number(v);
+  if (!isFinite(n) || n <= 0.0005) return -120;
+  return 20 * Math.log10(n);
+}
+function avLvDbText(db) {
+  if (db <= -99) return "-\u221E";
+  return (db > -10 ? db.toFixed(1) : String(Math.round(db)));
+}
+function avLvStripHTML() {
+  return '<span class="av-lv-strip" id="av-lv-strip" role="group" aria-label="Output stage">' +
+    '<span class="av-lv-cell"><i>INST</i><b data-lv="keys">100 %</b></span>' +
+    '<span class="av-lv-cell"><i>MASTER</i><b data-lv="master">80 %</b></span>' +
+    '<span class="av-lv-meter" aria-hidden="true">' +
+    '<span class="av-lv-bar" data-lv-bar="l"><i data-lv-fill="l"></i></span>' +
+    '<span class="av-lv-bar" data-lv-bar="r"><i data-lv-fill="r"></i></span>' +
+    '</span>' +
+    '<span class="av-lv-cell av-lv-peak"><i>PEAK</i><b data-lv="peak">-\u221E</b></span>' +
+    '<span class="av-lv-clip" id="av-lv-clip" title="Master clip tell">CLIP</span>' +
+    '</span>';
+}
+function avLvStripPaint() {
+  try {
+    const strip = document.getElementById("av-lv-strip");
+    if (!strip) return false;
+    const lv = (typeof avTap !== "undefined" && avTap && avTap.levels) ? avTap.levels : null;
+    const l = lv ? Math.max(0, Math.min(2, Number(lv.l) || 0)) : 0;
+    const r = lv ? Math.max(0, Math.min(2, Number(lv.r) || 0)) : 0;
+    /* -54 dB .. 0 dB maps to 0 .. 100 % of the bar: the useful meter span, not linear amplitude */
+    const pct = (v) => {
+      const db = avLvDb(v);
+      if (db <= -54) return 0;
+      return Math.max(0, Math.min(100, ((db + 54) / 54) * 100));
+    };
+    const fl = strip.querySelector('[data-lv-fill="l"]');
+    const fr = strip.querySelector('[data-lv-fill="r"]');
+    if (fl) fl.style.width = pct(l).toFixed(1) + "%";
+    if (fr) fr.style.width = pct(r).toFixed(1) + "%";
+    const now = Date.now();
+    const dbl = avLvDb(l), dbr = avLvDb(r);
+    if (dbl > avLvMeter.holdL) { avLvMeter.holdL = dbl; avLvMeter.holdAt = now; }
+    if (dbr > avLvMeter.holdR) { avLvMeter.holdR = dbr; avLvMeter.holdAt = now; }
+    if (now - avLvMeter.holdAt > AV_LV_HOLD_MS) {
+      avLvMeter.holdL = Math.max(-120, avLvMeter.holdL - 0.9);
+      avLvMeter.holdR = Math.max(-120, avLvMeter.holdR - 0.9);
+    }
+    const peak = strip.querySelector('[data-lv="peak"]');
+    if (peak) {
+      const txt = avLvDbText(Math.max(avLvMeter.holdL, avLvMeter.holdR));
+      if (peak.textContent !== txt) peak.textContent = txt;
+    }
+    const kEl = strip.querySelector('[data-lv="keys"]');
+    if (kEl && typeof avParams !== "undefined" && avParams) {
+      const txt = Math.round((Number(avParams.keys) || 0) * 100) + " %";
+      if (kEl.textContent !== txt) kEl.textContent = txt;
+    }
+    const mEl = strip.querySelector('[data-lv="master"]');
+    if (mEl && typeof avParams !== "undefined" && avParams) {
+      const txt = Math.round((Number(avParams.master) || 0) * 100) + " %";
+      if (mEl.textContent !== txt) mEl.textContent = txt;
+    }
+    if (Math.max(l, r) >= 0.999) avLvMeter.clipAt = now;
+    const clip = document.getElementById("av-lv-clip");
+    if (clip) clip.classList.toggle("on", now - avLvMeter.clipAt < 2600);
+    return true;
+  } catch (e) { return false; }
+}
+function avLvStripLoop() {
+  try {
+    if (avLvMeter.raf) return true;
+    const tick = function () {
+      avLvMeter.raf = 0;
+      if (typeof document === "undefined" || !document.getElementById("av-lv-strip")) return;
+      /* the meter only has a job while the SOUND page owns the work area */
+      const z = document.getElementById("av-zone-sound");
+      if (z && z.offsetParent !== null) avLvStripPaint();
+      avLvMeter.raf = (typeof requestAnimationFrame === "function") ? requestAnimationFrame(tick) : 0;
+      if (!avLvMeter.raf) { try { avLvMeter.raf = setTimeout(tick, 120); } catch (e) { } }
+    };
+    tick();
+    return true;
+  } catch (e) { return false; }
+}
+function avLevelsStrip() {
+  try {
+    const card = document.getElementById("av-levels");
+    if (!card) return false;
+    const head = card.querySelector(".av-mod-head");
+    if (!head) return false;
+    if (!document.getElementById("av-lv-strip")) {
+      const menu = head.querySelector(".av-mod-menu-btn");
+      const wrap = document.createElement("span");
+      wrap.innerHTML = avLvStripHTML();
+      const node = wrap.firstChild;
+      if (menu && menu.parentNode === head) head.insertBefore(node, menu);
+      else head.appendChild(node);
+    }
+    avLvStripPaint();
+    avLvStripLoop();
     return true;
   } catch (e) { return false; }
 }

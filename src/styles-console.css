@@ -1474,3 +1474,300 @@ body:not(.kb-armed) .pk-keycap { display: none; }
     repeating-linear-gradient(0deg, rgba(255, 255, 255, .012) 0 1px, rgba(0, 0, 0, 0) 1px 3px),
     linear-gradient(180deg, #0C1213 0%, #080B0C 100%);
 }
+
+/* ============================================================================
+   14. P2 SOUND SURFACE — the page fills the well (2026-11-10)
+   The two audits that closed P1 named four structural faults on SOUND, not paint:
+     a. LEVELS was a 64px shell: a head over a fold that never opened, so the card read blank.
+        P2 gives the head the output stage (avLevelsStrip: gains, stereo peak meter, clip tell) and
+        trims the shell to a single 40px band.
+     b. two engine tab layers stacked 80px apart (the retired #av-engine-strip + the real sub-tab
+        row). The strip is hidden; the row is the one engine layer.
+     c. ~600x180px of dead width in the SYNTH card's upper right, and
+     d. ~100px of dead band between the cards and the keyboard.
+        c+d are one fix: the card grows to the well and its slack goes into the filter response
+        screen, which now owns the card's right column.
+   Geometry never moves with the finish (P3 law): every rule here is layout only, no token colour.
+   ============================================================================ */
+
+/* 14a. the well: the SOUND box fills its zone, so no dead band can survive at any height */
+#av-zone-sound .av-zone-box { min-height: 100%; }
+#av-zone-sound .av-sub:not([hidden]) { display: flex; flex-direction: column; min-height: 0; }
+#av-synth { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+#av-synth-bank-host { flex: 0 0 auto; }
+#av-synth-knobs { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
+#av-synth-knobs > .av-synth-engine-row { flex: 0 0 auto; }
+#av-synth-knobs > .av-synth-panel.av-kind-on { flex: 1 1 auto; min-height: 0; }
+#av-synth .av-synth-panel[data-kind="va"]:not([hidden]) { display: flex; flex-direction: column; align-items: stretch; }
+
+/* 14b. the card body — three rows: the control line, the pot row, the screens band.
+   The band is the only thing that grows, so every spare pixel of the well lands in a display
+   instead of in a void. Every row is full width, so no column can go ragged. */
+.av-synth-va { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.av-synth-va-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px 22px; margin: 0 0 6px; }
+/* the old va rule set flex-basis 100% for a ROW-wrap parent; in the new column it measured
+   100% of the HEIGHT and swallowed the card. Basis auto, growth owned by the column. */
+#av-synth .av-synth-va-l .av-synth-selects { flex: 0 0 auto; margin: 0 0 4px; }
+.av-synth-va-head .av-synth-selects { margin: 0; }
+.av-synth-va-head .av-synth-adv { margin: 0 0 2px; }
+.av-synth-va-pots { flex: 0 0 auto; display: flex; flex-wrap: nowrap; gap: 18px; align-items: flex-start; margin: 0 0 6px; }
+.av-synth-va-screens { flex: 1 1 auto; min-height: 118px; display: flex; gap: 10px; align-items: stretch; }
+.av-synth-va-screens > .av-synth-oscscreen,
+.av-synth-va-screens > .av-synth-filtscreen { flex: 1 1 0; min-width: 0; width: auto; max-width: none; height: auto; min-height: 0; }
+/* a definite zero height + grow: a canvas takes its box, never its own attribute back */
+.av-synth-va-screens .av-synth-osccanvas,
+.av-synth-va-screens .av-synth-filtcanvas { height: 0; min-height: 0; flex: 1 1 auto; }
+.av-synth-oscscreen {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  background: linear-gradient(180deg, #060B0D 0%, #04080A 100%);
+  border: 1px solid #16211F; border-radius: 6px; padding: 4px 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+.av-synth-oscscreen-cap { font-family: var(--mono); font-size: 9px; letter-spacing: .06em; color: var(--text-3); white-space: nowrap; overflow: hidden; }
+.av-synth-va > .av-synth-sec { flex: 0 0 auto; margin: 6px 0 0; }
+.av-synth-va > .av-synth-sec .av-synth-envview { width: 100%; max-width: 100%; height: 134px; }
+.av-synth-va > .av-synth-sec .av-synth-envcanvas { height: 0; min-height: 0; flex: 1 1 auto; }
+@media (max-width: 1160px) {
+  .av-synth-va-pots { flex-wrap: wrap; }
+  .av-synth-va-screens { flex-wrap: wrap; }
+}
+
+/* 14c. LEVELS folds to a 40px output band — the head carries the strip (see app_core avLevelsStrip) */
+#av-levels { padding-top: 8px; padding-bottom: 8px; }
+#av-levels > .av-mod-head { margin: 0; }
+.av-lv-strip { display: flex; align-items: center; gap: 14px; flex: 0 0 auto; margin-left: 6px; }
+.av-lv-cell { display: flex; align-items: baseline; gap: 5px; }
+.av-lv-cell i {
+  font-family: var(--mono); font-style: normal; font-size: 9px; letter-spacing: .13em;
+  color: var(--text-3); text-transform: uppercase;
+}
+.av-lv-cell b {
+  font-family: var(--mono); font-weight: 500; font-size: 10.5px; letter-spacing: .02em;
+  color: var(--text-2); font-variant-numeric: tabular-nums; min-width: 40px;
+}
+.av-lv-peak b { min-width: 34px; }
+.av-lv-meter { display: flex; flex-direction: column; gap: 2px; width: 168px; }
+.av-lv-bar {
+  position: relative; height: 4px; border-radius: 1px; overflow: hidden;
+  background: #070C0E; box-shadow: inset 0 0 0 1px #162024, inset 0 1px 2px rgba(0, 0, 0, .8);
+}
+.av-lv-bar > i {
+  display: block; height: 100%; width: 0%;
+  background: linear-gradient(90deg, #2FB6C4 0%, #2FB6C4 62%, #C9A961 82%, #FF7A5C 100%);
+  background-size: 168px 100%;
+  transition: width 60ms linear;
+}
+body[data-finish="silver"] .av-lv-bar > i { background-image: linear-gradient(90deg, #59C6D2 0%, #59C6D2 62%, #C08A3E 82%, #E0603C 100%); }
+body[data-finish="walnut"] .av-lv-bar > i { background-image: linear-gradient(90deg, #DCAF57 0%, #DCAF57 62%, #E08B3A 82%, #C94A32 100%); }
+.av-lv-clip {
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .12em; padding: 2px 6px;
+  border-radius: 2px; color: #5A6A6E; border: 1px solid #1B262A; background: #0A1113;
+  transition: color 90ms linear, border-color 90ms linear, background 90ms linear;
+}
+.av-lv-clip.on { color: #1A0A06; background: #FF6A48; border-color: #FF8E72; font-weight: 600; }
+/* a page rule that sets display beats the [hidden] attribute — the retired strip must stay gone */
+.av-engine-strip[hidden] { display: none !important; }
+
+/* ============================================================================
+   15. MATERIAL PASS — every surface is a material, not a colour block (2026-11-10)
+   The owner's note: "the WHOLE THING, backplate and all textures need higgsfield - i still see
+   original design colours as layout colour templates". The P1 sheet carried only the bands, the
+   knobs and the keys, so the work floor, the card faces, the rail, the inspector, the dock and the
+   screens were flat token gradients. Each surface below now rides a Higgsfield plate (normalised
+   to mid-grey by mk_materials.py) under its token gradient with soft-light, so the grain is real
+   and the finish still owns the colour. Geometry never moves: background only.
+   ============================================================================ */
+
+/* 15a. the work floor — a dark anodised backplate with a fine horizontal brush */
+.av-work {
+  background-image:
+    var(--mat-backplate, none),
+    radial-gradient(120% 90% at 50% -10%, rgba(47, 182, 196, .045) 0%, rgba(0, 0, 0, 0) 60%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, .012) 0 1px, rgba(0, 0, 0, 0) 1px 3px),
+    linear-gradient(180deg, #0C1213 0%, #080B0C 100%);
+  background-size: 420px 420px, auto, auto, auto;
+  background-position: center, center, 0 0, 0 0;
+  background-repeat: repeat, no-repeat, repeat, no-repeat;
+  background-blend-mode: soft-light, normal, normal, normal;
+}
+
+/* 15b. card faces — matte graphite composite, the grain reads at 1:1 */
+.av-card {
+  background-image:
+    var(--mat-card, none),
+    linear-gradient(180deg, #111819 0%, #0D1314 100%);
+  background-size: 300px 300px, auto;
+  background-position: center, 0 0;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 15c. the rail and the inspector — vertical brushed gunmetal */
+.av-rail, #av-inspector {
+  background-image:
+    var(--mat-rail, none),
+    linear-gradient(180deg, #0E1517 0%, #080C0E 100%);
+  background-size: 260px 260px, auto;
+  background-position: center, 0 0;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 15d. the dock surround — dark wool felt under the keybed */
+#piano-dock {
+  background-image:
+    var(--mat-surf-felt, none),
+    linear-gradient(180deg, #121A1C 0%, #0A0F10 100%);
+  background-size: 220px 220px, auto;
+  background-position: center, 0 0;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 15e. the screens — a recessed cavity wall, so they read as wells, not as flat rectangles */
+.av-synth-filtscreen, .av-synth-oscscreen, .av-synth-envview,
+.av-insp-screen, #av-insp-wave, #av-insp-env, #av-insp-scope,
+.av-wt-screen, .av-chop-wavewrap, .av-sample-wavewrap {
+  background-image:
+    var(--mat-well, none),
+    linear-gradient(180deg, #060B0D 0%, #04080A 100%);
+  background-size: 260px 260px, auto;
+  background-position: center, 0 0;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 15f. the metal bands read as metal: a tighter tile and a stronger plate under the token */
+#av-title::after, .av-zones::after, #av-status::after {
+  background-size: 300px 300px, auto;
+  opacity: .8;
+}
+#av-status { position: fixed; }
+#av-status::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background-image: var(--mat-plate, none), var(--fin-brush);
+  background-position: center, 0 0;
+  mix-blend-mode: soft-light;
+}
+#av-status > * { position: relative; z-index: 1; }
+
+/* 15g. the dock's key surround and the panel wells keep their own hairline over the material */
+#piano-dock > #piano-keys { background: none; }
+
+/* ============================================================================
+   16. FULL SKIN — every component family carries a material (2026-11-10)
+   The owner's brief: "each and every available and possible asset and part of the GUI ... must
+   look like 100% professional decks and interfaces with no obvious signs of a windows generic
+   design". Section 15 covered the LARGE surfaces (floor, cards, rail, dock, screens). This one
+   covers the CONTROLS: keycaps, field keys, chips, sub-tabs, rockers, kind keys, launcher keys,
+   module buttons, drum/chop pads, fader caps and wheels, each on the material its finish owns.
+   Blend law: the texture rides UNDER the token gradient with soft-light, so a finish swap moves
+   the material and the colour together and no rule here can shift geometry.
+   ============================================================================ */
+
+/* 16a. keycaps — one cap material per finish under the key gradient */
+.av-btn,
+.av-sel-key,
+.av-chip,
+.av-adv-chip,
+.av-engine-chip,
+.av-kind-key,
+.av-insp-launch-key,
+.av-pair-key,
+.av-mod-toggle,
+.av-mod-menu-btn,
+.av-mod-float-btn,
+.av-sec-toggle,
+#av-status .pk-mode,
+.av-insp-edit {
+  background-image: var(--mat-btn, none), linear-gradient(180deg, #1B242A 0%, #121A1F 100%);
+  background-size: 130px 130px, auto;
+  background-position: center, 0 0;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: soft-light, normal;
+}
+/* pressed / latched states keep the cap under their lit gradient — the material never drops out */
+.av-btn.on, .av-btn[aria-pressed="true"],
+.av-sel-key[aria-expanded="true"],
+.av-kind-key.on, .av-kind-key[aria-pressed="true"],
+.av-pad.on, .av-pad.av-pad-on,
+.av-chop-pad.on, .av-chop-pad.sel {
+  background-image: var(--mat-btn, none), linear-gradient(180deg, #2A3B40 0%, #152024 100%);
+  background-size: 130px 130px, auto;
+  background-blend-mode: soft-light, normal;
+}
+.av-pair-key.on {
+  background-image: var(--mat-btn, none), linear-gradient(180deg, #67CBD6 0%, #2FB6C4 100%);
+  background-size: 130px 130px, auto;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 16b. sub-tabs are caps too. The base layer MUST be opaque: a transparent gradient leaves the
+   blend with nothing to blend into and the raw texture shows through as a light grey slab. */
+.av-subtab {
+  background-image: var(--mat-card, none), linear-gradient(180deg, #161E20 0%, #0D1416 100%);
+  background-size: 260px 260px, auto;
+  background-repeat: repeat, no-repeat;
+  background-blend-mode: soft-light, normal;
+}
+.av-subtab[aria-selected="true"] {
+  background-image: var(--mat-card, none), linear-gradient(180deg, #1E3438 0%, #10262A 100%);
+  background-size: 260px 260px, auto;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 16c. drum pads, chop pads and the sequencer's step cells — moulded rubber */
+.av-pad,
+.av-chop-pad,
+.av-step-cell,
+.av-seq-step {
+  background-image: var(--mat-pad, none), linear-gradient(180deg, #141C20 0%, #0B1114 100%);
+  background-size: 90px 90px, auto;
+  background-position: center, 0 0;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 16d. fader caps and the pitch / mod wheels — machined metal or bakelite */
+.av-fader .av-fader-cap {
+  background-image: var(--mat-fader, none), linear-gradient(180deg, #3A4750 0%, #1A242A 100%);
+  background-size: 60px 60px, auto;
+  background-repeat: no-repeat, no-repeat;
+  background-blend-mode: soft-light, normal;
+}
+.av-wheel {
+  background-image: var(--mat-wheel, none), linear-gradient(180deg, #1A242A 0%, #0C1215 100%);
+  background-size: 40px 40px, auto;
+  background-blend-mode: soft-light, normal;
+}
+.av-wheel-cap {
+  background-image: var(--mat-fader, none), linear-gradient(180deg, #46545E 0%, #25323A 100%);
+  background-size: 60px 60px, auto;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 16e. text / number fields, list rows, badges and wells: panel material inside, no flat fill */
+.av-input, .av-num input, .av-text, .av-list-row, .av-badge, .av-well, .av-row {
+  background-image: var(--mat-card, none), linear-gradient(180deg, #0B1113 0%, #080C0E 100%);
+  background-size: 240px 240px, auto;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 16f. popovers, menus and tooltips are plates, not flat rectangles */
+.av-mod-menu, .av-menu, .av-tooltip, .av-tip, .av-pop, .av-palette, .av-float,
+.av-about, .av-wizard, .av-tour {
+  background-image: var(--mat-card, none), linear-gradient(180deg, #16201F 0%, #0C1214 100%);
+  background-size: 300px 300px, auto;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 16g. the piano keys: per-finish ivory, shared ebony */
+/* a key is an OBJECT: the ivory / ebony photo is drawn at full opacity and owns the colour.
+   Soft-lighting a grey grain over cream only desaturates it into concrete. */
+.pk-white {
+  background-image: var(--mat-key-white, none), linear-gradient(180deg, #F7F2E6 0%, #EDE4D2 55%, #DCD0B8 100%) !important;
+  background-size: 180px 180px, auto !important;
+  background-position: center, 0 0 !important;
+  background-blend-mode: normal, normal;
+}
+.pk-black {
+  background-image: var(--mat-key-black, none), linear-gradient(180deg, #22282C 0%, #0A0E10 70%, #141A1D 100%) !important;
+  background-size: 180px 180px, auto !important;
+  background-position: center, 0 0 !important;
+  background-blend-mode: normal, normal;
+}

@@ -281,6 +281,10 @@ function avChromeBuildEngineStrip() {
     if (firstrun && firstrun.nextSibling) box.insertBefore(strip, firstrun.nextSibling);
     else if (firstrun) box.appendChild(strip);
     else box.insertBefore(strip, box.firstChild);
+    /* P2 (2026-11-10): the strip was a SECOND engine layer — six chips that only scrolled to a card
+       the ENGINE/FM/DRUMS/SAMPLES/CHOP/WAVETABLE/TUNING sub-tab row underneath already owns. One
+       layer now: the row. The element stays in the DOM (R2 counts its six chips) but never paints. */
+    strip.hidden = true;
     return true;
   } catch (e) { return false; }
 }

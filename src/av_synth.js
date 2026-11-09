@@ -392,17 +392,29 @@ function avSynthBodyHTML() {
     aria: AV_SYNTH_ENGINE.aria, options: AV_SYNTH_KINDS.concat(avSynthUserKindNames()),
   }) + "</div>";
 
-  /* va — the P1 body exactly as it shipped: selects row + one knob row per group. C3-5: the
-     deep rows carry a head (label + fold toggle) and the panel pairs its rows side by side. */
+  /* va — the P1 body, restructured for P2 (2026-11-10): the card is the SOUND surface, so it fills
+     the well instead of sitting in the top third of it. Left column = the picks, the fold chips and
+     the three face pot rows (OSC / FILTER / ENV, with TUNE + GLIDE behind their chips); right column
+     = the two dark screens, the filter response (it grows with whatever height the well has left)
+     over the envelopes overlay. Nothing moves by absolute positioning and no row is reordered —
+     the same rows, wrapped in two columns. */
   const picks = AV_SYNTH_SELECTS.map(s => avSynthSelectHTML(s)).join("");
-  const rows = AV_SYNTH_ROWS.map(row => {
-    const body = avSynthKnobSpecRowHTML(row.cls, row.knobs);
-    if (!row.sect) return body;
-    return '<div class="av-synth-sec" data-sect="' + avSynthEsc(row.sect) + '">' +
-      '<div class="av-synth-sec-head"><span class="av-synth-sec-lbl">' + avSynthEsc(row.label) + "</span></div>" +
-      body + "</div>";
-  }).join("");
-  const va = avSynthPanelHTML("va", kind === "va", '<div class="av-synth-selects">' + picks + "</div>" + rows + avSynthEnvSectionHTML());
+  const secOf = (row) =>
+    '<div class="av-synth-sec" data-sect="' + avSynthEsc(row.sect) + '">' +
+    '<div class="av-synth-sec-head"><span class="av-synth-sec-lbl">' + avSynthEsc(row.label) + "</span></div>" +
+    avSynthKnobSpecRowHTML(row.cls, row.knobs) + "</div>";
+  const faceRows = AV_SYNTH_ROWS.filter(r => !r.sect).map(r => avSynthKnobSpecRowHTML(r.cls, r.knobs)).join("");
+  const deepRows = AV_SYNTH_ROWS.filter(r => r.sect).map(secOf).join("");
+  const va = avSynthPanelHTML("va", kind === "va",
+    '<div class="av-synth-va">' +
+      '<div class="av-synth-va-head">' +
+        '<div class="av-synth-selects">' + picks + "</div>" +
+      "</div>" +
+      '<div class="av-synth-va-pots">' + faceRows + "</div>" +
+      '<div class="av-synth-va-screens">' + avSynthOscScreenHTML() + avSynthFiltScreenHTML() + "</div>" +
+      deepRows +
+      avSynthEnvSectionHTML() +
+    "</div>");
 
   /* acid — the hero row + MODS (EXPANDED) */
   const acid = avSynthPanelHTML("acid", kind === "acid",
@@ -549,7 +561,11 @@ function avSynthFoldInit(root) {
     row.appendChild(chip);
     sync();
   });
-  if (anchor.nextSibling) panel.insertBefore(row, anchor.nextSibling); else panel.appendChild(row);
+  /* P2: the chips belong on the control line, right after the picks — the picks now live inside
+     .av-synth-va-head, so "after the anchor" means inside that head, not at the panel's end. */
+  if (anchor.nextSibling) panel.insertBefore(row, anchor.nextSibling);
+  else if (anchor.parentNode) anchor.parentNode.appendChild(row);
+  else panel.appendChild(row);
   return true;
 }
 
@@ -689,6 +705,148 @@ function avSynthEnvInit(hostArg) {
   } catch (e) { return false; }
 }
 
+/* ---------- P2 screen: the oscillator scope (the SOUND card's left display) ---------- */
+
+/* The card had ~600x180 of dead width in its upper right; P2 spends it on the one display a synth
+   panel is expected to have. This is NOT an audio tap: it draws the two oscillator shapes the va
+   engine will render, from the same tables the engine reads (osc1.type's shape, osc2.type's
+   wavetable frame when it is an installed table), two cycles at the live levels. Same law as the
+   inspector's oscillator screen (av_inspector.js avInspectorWaveAt / avInspectorWtFrame), reused
+   when the part is present and restated here when it is not, so the card never depends on it. */
+function avSynthOscWaveAt(shape, p) {
+  if (typeof avInspectorWaveAt === "function") {
+    try { return avInspectorWaveAt(shape, p); } catch (e) { /* fall through to the local law */ }
+  }
+  const t = p - Math.floor(p);
+  if (shape === "sine") return Math.sin(t * Math.PI * 2);
+  if (shape === "tri") return 1 - 4 * Math.abs(t - 0.5);
+  if (shape === "square") return t < 0.5 ? 1 : -1;
+  if (shape === "pulse") return t < 0.25 ? 1 : -1;
+  return t < 0.5 ? (t * 4 - 1) : (3 - t * 4);
+}
+function avSynthOscBase(v) {
+  let x = String(v == null ? "saw" : v);
+  if (x.indexOf("wt.") === 0) x = x.slice(3);
+  if (x === "pulse25") x = "pulse";
+  return x;
+}
+/* the installed wavetable frame osc2 is playing, or null (a factory wt.* shape stands) */
+function avSynthOsc2Frame() {
+  try {
+    if (typeof avParams === "undefined" || !avParams) return null;
+    const mm = /^wt\.user(\d{1,2})$/.exec(String(avParams["osc2.type"] == null ? "" : avParams["osc2.type"]));
+    if (!mm) return null;
+    const slot = Number(mm[1]);
+    const rec = (typeof avWtState !== "undefined" && avWtState && avWtState.installed) ? avWtState.installed[slot] : null;
+    const frames = rec ? rec.data : null;
+    if (!frames || !frames.length) return null;
+    const f = frames[0];
+    return (f && typeof f.length === "number" && f.length >= 8) ? f : null;
+  } catch (e) { return null; }
+}
+function avSynthOscCapText() {
+  const P = (k, d) => String((typeof avParams !== "undefined" && avParams && avParams[k] != null) ? avParams[k] : d);
+  const frame = avSynthOsc2Frame();
+  const o2 = frame ? "TABLE" : P("osc2.type", "wt.saw").toUpperCase();
+  return "OSC1 " + avSynthOscBase(P("osc1.type", "saw")).toUpperCase() + " \u00B7 OSC2 " + o2;
+}
+function avSynthOscScreenHTML() {
+  return '<div class="av-synth-oscscreen" data-av-osc="1">' +
+    '<canvas class="av-synth-osccanvas" aria-label="Oscillator scope - the two shapes the engine renders"></canvas>' +
+    '<span class="av-synth-oscscreen-cap">OSC1 SAW \u00B7 OSC2 WT.SAW</span></div>';
+}
+function avSynthOscScopePaint(canvas) {
+  try {
+    if (!canvas || typeof canvas.getContext !== "function") return false;
+    const box = canvas.getBoundingClientRect ? canvas.getBoundingClientRect() : null;
+    const cssW = Math.max(80, Math.round((box && box.width) || 200));
+    const cssH = Math.max(40, Math.round((box && box.height) || 90));
+    const dpr = Math.max(1, Math.min(3, (typeof window !== "undefined" && window.devicePixelRatio) || 1));
+    if (canvas.width !== Math.round(cssW * dpr) || canvas.height !== Math.round(cssH * dpr)) {
+      canvas.width = Math.round(cssW * dpr); canvas.height = Math.round(cssH * dpr);
+    }
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return false;
+    const w = canvas.width, h = canvas.height;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    /* the graticule: a centre line and eight phase divisions (two cycles) */
+    ctx.strokeStyle = "rgba(255,255,255,0.055)";
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(0, h / 2 + 0.5); ctx.lineTo(w, h / 2 + 0.5); ctx.stroke();
+    for (let i = 1; i < 8; i++) {
+      const x = Math.round((i / 8) * w) + 0.5;
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+    }
+    const P = (k, d) => Number((typeof avParams !== "undefined" && avParams && avParams[k] != null) ? avParams[k] : d);
+    const amp = h * 0.40;
+    const mid = h / 2;
+    const frame = avSynthOsc2Frame();
+    const shapes = [
+      { kind: "osc1", base: avSynthOscBase(avParams && avParams["osc1.type"]), lvl: Math.max(0, Math.min(1, P("osc1.level", 1))), col: "#2ED8C9", a: 0.95 },
+      { kind: "osc2", base: null, lvl: Math.max(0, Math.min(1, P("osc2.level", 0.5))), col: "#8FB6BC", a: 0.85 },
+    ];
+    for (let k = 0; k < shapes.length; k++) {
+      const S = shapes[k];
+      const lv = S.lvl;
+      if (lv <= 0.002) continue;
+      ctx.globalAlpha = S.a * (0.35 + 0.65 * lv);
+      ctx.strokeStyle = S.col;
+      ctx.lineWidth = Math.max(1, 1.4 * dpr);
+      ctx.beginPath();
+      const N = 240;
+      for (let i = 0; i <= N; i++) {
+        const ph = (i / N) * 2;                       /* two cycles */
+        let v;
+        if (S.kind === "osc2" && frame) {
+          const fp = ph - Math.floor(ph);
+          v = Number(frame[Math.min(frame.length - 1, Math.floor(fp * frame.length))]) || 0;
+        } else {
+          v = avSynthOscWaveAt(S.kind === "osc2" ? S.base : S.base, ph);
+        }
+        const y = mid - v * lv * amp;
+        if (i === 0) ctx.moveTo(0, y); else ctx.lineTo((i / N) * w, y);
+      }
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    const cap = canvas.parentNode ? canvas.parentNode.querySelector(".av-synth-oscscreen-cap") : null;
+    if (cap) {
+      const txt = avSynthOscCapText();
+      if (cap.textContent !== txt) cap.textContent = txt;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function avSynthOscSync(hostArg) {
+  try {
+    const host = hostArg || document.getElementById("av-synth-knobs");
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    host.querySelectorAll(".av-synth-oscscreen").forEach(function (box) {
+      const canvas = box.querySelector(".av-synth-osccanvas");
+      if (canvas) avSynthOscScopePaint(canvas);
+    });
+    return true;
+  } catch (e) { return false; }
+}
+function avSynthOscInit(hostArg) {
+  try {
+    const host = hostArg || document.getElementById("av-synth-knobs");
+    if (!host || typeof host.querySelectorAll !== "function") return false;
+    host.querySelectorAll(".av-synth-oscscreen").forEach(function (box) {
+      if (box.__avOscRO) return;
+      try {
+        if (typeof ResizeObserver === "function") {
+          box.__avOscRO = new ResizeObserver(function () { try { avSynthOscScopePaint(box.querySelector(".av-synth-osccanvas")); } catch (e2) { } });
+          box.__avOscRO.observe(box);
+        }
+      } catch (e3) { /* observer is a nicety */ }
+    });
+    avSynthOscSync(host);
+    return true;
+  } catch (e) { return false; }
+}
+
 /* ---------- C3-12 screen 1: the filter response inset ---------- */
 
 /* The VA panel's filter row is 194px of three pots; the panel is 944 wide at 1280, so the screen
@@ -731,7 +889,7 @@ function avSynthFiltPaint(canvas) {
     const reso = Math.max(0, Math.min(1, Number((typeof avParams !== "undefined" && avParams && avParams["filter.reso"]) || 0)));
     const mode = String((typeof avParams !== "undefined" && avParams && avParams["filter.mode"]) || "lp12");
     const fc = Math.max(0, Math.min(1, avSynthFiltPos(cut)));
-    const base = h - 4 * dpr, top = 4 * dpr, amp = (base - top) * 0.78;
+    const base = h - 4 * dpr, top = 4 * dpr, amp = (base - top) * 0.90;
     ctx.strokeStyle = "#2ed8c9"; ctx.lineWidth = Math.max(1, 1.4 * dpr);
     ctx.beginPath();
     for (let i = 0; i <= 140; i++) {
@@ -783,15 +941,16 @@ function avSynthFiltInit(hostArg) {
   try {
     const host = hostArg || document.getElementById("av-synth-knobs");
     if (!host || typeof host.querySelectorAll !== "function") return false;
-    host.querySelectorAll(".av-synth-filter").forEach((row) => {
-      /* the screen is a PANEL-level flex item, not a knob-row child: inside the row it grew the row
-         by its own width and pushed ENV onto a second line at 1280 (the paired-row trap again). */
-      const panel = row.parentNode;
-      if (!panel || panel.querySelector(".av-synth-filtscreen")) return;
-      panel.insertAdjacentHTML("beforeend", avSynthFiltScreenHTML());
+    host.querySelectorAll(".av-synth-panel").forEach((panel) => {
+      /* P2: the VA panel carries its screen in the markup (the right-hand screen column). A kind
+         panel gets one only when it carries the shared filter row — the same rule as before. */
+      if (!panel.querySelector(".av-synth-filter")) return;
+      if (!panel.querySelector(".av-synth-filtscreen")) panel.insertAdjacentHTML("beforeend", avSynthFiltScreenHTML());
       const box = panel.querySelector(".av-synth-filtscreen");
       const canvas = box ? box.querySelector(".av-synth-filtcanvas") : null;
       if (!canvas || typeof canvas.addEventListener !== "function") return;
+      if (canvas.dataset.avFiltWired === "1") return;
+      canvas.dataset.avFiltWired = "1";
       let drag = false;
       const at = (e) => {
         const r = canvas.getBoundingClientRect();
@@ -804,6 +963,14 @@ function avSynthFiltInit(hostArg) {
       canvas.addEventListener("pointermove", (e) => { if (drag) { at(e); e.preventDefault(); } });
       canvas.addEventListener("pointerup", () => { drag = false; });
       canvas.addEventListener("pointercancel", () => { drag = false; });
+      /* P2: the screen is a column-filling box now, so its backing store has to follow every
+         resize of the card (a paint that lands before layout leaves a stale, smaller canvas). */
+      try {
+        if (typeof ResizeObserver === "function" && !box.__avFiltRO) {
+          box.__avFiltRO = new ResizeObserver(function () { try { avSynthFiltPaint(canvas); } catch (e7) { } });
+          box.__avFiltRO.observe(box);
+        }
+      } catch (e8) { /* observer is a nicety */ }
     });
     avSynthFiltSync(host);
     return true;
@@ -826,6 +993,7 @@ function avSynthInit() {
     avKnobBind(host);
     avSynthBindSelects(host);
     try { avSynthFiltInit(host); } catch (e) { /* the screen is an inset, never the card */ }
+    try { avSynthOscInit(host); } catch (e) { /* the scope is an inset too */ }
     try { avSynthEnvInit(host); } catch (e) { /* the envelope screen folds, never the card */ }
     try {
       if (!window.__avFiltHook) {
@@ -834,6 +1002,7 @@ function avSynthInit() {
           const p = ev && ev.detail && ev.detail.path;
           if (typeof p === "string" && p.indexOf("filter.") === 0) { try { avSynthFiltSync(); } catch (e2) { } }
           if (typeof p === "string" && p.indexOf("env1.") === 0) { try { avSynthEnvSync(); } catch (e3) { } }
+          if (typeof p === "string" && (p.indexOf("osc1.") === 0 || p.indexOf("osc2.") === 0)) { try { avSynthOscSync(); } catch (e4) { } }
         });
       }
     } catch (e3) { /* no window */ }
