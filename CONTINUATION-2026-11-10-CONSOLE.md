@@ -86,8 +86,20 @@ screen well, metal plate, knob face, keycap, rubber pad, fader cap, wheel rim, w
   assertion — a decorative element must never be matchable by a contract selector.
 - Gate on `3a7b42c6`: chassis 47/47 · a11y 37/37 · smoke 81/81 · m1 33/33 · m2 40/40 · seq 41/41.
 
+### EFFECTS — ATTEMPTED AND REVERTED (tree clean at `3a7b42c6`)
+Tried to kill the 153px void by letting the card own the well and the strip rack spread down it
+(`#av-fx-host` flex chain + `.av-fx-strips{flex:1; justify-content:space-between}` + a signal rail with a
+node per strip). **It made the page worse:** the strips are flex items in a column, so they took the slack
+themselves and DRIVE / FLAVOUR stretched into two 430px cards with a void inside each — the dead band moved
+from under the card into the card. Reverted with `git checkout -- src/styles-console.css`; bundle is back to
+the committed `3a7b42c6` and the tree is clean.
+**The real fix is a strip RACK with definite row heights** (each `.av-fx-strip` a fixed height from its own
+content, the chain container scrolling or distributing BESIDE them, never stretching them), not a stretched
+flex column. Do that as its own pass with the fx rig (`.av-fx-strip[data-sect=...]` legs, K24j) in hand.
+
 ### WHAT IS LEFT
 1. **P2 on EFFECTS** — still stacked cards, not the serial chain the spec asks for (a vertical signal rail).
+   See the reverted attempt above: fixed-height strips, not a stretched column.
 2. **MIX real strips** — the ghost rack is the EMPTY state; populated `.av-mix-track` rows are still
    horizontal, not vertical console strips with a dB-scaled fader.
 3. **SEQUENCE transport** — the PLAY/STOP/REC-STEP/FILL row leaves a wide void between the BPM knob and
