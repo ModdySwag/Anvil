@@ -1,3 +1,83 @@
+# ANVIL — CONSOLE DESIGN PROGRAMME (save point 2026-11-10, P2 SOUND + FULL SKIN)
+
+## READ THIS FIRST — P2 SOUND LANDED AND EVERY SURFACE IS A HIGGSFIELD MATERIAL
+
+**State:** HEAD `e7094ee` (skin pass 2) on `2dcb6fe` (P2 SOUND + full skin) · `index.html` sha
+`d51427fe7285ba6f3bdbda5ca40af4047a3be79b324edf72c38c201f302f08e6`, **6,063,974 B** · all 23 rigs pin it ·
+tree clean apart from the untracked concept artifacts.
+**Gate on `d51427fe`:** chassis **47/47** · a11y **37/37** · smoke **81/81** · m1 **33/33** · m2 **40/40**.
+
+**Owner brief this session (verbatim, both must keep governing):**
+1. *"the WHOLE THING, backplate and all textures need higgsfield . i still see original design colours as
+   layout colour templates"*
+2. *"each and every aVAILABLE AND POSSIBLE ASSET and part of the GUI and program interface professionally
+   skinned with as many higgsfield assets and anything needed. they 3 skins must look like 100% professional
+   decks and interfaces with No obvious signs of a windows generic design."*
+   → He then asked whether the subagents had covered the backplate and ALL assets for ALL 3 themes. They had
+   not (no subagents ran; the first pass was ONE neutral surface set shared by three finishes). That gap is
+   closed: every finish now owns a full asset set.
+
+### P2 SOUND (commit `2dcb6fe`) — structural, not paint
+- **LEVELS is the output stage.** The card still folds to its head (chassis K24 pins that), so the HEAD now
+  carries the job: INST + MASTER gains, a live stereo peak meter off `avTap.levels`, a peak-hold readout and
+  a latched CLIP tell (`avLevelsStrip` in app_core.js). Card 64 → **40 px**. Knobs stay behind the fold.
+- **One engine layer.** `#av-engine-strip` was six chips that only `scrollIntoView`-ed to a card the sub-tab
+  row already owns. It no longer paints (`strip.hidden = true` + `.av-engine-strip[hidden]{display:none!
+  important}` — a page `display` rule beats the attribute). Element kept: smoke R2 counts its six chips.
+- **The card fills the well.** `#av-zone-sound .av-zone-box{min-height:100%}` + `.av-sub:not([hidden])` as a
+  column + `#av-synth` flexing. Body = control line / one 12-pot row / **SCREENS BAND** that absorbs every
+  spare pixel. New **oscillator scope** (draws the two shapes the engine renders, reusing
+  `avInspectorWaveAt` with a local fallback) beside the enlarged filter response. Prose note deleted.
+  Dead band **0** (`p2probe.mjs` deadBottom), the 600×180 void is gone.
+- **K24h re-pinned** to the new shape (screen shares the band, sits below the pots, band carries the slack,
+  h≥140 w≥260) — same rigour, new geometry.
+
+### THE SKIN — one full asset set PER FINISH
+`cache/scratch/mk_materials.py` now emits, for gold / silver / walnut separately: **backplate, card face,
+screen well, metal plate, knob face, keycap, rubber pad, fader cap, wheel rim, white key, dial glass**
+(21 new Higgsfield `gpt_image_2_6` plates; ~90 credits; balance was 2541).
+- Textures are **high-passed** (blur-subtracted → grain only, no blotchy macro cloud) and **centred on
+  mid-grey** so soft-light adds texture and never a cast, **with per-family contrast**: plates mean 150 /
+  spread 150, caps 130/44, keys a photographed object at full opacity. One number for a 448px backplate and
+  a 24px keycap turns the small ones into static.
+- `styles-console.css` **§15** skins the large surfaces (floor, cards, rail, inspector, dock, screens,
+  bands); **§16** the controls (keycaps, field keys, chips, sub-tabs, rockers, kind keys, launcher keys,
+  module buttons, pads, step cells, fader caps, wheels, fields, rows, badges, wells, popovers, tooltips,
+  piano keys); **§17** buries the last native widgets (range inputs → machined cap on a recessed slot,
+  textareas → no resize grip / no OS scrollbar, `.av-seq-cell` → pad material).
+- Finish mapping lives in materials.css: `--mat-backplate/-card/-well/-rail/-btn/-pad/-fader/-wheel/
+  key-white/-plate/-knob/-dial` each resolve to that finish's own plates, so a finish swap moves the
+  MATERIAL, not a tint, and geometry cannot change.
+
+**Boards:** `cache/scratch/fin-gold3.png`, `fin-silver3.png`, `fin-walnut3.png` (SOUND in all three),
+`skin-mix.png`, `skin-sequence.png`, `skin-effects.png`, `crop-band2.png`, `crop-seq-ctl.png`,
+`p2-mat-crop3.png`. Tools: `p2probe.mjs` (zone structure + dead bottom), `p2dump.mjs` (card rect tree),
+`finishshot.mjs <zone> <finish> [w] [name]` (any page in any finish), `csprobe.mjs <sel>` (computed style).
+
+**TRAPS PAID THIS SESSION (add to the list):**
+- **A transparent gradient layer breaks the blend.** `background-image: texture, linear-gradient(…,
+  transparent)` leaves soft-light nothing to blend into and the RAW texture shows as a light grey slab (the
+  sub-tab row did exactly this). Every blended stack needs an OPAQUE base layer.
+- **Contrast is per family, not per sheet.** See above — keys/caps need their own spread or they read as
+  television static.
+- **An old `flex: 0 0 100%` written for a row-wrap parent measures 100% of the HEIGHT in a column** and
+  swallows the card. Reset the basis in the new layer (and mind specificity: an attribute selector counts
+  like a class, so `.x[data-y] .z` at 0,3,0 beats `.a .z` at 0,2,0 — scope with an id to win).
+- **`sweep_pins.py --old` must be the sha the RIGS carry, not your last build** (paid again): sweeping
+  `2f607e72` when the rigs held `30d90f86` rewrote 0 rigs and printed STALE REMAINING.
+
+### WHAT IS LEFT
+1. **P2 on MIX, SEQUENCE and EFFECTS** — still the old prose-card surfaces (MIX & MASTER is one giant text
+   card; SEQUENCE's grid is sparse; EFFECTS is stacked cards, not a serial chain). Same treatment SOUND got.
+2. **Inspector launcher grid** still repeats the sub-tab destinations (OSC/FM/DRUMS/SMP/CHOP/WT/TUNE) — make
+   it reflect the active page so it reads as status, not a third tab row.
+3. **Owner eye gate** on the three finishes + every page.
+4. Bundle is **6.06 MB** (materials.css 980 KB) — a size pass before release would be wise.
+5. Carried over untouched: MIDI import bug, full wave battery on final bytes, elevated uninstall of the stale
+   `C:\Program Files\Anvil`, publish v1.15.0, P3 finish into patch+installer, P4 craft.
+
+---
+
 # ANVIL — CONSOLE DESIGN PROGRAMME (save point 2026-11-10)
 
 ## READ THIS FIRST — P1 LANDED: control language, materials, three finishes (2026-11-10)
