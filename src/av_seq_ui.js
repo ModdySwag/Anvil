@@ -2071,6 +2071,7 @@ function avSeqUiFoldSync(rootArg) {
       if (!sec || !chip) continue;
       const folded = sec.classList.contains("av-sec-collapsed");
       chip.hidden = !folded;
+      chip.setAttribute("aria-expanded", folded ? "false" : "true");
       const label = name === "song" ? ("SONG \u00b7 " + rows) : "GEN";
       if (String(chip.textContent || "") !== label) chip.textContent = label;
       chip.title = folded ? ("Show the " + (name === "gen" ? "generators" : "song arrangement")) : ("Hide the " + (name === "gen" ? "generators" : "song arrangement"));

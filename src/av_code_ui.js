@@ -1528,6 +1528,7 @@ function avCodeUiFoldSync(cardArg) {
       const folded = sec.classList.contains("av-sec-collapsed");
       const on = name === "params" ? n > 0 : false;
       chip.hidden = !folded;
+      chip.setAttribute("aria-expanded", folded ? "false" : "true");
       chip.classList.toggle("on", on);
       const label = name === "params" ? ("PARAMS \u00b7 " + n) : "DOCS";
       if (String(chip.textContent || "") !== label) chip.textContent = label;

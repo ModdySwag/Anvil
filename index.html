@@ -6563,6 +6563,7 @@ function avMidiFoldInit(root) {
     function sync() {
       var folded = sec.classList.contains('av-sec-collapsed');
       chip.hidden = !folded;
+      chip.setAttribute('aria-expanded', folded ? 'false' : 'true');
       btn.textContent = folded ? '▸' : '▾';
       btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
       btn.setAttribute('aria-label', 'Hide the ' + label + ' controls');
@@ -25511,6 +25512,7 @@ function avChopUiFoldInit(root) {
   function sync() {
     const f = folded();
     chip.hidden = !f;
+    chip.setAttribute("aria-expanded", f ? "false" : "true");
     chip.title = "Show the mapping and apply controls";
     chip.setAttribute("aria-label", chip.title);
     btn.textContent = f ? "\u25b8" : "\u25be";
@@ -42810,6 +42812,7 @@ function avCodeUiFoldSync(cardArg) {
       const folded = sec.classList.contains("av-sec-collapsed");
       const on = name === "params" ? n > 0 : false;
       chip.hidden = !folded;
+      chip.setAttribute("aria-expanded", folded ? "false" : "true");
       chip.classList.toggle("on", on);
       const label = name === "params" ? ("PARAMS \u00b7 " + n) : "DOCS";
       if (String(chip.textContent || "") !== label) chip.textContent = label;
@@ -46281,6 +46284,7 @@ function avFxFoldInit(root) {
       const folded = sec.classList.contains("av-sec-collapsed");
       const on = !!(typeof avParams !== "undefined" && avParams && avParams["fx." + name + ".on"]);
       chip.hidden = !folded;
+      chip.setAttribute("aria-expanded", folded ? "false" : "true");
       chip.classList.toggle("on", on);
       chip.title = (on ? label + " is ON — " : "") + "Show the " + label + " controls";
       chip.setAttribute("aria-label", chip.title);
@@ -46313,6 +46317,7 @@ function avFxFoldSync(root) {
     const folded = !!(sec && sec.classList.contains("av-sec-collapsed"));
     const on = !!(typeof avParams !== "undefined" && avParams && avParams["fx." + name + ".on"]);
     chip.hidden = !folded;
+    chip.setAttribute("aria-expanded", folded ? "false" : "true");
     chip.classList.toggle("on", on);
     chip.title = (on ? name.toUpperCase() + " is ON — " : "") + "Show the " + name.toUpperCase() + " controls";
   });
@@ -54506,6 +54511,7 @@ function avSeqUiFoldSync(rootArg) {
       if (!sec || !chip) continue;
       const folded = sec.classList.contains("av-sec-collapsed");
       chip.hidden = !folded;
+      chip.setAttribute("aria-expanded", folded ? "false" : "true");
       const label = name === "song" ? ("SONG \u00b7 " + rows) : "GEN";
       if (String(chip.textContent || "") !== label) chip.textContent = label;
       chip.title = folded ? ("Show the " + (name === "gen" ? "generators" : "song arrangement")) : ("Hide the " + (name === "gen" ? "generators" : "song arrangement"));
@@ -78591,6 +78597,7 @@ function avMixUiDisclosure(root) {
     function sync() {
       var folded = sec.classList.contains('av-sec-collapsed');
       chip.hidden = !folded;
+      chip.setAttribute('aria-expanded', folded ? 'false' : 'true');
       btn.textContent = folded ? '▸' : '▾';
       btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
       btn.title = (folded ? 'Show the ' : 'Hide the ') + label + ' controls';
@@ -87389,6 +87396,7 @@ function avSynthFoldInit(root) {
     function sync() {
       const folded = sec.classList.contains("av-sec-collapsed");
       chip.hidden = !folded;
+      chip.setAttribute("aria-expanded", folded ? "false" : "true");
       chip.title = "Show the " + label + " controls";
       chip.setAttribute("aria-label", chip.title);
       btn.textContent = folded ? "▸" : "▾";

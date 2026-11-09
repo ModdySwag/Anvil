@@ -534,6 +534,7 @@ function avSynthFoldInit(root) {
     function sync() {
       const folded = sec.classList.contains("av-sec-collapsed");
       chip.hidden = !folded;
+      chip.setAttribute("aria-expanded", folded ? "false" : "true");
       chip.title = "Show the " + label + " controls";
       chip.setAttribute("aria-label", chip.title);
       btn.textContent = folded ? "▸" : "▾";

@@ -2584,6 +2584,7 @@ function avMixUiDisclosure(root) {
     function sync() {
       var folded = sec.classList.contains('av-sec-collapsed');
       chip.hidden = !folded;
+      chip.setAttribute('aria-expanded', folded ? 'false' : 'true');
       btn.textContent = folded ? '▸' : '▾';
       btn.setAttribute('aria-expanded', folded ? 'false' : 'true');
       btn.title = (folded ? 'Show the ' : 'Hide the ') + label + ' controls';

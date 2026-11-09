@@ -246,6 +246,7 @@ function avFxFoldInit(root) {
       const folded = sec.classList.contains("av-sec-collapsed");
       const on = !!(typeof avParams !== "undefined" && avParams && avParams["fx." + name + ".on"]);
       chip.hidden = !folded;
+      chip.setAttribute("aria-expanded", folded ? "false" : "true");
       chip.classList.toggle("on", on);
       chip.title = (on ? label + " is ON — " : "") + "Show the " + label + " controls";
       chip.setAttribute("aria-label", chip.title);
@@ -278,6 +279,7 @@ function avFxFoldSync(root) {
     const folded = !!(sec && sec.classList.contains("av-sec-collapsed"));
     const on = !!(typeof avParams !== "undefined" && avParams && avParams["fx." + name + ".on"]);
     chip.hidden = !folded;
+    chip.setAttribute("aria-expanded", folded ? "false" : "true");
     chip.classList.toggle("on", on);
     chip.title = (on ? name.toUpperCase() + " is ON — " : "") + "Show the " + name.toUpperCase() + " controls";
   });

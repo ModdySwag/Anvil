@@ -1493,6 +1493,7 @@ function avChopUiFoldInit(root) {
   function sync() {
     const f = folded();
     chip.hidden = !f;
+    chip.setAttribute("aria-expanded", f ? "false" : "true");
     chip.title = "Show the mapping and apply controls";
     chip.setAttribute("aria-label", chip.title);
     btn.textContent = f ? "\u25b8" : "\u25be";
