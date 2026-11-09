@@ -868,6 +868,31 @@ function avMixUiToggleHTML(t, params) {
     '<input type="checkbox" class="av-mix-check" id="' + t.id + '" data-mix-toggle="1" data-mix-path="' + avMixUiEsc(t.path) + '"' + (on ? " checked" : "") + ">";
 }
 
+/* P2 (2026-11-10): the EMPTY STATE is a strip rack, not a paragraph. With no tracks the card used
+   to be a wall of prose over an invisible surface, which read as a broken page. Eight ghost strips
+   show the shape of the surface (name plate, fader slot on a dB scale, stereo meter, M/S, output)
+   and the one action that fills them. Ghosts only: no values, no fake data. */
+const AV_MIX_RACK_STRIPS = 8;
+const AV_MIX_RACK_SCALE = ["0", "-6", "-12", "-24", "-40", "-\u221E"];
+function avMixUiRackHTML() {
+  let strips = "";
+  for (let i = 0; i < AV_MIX_RACK_STRIPS; i++) {
+    strips += '<div class="av-mix-strip av-mix-strip-ghost">' +
+      '<span class="av-mix-strip-name">T' + (i + 1) + "</span>" +
+      '<div class="av-mix-strip-body">' +
+      '<div class="av-mix-strip-slot"><i class="av-mix-strip-cap"></i></div>' +
+      '<div class="av-mix-strip-meter"><b></b><b></b></div>' +
+      "</div>" +
+      '<div class="av-mix-strip-keys"><span>M</span><span>S</span></div>' +
+      '<span class="av-mix-strip-out">MAIN</span>' +
+      "</div>";
+  }
+  let scale = "";
+  for (let i = 0; i < AV_MIX_RACK_SCALE.length; i++) scale += "<span>" + AV_MIX_RACK_SCALE[i] + "</span>";
+  return '<div class="av-mix-rack-scale" aria-hidden="true">' + scale + "</div>" +
+    '<div class="av-mix-rack-strips" aria-hidden="true">' + strips + "</div>";
+}
+
 function avMixUiBodyHTML() {
   const params = avMixUiMixParamsRead().params;
   const pknob = (id) => {
@@ -929,6 +954,7 @@ function avMixUiBodyHTML() {
     "</div>" +
     '<div class="av-mix-tracks" id="av-mix-tracks"></div>' +
     '<p class="av-mix-tracks-none av-mix-none av-note av-dim" id="av-mix-tracks-none">No tracks yet \u2014 pick a take, a comp or the engine pattern above and press ADD.</p>' +
+    '<div class="av-mix-rack" id="av-mix-rack">' + avMixUiRackHTML() + "</div>" +
     "</section>" +
 
     '<section class="av-mix-sect" data-sect="sends">' +
@@ -1369,6 +1395,8 @@ function avMixUiPaintTracks(host) {
     }
     const none = host.querySelector("#av-mix-tracks-none");
     if (none) none.hidden = views.length > 0;
+    const rack = host.querySelector("#av-mix-rack");
+    if (rack) rack.hidden = views.length > 0;
     avMixUiSetText(host, "#av-mix-track-n", views.length + " track" + (views.length === 1 ? "" : "s"));
     const st = avMixUiMixStateRead();
     avMixUiSetText(host, "#av-mix-rev", st && st.rev != null ? ("rev " + avMixUiInt(st.rev, 0, 1e9, 0)) : "");
