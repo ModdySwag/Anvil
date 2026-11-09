@@ -1,0 +1,48 @@
+
+== Anvil desktop app: C:\Users\Moddy\anvil\windows\stage\Anvil\Anvil.exe
+   cdp :9356 | downloads -> C:\Users\Moddy\anvil\windows\tmp-dl-desktop
+-- shell + origin
+ ok   the app is served from the loopback server (not file://)  -- http://127.0.0.1:47900/index.html
+ ok   a secure context with AudioWorklet (the hosted-page path)
+ ok   __AV_DESKTOP marker present (=== true)  -- "true"
+ ok   __AV_SHELL reports the serving port (version/electron reported)  -- {"version":"1.15.0","electron":"40.10.2","servePort":47900}
+ ok   the window carries the Anvil title  -- Anvil — a MODDYS Foundry synthesizer
+ ok   the shell reports its build on stdout (tolerant: stdout mentions 1.15.0)
+-- boot
+ ok   boot: data-av-ready flips (the smoke contract)
+ ok   ANVIL.version reads 1.15.0 (the R22 freeze)  -- {"version":"1.15.0","phase":"C5 · rebuild","built":"2026-11-10"}
+-- engine
+ ok   the engine boots (__avEngine.ready)  -- {"ready":true,"tier":"worklet","url":"blob","sr":48000,"maxVoices":64,"os":2,"err":null,"ctx":true}
+ ok   the engine reports the worklet tier  -- tier=worklet url=blob err=null
+ ok   the engine carries 64+ voices (maxVoices)  -- maxVoices=64 sr=48000
+-- note + master-tap witness
+   - witness: armed on the master tap ({"sr":48000,"binHz":2.9296875,"fft":16384})
+ ok   witness baseline silent on the master tap before the note (control)  -- rmsMax=0
+ ok   note: avNoteDown('a4') starts a note through the app's own note path  -- {"ok":true,"held":["a4"],"sink":true}
+ ok   note WITNESSED on the master tap: NON-SILENT (own AnalyserNode, never panel reads)  -- rmsMax=0.1208896538353299 frames=58 loudFrames=29 flow@324ms rms=0.08661609807678258
+ ok   note WITNESSED: spectral peak well above the floor  -- peakDB=-31.672182083129883 lit bins=1186 peakHz=439.453125
+ ok   note WITNESSED: dominant energy sits in the note's register (200-1000 Hz around a4=440)  -- peakHz=439.453125 (bin 2.93 Hz, fft 16384)
+ ok   note: avNoteUp releases the note  -- {"ok":true}
+ ok   note: silence returns on the master tap after the release (control)  -- rmsNow=0.004929398462546664
+-- Web MIDI
+ ok   Web MIDI: navigator.requestMIDIAccess resolves (permission granted by the shell, no prompt)  -- {"granted":true,"inputs":0,"outputs":0,"sysex":false,"names":[]}
+-- library (R22 overlay + EXP download)
+ ok   library: the __avLibrary facade is present (version/open/snap)  -- "r21.0"
+ ok   the library overlay opens (snap.open, a real box)  -- {"open":true,"state":"normal","w":1200,"h":858,"pref":null,"grip":true}
+ ok   the library overlay carries the R22 chrome (state normal, grip, real size)  -- {"open":true,"state":"normal","w":1200,"h":858,"pref":null,"grip":true}
+ ok   library overlay: min/max buttons present and the pop is visible  -- {"pop":true,"hidden":false,"display":"flex","min":true,"max":true}
+ ok   library: a sample row exists for the EXP lane (imported via __avImport when missing)  -- rows=1 (pre-existing)
+ ok   the library EXP action downloads through the shell (will-download -> DL dir, no dialog)  -- desktop-rig-220.wav (192044 B)
+ ok   the downloaded file carries the library bytes (RIFF/WAVE; size matches the import when fresh)  -- desktop-rig-220.wav 192044 B (pre-existing row)
+   - the app recorded its own download metadata: {"name":"desktop-rig-220.wav","bytes":192044,"at":1794247536306,"via":"anchor"}
+ ok   the library overlay closes (snap.open false)
+-- header (fit law)
+ ok   the header renders 21 buttons (the fit law)  -- visible=21 at 1492x918
+ ok   the header buttons fit their boxes and do not overlap (fit law)  -- {"hits":[],"spill":[]}
+-- errors
+ ok   zero uncaught exceptions during the run
+ ok   zero console errors during the run
+
+-- summary: 31 passed, 0 failed
+
+DESKTOP-RESULT: GREEN -- all 31 checks passed (exit 0)

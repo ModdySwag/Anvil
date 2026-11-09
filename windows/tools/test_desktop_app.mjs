@@ -501,7 +501,10 @@ try {
     check(closed, 'the library overlay closes (snap.open false)');
   }
 
-  /* ---- the header fit law: 15 buttons, no overlap, no clipped labels ---- */
+  /* ---- the header fit law: the band's full control set, no overlap, no clipped labels.
+     C1's chassis rebuild grew the header from 15 to 21 visible buttons (contrast, motion,
+     palette, nav, the level keys) and the count is re-pinned to the MEASURED set at this
+     viewport; the geometry legs below (no overlap, no spill) are the actual law. ---- */
   console.log('-- header (fit law)');
   const fit = await app.ev(`(() => {
     const head = document.querySelector('header.av-head.av-console') || document.querySelector('header.av-head');
@@ -527,7 +530,7 @@ try {
     const spill = btns.filter(function (b) { return b.sw > b.cw + 1; }).map(function (b) { return b.id || '?'; });
     return { n: btns.length, hits: hits, spill: spill, ids: btns.map(function (b) { return b.id; }), innerW: window.innerWidth, innerH: window.innerHeight };
   })()`);
-  check(!!(fit && fit.n === 15), 'the header renders 15 buttons (the fit law)', fit ? ('visible=' + fit.n + ' at ' + fit.innerW + 'x' + fit.innerH) : 'header read failed');
+  check(!!(fit && fit.n === 21), 'the header renders 21 buttons (the fit law)', fit ? ('visible=' + fit.n + ' at ' + fit.innerW + 'x' + fit.innerH) : 'header read failed');
   check(!!(fit && Array.isArray(fit.hits) && fit.hits.length === 0 && Array.isArray(fit.spill) && fit.spill.length === 0),
     'the header buttons fit their boxes and do not overlap (fit law)', fit ? JSON.stringify({ hits: fit.hits, spill: fit.spill }) : 'header read failed');
 
