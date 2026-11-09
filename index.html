@@ -1965,7 +1965,10 @@ header.av-head.av-console #av-version { font-size: 9px; opacity: .85; }
 .avc-key:hover { border-color: var(--teal-deep); color: #f2fffd; }
 .avc-key:active { transform: translateY(1px); box-shadow: 0 1px 0 #05080b, inset 0 1px 0 rgba(255, 255, 255, .07); }
 .avc-key::after {
-  content: ""; position: absolute; top: 5px; right: 6px; width: 5px; height: 5px; border-radius: 50%;
+  /* the status dot sits in the corner ABOVE the cap height: at top:5px it overlapped the last
+     glyph of every key by 4x1-2 px (measured 2026-11-10: dot 70..75/y63..68 vs text 37..74/y66),
+     which read as the letters colliding with the LED. top:2px clears the ink on all six keys. */
+  content: ""; position: absolute; top: 2px; right: 6px; width: 5px; height: 5px; border-radius: 50%;
   background: #10161b; box-shadow: inset 0 1px 1px #000;
 }
 .avc-key.on::after { background: var(--teal); box-shadow: 0 0 7px var(--teal), inset 0 0 2px #fff; }
@@ -2588,6 +2591,12 @@ body { --dock-h: 132px; }
   text-transform: uppercase;
   color: var(--text-3);
   white-space: nowrap;
+}
+.av-band-pot .av-knob-val {
+  /* the readout sits flush under the knob (0 px box gap by design) and carried a 6 px teal
+     glow on 9.5 px text - the halo, not the box, is what read as an overlap (measured
+     2026-11-10). Tighten the glow in the band only; no layout change, no band-height cost. */
+  text-shadow: 0 0 3px rgba(46, 216, 201, 0.20);
 }
 .av-band-num {
   font-family: var(--mono);

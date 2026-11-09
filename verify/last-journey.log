@@ -1,0 +1,51 @@
+-- elevation: net session non-zero (limited token) | token integrity level: Medium
+== journey for Anvil-1.15.0-Setup.exe (100,074,944 B, sha 765dbad308bf1e2a...)
+
+-- pre-flight
+ ok   no previous install in the way  -- C:\Users\Moddy\AppData\Local\Programs\Anvil
+ FAIL no stale MACHINE-WIDE (HKLM) Add/Remove entry -- Inno would glom it into admin mode  -- found 1 DisplayName row(s)
+ FAIL no stale machine-wide install directory in Program Files  -- C:\Program Files\Anvil
+
+-- install (silent, per-user, default location)
+ ok   the installer exits 0  -- 11.1s
+ FAIL Anvil.exe is installed  -- C:\Users\Moddy\AppData\Local\Programs\Anvil\Anvil.exe
+ FAIL the uninstaller is installed (unins000.exe)
+ ok   the install landed per-user (%LOCALAPPDATA%\Programs\Anvil)
+ FAIL nothing landed machine-wide (PrivilegesRequired=lowest held)  -- C:\Program Files\Anvil
+ FAIL the install log confirms the chosen mode (per-user)  -- 2026-11-10 04:38:30.773   Install mode root key: HKEY_LOCAL_MACHINE
+ FAIL the app payload is inside the install
+ FAIL build-info.json is installed (the shell reads its build from it)  -- C:\Users\Moddy\AppData\Local\Programs\Anvil\resources\app\build-info.json
+ FAIL a Start Menu entry exists  -- missing
+ FAIL Add/Remove Programs lists EXACTLY ONE entry  -- 0 DisplayName row(s)
+ ok   the installer added nothing to %APPDATA%\Anvil (app data is the app's own)  -- 19 pre-existing entries untouched
+
+-- the installed app, driven over CDP (windows/tools/test_desktop_app.mjs)
+ FAIL the installed app passes its desktop suite
+ ok   the app created its own data folder when it ran (%APPDATA%\Anvil)  -- C:\Users\Moddy\AppData\Roaming\Anvil
+
+-- upgrade over the top
+ ok   the upgrade install exits 0
+ FAIL the app is still installed after the upgrade
+ ok   user data (%APPDATA%\Anvil) survived the upgrade  -- C:\Users\Moddy\AppData\Roaming\Anvil\journey-marker.txt
+ FAIL still exactly one Add/Remove entry after the upgrade  -- 0 DisplayName row(s)
+
+-- uninstall (silent)
+Traceback (most recent call last):
+  File "C:\Users\Moddy\anvil\windows\tools\install_journey.py", line 382, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "C:\Users\Moddy\anvil\windows\tools\install_journey.py", line 365, in main
+    r = run([UNINST, "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"])
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Moddy\anvil\windows\tools\install_journey.py", line 84, in run
+    return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Moddy\AppData\Local\Programs\Python\Python311\Lib\subprocess.py", line 548, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Moddy\AppData\Local\Programs\Python\Python311\Lib\subprocess.py", line 1026, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "C:\Users\Moddy\AppData\Local\Programs\Python\Python311\Lib\subprocess.py", line 1538, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [WinError 2] The system cannot find the file specified

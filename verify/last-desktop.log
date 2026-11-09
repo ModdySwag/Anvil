@@ -19,11 +19,11 @@
    - witness: armed on the master tap ({"sr":48000,"binHz":2.9296875,"fft":16384})
  ok   witness baseline silent on the master tap before the note (control)  -- rmsMax=0
  ok   note: avNoteDown('a4') starts a note through the app's own note path  -- {"ok":true,"held":["a4"],"sink":true}
- ok   note WITNESSED on the master tap: NON-SILENT (own AnalyserNode, never panel reads)  -- rmsMax=0.1208896538353299 frames=58 loudFrames=29 flow@324ms rms=0.08661609807678258
+ ok   note WITNESSED on the master tap: NON-SILENT (own AnalyserNode, never panel reads)  -- rmsMax=0.1208896538353299 frames=58 loudFrames=30 flow@325ms rms=0.08661609807678258
  ok   note WITNESSED: spectral peak well above the floor  -- peakDB=-31.672182083129883 lit bins=1186 peakHz=439.453125
  ok   note WITNESSED: dominant energy sits in the note's register (200-1000 Hz around a4=440)  -- peakHz=439.453125 (bin 2.93 Hz, fft 16384)
  ok   note: avNoteUp releases the note  -- {"ok":true}
- ok   note: silence returns on the master tap after the release (control)  -- rmsNow=0.004929398462546664
+ ok   note: silence returns on the master tap after the release (control)  -- rmsNow=0.0038366746366852783
 -- Web MIDI
  ok   Web MIDI: navigator.requestMIDIAccess resolves (permission granted by the shell, no prompt)  -- {"granted":true,"inputs":0,"outputs":0,"sysex":false,"names":[]}
 -- library (R22 overlay + EXP download)
@@ -34,7 +34,7 @@
  ok   library: a sample row exists for the EXP lane (imported via __avImport when missing)  -- rows=1 (pre-existing)
  ok   the library EXP action downloads through the shell (will-download -> DL dir, no dialog)  -- desktop-rig-220.wav (192044 B)
  ok   the downloaded file carries the library bytes (RIFF/WAVE; size matches the import when fresh)  -- desktop-rig-220.wav 192044 B (pre-existing row)
-   - the app recorded its own download metadata: {"name":"desktop-rig-220.wav","bytes":192044,"at":1794247536306,"via":"anchor"}
+   - the app recorded its own download metadata: {"name":"desktop-rig-220.wav","bytes":192044,"at":1794250732313,"via":"anchor"}
  ok   the library overlay closes (snap.open false)
 -- header (fit law)
  ok   the header renders 21 buttons (the fit law)  -- visible=21 at 1492x918
