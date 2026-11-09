@@ -1633,10 +1633,28 @@ body[data-finish="walnut"] .av-lv-bar > i { background-image: linear-gradient(90
   background-blend-mode: soft-light, normal;
 }
 
-/* 15f. the metal bands read as metal: a tighter tile and a stronger plate under the token */
+/* 15f. the metal bands read as metal: a tighter tile, a full-strength plate, and a sheen so the
+   faceplate has directional light the way a milled panel does instead of an even vector fill */
 #av-title::after, .av-zones::after, #av-status::after {
-  background-size: 300px 300px, auto;
-  opacity: .8;
+  background-size: 220px 220px, auto;
+  opacity: .96;
+}
+#av-title .av-band-plate, .av-zones, #av-status {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, .16) 0%, rgba(255, 255, 255, 0) 42%, rgba(0, 0, 0, .10) 100%),
+    var(--fin-metal);
+  background-blend-mode: normal, normal;
+}
+.av-zones {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .55),
+    inset 0 -1px 0 rgba(0, 0, 0, .35),
+    0 2px 6px rgba(0, 0, 0, .35);
+}
+#av-title .av-band-plate {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .50),
+    inset 0 -1px 0 rgba(0, 0, 0, .30);
 }
 #av-status { position: fixed; }
 #av-status::after {
@@ -1770,4 +1788,84 @@ body[data-finish="walnut"] .av-lv-bar > i { background-image: linear-gradient(90
   background-size: 180px 180px, auto !important;
   background-position: center, 0 0 !important;
   background-blend-mode: normal, normal;
+}
+
+/* ============================================================================
+   17. NATIVE CONTROL BURIAL (2026-11-10)
+   "no obvious signs of a windows generic design". Three families still shipped the browser's own
+   widgets: range inputs (round thumb on a teal bar), textareas (default resize grip) and the
+   sequencer's step cells (flat fill). They are the last places the OS shows through.
+   ============================================================================ */
+
+/* 17a. range inputs: a machined cap on a recessed slot */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  height: 18px;
+  cursor: pointer;
+}
+input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 3px;
+  background:
+    linear-gradient(180deg, #0A1214 0%, #050A0B 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .9), inset 0 -1px 0 rgba(255, 255, 255, .05);
+  border: 1px solid #060B0D;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 13px;
+  height: 20px;
+  margin-top: -8px;
+  border-radius: 2px;
+  background-image: var(--mat-fader, none), linear-gradient(180deg, #4A5A63 0%, #1E2A30 55%, #101820 100%);
+  background-size: 60px 60px, auto;
+  background-position: center, 0 0;
+  background-blend-mode: soft-light, normal;
+  border: 1px solid #05080B;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .28),
+    inset 0 -2px 4px rgba(0, 0, 0, .55),
+    0 1px 3px rgba(0, 0, 0, .7);
+}
+input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 2px var(--fin-accent), 0 1px 3px rgba(0, 0, 0, .7); }
+input[type="range"]::-moz-range-track {
+  height: 6px; border-radius: 3px; background: #070D0F;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, .9);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 13px; height: 20px; border-radius: 2px; border: 1px solid #05080B;
+  background-image: var(--mat-fader, none), linear-gradient(180deg, #4A5A63 0%, #1E2A30 55%, #101820 100%);
+  background-size: 60px 60px, auto;
+  background-blend-mode: soft-light, normal;
+}
+
+/* 17b. textareas and text fields: panel material, no OS resize grip, no OS scrollbar */
+textarea {
+  background-image: var(--mat-card, none), linear-gradient(180deg, #0B1113 0%, #080C0E 100%);
+  background-size: 240px 240px, auto;
+  background-blend-mode: soft-light, normal;
+  border: 1px solid #16211F;
+  border-radius: 3px;
+  color: var(--text-2);
+  resize: none;
+  scrollbar-width: thin;
+}
+textarea::-webkit-scrollbar { width: 9px; height: 9px; }
+textarea::-webkit-scrollbar-track { background: transparent; }
+textarea::-webkit-scrollbar-thumb { background: #22303A; border-radius: 5px; border: 2px solid #0A0F11; }
+
+/* 17c. the sequencer's step cells wear the pad material, not a flat fill */
+.av-seq-cell {
+  background-image: var(--mat-pad, none), linear-gradient(180deg, #131B1F 0%, #0A1013 100%);
+  background-size: 90px 90px, auto;
+  background-position: center, 0 0;
+  background-blend-mode: soft-light, normal;
+  border-radius: 2px;
+}
+.av-seq-cell.on, .av-seq-cell.av-on, .av-seq-cell.active {
+  background-image: var(--mat-pad, none), linear-gradient(180deg, #2A4E56 0%, #163036 100%);
+  background-size: 90px 90px, auto;
+  background-blend-mode: soft-light, normal;
 }
