@@ -67,7 +67,7 @@ if (!existsSync(page)) { console.error('page not found: ' + page); process.exit(
    authoring. A valid --sha <hex> becomes the run-time expectation while the constant is null,
    and echoes/overrides the constant once pinned (cdp_hub semantics, verbatim). The rig never
    loosens the before === after check. */
-const EXPECT_SHA = 'ad4f9f885f205c76428f006a618e912fdf6c3a1a70b977495a14634b0ebb8f6b';
+const EXPECT_SHA = '451b398ed48e6a3654d2d8bb5b17af7d9a523e547ce16d3bdc23413d741de7f0';
 const PIN = (shaArg > -1 && argv[shaArg + 1] && /^[0-9a-f]{64}$/i.test(argv[shaArg + 1])) ? argv[shaArg + 1].toLowerCase() : EXPECT_SHA;
 const shaOf = (p) => createHash('sha256').update(readFileSync(p)).digest('hex');
 const shaBefore = shaOf(page);

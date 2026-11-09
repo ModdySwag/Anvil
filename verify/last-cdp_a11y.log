@@ -1,8 +1,7 @@
-index.html sha256 (before): ad4f9f885f205c76428f006a618e912fdf6c3a1a70b977495a14634b0ebb8f6b
+index.html sha256 (before): 451b398ed48e6a3654d2d8bb5b17af7d9a523e547ce16d3bdc23413d741de7f0
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794263493660
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794264060610
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
-   - Page.setDownloadBehavior unavailable
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
  ok   C3-5: the LEVELS fold opens before the knob legs (a hidden knob cannot take focus)  -> opened
@@ -13,7 +12,7 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   A3 fresh-load defaults: contrast false + motion system + no av-contrast / av-reduce-motion on body + stored prefs default-or-absent  -> {"cls":"av-rail-closed","contrast":false,"motion":"system","systemReduced":false,"reduceActive":false,"ls":null}
  ok   A4 module UI: #av-a11y-host inside header.av-head + real buttons #av-a11y-contrast / #av-a11y-motion (title + aria-pressed)  -> {"host":true,"inHead":true,"hostCls":"av-a11y","contrast":{"tag":"BUTTON","pressed":"false","title":true,"label":"High contrast"},"motion":{"tag":"BUTTON","pressed":"false","title":true,"label":"Reduce motion"}}
 == B. skip link (real Tab + Enter) ==
- ok   B1 skip link: #av-a11y-skip anchor -> #av-main + main.av-main carries id="av-main"  -> {"skip":true,"tag":"A","cls":"av-a11y-skip","href":"#av-main","first":"av-a11y-skip","mainId":"av-main","rect":{"x":12,"y":-64,"w":170,"h":36},"text":"Skip to main content"}
+ ok   B1 skip link: #av-a11y-skip anchor -> #av-main + main.av-main carries id="av-main"  -> {"skip":true,"tag":"A","cls":"av-a11y-skip","href":"#av-main","first":"av-a11y-skip","mainId":"av-main","rect":{"x":12,"y":-56,"w":171,"h":32},"text":"Skip to main content"}
  ok   B2 skip link is the first focusable: fresh-load Tab -> activeElement #av-a11y-skip  -> {"before":{"id":null,"tag":"BODY","cls":"av-rail-closed","txt":"Skip to main content Anvilv1.15.0FileEditViewWorkspaceHelpAN"},"after":{"id":"av-a11y-skip","tag":"A","cls":"av-a11y-skip","txt":"Skip to main content"}}
  ok   B3 skip link Enter: focus lands on #av-main  -> {"id":"av-main","tag":"MAIN","hash":"","scrollY":0}
 == C. knobs (tabindex/role/aria + keyboard witness on master) ==
@@ -52,11 +51,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"av-rail-closed","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  ad4f9f885f205c76428f006a618e912fdf6c3a1a70b977495a14634b0ebb8f6b
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> ad4f9f885f205c76428f006a618e912fdf6c3a1a70b977495a14634b0ebb8f6b
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned ad4f9f885f20...
+index.html sha256 (after):  451b398ed48e6a3654d2d8bb5b17af7d9a523e547ce16d3bdc23413d741de7f0
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 451b398ed48e6a3654d2d8bb5b17af7d9a523e547ce16d3bdc23413d741de7f0
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 451b398ed48e...
 
 RESULT: 37 passed, 0 failed
 A11Y-RESULT 37/37
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"ad4f9f885f205c76428f006a618e912fdf6c3a1a70b977495a14634b0ebb8f6b","sha256After":"ad4f9f885f205c76428f006a618e912fdf6c3a1a70b977495a14634b0ebb8f6b","pinned":"ad4f9f885f205c76428f006a618e912fdf6c3a1a70b977495a14634b0ebb8f6b","passed":37,"failed":0,"checks":37,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"451b398ed48e6a3654d2d8bb5b17af7d9a523e547ce16d3bdc23413d741de7f0","sha256After":"451b398ed48e6a3654d2d8bb5b17af7d9a523e547ce16d3bdc23413d741de7f0","pinned":"451b398ed48e6a3654d2d8bb5b17af7d9a523e547ce16d3bdc23413d741de7f0","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 A11Y PASSED
