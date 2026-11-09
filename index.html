@@ -4683,6 +4683,87 @@ body.kb-armed .pk-keycap { color: #052A2E; background: #A7F4E9; border-color: va
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .6), inset 0 2px 6px rgba(0, 0, 0, .5);
 }
 
+/* ============================================================================
+   10. THE CONSOLE SELECT (P1b) — a field key + a real popover over the native select
+   ============================================================================ */
+.av-sel { position: relative; display: inline-block; vertical-align: middle; max-width: 100%; }
+select.av-sel-native {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  margin: 0;
+}
+.av-sel-key {
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 24px;
+  max-width: 100%;
+  padding: 0 22px 0 8px;
+  position: relative;
+  border: 1px solid #0A1014;
+  border-radius: 3px;
+  background-color: #0E1518;
+  background-image: linear-gradient(180deg, #161F22 0%, #0E1518 100%);
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .05em;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+.av-sel-key::after {
+  content: "";
+  position: absolute;
+  right: 7px; top: 50%;
+  width: 9px; height: 9px;
+  margin-top: -5px;
+  background-color: currentColor;
+  -webkit-mask: var(--ic-chevron) no-repeat center / 9px 9px;
+  mask: var(--ic-chevron) no-repeat center / 9px 9px;
+  opacity: .7;
+  pointer-events: none;
+}
+.av-sel-key:hover { color: var(--text); border-color: #2A3A40; }
+.av-sel-key:focus-visible { outline: 2px solid var(--fin-accent); outline-offset: 1px; }
+.av-sel-key[aria-expanded="true"] { color: var(--text); border-color: #2C5A61; background-image: linear-gradient(180deg, #1B2729 0%, #101A1C 100%); }
+.av-sel-pop {
+  position: fixed;
+  z-index: 90;
+  display: none;
+  max-height: 260px;
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid #223032;
+  border-radius: 4px;
+  background: linear-gradient(180deg, #131C1E 0%, #0B1214 100%);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .05);
+}
+.av-sel-pop.open { display: block; }
+.av-sel-opt {
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 2px;
+  color: var(--text-2);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.av-sel-opt:hover, .av-sel-opt.act { background: rgba(47, 182, 196, .12); color: var(--text); }
+.av-sel-opt.on { color: #8CE9F2; }
+.av-sel-opt.on::before { content: "· "; color: var(--fin-accent); }
+
 </style>
 </head>
 
@@ -96375,6 +96456,233 @@ if (typeof window !== "undefined" && window) {
 
 /* boot: self-init at parse time (the header + chips are already in the DOM above the script) */
 try { avConsoleInit(); } catch (e) { /* console boots best-effort */ }
+
+
+/* Anvil — the console select (P1b): every native <select> gets a console field + a real popover.
+   The native element stays in the DOM (hidden) as the value carrier, so every module's reader,
+   every rig's .value/.options contract and every programmatic dispatch('change') keeps working;
+   only the RENDERING and the POPUP are replaced. The LCD's bank selects are left alone (they are
+   display fields, styled as dial-glass text). */
+"use strict";
+
+const AV_SEL_SKIP = function (s) {
+  try {
+    if (!s || s.tagName !== "SELECT") return true;
+    if (s.dataset.avSel === "1") return true;
+    if (s.classList.contains("av-bank-pack") || s.classList.contains("av-bank-preset")) return true;
+    if (s.closest && s.closest("#av-lcd-bezel")) return true;
+    if (s.dataset.nosel === "1") return true;
+    return false;
+  } catch (e) { return true; }
+};
+
+const avSelState = { open: null, wrap: null, btn: null, pop: null, idx: 0 };
+
+function avSelLabel(s) {
+  try {
+    const o = s.options[s.selectedIndex];
+    return o ? String(o.textContent || "").trim() : "";
+  } catch (e) { return ""; }
+}
+
+function avSelClose() {
+  try {
+    const p = avSelState.pop;
+    if (p) { p.classList.remove("open"); p.innerHTML = ""; }
+    if (avSelState.btn) avSelState.btn.setAttribute("aria-expanded", "false");
+    avSelState.open = null; avSelState.wrap = null; avSelState.btn = null; avSelState.pop = null;
+  } catch (e) { /* already closed */ }
+}
+
+function avSelPosition() {
+  try {
+    const b = avSelState.btn, p = avSelState.pop;
+    if (!b || !p) return;
+    const r = b.getBoundingClientRect();
+    const w = Math.max(r.width, 168);
+    let left = Math.min(Math.max(6, r.left), window.innerWidth - w - 8);
+    p.style.width = w + "px";
+    p.style.left = left + "px";
+    p.style.top = "0px";
+    const ph = p.offsetHeight || 200;
+    let top = r.bottom + 4;
+    if (top + ph > window.innerHeight - 6) top = Math.max(6, r.top - ph - 4);
+    p.style.top = top + "px";
+  } catch (e) { /* unpositioned is still usable */ }
+}
+
+function avSelOpen(s, wrap, btn, pop) {
+  try {
+    avSelClose();
+    avSelState.open = s; avSelState.wrap = wrap; avSelState.btn = btn; avSelState.pop = pop;
+    pop.innerHTML = "";
+    const opts = Array.prototype.slice.call(s.options || []);
+    let act = Math.max(0, s.selectedIndex);
+    for (let i = 0; i < opts.length; i++) {
+      const o = opts[i];
+      const row = document.createElement("div");
+      row.className = "av-sel-opt" + (i === s.selectedIndex ? " on" : "");
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-selected", i === s.selectedIndex ? "true" : "false");
+      row.dataset.i = String(i);
+      row.textContent = String(o.textContent || "").trim() || String(o.value || "");
+      row.addEventListener("pointerdown", function (e) { e.preventDefault(); e.stopPropagation(); });
+      row.addEventListener("click", function (e) {
+        e.preventDefault(); e.stopPropagation();
+        try {
+          s.selectedIndex = i;
+          s.value = o.value;
+          s.dispatchEvent(new Event("input", { bubbles: true }));
+          s.dispatchEvent(new Event("change", { bubbles: true }));
+        } catch (e2) { /* the module keeps its last value */ }
+        btn.textContent = avSelLabel(s);
+        avSelClose();
+        try { btn.focus({ preventScroll: true }); } catch (e3) { /* focus is best effort */ }
+      });
+      pop.appendChild(row);
+    }
+    pop.classList.add("open");
+    btn.setAttribute("aria-expanded", "true");
+    avSelPosition();
+    const rows = pop.querySelectorAll(".av-sel-opt");
+    if (rows[act]) rows[act].classList.add("act");
+    avSelState.idx = act;
+  } catch (e) { /* a select that cannot open stays readable */ }
+}
+
+function avSelMove(d) {
+  try {
+    const pop = avSelState.pop, s = avSelState.open;
+    if (!pop || !s) return;
+    const rows = Array.prototype.slice.call(pop.querySelectorAll(".av-sel-opt"));
+    if (!rows.length) return;
+    let i = (avSelState.idx || 0) + d;
+    if (i < 0) i = 0; if (i > rows.length - 1) i = rows.length - 1;
+    rows.forEach(function (r, j) { r.classList.toggle("act", j === i); });
+    avSelState.idx = i;
+    if (rows[i] && rows[i].scrollIntoView) rows[i].scrollIntoView({ block: "nearest" });
+  } catch (e) { /* the list stays where it was */ }
+}
+
+function avSelChoose() {
+  try {
+    const pop = avSelState.pop;
+    if (!pop) return;
+    const row = pop.querySelectorAll(".av-sel-opt")[avSelState.idx || 0];
+    if (row) row.click();
+  } catch (e) { /* nothing to choose */ }
+}
+
+function avSelBuild(s) {
+  try {
+    if (AV_SEL_SKIP(s)) return false;
+    s.dataset.avSel = "1";
+    const wrap = document.createElement("span");
+    wrap.className = "av-sel";
+    s.parentNode.insertBefore(wrap, s);
+    wrap.appendChild(s);
+    s.classList.add("av-sel-native");
+    s.setAttribute("aria-hidden", "true");
+    s.tabIndex = -1;
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "av-sel-key";
+    btn.setAttribute("role", "combobox");
+    btn.setAttribute("aria-haspopup", "listbox");
+    btn.setAttribute("aria-expanded", "false");
+    const lab = avSelLabel(s);
+    btn.textContent = lab;
+    btn.title = (s.getAttribute("aria-label") || s.getAttribute("title") || lab) + " — click to choose";
+    btn.setAttribute("aria-label", btn.title);
+
+    const pop = document.createElement("div");
+    pop.className = "av-sel-pop";
+    pop.setAttribute("role", "listbox");
+
+    wrap.appendChild(btn);
+    wrap.appendChild(pop);
+
+    btn.addEventListener("click", function (e) {
+      e.preventDefault(); e.stopPropagation();
+      if (avSelState.open === s) { avSelClose(); return; }
+      avSelOpen(s, wrap, btn, pop);
+    });
+    btn.addEventListener("keydown", function (e) {
+      const k = e.key;
+      if (k === "ArrowDown" || k === "ArrowUp") {
+        e.preventDefault();
+        if (avSelState.open !== s) { avSelOpen(s, wrap, btn, pop); return; }
+        avSelMove(k === "ArrowDown" ? 1 : -1);
+      } else if (k === "Enter" || k === " ") {
+        e.preventDefault();
+        if (avSelState.open !== s) avSelOpen(s, wrap, btn, pop); else avSelChoose();
+      } else if (k === "Escape") { if (avSelState.open === s) { e.preventDefault(); avSelClose(); } }
+    });
+    /* external writes (rigs, modules, patch loads) keep the key honest */
+    s.addEventListener("change", function () { if (btn.textContent !== avSelLabel(s)) btn.textContent = avSelLabel(s); });
+    return true;
+  } catch (e) { return false; }
+}
+
+function avSelUpgradeAll(root) {
+  let n = 0;
+  try {
+    const r = root && root.querySelectorAll ? root : document;
+    const list = Array.prototype.slice.call(r.querySelectorAll("select"));
+    for (let i = 0; i < list.length; i++) if (avSelBuild(list[i])) n++;
+  } catch (e) { /* the un-upgraded select is still usable */ }
+  return n;
+}
+
+function avSelInit() {
+  try {
+    if (avSelState.ready) return true;
+    avSelState.ready = true;
+    avSelUpgradeAll(document);
+    document.addEventListener("pointerdown", function (e) {
+      if (!avSelState.open) return;
+      const w = avSelState.wrap;
+      if (w && w.contains(e.target)) return;
+      avSelClose();
+    }, true);
+    document.addEventListener("keydown", function (e) {
+      if (avSelState.open && e && e.key === "Escape") avSelClose();
+    }, true);
+    window.addEventListener("resize", function () { if (avSelState.open) avSelPosition(); });
+    if (typeof MutationObserver === "function") {
+      let t = 0;
+      const mo = new MutationObserver(function () {
+        if (t) return;
+        t = setTimeout(function () { t = 0; avSelUpgradeAll(document); }, 120);
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+      avSelState.mo = mo;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+
+if (typeof window !== "undefined" && window) {
+  try {
+    window.__avSel = {
+      init: avSelInit,
+      upgradeAll: avSelUpgradeAll,
+      count: function () { return document.querySelectorAll("select[data-av-sel='1']").length; },
+      native: function () { return document.querySelectorAll("select:not([data-av-sel='1'])").length; },
+      close: avSelClose,
+    };
+  } catch (e) { /* no window */ }
+}
+
+/* self-init: the script sits at the end of <body>, so the first pass runs on parse and the
+   observer catches every module that mounts later (cards build their selects from templates). */
+if (typeof document !== "undefined" && document) {
+  try {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { avSelInit(); });
+    else avSelInit();
+  } catch (e) { /* the native selects remain usable */ }
+}
 
 
 /* Anvil — THE INSPECTOR COLUMN (C1 chassis, verify/_c1_wave.md 2.4): the persistent right-hand
