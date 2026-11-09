@@ -157,7 +157,10 @@ function avMenubarBuild() {
     stat.id = "av-menu-status";
     stat.textContent = "ANVIL" + (window.ANVIL ? " \u00B7 v" + window.ANVIL.version : "");
     bar.appendChild(stat);
-    head.parentNode.insertBefore(bar, head);
+    /* the menu legend lives in the 30px title bar (P0) — the old 24px strip above the band is gone */
+    const titleBar = document.getElementById("av-title");
+    if (titleBar) titleBar.appendChild(bar);
+    else head.parentNode.insertBefore(bar, head);
     document.addEventListener("pointerdown", function (e) {
       if (!avMenuState.openFor) return;
       const pop = avMenuState.pop;

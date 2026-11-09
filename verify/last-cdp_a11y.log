@@ -1,20 +1,19 @@
-index.html sha256 (before): 97ba6540da4e43a7fc731e988381539bf70fed9cc5f0f6170ef1abcd5ddf2847
+index.html sha256 (before): de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794255439832
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794261504011
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
-   - Page.setDownloadBehavior unavailable
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
  ok   C3-5: the LEVELS fold opens before the knob legs (a hidden knob cannot take focus)  -> opened
    - settle 1400 ms for the decoration pass 2 (module init + 1200 ms)
 == A. a11y module + state() ==
  ok   A1 module: window.__avA11y {version, init, state, setPref, toggle} + avA11yAnnounce fn  -> {"has":true,"version":"1.0.0","init":"function","state":"function","setPref":"function","toggle":"function","announce":"function","proof":"function","classes":"function"}
- ok   A2 state(): inited/skip/live true + counts.sliders === DOM .av-knob[data-knob] total (sliders 223 vs DOM 223)  -> {"inited":true,"skip":true,"live":true,"sliders":223,"domKnobs":223,"counts":{"sliders":223,"knobsTabbed":223,"canvases":22,"liveRegions":4,"roleButtons":2,"labeled":566,"unnamed":0},"errN":0}
+ ok   A2 state(): inited/skip/live true + counts.sliders === DOM .av-knob[data-knob] total (sliders 223 vs DOM 223)  -> {"inited":true,"skip":true,"live":true,"sliders":223,"domKnobs":223,"counts":{"sliders":223,"knobsTabbed":223,"canvases":22,"liveRegions":4,"roleButtons":2,"labeled":565,"unnamed":0},"errN":0}
  ok   A3 fresh-load defaults: contrast false + motion system + no av-contrast / av-reduce-motion on body + stored prefs default-or-absent  -> {"cls":"av-rail-closed","contrast":false,"motion":"system","systemReduced":false,"reduceActive":false,"ls":null}
  ok   A4 module UI: #av-a11y-host inside header.av-head + real buttons #av-a11y-contrast / #av-a11y-motion (title + aria-pressed)  -> {"host":true,"inHead":true,"hostCls":"av-a11y","contrast":{"tag":"BUTTON","pressed":"false","title":true,"label":"High contrast"},"motion":{"tag":"BUTTON","pressed":"false","title":true,"label":"Reduce motion"}}
 == B. skip link (real Tab + Enter) ==
- ok   B1 skip link: #av-a11y-skip anchor -> #av-main + main.av-main carries id="av-main"  -> {"skip":true,"tag":"A","cls":"av-a11y-skip","href":"#av-main","first":"av-a11y-skip","mainId":"av-main","rect":{"x":12,"y":-64,"w":158,"h":36},"text":"Skip to main content"}
- ok   B2 skip link is the first focusable: fresh-load Tab -> activeElement #av-a11y-skip  -> {"before":{"id":null,"tag":"BODY","cls":"av-rail-closed","txt":"Skip to main content FileEditViewWorkspaceHelpANVIL · v1.15."},"after":{"id":"av-a11y-skip","tag":"A","cls":"av-a11y-skip","txt":"Skip to main content"}}
+ ok   B1 skip link: #av-a11y-skip anchor -> #av-main + main.av-main carries id="av-main"  -> {"skip":true,"tag":"A","cls":"av-a11y-skip","href":"#av-main","first":"av-a11y-skip","mainId":"av-main","rect":{"x":12,"y":-64,"w":170,"h":36},"text":"Skip to main content"}
+ ok   B2 skip link is the first focusable: fresh-load Tab -> activeElement #av-a11y-skip  -> {"before":{"id":null,"tag":"BODY","cls":"av-rail-closed","txt":"Skip to main content Anvilv1.15.0FileEditViewWorkspaceHelpAN"},"after":{"id":"av-a11y-skip","tag":"A","cls":"av-a11y-skip","txt":"Skip to main content"}}
  ok   B3 skip link Enter: focus lands on #av-main  -> {"id":"av-main","tag":"MAIN","hash":"","scrollY":0}
 == C. knobs (tabindex/role/aria + keyboard witness on master) ==
    - knob selftest present: true
@@ -26,7 +25,7 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   C6 master knob restore: start value (0.8) restored through the commit path (readback matches)  -> {"orig":0.8,"restored":0.8,"aria":"0.8"}
 == D. names (visible buttons + counts.unnamed) ==
  ok   D1 names: every VISIBLE button has a nonempty accessible name (text | aria-label | title) - 147 visible of 652  -> {"total":652,"visible":147,"bad":[]}
- ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":566,"counts":{"sliders":223,"knobsTabbed":223,"canvases":22,"liveRegions":4,"roleButtons":2,"labeled":566,"unnamed":0}}
+ ok   D2 names: state().counts.unnamed === 0 for buttons  -> {"unnamed":0,"labeled":565,"counts":{"sliders":223,"knobsTabbed":223,"canvases":22,"liveRegions":4,"roleButtons":2,"labeled":565,"unnamed":0}}
 == E. live regions + announce ==
  ok   E1 live regions: >= 3 pinned-selector elements (.av-fam-status / #av-deliver-status / .av-session-status) carry role=status or aria-live (live 4 of 4)  -> {"found":4,"live":4,"sample":["av-deliver-status","av-fam-hub-status","av-fam-res-status","av-fam-radio-status"]}
  ok   E2 announce: avA11yAnnounce("a11y-rig-probe") writes #av-a11y-live textContent  -> {"fn":true,"exists":true,"text":"a11y-rig-probe"}
@@ -34,7 +33,7 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
 == F. contrast (toggle - token - reload - reset) ==
  ok   F1 contrast click: body gains av-contrast + aria-pressed "true" + state().contrast true  -> {"click":true,"cls":"av-rail-closed av-contrast","pressed":"true","contrast":true,"before":{"cls":"av-rail-closed","pressed":"false"}}
    - F2 triage: --text moved on <body> (the class carrier); the documentElement read is unchanged
- ok   F2 contrast token: computed --text changes with the toggle (documentElement + body reads)  -> {"normal":{"html":"#E8F1F2","body":"#E8F1F2"},"contrast":{"html":"#E8F1F2","body":"#FFFFFF"},"htmlChanged":false,"bodyChanged":true}
+ ok   F2 contrast token: computed --text changes with the toggle (documentElement + body reads)  -> {"normal":{"html":"#E9EEEF","body":"#E9EEEF"},"contrast":{"html":"#E9EEEF","body":"#FFFFFF"},"htmlChanged":false,"bodyChanged":true}
  ok   F3 contrast reload: class + aria-pressed + state RESTORED from prefs  -> {"ready":true,"inited":true,"cls":"av-contrast av-rail-closed","pressed":"true","contrast":true,"ls":{"contrast":true,"motion":"system"}}
  ok   F4 contrast reset: default clean (class off + aria-pressed "false" + state false + prefs contrast false)  -> {"click":true,"cls":"av-rail-closed","pressed":"false","contrast":false,"ls":{"contrast":false,"motion":"system"}}
 == G. motion (emulated reduce + the manual toggle) ==
@@ -46,17 +45,17 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
 == I. tab sets + the recorded focus order ==
  ok   I1 tab sets: every [role=tab] resolves aria-controls to a [role=tabpanel] that names it back via aria-labelledby, + exactly one aria-selected per tablist (tabs 44, panels 44)  -> {"tabs":44,"panels":44,"lists":10,"fm":{"label":"FM operators","tabs":6,"selected":1,"stops":1}}
  ok   I2 FM operator tabs: one tab stop (roving tabindex) + ArrowRight/End/Home with REAL CDP keys move selection, panel and focus together  -> {"a":{"tabs":6,"sel":["1"],"stops":["1"],"focus":"av-fm-op-tab-1","panel":true,"shownPanels":1},"arrowRight":{"tabs":6,"sel":["2"],"stops":["2"],"focus":"av-fm-op-tab-2","panel":true,"shownPanels":1},"end":{"tabs":6,"sel":["6"],"stops":["6"],"focus":"av-fm-op-tab-6","panel":true,"shownPanels":1},"home":{"tabs":6,"sel":["1"],"stops":["1"],"focus":"av-fm-op-tab-1","panel":true,"shownPanels":1}}
- ok   I3 focus order recorded: on every page the tab order runs chrome -> band -> tab bar -> pane -> inspector (no cycle, 9 pages; stops "133/128/152/158/228/143/139/132/138")  -> {"bad":[],"per":{"browse":{"stops":133,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":45}},"perform":{"stops":128,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":40}},"sound":{"stops":152,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":64}},"shape":{"stops":158,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":70}},"sequence":{"stops":228,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":140}},"effects":{"stops":143,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":55}},"mix":{"stops":139,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":51}},"deliver":{"stops":132,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":44}},"system":{"stops":138,"first":{"chrome":0,"band":6,"tabs":35,"pane":36,"inspector":50}}}}
- ok   I4 real Tab walk: from #av-a11y-skip, eight REAL Tabs land on exactly the eight stops the record predicts ("BUTTON.av-menu-item | BUTTON.av-menu-item | BUTTON.av-menu-item" ...)  -> {"skipAt":0,"predicted":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","avc-play","avc-stop","avc-song"],"real":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","avc-play","avc-stop","avc-song"]}
+ ok   I3 focus order recorded: on every page the tab order runs chrome -> band -> tab bar -> pane -> inspector (no cycle, 9 pages; stops "152/228/139/133/128/158/143/132/138")  -> {"bad":[],"per":{"sound":{"stops":152,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":64}},"sequence":{"stops":228,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":140}},"mix":{"stops":139,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":51}},"browse":{"stops":133,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":45}},"perform":{"stops":128,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":40}},"shape":{"stops":158,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":70}},"effects":{"stops":143,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":55}},"deliver":{"stops":132,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":44}},"system":{"stops":138,"first":{"chrome":0,"band":15,"tabs":35,"pane":36,"inspector":50}}}}
+ ok   I4 real Tab walk: from #av-a11y-skip, eight REAL Tabs land on exactly the eight stops the record predicts ("BUTTON.av-menu-item | BUTTON.av-menu-item | BUTTON.av-menu-item" ...)  -> {"skipAt":0,"predicted":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","av-head-browse","av-head-undo","av-head-redo"],"real":["BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","BUTTON.av-menu-item","av-head-browse","av-head-undo","av-head-redo"]}
 == H. seal (prefs default - zero errors - freeze - pin) ==
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"av-rail-closed","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  97ba6540da4e43a7fc731e988381539bf70fed9cc5f0f6170ef1abcd5ddf2847
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 97ba6540da4e43a7fc731e988381539bf70fed9cc5f0f6170ef1abcd5ddf2847
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 97ba6540da4e...
+index.html sha256 (after):  de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned de3bf123b24e...
 
 RESULT: 37 passed, 0 failed
 A11Y-RESULT 37/37
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"97ba6540da4e43a7fc731e988381539bf70fed9cc5f0f6170ef1abcd5ddf2847","sha256After":"97ba6540da4e43a7fc731e988381539bf70fed9cc5f0f6170ef1abcd5ddf2847","pinned":"97ba6540da4e43a7fc731e988381539bf70fed9cc5f0f6170ef1abcd5ddf2847","passed":37,"failed":0,"checks":37,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205","sha256After":"de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205","pinned":"de3bf123b24eb5a491f678ddb1129b768c340f53054311d287f3d19b35bde205","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 A11Y PASSED

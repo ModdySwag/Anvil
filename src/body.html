@@ -1,16 +1,18 @@
 <body>
+<div id="av-title" class="av-title" role="toolbar" aria-label="Title bar"></div>
 <header class="av-head" id="av-head"></header>
 <nav class="av-zones" id="av-zones" role="tablist" aria-label="Pages">
   <div class="av-zones-in">
-    <button class="av-zone-tab" id="av-tab-browse" data-zone="browse" role="tab" aria-selected="false" aria-controls="av-zone-browse" title="What you pick: packs, presets, imports and saved sessions">BROWSE</button>
-    <button class="av-zone-tab" id="av-tab-perform" data-zone="perform" role="tab" aria-selected="false" aria-controls="av-zone-perform" title="The performance: macro pots, poly and glide">PERFORM</button>
-    <button class="av-zone-tab" id="av-tab-sound" data-zone="sound" role="tab" aria-selected="true" aria-controls="av-zone-sound" title="The voice: engine, FM, drums, samples, chop, wavetable, tuning">SOUND</button>
-    <button class="av-zone-tab" id="av-tab-shape" data-zone="shape" role="tab" aria-selected="false" aria-controls="av-zone-shape" title="What moves it: the matrix and the LFO">SHAPE</button>
-    <button class="av-zone-tab" id="av-tab-sequence" data-zone="sequence" role="tab" aria-selected="false" aria-controls="av-zone-sequence" title="What plays it: the sequencer, scenes and the song arranger">SEQUENCE</button>
-    <button class="av-zone-tab" id="av-tab-effects" data-zone="effects" role="tab" aria-selected="false" aria-controls="av-zone-effects" title="What processes it: the FX rack">EFFECTS</button>
-    <button class="av-zone-tab" id="av-tab-mix" data-zone="mix" role="tab" aria-selected="false" aria-controls="av-zone-mix" title="Where it sums: mix and master, comping, the recorder and the studio">MIX</button>
-    <button class="av-zone-tab" id="av-tab-deliver" data-zone="deliver" role="tab" aria-selected="false" aria-controls="av-zone-deliver" title="What leaves the building: the deck display and the one-press deliver render">DELIVER</button>
-    <button class="av-zone-tab" id="av-tab-system" data-zone="system" role="tab" aria-selected="false" aria-controls="av-zone-system" title="The plumbing: MIDI, project, CODE, family bridges, roadmap">SYSTEM</button>
+    <button class="av-zone-tab" data-kind="mode" id="av-tab-sound" data-zone="sound" role="tab" aria-selected="true" aria-controls="av-zone-sound" title="The voice: engine, FM, drums, samples, chop, wavetable, tuning">SOUND</button>
+    <button class="av-zone-tab" data-kind="mode" id="av-tab-sequence" data-zone="sequence" role="tab" aria-selected="false" aria-controls="av-zone-sequence" title="What plays it: the sequencer, scenes and the song arranger">SEQUENCE</button>
+    <button class="av-zone-tab" data-kind="mode" id="av-tab-mix" data-zone="mix" role="tab" aria-selected="false" aria-controls="av-zone-mix" title="Where it sums: mix and master, comping, the recorder and the studio">MIX</button>
+    <span class="av-zone-sep" aria-hidden="true"></span>
+    <button class="av-zone-tab" data-kind="panel" id="av-tab-browse" data-zone="browse" role="tab" aria-selected="false" aria-controls="av-zone-browse" title="What you pick: packs, presets, imports and saved sessions">BROWSE</button>
+    <button class="av-zone-tab" data-kind="panel" id="av-tab-perform" data-zone="perform" role="tab" aria-selected="false" aria-controls="av-zone-perform" title="The performance: macro pots, poly and glide">PERFORM</button>
+    <button class="av-zone-tab" data-kind="panel" id="av-tab-shape" data-zone="shape" role="tab" aria-selected="false" aria-controls="av-zone-shape" title="What moves it: the matrix and the LFO">SHAPE</button>
+    <button class="av-zone-tab" data-kind="panel" id="av-tab-effects" data-zone="effects" role="tab" aria-selected="false" aria-controls="av-zone-effects" title="What processes it: the FX rack">EFFECTS</button>
+    <button class="av-zone-tab" data-kind="panel" id="av-tab-deliver" data-zone="deliver" role="tab" aria-selected="false" aria-controls="av-zone-deliver" title="What leaves the building: the deck display and the one-press deliver render">DELIVER</button>
+    <button class="av-zone-tab" data-kind="panel" id="av-tab-system" data-zone="system" role="tab" aria-selected="false" aria-controls="av-zone-system" title="The plumbing: MIDI, project, CODE, family bridges, roadmap">SYSTEM</button>
   </div>
 </nav>
 <div class="av-work">
@@ -285,26 +287,34 @@
       <div id="av-wheel-mod" class="av-wheel" role="slider" tabindex="0" aria-label="Mod wheel" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0" title="Mod wheel — drag or arrows, holds"><span class="av-wheel-cap"></span></div>
     </div>
     <div class="av-dock-body">
+    <div id="piano-keys"></div>
+    </div>
+  </div>
+
+<footer id="av-status" class="av-status" role="contentinfo" aria-label="Status">
     <div id="piano-rail">
-      <button id="pk-close" class="av-btn mini" title="Hide the piano (Y)" aria-label="Hide the piano (Y)">✕</button>
-      <button id="pk-pop" class="av-btn mini" title="Pop the keys out into their own window (always-on-top where the browser allows)" aria-label="Pop the keyboard out">⧉</button>
-      <button id="pk-return" class="av-btn mini" title="Bring the keys home" aria-label="Bring keys home">⧉ BACK</button>
       <div id="pk-modes" class="pk-modes" role="group" aria-label="Input mode — what the computer keyboard drives">
         <button class="pk-mode" data-mode="studio" title="STUDIO — single letters stay quiet; the KEYS chip or ` turns the typing keys into the dock">STUDIO</button>
         <button class="pk-mode" data-mode="keys" title="KEYS — typing keys play the dock: A-row white (A = C), W-row black (W = C♯), Z / X hop octaves, Esc hands back"><span class="pk-sw-led" id="pk-arm-led"></span>KEYS</button>
         <button class="pk-mode" data-mode="midi" title="MIDI — hardware plays the notes, PC letters stay quiet; Ctrl/Alt combos, F-keys and Space still work">MIDI</button>
       </div>
-      <span id="pk-mode-hint" class="pk-mode-hint">STUDIO — letters are quiet here; ` or the KEYS chip makes the typing keys play.</span>
       <div class="pk-rail-ctl">
         <button id="pk-oct-down" class="av-btn mini" title="Window octave down ( [ )" aria-label="Window octave down">&minus;</button>
         <span id="pk-win" class="pk-win">OCT C4</span>
         <button id="pk-oct-up" class="av-btn mini" title="Window octave up ( ] )" aria-label="Window octave up">+</button>
       </div>
-      <div class="pk-rail-note">click to play · hold to sustain · glide to sweep · ` flips STUDIO ↔ KEYS</div>
+      <span id="pk-mode-hint" class="pk-mode-hint">STUDIO — letters are quiet here; ` or the KEYS chip makes the typing keys play.</span>
+      <span class="av-status-meta" id="av-status-meta">
+        <span id="av-status-voices">VOICES —</span>
+        <span id="av-status-cpu">CPU —</span>
+        <span id="av-status-rate">— kHz</span>
+        <span id="av-status-ver">v1.15.0</span>
+      </span>
+      <button id="pk-close" class="av-btn mini" title="Hide the piano (Y)" aria-label="Hide the piano (Y)">✕</button>
+      <button id="pk-pop" class="av-btn mini" title="Pop the keys out into their own window (always-on-top where the browser allows)" aria-label="Pop the keyboard out">⧉</button>
+      <button id="pk-return" class="av-btn mini" title="Bring the keys home" aria-label="Bring keys home">⧉ BACK</button>
     </div>
-    <div id="piano-keys"></div>
-    </div>
-  </div>
+</footer>
 
 <script id="AV_JS">
 </script>

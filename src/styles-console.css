@@ -1,0 +1,528 @@
+/* ============================================================================
+   ANVIL CONSOLE — P0 chassis layer  (docs/16-console-design-program.md s.9)
+   Chrome is metal, work is glass. This file loads AFTER styles.css and owns:
+     - the finish tokens (gold leads; silver + walnut are defined for P3)
+     - the type ramp
+     - the five bands: title 30 / transport 74 / zone strip 38 / status 23 / dock 68
+   Nothing here restyles card internals: the glass retint rides the legacy :root vars.
+   ============================================================================ */
+
+:root {
+  /* ---- metal (the finish: Marantz gold, owner-picked 2026-11-10) ---- */
+  --fin-face-1: #F2E7CF;
+  --fin-face-2: #E7D7B4;
+  --fin-face-3: #CDB27C;
+  --fin-face-4: #B2955D;
+  --fin-ink: #2E2616;
+  --fin-ink-2: rgba(46, 38, 22, .68);
+  --fin-ink-3: rgba(46, 38, 22, .46);
+  --fin-edge-hi: rgba(255, 250, 235, .62);
+  --fin-edge-lo: rgba(60, 44, 20, .32);
+  --fin-metal: linear-gradient(180deg, var(--fin-face-1) 0%, var(--fin-face-2) 34%, var(--fin-face-3) 82%, var(--fin-face-4) 100%);
+  --fin-brush: repeating-linear-gradient(90deg, rgba(255, 255, 255, .055) 0 1px, rgba(90, 68, 30, .022) 1px 3px);
+
+  /* ---- glass (the work) ---- */
+  --fin-glass-1: #0D1213;
+  --fin-glass-2: #070A0A;
+  --fin-raise: #131B1D;
+  --fin-hairline: #223032;
+  --fin-ink-glass: #E9EEEF;
+  --fin-ink-glass-2: #A9B4B8;
+  --fin-ink-glass-3: #75828A;
+  --fin-accent: #2FB6C4;
+  --fin-accent-deep: #15707B;
+
+  /* ---- type ramp (docs/16 s.5) ---- */
+  --fs-display: 22px;
+  --fs-title: 17px;
+  --fs-sub: 14px;
+  --fs-body: 13px;
+  --fs-small: 12px;
+  --fs-value: 13px;
+  --fs-value-s: 11px;
+  --fs-micro: 10px;
+  --fs-mono: 12px;
+  --lh-display: 28px;
+  --lh-title: 22px;
+  --lh-sub: 19px;
+  --lh-body: 18px;
+  --lh-small: 16px;
+  --trk-micro: .09em;
+  --trk-legend: .16em;
+
+  /* ---- chassis geometry (measured before/after in the receipt) ---- */
+  --title-h: 30px;
+  --band-h: 74px;
+  --zones-h: 38px;
+  --status-h: 23px;
+  --dock-h: 68px;
+
+  /* ---- legacy tokens retinted onto the glass (every card inherits) ---- */
+  --bg: #080B0C;
+  --panel: #0F1617;
+  --raised: #172022;
+  --hair: #223032;
+  --text: #E9EEEF;
+  --text-2: #A9B4B8;
+  --text-3: #75828A;
+  --teal: #2FB6C4;
+  --teal-deep: #177E89;
+  --teal-glow: #8CE9F2;
+  --sans: "Inter", "Segoe UI Variable Text", system-ui, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+
+/* finish variants — selected in P3; present now so the tokens never fork per rule */
+body[data-finish="silver"] {
+  --fin-face-1: #F4F5F5;
+  --fin-face-2: #ECEDED;
+  --fin-face-3: #CFD1CB;
+  --fin-face-4: #B4B6AE;
+  --fin-ink: #1B2124;
+  --fin-ink-2: rgba(27, 33, 36, .66);
+  --fin-ink-3: rgba(27, 33, 36, .44);
+  --fin-accent: #C07A2E;
+  --fin-accent-deep: #8A5420;
+  --teal: #C07A2E;
+  --teal-deep: #8A5420;
+  --teal-glow: #E9A961;
+}
+body[data-finish="walnut"] {
+  --fin-face-1: #3A2A1E;
+  --fin-face-2: #2B1D15;
+  --fin-face-3: #1D130D;
+  --fin-face-4: #150E09;
+  --fin-ink: #F0E6D2;
+  --fin-ink-2: rgba(240, 230, 210, .68);
+  --fin-ink-3: rgba(240, 230, 210, .46);
+  --fin-edge-hi: rgba(255, 240, 210, .18);
+  --fin-edge-lo: rgba(0, 0, 0, .55);
+  --fin-accent: #E0A04A;
+  --fin-accent-deep: #A9762C;
+  --teal: #E0A04A;
+  --teal-deep: #A9762C;
+  --teal-glow: #F3C784;
+  --fin-brush: repeating-linear-gradient(90deg, rgba(255, 220, 170, .03) 0 1px, rgba(0, 0, 0, .05) 1px 4px);
+}
+
+/* ============================================================================
+   1. TITLE BAR — 30 px of metal: word mark, menu legend, utilities
+   ============================================================================ */
+#av-title {
+  flex: none;
+  height: var(--title-h);
+  min-height: var(--title-h);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px;
+  position: relative;
+  z-index: 32;
+  background: var(--fin-metal);
+  border-bottom: 1px solid var(--fin-edge-lo);
+  box-shadow: inset 0 1px 0 var(--fin-edge-hi);
+  color: var(--fin-ink);
+  font-family: var(--mono);
+  user-select: none;
+}
+#av-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--fin-brush);
+  opacity: .6;
+}
+#av-title .av-band-plate {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  padding: 0;
+  flex: none;
+}
+#av-title .av-word {
+  font-family: var(--sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  color: var(--fin-ink);
+}
+#av-title .av-chip {
+  font-size: 8.5px;
+  letter-spacing: .08em;
+  padding: 1px 5px;
+  border: 1px solid var(--fin-edge-lo);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, .22);
+  color: var(--fin-ink-2);
+}
+#av-title #avc-power { width: 6px; height: 6px; box-shadow: inset 0 0 2px rgba(0, 0, 0, .9); }
+
+/* the menu row rides INSIDE the title bar as an engraved legend — no second strip */
+#av-title #av-menubar {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  height: auto;
+  padding: 0;
+  background: none;
+  border: 0;
+  position: static;
+}
+#av-title .av-menu-item {
+  height: 20px;
+  padding: 0 7px;
+  background: transparent;
+  border: 0;
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fin-ink-2);
+}
+#av-title .av-menu-item:hover { background: rgba(0, 0, 0, .09); color: var(--fin-ink); }
+#av-title .av-menu-item[aria-expanded="true"] { background: rgba(0, 0, 0, .12); color: var(--fin-ink); }
+#av-title #av-menu-status { display: none; }
+
+/* utilities: BROWSE / undo / redo / about / NAV / help / a11y / piano */
+#av-title .av-band-grp[data-grp="view"] {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 0;
+  background: none;
+  clip-path: none;
+}
+#av-title .av-band-grp[data-grp="view"]::before { display: none; }
+#av-title .av-btn {
+  width: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--fin-ink);
+  background: linear-gradient(180deg, #F7EDD8 0%, #E9D9B8 55%, #D8C193 100%);
+  border: 1px solid var(--fin-edge-lo);
+  border-radius: 3px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 1px 0 rgba(255, 255, 255, .25);
+}
+#av-title .av-btn:hover { color: var(--fin-ink); border-color: rgba(46, 38, 22, .55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), 0 1px 3px rgba(0, 0, 0, .18); }
+#av-title .av-btn:focus-visible { outline: 2px solid var(--fin-accent-deep); outline-offset: 1px; }
+
+/* ============================================================================
+   2. TRANSPORT BAND — 74 px of glass (the instrument's face stays dark)
+   ============================================================================ */
+header.av-head {
+  height: var(--band-h);
+  min-height: var(--band-h);
+}
+#av-band {
+  padding: 5px 10px;
+  gap: 10px;
+}
+#av-band .av-band-grp {
+  background: rgba(255, 255, 255, .045);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), inset 0 -10px 18px rgba(0, 0, 0, .45);
+}
+#av-band .av-band-grp::before {
+  background: linear-gradient(180deg, #1A2426 0%, #101719 62%, #0A1011 100%);
+}
+
+/* ============================================================================
+   3. ZONE STRIP — 38 px of metal: three modes, then the six panels
+   ============================================================================ */
+.av-zones {
+  flex: none;
+  height: var(--zones-h);
+  min-height: var(--zones-h);
+  position: relative;
+  z-index: 31;
+  background: var(--fin-metal);
+  border-bottom: 1px solid var(--fin-edge-lo);
+  box-shadow: inset 0 1px 0 var(--fin-edge-hi), 0 2px 6px rgba(0, 0, 0, .35);
+}
+.av-zones::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: var(--fin-brush);
+  opacity: .55;
+}
+.av-zones-in {
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0 10px;
+  gap: 2px;
+  align-items: stretch;
+  justify-content: flex-start;
+  scrollbar-width: none;
+}
+.av-zone-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  box-sizing: border-box;
+  padding: 0 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--fin-ink-3);
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 400;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.av-zone-tab::before {
+  content: "";
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  border-radius: 0;
+  opacity: .62;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: 13px 13px;
+  mask-size: 13px 13px;
+}
+.av-zone-tab[data-zone="sound"]::before { -webkit-mask-image: var(--ic-sound); mask-image: var(--ic-sound); }
+.av-zone-tab[data-zone="sequence"]::before { -webkit-mask-image: var(--ic-sequence); mask-image: var(--ic-sequence); }
+.av-zone-tab[data-zone="mix"]::before { -webkit-mask-image: var(--ic-mix); mask-image: var(--ic-mix); }
+.av-zone-tab[data-zone="browse"]::before { -webkit-mask-image: var(--ic-browse); mask-image: var(--ic-browse); }
+.av-zone-tab[data-zone="perform"]::before { -webkit-mask-image: var(--ic-perform); mask-image: var(--ic-perform); }
+.av-zone-tab[data-zone="shape"]::before { -webkit-mask-image: var(--ic-shape); mask-image: var(--ic-shape); }
+.av-zone-tab[data-zone="effects"]::before { -webkit-mask-image: var(--ic-effects); mask-image: var(--ic-effects); }
+.av-zone-tab[data-zone="deliver"]::before { -webkit-mask-image: var(--ic-deliver); mask-image: var(--ic-deliver); }
+.av-zone-tab[data-zone="system"]::before { -webkit-mask-image: var(--ic-system); mask-image: var(--ic-system); }
+
+/* the three modes carry the weight; the six panels are a quieter second rank */
+.av-zone-tab[data-kind="mode"] {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  color: var(--fin-ink-2);
+  padding: 0 15px;
+}
+.av-zone-tab[data-kind="mode"]::before { width: 15px; height: 15px; -webkit-mask-size: 15px 15px; mask-size: 15px 15px; opacity: .72; }
+.av-zone-tab[data-kind="panel"] { font-size: 9px; letter-spacing: .13em; padding: 0 9px; }
+.av-zone-tab[data-kind="panel"]::before { width: 11px; height: 11px; -webkit-mask-size: 11px 11px; mask-size: 11px 11px; opacity: .5; }
+
+.av-zone-tab:hover { color: var(--fin-ink); background: rgba(0, 0, 0, .05); }
+.av-zone-tab:hover::before { opacity: .9; }
+.av-zone-tab[aria-selected="true"] {
+  color: var(--fin-ink);
+  background: linear-gradient(180deg, rgba(255, 255, 255, .3), rgba(255, 255, 255, 0));
+  border-bottom-color: var(--fin-accent-deep);
+  text-shadow: none;
+  box-shadow: inset 0 -6px 10px -8px rgba(21, 112, 123, .55);
+}
+.av-zone-tab[aria-selected="true"]::before { opacity: 1; }
+.av-zone-tab[data-kind="mode"][aria-selected="true"] {
+  border-bottom-width: 3px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .42), rgba(255, 255, 255, .02));
+}
+.av-zone-tab:focus-visible { outline: 2px solid var(--fin-accent-deep); outline-offset: -3px; }
+
+.av-zone-sep {
+  width: 1px;
+  height: 16px;
+  align-self: center;
+  margin: 0 8px;
+  background: var(--fin-edge-lo);
+  box-shadow: 1px 0 0 rgba(255, 255, 255, .35);
+}
+
+/* ============================================================================
+   4. STATUS BAR — 23 px of metal: input mode, hint, live engine facts
+   ============================================================================ */
+#av-status {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 42;
+  height: var(--status-h);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  background: var(--fin-metal);
+  border-top: 1px solid var(--fin-edge-lo);
+  box-shadow: inset 0 1px 0 var(--fin-edge-hi);
+  color: var(--fin-ink);
+  font-family: var(--mono);
+  user-select: none;
+}
+#av-status #piano-rail {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+#av-status .pk-modes {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  flex: none;
+}
+#av-status .pk-mode {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 17px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--fin-ink-3);
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .1em;
+}
+#av-status .pk-mode:hover { color: var(--fin-ink); background: rgba(0, 0, 0, .06); }
+#av-status .pk-mode.on {
+  color: #8CE9F2;
+  background: #0D181A;
+  border-color: #1D3A3E;
+  box-shadow: inset 0 0 6px rgba(47, 182, 196, .22);
+}
+#av-status .pk-sw-led { width: 6px; height: 6px; }
+#av-status .pk-sw-led.on { background: #8CE9F2; box-shadow: 0 0 6px #8CE9F2; }
+#av-status .pk-win { font-family: var(--mono); font-size: 9px; color: var(--fin-ink); min-width: 52px; text-align: center; }
+#av-status .pk-rail-ctl { display: flex; align-items: center; gap: 2px; flex: none; }
+#av-status .pk-mode-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 8.5px;
+  letter-spacing: .04em;
+  color: var(--fin-ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.kb-armed #av-status .pk-mode-hint { color: #0F5C63; }
+body.kb-midi #av-status .pk-mode-hint { color: #1E5A78; }
+#av-status .av-status-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: .06em;
+  color: var(--fin-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+#av-status .av-btn {
+  width: auto;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  line-height: 1;
+  color: var(--fin-ink);
+  background: rgba(255, 255, 255, .3);
+  border: 1px solid var(--fin-edge-lo);
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55);
+}
+#av-status .av-btn:hover { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .7), 0 1px 3px rgba(0, 0, 0, .18); }
+#av-status #pk-return { display: none; }
+body.piano-pop #av-status #pk-return { display: inline-flex; }
+body.piano-pop #av-status #pk-pop { display: none; }
+
+/* ============================================================================
+   5. PIANO DOCK — 68 px: wheels + keys only (the rail lives in the status bar)
+   ============================================================================ */
+body { --dock-h: 68px; --status-h: 23px; }
+body:not(.piano-closed) { --dock-tax: calc(var(--dock-h) + var(--status-h)); }
+body.piano-closed { --dock-tax: var(--status-h); }
+#piano-dock {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: var(--status-h);
+  height: var(--dock-h);
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  column-gap: 0;
+  border: 1px solid var(--fin-edge-lo);
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+  background: linear-gradient(180deg, #121A1C 0%, #0A0F10 100%);
+  box-shadow: 0 -6px 18px rgba(0, 0, 0, .5), inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+#piano-dock > #piano-keys {
+  grid-column: 2;
+  grid-row: 1;
+  min-height: 0;
+  padding: 4px 4px 5px;
+}
+#piano-dock .av-wheels {
+  grid-column: 1;
+  grid-row: 1;
+  width: 44px;
+  padding: 5px 0 7px;
+  gap: 6px;
+  border-right: 1px solid var(--fin-edge-lo);
+  background: linear-gradient(90deg, #0E1517 0%, #0A1011 100%);
+}
+.pk-keycap { width: 13px; height: 13px; line-height: 13px; font-size: 8px; top: 18%; }
+.pk-note { display: none; }
+body.piano-pop { --dock-h: 40px; }
+body.piano-pop #piano-dock > #piano-keys { padding: 3px 4px; }
+
+/* ============================================================================
+   6. WORK AREA — glass, quieter hairlines, metal bezel
+   ============================================================================ */
+.av-work {
+  background: linear-gradient(180deg, #0C1213 0%, #080B0C 100%);
+}
+.av-zone-box { padding: 11px 13px 15px; }
+.av-card {
+  background: linear-gradient(180deg, #111819 0%, #0D1314 100%);
+  border-color: #1E2A2C;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035), 0 1px 2px rgba(0, 0, 0, .35);
+}
+.av-card h2 {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: var(--trk-legend);
+}
+
+/* forced-colors / High Contrast: never rely on the metal */
+@media (forced-colors: active) {
+  #av-title, .av-zones, #av-status, #piano-dock { background: Canvas; color: CanvasText; }
+  .av-zone-tab[aria-selected="true"] { border-bottom-color: Highlight; color: Highlight; }
+}

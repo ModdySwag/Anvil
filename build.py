@@ -23,7 +23,12 @@ SRC = ROOT / "src"
 OUT = ROOT / "index.html"
 
 head = (SRC / "head.html").read_text(encoding="utf-8")
-css = (SRC / "styles.css").read_text(encoding="utf-8")
+css = "\n".join((
+    (SRC / "styles.css").read_text(encoding="utf-8"),
+    (SRC / "fonts.css").read_text(encoding="utf-8"),        # P0: Inter var 400-600 + Plex Mono 400/500 (OFL, embedded)
+    (SRC / "icons.css").read_text(encoding="utf-8"),        # P0: the icon masks (generated from the Iconset catalog)
+    (SRC / "styles-console.css").read_text(encoding="utf-8"),  # P0: the Console chassis layer (loads last, owns the bands)
+))
 body = (SRC / "body.html").read_text(encoding="utf-8")
 
 # ---- the worklet module source (M2 joined: av_mpe + av_ladder + av_dsp + av_acid + av_string + av_drum + av_grain +

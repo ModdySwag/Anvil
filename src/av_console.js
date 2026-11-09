@@ -347,6 +347,67 @@ function avConsoleRefresh() {
       const txt = "CPU " + (isFinite(load) ? String(Math.max(0, Math.min(100, Math.round(load)))) + "%" : "—");
       if (cpuRow.textContent !== txt) cpuRow.textContent = txt;
     }
+    /* P0: the title bar + the status bar ride the same tick (both are idempotent moves/paints) */
+    try { avConsoleTitleDeck(); avConsoleStatusPaint(); } catch (e10) { /* the bands keep their last paint */ }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- P0: the title bar (docs/16 s.3, s.9) ----------
+   The plate (word mark / version / power LED), the menu row and the utility keys leave the
+   transport band for the 30 px metal title bar. The band keeps transport + LCD + pots + out.
+   Idempotent: every move is guarded by parentNode, so the 400 ms tick never re-shuffles. */
+function avConsoleTitleDeck() {
+  try {
+    const bar = document.getElementById("av-title");
+    if (!bar) return false;
+    const head = document.querySelector("header.av-head");
+    if (!head) return false;
+    const plate = head.querySelector("#av-band .av-band-plate") || bar.querySelector(".av-band-plate");
+    const mb = document.getElementById("av-menubar");
+    const view = document.querySelector('.av-band-grp[data-grp="view"]');
+    const want = [plate, mb, view].filter(Boolean);
+    if (!want.length) return false;
+    /* adopt whatever still lives in the band */
+    for (let i = 0; i < want.length; i++) if (want[i].parentNode !== bar) bar.appendChild(want[i]);
+    /* order guard: plate, menu legend, then the utility keys (never re-shuffle a settled bar) */
+    let same = want.length === bar.children.length;
+    if (same) {
+      for (let i = 0; i < want.length; i++) { if (bar.children[i] !== want[i]) { same = false; break; } }
+    }
+    if (!same) { for (let i = 0; i < want.length; i++) bar.appendChild(want[i]); }
+    return true;
+  } catch (e) { return false; }
+}
+
+/* ---------- P0: the status bar readouts ----------
+   Mirrors the LCD's own numbers (one source of truth, no second engine read) plus the audio
+   rate when the engine exposes it. A dash is the honest value on a cold engine. */
+function avConsoleStatusPaint() {
+  try {
+    const g = function (id) { try { return document.getElementById(id); } catch (e) { return null; } };
+    const voices = g("av-status-voices"), cpu = g("av-status-cpu"), rate = g("av-status-rate"), ver = g("av-status-ver");
+    if (voices) {
+      const src = g("av-lcd-voices");
+      const t = src ? String(src.textContent || "") : "";
+      if (t && voices.textContent !== t) voices.textContent = t;
+    }
+    if (cpu) {
+      const src = g("av-lcd-cpu");
+      const t = src ? String(src.textContent || "") : "";
+      if (t && cpu.textContent !== t) cpu.textContent = t;
+    }
+    if (rate) {
+      let sr = 0;
+      try { sr = (window.__avEngine && isFinite(Number(window.__avEngine.sr))) ? Number(window.__avEngine.sr) : 0; } catch (e2) { sr = 0; }
+      const t = sr > 0 ? (Math.round(sr / 100) / 10).toFixed(1) + " kHz" : "— kHz";
+      if (rate.textContent !== t) rate.textContent = t;
+    }
+    if (ver) {
+      const src = g("av-version");
+      const t = src ? String(src.textContent || "") : "";
+      if (t && ver.textContent !== t) ver.textContent = t;
+    }
     return true;
   } catch (e) { return false; }
 }
@@ -939,7 +1000,7 @@ function avConsoleBuild(head) {
           if (id === "avc-preset") { const s3 = avConsoleEl("av-lcd-preset"); if (s3 && node.parentNode !== s3) s3.appendChild(node); return; }
           for (let i = 0; i < AV_CONSOLE_VIEW_KEYS.length; i++) {
             if (AV_CONSOLE_VIEW_KEYS[i][0] !== id) continue;
-            const g = document.querySelector('#av-band .av-band-grp[data-grp="view"]');
+            const g = document.querySelector('#av-band .av-band-grp[data-grp="view"], #av-title .av-band-grp[data-grp="view"]');
             if (!g) return;
             if (!node.classList.contains("av-btn")) node.classList.add("av-btn");
             node.classList.add("mini");

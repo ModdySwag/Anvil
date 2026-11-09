@@ -62,7 +62,9 @@ const profile = path.join(tmpdir(), 'anvil-chassis-' + Date.now());
 const url = 'file:///' + path.resolve(page).replace(/\\/g, '/') + '?avtest=1';
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-const PAGES = ['browse', 'perform', 'sound', 'shape', 'sequence', 'effects', 'mix', 'deliver', 'system'];
+/* P0 (2026-11-10, owner-picked): navigation is three MODES first — sound / sequence / mix —
+   then the six demoted panels. The order is the contract: modes lead, panels follow. */
+const PAGES = ['sound', 'sequence', 'mix', 'browse', 'perform', 'shape', 'effects', 'deliver', 'system'];
 const C1_RATIO = 2.2;
 let pass = 0, fail = 0;
 const check = (name, ok, info) => {
@@ -131,25 +133,41 @@ async function main() {
   check('K1 virgin: rail closed, no rail control visible (tabs are the one navigation)',
     k1.closed === true && k1.visibleRailCtl === 0, JSON.stringify(k1));
 
-  /* K2 -- the tab bar */
+  /* K2 -- the tab bar: three modes, then the six panels */
   const k2 = (await ev(`(() => {
     const tabs = [...document.querySelectorAll('.av-zone-tab')];
-    return { ids: tabs.map(t => t.dataset.zone), unresolved: tabs.filter(t => !document.getElementById(t.getAttribute('aria-controls'))).map(t => t.id) };
+    return { ids: tabs.map(t => t.dataset.zone),
+      kinds: tabs.map(t => t.dataset.kind || ''),
+      modes: tabs.filter(t => t.dataset.kind === 'mode').length,
+      panels: tabs.filter(t => t.dataset.kind === 'panel').length,
+      unresolved: tabs.filter(t => !document.getElementById(t.getAttribute('aria-controls'))).map(t => t.id) };
   })()`)).value || {};
-  check('K2 nine tabs in the pinned signal order, every aria-controls resolves',
-    JSON.stringify(k2.ids) === JSON.stringify(PAGES) && (k2.unresolved || []).length === 0, JSON.stringify(k2));
+  check('K2 three modes then six panels in the pinned order, every aria-controls resolves',
+    JSON.stringify(k2.ids) === JSON.stringify(PAGES) && k2.modes === 3 && k2.panels === 6 &&
+    (k2.unresolved || []).length === 0, JSON.stringify(k2));
 
-  /* K3 -- the band */
-  const k3 = (await ev(`(() => ({
-    grp: [...document.querySelectorAll('.av-band-grp')].map(e => e.getAttribute('data-grp')),
-    lcdRows: document.querySelectorAll('#av-lcd .av-lcd-row').length,
-    pots: ['a','b','c','d'].filter(k => document.getElementById('av-pot-' + k)).length,
-    checked: document.querySelectorAll('#av-potmode [aria-checked="true"]').length,
-    vol: !!document.getElementById('av-vol-pot')
-  }))()`)).value || {};
+  /* K3 -- the band (P0: transport + identity + pots + out) and the title bar it moved to */
+  const k3 = (await ev(`(() => {
+    const bar = document.getElementById('av-title');
+    return {
+      grp: [...document.querySelectorAll('#av-band .av-band-grp')].map(e => e.getAttribute('data-grp')),
+      titleGrp: bar ? [...bar.querySelectorAll('.av-band-grp')].map(e => e.getAttribute('data-grp')) : [],
+      titleH: bar ? Math.round(bar.getBoundingClientRect().height) : 0,
+      plate: !!(bar && bar.querySelector('.av-band-plate')),
+      menu: !!(bar && bar.querySelector('#av-menubar')),
+      word: !!(bar && bar.querySelector('.av-word')),
+      lcdRows: document.querySelectorAll('#av-lcd .av-lcd-row').length,
+      pots: ['a','b','c','d'].filter(k => document.getElementById('av-pot-' + k)).length,
+      checked: document.querySelectorAll('#av-potmode [aria-checked="true"]').length,
+      vol: !!document.getElementById('av-vol-pot')
+    };
+  })()`)).value || {};
   check('K3 band: groups in contract order, LCD rows, four pot mounts, one pot-mode key lit, volume pot',
-    JSON.stringify(k3.grp) === JSON.stringify(['transport', 'identity', 'pots', 'view', 'out']) &&
+    JSON.stringify(k3.grp) === JSON.stringify(['transport', 'identity', 'pots', 'out']) &&
     k3.lcdRows >= 3 && k3.pots === 4 && k3.checked === 1 && k3.vol === true, JSON.stringify(k3));
+  check('K3b title bar: 30px of metal carrying the word mark, the menu legend and the utility keys',
+    k3.titleH === 30 && k3.plate === true && k3.menu === true && k3.word === true &&
+    JSON.stringify(k3.titleGrp) === JSON.stringify(['view']), JSON.stringify({ h: k3.titleH, plate: k3.plate, menu: k3.menu, word: k3.word, grp: k3.titleGrp }));
 
   /* K4 -- the inspector and every launcher target */
   const k4 = (await ev(`(() => {

@@ -587,9 +587,9 @@ async function main() {
              facade: typeof window.__avZone, auto: typeof window.__avZoneAuto, proof: proof };
   })()`);
   const ck = ckR.value || {};
-  check('R1 cockpit: 8 zones + 8 tabs (workflow order), exactly one shown (synth default), page cannot scroll',
+  check('R1 cockpit: 9 zones + 9 tabs (three modes then six panels), exactly one shown (sound default), page cannot scroll',
     ck.zones === 9 && ck.tabs === 9 && ck.shown === 1 && ck.active === 'sound'
-    && ck.order === 'browse,perform,sound,shape,sequence,effects,mix,deliver,system' && ck.bodyZone === 'sound'
+    && ck.order === 'sound,sequence,mix,browse,perform,shape,effects,deliver,system' && ck.bodyZone === 'sound'
     && ck.docScroll <= ck.docClient + 2 && ck.overflowY === 'hidden'
     && ck.facade === 'object' && ck.auto === 'function', JSON.stringify({ zones: ck.zones, tabs: ck.tabs, shown: ck.shown, active: ck.active, doc: ck.docScroll + '/' + ck.docClient, overflow: ck.overflowY }));
   check('R1 cockpit: SHELL SELFTEST ok (?avtest=1)',
@@ -661,20 +661,26 @@ async function main() {
     const rail = document.getElementById('av-rail');
     const tab = document.getElementById('av-tab-sound');
     const cs = tab ? getComputedStyle(tab) : null;
+    const strip = document.querySelector('.av-zones');
+    const stripCs = strip ? getComputedStyle(strip) : null;
+    const selCs = tab ? getComputedStyle(tab) : null;
     let proof = null;
     try { const el = document.getElementById('av-railtest'); proof = el ? JSON.parse(el.textContent.replace('RAIL SELFTEST ', '')) : null; } catch (e) { proof = null; }
     return { rail: !!rail, groups: rail ? rail.querySelectorAll('.av-rail-group').length : 0,
              links: rail ? rail.querySelectorAll('.av-rail-card').length : 0,
              navBtn: !!document.getElementById('av-head-rail'),
              tabBorder: cs ? cs.borderTopWidth : null, tabRadius: cs ? cs.borderTopLeftRadius : null,
+             selUnderline: selCs ? selCs.borderBottomWidth : null,
+             stripMetal: stripCs ? String(stripCs.backgroundImage).indexOf('gradient') >= 0 : false,
              railApi: typeof window.__avRail, proof: proof };
   })()`);
   const r4 = r4R.value || {};
   check('R4 rail: left navigator (8 groups + >=20 card links) + header NAV toggle + RAIL SELFTEST',
     r4.rail === true && r4.groups === 9 && r4.links >= 20 && r4.navBtn === true && r4.railApi === 'object'
     && !!r4.proof && r4.proof.ready === true && r4.proof.cards >= 20, JSON.stringify(r4));
-  check('R4 toggles: the top tabs are sectioned chips (bordered, rounded)',
-    parseFloat(r4.tabBorder) >= 1, JSON.stringify({ border: r4.tabBorder, radius: r4.tabRadius }));
+  check('R4 toggles: the tab keys are flat engraved keys on the metal strip, the selected one carries the accent underline',
+    parseFloat(r4.tabBorder) === 0 && r4.stripMetal === true && parseFloat(r4.selUnderline) >= 2,
+    JSON.stringify({ border: r4.tabBorder, metal: r4.stripMetal, underline: r4.selUnderline }));
 
   const r4f = await ev(`(() => {
     window.__avPanels.open('av-fx');
