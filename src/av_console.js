@@ -506,7 +506,17 @@ function avConsoleFillPots(g) {
       } catch (e) { mount.innerHTML = '<span class="av-band-gap" aria-hidden="true">\u2014</span>'; }
     }
     cell.appendChild(mount);
-    cell.appendChild(avConsoleNumLine(spec.path));
+    /* seed the band's number line from the knob's own formatted value: it used to mount EMPTY and
+       only gain text on the first commit, so the pot was 51 px at rest and 62 px the moment you
+       touched a dial - the whole knob jumped 6 px up (owner: "the button lifts on the first
+       attempt"; measured 2026-11-10 with real mouse events, pot t=45 h=51 -> t=40 h=62). */
+    const numLine = avConsoleNumLine(spec.path);
+    try {
+      const inner = mount.querySelector(".av-knob-val");
+      const seed = inner ? String(inner.textContent || "").trim() : "";
+      if (seed) numLine.textContent = seed;
+    } catch (e) { /* the refresh fills it */ }
+    cell.appendChild(numLine);
     g.appendChild(cell);
   }
   try { avKnobBind(g); } catch (e) { /* the pots stay readable */ }

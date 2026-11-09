@@ -2552,15 +2552,26 @@ body { --dock-h: 132px; }
 #av-pot-a,
 #av-pot-b,
 #av-pot-c,
-#av-pot-d {
-  width: 40px; flex: none;
-  /* height was pinned to the knob's 40 px, but the mount also carries the readout line under the
-     knob. With the pin, the pot measured 51 px while its content was 65, so the readout hung 7 px
-     below the pots group and the group's clip-path (--ch-chamfer, overflow-hidden box) sliced the
-     bottom off every value - the owner's "2ms reads 2mc, 800 reads 80A" (measured 2026-11-10:
-     value 97..111 against a group bottom of 104). Auto height puts the value INSIDE the group
-     (90..104) with no header growth, so K23 is untouched. */
-  height: auto;
+#av-pot-d { width: 40px; height: 40px; flex: none; }
+
+/* ONE readout per band pot. avKnobHTML renders its own .av-knob-val inside the knob wrap, and the
+   pot also appends avConsoleNumLine()'s .av-band-num - so every macro dial printed its value TWICE,
+   one line inside the knob and one below it. The lower one fell outside the pots group and was
+   sliced by its clip-path (the owner's "2mc"/"80A"), and the pair re-flowed the pot while dragging.
+   The band's own .av-band-num is the line the layout was built around; the knob's inner copy is
+   redundant here because .av-knob-lbl is already hidden for these mounts. */
+#av-band .av-band-pot .av-knob-val { display: none; }
+
+/* VOL sits in the same 66 px group as the four macros, but its own label rendered BELOW the dial
+   while theirs render above it - so its dial sat 13 px higher (knob centre 58 vs 71, measured
+   2026-11-10). Put the label above the dial the way the macro pots do it; the pot keeps its
+   height, so nothing clips and no header space is spent. */
+#av-vol-pot .av-knob-wrap { display: flex; flex-direction: column; align-items: center; }
+#av-vol-pot .av-knob-lbl { order: -1; }
+#av-band .av-band-pot .av-band-num {
+  /* the readout must own its line even while empty, or the pot's height (and the centred group's
+     top) changes the first time a value is written - the "knob lifts" defect. */
+  line-height: 1.2; min-height: 12px;
 }
 #av-pot-a .av-knob-wrap,
 #av-pot-b .av-knob-wrap,
