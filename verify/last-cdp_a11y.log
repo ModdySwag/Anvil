@@ -1,6 +1,6 @@
-index.html sha256 (before): 5b8d706cfde9de5b25ff56b39dd7857ad20c7b1df5974183d8c3b530cd4415c3
+index.html sha256 (before): 352db60680c603f4a6e6cce810bedbcb9305e00c544babf24158bd7981e5b91a
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794266810323
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794266967511
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
@@ -51,11 +51,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"av-rail-closed","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  5b8d706cfde9de5b25ff56b39dd7857ad20c7b1df5974183d8c3b530cd4415c3
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 5b8d706cfde9de5b25ff56b39dd7857ad20c7b1df5974183d8c3b530cd4415c3
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 5b8d706cfde9...
+index.html sha256 (after):  352db60680c603f4a6e6cce810bedbcb9305e00c544babf24158bd7981e5b91a
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> 352db60680c603f4a6e6cce810bedbcb9305e00c544babf24158bd7981e5b91a
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned 352db60680c6...
 
 RESULT: 37 passed, 0 failed
 A11Y-RESULT 37/37
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"5b8d706cfde9de5b25ff56b39dd7857ad20c7b1df5974183d8c3b530cd4415c3","sha256After":"5b8d706cfde9de5b25ff56b39dd7857ad20c7b1df5974183d8c3b530cd4415c3","pinned":"5b8d706cfde9de5b25ff56b39dd7857ad20c7b1df5974183d8c3b530cd4415c3","passed":37,"failed":0,"checks":37,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"352db60680c603f4a6e6cce810bedbcb9305e00c544babf24158bd7981e5b91a","sha256After":"352db60680c603f4a6e6cce810bedbcb9305e00c544babf24158bd7981e5b91a","pinned":"352db60680c603f4a6e6cce810bedbcb9305e00c544babf24158bd7981e5b91a","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 A11Y PASSED

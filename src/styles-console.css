@@ -1935,3 +1935,14 @@ textarea::-webkit-scrollbar-thumb { background: #22303A; border-radius: 5px; bor
 .av-mix-strip-out {
   font-family: var(--mono); font-size: 7.5px; letter-spacing: .12em; color: #45585C;
 }
+
+/* 18b. the inspector launcher shows where you are — it is navigation, not a tab row */
+.av-insp-launch-key.on,
+.av-insp-launch-key[aria-current="page"] {
+  color: #BFEFF5;
+  border-color: #2C5A61;
+  background-image: var(--mat-btn, none), linear-gradient(180deg, #1B2E33 0%, #0E1C20 100%);
+  background-size: 130px 130px, auto;
+  background-blend-mode: soft-light, normal;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), inset 0 -2px 0 rgba(47, 182, 196, .28);
+}

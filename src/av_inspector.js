@@ -605,6 +605,37 @@ function avInspectorLaunch(page, sub) {
   } catch (e) { return false; }
 }
 
+/* P2 (2026-11-10): the launcher grid is NOT a third tab row — it is navigation, so it has to show
+   where you are. The entry matching the live zone + sub reads as current (lit + aria-current) and
+   the rest stay quiet. Listens to the shell's own two transitions, so opening a page any way at all
+   (tab, rail, palette, this grid) keeps it honest. */
+function avInspectorLaunchSync() {
+  try {
+    if (typeof document === "undefined" || !document) return false;
+    const zone = (typeof avShellState !== "undefined" && avShellState) ? avShellState.zone : null;
+    const sub = (zone && typeof avZoneSubCurrent === "function") ? avZoneSubCurrent(zone) : null;
+    const keys = document.querySelectorAll(".av-insp-launch-key");
+    for (let i = 0; i < keys.length; i++) {
+      const b = keys[i];
+      const p = b.getAttribute("data-page") || "";
+      const s = b.getAttribute("data-sub") || "";
+      const on = p === zone && (s === "" || s === (sub || ""));
+      b.classList.toggle("on", on);
+      if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+    }
+    return true;
+  } catch (e) { return false; }
+}
+function avInspectorLaunchWatch() {
+  try {
+    if (window.__avInspLaunchWatch) return true;
+    window.__avInspLaunchWatch = 1;
+    window.addEventListener("av-zone-shown", function () { try { avInspectorLaunchSync(); } catch (e) { } });
+    window.addEventListener("av-sub-shown", function () { try { avInspectorLaunchSync(); } catch (e) { } });
+    return true;
+  } catch (e) { return false; }
+}
+
 /* ---------- markup (pure string builders) ---------- */
 
 function avInspectorKindsHTML() {
@@ -827,6 +858,8 @@ function avInspectorInit() {
     avInspectorTrimKnobChrome();
     avInspectorBindKinds();
     avInspectorBindLaunch();
+    avInspectorLaunchWatch();
+    avInspectorLaunchSync();
     avInspectorBindEdit();
     avInspectorBindPoly();
 
