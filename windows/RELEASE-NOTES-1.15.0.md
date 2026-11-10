@@ -52,6 +52,11 @@ one of the 44 tabs resolves its panel and names it back, the FM operator keys ar
 (one tab stop, arrows walk the six operators), and the focus order is recorded per page and
 checked with real key presses on every run.
 
+**No first-second crackle.** The engine now warms all 64 voices silently at start-up, so the
+first chord you play after opening the app runs on warm code instead of stuttering through the
+one-time cost of building the voice pool. On the stress rig this removed every dropped audio
+buffer in the first thirty seconds - it used to be the only place drops ever happened.
+
 ## In this release
 
 - Anvil-1.15.0-Setup.exe - the installer. Per-user (no admin prompt), Start Menu entry and
@@ -75,16 +80,25 @@ checked with real key presses on every run.
   deleting anything - installing again picks up where you left off. Nothing is sent anywhere.
 - Verified on this exact payload: the app's own suites ran green on the frozen build (28 suites,
   hub 68 checks, fit 49, accessibility 37; bench, alias and stress clean), the desktop suite
-  drives the installed program, and a silent install -> upgrade-over install -> uninstall journey
-  leaves your data intact. The build inside the installer is byte-identical to the one live at
-  moddys.net/anvil.
+  drives the installed program (32 checks), and a silent install -> upgrade-over install ->
+  uninstall journey (28 checks) leaves your data intact. The build inside the installer is
+  byte-identical to the one live at moddys.net/anvil.
 - If something breaks, tell me: modtech@gmail.com.
 
 ## sha256
 
-  TODO-SHA256-SETUP  Anvil-1.15.0-Setup.exe
-  TODO-SHA256-SETUPZIP  Anvil-1.15.0-Setup.exe.zip
-  TODO-SHA256-SOURCE  Anvil-1.15.0-source.zip
+  e3a16a2259dd06ae812e509145f4cc77f294689510c38d400310edda818db864  Anvil-1.15.0-Setup.exe
+      100,936,871 bytes
+
+  6f8dda610927607eb92e1dbba39ce5217b23b7a90db56e9a381cf475e6a17c57  Anvil-1.15.0-Setup.exe.zip
+      100,457,994 bytes
+
+  c083920c2f99440289772fc2f648dcf22fcc147c0c7f99b0fad02246118762de  Anvil-1.15.0-source.zip
+      45,750,275 bytes
+
+On Windows: `certutil -hashfile "Anvil-1.15.0-Setup.exe.zip" SHA256`. The exe inside unzips
+to the first hash, which is also the installer attached to this release. The installer carries
+app build `e8aaee89`, the same build that is live at moddys.net/anvil.
 
 The download page is also https://moddys.net/moddys-downloads.html.
 

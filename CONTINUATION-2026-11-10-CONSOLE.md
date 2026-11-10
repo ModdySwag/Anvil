@@ -1,11 +1,46 @@
-# SAVE POINT — 2026-11-10, end of session (CONSOLE P2 + FULL SKIN + RELEASE PREP)
+# SHIPPED — Anvil 1.15.0 live, 2026-11-10
 
 ## READ THIS FIRST
 
-**Repo** `C:\Users\Moddy\anvil` · **HEAD** `d4161d0` · **bundle** `index.html` sha
-`d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412`, **6,141,970 B** · every rig pins it.
+**Repo** `C:\Users\Moddy\anvil` · **bundle** `index.html` sha
+`e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0`, **6,146,919 B** · every rig pins it.
 
-### GATE ON THESE EXACT BYTES
+**v1.15.0 is released.** GitHub release live with the installer attached; moddys.net/anvil
+serves `e8aaee89` byte-identically; downloads page carries the same build and its three real
+sha256 values. Install `Anvil-1.15.0-Setup.exe` 100,936,871 B sha `e3a16a22…`.
+
+### WHAT CLOSED TODAY (the reason this build exists)
+- **Cold-start underruns fixed.** Three 10-min stress runs on `d206eec2` posted 613 / 47 / 19
+  deltas, with 11 / 7 / 11 inside the asserted envelope and 10 of the last run's 11 in the
+  first 30 s. Root cause was first-use cost (64 voice slots allocated and initialised,
+  oscillator/filter state built, first coefficient pass, JIT). A silent 64-voice boot warm-up
+  fixed it: **verified-envelope PASS, 0 deltas in the asserted window, 5 total, all inside the
+  labelled uni-7 over-drive cycles.**
+- Two contracts collided on the way and both were fixed at the root, not worked around:
+  warming before `ready` broke `avSessionLoad` (params dropped into `skipped`), warming after
+  `ready` let `cdp_rec`'s control take hear the warm-up. Final shape: warm before `ready`,
+  silent at the SOURCE (oscillator levels zeroed, not a downstream mute), voices released
+  individually, and `avSessionAwaitEngine()` in both restore paths.
+- **Desktop fit law re-pinned.** The packaged header renders 12 `<button>`s (14 clickable with
+  the av-tier/av-voices chips); the old `21` counted controls that have since moved into the
+  a11y host and popovers. Pinning 12 alone could hide a disappearance, so the moved set is
+  asserted separately (contrast 60 px, motion 48 px, about 43 px, palette host present).
+  Desktop suite **GREEN 32/32**, install journey **28 passed, 0 failed** (was 27/1).
+
+### GATE ON THESE EXACT BYTES (`e8aaee89`)
+- **28 rigs + bench + alias: FULL-WAVE verdict CLEAN** (13:43). bench realtimeRatio **1.003**,
+  published **light 64 / fat 64** (light was 32 on the previous build), offline knee 96 pass /
+  128 fail monotone, invalidReads 0. alias verdict complete.
+- **STRESS: verdict complete**, verified-envelope PASS (the numbers above).
+
+---
+
+# Pre-release save point (2026-11-10, earlier) — kept for the record
+
+**HEAD at that point** `d4161d0` · **bundle** `d206eec2…`, **6,141,970 B** — superseded by the
+shipped build above. Everything below this line is the history of how the release was reached.
+
+### GATE ON THOSE EARLIER BYTES
 - **28 rigs green, first lap** (all re-run on `d206eec2` after the last change):
   a11y 37 · bounce 32 · chassis 47 · cockpit 21 · code 36 · comp 41 · deck 35 · fit 49 · fx 28 ·
   hub 68 · import 26 · keys 27 · knob_feel 19 · m1 33 · m2 40 · midi 34 · mix 47 · platform 52 ·
