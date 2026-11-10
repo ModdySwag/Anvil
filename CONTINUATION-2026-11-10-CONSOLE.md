@@ -2,8 +2,11 @@
 
 ## READ THIS FIRST — P2 SOUND LANDED AND EVERY SURFACE IS A HIGGSFIELD MATERIAL
 
-**State:** HEAD `ddbf28e` · `index.html` sha `1f8101ae4ff91eead79c629cc2bf845d2f9e705cec6ca28ef0a827d219b3e064`,
-**6,077,887 B** · all rigs pin it · tree clean apart from the untracked concept artifacts.
+**State:** HEAD `2ace8f4` · `index.html` sha `38b1d59db47abb3150097cbd1b6b9494a5566ce2b46c42e951409ffd045e8e2a`,
+**6,138,754 B** · all rigs pin it · tree clean apart from the untracked concept artifacts.
+**Since the gate run below:** black keys got their own Higgsfield material per finish (gold warm
+lacquer, silver blue-steel, walnut umber bakelite) — the last single-finish asset on the keyboard. Re-gated:
+keys 0 fail, chassis 0 fail, smoke 0 fail. Boards rebuilt after the change.
 **GATE — every rig green on these exact bytes: 1,078 legs across 28 rigs, zero failures.**
 chassis 47 · a11y 37 · smoke 81 · m1 33 · m2 40 · mix 47 · seq 41 · fx 28 · s4 42 · s5 36 · studio 37 ·
 store 28 · code 36 · cockpit 21 · deck 35 · comp 41 · sample 29 · tune 18 · midi 34 · sessions 65 ·
@@ -115,8 +118,13 @@ flex column. Do that as its own pass with the fx rig (`.av-fx-strip[data-sect=..
    See the reverted attempt above: fixed-height strips, not a stretched column.
 2. **MIX real strips** — the ghost rack is the EMPTY state; populated `.av-mix-track` rows are still
    horizontal, not vertical console strips with a dB-scaled fader.
-3. **SEQUENCE transport** — the PLAY/STOP/REC-STEP/FILL row leaves a wide void between the BPM knob and
-   GEN/SONG; it could carry the bar/beat and the swing control.
+3. **PERFORM is a FEATURE gap, not a layout one** (measured 2026-11-10: one 93px card, 508px of dead well —
+   the emptiest page in the app). The engine only backs `env.mono` (poly/mono), `voice.glide` and the live
+   `#av-voices` counter. There is no velocity-curve or key-response DSP, so a "Voice & feel" surface cannot be
+   built honestly yet. Do NOT pad it with controls that drive nothing — either build the DSP first or demote
+   the page. DELIVER (228px dead) and SYSTEM (180px dead) are prose-heavy by comparison but have real content.
+4. **The other six pages eye-checked** (2026-11-10): BROWSE / CODE / SHAPE / DELIVER / SYSTEM read as finished
+   surfaces under the new skin; PERFORM does not, for the reason above. Board: `cache/scratch/board-other.png`.
 2. **MIX real strips** — the loop-only rack is the EMPTY state; the populated `.av-mix-track` rows are still
    horizontal rows, not vertical console strips with a dB-scaled fader.
 3. The SEQ pattern textarea is the last raw-looking field (styled in §17 but never eye-checked).
