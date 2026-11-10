@@ -1,3 +1,38 @@
+## RELEASE v1.15.0 — IN PROGRESS (2026-11-10, do not freeze anything yet)
+
+**Gate on `d206eec2` (index.html, 6,141,970 B, HEAD `d7b9d4e`):**
+- **28 rigs green, first lap** — every cdp_* suite re-run on these exact bytes: a11y 37 · bounce 32 ·
+  chassis 47 · cockpit 21 · code 36 · comp 41 · deck 35 · fit 49 · fx 28 · hub 68 · import 26 · keys 27 ·
+  knob_feel 19 · m1 33 · m2 40 · midi 34 · mix 47 · platform 52 · rec 29 · s4 42 · s5 36 · sample 29 ·
+  seq 41 · sessions 65 · smoke 81 · store 28 · studio 37 · tune 18.
+- **BENCH PASSED**: realtime ratio **0.999** (identical to the last release build), published voices
+  **light 32 / fat 64**, offline knee **96 pass → 128 fail, monotone**, **invalidReads 0**. The one
+  underrun it logs at light/48 is the rig FINDING its knee (it publishes the highest stable step), not a fail.
+- **STRESS: still running** at t≈525 s when this note was written (protocol: chord/arpeggio cycles 8..64,
+  REAL knob commits on CUTOFF/RESO/UNISON, allOff drain ~every 60 s, heap < 60 MB, **zero underrun deltas at
+  cap**). Live sample at t=525 s: `dUR=0`, heap 13 MB — both assertions holding. It is LONG (~9 min+), not stuck.
+  **It must finish clean before freezing.** Re-check with `ps -p <pid>` + `grep STRESS-RESULT verify/last-cdp_stress.log`.
+- **ALIAS: inconclusive** — printed no leg lines (`ok=0 fail=0`). Treat as unproven, not green; look at what
+  the rig actually emits before the release note claims it.
+
+**RUNNER TRAP (paid twice this session):** the foreground `terminal` timeout clamps at **180 s** — `timeout_s`
+of 600/900/1200 does not survive. Bench and stress both exceed it. Run them with
+`nohup node verify/cdp_X.mjs > verify/last-cdp_X.log 2>&1 < /dev/null &` and poll the log. Note the
+background wrapper's completion notice reports the LAUNCHER's exit, not the rig's — poll the pid.
+
+**THEN, in order (nothing has been staged or bumped yet):**
+1. Re-stage `windows/stage/Anvil/resources/app/` with today's bundle — it still carries
+   `54df076a` / 4,870,911 B while the app is `d206eec2` / 6,141,970 B. Also refresh `sw.js`,
+   `manifest.webmanifest`, the three `icon-*.png`, `packs/` if they changed, and `build-info.json`
+   (`appBuild`, `appBuildBytes`, `appBuildSha256`, `appBuildNote`, `appTree`).
+2. Bump `windows/version.json` to the same numbers (it currently pins `appBuild 54df076a`, bytes 4,870,911).
+3. Rebuild the installer from `windows/installer/`, then verify by installing.
+4. Shots + `windows/downloads-card-draft.md` → downloads card, then publish v1.15.0.
+
+**Do not retract a version number**: stage and bump only after stress is clean on the final bytes.
+
+---
+
 # ANVIL — CONSOLE DESIGN PROGRAMME (save point 2026-11-10, P2 SOUND + FULL SKIN)
 
 ## READ THIS FIRST — P2 SOUND LANDED AND EVERY SURFACE IS A HIGGSFIELD MATERIAL

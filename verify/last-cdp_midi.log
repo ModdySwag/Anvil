@@ -1,7 +1,7 @@
-index.html sha256 (before): d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08
+index.html sha256 (before): d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1794268316486
- ok   freeze: index.html sha256 before = 5861d7d6…  -> d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08
+cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1794270814268
+ ok   freeze: index.html sha256 before = 5861d7d6…  -> d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412
  ok   boot: data-av-ready flips (with the stub injected pre-boot)
  ok   boot: MIDI deck mounted (#av-midi-body .av-midi) + __avMidi API + stub alive  -> {"panel":true,"api":true,"snapFn":true,"stub":true,"ourClass":true}
  ok   unsupported: honest no-Web-MIDI copy (NO WEB MIDI · Safari named)  -> status=unsupported · NO WEB MIDI Web MIDI is missing in this browser, so hardware keys and hardware out are both off the table here. Chrome, 
@@ -42,7 +42,7 @@ cdp port 9400 · profile C:\Users\Moddy\AppData\Local\Temp\anvil-midi-1794268316
  ok   clock out: OFF (real click) stops a running clock — 0xFC sent, wire frozen, pref off  -> was ticking=true · FC at 11/12 · frozen 63=63
  ok   zero console errors for the whole run (exceptions · Log errors · console.error · stub listener errors)  -> page errors=0 · stub listener errors=0
  ok   screenshot: renders/p0-midi-suite.png (panel post-enable, clip #av-midi-card, scale 2)  -> 1034297 bytes · clip 1054×494 @2x
-index.html sha256 (after): d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08
- ok   freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)  -> d133f8a1a6d1721936fe878aff735295ae934373d188296dc4ade1a824423e08
+index.html sha256 (after): d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412
+ ok   freeze: index.html sha256 after = 5861d7d6… (unchanged by the run)  -> d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412
 
 34 passed, 0 failed
