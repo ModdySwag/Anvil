@@ -511,6 +511,15 @@ function avFxScreenPaint(canvas, mod) {
     const N = function (path, def) { const v = Number(P(path, def)); return isFinite(v) ? v : def; };
     const base = h - 5 * dpr, top = 5 * dpr, H = base - top;
     const teal = "#2ed8c9", dim = "rgba(150,170,170,0.35)";
+    /* P2: a quarter graticule. Every block screen draws its real curve — and at default settings that
+       curve IS the unity line, so without a grid the box reads as blank rather than as an instrument
+       sitting at 0 dB. Paint only; the caption still carries the units. */
+    ctx.strokeStyle = "rgba(255,255,255,0.115)"; ctx.lineWidth = 1;
+    for (let g = 1; g < 4; g++) {
+      const gx = Math.round((g / 4) * w) + 0.5, gy = Math.round(top + (g / 4) * H) + 0.5;
+      ctx.beginPath(); ctx.moveTo(gx, top); ctx.lineTo(gx, base); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+    }
     if (mod === "drive") {
       const amt = Math.max(0, Math.min(1, N("fx.drive.amount", 0)));
       const mode = String(P("fx.drive.mode", "sat"));
