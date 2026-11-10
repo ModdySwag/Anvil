@@ -16,10 +16,17 @@
 - **ALIAS PASSED** — `ALIAS-RESULT {"verdict":"complete","validation":{"onBinDBc":-165.73,
   "onBinPass":true,"bh4FloorWorst":-91.22}}`. **It reports ALIAS-RESULT, not `^ ok` legs** — a grep for
   `^ ok` reads 0/0 and looks inconclusive. It is clean.
-- **STRESS — NOT FINISHED.** Last seen RUNNING (pid 141056) at t≈525 s in a build phase with
-  `dUR=0` (zero underrun deltas at cap) and heap 13 MB against a 60 MB ceiling — both assertions holding.
-  Protocol: chord/arpeggio cycles 8..64, REAL knob commits on CUTOFF/RESO/UNISON, allOff drain ~60 s,
-  heap < 60 MB, zero underrun deltas at cap. **It is long (~9 min+), not stuck. Poll the PID, not the job.**
+- **STRESS — RAN, RED, MUST BE RE-RUN CLEAN.** `STRESS-RESULT {"verdict":"asserts-not-met",
+  "asserts":{"heapGrowthMb":0,"underrunDeltas":114,"drains":"PASS","pageErrors":0}}` at t=615 s,
+  27 cycles, cap reached 27/27, maxHeld 64. Heap growth 0 MB and drains PASS, but **114 underrun
+  deltas against a zero-delta assertion**.
+  **This run is not a clean measurement** — I ran terminal commands, file writes and git commits while
+  it measured, and a stress run beside any activity reads contaminated. For context: the last release
+  build posted **7 deltas** ("best of the day; history 16-138"), so 114 sits inside the historical band
+  but nowhere near the last build.
+  **Action: re-run it on a quiet box before freezing** — `nohup node verify/cdp_stress.mjs >
+  verify/last-cdp_stress.log 2>&1 < /dev/null &`, then touch nothing until it prints STRESS-RESULT.
+  If a clean run still posts deltas in the hundreds, something regressed and the release waits.
 
 ### RUNNER TRAP (paid twice — will bite again)
 The foreground `terminal` timeout **clamps at 180 s**; asking for 600/900/1200 still returns
