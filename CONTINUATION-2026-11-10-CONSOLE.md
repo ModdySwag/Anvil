@@ -1,13 +1,33 @@
-# SHIPPED — Anvil 1.15.0 live, 2026-11-10
+# SHIPPED — Anvil 1.15.1 live, 2026-11-10
 
 ## READ THIS FIRST
 
 **Repo** `C:\Users\Moddy\anvil` · **bundle** `index.html` sha
-`e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0`, **6,146,919 B** · every rig pins it.
+`ccaff4586eddf1fe96f36034962e8063c576a30099dfdddb4c0897f6d772aee2`, **6,151,753 B** · every rig pins it.
 
-**v1.15.0 is released.** GitHub release live with the installer attached; moddys.net/anvil
-serves `e8aaee89` byte-identically; downloads page carries the same build and its three real
-sha256 values. Install `Anvil-1.15.0-Setup.exe` 100,936,871 B sha `e3a16a22…`.
+**v1.15.1 is the current release.** GitHub release live (installer `Anvil-1.15.1-Setup.exe`
+100,936,264 B sha `24068183…`, marked Latest); moddys.net/anvil serves `ccaff458` byte-identically;
+downloads page carries v1.15.1 with its three real sha256 values and screenshots re-cut from the
+packaged build. The 1.15.0 block below is kept as history.
+
+### WHAT 1.15.1 ADDED
+- **PERFORM has an engine.** `vel.curve` shapes played velocity per note (exponent `2^(1-2·curve)`,
+  0.5 linear) and `vel.sens` is key response on the filter cutoff (±2 octaves at 1.0). Proved
+  audible, not parsed: same note at gain 0.25, three interleaved rounds, AnalyserNode on the
+  master node — soft 0.0192 / linear 0.0577 / hard 0.1127 peak, ordered every round, hard/soft
+  5.86 vs 6.3 predicted. (`avTap.levels` is a decaying peak-hold and is useless as a witness —
+  it read e-43 between notes; the analyser is the instrument.)
+- **A latent warm-up leak fixed.** The boot warm-up restored the oscillator levels after a fixed
+  160 ms, so a still-ringing release tail became audible. It now polls the voice pool until
+  active+released is 0 before un-muting. `cdp_rec`'s control take caught it; it had passed on
+  1.15.0 by timing luck.
+- **Desktop rig derives identity from `windows/version.json`** instead of hardcoding a version, so
+  bumps stop turning the suite red (it went 2-of-32 red on the bump until fixed).
+- **bench:** realtimeRatio 1.0, published light 64 / fat 48, offline knee 96/128 monotone,
+  invalidReads 0. **alias:** complete. **stress:** 5 deltas, **1 in the asserted envelope** — a
+  single quantum in the first 15 s (2.7 ms in ten minutes), recorded in the notes, not rounded away.
+
+### EARLIER STATE (1.15.0, kept for the record)
 
 ### WHAT CLOSED TODAY (the reason this build exists)
 - **Cold-start underruns fixed.** Three 10-min stress runs on `d206eec2` posted 613 / 47 / 19
