@@ -1,4 +1,4 @@
-index.html sha256: 1f8101ae4ff91eead79c629cc2bf845d2f9e705cec6ca28ef0a827d219b3e064
+index.html sha256: 38b1d59db47abb3150097cbd1b6b9494a5566ce2b46c42e951409ffd045e8e2a
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
    - data-av-ready: true
  ok   K1 virgin: rail closed, no rail control visible (tabs are the one navigation)  -> {"closed":true,"rail":true,"visibleRailCtl":0}
@@ -18,9 +18,9 @@ using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
  ok   K14 voice screens draw real data (oscillator, filter response with a live corner label, envelope with its time)  -> {"wave":18480,"filter":18480,"env":18480,"flab":"LP 800 R30","elab":"502 ms"}
  ok   K15 the screens edit: a drag on the filter moves cutoff + reso, a drag on the envelope moves attack  -> {"c0":800,"c1":3835,"r1":0.8,"a0":0.002,"a1":0.72}
  ok   K16 kind keys drive the engine kind (param + synth select + LCD + lit key)  -> {"okClick":true,"open":{"param":"va","sel":"va","lcd":"VA","lit":["wavetable"]},"fm":{"param":"fm","sel":"fm","lcd":"FM","lit":["fm"]},"back":{"param":"va","sel":"va","lcd":"VA","lit":["wavetable"]}}
- ok   K17 core pots are live: drags on CUTOFF and LEVEL write filter.cutoff and engine.outScale  -> {"pathC":"filter.cutoff","pathL":"engine.outScale","c0":3835,"c1":3882,"l0":null,"l1":0.36,"num":"3.84k"}
+ ok   K17 core pots are live: drags on CUTOFF and LEVEL write filter.cutoff and engine.outScale  -> {"pathC":"filter.cutoff","pathL":"engine.outScale","c0":3835,"c1":3945,"l0":null,"l1":0.37,"num":"3.84k"}
  ok   K18 POLY/MONO is a live voice mode (mono keeps one voice per channel, held notes return)  -> {"engine":true,"envPoly":0,"poly":2,"statsMono":1,"mono2":1,"clicked":true,"envMono":1,"lcd":"MONO —","lit":"mono","back1":1,"rel":0,"restored":0}
- ok   K19 scope + LEVEL are live: a sounding note inks the scope and the LEVEL pot scales the master tap  -> {"engine":true,"silent":{"ink":440,"spread":1},"loud":{"ink":948,"spread":17},"r0":0,"r1":0.2667662841774431,"r2":0.013682769794142631}
+ ok   K19 scope + LEVEL are live: a sounding note inks the scope and the LEVEL pot scales the master tap  -> {"engine":true,"silent":{"ink":440,"spread":1},"loud":{"ink":858,"spread":15},"r0":0,"r1":0.2774533337369248,"r2":0.01354045373424028}
  ok   K20 the oscillator screen draws the live wavetable frame of the installed table  -> {"engine":true,"ok":true,"slot":0,"before":{"shape":"saw","wt":""},"after":{"shape":"wt","wt":"C2 RIG TABLE #1/1"},"ink":466}
  ok   K21 band fit: every group carries its content and the strip does not overflow  -> {"band":{"cw":1420,"sw":1420},"clipped":[]}
  ok   K22 W=1440: glass rows + fields fit, tempo inside the glass  -> {"rows":[{"cw":313,"sw":313},{"cw":313,"sw":313},{"cw":313,"sw":313}],"badRow":[],"badSlot":[],"tempoRight":664.7,"glassRight":673.7,"inside":9}
