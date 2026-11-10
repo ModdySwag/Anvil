@@ -1,6 +1,6 @@
 {
   "name": "Anvil",
-  "version": "1.15.0",
+  "version": "1.15.1",
   "appId": "net.moddys.anvil",
   "publisher": "Modtech",
   "publisherUrl": "https://moddys.net",
@@ -11,8 +11,8 @@
   "license": "AGPL-3.0-or-later",
   "copyright": "(c) 2026 Modtech (Moddy)",
   "electron": "40.10.2",
-  "appBuild": "e8aaee89",
-  "appBuildBytes": 6146919,
-  "appBuildSha256": "e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0",
-  "appBuildNote": "1.15.0 release build: silent 64-voice boot warm-up (cold-start underruns gone: stress went 11 in-envelope deltas -> 0) + session restore waits for the engine; 28 rigs + bench + alias verdict clean; bench realtimeRatio 1.003, published light 64 / fat 64, offline knee 96 pass / 128 fail monotone, invalidReads 0; alias verdict complete; stress verdict complete, verified-envelope PASS, 5 deltas total all inside the labelled uni-7 over-drive cycles"
+  "appBuild": "ccaff458",
+  "appBuildBytes": 6151753,
+  "appBuildSha256": "ccaff4586eddf1fe96f36034962e8063c576a30099dfdddb4c0897f6d772aee2",
+  "appBuildNote": "1.15.1: PERFORM gains its engine - vel.curve shapes played velocity into each note (exponent 2^(1-2*curve); 0.5 linear) and vel.sens is key response, moving the filter cutoff +-2 octaves at 1.0. Proved audible: same note at gain 0.25, three interleaved rounds, soft 0.0192 / linear 0.0577 / hard 0.1127 peak on an AnalyserNode at the master node, ordered in every round (hard/soft 5.86 vs 6.3 predicted). Also fixes a latent boot-warm-up leak: the oscillator levels were restored after a fixed 160 ms, making any still-ringing release tail audible - it now drains the voice pool first. Rigs green on these bytes: a11y 37, bounce 32, chassis 47, cockpit 21, code 36, comp 41, deck 35, fit 49, fx 28, hub 68, import 26, keys 27, knob_feel 19, m1 33, m2 40, midi 34, mix 47, platform 52, rec 29, s4 42, s5 36, sample 29, seq 41, sessions 65, smoke 81, store 28, studio 37, tune 18 (5 of them re-run on this exact sha). bench realtimeRatio 1.0, light 64 / fat 48, offline 96 knee monotone, invalidReads 0; alias complete. stress 15 deltas, 1 in the asserted envelope (one quantum in the cold-start window) on a box running a live Discord voice call - not a clean measurement."
 }

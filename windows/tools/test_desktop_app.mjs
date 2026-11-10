@@ -250,7 +250,8 @@ try {
   rmSync(DL, { recursive: true, force: true }); mkdirSync(DL, { recursive: true });
   console.log('\n== Anvil desktop app: ' + EXE);
   console.log('   cdp :' + CDP + ' | downloads -> ' + DL);
-  if (!VERSION.version) note('windows/version.json not readable -- the 1.15.0 pin below is asserted from the wave contract (D2 owns the file)');
+  const VEXP = VERSION.version || '1.15.0';   /* identity comes from windows/version.json, not a literal */
+  if (!VERSION.version) note('windows/version.json not readable -- falling back to 1.15.0 for the identity legs');
 
   app.start();
   await app.connect({ timeoutMs: 90000 });
@@ -273,7 +274,7 @@ try {
   check(!!(info && info.desktop === true), '__AV_DESKTOP marker present (=== true)', JSON.stringify(info && (info.desktop ? 'true' : info.desktopVal)));
   check(!!(info && info.shell && Number(info.shell.servePort) === pagePort), '__AV_SHELL reports the serving port (version/electron reported)', JSON.stringify(info && info.shell));
   check((info && String(info.title || '').indexOf('Anvil') >= 0), 'the window carries the Anvil title', info && info.title);
-  check(app.log('1.15.0'), 'the shell reports its build on stdout (tolerant: stdout mentions 1.15.0)');
+  check(app.log(VEXP), 'the shell reports its build on stdout (tolerant: stdout mentions ' + VEXP + ')');
 
   /* ---- boot contract ---- */
   console.log('-- boot');
@@ -282,8 +283,8 @@ try {
   if (!ready) throw new Error('the app never reached data-av-ready');
 
   const ver = await app.ev(`(() => { try { const A = window.ANVIL; return A ? { version: A.version, phase: A.phase, built: A.built } : null; } catch (e) { return { err: String(e) }; } })()`);
-  check(!!(ver && ver.version === '1.15.0'), 'ANVIL.version reads 1.15.0 (the R22 freeze)', JSON.stringify(ver));
-  if (VERSION.version && VERSION.version !== '1.15.0') note('windows/version.json carries ' + VERSION.version + ' -- reconcile against the 1.15.0 wave pin');
+  check(!!(ver && ver.version === VEXP), 'ANVIL.version reads ' + VEXP + ' (the manifest freeze)', JSON.stringify(ver));
+  if (VERSION.version && ver && ver.version !== VERSION.version) note('version drift: manifest ' + VERSION.version + ' vs app ' + ver.version);
 
   /* ---- the engine: worklet tier, 64+ voices ---- */
   console.log('-- engine');
