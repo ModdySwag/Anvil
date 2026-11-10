@@ -1470,12 +1470,24 @@ function avSessionLoad(id) {
   }
 }
 
+/* A session state carries engine params; applying them before the engine publishes drops every one
+   into `skipped` (they do replay later, but the receipt would lie about what landed). Boot spends
+   the warm-up window before `ready`, so every restore path waits for the engine here. */
+async function avSessionAwaitEngine() {
+  try {
+    if (typeof avEngineEnsure !== "function") return;
+    if (typeof window !== "undefined" && window.__avEngine && window.__avEngine.ready) return;
+    await avEngineEnsure();
+  } catch (e) { /* a dead engine is reported by the params themselves */ }
+}
+
 async function avSessionLoadRun(id) {
   const st = avSession;
   await avSessionHydrate();
   const rec = avSessionFind(id);
   if (!rec) return { ok: false, id: String(id == null ? "" : id), error: "no-session" };
   if (!rec.versions.length) return { ok: false, id: rec.id, name: rec.name, error: "no-versions" };
+  await avSessionAwaitEngine();
   const ver = rec.versions[rec.versions.length - 1];
   const ap = avSessionApply(ver.state);
   const marked = await avSessionMarkCurrent(rec);
@@ -1937,6 +1949,7 @@ async function avSessionRecoverRun() {
     return { ok: false, error: "no-recovery", applied: 0, skipped: [], carried: [] };
   }
   const savedAt = rec.savedAt;
+  await avSessionAwaitEngine();
   const ap = avSessionApply(rec.state);
   st.recovery = null;                                   /* the offer is consumed */
   const clear = await avSessionClearAutoRec();

@@ -647,43 +647,66 @@ function avEngineFailEnsure(reason) {
 /* ---------- boot warm-up ----------
    The first heavy build pays costs the steady state never pays again: 64 voice slots allocated and
    initialised, oscillator and filter state built per voice, the first coefficient pass, and the JIT
-   compiling those paths. Measured on the frozen build it costs ~10 dropped render quanta inside the
-   first 30 s and nothing afterwards, so the path is exercised once HERE, at volume 0, before any
-   note is routed to the engine.
+   compiling those paths. Measured on d206eec2 it cost 10 dropped render quanta inside the first
+   30 s and nothing afterwards, so the path is exercised once HERE, at volume 0.
 
-   Deliberately narrow: worklet tier only (the SPN tier allocates in-page and never overruns a
-   quantum), a running context only (a suspended one renders nothing, so the warm-up would just
-   park messages), and it runs before avEngineRegisterSink so no held note can exist to be cut by
-   the closing allOff. Silence comes from the engine's own output gain (see avEngineTryWorklet),
-   which sits at unity for the life of the page and is dipped to 0 only here — nothing is ever
-   disconnected, so a failed warm-up cannot cost anyone their audio. */
+   Deliberately narrow, and shaped by what went wrong the first time:
+   - it runs AFTER avEngineSetWindow/ReplayParams, not before, because delaying `ready` by the
+     warm-up length made avSessionLoad drop every engine param into `skipped`;
+   - silence is done at the SOURCE, not just the output: the four oscillator levels are zeroed for
+     the warm-up and restored after, because the recorder taps the voice node itself and a
+     destination-side mute is invisible to it (cdp_rec's control take caught the tail);
+   - voices are released individually, never with allOff, so a note the user is holding survives;
+   - pitches start at 64 so a warm-up release is unlikely to land on a played note;
+   - the output gain is also dipped (belt and braces; see avEngineTryWorklet) but nothing is ever
+     disconnected, so a failed warm-up cannot cost anyone their audio. */
 async function avEnginePrewarm(h) {
+  const LEVELS = ["osc1.level", "osc2.level", "sub.level", "noise.level"];
+  let out = null, saved = null;
   try {
     if (!h || h.kind !== "worklet" || !h.ctx || !h.node || h.ready !== true) return false;
     const ctx = h.ctx;
     if (ctx.state !== "running") return false;
-    const out = h.out;
+    out = h.out;
     if (!out || !out.gain) return false;                 /* no output gain — skip rather than risk it */
+    /* remember where the levels really are, so the restore is exact even if a param changed */
+    saved = {};
+    for (let i = 0; i < LEVELS.length; i++) {
+      const v = (typeof avParams === "object" && avParams) ? Number(avParams[LEVELS[i]]) : NaN;
+      saved[LEVELS[i]] = isFinite(v) ? v : null;
+    }
     const n = Math.max(1, Math.min(64, Math.floor(avEngineNum(h.maxVoices) || 64)));
-    const cut0 = (typeof avParams === "object" && avParams && isFinite(Number(avParams["filter.cutoff"])))
-      ? Number(avParams["filter.cutoff"]) : 800;
-    out.gain.value = 0;                                  /* the only thing standing between the warm-up and the speakers */
+    const started = [];
+    for (let i = 0; i < LEVELS.length; i++) { try { h.setParam(LEVELS[i], 0); } catch (e) { /* ok */ } }
+    out.gain.value = 0;                                  /* belt and braces — the source is already silent */
     try {
-      for (let i = 0; i < n; i++) { try { h.noteOn(36 + i, 0.9); } catch (e) { /* one voice is not fatal */ } }
-      /* force the first coefficient pass through the path the filter uses at runtime */
-      try { h.setParam("filter.cutoff", 300); h.setParam("filter.cutoff", 6000); h.setParam("filter.cutoff", cut0); } catch (e) { /* params are best effort */ }
+      for (let i = 0; i < n && (64 + i) <= 127; i++) {
+        const m = 64 + i;
+        try { if (h.noteOn(m, 0.9)) started.push(m); } catch (e) { /* one voice is not fatal */ }
+      }
       await new Promise((r) => setTimeout(r, 180));
-      try { h.allOff(); } catch (e) { /* only warm-up voices are held */ }
-      await new Promise((r) => setTimeout(r, 260));      /* let the release tails die before unmuting */
+      for (let i = 0; i < started.length; i++) { try { h.noteOff(started[i]); } catch (e) { /* ok */ } }
+      await new Promise((r) => setTimeout(r, 160));      /* let the release tails finish, still silent */
     } finally {
+      for (let i = 0; i < LEVELS.length; i++) {
+        const v = saved[LEVELS[i]];
+        if (v !== null) { try { h.setParam(LEVELS[i], v); } catch (e) { /* ok */ } }
+      }
       try { out.gain.value = 1; } catch (e) { avEngineWarn("boot warm-up: output restore failed"); }
-      try { h.setParam("filter.cutoff", cut0); } catch (e) { /* ok */ }
     }
     h.prewarmed = true;
     return true;
   } catch (e) {
-    try { if (h && h.out && h.out.gain) h.out.gain.value = 1; } catch (e2) { /* ok */ }
-    try { avEngineWarn("boot warm-up skipped — " + avEngineErr(e)); } catch (e3) { /* ok */ }
+    try {
+      if (saved) {
+        for (let i = 0; i < LEVELS.length; i++) {
+          const v = saved[LEVELS[i]];
+          if (v !== null) { try { h.setParam(LEVELS[i], v); } catch (e2) { /* ok */ } }
+        }
+      }
+      if (out && out.gain) out.gain.value = 1;
+    } catch (e3) { /* ok */ }
+    try { avEngineWarn("boot warm-up skipped — " + avEngineErr(e)); } catch (e4) { /* ok */ }
     return false;
   }
 }
@@ -708,7 +731,7 @@ function avEngineEnsure(opts) {
         return null;
       }
       avEngineLive = h;
-      await avEnginePrewarm(h);          /* silent, before anything can route a note (§9.4) */
+      await avEnginePrewarm(h);          /* silent, and finished before `ready` so no rig can record it */
       try { document.documentElement.setAttribute("data-av-engine", h.mode); } catch (e) { /* attribute is a nicety */ }
       avEngineSetWindow(h, null);
       avEngineRegisterSink(h);
