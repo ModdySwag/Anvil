@@ -504,7 +504,12 @@ try {
   /* ---- the header fit law: the band's full control set, no overlap, no clipped labels.
      C1's chassis rebuild grew the header from 15 to 21 visible buttons (contrast, motion,
      palette, nav, the level keys) and the count is re-pinned to the MEASURED set at this
-     viewport; the geometry legs below (no overlap, no spill) are the actual law. ---- */
+     viewport; the geometry legs below (no overlap, no spill) are the actual law.
+     RE-PINNED 1.15.0: measured 12 <button> elements in header.av-head (14 clickable counting the
+     av-tier / av-voices chips). The controls that used to sit here - a11y contrast, a11y motion,
+     about, palette, the nav keys - moved into the band's a11y host / popovers, so the old 21 is
+     a stale shape, not a loss. The count alone could hide that, so the MOVED set is asserted
+     separately below: they must still exist as real, laid-out buttons. ---- */
   console.log('-- header (fit law)');
   const fit = await app.ev(`(() => {
     const head = document.querySelector('header.av-head.av-console') || document.querySelector('header.av-head');
@@ -530,9 +535,30 @@ try {
     const spill = btns.filter(function (b) { return b.sw > b.cw + 1; }).map(function (b) { return b.id || '?'; });
     return { n: btns.length, hits: hits, spill: spill, ids: btns.map(function (b) { return b.id; }), innerW: window.innerWidth, innerH: window.innerHeight };
   })()`);
-  check(!!(fit && fit.n === 21), 'the header renders 21 buttons (the fit law)', fit ? ('visible=' + fit.n + ' at ' + fit.innerW + 'x' + fit.innerH) : 'header read failed');
+  check(!!(fit && fit.n === 12), 'the header renders 12 buttons (the fit law)', fit ? ('visible=' + fit.n + ' at ' + fit.innerW + 'x' + fit.innerH) : 'header read failed');
   check(!!(fit && Array.isArray(fit.hits) && fit.hits.length === 0 && Array.isArray(fit.spill) && fit.spill.length === 0),
     'the header buttons fit their boxes and do not overlap (fit law)', fit ? JSON.stringify({ hits: fit.hits, spill: fit.spill }) : 'header read failed');
+  /* the controls that moved out of the header must still be there: three real buttons, plus the
+     palette container (a DIV that stays display:none until it is opened — that is correct) */
+  const moved = await app.ev(`(() => {
+    const ids = ['av-a11y-contrast', 'av-a11y-motion', 'av-head-about', 'av-palette'];
+    const out = {};
+    ids.forEach(function (id) {
+      const el = document.getElementById(id);
+      if (!el) { out[id] = { present: false }; return; }
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      out[id] = { present: true, tag: el.tagName, w: Math.round(r.width), h: Math.round(r.height), display: cs.display, vis: cs.visibility };
+    });
+    return out;
+  })()`);
+  const btnIds = ['av-a11y-contrast', 'av-a11y-motion', 'av-head-about'];
+  const btnOk = moved && btnIds.every(function (k) {
+    const m = moved[k];
+    return m && m.present === true && m.tag === 'BUTTON' && m.display !== 'none' && m.vis !== 'hidden' && m.w > 0 && m.h > 0;
+  });
+  const palOk = moved && moved['av-palette'] && moved['av-palette'].present === true;
+  check(!!(btnOk && palOk), 'the header controls that moved into popovers still exist (3 buttons + the palette host)', JSON.stringify(moved));
 
   /* ---- zero page errors ---- */
   console.log('-- errors');
