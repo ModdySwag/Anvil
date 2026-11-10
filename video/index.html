@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Anvil — the modules</title>
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      :root {
+        --bg: #0b0e11;
+        --panel: #10161b;
+        --cream: #efe7d6;
+        --teal: #35e0d0;
+        --muted: #8fa3a9;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: var(--bg);
+        font-family: monospace;
+        color: var(--cream);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* canvas */
+      .bg {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(1200px 700px at 72% 18%, rgba(31, 92, 96, 0.28), transparent 70%),
+          radial-gradient(900px 700px at 8% 92%, rgba(24, 58, 74, 0.22), transparent 70%),
+          linear-gradient(180deg, #0b0e11 0%, #0a0d10 60%, #080b0e 100%);
+      }
+      .grid {
+        position: absolute;
+        inset: 0;
+        background-image:
+          repeating-linear-gradient(90deg, rgba(239, 231, 214, 0.028) 0 1px, transparent 1px 48px),
+          repeating-linear-gradient(0deg, rgba(239, 231, 214, 0.028) 0 1px, transparent 1px 48px);
+        opacity: 0.55;
+      }
+      .vignette {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(1400px 900px at 50% 45%, transparent 45%, rgba(0, 0, 0, 0.55) 100%);
+      }
+
+      /* window */
+      .frame {
+        position: absolute;
+        left: 192px;
+        top: 24px;
+        width: 1536px;
+        height: 960px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(239, 231, 214, 0.11);
+        box-shadow:
+          0 40px 110px rgba(0, 0, 0, 0.62),
+          0 2px 0 rgba(255, 255, 255, 0.04) inset;
+        background: #0a0d10;
+      }
+      .shot {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* caption row (lower third) */
+      .caption {
+        position: absolute;
+        left: 192px;
+        top: 1004px;
+        width: 1536px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+      }
+      .rule {
+        width: 46px;
+        height: 2px;
+        background: var(--teal);
+        margin-right: 20px;
+        transform-origin: 0 50%;
+      }
+      .name {
+        font-family: monospace;
+        font-size: 30px;
+        font-weight: 500;
+        letter-spacing: 0.3em;
+        color: var(--cream);
+        white-space: nowrap;
+      }
+      .idx {
+        position: absolute;
+        right: 2px;
+        top: 50%;
+        margin-top: -18px;
+        font-family: monospace;
+        font-size: 28px;
+        letter-spacing: 0.1em;
+        color: rgba(53, 224, 208, 0.6);
+        white-space: nowrap;
+      }
+
+      /* module rail */
+      .rail {
+        position: absolute;
+        left: 192px;
+        top: 988px;
+        width: 1536px;
+        height: 3px;
+        z-index: 60;
+      }
+      .tick {
+        position: absolute;
+        top: 0;
+        width: 30px;
+        height: 3px;
+        background: var(--teal);
+        opacity: 0.14;
+      }
+
+      /* title card */
+      .title-inner {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding-left: 192px;
+        padding-bottom: 36px;
+      }
+      .wordmark {
+        display: flex;
+        align-items: baseline;
+        font-size: 188px;
+        font-weight: 500;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        color: var(--cream);
+      }
+      .wordmark .l {
+        display: inline-block;
+      }
+      .title-rule {
+        width: 124px;
+        height: 3px;
+        background: var(--teal);
+        margin-top: 40px;
+        transform-origin: 0 50%;
+      }
+      .subline {
+        margin-top: 28px;
+        font-size: 30px;
+        letter-spacing: 0.13em;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+      .subline .ver {
+        color: var(--teal);
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-width="1920"
+      data-height="1080"
+      data-duration="19.2"
+    >
+      <div class="bg"></div>
+      <div class="grid"></div>
+      <div class="vignette"></div>
+
+      <!-- 01 — title -->
+      <section id="scene-title" class="clip" data-start="0" data-duration="2.35" data-track-index="0">
+        <div class="title-inner">
+          <div class="wordmark" id="wordmark">
+            <span class="l">A</span><span class="l">N</span><span class="l">V</span><span class="l">I</span
+            ><span class="l">L</span>
+          </div>
+          <div class="title-rule" id="title-rule"></div>
+          <div class="subline" id="subline"><span class="ver">v1.15.1</span> — the modules</div>
+        </div>
+      </section>
+
+      <!-- 02 — browse -->
+      <section id="scene-browse" class="clip scene" data-start="2.20" data-duration="2.02" data-track-index="1">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-browse.png" alt="" style="transform-origin: 38% 46%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">BROWSE</span>
+          <span class="idx">01 / 09</span>
+        </div>
+      </section>
+
+      <!-- 03 — perform -->
+      <section id="scene-perform" class="clip scene" data-start="4.00" data-duration="2.02" data-track-index="2">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-perform.png" alt="" style="transform-origin: 26% 24%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">PERFORM</span>
+          <span class="idx">02 / 09</span>
+        </div>
+      </section>
+
+      <!-- 04 — sound -->
+      <section id="scene-sound" class="clip scene" data-start="5.80" data-duration="2.02" data-track-index="3">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-sound.png" alt="" style="transform-origin: 34% 46%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">SOUND</span>
+          <span class="idx">03 / 09</span>
+        </div>
+      </section>
+
+      <!-- 05 — shape -->
+      <section id="scene-shape" class="clip scene" data-start="7.60" data-duration="2.02" data-track-index="4">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-shape.png" alt="" style="transform-origin: 34% 34%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">SHAPE</span>
+          <span class="idx">04 / 09</span>
+        </div>
+      </section>
+
+      <!-- 06 — sequence -->
+      <section id="scene-sequence" class="clip scene" data-start="9.40" data-duration="2.02" data-track-index="5">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-sequence.png" alt="" style="transform-origin: 44% 44%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">SEQUENCE</span>
+          <span class="idx">05 / 09</span>
+        </div>
+      </section>
+
+      <!-- 07 — effects -->
+      <section id="scene-effects" class="clip scene" data-start="11.20" data-duration="2.02" data-track-index="6">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-effects.png" alt="" style="transform-origin: 38% 40%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">EFFECTS</span>
+          <span class="idx">06 / 09</span>
+        </div>
+      </section>
+
+      <!-- 08 — mix -->
+      <section id="scene-mix" class="clip scene" data-start="13.00" data-duration="2.02" data-track-index="7">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-mix.png" alt="" style="transform-origin: 38% 46%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">MIX</span>
+          <span class="idx">07 / 09</span>
+        </div>
+      </section>
+
+      <!-- 09 — deliver -->
+      <section id="scene-deliver" class="clip scene" data-start="14.80" data-duration="2.02" data-track-index="8">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-deliver.png" alt="" style="transform-origin: 40% 30%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">DELIVER</span>
+          <span class="idx">08 / 09</span>
+        </div>
+      </section>
+
+      <!-- 10 — system — holds to the end -->
+      <section id="scene-system" class="clip scene" data-start="16.60" data-duration="2.50" data-track-index="9">
+        <div class="frame" data-layout-allow-overflow="true">
+          <img class="shot" src="assets/shots/zone-system.png" alt="" style="transform-origin: 36% 36%" />
+        </div>
+        <div class="caption">
+          <span class="rule"></span>
+          <span class="name">SYSTEM</span>
+          <span class="idx">09 / 09</span>
+        </div>
+      </section>
+
+      <!-- module rail: nine marks, one per module, lit in signal order -->
+      <div class="rail" id="rail">
+        <div class="tick" style="left: 0px"></div>
+        <div class="tick" style="left: 192px"></div>
+        <div class="tick" style="left: 384px"></div>
+        <div class="tick" style="left: 576px"></div>
+        <div class="tick" style="left: 768px"></div>
+        <div class="tick" style="left: 960px"></div>
+        <div class="tick" style="left: 1152px"></div>
+        <div class="tick" style="left: 1344px"></div>
+        <div class="tick" style="left: 1506px"></div>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        const root = document.getElementById("root");
+        const tl = gsap.timeline({ paused: true });
+
+        /* ---- title card ---- */
+        tl.fromTo(
+          "#wordmark .l",
+          { y: 18, opacity: 1 },
+          { y: 0, opacity: 1, duration: 0.7, ease: "power3.out", stagger: 0.055 },
+          0
+        );
+        tl.fromTo("#title-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.55, ease: "power2.inOut" }, 0.42);
+        tl.fromTo("#subline", { y: 10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.48, ease: "power2.out" }, 0.3);
+        tl.to("#scene-title .title-inner", { opacity: 0, duration: 0.3, ease: "power1.in" }, 1.88);
+
+        /* ---- module scenes: fade over the previous one, then push in ---- */
+        const scenes = gsap.utils.toArray(".scene");
+        scenes.forEach((scene, si) => {
+          const start = parseFloat(scene.dataset.start);
+          const dur = parseFloat(scene.dataset.duration);
+          const frame = scene.querySelector(".frame");
+          const shot = scene.querySelector(".shot");
+          const caption = scene.querySelector(".caption");
+          const rule = scene.querySelector(".rule");
+          const name = scene.querySelector(".name");
+          const idx = scene.querySelector(".idx");
+
+          tl.fromTo(frame, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.28, ease: "power2.out" }, start);
+          tl.fromTo(shot, { scale: 1 }, { scale: 1.05, duration: dur + 0.12, ease: "none" }, start);
+          /* the caption hands over cleanly: it is gone before the next one arrives
+             (the last module's caption holds to the end of the film) */
+          if (si < scenes.length - 1) tl.to(caption, { opacity: 0, duration: 0.14, ease: "power1.in" }, start + dur - 0.26);
+          tl.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: 0.42, ease: "power2.out" }, start + 0.18);
+          tl.fromTo(caption, { opacity: 0 }, { opacity: 1, duration: 0.18, ease: "power1.out" }, start + 0.18);
+          tl.fromTo(name, { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.42, ease: "power2.out" }, start + 0.2);
+          tl.fromTo(idx, { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power1.out" }, start + 0.28);
+        });
+
+        /* ---- rail ticks: light as each module arrives, settle after it passes ---- */
+        const ticks = gsap.utils.toArray(".tick");
+        ticks.forEach((tick, i) => {
+          const start = 2.2 + i * 1.8;
+          tl.to(tick, { opacity: 1, duration: 0.26, ease: "power2.out" }, start + 0.05);
+          if (i < ticks.length - 1) tl.to(tick, { opacity: 0.62, duration: 0.5, ease: "power1.inOut" }, start + 1.55);
+        });
+
+        window.__timelines["main"] = tl;
+        tl.seek(0);
+        void root;
+      })();
+    </script>
+  </body>
+</html>

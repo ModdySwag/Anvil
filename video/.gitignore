@@ -1,0 +1,7 @@
+# generated captures, rendered output and QC frames stay out of git:
+# the published copy lives on the release and the downloads page
+assets/shots/
+captures-demo/
+qc/
+out/
+node_modules/
