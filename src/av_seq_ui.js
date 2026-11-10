@@ -1122,6 +1122,16 @@ function avSeqUiTransportHTML() {
        controls (the named picker + the apply button) fold away with GEN. */
     '<button type="button" class="av-btn mini av-seq-btn" id="av-seq-fill-toggle" aria-pressed="false" title="FILL — runtime fill flag (steps with condition FILL fire while on) · performance state: no undo, not part of the pattern, not saved">FILL</button>' +
     '<span class="av-seq-pos" id="av-seq-pos" role="status">BAR 1 · 01/16</span>' +
+    '<span class="av-seq-ruler" aria-hidden="true">' + (function () {
+      /* P2: the transport carried a wide void between the BPM knob and GEN/SONG. A step ruler belongs
+         there — it is the one element every sequencer puts beside its transport, it needs no data, and
+         it fills the gap without adding a control that could disagree with the grid. */
+      let r = "";
+      for (let i = 0; i < 16; i++) {
+        r += '<i class="av-seq-tick' + (i % 4 === 0 ? " is-bar" : "") + '"></i>';
+      }
+      return r;
+    })() + '</span>' +
     '<span class="av-seq-bpm">' + knob + '</span>' +
     '</div>';
 }

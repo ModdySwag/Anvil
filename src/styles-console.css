@@ -2018,3 +2018,17 @@ textarea::-webkit-scrollbar-thumb { background: #22303A; border-radius: 5px; bor
 }
 /* the chain bar says the order now, so the cap line that spelled it out is redundant prose */
 .av-fx-cap { display: none !important; }
+
+/* 19b. the SEQUENCE transport ruler: the void between the BPM knob and GEN/SONG was ~500px of nothing.
+   A 16-step ruler belongs beside a transport, needs no data, and cannot disagree with the grid. */
+.av-seq-ruler {
+  flex: 1 1 auto; min-width: 120px; max-width: 520px;
+  display: flex; align-items: flex-end; gap: 0;
+  height: 22px; padding: 0 6px 3px;
+  border-bottom: 1px solid #16211F;
+}
+.av-seq-tick {
+  flex: 1 1 0; height: 6px;
+  border-left: 1px solid #33474D;
+}
+.av-seq-tick.is-bar { height: 13px; border-left-color: #5C8A94; }
