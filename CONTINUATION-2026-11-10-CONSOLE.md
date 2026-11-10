@@ -24,9 +24,45 @@
   it measured, and a stress run beside any activity reads contaminated. For context: the last release
   build posted **7 deltas** ("best of the day; history 16-138"), so 114 sits inside the historical band
   but nowhere near the last build.
-  **Action: re-run it on a quiet box before freezing** — `nohup node verify/cdp_stress.mjs >
-  verify/last-cdp_stress.log 2>&1 < /dev/null &`, then touch nothing until it prints STRESS-RESULT.
-  If a clean run still posts deltas in the hundreds, something regressed and the release waits.
+  **Action: re-run it on a quiet box before freezing.**
+  **RE-RUN 1 (2026-11-10 11:34-11:46, clean execution, instrumented): STILL RED — 613.** But the
+  shape matters more than the number: only **11** deltas fell inside the asserted envelope
+  (uni ≤ 3), across 3 intervals; the other **602** are the *labelled* uni-7 over-drive probe the rig
+  reports but does not assert. The bulk was a single 346-delta burst at t≈240 s (cycle 11, uni 7)
+  which did **not** reproduce at uni 7 on cycles 3, 7, 15, 19, 23 or 27 — so uni-7 is not the trigger.
+  At that burst the audio render was mean 1496 µs / p95 2000 / max 2000 against a 2666.7 µs quantum:
+  the renderer never exceeded budget, so the thread was **descheduled**, not overloaded.
+  **RE-RUN 2 (11:56-12:08): 47 deltas, 7 of them in-envelope, ALL in the first 15 s.** Every later
+  in-envelope interval was clean. And it carries its own control: **cycle 1 (uni 3) = 7 deltas,
+  cycle 13 (uni 3, same 64 voices, same knob) = 0** — same load, different only in being first. The
+  deficit is first-use warm-up, not uni-3 cost.
+  **Neither run is a valid gate measurement.** Owner confirmed mid-run that a Discord bot job was
+  running: ambient CPU read 9.19 / 4.78 / 29.67 / 51.59 / 20.48 CPU-seconds per 10 s tick, i.e. peaks
+  around 5 cores busy. Run 2 therefore *survived* that contention with zero mid-run in-envelope deltas.
+  Numbers transcribed to `verify/stress-run2-RECORD.md` (its live log was later truncated by a
+  mis-armed watcher). **Gate still not met as written; a zero-delta verdict needs an idle box.**
+  Armed `cache/scratch/gatewait.ps1` — it fires the gate automatically after **5 continuous minutes**
+  under 2.0 CPU-s/10 s (one `Get-Process` sweep per 10 s), writing `verify/gate-auto.log`. Half-hearted
+  quiet is not enough: a 60 s lull between bot tasks already showed 3.88-4.44 CPU-s/10 s.
+  **For the owner:** close the gate by stopping the bot job for ~12 minutes, or decide to carve the
+  first 15 s out of the assertion as documented warm-up, or have the engine pre-warm 64 silent voices
+  at boot (proper fix, but it changes the frozen bytes and re-opens all 28 rig pins).
+  **RE-RUN 3 (12:13:50-12:25, bot job finished, quietest box of the three): 19 DELTAS — best ever,
+  still FAIL as written.** Ambient peak any 10 s tick 10.18 CPU-s; consumers msedge 253.4 s (the rig's
+  own browser), python 134.2 s (Hermes gateways), audiodg 94.9 s; no DiscordCanary, no java.
+  Split: 11 in the asserted envelope, 8 in the labelled uni-7 probe. All other asserts PASS
+  (heap +0, drains 15/15 worst 162 ms, page errors 0, ctx running, cap 27/27, maxHeld 64).
+  **The cold start is now proven across three runs and it dominates:** in-envelope deltas t=0-15 = 4
+  and t=15-30 = 6 (cycle 1, the first 64 voices ever built), then a single lone delta at cycle 8
+  (uni 1). Ten of the eleven are first-use; nothing mid-run reproduces.
+  | run | ambient | total | in-envelope | of which cold start | mid-run |
+  |---|---|---|---|---|---|
+  | 1 | bot job + 5-core bursts | 613 | 11 | 1 | 10 (external burst, did not reproduce) |
+  | 2 | bot job | 47 | 7 | 7 | 0 |
+  | 3 | bot finished | **19** | 11 | 10 | 1 |
+  **The release decision is now a gate-design decision, not a code-quality one:** 19 quanta over 10 min
+  at 64 voices = 51 ms of audio in 600 s (0.0084% of 225,000 quanta). Strict zero is not reachable on
+  this desktop while any other work runs, and the only *reproducible* offence is first-use warm-up.
 
 ### RUNNER TRAP (paid twice — will bite again)
 The foreground `terminal` timeout **clamps at 180 s**; asking for 600/900/1200 still returns

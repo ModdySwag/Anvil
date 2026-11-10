@@ -260,7 +260,12 @@ async function avEngineTryWorklet(ctx, transport, maxVoices, log) {
     const dest = avEngineDestFor(ctx);
     try {
       if (!dest) throw new Error("no destination");
-      node.connect(dest);
+      /* one output gain between the voice node and the destination, unity by default. It exists
+         for ONE reason: the boot warm-up has to render the real DSP without anyone hearing it, and
+         muting a gain is far safer than rewiring a live graph. */
+      const out = (typeof ctx.createGain === "function") ? ctx.createGain() : null;
+      if (out) { out.gain.value = 1; node.connect(out); out.connect(dest); node.__avOut = out; }
+      else { node.connect(dest); }
     } catch (e) {
       avEngineNote(log, tag + ": connect failed — " + avEngineErr(e), true);
       avEngineDropNode(node);
@@ -312,6 +317,7 @@ function avEngineMakeWorkletHandle(ctx, node, transport, readyMsg, maxVoices, lo
     ready: true,
     ctx: ctx,
     node: node,
+    out: node.__avOut || null,          /* the unity output gain (see avEngineTryWorklet) */
     engine: null,
     sr: sr,
     maxVoices: (mv0 && mv0 >= 1) ? Math.floor(mv0) : maxVoices,
@@ -638,6 +644,50 @@ function avEngineFailEnsure(reason) {
   avEngineWarn("engine failed — " + r);
 }
 
+/* ---------- boot warm-up ----------
+   The first heavy build pays costs the steady state never pays again: 64 voice slots allocated and
+   initialised, oscillator and filter state built per voice, the first coefficient pass, and the JIT
+   compiling those paths. Measured on the frozen build it costs ~10 dropped render quanta inside the
+   first 30 s and nothing afterwards, so the path is exercised once HERE, at volume 0, before any
+   note is routed to the engine.
+
+   Deliberately narrow: worklet tier only (the SPN tier allocates in-page and never overruns a
+   quantum), a running context only (a suspended one renders nothing, so the warm-up would just
+   park messages), and it runs before avEngineRegisterSink so no held note can exist to be cut by
+   the closing allOff. Silence comes from the engine's own output gain (see avEngineTryWorklet),
+   which sits at unity for the life of the page and is dipped to 0 only here — nothing is ever
+   disconnected, so a failed warm-up cannot cost anyone their audio. */
+async function avEnginePrewarm(h) {
+  try {
+    if (!h || h.kind !== "worklet" || !h.ctx || !h.node || h.ready !== true) return false;
+    const ctx = h.ctx;
+    if (ctx.state !== "running") return false;
+    const out = h.out;
+    if (!out || !out.gain) return false;                 /* no output gain — skip rather than risk it */
+    const n = Math.max(1, Math.min(64, Math.floor(avEngineNum(h.maxVoices) || 64)));
+    const cut0 = (typeof avParams === "object" && avParams && isFinite(Number(avParams["filter.cutoff"])))
+      ? Number(avParams["filter.cutoff"]) : 800;
+    out.gain.value = 0;                                  /* the only thing standing between the warm-up and the speakers */
+    try {
+      for (let i = 0; i < n; i++) { try { h.noteOn(36 + i, 0.9); } catch (e) { /* one voice is not fatal */ } }
+      /* force the first coefficient pass through the path the filter uses at runtime */
+      try { h.setParam("filter.cutoff", 300); h.setParam("filter.cutoff", 6000); h.setParam("filter.cutoff", cut0); } catch (e) { /* params are best effort */ }
+      await new Promise((r) => setTimeout(r, 180));
+      try { h.allOff(); } catch (e) { /* only warm-up voices are held */ }
+      await new Promise((r) => setTimeout(r, 260));      /* let the release tails die before unmuting */
+    } finally {
+      try { out.gain.value = 1; } catch (e) { avEngineWarn("boot warm-up: output restore failed"); }
+      try { h.setParam("filter.cutoff", cut0); } catch (e) { /* ok */ }
+    }
+    h.prewarmed = true;
+    return true;
+  } catch (e) {
+    try { if (h && h.out && h.out.gain) h.out.gain.value = 1; } catch (e2) { /* ok */ }
+    try { avEngineWarn("boot warm-up skipped — " + avEngineErr(e)); } catch (e3) { /* ok */ }
+    return false;
+  }
+}
+
 function avEngineEnsure(opts) {
   if (avEngineEnsurePromise) return avEngineEnsurePromise;
   avEngineEnsurePromise = (async () => {
@@ -658,6 +708,7 @@ function avEngineEnsure(opts) {
         return null;
       }
       avEngineLive = h;
+      await avEnginePrewarm(h);          /* silent, before anything can route a note (§9.4) */
       try { document.documentElement.setAttribute("data-av-engine", h.mode); } catch (e) { /* attribute is a nicety */ }
       avEngineSetWindow(h, null);
       avEngineRegisterSink(h);
@@ -666,7 +717,7 @@ function avEngineEnsure(opts) {
       avEngineTierChip(h.mode);
       avEngineStartVoiceChip(h);
       avEngineBindResume(ctx);
-      avEngineLogLine("engine ready — " + h.tier + " · sr " + h.sr + " · voices " + h.maxVoices);
+      avEngineLogLine("engine ready — " + h.tier + " · sr " + h.sr + " · voices " + h.maxVoices + (h.prewarmed ? " · warmed" : ""));
       return h;
     } catch (e) {
       avEngineFailEnsure("ensure — " + avEngineErr(e));
