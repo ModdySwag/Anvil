@@ -1,8 +1,7 @@
-index.html sha256 (before): d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412
+index.html sha256 (before): e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794270523312
+cdp port 9780 - profile C:\Users\Moddy\AppData\Local\Temp\anvil-a11y-1794279309534
 url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no service worker)
-   - Page.setDownloadBehavior unavailable
 == 0. boot ==
  ok   0 boot: data-av-ready flips on the file:// ?avtest=1 page (no server, no SW)  -> url file:///C:/Users/Moddy/anvil/index.html?avtest=1
  ok   C3-5: the LEVELS fold opens before the knob legs (a hidden knob cannot take focus)  -> opened
@@ -52,11 +51,11 @@ url file:///C:/Users/Moddy/anvil/index.html?avtest=1   (file:// - no server, no 
  ok   H1 prefs restored to defaults (contrast false + motion system + classes off + stored default-or-absent)  -> {"set":{"before":"{\"contrast\":false,\"motion\":\"system\"}","err":null},"cls":"av-rail-closed","cbPressed":"false","mbPressed":"false","contrast":false,"motion":"system","ls":{"contrast":false,"motion":"system"}}
    - prefs left at defaults - file:// localStorage may be shared with every other suite (this rig owns its state and cleans up)
  ok   H2 zero page errors across every section (exceptions + Log errors + console.error)  -> page errors=0 - module errors=0
-index.html sha256 (after):  d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412
- ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412
- ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned d206eec23597...
+index.html sha256 (after):  e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0
+ ok   H3 freeze: index.html sha256 before === after (unchanged by the run)  -> e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0
+ ok   H4 freeze pin leg: index.html sha256 = pinned  -> pinned e8aaee896019...
 
 RESULT: 37 passed, 0 failed
 A11Y-RESULT 37/37
-A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412","sha256After":"d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412","pinned":"d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412","passed":37,"failed":0,"checks":37,"verdict":"pass"}
+A11Y-RESULT-JSON {"kind":"anvil-cdp-a11y","sha256Before":"e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0","sha256After":"e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0","pinned":"e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0","passed":37,"failed":0,"checks":37,"verdict":"pass"}
 A11Y PASSED

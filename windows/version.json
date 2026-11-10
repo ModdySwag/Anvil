@@ -11,8 +11,8 @@
   "license": "AGPL-3.0-or-later",
   "copyright": "(c) 2026 Modtech (Moddy)",
   "electron": "40.10.2",
-  "appBuild": "54df076a",
-  "appBuildBytes": 4870911,
-  "appBuildSha256": "54df076ae5d57d7a4fe5cba3c15f0d3da0833ebc18609673859151f09db25334",
-  "appBuildNote": "C5 rebuild + owner pass (band LED clear of glyphs, band readout no longer clipped by the pots group); frozen 54df076a; 28 suites green first-lap; bench realtime 0.999 knee 128 no-fail; alias clean; stress 7 deltas (best of the day; history 16-138)"
+  "appBuild": "e8aaee89",
+  "appBuildBytes": 6146919,
+  "appBuildSha256": "e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0",
+  "appBuildNote": "1.15.0 release build: silent 64-voice boot warm-up (cold-start underruns gone: stress went 11 in-envelope deltas -> 0) + session restore waits for the engine; 28 rigs + bench + alias verdict clean; bench realtimeRatio 1.003, published light 64 / fat 64, offline knee 96 pass / 128 fail monotone, invalidReads 0; alias verdict complete; stress verdict complete, verified-envelope PASS, 5 deltas total all inside the labelled uni-7 over-drive cycles"
 }

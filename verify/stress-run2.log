@@ -1,0 +1,13 @@
+freeze sha256 d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412 (6141970 B) [index.html]
+server: http://127.0.0.1:9600/ (repo root C:\Users\Moddy\anvil)
+devtools port: 9601
+using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
+url: http://127.0.0.1:9600/index.html?avtest=1
+=== ANVIL stress rig === (contract §9.4; 10 min; http page; worklet tier; cap 64 voices; sample every 15 s)
+protocol: chord/arpeggio cycles 8..64 · REAL knob commits (avKnobCommit on #av-synth CUTOFF/RESO + UNISON) · allOff drain check ~every 60 s · assert heap growth < 60 MB, zero underrun deltas at cap, pool drains, zero page errors
+--- sanity ---
+engine: attr=worklet tier=worklet url=blob sr=48000 maxVoices=64
+sanity: PASS  state=running  advance=2s / wall 2s (ratio 1)  windows[2]  baseLatency=0.01  sampleRate=48000
+mounted knobs: {"cutoff":{"bound":true,"norm":"0.5340"},"reso":{"bound":true,"norm":"0.3000"},"uni":{"bound":true,"norm":"0.0000"},"host":true}
+--- workload: 10 min — starting ---
+sample t=    0s active=0/64 released=0 stolen=0 heap=14.7MB ur=0 dUR=- mean=7.81 p95=0 max=1000 n=964 ctx=running phase=drain step=cycle 1 cycles=1 capHits=0 drains=0 notes=+0/-0 knobs=0 sErr=0

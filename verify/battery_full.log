@@ -1,0 +1,32 @@
+FULL-WAVE START 10 Nov 2026 13:25:02 sha=e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0
+cdp_smoke exit=0 ok=81 fail=0 secs=7
+cdp_a11y exit=0 ok=37 fail=0 secs=14
+cdp_chassis exit=0 ok=47 fail=0 secs=23
+cdp_cockpit exit=0 ok=21 fail=0 secs=2
+cdp_keys exit=0 ok=27 fail=0 secs=13
+cdp_knob_feel exit=0 ok=19 fail=0 secs=10
+cdp_m1 exit=0 ok=33 fail=0 secs=17
+cdp_m2 exit=0 ok=40 fail=0 secs=28
+cdp_midi exit=0 ok=34 fail=0 secs=12
+cdp_mix exit=0 ok=47 fail=0 secs=11
+cdp_seq exit=0 ok=41 fail=0 secs=85
+cdp_fx exit=0 ok=28 fail=0 secs=9
+cdp_comp exit=0 ok=41 fail=0 secs=16
+cdp_code exit=0 ok=36 fail=0 secs=16
+cdp_deck exit=0 ok=35 fail=0 secs=14
+cdp_fit exit=0 ok=49 fail=0 secs=4
+cdp_hub exit=0 ok=68 fail=0 secs=26
+cdp_import exit=0 ok=26 fail=0 secs=30
+cdp_platform exit=0 ok=52 fail=0 secs=17
+cdp_rec exit=0 ok=29 fail=0 secs=7
+cdp_s4 exit=0 ok=42 fail=0 secs=7
+cdp_s5 exit=0 ok=36 fail=0 secs=9
+cdp_sample exit=0 ok=29 fail=0 secs=6
+cdp_sessions exit=0 ok=65 fail=0 secs=47
+cdp_store exit=0 ok=28 fail=0 secs=7
+cdp_studio exit=0 ok=37 fail=0 secs=27
+cdp_tune exit=0 ok=18 fail=0 secs=13
+cdp_bounce exit=0 ok=32 fail=0 secs=22
+cdp_bench exit=0 secs=595 result=BENCH-RESULT {"mode":"real","quick":false,"tier":"worklet","url":"blob","realtimeRatio":1.003,"published":{"light":64,"fat":64},"offl
+cdp_alias exit=0 secs=5 result=ALIAS-RESULT {"sha256":"e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0","verdict":"complete","validation":{"onBinDB
+FULL-WAVE DONE 10 Nov 2026 13:43:26 verdict=clean
