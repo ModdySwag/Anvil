@@ -5,3 +5,4 @@ captures-demo/
 qc/
 out/
 node_modules/
+.hyperframes/
