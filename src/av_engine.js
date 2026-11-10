@@ -686,7 +686,17 @@ async function avEnginePrewarm(h) {
       }
       await new Promise((r) => setTimeout(r, 180));
       for (let i = 0; i < started.length; i++) { try { h.noteOff(started[i]); } catch (e) { /* ok */ } }
-      await new Promise((r) => setTimeout(r, 160));      /* let the release tails finish, still silent */
+      /* wait for the pool to be EMPTY, not for a guessed release time: restoring the levels
+         while a tail is still ringing makes that tail audible, which is exactly what the
+         recorder's control take caught. 40 ms steps, ~1.2 s ceiling. */
+      for (let i = 0; i < 30; i++) {
+        let st = null;
+        try { st = await h.stats(); } catch (e) { st = null; }
+        const busy = st ? (Number(st.active || 0) + Number(st.released || 0)) : 0;
+        if (!st || busy === 0) break;
+        await new Promise((r) => setTimeout(r, 40));
+      }
+      await new Promise((r) => setTimeout(r, 60));       /* one last quantum of margin, still silent */
     } finally {
       for (let i = 0; i < LEVELS.length; i++) {
         const v = saved[LEVELS[i]];

@@ -50,6 +50,30 @@ const AV_LEVELS = [
   { path: "master", label: "Master", opts: { min: 0, max: 1.2, step: 0.01, def: 0.8, fmt: "pct", size: "lg" } },
 ];
 
+/* ---------- PERFORM: velocity and key response ----------
+   The page's own VOICE panel used to be a placeholder ("velocity and key response ... land here").
+   These are the two engine params that make it true: vel.curve shapes what you play into the
+   engine per note (0.5 linear, below compresses the low end, above flattens toward full level),
+   and vel.sens is key response - how far velocity moves the filter cutoff, +-2 octaves at 1.0.
+   Both read back through avParams, so a project/session captures them like any other control. */
+const AV_PERFORM = [
+  { path: "vel.curve", label: "Curve", opts: { min: 0, max: 1, step: 0.01, def: 0.5, fmt: "pct", size: "lg" } },
+  { path: "vel.sens", label: "Key resp", opts: { min: 0, max: 1, step: 0.01, def: 0.0, fmt: "pct", size: "lg" } },
+];
+
+function avMountPerform() {
+  const host = document.getElementById("av-perf-host");
+  if (!host || typeof avKnobHTML !== "function") return false;
+  avParams["vel.curve"] = (typeof avParams["vel.curve"] === "number") ? avParams["vel.curve"] : 0.5;
+  avParams["vel.sens"] = (typeof avParams["vel.sens"] === "number") ? avParams["vel.sens"] : 0.0;
+  host.innerHTML = avKnobRowHTML(AV_PERFORM.map(k =>
+    avKnobHTML(k.path, k.label, Object.assign({ value: avParams[k.path] }, k.opts)))) +
+    '<p class="av-note av-dim">Curve shapes how hard you play into the engine; Key resp is how far ' +
+    'velocity moves the filter. Both are per-patch.</p>';
+  avKnobBind(host);
+  return true;
+}
+
 function avMountLevels() {
   const host = document.getElementById("av-levels-knobs");
   if (!host || typeof avKnobHTML !== "function") return false;
@@ -212,6 +236,7 @@ function avLevelsStrip() {
 (function avBoot() {
   const tapOk = (typeof avInstallAudioTap === "function") ? avInstallAudioTap() : false;
   const levelsOk = avMountLevels();
+  try { avMountPerform(); } catch (e) { /* the panel keeps its placeholder */ }
   let kbOk = false, midiOk = false, synthOk = false, mpeOk = false;
   try { kbOk = (typeof avKbInit === "function") ? (avKbInit() !== false) : false; } catch (e) { console.warn("[anvil] kb init failed", e); }
   try { midiOk = (typeof avMidiInit === "function") ? (avMidiInit() !== false) : false; } catch (e) { console.warn("[anvil] midi init failed", e); }

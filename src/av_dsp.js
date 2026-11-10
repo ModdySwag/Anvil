@@ -421,6 +421,8 @@ const AVDSP = (function () {
       osc1Tune: 0, osc1Fine: 0, tune1F: 1, osc1Uni: 1, osc1Spread: 12,
       osc2Tune: 0, osc2Fine: 0, tune2F: 1, osc2Uni: 1, osc2Spread: 12,
       ktrk: 0.5,
+      tVelCurve: 0.5, cVelCurve: 0.5,   /* PERFORM: input velocity -> v.vel shaping */
+      tVelSens: 0.0, cVelSens: 0.0,     /* PERFORM: velocity -> filter cutoff (key response) */
       e1a: 0.002, e1d: 0.3, e1s: 0.8, e1r: 0.2,
       e2a: 0.001, e2d: 0.5, e2s: 0.5, e2r: 0.3,
       lfoRate: 5, lfoStep: 5 / sr, lfoToCut: 0, lfoToPitch: 0,
@@ -562,6 +564,8 @@ const AVDSP = (function () {
       case "filter.reso": { const n = Number(value); if (!isFinite(n)) return false; eng.tReso = cl(n, 0, 1); return true; }
       case "filter.envAmt": { const n = Number(value); if (!isFinite(n)) return false; eng.tEnvAmt = cl(n, -4, 4); return true; }
       case "filter.ktrk": { const n = Number(value); if (!isFinite(n)) return false; eng.ktrk = cl(n, 0, 1); return true; }
+      case "vel.curve": { const n = Number(value); if (!isFinite(n)) return false; eng.tVelCurve = cl(n, 0, 1); eng.cVelCurve = eng.tVelCurve; return true; }
+      case "vel.sens": { const n = Number(value); if (!isFinite(n)) return false; eng.tVelSens = cl(n, 0, 1); return true; }
       case "env1.a": { const n = Number(value); if (!isFinite(n)) return false; eng.e1a = cl(n, 0.001, 4); return true; }
       case "env1.d": { const n = Number(value); if (!isFinite(n)) return false; eng.e1d = cl(n, 0.001, 8); return true; }
       case "env1.s": { const n = Number(value); if (!isFinite(n)) return false; eng.e1s = cl(n, 0, 1); return true; }
@@ -717,7 +721,16 @@ const AVDSP = (function () {
     v.state = 1;
     v.kindId = routeKind(eng, midi);
     v.noteMidi = midi;
-    v.vel = cl(gain, 0.05, 1);
+    /* PERFORM: the curve shapes how hard you play into the engine. curve 0.5 is linear;
+       below it the low end gets quieter (more room for soft playing), above it compresses
+       toward full level. The mod matrix reads v.vel, so it follows the same curve. */
+    {
+      const g0 = cl(gain, 0.05, 1);
+      const cx = cl(Number(eng.cVelCurve) || 0.5, 0, 1);
+      const ex = Math.pow(2, 1 - 2 * cx);            /* 2.0 soft .. 1.0 linear .. 0.5 hard */
+      v.velRaw = g0;
+      v.vel = (ex === 1) ? g0 : Math.pow(g0, ex);
+    }
     v.seq = ++eng.seq;
     v.pending = 0; v.pendingMidi = -1; v.pendingVel = 0; v.pendingStart = 0;
     v.pitch = start;
@@ -1301,6 +1314,9 @@ const AVDSP = (function () {
       if (tb >= 0) cutBase = tb;
     }
     let l2 = cutBase + eng.cEnvAmt * v.e2Val + 2 * eng.lfoToCut * v.lfoVal + eng.ktrk * v.ktrkOct;
+    /* PERFORM key response: playing harder opens the filter, softer closes it. +-2 octaves
+       at sens 1.0, centred on 0.5 so a mid-velocity note sits where the knob says. */
+    if (eng.cVelSens > 0) l2 += eng.cVelSens * ((v.velRaw === undefined ? v.vel : v.velRaw) - 0.5) * 4;
     if (v.mpeCh > 0 && eng.mpe && eng.mpe.on && typeof AVM !== "undefined" && AVM) l2 += AVM.atOct(eng.mpe, v.mpeCh);
     if (v.modCut !== 0) l2 += v.modCut * 4;                       /* cutoff ±4 oct */
     let fc = Math.pow(2, l2);
@@ -1329,6 +1345,7 @@ const AVDSP = (function () {
     eng.cCutoffLog2 += (eng.tCutoffLog2 - eng.cCutoffLog2) * eng.s15;
     eng.cReso += (eng.tReso - eng.cReso) * eng.s15;
     eng.cEnvAmt += (eng.tEnvAmt - eng.cEnvAmt) * eng.s20;
+    eng.cVelSens += (eng.tVelSens - eng.cVelSens) * eng.s15;   /* PERFORM key response */
     eng.cOutScale += (eng.tOutScale - eng.cOutScale) * eng.s20;
     eng.cDrive += (eng.tDrive - eng.cDrive) * eng.s15;   /* P2 filter drive */
   }
