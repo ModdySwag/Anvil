@@ -2,8 +2,8 @@
 
 ## READ THIS FIRST — P2 SOUND LANDED AND EVERY SURFACE IS A HIGGSFIELD MATERIAL
 
-**State:** HEAD `2ace8f4` · `index.html` sha `38b1d59db47abb3150097cbd1b6b9494a5566ce2b46c42e951409ffd045e8e2a`,
-**6,138,754 B** · all rigs pin it · tree clean apart from the untracked concept artifacts.
+**State:** HEAD `8f7309d` · `index.html` sha `9af39bb08fbb1547786d364eefcdc4be5161325d62d29abd2a33418a4911c3b6`,
+**6,139,390 B** · all rigs pin it · tree clean apart from the untracked concept artifacts.
 **Since the gate run below:** black keys got their own Higgsfield material per finish (gold warm
 lacquer, silver blue-steel, walnut umber bakelite) — the last single-finish asset on the keyboard. Re-gated:
 keys 0 fail, chassis 0 fail, smoke 0 fail. Boards rebuilt after the change.
