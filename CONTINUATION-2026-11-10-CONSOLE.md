@@ -1,35 +1,144 @@
-## RELEASE v1.15.0 — IN PROGRESS (2026-11-10, do not freeze anything yet)
+# SAVE POINT — 2026-11-10, end of session (CONSOLE P2 + FULL SKIN + RELEASE PREP)
 
-**Gate on `d206eec2` (index.html, 6,141,970 B, HEAD `d7b9d4e`):**
-- **28 rigs green, first lap** — every cdp_* suite re-run on these exact bytes: a11y 37 · bounce 32 ·
-  chassis 47 · cockpit 21 · code 36 · comp 41 · deck 35 · fit 49 · fx 28 · hub 68 · import 26 · keys 27 ·
-  knob_feel 19 · m1 33 · m2 40 · midi 34 · mix 47 · platform 52 · rec 29 · s4 42 · s5 36 · sample 29 ·
-  seq 41 · sessions 65 · smoke 81 · store 28 · studio 37 · tune 18.
-- **BENCH PASSED**: realtime ratio **0.999** (identical to the last release build), published voices
-  **light 32 / fat 64**, offline knee **96 pass → 128 fail, monotone**, **invalidReads 0**. The one
-  underrun it logs at light/48 is the rig FINDING its knee (it publishes the highest stable step), not a fail.
-- **STRESS: still running** at t≈525 s when this note was written (protocol: chord/arpeggio cycles 8..64,
-  REAL knob commits on CUTOFF/RESO/UNISON, allOff drain ~every 60 s, heap < 60 MB, **zero underrun deltas at
-  cap**). Live sample at t=525 s: `dUR=0`, heap 13 MB — both assertions holding. It is LONG (~9 min+), not stuck.
-  **It must finish clean before freezing.** Re-check with `ps -p <pid>` + `grep STRESS-RESULT verify/last-cdp_stress.log`.
-- **ALIAS: inconclusive** — printed no leg lines (`ok=0 fail=0`). Treat as unproven, not green; look at what
-  the rig actually emits before the release note claims it.
+## READ THIS FIRST
 
-**RUNNER TRAP (paid twice this session):** the foreground `terminal` timeout clamps at **180 s** — `timeout_s`
-of 600/900/1200 does not survive. Bench and stress both exceed it. Run them with
-`nohup node verify/cdp_X.mjs > verify/last-cdp_X.log 2>&1 < /dev/null &` and poll the log. Note the
-background wrapper's completion notice reports the LAUNCHER's exit, not the rig's — poll the pid.
+**Repo** `C:\Users\Moddy\anvil` · **HEAD** `d4161d0` · **bundle** `index.html` sha
+`d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412`, **6,141,970 B** · every rig pins it.
 
-**THEN, in order (nothing has been staged or bumped yet):**
-1. Re-stage `windows/stage/Anvil/resources/app/` with today's bundle — it still carries
-   `54df076a` / 4,870,911 B while the app is `d206eec2` / 6,141,970 B. Also refresh `sw.js`,
-   `manifest.webmanifest`, the three `icon-*.png`, `packs/` if they changed, and `build-info.json`
-   (`appBuild`, `appBuildBytes`, `appBuildSha256`, `appBuildNote`, `appTree`).
-2. Bump `windows/version.json` to the same numbers (it currently pins `appBuild 54df076a`, bytes 4,870,911).
-3. Rebuild the installer from `windows/installer/`, then verify by installing.
-4. Shots + `windows/downloads-card-draft.md` → downloads card, then publish v1.15.0.
+### GATE ON THESE EXACT BYTES
+- **28 rigs green, first lap** (all re-run on `d206eec2` after the last change):
+  a11y 37 · bounce 32 · chassis 47 · cockpit 21 · code 36 · comp 41 · deck 35 · fit 49 · fx 28 ·
+  hub 68 · import 26 · keys 27 · knob_feel 19 · m1 33 · m2 40 · midi 34 · mix 47 · platform 52 ·
+  rec 29 · s4 42 · s5 36 · sample 29 · seq 41 · sessions 65 · smoke 81 · store 28 · studio 37 · tune 18
+- **BENCH PASSED** — realtime ratio **0.999** (same as the last release build), published voices
+  **light 32 / fat 64**, offline knee **96 pass → 128 fail monotone**, **invalidReads 0**.
+  The underrun it logs at light/48 is the rig FINDING its knee, not a failure.
+- **ALIAS PASSED** — `ALIAS-RESULT {"verdict":"complete","validation":{"onBinDBc":-165.73,
+  "onBinPass":true,"bh4FloorWorst":-91.22}}`. **It reports ALIAS-RESULT, not `^ ok` legs** — a grep for
+  `^ ok` reads 0/0 and looks inconclusive. It is clean.
+- **STRESS — NOT FINISHED.** Last seen RUNNING (pid 141056) at t≈525 s in a build phase with
+  `dUR=0` (zero underrun deltas at cap) and heap 13 MB against a 60 MB ceiling — both assertions holding.
+  Protocol: chord/arpeggio cycles 8..64, REAL knob commits on CUTOFF/RESO/UNISON, allOff drain ~60 s,
+  heap < 60 MB, zero underrun deltas at cap. **It is long (~9 min+), not stuck. Poll the PID, not the job.**
 
-**Do not retract a version number**: stage and bump only after stress is clean on the final bytes.
+### RUNNER TRAP (paid twice — will bite again)
+The foreground `terminal` timeout **clamps at 180 s**; asking for 600/900/1200 still returns
+"timed out after 180s". Bench and stress both exceed it. Run them detached and poll:
+`cd /c/Users/Moddy/anvil && nohup node verify/cdp_X.mjs > verify/last-cdp_X.log 2>&1 < /dev/null &`
+then `ps -p <pid>` plus `grep -E "BENCH-RESULT|STRESS-RESULT|ALIAS-RESULT" verify/last-cdp_X.log`.
+The background completion notice reports the LAUNCHER's exit, not the rig's — it is meaningless.
+
+## WHAT LANDED THIS SESSION (all committed, all gated)
+
+**P2 — the four working surfaces**
+- **SOUND** (`2dcb6fe`): LEVELS is the output stage now — its head carries INST + MASTER gains, a live
+  stereo peak meter off `avTap.levels`, peak-hold and a latched CLIP tell (`avLevelsStrip`, app_core.js);
+  card 64 → 40 px, knobs stay behind the fold (chassis K24 pins the fold). The duplicate
+  `#av-engine-strip` is retired (hidden; `.av-engine-strip[hidden]{display:none!important}` because a
+  page `display` rule beats the attribute; element kept for smoke R2's six-chip count). The card FILLS the
+  well: control line / one 12-pot row / **screens band** (new oscillator scope + enlarged filter response)
+  that absorbs every spare pixel. Prose note deleted. K24h re-pinned to the band shape.
+- **MIX** (`0913b89`, `d7b9d4e`): the empty state is an **eight-strip ghost rack** (`avMixUiRackHTML`) —
+  T1..T8 plates, fader slot with cap at unity on a 0/-6/-12/-24/-40/-inf scale, stereo meters, M/S, MAIN.
+  Ghosts only, hidden the moment a track exists. Cap + foot prose off the face; duplicate inner MIX title
+  gone. **Per-track FADER added** on `gainDb` (its own spec calls it "track fader"), writing through
+  `avMixUiTrackPatch` so fader and GAIN knob can never disagree; row key excludes gainDb so a drag never
+  rebuilds the row. The control is the §17 range skin ROTATED.
+- **SEQUENCE** (`51735f9`, `ddbf28e`): inert ghost rows to eight (`av-seq-grow` / `av-seq-gcell` — their
+  OWN class names, see traps), instruction prose off the face, pattern textarea 90 → 46 px, and a
+  **16-step transport ruler** in the void beside the BPM knob.
+- **EFFECTS** (`e69ac9c`, `8f7309d`): **signal-flow bar** `IN → DRIVE → FLAVOUR → MOD → DELAY → VERB →
+  CONV → DYN → OUT`, each block lit from its strip's `.av-fx-on` via `avFxChainSync` (called from
+  `avFxSync`). **Definite 104 px height** so it can never stretch a strip. Dead band 153 → ~48 px. Head
+  cap prose off the face. Block screens got a quarter graticule at 0.115 alpha.
+
+**SKIN — one full Higgsfield asset set PER FINISH**
+`cache/scratch/mk_materials.py` emits, separately for gold / silver / walnut: **backplate, card face,
+screen well, metal plate, knob face, keycap, rubber pad, fader cap, wheel rim, white key, black key,
+dial glass** (~24 plates generated this session; credits were 2541 → plenty left).
+- Textures are **high-passed** (blur-subtracted → grain, no blotchy macro cloud) and **centred on
+  mid-grey** so soft-light adds texture and never a cast, with **per-family contrast**: plates 150/150,
+  caps 130/44, keys a photographed object at full opacity.
+- `styles-console.css` **§15** large surfaces · **§16** controls (keycaps, field keys, chips, sub-tabs,
+  rockers, kind keys, launcher keys, module buttons, pads, step cells, fader caps, wheels, fields, rows,
+  badges, wells, popovers, tooltips, piano keys) · **§17** native-widget burial (range inputs → machined
+  cap on a recessed slot, textareas → no resize grip/OS scrollbar, `.av-seq-cell` → pad material) ·
+  **§18** MIX rack + inspector launcher current-page state · **§19** SEQUENCE · **§20** EFFECTS chain ·
+  **§21** MIX per-track fader.
+- Finish mapping lives in `materials.css`: `--mat-backplate/-card/-well/-rail/-btn/-pad/-fader/-wheel/
+  key-white/-key-black/-plate/-knob/-dial` each resolve to that finish's own plates, so a finish swap
+  moves the MATERIAL, not a tint, and geometry cannot change.
+- **Black keys got their own material per finish** (`2ace8f4`) — the last shared asset on the keyboard.
+
+**Also**: the inspector launcher is navigation now (`7d49d11`) — the entry matching the live zone + sub
+carries `.on` + `aria-current="page"`, driven by `av-zone-shown` / `av-sub-shown`.
+
+**Boards for the owner eye gate** (rebuilt after the black-key pass):
+`cache/scratch/board-{gold,silver,walnut}.png` (SOUND/MIX/SEQUENCE/EFFECTS tiled per finish),
+`cache/scratch/board-other.png` (BROWSE/CODE/SHAPE/PERFORM/DELIVER/SYSTEM),
+`cache/scratch/mix-c315-1440.png` (MIX with three real tracks + faders).
+
+## THE QUEUE — in the order it should be taken
+
+### 1. FINISH THE RELEASE v1.15.0 (in progress — nothing staged or bumped yet)
+- [ ] Let **stress** finish. Re-check `ps -p 141056` and `grep STRESS-RESULT verify/last-cdp_stress.log`.
+      It must be clean before freezing. If it lands worse than the last build's 7 deltas, re-run it on a
+      quiet box (`nohup`, nothing else open).
+- [ ] **Re-stage** `windows/stage/Anvil/resources/app/` with today's bundle. It still carries
+      `54df076a` / **4,870,911 B** while the app is `d206eec2` / **6,141,970 B**. Refresh `index.html`,
+      `sw.js`, `manifest.webmanifest`, the three `icon-*.png`, `packs/` if changed, and
+      `build-info.json` (`appBuild`, `appBuildBytes`, `appBuildSha256`, `appBuildNote`, `appTree`).
+- [ ] **Bump** `windows/version.json` to the same numbers (currently pins `appBuild 54df076a`, bytes
+      4,870,911 — both stale).
+- [ ] **Rebuild the installer** from `windows/installer/`, then verify by installing.
+- [ ] Shots + `windows/downloads-card-draft.md` → downloads card, then publish (site + GitHub).
+- [ ] `windows/RELEASE-NOTES-1.15.0.md` already exists and needs a pass against what actually shipped.
+- **Do not retract a version number**: stage and bump only after stress is clean on the final bytes.
+
+### 2. PRODUCT WORK STILL OPEN
+- **PERFORM is a FEATURE gap, not a layout one.** Measured: one 93 px card over 508 px of dead well — the
+  emptiest page in the app. The engine only backs `env.mono` (poly/mono), `voice.glide` and the live
+  `#av-voices` counter. There is **no velocity-curve or key-response DSP**, so a "Voice & feel" surface
+  cannot be built honestly. Either build the DSP first or demote the page. **Do not pad it.**
+- **MIX tracks are still horizontal rows.** They now carry a real per-track fader, but they are not
+  vertical console strips with a dB-scaled fader + meters in the standard order (the P2 spec's shape).
+  Rebuilding them puts the 47 mix legs at risk — own pass, rig open.
+- **EFFECTS strips are still sparse** at default settings (the block screens are honest but near-empty;
+  the graticule helped the read, not the content).
+- **P3 — finish into the patch**: the finish persists in `localStorage['av-finish']` only. Not yet in the
+  project file (export/import with the project) and not in the installer.
+- Two C2 leftovers: mono not per-patch (`env.mono` not in the pack schema); no LCD cell for latency/buffer.
+
+### 3. CARRIED OVER, UNTOUCHED
+- MIDI import bug.
+- Elevated uninstall of the stale `C:\Program Files\Anvil`.
+- Live site still serves the 2026-10-09 build.
+
+## TRAPS PAID THIS SESSION (add to the standing list)
+- **A transparent gradient layer breaks soft-light blending** — the RAW texture shows through as a light
+  grey slab (the sub-tab row did exactly this). Every blended stack needs an OPAQUE base layer.
+- **Contrast is per family, not per sheet.** One spread for a 448 px backplate and a 24 px keycap turns the
+  caps into television static.
+- **An old `flex: 0 0 100%` written for a row-wrap parent measures 100% of the HEIGHT in a column** and
+  swallows the card. Reset the basis in the new layer — and mind specificity: an attribute selector counts
+  like a class, so `.x[data-y] .z` at 0,3,0 beats `.a .z` at 0,2,0. Scope with an id to win.
+- **`sweep_pins.py --old` must be the sha the RIGS carry, not your last build** (paid again).
+- **A finish shot must write the key the APP reads**: `localStorage['av-finish']` + `avFinishBoot()` +
+  ASSERT `body[data-finish]`. `finishshot.mjs` wrote `anvil.finish`, so walnut boards silently came back gold.
+- **Decorative elements need their OWN class names.** Reusing `.av-seq-row`/`.av-seq-cell` for ghost rows
+  broke smoke P4 and cdp_seq — the fix is own class names, never a relaxed assertion.
+- **`cdp_cockpit` was red since P0**: it still pinned the C1 FSVR zone order while P0 shipped modes-first.
+  Re-pinned to `sound,sequence,mix,browse,perform,shape,effects,deliver,system`.
+- **A rig that reports `*-RESULT` lines has no `^ ok` legs** — grepping for `^ ok` reads 0/0 and looks
+  inconclusive. bench and alias both do this.
+- **NEVER stretch a flex column to fill a page** — the first EFFECTS attempt turned two strips into 430 px
+  cards with a void inside each. Fixed heights, or grow something that is meant to grow.
+
+## TOOLS
+`cache/scratch/p2probe.mjs <w> <zone>` (structure + dead bottom) · `p2dump.mjs <cardId> <w> <depth>`
+(card rect tree — NOTE: it hardcodes the sound zone) · `finishshot.mjs <zone> <finish> [w] [name]`
+(any page, any finish — writes the right key and asserts it) · `csprobe.mjs <sel>` (computed style) ·
+`mixshot.mjs` (MIX with tracks, both widths) · `battery_fast.sh <card>` (per-card fast lane).
 
 ---
 

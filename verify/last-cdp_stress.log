@@ -47,4 +47,29 @@ sample t=  495s active=64/64 released=0 stolen=0 heap=12.9MB ur=105 dUR=0 mean=8
 sample t=  510s active=64/64 released=0 stolen=0 heap=13.3MB ur=105 dUR=0 mean=1355.47 p95=2000 max=2000 n=192188 ctx=running phase=cap step=cap churn 7/34 cycles=23 capHits=23 drains=12 lastDrain=ok@155ms notes=+2980/-2916 knobs=995 sErr=0
 sample t=  525s active=16/64 released=0 stolen=0 heap=13MB ur=105 dUR=0 mean=97.66 p95=1000 max=1000 n=197813 ctx=running phase=build step=build @uni 1 cycles=24 capHits=23 drains=12 lastDrain=ok@155ms notes=+3052/-3036 knobs=1017 sErr=0
 sample t=  540s active=64/64 released=0 stolen=0 heap=12.7MB ur=105 dUR=0 mean=714.84 p95=1000 max=1000 n=203441 ctx=running phase=cap step=cap churn 29/34 cycles=24 capHits=24 drains=12 lastDrain=ok@155ms notes=+3156/-3092 knobs=1055 sErr=0
-sample t=  540s active=64/64 released=0 stolen=0 heap=12.7MB ur=105 dUR=0 mean=714.84 p95=1000 max=1000 n=203441 ctx=running phase=cap step=cap churn 29/34 cycles=24 capHits=24 drains=12 lastDrain=ok@155ms notes=+3156/-3092 knobs=1055 sErr=0
+sample t=  555s active=64/64 released=0 stolen=0 heap=13MB ur=105 dUR=0 mean=992.19 p95=2000 max=2000 n=209066 ctx=running phase=cap step=cap churn 6/34 cycles=25 capHits=25 drains=13 lastDrain=ok@155ms notes=+3242/-3178 knobs=1082 sErr=0
+sample t=  570s active=16/64 released=0 stolen=0 heap=12.7MB ur=105 dUR=0 mean=31.25 p95=0 max=1000 n=214688 ctx=running phase=build step=build @uni 2 cycles=26 capHits=25 drains=13 lastDrain=ok@155ms notes=+3316/-3300 knobs=1104 sErr=0
+sample t=  585s active=64/64 released=0 stolen=0 heap=12.8MB ur=105 dUR=0 mean=816.41 p95=1000 max=2000 n=220313 ctx=running phase=cap step=cap churn 27/34 cycles=26 capHits=26 drains=13 lastDrain=ok@155ms notes=+3416/-3352 knobs=1143 sErr=0
+sample t=  600s active=64/64 released=0 stolen=0 heap=13.1MB ur=105 dUR=0 mean=1347.66 p95=2000 max=2000 n=225938 ctx=running phase=cap step=cap churn 5/34 cycles=27 capHits=27 drains=14 lastDrain=ok@156ms notes=+3504/-3440 knobs=1168 sErr=0
+sample t=  615s active=0/64 released=0 stolen=0 heap=13.1MB ur=114 dUR=9 mean=121.09 p95=1000 max=1000 n=231559 ctx=running phase=done step=done cycles=27 capHits=27 drains=15 lastDrain=ok@158ms notes=+3564/-3564 knobs=1191 sErr=0
+post-run sample active=0 released=0 heap=13.1MB ur=114 drains=15 done=true sErr=0
+shot: renders/p1-stress.png (860100 B)
+==== STRESS ASSERTS ====
+heap growth: 0 MB (first 14.7 / max 14.7 / last 13.1; limit 60 MB) -> PASS
+underrun deltas at cap: verified-envelope FAIL · strict(all-cap) FAIL (total delta 114 over 41 intervals; nonzero 11; at-cap 11 [verified-window 2 · uni>3-window 9]; outside-cap 0)
+  uni>3 over-drive probe deltas: [{"from":45,"to":60,"delta":3,"wins":[{"cycle":3,"uni":7,"start":52152,"end":64139}]},{"from":60,"to":75,"delta":2,"wins":[{"cycle":3,"uni":7,"start":52152,"end":64139}]},{"from":135,"to":150,"delta":85,"wins":[{"cycle":7,"uni":7,"start":143119,"end":155119}]},{"from":150,"to":165,"delta":2,"wins":[{"cycle":7,"uni":7,"start":143119,"end":155119}]},{"from":225,"to":240,"delta":3,"wins":[{"cycle":11,"uni":7,"start":234069,"end":246065}]}]
+  VERIFIED-ENVELOPE deltas: [{"from":0,"to":15,"delta":3,"wins":[{"cycle":1,"uni":3,"start":6624,"end":18624}]},{"from":165,"to":180,"delta":2,"wins":[{"cycle":8,"uni":1,"start":165987,"end":177965}]}]
+pool drains: PASS (15 checks; worst 159 ms; 15/15 ok)
+page errors: PASS (0)
+ctx.state over all samples: PASS (running)
+cap coverage: PASS (cycles 27; cap reached 27x; maxHeld 64; notes +3564/-3564; knob commits 1191; driver errors 0)
+==== STRESS SUMMARY ====
+freeze: sha256 d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412 (6141970 B)
+sanity: PASS ratio=1 tier=worklet/blob
+samples: 42 (+1 post-run) over 10 min · cycle count 27
+asserts: heap PASS · underruns FAIL [strict FAIL] · drains PASS · page errors PASS · ctx PASS · cap coverage PASS
+console messages: 2
+  [log] [anvil] boot — v1.15.0 tap=true knobs=true kb=true midi=true synth=true pads=true sample=true rec=true import=true sourcesUi=true fx=true mod=true lfo=true seq=true seqUi=true cap=true undo=true store=true bank=true storeUi=true deliver=true input=true metro=true takes=true studioUi=true sessi
+  [log] [anvil] engine ready — worklet:blob · sr 48000 · voices 64
+STRESS-RESULT {"sha256":"d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412","verdict":"asserts-not-met","asserts":{"heapGrowthMb":0,"underrunDeltas":114,"drains":"PASS","pageErrors":0},"finalSample":{"tSec":615,"active":0,"released":0,"total":0,"stolen":0,"maxVoices":64,"heap":13731045,"heapTotal":16074177,"ur":114,"meanUs":121.09,"p95Us":1000,"maxUs":1000,"ringN":231559,"ctxState":"running","phase":"done","step":"done","fatal":null,"cycles":27,"capReached":27,"maxHeld":64,"drains":15,"lastDrain":{"label":"final","ok":true,"ms":158,"active":0,"released":0},"notesOn":3564,"notesOff":3564,"knobCommits":1191,"sErrors":0,"done":true,"postRun":true}}
+STRESS-RESULT {"sha256":"d206eec2359719613284dae2867ff67f9a35fa4a0c804c133fa9537a4ce6b412","verdict":"asserts-not-met","asserts":{"heapGrowthMb":0,"underrunDeltas":114,"drains":"PASS","pageErrors":0},"finalSample":{"tSec":615,"active":0,"released":0,"total":0,"stolen":0,"maxVoices":64,"heap":13731045,"heapTotal":16074177,"ur":114,"meanUs":121.09,"p95Us":1000,"maxUs":1000,"ringN":231559,"ctxState":"running","phase":"done","step":"done","fatal":null,"cycles":27,"capReached":27,"maxHeld":64,"drains":15,"lastDrain":{"label":"final","ok":true,"ms":158,"active":0,"released":0},"notesOn":3564,"notesOff":3564,"knobCommits":1191,"sErrors":0,"done":true,"postRun":true}}
