@@ -2,10 +2,15 @@
 
 ## READ THIS FIRST — P2 SOUND LANDED AND EVERY SURFACE IS A HIGGSFIELD MATERIAL
 
-**State:** HEAD `e7094ee` (skin pass 2) on `2dcb6fe` (P2 SOUND + full skin) · `index.html` sha
-`d51427fe7285ba6f3bdbda5ca40af4047a3be79b324edf72c38c201f302f08e6`, **6,063,974 B** · all 23 rigs pin it ·
-tree clean apart from the untracked concept artifacts.
-**Gate on `d51427fe`:** chassis **47/47** · a11y **37/37** · smoke **81/81** · m1 **33/33** · m2 **40/40**.
+**State:** HEAD `ddbf28e` · `index.html` sha `1f8101ae4ff91eead79c629cc2bf845d2f9e705cec6ca28ef0a827d219b3e064`,
+**6,077,887 B** · all rigs pin it · tree clean apart from the untracked concept artifacts.
+**GATE — every rig green on these exact bytes: 1,078 legs across 28 rigs, zero failures.**
+chassis 47 · a11y 37 · smoke 81 · m1 33 · m2 40 · mix 47 · seq 41 · fx 28 · s4 42 · s5 36 · studio 37 ·
+store 28 · code 36 · cockpit 21 · deck 35 · comp 41 · sample 29 · tune 18 · midi 34 · sessions 65 ·
+import 26 · bounce 32 · rec 29 · platform 52 · hub 68 · keys 27 · knob_feel 19 · fit 49.
+NOT run (load/wave-gate suites that need a quiet machine): bench · stress · alias.
+**Boards for the owner eye gate:** `cache/scratch/board-{gold,silver,walnut}.png` — SOUND / MIX /
+SEQUENCE / EFFECTS tiled per finish, plus the individual `cache/scratch/fin-<page>-<finish>.png`.
 
 **Owner brief this session (verbatim, both must keep governing):**
 1. *"the WHOLE THING, backplate and all textures need higgsfield . i still see original design colours as
