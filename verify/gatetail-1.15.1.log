@@ -1,0 +1,5 @@
+GATE-TAIL START 10 Nov 2026 19:08:44 sha=ccaff4586eddf1fe96f36034962e8063c576a30099dfdddb4c0897f6d772aee2
+bench exit=0 BENCH-RESULT {"mode":"real","quick":false,"tier":"worklet","url":"blob","realtimeRatio":1,"published":{"light":64,"fat":48},"offlinePublished":96,"offlineKnee":{"l
+alias exit=0 ALIAS-RESULT {"sha256":"ccaff4586eddf1fe96f36034962e8063c576a30099dfdddb4c0897f6d772aee2","verdict":"complete","validation":{"onBinDB
+stress exit=1 heap growth: 0 MB (first 14.9 / max 14.9 / last 13.1; limit 60 MB) -> PASS|underrun deltas at cap: verified-envelope FAIL · strict(all-cap) FAIL (total delta 15 over 41 intervals; nonzero 11; at-cap 11 [verified-window 1 · uni>3-window 10]; outside-cap 0)|pool drains: PASS (15 checks; worst 166 ms; 15/15 ok)|page errors: PASS (0)|
+GATE-TAIL DONE 10 Nov 2026 19:29:07

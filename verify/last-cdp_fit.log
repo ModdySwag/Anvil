@@ -1,6 +1,6 @@
-index.html sha256 (before): e8aaee896019e90b7fd881595a3b56f5882564a6866e6057ef5d75e7557e2cc0
+index.html sha256 (before): 0bdca108510fba7817c93f85971a11058afed9737026d42ebbe7720d5ac15b3c
 using browser: C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe
-cdp port 9620 | profile C:\Users\Moddy\AppData\Local\Temp\anvil-fit-1794279582313
+cdp port 9620 | profile C:\Users\Moddy\AppData\Local\Temp\anvil-fit-1794299306563
    - data-av-ready: true | widths 1440/1400/1300/1200/1100/1000/900/800 | settle 250 ms, one retry per read
    - floor: 800 px is the design floor (the transport deck itself cannot fit below)
  ok   F1 W=1440: no pairwise overlap among visible header buttons (2px tolerance)  -> btns=12 hits=0
