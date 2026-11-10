@@ -2032,3 +2032,26 @@ textarea::-webkit-scrollbar-thumb { background: #22303A; border-radius: 5px; bor
   border-left: 1px solid #33474D;
 }
 .av-seq-tick.is-bar { height: 13px; border-left-color: #5C8A94; }
+
+/* 21. MIX per-track FADER (2026-11-10)
+   The ghost rack promises faders, so a real track carries one. gainDb is the track's own gain; the
+   fader writes through the same patch path as the GAIN knob, so the two are always one value.
+   The control is the §17 range skin ROTATED rather than a second native-vertical widget — one skin,
+   one behaviour, and it inherits the machined cap for free. */
+.av-mix-fadercol {
+  position: relative; flex: 0 0 32px; width: 32px;
+  align-self: stretch; min-height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 4px 0 15px;
+}
+.av-mix-fader {
+  position: absolute; top: calc(50% - 7px); left: 50%;
+  width: 66px; height: 18px; margin: 0;
+  transform: translate(-50%, -50%) rotate(-90deg);
+}
+.av-mix-fader-val {
+  position: absolute; bottom: 1px; left: -6px; right: -6px; text-align: center;
+  font-family: var(--mono); font-size: 8.5px; letter-spacing: .02em; color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}

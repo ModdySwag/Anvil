@@ -814,6 +814,12 @@ function avMixUiTrackRowHTML(v, tracks) {
     '<button type="button" class="av-btn mini av-mix-btn av-mix-remove" data-act="remove" data-track="' + idEsc + '" title="Remove this track" aria-label="Remove">\u2715</button>' +
     avMixUiWaveHTML(v.srcKind) +
     "</div>" +
+    '<div class="av-mix-fadercol">' +
+    '<input type="range" class="av-mix-fader" data-mix-fader="gainDb" data-track="' + idEsc + '"' +
+    ' min="-60" max="24" step="0.5" value="' + avMixUiNum(v.gainDb, 0) + '"' +
+    ' aria-label="Track ' + idEsc + ' gain fader" title="Track fader — −60..+24 dB">' +
+    '<span class="av-mix-fader-val">' + avMixUiSignedDb(avMixUiNum(v.gainDb, 0), "dB") + "</span>" +
+    "</div>" +
     '<div class="av-mix-track-knobs">' + knobs + "</div>" +
     '<div class="av-mix-track-extra">' +
     '<span class="av-mix-sub">DUCK</span>' +
@@ -1391,6 +1397,24 @@ function avMixUiPaintTracks(host) {
         if (typeof avKnobBind === "function" && box && typeof box.querySelectorAll === "function") {
           try { avKnobBind(box); } catch (e) { /* binding is a nicety */ }
         }
+        /* P2: the per-track FADER. The ghost rack promises faders, so a real track has to carry one:
+           gainDb is the track's own gain ("track fader" in AV_MIX_UI_TRACK_KNOBS) and this writes
+           through the same patch path the knob uses, so both surfaces always agree. The row key does
+           NOT include gainDb, so a drag never rebuilds the row under the pointer. */
+        try {
+          box.querySelectorAll(".av-mix-fader").forEach(function (el) {
+            if (el.dataset.mixWired === "1") return;
+            el.dataset.mixWired = "1";
+            el.addEventListener("input", function () {
+              const tr = el.getAttribute("data-track");
+              const v = Number(el.value);
+              if (!tr || !isFinite(v)) return;
+              try { avMixUiTrackPatch(tr, "gainDb", v); } catch (e) { /* patch is best-effort */ }
+              const lab = el.parentNode ? el.parentNode.querySelector(".av-mix-fader-val") : null;
+              if (lab) lab.textContent = avMixUiSignedDb(v, "dB");
+            });
+          });
+        } catch (e2) { /* faders are an addition, never a blocker */ }
       }
     }
     const none = host.querySelector("#av-mix-tracks-none");
